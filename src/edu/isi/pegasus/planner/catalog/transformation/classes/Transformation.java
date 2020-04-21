@@ -185,9 +185,16 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     break;
 
                 case REQUIRES:
-                    throw new CatalogException(
-                            "Compound transformations are not yet supported. Specified in tx "
-                                    + base.getLogicalName());
+                    JsonNode requiresNode =
+                            node.get(TransformationCatalogKeywords.REQUIRES.getReservedName());
+                    if (requiresNode.isArray()) {
+                        for (JsonNode dependentNode : requiresNode) {
+                            base.addDependantTransformation(dependentNode.asText());
+                        }
+                    } else {
+                        throw new CatalogException("requires: value should be of type array ");
+                    }
+                    break;
 
                 case SITES:
                     JsonNode sitesNode = node.get(key);

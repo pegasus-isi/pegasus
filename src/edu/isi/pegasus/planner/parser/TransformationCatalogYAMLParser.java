@@ -312,12 +312,16 @@ public class TransformationCatalogYAMLParser {
                             node.get(TransformationCatalogKeywords.METADATA.getReservedName())));
         }
         if (node.has(TransformationCatalogKeywords.REQUIRES.getReservedName())) {
-            mLogger.log(
-                    "Compound transformations are not yet supported. Specified in tx "
-                            + baseEntry.getLogicalName(),
-                    LogManager.ERROR_MESSAGE_LEVEL);
+            JsonNode requiresNode =
+                    node.get(TransformationCatalogKeywords.REQUIRES.getReservedName());
+            if (requiresNode.isArray()) {
+                for (JsonNode dependentNode : requiresNode) {
+                    baseEntry.addDependantTransformation(dependentNode.asText());
+                }
+            } else {
+                throw new ScannerException("requires: value should be of type array ");
+            }
         }
-
         if (node.has(TransformationCatalogKeywords.SITES.getReservedName())) {
             JsonNode sitesNode = node.get(TransformationCatalogKeywords.SITES.getReservedName());
             if (sitesNode.isArray()) {

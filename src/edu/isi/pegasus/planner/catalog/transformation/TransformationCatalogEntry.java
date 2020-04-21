@@ -28,7 +28,9 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogKeywords;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Notifications;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.Invoke;
@@ -77,6 +79,12 @@ public class TransformationCatalogEntry implements CatalogEntry {
     /** A reference to the container to use to launch the transformation */
     private Container mContainer;
 
+    /**
+     * if a compound transformation then this is the reference to the container that has all the
+     * dependent transformations.
+     */
+    private CompoundTransformation mCompoundTX;
+
     /** The basic constructor */
     public TransformationCatalogEntry() {
         mNamespace = null;
@@ -89,6 +97,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
         mSysInfo = new SysInfo();
         mNotifications = new Notifications();
         mContainer = null;
+        mCompoundTX = null;
     }
 
     /**
@@ -196,6 +205,11 @@ public class TransformationCatalogEntry implements CatalogEntry {
                         this.getSysInfo());
         entry.addNotifications(this.getNotifications());
         entry.setContainer(this.mContainer == null ? null : (Container) mContainer.clone());
+        if (this.mCompoundTX != null) {
+            for (PegasusFile pf : this.mCompoundTX.getDependantFiles()) {
+                this.addDependantTransformation(pf);
+            }
+        }
         return entry;
     }
 
@@ -229,6 +243,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
 
         sb.append("\n Notifications: ").append(this.mNotifications);
         sb.append("\n Container    : ").append(this.mContainer);
+        sb.append("\n Compound Tx  : ").append(this.mCompoundTX);
 
         return sb.toString();
     }
@@ -299,6 +314,43 @@ public class TransformationCatalogEntry implements CatalogEntry {
      */
     public void setContainer(Container container) {
         this.mContainer = container;
+    }
+
+    /**
+     * Set the Compound Transformation for the entry
+     *
+     * @param compoundTX
+     */
+    private void setCompoundTransformation(CompoundTransformation compoundTX) {
+        this.mCompoundTX = compoundTX;
+    }
+
+    /**
+     * Adds a dependant transformation
+     *
+     * @param transformationFQDN
+     */
+    public void addDependantTransformation(String transformationFQDN) {
+
+        PegasusFile pf = new PegasusFile(transformationFQDN);
+        pf.setType(PegasusFile.EXECUTABLE_FILE);
+        this.addDependantTransformation(pf);
+    }
+
+    /**
+     * Adds a dependant transformation
+     *
+     * @param pf pegasus file object containing the tx
+     */
+    public void addDependantTransformation(PegasusFile pf) {
+        if (this.mCompoundTX == null) {
+            this.mCompoundTX =
+                    new CompoundTransformation(
+                            this.getLogicalNamespace(),
+                            this.getLogicalName(),
+                            this.getLogicalVersion());
+            this.mCompoundTX.addDependantFile(pf);
+        }
     }
 
     /**
