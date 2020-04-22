@@ -302,10 +302,25 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.api.transformation_catalog.Transformation` or str
         :return: self
         """
+        key = ""
         if isinstance(required_transformation, Transformation):
-            key = required_transformation._get_key()
+            if required_transformation.namespace:
+                key += required_transformation.namespace + "::"
+
+            key += required_transformation.name
+
+            if required_transformation.version:
+                key += ":" + required_transformation.version
+
         elif isinstance(required_transformation, str):
-            key = "{}::{}::{}".format(namespace, required_transformation, version)
+            if namespace:
+                key += namespace + "::"
+
+            key += required_transformation
+
+            if version:
+                key += ":" + version
+
         else:
             raise TypeError(
                 "invalid required_transformation: {required_transformation}; required_transformation must be of type Transformation or str".format(
