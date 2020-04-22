@@ -543,13 +543,13 @@ public class PegasusConfiguration {
      */
     private SiteCatalogEntry constructDefaultCondorPoolSiteEntry(
             PlannerOptions options, String pegasusHome) {
-        
+
         SiteCatalogEntry site = new SiteCatalogEntry("condorpool");
         site.setArchitecture(mVersion.getArchitecture());
-        
+
         // set the profiles for the site to be treated as a condor pool
         site.addProfile(new Profile(Profile.VDS, "style", "condor"));
-       
+
         return site;
     }
 
@@ -585,7 +585,7 @@ public class PegasusConfiguration {
 
         return site;
     }
-    
+
     /**
      * Construct a file server based directory
      *
