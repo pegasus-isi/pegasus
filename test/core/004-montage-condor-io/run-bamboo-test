@@ -6,24 +6,24 @@ TOP_DIR=`pwd`
 
 export PATH=/ccg/software/montage/current/bin:$PATH
 
-rm -rf montage-workflow-v2
-git clone https://github.com/pegasus-isi/montage-workflow-v2.git
+rm -rf montage-workflow-v3
+git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 echo
 
-cd montage-workflow-v2
+cd montage-workflow-v3
 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.5 \
                       --band 2mass:j:green \
                       --band 2mass:h:blue \
                       --band 2mass:k:red
                       
+cp ../pegasus.properties .
+
 pegasus-plan \
-        --conf ../pegasusrc \
         --dir work \
-        --relative-dir `date +'%s'` \
-        --dax data/montage.dax \
+        --dax data/montage-workflow.yml \
         --sites condor_pool \
         --output-site local \
         --cluster horizontal \

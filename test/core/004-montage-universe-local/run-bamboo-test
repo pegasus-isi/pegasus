@@ -19,18 +19,16 @@ export PATH=/ccg/software/montage/current/bin:$PATH
 RUN_ID=`/bin/date +'%F_%H%M%S'`
 RUN_DIR=`pwd`/work/$RUN_ID
 
-rm -rf montage-workflow-v2
-git clone https://github.com/pegasus-isi/montage-workflow-v2.git
+rm -rf montage-workflow-v3
+git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
-cd montage-workflow-v2
+cd montage-workflow-v3
 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.1 \
                       --band 2mass:j:green \
                       --band 2mass:h:blue \
                       --band 2mass:k:red
-
-cat pegasus.properties >> ../pegasusrc
 
 # site catalog
 echo
@@ -68,11 +66,12 @@ sites:
 
 EOF
 
+cp ../pegasus.properties .
+
 pegasus-plan \
-        --conf ../pegasusrc \
         --dir work \
-        --relative-dir `date +'%s'` \
-        --dax data/montage.dax \
+        --relative-dir $RUN_ID \
+        --dax data/montage-workflow.yml \
         --sites local \
         --output-site local \
         --cluster horizontal \

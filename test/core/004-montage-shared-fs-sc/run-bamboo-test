@@ -6,13 +6,13 @@ TOP_DIR=`pwd`
 
 export PATH=/ccg/software/montage/current/bin:$PATH
 
-rm -rf montage-workflow-v2
-git clone https://github.com/pegasus-isi/montage-workflow-v2.git
+rm -rf montage-workflow-v3
+git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 echo
 
-cd montage-workflow-v2
+cd montage-workflow-v3
 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.5 \
                       --band 2mass:j:green \
@@ -87,14 +87,14 @@ sites:
       http_proxy: "http://workflow.isi.edu:3128"
 EOF
 
+cp ../pegasus.properties .
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    --conf ../pegasusrc \
     --dir work \
     --sites CCG \
     --output-site CCG \
     --cleanup constraint \
-    --dax data/montage.dax \
+    --dax data/montage-workflow.yml \
     --submit \
     | tee $TOP_DIR/plan.out
