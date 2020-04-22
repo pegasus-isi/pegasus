@@ -193,7 +193,7 @@ public class PegasusConfiguration {
                             + store.lookup("local"),
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
-        // check for condorpool site or create a default entry
+        // PM-1516 check for condorpool site or create a default entry
         if (!store.list().contains("condorpool")) {
             store.addEntry(constructDefaultCondorPoolSiteEntry(options, pegasusHome));
             mLogger.log(
@@ -535,7 +535,7 @@ public class PegasusConfiguration {
     }
 
     /**
-     * Constructs default SiteCatalogEntry for local site
+     * Constructs default SiteCatalogEntry for condorpool site
      *
      * @param options
      * @param pegasusHome the pegasus home to be set
@@ -543,10 +543,29 @@ public class PegasusConfiguration {
      */
     private SiteCatalogEntry constructDefaultCondorPoolSiteEntry(
             PlannerOptions options, String pegasusHome) {
+        
+        SiteCatalogEntry site = new SiteCatalogEntry("condorpool");
+        site.setArchitecture(mVersion.getArchitecture());
+        
+        // set the profiles for the site to be treated as a condor pool
+        site.addProfile(new Profile(Profile.VDS, "style", "condor"));
+       
+        return site;
+    }
+
+    /**
+     * Constructs default SiteCatalogEntry for condorpool site
+     *
+     * @param options
+     * @param pegasusHome the pegasus home to be set
+     * @return
+     */
+    private SiteCatalogEntry constructDefaultSharedCondorPoolSiteEntry(
+            PlannerOptions options, String pegasusHome) {
         String submitDir = options.getSubmitDirectory();
         File scratch = new File(new File(submitDir).getParent(), "wf-scratch/CONDORPOOL");
 
-        SiteCatalogEntry site = new SiteCatalogEntry("condorpool");
+        SiteCatalogEntry site = new SiteCatalogEntry("condorpool-shared");
         site.setArchitecture(mVersion.getArchitecture());
         site.addDirectory(constructFileServerDirectory(Directory.TYPE.shared_scratch, scratch));
 
@@ -566,7 +585,7 @@ public class PegasusConfiguration {
 
         return site;
     }
-
+    
     /**
      * Construct a file server based directory
      *
