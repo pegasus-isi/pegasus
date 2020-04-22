@@ -548,16 +548,7 @@ public class Text extends Abstract implements TransformationCatalog {
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public int insert(TransformationCatalogEntry entry) throws Exception {
-        return this.insert(
-                entry.getLogicalNamespace(),
-                entry.getLogicalName(),
-                entry.getLogicalVersion(),
-                entry.getPhysicalTransformation(),
-                entry.getType(),
-                entry.getResourceId(),
-                null,
-                entry.getProfiles(),
-                entry.getSysInfo());
+        return this.insert(entry,true);
     }
 
     /**
@@ -572,7 +563,7 @@ public class Text extends Abstract implements TransformationCatalog {
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public int insert(TransformationCatalogEntry entry, boolean write) throws Exception {
-        if (this.addTCEntry(
+        /*if (this.addTCEntry(
                 entry.getLogicalNamespace(),
                 entry.getLogicalName(),
                 entry.getLogicalVersion(),
@@ -588,7 +579,39 @@ public class Text extends Abstract implements TransformationCatalog {
         } else {
             throw new RuntimeException(
                     "Failed to add TransformationCatalogEntry " + entry.getLogicalName());
+        }*/
+        List<TransformationCatalogEntry> existing =
+                this.lookup(
+                        entry.getLogicalNamespace(),
+                        entry.getLogicalName(),
+                        entry.getLogicalVersion(),
+                        entry.getResourceId(),
+                        entry.getType());
+
+        boolean add = true;
+
+        if (existing != null) {
+            // check to see if entries match
+            for (TransformationCatalogEntry e : existing) {
+                if (e.equals(entry)) {
+                    add = false;
+                    break;
+                }
+            }
         }
+
+        if (add) {
+            mTCStore.addEntry((TransformationCatalogEntry) entry.clone());
+        } else {
+            mLogger.log("TC Entry already exists. Skipping", LogManager.DEBUG_MESSAGE_LEVEL);
+        }
+
+        // if entry needs to be added and flushed to the backend
+        // set to flag to true.
+        if (write && add) {
+            mFlushOnClose = true;
+        }
+        return 1;
     }
 
     /**
@@ -687,7 +710,7 @@ public class Text extends Abstract implements TransformationCatalog {
         entry.addProfiles(lfnprofiles);
         entry.addProfiles(pfnprofiles);
         entry.setSysInfo(system);
-        // entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
+
         entry.addNotifications(invokes);
 
         List<TransformationCatalogEntry> existing =
