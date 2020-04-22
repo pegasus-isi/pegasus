@@ -447,6 +447,13 @@ public class InterPoolEngine extends Engine implements Refiner {
     private void handleExecutableFileTransfers(Job job, TransformationCatalogEntry entry) {
         FileTransfer fTx = handleFileTransfersForMainExecutable(job, entry);
 
+        // PM-1525 starting 5.0, the parsing of dax and tc in yaml formats sets
+        // compound transformation for the transformation catalog entry object
+        // need to add dependent executables as input files for the job
+        for (PegasusFile pf : entry.getDependantFiles()) {
+            job.addInputFile(pf);
+        }
+
         // handle dependant executables
         handleFileTransfersForDependantExecutables(job);
 
