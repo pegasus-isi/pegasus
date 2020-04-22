@@ -275,19 +275,37 @@ class TestTransformation:
 
         assert "badsite" in str(e)
 
-    def test_add_requirement_as_str(self):
+    @pytest.mark.parametrize(
+        "namespace, name, version, expected",
+        [
+            (None, "tr", None, "tr"),
+            ("pegasus", "tr", None, "pegasus::tr"),
+            ("pegasus", "tr", "1.1.1", "pegasus::tr:1.1.1"),
+            (None, "tr", "1.1.1", "tr:1.1.1"),
+        ],
+    )
+    def test_add_requirement_as_str(self, namespace, name, version, expected):
         t = Transformation("test")
-        required_transformation_name = "required"
-        t.add_requirement(required_transformation_name)
+        t.add_requirement(name, namespace=namespace, version=version)
 
-        assert "None::required::None" in t.requires
+        assert expected in t.requires
 
-    def test_add_requirement_as_transformation_object(self):
+    @pytest.mark.parametrize(
+        "transformation, expected",
+        [
+            (Transformation("tr"), "tr"),
+            (Transformation("tr", namespace="pegasus"), "pegasus::tr"),
+            (
+                Transformation("tr", namespace="pegasus", version="1.1"),
+                "pegasus::tr:1.1",
+            ),
+            (Transformation("tr", version="1.1"), "tr:1.1"),
+        ],
+    )
+    def test_add_requirement_as_transformation_object(self, transformation, expected):
         t = Transformation("test")
-        required = Transformation("required", namespace=None, version=None)
-
-        t.add_requirement(required)
-        assert required._get_key() in t.requires
+        t.add_requirement(transformation)
+        assert expected in t.requires
 
     def test_add_invalid_requirement(self):
         t = Transformation("test")
@@ -296,25 +314,17 @@ class TestTransformation:
 
         assert "invalid required_transformation: {tr}".format(tr=1) in str(e)
 
-    def test_add_duplicate_requirement_as_str(self):
+    @pytest.mark.parametrize(
+        "transformation", [("required"), (Transformation("required"))]
+    )
+    def test_add_duplicate_requirement(self, transformation):
         t = Transformation("test")
-        required = "required"
+        t.add_requirement(transformation)
 
-        t.add_requirement(required)
         with pytest.raises(DuplicateError) as e:
-            t.add_requirement(required)
+            t.add_requirement(transformation)
 
-        assert "transformation: None::required::None" in str(e)
-
-    def test_add_duplicate_requirement_as_transformation_object(self):
-        t = Transformation("test")
-        required = Transformation("required", namespace=None, version=None)
-
-        t.add_requirement(required)
-        with pytest.raises(DuplicateError) as e:
-            t.add_requirement(required)
-
-        assert "transformation: None::required::None" in str(e)
+        assert "transformation: required" in str(e)
 
     def test_chaining(self):
         t = (
@@ -329,7 +339,7 @@ class TestTransformation:
 
         assert "local" in t.sites
         assert t.sites["local"].profiles["env"]["JAVA_HOME"] == "/java/home"
-        assert "None::required::None" in t.requires
+        assert "required" in t.requires
 
     def test_tojson_without_profiles_hooks_metadata(
         self, convert_yaml_schemas_to_json, load_schema
@@ -342,7 +352,7 @@ class TestTransformation:
         expected = {
             "name": "test",
             "namespace": "pegasus",
-            "requires": ["None::required::None"],
+            "requires": ["required"],
             "sites": [{"name": "local", "pfn": "/pfn", "type": "stageable"}],
         }
 
@@ -369,7 +379,7 @@ class TestTransformation:
         expected = {
             "name": "test",
             "namespace": "pegasus",
-            "requires": ["None::required::None"],
+            "requires": ["required"],
             "sites": [
                 {
                     "name": "local",
