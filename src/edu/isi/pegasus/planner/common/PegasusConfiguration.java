@@ -59,14 +59,14 @@ public class PegasusConfiguration {
     /** The value for the non shared filesystem configuration. */
     public static final String SHARED_FS_CONFIGURATION_VALUE = "sharedfs";
 
+    /** The value for the condor configuration. */
+    public static final String CONDOR_CONFIGURATION_VALUE = "condorio";
+
     /** The default data configuration value */
-    public static String DEFAULT_DATA_CONFIGURATION_VALUE = SHARED_FS_CONFIGURATION_VALUE;
+    public static String DEFAULT_DATA_CONFIGURATION_VALUE = CONDOR_CONFIGURATION_VALUE;
 
     /** The value for the non shared filesystem configuration. */
     public static final String NON_SHARED_FS_CONFIGURATION_VALUE = "nonsharedfs";
-
-    /** The value for the condor configuration. */
-    public static final String CONDOR_CONFIGURATION_VALUE = "condorio";
 
     /** The value for the condor configuration. */
     public static final String DEPRECATED_CONDOR_CONFIGURATION_VALUE = "Condor";

@@ -448,6 +448,9 @@ public class CPlanner extends Executable {
                         ? PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE
                         : dataConfiguration;
         mPMetrics.setDataConfiguration(dataConfiguration);
+        mLogger.log(
+                "Data Configuration used for the workflow " + dataConfiguration,
+                LogManager.CONFIG_MESSAGE_LEVEL);
         mPMetrics.setPlannerOptions(mPOptions.getOriginalArgString());
 
         // set some initial workflow metrics
