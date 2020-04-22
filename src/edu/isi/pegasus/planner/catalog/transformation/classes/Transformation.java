@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.node.TextNode;
 import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
@@ -201,7 +202,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     if (sitesNode.isArray()) {
                         for (JsonNode siteNode : sitesNode) {
                             TransformationCatalogEntry entry =
-                                    getSiteSpecificEntry(parser, siteNode);
+                                    getSiteSpecificEntry(parser, siteNode, base);
                             tx.addSiteTCEntry(entry);
                         }
                     } else {
@@ -244,10 +245,12 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
      * container: centos-pegasus
      * </pre>
      *
+     * @param parser
      * @param node
+     * @param base
      */
-    protected TransformationCatalogEntry getSiteSpecificEntry(JsonParser parser, JsonNode node)
-            throws IOException {
+    protected TransformationCatalogEntry getSiteSpecificEntry(
+            JsonParser parser, JsonNode node, TransformationCatalogEntry base) throws IOException {
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
         SysInfo sysInfo = new SysInfo();
         ObjectCodec oc = parser.getCodec();
@@ -308,6 +311,13 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     break;
 
                 case SITE_CONTAINER_NAME:
+                    if (!(node instanceof TextNode)) {
+                        throw new CatalogException(
+                                "Container node is fully defined in the tx "
+                                        + base.getLogicalTransformation()
+                                        + " instead of being a reference "
+                                        + node);
+                    }
                     String containerName = node.get(key).asText();
                     entry.setContainer(new Container(containerName));
                     break;

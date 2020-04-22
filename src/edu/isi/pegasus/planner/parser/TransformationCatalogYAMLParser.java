@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.parser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -531,6 +532,13 @@ public class TransformationCatalogYAMLParser {
                     break;
 
                 case SITE_CONTAINER_NAME:
+                    if (!(node instanceof TextNode)) {
+                        throw new ScannerException(
+                                "Container node is fully defined in the tx "
+                                        + entry.getLogicalTransformation()
+                                        + " instead of being a reference "
+                                        + node);
+                    }
                     String containerName = node.get(key).asText();
                     entry.setContainer(new Container(containerName));
                     break;
