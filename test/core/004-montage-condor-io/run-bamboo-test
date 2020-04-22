@@ -24,7 +24,6 @@ cp ../pegasus.properties .
 pegasus-plan \
         --dir work \
         --dax data/montage-workflow.yml \
-        --sites condor_pool \
         --output-site local \
         --cluster horizontal \
         --submit \
