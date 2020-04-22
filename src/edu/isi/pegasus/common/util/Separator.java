@@ -377,7 +377,8 @@ public class Separator {
         } while (state < 16);
 
         if (state == 17 || (is4args && version == null && max == null))
-            throw new IllegalArgumentException("Malformed fully-qualified definition identifier");
+            throw new IllegalArgumentException(
+                    "Malformed fully-qualified definition identifier " + fqdn);
 
         // POSTCONDITION: state == 16
         // assemble result
