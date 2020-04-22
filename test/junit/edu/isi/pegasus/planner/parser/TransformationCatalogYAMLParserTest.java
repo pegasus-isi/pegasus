@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.Notifications;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
@@ -206,6 +207,9 @@ public class TransformationCatalogYAMLParserTest {
         expected.addProfile(new Profile("env", "Hello", "World"));
         expected.addProfile(new Profile("env", "JAVA_HOME", "/bin/java.1.6"));
         expected.addProfile(new Profile("condor", "FOO", "bar"));
+        PegasusFile pf = new PegasusFile("anotherTr");
+        pf.setType(PegasusFile.EXECUTABLE_FILE);
+        expected.addDependantTransformation(pf);
         expected.setContainer(new Container("centos-pegasus"));
         TransformationCatalogEntry actual = entries.get(0);
         assertEquals("Mismatch in TC Entry", expected.toString(), actual.toString());
