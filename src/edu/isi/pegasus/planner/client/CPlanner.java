@@ -398,7 +398,7 @@ public class CPlanner extends Executable {
 
         // check if sites set by user. If user has not specified any sites then
         // load all sites from site catalog.
-        Collection eSites = mPOptions.getExecutionSites();
+        Collection<String> eSites = mPOptions.getExecutionSites();
         if (eSites.isEmpty()) {
             mLogger.log(
                     "No sites given by user. Will use sites from the site catalog",
@@ -422,6 +422,15 @@ public class CPlanner extends Executable {
             eSites.remove("local");
         }
         mLogger.log("Execution sites are " + eSites, LogManager.DEBUG_MESSAGE_LEVEL);
+        for (String site : eSites) {
+            if (!s.contains(site)) {
+                throw new RuntimeException(
+                        "Execution site "
+                                + site
+                                + " not loaded into site store. Loaded sites are "
+                                + s.list());
+            }
+        }
 
         mBag.add(PegasusBag.SITE_STORE, s);
         mBag.add(

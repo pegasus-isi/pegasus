@@ -548,7 +548,7 @@ public class Text extends Abstract implements TransformationCatalog {
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public int insert(TransformationCatalogEntry entry) throws Exception {
-        return this.insert(entry,true);
+        return this.insert(entry, true);
     }
 
     /**
