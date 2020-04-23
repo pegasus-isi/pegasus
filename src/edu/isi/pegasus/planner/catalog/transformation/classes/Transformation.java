@@ -315,7 +315,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     if (!(containerNode instanceof TextNode)) {
                         throw new CatalogException(
                                 "Container node is fully defined in the tx "
-                                        + entry.getLogicalTransformation()
+                                        + base.getLogicalTransformation()
                                         + " instead of being a reference "
                                         + node);
                     }
