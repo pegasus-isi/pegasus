@@ -397,7 +397,7 @@ Setting job requirements
 
 The job requirements are constructed based on the following profiles:
 
-.. table:: Mapping of Pegasus Profiles to Job Requirements
+.. table:: Mapping of Pegasus Profiles to Batch Scheduler Job Requirements
 
    ======================= ============================= ====================== ================== ================ =================== ================= =====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
    Profile Key             Key in +remote_cerequirements SLURM parameter        PBS Parameter      SGE Parameter    Moab Parameter      Cobalt Parameter  Description
@@ -518,27 +518,59 @@ Remote Clusters
 
 .. _bosco:
 
-BOSCO
+Bosco
 -----
 
-`BOSCO <http://bosco.opensciencegrid.org/about/>`__ enables HTCondor to
-submit jobs to remote PBS clusters using SSH. This section describes how
-to specify a site catalog entry for a site that has been configured for
-BOSCO job submissions.
+`Bosco <https://osg-bosco.github.io/docs/>`__ enables HTCondor to
+submit jobs to remote clusters using SSH, and the *glite* job
+translation layer in HTCondor.
 
-First, the site needs to be setup for BOSCO according to the `BOSCO
-documentation <https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO>`__.
-BOSCO uses glite to submit jobs to the PBS scheduler on the remote
-cluster. You will also need to configure the glite installed for BOSCO
-on the remote system according to the documentation in the `glite
-section <#glite>`__ in order for the mapping of Pegasus profiles to PBS
-job requirements to work. In particular, you will need to install the
-``pbs_local_submit_attributes.sh`` and
-``sge_local_submit_attributes.sh`` scripts in the correct place in the
+The requirements for Bosco is that you have your own submit host.
+To install Bosco, we recommend that you choose the *Bosco Multiuser*
+option as it will enable Bosco for all users the host. However, 
+Pegasus will work fine with a single user installation as well.
+
+We also recommended to have the submit node configured either as a Bosco
+submit node or a vanilla HTCondor node. You cannot have HTCondor
+configured both as a Bosco install and a traditional HTCondor submit
+node at the same time as Bosco will override the traditional HTCondor
+pool in the user environment.
+
+You will need to configure the glite installed for Bosco
+on the *remote* system for the mapping of Pegasus profiles to local
+scheduler job requirements to work. In particular, you will need
+to install the ``slurm_local_submit_attributes.sh`` script
+(equivalent ones exist for PBS, SGE and LSF) in the correct place in the
 glite ``bin`` directory on the remote cluster, usually in the directory
-*~/bosco/glite/bin/* .
+``~/bosco/glite/bin/`` . See :ref:`glite-mappings` for a full list
+of available attributes. An example of this file can be found in
+``/usr/share/pegasus/htcondor/glite/slurm_local_submit_attributes.sh``
 
-Second, to tag a site for SSH submission, the following profiles need to
+Long Term SSH Connnection against 2FA Clusters (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is an optional step and should only be considered if the
+target cluster is using 2 factor authentication. One solution
+to this problen is to maintain a long term ssh channel which
+can be reused over and over again by Bosco. Under the
+*bosco* user, create ``~/.ssh/config`` file containing:
+
+::
+
+   ControlPath /tmp/bosco_ssh_control.%r@%h:%p
+   ControlMaster auto
+   ControlPersist 2h
+
+Then ssh to the target cluster and authenticate with your 2FA
+methods. As long as this connection is alive (run in screen/tmux),
+Bosco can interact with the cluster by connecting over that
+control master channel, and no additional authentications will
+be necessary.
+
+Configuring Pegasus for Bosco
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To tag a site for SSH submission, the following profiles need to
 be specified for the site in the site catalog:
 
 1. **pegasus** profile **style** with value set to **ssh**
@@ -555,7 +587,7 @@ An example site catalog entry for a BOSCO site looks like this:
                 xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
                 version="4.0">
 
-       <site  handle="USC_HPCC_Bosco" arch="x86_64" os="LINUX">
+       <site  handle="bosco" arch="x86_64" os="LINUX">
 
            <!-- Specify the service information. This should match what Bosco provided when the cluster
                 was set up. -->
@@ -580,24 +612,12 @@ An example site catalog entry for a BOSCO site looks like this:
 
        </site>
 
-
    </sitecatalog>
 
 ..
 
-   **Note**
 
-   It is recommended to have a submit node configured either as a BOSCO
-   submit node or a vanilla HTCondor node. You cannot have HTCondor
-   configured both as a BOSCO install and a traditional HTCondor submit
-   node at the same time as BOSCO will override the traditional HTCondor
-   pool in the user environment.
 
-There is a bosco-shared-fs example in the examples directory of the
-distribution.
-
-Job Requirements for the jobs can be set using the same profiles as
-listed `here <#glite_mappings>`__ .
 
 
 .. _pyglidein:
