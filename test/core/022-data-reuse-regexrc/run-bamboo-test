@@ -27,6 +27,8 @@ sites:
   name: "condorpool"
   arch: "x86_64"
   os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
   profiles:
     condor:
       universe: "vanilla"
