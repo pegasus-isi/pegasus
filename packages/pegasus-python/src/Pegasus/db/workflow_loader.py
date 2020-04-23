@@ -735,7 +735,11 @@ class WorkflowLoader(BaseLoader):
         """
         rc_meta = self.linedataToObject(linedata, RCMeta())
         lfn = rc_meta.lfn_id
-        rc_meta.lfn = lfn
+
+        #str’ object has no attribute ‘_sa_instance_state’ error if the below is set
+        #in 5.0 schema lfn maps to RCLFN object based on how the sql alchemy schema is defined
+        #rc_meta.lfn = lfn
+
         rc_meta.wf_id = self.wf_uuid_to_id(rc_meta.wf_uuid)
         rc_meta.lfn_id = self.get_lfn_id(rc_meta.wf_id, lfn)
 
