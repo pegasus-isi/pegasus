@@ -532,14 +532,15 @@ public class TransformationCatalogYAMLParser {
                     break;
 
                 case SITE_CONTAINER_NAME:
-                    if (!(node instanceof TextNode)) {
+                    JsonNode containerNode = node.get(key);
+                    if (!(containerNode instanceof TextNode)) {
                         throw new ScannerException(
                                 "Container node is fully defined in the tx "
                                         + entry.getLogicalTransformation()
                                         + " instead of being a reference "
                                         + node);
                     }
-                    String containerName = node.get(key).asText();
+                    String containerName = containerNode.asText();
                     entry.setContainer(new Container(containerName));
                     break;
 
