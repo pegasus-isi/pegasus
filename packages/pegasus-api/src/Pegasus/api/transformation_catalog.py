@@ -89,7 +89,20 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         self.os_release = os_release
         self.os_version = os_version
         self.glibc = glibc
-        self.container = container
+
+        container_name = None
+        if container:
+            if isinstance(container, Container):
+                container_name = container.name
+            elif isinstance(container, str):
+                container_name = container
+            else:
+                raise TypeError(
+                    "invalid container: {container}; container must be of type Container or str (the container name)".format(
+                        container=container
+                    )
+                )
+        self.container = container_name
 
         self.profiles = defaultdict(dict)
         self.metadata = dict()
@@ -181,39 +194,7 @@ class Container(ProfileMixin):
 
 class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     """A transformation, which can be a standalone executable, or one that
-    requires other executables. When a transformation resides on a single site, the
-    syntax in Example 1 can be used where the args: site, pfn, and is_stageable is
-    provided to the constructor. If site, pfn, and is_stageable is specified, then
-    the args: arch, os_type, os_release, os_version, glibc, and container, are
-    applied to the site, else they are ignored. When a transformation resides
-    multiple sites, the syntax in Example 2 can be used where multiple
-    TransformationSite objects can be added.
-
-    .. code-block:: python
-
-        # Example 1: transformation that resides on a single site
-        preprocess = Transformation(
-                "preprocess",
-                namespace="pegasus",
-                version="4.0",
-                site=CONDOR_POOL,
-                pfn=PEGASUS_LOCATION,
-                is_stageable=False
-            )
-
-        # Example 2: transformation that resides on multiple sites
-        preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
-                        .add_sites(
-                            TransformationSite(
-                                CONDOR_POOL,
-                                PEGASUS_LOCATION,
-                                is_stageable=False,
-                                arch=Arch.X86_64,
-                                os_type=OS.LINUX),
-
-                            ...
-                        ))
-
+    requires other executables. 
     """
 
     def __init__(
@@ -231,6 +212,83 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         glibc=None,
         container=None,
     ):
+        """
+        When a transformation resides on a single site, the
+        syntax in Example 1 can be used where the args: site, pfn, and is_stageable is
+        provided to the constructor. If site, pfn, and is_stageable is specified, then
+        the args: arch, os_type, os_release, os_version, glibc, and container, are
+        applied to the site, else they are ignored. When a transformation resides
+        multiple sites, the syntax in Example 2 can be used where multiple
+        TransformationSite objects can be added.
+
+        .. code-block:: python
+
+            # Example 1: transformation that resides on a single site
+            preprocess = Transformation(
+                    "preprocess",
+                    namespace="pegasus",
+                    version="4.0",
+                    site=CONDOR_POOL,
+                    pfn=PEGASUS_LOCATION,
+                    is_stageable=False
+                )
+
+            # Example 2: transformation that resides on multiple sites
+            preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
+                            .add_sites(
+                                TransformationSite(
+                                    CONDOR_POOL,
+                                    PEGASUS_LOCATION,
+                                    is_stageable=False,
+                                    arch=Arch.X86_64,
+                                    os_type=OS.LINUX),
+
+                                ...
+                            ))
+
+
+        :param name: the logical name of the transformation
+        :type name: str
+        :param namespace: the namespace that this transformation belongs to, defaults to None
+        :type namespace: str, optional
+        :param version: the version of this transformation (e.g. "1.1"), defaults to None
+        :type version: str, optional
+        :param site: a site specified in the site catalog to on which this transformation resides, defaults to None
+        :type site: str, optional
+        :param pfn: the physical filename of this transformation (e.g. "/usr/bin/tar"), defaults to None
+        :type pfn: str, optional
+        :param is_stageable: whether or not this transformation is stageable or installed
+        :type type: bool
+        :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
+        :type arch: Arch, optional
+        :param os_type: name of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS`), defaults to None
+        :type os_type: OS, optional
+        :param os_release: release of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
+        :type os_release: str, optional
+        :param os_version: version of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
+        :type os_version: str, optional
+        :param glibc: version of glibc this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled against, defaults to None
+        :type glibc: str, optional
+        :param container: a container object or name of the container to be used for this transformation, optional
+        :type container: Container or str
+        :raises TypeError: Container must be of type Container or str
+        :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
+        :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
+        :raises ValueError: fields: namespace, name, and field must not contain any ":"s
+        """
+
+        for field, value in {
+            "name": name,
+            "namespace": namespace,
+            "version": version,
+        }.items():
+            if ":" in str(value):
+                raise ValueError(
+                    "invalid {field}: {value}; {field} must not contain ':'".format(
+                        field=field, value=value
+                    )
+                )
+
         self.name = name
         self.namespace = namespace
         self.version = version
@@ -300,6 +358,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :type required_transformation: str or Transformation
         :raises DuplicateError: this requirement already exists
         :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.api.transformation_catalog.Transformation` or str
+        :raises ValueError: namespace, required transformation name, and version cannot contain any ":" characters
         :return: self
         """
         key = ""
@@ -313,6 +372,18 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                 key += ":" + required_transformation.version
 
         elif isinstance(required_transformation, str):
+            for field, value in {
+                "namespace": namespace,
+                "required_transformation": required_transformation,
+                "version": version,
+            }.items():
+                if ":" in str(value):
+                    raise ValueError(
+                        "invalid {field}: {value}; {field} cannot contain `:` characters".format(
+                            field=field, value=value
+                        )
+                    )
+
             if namespace:
                 key += namespace + "::"
 

@@ -77,6 +77,23 @@ class TestTransformationSite:
                     "container": "centos-pegasus",
                 },
             ),
+            (
+                "local",
+                "/pfn",
+                True,
+                {
+                    "arch": Arch.X86_64,
+                    "os_type": OS.LINUX,
+                    "os_release": "release",
+                    "os_version": "1.1.1",
+                    "glibc": "123",
+                    "container": Container(
+                        "centos-pegasus",
+                        Container.DOCKER,
+                        "docker:///ryan/centos-pegasus:latest",
+                    ),
+                },
+            ),
         ],
     )
     def test_valid_transformation_site(
@@ -113,6 +130,19 @@ class TestTransformationSite:
                     "container": None,
                 },
             ),
+            (
+                "local",
+                "/pfn",
+                True,
+                {
+                    "arch": Arch.X86_64,
+                    "os_type": "should be one of OS",
+                    "os_release": None,
+                    "os_version": None,
+                    "glibc": None,
+                    "container": 123,
+                },
+            ),
         ],
     )
     def test_invalid_transformation_site(
@@ -141,6 +171,34 @@ class TestTransformationSite:
                     os_version="1.1.1",
                     glibc="123",
                     container="centos-pegasus",
+                ),
+                {
+                    "name": "local",
+                    "pfn": "/pfn",
+                    "type": "installed",
+                    "arch": "x86_64",
+                    "os.type": "linux",
+                    "os.release": "release",
+                    "os.version": "1.1.1",
+                    "glibc": "123",
+                    "container": "centos-pegasus",
+                },
+            ),
+            (
+                TransformationSite(
+                    "local",
+                    "/pfn",
+                    False,
+                    arch=Arch.X86_64,
+                    os_type=OS.LINUX,
+                    os_release="release",
+                    os_version="1.1.1",
+                    glibc="123",
+                    container=Container(
+                        "centos-pegasus",
+                        Container.DOCKER,
+                        "docker:///ryan/centos-pegasus:latest",
+                    ),
                 ),
                 {
                     "name": "local",
@@ -201,6 +259,20 @@ class TestTransformationSite:
 
 
 class TestTransformation:
+    @pytest.mark.parametrize(
+        "namespace, name, version, bad_field",
+        [
+            ("name:space", "name", "version", "namespace"),
+            ("namespace", "na:me", "version", "name"),
+            ("namespace", "name", "ver:sion", "version"),
+        ],
+    )
+    def test_invalid_transformation(self, namespace, name, version, bad_field):
+        with pytest.raises(ValueError) as e:
+            Transformation(name, namespace=namespace, version=version)
+
+        assert "invalid {bad_field}: ".format(bad_field=bad_field) in str(e)
+
     def test_add_single_tranformation_site_constructor(self):
         t1 = Transformation("t1")
         assert len(t1.sites) == 0
@@ -289,6 +361,21 @@ class TestTransformation:
         t.add_requirement(name, namespace=namespace, version=version)
 
         assert expected in t.requires
+
+    @pytest.mark.parametrize(
+        "namespace, name, version, bad_field",
+        [
+            ("name:space", "name", "version", "namespace"),
+            ("namespace", "na:me", "version", "required_transformation"),
+            ("namespace", "name", "ver:sion", "version"),
+        ],
+    )
+    def test_add_invalid_requirement_as_str(self, namespace, name, version, bad_field):
+        t = Transformation("test")
+        with pytest.raises(ValueError) as e:
+            t.add_requirement(name, namespace, version)
+
+        assert "invalid {bad_field}".format(bad_field=bad_field) in str(e)
 
     @pytest.mark.parametrize(
         "transformation, expected",
