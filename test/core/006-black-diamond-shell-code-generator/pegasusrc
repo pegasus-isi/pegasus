@@ -1,2 +1,4 @@
 pegasus.dir.useTimestamp=true
 pegasus.dir.storage.deep=false
+# shell code gen only works for sharedfs
+pegasus.data.configuration=sharedfs
