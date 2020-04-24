@@ -532,6 +532,93 @@ public class WorkflowMetrics extends Data implements Cloneable {
     }
 
     /**
+     * Returns task count corresponding to a job type
+     *
+     * @param jobType
+     * @return
+     */
+    public int getTaskCount(int jobType) {
+        int count = 0;
+        switch (jobType) {
+
+                // treating compute and staged compute as same
+            case Job.COMPUTE_JOB:
+                count = mNumComputeTasks;
+                break;
+
+            case Job.DAX_JOB:
+                count = mNumDAXTasks;
+                break;
+
+            case Job.DAG_JOB:
+                count = mNumDAGTasks;
+                break;
+
+            default:
+                throw new RuntimeException("Unknown Job Type for Task " + jobType);
+        }
+        return count;
+    }
+
+    /**
+     * Returns job count corresponding to a job type
+     *
+     * @param jobType
+     * @return
+     */
+    public int getJobCount(int jobType) {
+        int count = 0;
+        switch (jobType) {
+
+                // treating compute and staged compute as same
+            case Job.COMPUTE_JOB:
+                count = mNumComputeJobs;
+                break;
+
+            case Job.DAX_JOB:
+                count = mNumDAXJobs;
+                break;
+
+            case Job.DAG_JOB:
+                count = mNumDAGJobs;
+                break;
+
+            case Job.STAGE_IN_JOB:
+            case Job.STAGE_IN_WORKER_PACKAGE_JOB:
+                count = mNumSITxJobs;
+                break;
+
+            case Job.STAGE_OUT_JOB:
+                count = mNumSOTxJobs;
+                break;
+
+            case Job.INTER_POOL_JOB:
+                count = mNumInterTxJobs;
+                break;
+
+            case Job.REPLICA_REG_JOB:
+                count = mNumRegJobs;
+                break;
+
+            case Job.CLEANUP_JOB:
+                count = mNumCleanupJobs;
+                break;
+
+            case Job.CREATE_DIR_JOB:
+                count = mNumCreateDirJobs;
+                break;
+
+            case Job.CHMOD_JOB:
+                count = mNumChmodJobs;
+                break;
+
+            default:
+                throw new RuntimeException("Unknown Job Type for Task " + jobType);
+        }
+        return count;
+    }
+
+    /**
      * Returns a textual description of the object.
      *
      * @return Object
@@ -553,6 +640,7 @@ public class WorkflowMetrics extends Data implements Cloneable {
         append(sb, "total-files.count", this.mNumTotalFiles);
 
         // job related metrics
+        append(sb, "createdir-jobs.count", this.mNumComputeJobs);
         append(sb, "createdir-jobs.count", this.mNumCreateDirJobs);
         append(sb, "chmod-jobs.count", this.mNumChmodJobs);
         append(sb, "unclustered-compute-jobs.count", this.mNumComputeJobs);
