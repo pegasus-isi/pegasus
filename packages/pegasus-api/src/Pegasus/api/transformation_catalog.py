@@ -284,7 +284,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         }.items():
             if ":" in str(value):
                 raise ValueError(
-                    "invalid {field}: {value}; {field} must not contain ':'".format(
+                    "invalid {field}: {value}; {field} must not contain ':' characters".format(
                         field=field, value=value
                     )
                 )
@@ -379,7 +379,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
             }.items():
                 if ":" in str(value):
                     raise ValueError(
-                        "invalid {field}: {value}; {field} cannot contain `:` characters".format(
+                        "invalid {field}: {value}; {field} must not contain `:` characters".format(
                             field=field, value=value
                         )
                     )
