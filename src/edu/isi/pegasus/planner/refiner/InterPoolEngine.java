@@ -246,27 +246,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                 "Setting up site mapping for job " + job.getName(), LogManager.DEBUG_MESSAGE_LEVEL);
 
         if (site == null) {
-            error = new StringBuilder();
-            error.append("Site Selector could not map the job ")
-                    .append(job.getCompleteTCName())
-                    .append(" with id ")
-                    .append(job.getID())
-                    .append(" to any of the execution sites ")
-                    .append(sites)
-                    .append(" using the Transformation Mapper (")
-                    .append(this.mTCMapper.getMode())
-                    .append(")")
-                    .append("\n")
-                    .append(
-                            "\nThis error is most likely due to an error in the transformation catalog.")
-                    .append("\nMake sure that the ")
-                    .append(job.getCompleteTCName())
-                    .append(" transformation")
-                    .append("\nexists with matching system information  for sites ")
-                    .append(sites)
-                    .append(" you are trying to plan for ")
-                    .append(mSiteStore.getSysInfos(sites))
-                    .append("\n");
+            complainForFailedSiteMapping(job, sites);
             mLogger.log(error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException(error.toString());
         }
@@ -805,5 +785,55 @@ public class InterPoolEngine extends Engine implements Refiner {
         }
 
         mLogger.logEventCompletion();
+    }
+
+    /**
+     * Complain with an informative error for the user in site selector fails.
+     *
+     * @param job
+     * @param sites
+     * @throws RuntimeException
+     */
+    private void complainForFailedSiteMapping(Job job, List<String> sites) throws RuntimeException {
+        StringBuilder error = new StringBuilder();
+        error.append("Site Selector could not map the job ")
+                .append(job.getCompleteTCName())
+                .append(" with id ")
+                .append(job.getID())
+                .append("\n")
+                .append("to any of the execution sites ")
+                .append(sites)
+                .append("\n")
+                .append("using the Transformation Mapper (")
+                .append(this.mTCMapper.getMode())
+                .append(")")
+                .append("\n")
+                .append("This error is most likely due to an error in the transformation catalog.")
+                .append("\n")
+                .append("Make sure that the ")
+                .append(job.getCompleteTCName())
+                .append(" transformation exists with matching system information for sites ")
+                .append("\n")
+                .append(sites)
+                .append(" you are trying to plan for ")
+                .append(mSiteStore.getSysInfos(sites))
+                .append("\n");
+
+        // add more information if possible
+        try {
+            List<TransformationCatalogEntry> entries =
+                    mTCHandle.lookup(
+                            job.getTXNamespace(),
+                            job.getTXName(),
+                            job.getTXVersion(),
+                            (List) null,
+                            null);
+            if (entries != null && !entries.isEmpty()) {
+                error.append("Candidate Entries found were " + entries);
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        throw new RuntimeException(error.toString());
     }
 }

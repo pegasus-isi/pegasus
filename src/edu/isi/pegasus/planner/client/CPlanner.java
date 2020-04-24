@@ -1869,7 +1869,7 @@ public class CPlanner extends Executable {
             if ((daxStore == null || daxStore.isEmpty())
                     && dag.getWorkflowMetrics().getTaskCount(Job.COMPUTE_JOB)
                             != 0) { // pure hierarchal workflows with no compute jobs should not
-                                    // throw error
+                // throw error
                 throw e;
             }
             // log the error nevertheless
