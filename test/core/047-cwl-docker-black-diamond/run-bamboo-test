@@ -9,7 +9,7 @@ command -v virtualenv >/dev/null 2>&1 || {
     exit 1;
 }
 VIRTUAL_ENV_DIR=cwl_venv
-python -m virtualenv -p python3.7 $VIRTUAL_ENV_DIR
+python -m virtualenv -p python3 $VIRTUAL_ENV_DIR
 
 source cwl_venv/bin/activate
 
