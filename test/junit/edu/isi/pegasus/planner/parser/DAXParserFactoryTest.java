@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.parser.dax.DAXParser3;
+import edu.isi.pegasus.planner.parser.dax.DAXParser3Test;
 import edu.isi.pegasus.planner.parser.dax.DAXParser5;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
@@ -56,7 +57,9 @@ public class DAXParserFactoryTest {
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
-        mTestSetup.setInputDirectory(this.getClass());
+        //the input dir is from the dax subpackage
+        mTestSetup.setInputDirectory(DAXParser3Test.class);
+       
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
         PegasusProperties properties = PegasusProperties.nonSingletonInstance();
         mLogger = mTestSetup.loadLogger(properties);
