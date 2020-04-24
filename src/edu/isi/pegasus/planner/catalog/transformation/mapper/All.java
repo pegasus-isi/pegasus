@@ -18,6 +18,7 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import java.util.Iterator;
@@ -106,20 +107,11 @@ public class All extends Mapper {
                 String site = (String) i.next();
                 SysInfo sitesysinfo = (SysInfo) sysinfomap.get(site);
                 for (Iterator j = tcentries.iterator(); j.hasNext(); ) {
-                    TransformationCatalogEntry entry = (TransformationCatalogEntry) j.next();
-                    // get the required stuff from the TCentry.
-                    String txsiteid = entry.getResourceId();
-                    TCType txtype = entry.getType();
-                    SysInfo txsysinfo = entry.getSysInfo();
-
                     // check for installed and static binary executables at each site.
-                    if (txsysinfo.equals(sitesysinfo)) {
-                        if (((txsiteid.equalsIgnoreCase(site)) && (txtype.equals(TCType.INSTALLED)))
-                                || (txtype.equals(TCType.STAGEABLE))) {
-
-                            // add the TC entries in the map.
-                            mTCMap.setSiteTCEntries(lfn, site, entry);
-                        }
+                    TransformationCatalogEntry entry = (TransformationCatalogEntry) j.next();
+                    if (match(entry, site, sitesysinfo)) {
+                        // add the TC entries in the map.
+                        mTCMap.setSiteTCEntries(lfn, site, entry);
                     }
                 } // outside inner for loop
             } // outside outer for loop
@@ -138,5 +130,30 @@ public class All extends Mapper {
         return "All Mode - Handle both Installed and Stageable Executables on all sites";
     }
 
-    /** Returns a Map of entries */
+    /**
+     * Return a boolean indicating whether a TC entry maps to a site with a particular sysinfo
+     *
+     * @param entry
+     * @param site
+     * @param sitesysinfo
+     * @return
+     */
+    private boolean match(TransformationCatalogEntry entry, String site, SysInfo sitesysinfo) {
+        SysInfo txsysinfo = entry.getSysInfo();
+        String txsiteid = entry.getResourceId();
+        TCType txtype = entry.getType();
+        boolean match = false;
+        if (txsysinfo.equals(sitesysinfo)) {
+            //system information match
+            if ((txsiteid.equalsIgnoreCase(site)) && (txtype.equals(TCType.INSTALLED))){
+                //vanilla installed case where entry is installed on the site
+                match = true;
+            }
+            else if(txtype.equals(TCType.STAGEABLE)){
+                //stageable entries are accepted
+                match = true;
+            }
+        }
+        return match;
+    }
 }
