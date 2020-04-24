@@ -14,10 +14,12 @@
 package edu.isi.pegasus.planner.catalog.transformation.mapper;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import java.util.Iterator;
@@ -105,13 +107,8 @@ public class Staged extends Mapper {
                 SysInfo sitesysinfo = (SysInfo) sysinfomap.get(site);
                 for (Iterator j = tcentries.iterator(); j.hasNext(); ) {
                     TransformationCatalogEntry entry = (TransformationCatalogEntry) j.next();
-                    // get the required stuff from the TCentry.
-                    String txsiteid = entry.getResourceId();
-                    SysInfo txsysinfo = entry.getSysInfo();
-
-                    // check for static binary executables at each site.
-                    if (txsysinfo.equals(sitesysinfo)) {
-                        // add the stageable executables in the map.
+                    if (match(entry, site, sitesysinfo)) {
+                        // add the TC entries in the map.
                         mTCMap.setSiteTCEntries(lfn, site, entry);
                     }
                 } // outside inner for loop
@@ -124,6 +121,37 @@ public class Staged extends Mapper {
         // ENTRIES MATCHING THE SITES . KARAN SEPT 21, 2005
         //    return mTCMap.getSiteMap( lfn );
         return mTCMap.getSitesTCEntries(lfn, siteids);
+    }
+
+    /**
+     * Return a boolean indicating whether a TC entry maps to a site with a particular sysinfo
+     *
+     * @param entry
+     * @param site the execution site where a job may run
+     * @param sitesysinfo
+     * @return
+     */
+    private boolean match(TransformationCatalogEntry entry, String site, SysInfo sitesysinfo) {
+        SysInfo txsysinfo = entry.getSysInfo();
+        TCType txtype = entry.getType();
+        boolean match = false;
+        Container c = entry.getContainer();
+        if (txsysinfo.equals(sitesysinfo)) {
+            // system information match
+            if (txtype.equals(TCType.STAGEABLE)) {
+                // stageable entries are accepted
+                match = true;
+            } else if (c != null) {
+                // PM-1530 check if job has a container associated with it
+                // check for a non file URL since siteid don't match
+                PegasusURL url = c.getImageURL();
+                if (!url.getProtocol().equals(PegasusURL.FILE_URL_SCHEME)) {
+                    // non file URL means can be staged remotely
+                    match = true;
+                }
+            }
+        }
+        return match;
     }
 
     public String getMode() {
