@@ -7,7 +7,7 @@ hooks:
       cmd: /bin/mailx -s &apos;diamond failed&apos; use@some.domain
 
 siteCatalog:
-  $ref: "https://pegasus.isi.edu/hosted/site/catalog"
+#  $ref: "https://pegasus.isi.edu/hosted/site/catalog"
 
 replicaCatalog:
   replicas:

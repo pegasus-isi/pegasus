@@ -57,9 +57,9 @@ public class DAXParserFactoryTest {
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
-        //the input dir is from the dax subpackage
+        // the input dir is from the dax subpackage
         mTestSetup.setInputDirectory(DAXParser3Test.class);
-       
+
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
         PegasusProperties properties = PegasusProperties.nonSingletonInstance();
         mLogger = mTestSetup.loadLogger(properties);

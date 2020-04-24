@@ -62,6 +62,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.partitioner.graph.CycleCheckerTest.class,
     edu.isi.pegasus.planner.parser.DAXParserFactoryTest.class,
     edu.isi.pegasus.planner.parser.dax.DAXParser3Test.class,
+    edu.isi.pegasus.planner.parser.dax.DAXParser5Test.class,
     edu.isi.pegasus.planner.parser.TransformationCatalogYAMLParserTest.class
 })
 public class AllTests {}
