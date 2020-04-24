@@ -238,6 +238,17 @@ public class WorkflowMetrics extends Data implements Cloneable {
         // update the total account
         mNumTotalTasks++;
 
+        // special handling for dax and dag jobs
+        // since their job type is always set to compute
+        if (job instanceof DAXJob) {
+            this.mNumDAXTasks++;
+            return;
+        }
+        if (job instanceof DAGJob) {
+            this.mNumDAGTasks++;
+            return;
+        }
+
         // update the task metrics
         // incrementJobMetrics on basis of type of job
         int type = job.getJobType();
@@ -246,14 +257,6 @@ public class WorkflowMetrics extends Data implements Cloneable {
                 // treating compute and staged compute as same
             case Job.COMPUTE_JOB:
                 mNumComputeTasks++;
-                break;
-
-            case Job.DAX_JOB:
-                mNumDAXTasks++;
-                break;
-
-            case Job.DAG_JOB:
-                mNumDAGTasks++;
                 break;
 
             default:
@@ -276,41 +279,28 @@ public class WorkflowMetrics extends Data implements Cloneable {
         // incrementJobMetrics the total
         mNumTotalJobs++;
 
+        // special handling for dax and dag jobs
+        // since their job type is always set to compute
+        if (job instanceof DAXJob) {
+            this.mNumDAXJobs++;
+            return;
+        }
+        if (job instanceof DAGJob) {
+            this.mNumDAGJobs++;
+            return;
+        }
+
         // incrementJobMetrics on basis of type of job
         int type = job.getJobType();
         switch (type) {
 
                 // treating compute and staged compute as same
             case Job.COMPUTE_JOB:
-                /*
-                               if( job instanceof AggregatedJob ){
-                                   mNumClusteredJobs++;
-
-                                   for( Iterator<Job> it = ((AggregatedJob)job).constituentJobsIterator(); it.hasNext(); ){
-                                       Job j = it.next();
-                                       this.incrementJobMetrics( j , false );
-                                   }
-
-                               }else{
-                                   if( incrementJobs ){
-                                       mNumComputeJobs++;
-                                   }
-                                   mNumComputeTasks++;
-                               }
-                */
                 if (job instanceof AggregatedJob) {
                     mNumClusteredJobs++;
                 } else {
                     mNumComputeJobs++;
                 }
-                break;
-
-            case Job.DAX_JOB:
-                mNumDAXJobs++;
-                break;
-
-            case Job.DAG_JOB:
-                mNumDAGJobs++;
                 break;
 
             case Job.STAGE_IN_JOB:
@@ -373,6 +363,17 @@ public class WorkflowMetrics extends Data implements Cloneable {
         // incrementJobMetrics the total
         mNumTotalJobs--;
 
+        // special handling for dax and dag jobs
+        // since their job type is always set to compute
+        if (job instanceof DAXJob) {
+            this.mNumDAXJobs--;
+            return;
+        }
+        if (job instanceof DAGJob) {
+            this.mNumDAGJobs--;
+            return;
+        }
+
         // incrementJobMetrics on basis of type of job
         int type = job.getJobType();
         switch (type) {
@@ -384,14 +385,6 @@ public class WorkflowMetrics extends Data implements Cloneable {
                 } else {
                     mNumComputeJobs--;
                 }
-                break;
-
-            case Job.DAX_JOB:
-                mNumDAXJobs--;
-                break;
-
-            case Job.DAG_JOB:
-                mNumDAGJobs--;
                 break;
 
             case Job.STAGE_IN_JOB:
@@ -444,6 +437,17 @@ public class WorkflowMetrics extends Data implements Cloneable {
         // decrement the total count
         mNumTotalTasks--;
 
+        // special handling for dax and dag jobs
+        // since their job type is always set to compute
+        if (job instanceof DAXJob) {
+            this.mNumDAXTasks--;
+            return;
+        }
+        if (job instanceof DAGJob) {
+            this.mNumDAGTasks--;
+            return;
+        }
+
         // update the task metrics
         // incrementJobMetrics on basis of type of job
         int type = job.getJobType();
@@ -452,14 +456,6 @@ public class WorkflowMetrics extends Data implements Cloneable {
                 // treating compute and staged compute as same
             case Job.COMPUTE_JOB:
                 mNumComputeTasks--;
-                break;
-
-            case Job.DAX_JOB:
-                mNumDAXTasks--;
-                break;
-
-            case Job.DAG_JOB:
-                mNumDAGTasks--;
                 break;
 
             default:
