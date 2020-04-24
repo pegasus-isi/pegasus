@@ -433,9 +433,7 @@ public class CPlanner extends Executable {
         }
 
         mBag.add(PegasusBag.SITE_STORE, s);
-        mBag.add(
-                PegasusBag.TRANSFORMATION_CATALOG,
-                loadTransformationCatalog(mBag, orgDag.getTransformationStore()));
+        mBag.add(PegasusBag.TRANSFORMATION_CATALOG, loadTransformationCatalog(mBag, orgDag));
 
         // populate planner metrics
         mPMetrics.setVOGroup(mPOptions.getVOGroup());
@@ -1861,14 +1859,17 @@ public class CPlanner extends Executable {
      * @param daxStore
      * @return
      */
-    private TransformationCatalog loadTransformationCatalog(
-            PegasusBag bag, TransformationStore daxStore) {
+    private TransformationCatalog loadTransformationCatalog(PegasusBag bag, ADag dag) {
 
         TransformationCatalog store = null;
+        TransformationStore daxStore = dag.getTransformationStore();
         try {
             store = TransformationFactory.loadInstance(bag);
         } catch (TransformationFactoryException e) {
-            if (daxStore == null || daxStore.isEmpty()) {
+            if ((daxStore == null || daxStore.isEmpty())
+                    && dag.getWorkflowMetrics().getTaskCount(Job.COMPUTE_JOB)
+                            != 0) { // pure hierarchal workflows with no compute jobs should not
+                                    // throw error
                 throw e;
             }
             // log the error nevertheless
@@ -1901,7 +1902,7 @@ public class CPlanner extends Executable {
                     PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                     f.getAbsolutePath());
             b.add(PegasusBag.PEGASUS_PROPERTIES, props);
-            return loadTransformationCatalog(b, daxStore);
+            return loadTransformationCatalog(b, dag);
         }
         return store;
     }
