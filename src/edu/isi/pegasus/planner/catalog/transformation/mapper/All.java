@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.catalog.transformation.mapper;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
@@ -134,7 +135,7 @@ public class All extends Mapper {
      * Return a boolean indicating whether a TC entry maps to a site with a particular sysinfo
      *
      * @param entry
-     * @param site
+     * @param site the execution site where a job may run
      * @param sitesysinfo
      * @return
      */
@@ -143,15 +144,23 @@ public class All extends Mapper {
         String txsiteid = entry.getResourceId();
         TCType txtype = entry.getType();
         boolean match = false;
+        Container c = entry.getContainer();
         if (txsysinfo.equals(sitesysinfo)) {
-            //system information match
-            if ((txsiteid.equalsIgnoreCase(site)) && (txtype.equals(TCType.INSTALLED))){
-                //vanilla installed case where entry is installed on the site
+            // system information match
+            if ((txsiteid.equalsIgnoreCase(site)) && (txtype.equals(TCType.INSTALLED))) {
+                // vanilla installed case where entry is installed on the site
                 match = true;
-            }
-            else if(txtype.equals(TCType.STAGEABLE)){
-                //stageable entries are accepted
+            } else if (txtype.equals(TCType.STAGEABLE)) {
+                // stageable entries are accepted
                 match = true;
+            } else if (c != null) {
+                // PM-1530 check if job has a container associated with it
+                // check for a non file URL since siteid don't match
+                PegasusURL url = c.getImageURL();
+                if (!url.getProtocol().equals(PegasusURL.FILE_URL_SCHEME)) {
+                    // non file URL means can be staged remotely
+                    match = true;
+                }
             }
         }
         return match;
