@@ -2,16 +2,16 @@ import logging
 import sys
 
 from pathlib import Path
-from datetime import date
+from datetime import datetime
 
 from Pegasus.api import *
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
-PEGASUS_LOCATION = "file:///usr/bin/pegasus-keg"
+PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
 
 # --- Work Dir Setup -----------------------------------------------------------
-RUN_ID = "black-diamond-5.0api-" + date.today().strftime("%s")
+RUN_ID = "black-diamond-5.0api-" + datetime.now().strftime("%s")
 TOP_DIR = Path(Path.cwd())
 WORK_DIR = TOP_DIR / "work"
 
@@ -33,7 +33,7 @@ conf["pegasus.catalog.transformation.file"] = "transformations.yml"
 conf["pegasus.catalog.replica"] = "YAML"
 conf["pegasus.catalog.replica.file"] = "replicas.yml"
 conf["pegasus.data.configuration"] = "condorio"
-
+conf["pegasus.integrity.checking"] = "none"
 conf.write()
 
 # --- Sites --------------------------------------------------------------------
@@ -81,7 +81,7 @@ preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0"
     TransformationSite(
         CONDOR_POOL,
         PEGASUS_LOCATION,
-        is_stageable=False,
+        is_stageable=True,
         arch=Arch.X86_64,
         os_type=OS.LINUX,
     )
@@ -91,7 +91,7 @@ findrage = Transformation("findrange", namespace="pέgasuζ", version="4.0").add
     TransformationSite(
         CONDOR_POOL,
         PEGASUS_LOCATION,
-        is_stageable=False,
+        is_stageable=True,
         arch=Arch.X86_64,
         os_type=OS.LINUX,
     )
@@ -101,7 +101,7 @@ analyze = Transformation("analyze", namespace="pέgasuζ", version="4.0").add_si
     TransformationSite(
         CONDOR_POOL,
         PEGASUS_LOCATION,
-        is_stageable=False,
+        is_stageable=True,
         arch=Arch.X86_64,
         os_type=OS.LINUX,
     )
