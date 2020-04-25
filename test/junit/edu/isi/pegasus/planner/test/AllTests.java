@@ -41,6 +41,8 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogEntryTest.class,
     edu.isi.pegasus.planner.catalog.transformation.classes.ContainerTest.class,
     edu.isi.pegasus.planner.catalog.transformation.classes.TransformationTest.class,
+    edu.isi.pegasus.planner.catalog.transformation.mapper.AllTest.class,
+    edu.isi.pegasus.planner.catalog.transformation.mapper.StagedTest.class,
     edu.isi.pegasus.planner.catalog.transformation.impl.TextTest.class,
     edu.isi.pegasus.planner.catalog.transformation.impl.YAMLTest.class,
     edu.isi.pegasus.planner.classes.PegasusFileTest.class,
