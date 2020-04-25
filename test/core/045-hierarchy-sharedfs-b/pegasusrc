@@ -11,4 +11,4 @@ pegasus.dir.storage.deep=false
 
 pegasus.transfer.worker.package=true
 
-
+pegasus.data.configuration sharedfs

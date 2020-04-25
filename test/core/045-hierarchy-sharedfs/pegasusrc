@@ -9,4 +9,4 @@ pegasus.catalog.replica.file=rc.data
 
 pegasus.dir.storage.deep=false
 
-
+pegasus.data.configuration = sharedfs

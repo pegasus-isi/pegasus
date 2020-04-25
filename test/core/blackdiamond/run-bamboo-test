@@ -79,6 +79,8 @@ sites:
   name: "sharedfs"
   arch: "x86_64"
   os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
   directories:
    -
     type: "sharedStorage"
@@ -107,6 +109,8 @@ sites:
   name: "local"
   arch: "x86_64"
   os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
   directories:
    -
     type: "sharedStorage"
