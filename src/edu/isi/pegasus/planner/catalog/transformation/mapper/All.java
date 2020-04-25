@@ -147,7 +147,8 @@ public class All extends Mapper {
         Container c = entry.getContainer();
         if (txsysinfo.equals(sitesysinfo)) {
             // system information match
-            if ((txsiteid.equalsIgnoreCase(site)) && (txtype.equals(TCType.INSTALLED))) {
+            if ((txsiteid != null && txsiteid.equalsIgnoreCase(site))
+                    && (txtype.equals(TCType.INSTALLED))) {
                 // vanilla installed case where entry is installed on the site
                 match = true;
             } else if (txtype.equals(TCType.STAGEABLE)) {
