@@ -131,7 +131,7 @@ public class Staged extends Mapper {
      * @param sitesysinfo
      * @return
      */
-    private boolean match(TransformationCatalogEntry entry, String site, SysInfo sitesysinfo) {
+    public boolean match(TransformationCatalogEntry entry, String site, SysInfo sitesysinfo) {
         SysInfo txsysinfo = entry.getSysInfo();
         TCType txtype = entry.getType();
         boolean match = false;
@@ -145,7 +145,7 @@ public class Staged extends Mapper {
                 // PM-1530 check if job has a container associated with it
                 // check for a non file URL since siteid don't match
                 PegasusURL url = c.getImageURL();
-                if (!url.getProtocol().equals(PegasusURL.FILE_URL_SCHEME)) {
+                if (url != null && !url.getProtocol().equals(PegasusURL.FILE_PROTOCOL)) {
                     // non file URL means can be staged remotely
                     match = true;
                 }

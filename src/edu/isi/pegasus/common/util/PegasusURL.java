@@ -37,6 +37,9 @@ public class PegasusURL {
     /** The default protocol if none is determined from the PegasusURL or path */
     public static final String DEFAULT_PROTOCOL = "file";
 
+    /** The default protocol if none is determined from the PegasusURL or path */
+    public static final String FILE_PROTOCOL = "file";
+
     /** singularity hub protocol scheme */
     public static String SINGULARITY_PROTOCOL_SCHEME = "shub";
 
