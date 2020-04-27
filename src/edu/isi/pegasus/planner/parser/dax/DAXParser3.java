@@ -23,7 +23,6 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -42,7 +41,6 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PegasusFile.LINKAGE;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
-import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Executable.ARCH;
@@ -51,8 +49,6 @@ import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
-import edu.isi.pegasus.planner.namespace.Hints;
-import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 import edu.isi.pegasus.planner.parser.XMLParser;
 import java.io.File;
@@ -348,24 +344,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         dagJob.setDAGLFN(file);
                         dagJob.addInputFile(pf);
 
-                        // the job should always execute on local site
-                        // for time being
-                        dagJob.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
-
-                        // also set the executable to be used
-                        dagJob.hints.construct(Hints.PFN_HINT_KEY, "/opt/condor/bin/condor-dagman");
-
-                        // add default name and namespace information
-                        dagJob.setTransformation("condor", "dagman", null);
-
-                        dagJob.setDerivation("condor", "dagman", null);
-
-                        // dagman jobs are always launched without a gridstart
-                        dagJob.vdsNS.construct(
-                                Pegasus.GRIDSTART_KEY,
-                                GridStartFactory.GRIDSTART_SHORT_NAMES[
-                                        GridStartFactory.NO_GRIDSTART_INDEX]);
-
                         // set the internal primary id for job
                         // dagJob.setName( constructJobID( dagJob ) );
                         return dagJob;
@@ -378,23 +356,9 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         // the job should be tagged type pegasus
                         daxJob.setTypeRecursive();
 
-                        // the job should always execute on local site
-                        // for time being
-                        daxJob.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
-
-                        // also set a fake executable to be used
-                        daxJob.hints.construct(Hints.PFN_HINT_KEY, "/tmp/pegasus-plan");
-
                         // retrieve the extra attribute about the DAX
                         daxJob.setDAXLFN(file);
                         daxJob.addInputFile(pf);
-
-                        // add default name and namespace information
-                        daxJob.setTransformation(
-                                "pegasus", "pegasus-plan", Version.instance().toString());
-
-                        daxJob.setDerivation(
-                                "pegasus", "pegasus-plan", Version.instance().toString());
 
                         daxJob.level = -1;
                         return daxJob;

@@ -173,6 +173,10 @@ public class DAX2CDAG implements Callback {
             // the job should always execute on local site
             // for time being
             job.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
+
+            // also set a fake executable to be used
+            job.hints.construct(Hints.PFN_HINT_KEY, "/tmp/pegasus-plan");
+
             // add default name and namespace information
             job.setTransformation("pegasus", "pegasus-plan", Version.instance().toString());
 
