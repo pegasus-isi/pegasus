@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.parser.dax;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -32,8 +33,11 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.WorkflowMetrics;
+import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.Hints;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.HashMap;
@@ -166,9 +170,32 @@ public class DAX2CDAG implements Callback {
             // set the internal primary id for job
             job.setName(
                     XMLParser.makeDAGManCompliant(((DAXJob) job).generateName(this.mJobPrefix)));
+            // the job should always execute on local site
+            // for time being
+            job.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
+            // add default name and namespace information
+            job.setTransformation("pegasus", "pegasus-plan", Version.instance().toString());
+
+            job.setDerivation("pegasus", "pegasus-plan", Version.instance().toString());
         } else if (job instanceof DAGJob) {
             job.setName(
                     XMLParser.makeDAGManCompliant(((DAGJob) job).generateName(this.mJobPrefix)));
+            // the job should always execute on local site
+            // for time being
+            job.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
+
+            // also set the executable to be used
+            job.hints.construct(Hints.PFN_HINT_KEY, "/opt/condor/bin/condor-dagman");
+
+            // add default name and namespace information
+            job.setTransformation("condor", "dagman", null);
+
+            job.setDerivation("condor", "dagman", null);
+
+            // dagman jobs are always launched without a gridstart
+            job.vdsNS.construct(
+                    Pegasus.GRIDSTART_KEY,
+                    GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX]);
         } else {
             // all normal jobs are of type compute
             job.setJobType(Job.COMPUTE_JOB);
