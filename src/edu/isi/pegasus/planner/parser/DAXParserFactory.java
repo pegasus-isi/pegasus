@@ -125,7 +125,7 @@ public class DAXParserFactory {
 
         try {
             if (daxFile != null && !daxFile.isEmpty()) {
-                Map m = getDAXMetadata(bag, daxFile);
+                Map m = getXMLDAXMetadata(bag, daxFile);
                 if (m.containsKey("version")
                         && (schemaVersion = (String) m.get("version")) != null) {
 
@@ -218,39 +218,7 @@ public class DAXParserFactory {
         return daxParser;
     }
 
-    /**
-     * Loads the implementing class corresponding to the type specified by the user. The properties
-     * object passed should not be null. The callback that is loaded, is the one referred to in the
-     * properties by the user, unless the type of partitioning is label. In that case DAX2LabelGraph
-     * is loaded always.
-     *
-     * @param properties the <code>PegasusProperties</code> object containing all the properties
-     *     required by Pegasus.
-     * @param type the type of partitioning the user specified.
-     * @param dax the path to the DAX file that has to be parsed.
-     * @return the instance of the class implementing this interface.
-     * @exception DAXParserFactoryException that nests any error that might occur during the
-     *     instantiation
-     * @see #DEFAULT_CALLBACK_PACKAGE_NAME
-     * @see edu.isi.pegasus.planner.common.PegasusProperties#getPartitionerDAXCallback()
-     */
-    public static Callback loadDAXParserCallback(String type, PegasusBag bag, String dax)
-            throws DAXParserFactoryException {
-
-        String callbackClass = null;
-        PegasusProperties properties = bag.getPegasusProperties();
-
-        // for type label always load DAX2LabelGraph
-        if (type.equalsIgnoreCase("label")) {
-            callbackClass = LABEL_CALLBACK_CLASS; // graph with labels populated
-        } else {
-            // pick up the value passed in properties
-            callbackClass = properties.getPartitionerDAXCallback();
-        }
-
-        return loadDAXParserCallback(bag, dax, callbackClass);
-    }
-
+    
     /**
      * Returns the metadata stored in the root adag element in the DAX
      *
@@ -259,6 +227,21 @@ public class DAXParserFactory {
      * @return Map containing the metadata, else an empty map
      */
     public static Map getDAXMetadata(PegasusBag bag, String dax) {
+        // PM-1511
+        if (FileDetector.isTypeXML(dax)) {
+            return DAXParserFactory.getXMLDAXMetadata(bag, dax);
+        }
+        return null;
+    }
+    
+    /**
+     * Returns the metadata stored in the root adag element in the DAX
+     *
+     * @param bag the bag of initialization objects
+     * @param dax the dax file.
+     * @return Map containing the metadata, else an empty map
+     */
+    private static Map getXMLDAXMetadata(PegasusBag bag, String dax) {
         Callback cb = DAXParserFactory.loadDAXParserCallback(bag, dax, "DAX2Metadata");
 
         LogManager logger = bag.getLogger();
