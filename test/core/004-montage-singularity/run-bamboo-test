@@ -27,6 +27,7 @@ singularity exec \
                 --band 2mass:k:red
 
 pegasus-plan \
+        -Denv.http_proxy=workflow.isi.edu:3128 \
         --dir work \
         --dax data/montage-workflow.yml \
         --cluster horizontal \
