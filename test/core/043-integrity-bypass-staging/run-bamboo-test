@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -e
+
+export TOPDIR=`pwd`
+
+# generate the dax
+export PYTHONPATH=`pegasus-config --python`
+./workflow-generator.py
+
+# plan and submit the  workflow
+pegasus-plan \
+    --dax workflow.yml \
+    --force \
+    2>&1 | tee plan.log
+
+RUN_DIR=`cat plan.log | grep "pegasus-run  " | sed 's/.*  //'`
+echo
+echo "RUN_DIR is $RUN_DIR"
+
+# find the right .sh script
+LS_SH=`find $RUN_DIR -name ls\*.sh`
+echo
+echo ".sh script to check is $LS_SH"
+
+if ! (grep pegasus-integrity $LS_SH) >/dev/null 2>&1; then
+    echo 
+    echo "ERROR: $LS_SH does not contain a call to pegasus-integrity" 1>&2
+    exit 1
+fi
+
+
