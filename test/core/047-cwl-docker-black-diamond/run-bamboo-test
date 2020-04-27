@@ -39,7 +39,7 @@ EOT
 
 echo
 echo "Converting the cwl workflow to pegasus format"
-pegasus-cwl-converter.py \
+pegasus-cwl-converter \
     --debug \
     ./cwl/blackdiamond.cwl \
     ./cwl/input.yml \
