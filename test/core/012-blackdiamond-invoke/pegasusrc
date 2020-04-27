@@ -5,3 +5,5 @@ pegasus.condor.logs.symlink = false
 
 #turn on invoke always.
 pegasus.gridstart.invoke.length 2
+
+pegasus.data.configuration sharedfs
