@@ -1,2 +1,3 @@
 pegasus.code.generator=PMC
 
+pegasus.data.configuration=sharedfs

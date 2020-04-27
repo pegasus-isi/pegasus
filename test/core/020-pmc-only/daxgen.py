@@ -11,7 +11,7 @@ daxfile = sys.argv[1]
 dax = ADAG("pmc-only")
 
 # Create a mapping for the test script
-test = Executable(name="test", os="linux", arch="x86_64", installed=True, osrelease="rhel", osversion="7")
+test = Executable(name="test", os="linux", arch="x86_64", installed=True)
 test.PFN("file://%s/test.sh" % os.getcwd(), "local")
 dax.addExecutable(test)
 
