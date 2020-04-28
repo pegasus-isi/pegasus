@@ -131,6 +131,8 @@ public class DAXParser5 implements DAXParser {
             ObjectCodec oc = parser.getCodec();
             JsonNode node = oc.readTree(parser);
 
+            Map attrs = new HashMap();
+            attrs.put("index", "0");
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
@@ -140,8 +142,6 @@ public class DAXParser5 implements DAXParser {
                     this.complainForIllegalKey(
                             WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
-                Map attrs = new HashMap();
-                attrs.put("index", "0");
                 switch (reservedKey) {
                     case PEGASUS:
                         attrs.put("version", node.get(key).asText());
