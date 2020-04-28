@@ -33,7 +33,7 @@ sites:
     env:
       MONTAGE_HOME: "/ccg/software/montage/current"
       GLOBUS_LOCATION: "/ccg/software/globus/default"
-      http_proxy: "http://workflow.isi.edu:3128"
+      http_proxy: "workflow.isi.edu:3128"
     condor:
       requirements: "(TARGET.FileSystemDomain =!= \"\")"
       should_transfer_files: "Yes"
@@ -69,7 +69,7 @@ sites:
     env:
       GLOBUS_LOCATION: "/ccg/software/globus/default"
       GLOBUS_TCP_PORT_RANGE: "40000,50000"
-      http_proxy: "http://workflow.isi.edu:3128"
+      http_proxy: "workflow.isi.edu:3128"
  -
   name: "CCGData"
   arch: "x86"

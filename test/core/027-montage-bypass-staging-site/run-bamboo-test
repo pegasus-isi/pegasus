@@ -32,7 +32,7 @@ sites:
   profiles:
     env:
       MONTAGE_HOME: "/ccg/software/montage/current"
-      http_proxy: "http://workflow.isi.edu:3128"
+      http_proxy: "workflow.isi.edu:3128"
     pegasus:
       style: "condor"
  -
@@ -62,7 +62,7 @@ sites:
     jobtype: "auxillary"
   profiles:
     env:
-      http_proxy: "http://workflow.isi.edu:3128"
+      http_proxy: "workflow.isi.edu:3128"
  -
   name: "CCGData"
   arch: "x86"

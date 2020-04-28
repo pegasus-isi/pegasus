@@ -58,7 +58,7 @@ sites:
   profiles:
     env:
       MONTAGE_HOME: "/ccg/software/montage/current"
-      http_proxy: "http://workflow.isi.edu:3128"
+      http_proxy: "workflow.isi.edu:3128"
     condor:
       universe: "local"
     pegasus:

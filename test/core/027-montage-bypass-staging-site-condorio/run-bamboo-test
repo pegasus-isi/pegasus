@@ -17,7 +17,7 @@ cd montage-workflow-v2
                       --band 2mass:h:blue \
                       --band 2mass:k:red
 
-export http_proxy="http://workflow.isi.edu:3128"
+export http_proxy="workflow.isi.edu:3128"
 
 echo
 echo "Retrieving input fit files before the workflow gets planned"

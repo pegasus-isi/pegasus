@@ -34,7 +34,7 @@ import six
 from six.moves.builtins import int
 
 # Module variables
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("Pegasus")
 
 
 def force_str(s):

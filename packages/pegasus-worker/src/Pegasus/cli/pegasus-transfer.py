@@ -4631,7 +4631,7 @@ class Alarm(Exception):
 prog_dir = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
 prog_base = os.path.split(sys.argv[0])[1]  # Name of this program
 
-logger = logging.getLogger("my_logger")
+logger = logging.getLogger("Pegasus")
 
 # threads we have currently running
 threads = []

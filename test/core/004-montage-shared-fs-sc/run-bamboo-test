@@ -50,7 +50,7 @@ sites:
     env:
       MONTAGE_HOME: "/ccg/software/montage/current"
       PEGASUS_HOME: "/lizard/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION"
-      http_proxy: "http://workflow.isi.edu:3128"
+      http_proxy: "workflow.isi.edu:3128"
     condor:
       requirements: "(TARGET.FileSystemDomain =!= \"\")"
     pegasus:
@@ -84,7 +84,7 @@ sites:
     env:
       GLOBUS_LOCATION: "/ccg/software/globus/default"
       GLOBUS_TCP_PORT_RANGE: "40000,50000"
-      http_proxy: "http://workflow.isi.edu:3128"
+      http_proxy: "workflow.isi.edu:3128"
 EOF
 
 cp ../pegasus.properties .
