@@ -64,6 +64,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
     protected ReplicaLocation createReplicaLocation(JsonNode node) {
 
         String lfn = null;
+        ReplicaLocation rl = new ReplicaLocation();
         ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
@@ -93,7 +94,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                     break;
 
                 case CHECKSUM:
-                    addChecksum(rce, node.get(key));
+                    addChecksum(rl, node.get(key));
                     break;
 
                 default:
@@ -108,7 +109,6 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
             throw new ReplicaCatalogException(
                     "Replica needs to be defined with a pfn for replica " + lfn + " " + rce);
         }
-        ReplicaLocation rl = new ReplicaLocation();
         rl.setLFN(lfn);
         rl.addPFN(rce);
         return rl;
@@ -120,7 +120,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
      * @param rce
      * @param node
      */
-    private void addChecksum(ReplicaCatalogEntry rce, JsonNode node) {
+    private void addChecksum(ReplicaLocation rl, JsonNode node) {
 
         if (node instanceof ObjectNode) {
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
@@ -135,11 +135,11 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                 String keyValue = node.get(key).asText();
                 switch (reservedKey) {
                     case TYPE:
-                        rce.addAttribute(Metadata.CHECKSUM_TYPE_KEY, keyValue);
+                        rl.addMetadata(Metadata.CHECKSUM_TYPE_KEY, keyValue);
                         break;
 
                     case VALUE:
-                        rce.addAttribute(Metadata.CHECKSUM_VALUE_KEY, keyValue);
+                        rl.addMetadata(Metadata.CHECKSUM_VALUE_KEY, keyValue);
                         break;
 
                     default:

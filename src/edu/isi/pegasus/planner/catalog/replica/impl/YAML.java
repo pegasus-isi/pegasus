@@ -435,7 +435,18 @@ public class YAML implements ReplicaCatalog {
         ReplicaLocation tmp;
         // Lookup regular LFN's
         tmp = mLFN.get(lfn);
-        if (tmp != null) c.addAll(tmp.getPFNList());
+        if (tmp != null) {
+            c.addAll(tmp.getPFNList());
+            // PM-1534 and PM-1523 add metadata at LFN level
+            // in the Replica Location object to individual RCE's
+            Metadata m = tmp.getAllMetadata();
+            for (ReplicaCatalogEntry rce : c) {
+                for (Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ) {
+                    String key = it.next();
+                    rce.addAttribute(key, m.get(key));
+                }
+            }
+        }
         // Lookup regex LFN's
         ReplicaCatalogEntry rce = null;
         Pattern p = null;
@@ -458,6 +469,14 @@ public class YAML implements ReplicaCatalog {
                     // Add new RCE
                     rce = cloneRCE(entry);
                     rce.setPFN(tmpPFN);
+                    // PM-1534 and PM-1523 add metadata at LFN level
+                    // in the Replica Location object to individual RCE's
+                    Metadata metadata = entries.getAllMetadata();
+                    for (Iterator<String> it = metadata.getProfileKeyIterator(); it.hasNext(); ) {
+                        String key = it.next();
+                        rce.addAttribute(key, metadata.get(key));
+                    }
+
                     entriesResult.add(rce);
                 }
                 c.addAll(entriesResult);
