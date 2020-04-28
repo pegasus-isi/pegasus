@@ -2,3 +2,5 @@ pegasus.catalog.transformation=Text
 pegasus.catalog.transformation.file=tc.data
 
 pegasus.clusterer.job.aggregator=MPIExec
+
+pegasus.data.configuration sharedfs
