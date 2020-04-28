@@ -82,7 +82,8 @@ public class DAXParserFactory {
         if (properties == null) {
             throw new RuntimeException("Invalid properties passed");
         }
-        return loadDAXParser( bag , DAXParserFactory.loadDAXParserCallback(bag, daxFile, callbackClass), daxFile);
+        return loadDAXParser(
+                bag, DAXParserFactory.loadDAXParserCallback(bag, daxFile, callbackClass), daxFile);
     }
 
     /**
@@ -105,7 +106,7 @@ public class DAXParserFactory {
         if (properties == null) {
             throw new RuntimeException("Invalid properties passed");
         }
-        
+
         // PM-1511
         if (FileDetector.isTypeXML(daxFile)) {
             return DAXParserFactory.loadXMLDAXParser(bag, cb, daxFile);
@@ -114,7 +115,6 @@ public class DAXParserFactory {
         }
     }
 
-    
     /**
      * Loads the appropriate DAXParser looking at the dax schema that is specified in the DAX file.
      *
@@ -240,7 +240,6 @@ public class DAXParserFactory {
         return daxParser;
     }
 
-    
     /**
      * Returns the metadata stored in the root adag element in the DAX
      *
@@ -253,9 +252,28 @@ public class DAXParserFactory {
         if (FileDetector.isTypeXML(dax)) {
             return DAXParserFactory.getXMLDAXMetadata(bag, dax);
         }
-        return null;
+        Callback cb = DAXParserFactory.loadDAXParserCallback(bag, dax, "DAX2Metadata");
+
+        LogManager logger = bag.getLogger();
+        if (logger != null) {
+            logger.log(
+                    "Retrieving Metadata from the DAX file " + dax, LogManager.DEBUG_MESSAGE_LEVEL);
+        }
+        try {
+            DAXParser p = DAXParserFactory.loadDAXParser(bag, cb, dax);
+            p.parse(dax);
+        } catch (RuntimeException e) {
+            // check explicity for file not found exception
+            if (e.getCause() != null && e.getCause() instanceof java.io.IOException) {
+                // rethrow
+                throw e;
+            }
+        }
+
+        Map result = (Map) cb.getConstructedObject();
+        return (result == null) ? new HashMap() : result;
     }
-    
+
     /**
      * Returns the metadata stored in the root adag element in the DAX
      *

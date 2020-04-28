@@ -18,7 +18,7 @@
 package edu.isi.pegasus.planner.parser;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.parser.dax.DAXParser5;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -89,6 +90,30 @@ public class DAXParserFactoryTest {
         DAXParser parser =
                 DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         assertThat(parser, instanceOf(DAXParser5.class));
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testXMLDAXMetadata() {
+        mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
+        String dax = new File(mTestSetup.getInputDirectory(), "blackdiamond.dax").getAbsolutePath();
+        Map map = DAXParserFactory.getDAXMetadata(mBag, dax);
+        assertEquals("1", map.get("count"));
+        assertEquals("diamond", map.get("name"));
+        assertEquals("0", map.get("index"));
+        assertEquals("3.6", map.get("version"));
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testYAMLDAXMetadata() {
+        mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
+        String dax = new File(mTestSetup.getInputDirectory(), "workflow.yml").getAbsolutePath();
+        Map map = DAXParserFactory.getDAXMetadata(mBag, dax);
+        assertEquals("1", map.get("count"));
+        assertEquals("diamond", map.get("name"));
+        assertEquals("0", map.get("index"));
+        assertEquals("5.0", map.get("version"));
         mLogger.logEventCompletion();
     }
 
