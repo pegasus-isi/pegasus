@@ -82,17 +82,39 @@ public class DAXParserFactory {
         if (properties == null) {
             throw new RuntimeException("Invalid properties passed");
         }
-        // load the callback
-        Callback c = DAXParserFactory.loadDAXParserCallback(bag, daxFile, callbackClass);
+        return loadDAXParser( bag , DAXParserFactory.loadDAXParserCallback(bag, daxFile, callbackClass), daxFile);
+    }
 
+    /**
+     * Loads the appropriate DAXParser looking at the dax schema that is specified by the user.
+     *
+     * @param bag bag of Pegasus intialization objects
+     * @param cb the dax callback class
+     * @param daxFile
+     * @return the DAXParser loaded.
+     * @exception DAXParserFactoryException that nests any error that might occur during the
+     *     instantiation
+     * @see #DEFAULT_CALLBACK_PACKAGE_NAME
+     */
+    public static DAXParser loadDAXParser(PegasusBag bag, Callback cb, String daxFile)
+            throws DAXParserFactoryException {
+
+        PegasusProperties properties = bag.getPegasusProperties();
+
+        // sanity check
+        if (properties == null) {
+            throw new RuntimeException("Invalid properties passed");
+        }
+        
         // PM-1511
         if (FileDetector.isTypeXML(daxFile)) {
-            return DAXParserFactory.loadXMLDAXParser(bag, c, daxFile);
+            return DAXParserFactory.loadXMLDAXParser(bag, cb, daxFile);
         } else {
-            return DAXParserFactory.loadDAXParser(YAML_DAX_PARSER_CLASS, "5.0", bag, c);
+            return DAXParserFactory.loadDAXParser(YAML_DAX_PARSER_CLASS, "5.0", bag, cb);
         }
     }
 
+    
     /**
      * Loads the appropriate DAXParser looking at the dax schema that is specified in the DAX file.
      *
