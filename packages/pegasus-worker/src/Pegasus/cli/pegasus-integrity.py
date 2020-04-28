@@ -88,7 +88,7 @@ class Singleton(type):
 prog_dir = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
 prog_base = os.path.split(sys.argv[0])[1]  # Name of this program
 
-logger = logging.getLogger("Pegasus")
+logger = logging.getLogger("PegasusIntegrity")
 
 multipart_fh = None
 
