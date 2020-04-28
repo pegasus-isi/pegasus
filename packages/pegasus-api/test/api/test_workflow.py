@@ -1168,6 +1168,7 @@ class TestWorkflow:
             output_site="local",
             relative_dir=None,
             sites=None,
+            staging_sites=None,
             submit=False,
             verbose=0,
         )
@@ -1194,6 +1195,7 @@ class TestWorkflow:
             output_site="local",
             relative_dir=None,
             sites=None,
+            staging_sites=None,
             submit=False,
             verbose=0,
         )

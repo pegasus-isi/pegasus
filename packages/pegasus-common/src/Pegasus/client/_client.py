@@ -46,8 +46,9 @@ class Client:
         self,
         dax: str,
         conf: str = None,
-        sites: str = None,
+        sites: list = None,
         output_site: str = "local",
+        staging_sites: dict = None,
         input_dir: str = None,
         output_dir: str = None,
         dir: str = None,
@@ -67,10 +68,18 @@ class Client:
             cmd.extend(("--conf", conf))
 
         if sites:
-            cmd.extend(("--sites", sites))
+            cmd.extend(("--sites", ",".join(sites)))
 
         if output_site:
             cmd.extend(("--output-site", output_site))
+
+        if staging_sites:
+            cmd.extend(
+                (
+                    "--staging-site",
+                    ",".join([s + "=" + ss for s, ss in staging_sites.items()]),
+                )
+            )
 
         if input_dir:
             cmd.extend(("--input-dir", input_dir))

@@ -665,8 +665,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def plan(
         self,
         conf: str = None,
-        sites: str = None,
+        sites: list = None,
         output_site: str = "local",
+        staging_sites: dict = None,
         input_dir: str = None,
         output_dir: str = None,
         dir: str = None,
@@ -681,10 +682,12 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         :param conf:  the path to the properties file to use for planning, defaults to None
         :type conf: str, optional
-        :param sites: comma separated list of executions sites on which to map the workflow, defaults to None
-        :type sites: str, optional
+        :param sites: list of execution sites on which to map the workflow, defaults to None
+        :type sites: list, optional
         :param output_site: the output site where the data products during workflow execution are transferred to, defaults to "local"
         :type output_site: str, optional
+        :param staging_sites: key, value pairs of execution site to staging site mappings, defaults to None
+        :type staging_sites: dict, optional
         :param input_dir: comma separated list of optional input directories where the input files reside on submit host, defaults to None
         :type input_dir: str, optional
         :param output_dir: an optional output directory where the output files should be transferred to on submit host, defaults to None
@@ -713,6 +716,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             conf=conf,
             sites=sites,
             output_site=output_site,
+            staging_sites=staging_sites,
             input_dir=input_dir,
             output_dir=output_dir,
             dir=dir,
