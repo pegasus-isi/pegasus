@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.io.File;
@@ -472,8 +473,16 @@ public class RCConverter extends Executable {
         for (Iterator<ReplicaLocation> it = output.replicaLocationIterator(); it.hasNext(); ) {
             ReplicaLocation rl = it.next();
             String lfn = rl.getLFN();
+            Metadata m = rl.getAllMetadata();
             int insert = 0;
             for (ReplicaCatalogEntry rce : rl.getPFNList()) {
+                // PM-1534 and PM-1523 add metadata at LFN level
+                // in the Replica Location object to individual RCE's
+                for (Iterator<String> attribIT = m.getProfileKeyIterator(); attribIT.hasNext(); ) {
+                    String key = attribIT.next();
+                    rce.addAttribute(key, m.get(key));
+                }
+
                 try {
                     insert += catalog.insert(lfn, rce);
                 } catch (Exception e) {
