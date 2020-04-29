@@ -535,8 +535,10 @@ public class CPlanner extends Executable {
             }
 
             state++;
-
-            mProps.writeOutProperties(mPOptions.getSubmitDirectory());
+            // PM-1535 we cannot write out properties file , as we need to also
+            // write out the default paths for catalog files for hierachal workflows
+            mProps.setPropertiesFileBackend(mPOptions.getSubmitDirectory());
+            //mProps.writeOutProperties(mPOptions.getSubmitDirectory());
 
             mPMetrics.setRelativeSubmitDirectory(mPOptions.getRelativeSubmitDirectory());
 
@@ -546,7 +548,7 @@ public class CPlanner extends Executable {
             String error =
                     (state == 0)
                             ? "Unable to write to directory "
-                            : "Unable to write out properties to directory ";
+                            : "Unable to set out properties file backend to directory ";
             throw new RuntimeException(error + mPOptions.getSubmitDirectory(), ioe);
         }
 
@@ -596,7 +598,7 @@ public class CPlanner extends Executable {
         MainEngine cwmain = new MainEngine(orgDag, mBag);
 
         ADag finalDag = cwmain.runPlanner();
-
+        
         // store the workflow metrics from the final dag into
         // the planner metrics
         mPMetrics.setWorkflowMetrics(finalDag.getWorkflowMetrics());
@@ -622,6 +624,9 @@ public class CPlanner extends Executable {
                     LoggingKeys.EVENTS_PEGASUS_CODE_GENERATION,
                     LoggingKeys.DAX_ID,
                     finalDag.getAbstractWorkflowName());
+            
+            //PM-1535 write out the properties file in the submit directory
+            mProps.writeOutProperties();
 
             result = codeGenerator.generateCode(finalDag);
 

@@ -2226,6 +2226,21 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Sets the file backend to which properties maybe written out to 
+     * 
+     * @param directory
+     * @throws java.io.IOException
+     */
+    public void setPropertiesFileBackend(String directory) throws IOException {
+        // create a temporary file in directory
+        File dir = new File(directory);
+
+        // sanity check on the directory
+        sanityCheck(dir);
+        this.mPropsInSubmitDir = File.createTempFile("pegasus.", ".properties", dir).getAbsolutePath();
+    }
+
+    /**
      * Returns the path to the property file that has been writing out in the submit directory.
      *
      * @return path to the property file, else null
@@ -2242,35 +2257,34 @@ public class PegasusProperties implements Cloneable {
         */
         return mPropsInSubmitDir;
     }
-
+    
     /**
      * Writes out the properties to a temporary file in the directory passed.
      *
-     * @param directory the directory in which the properties file needs to be written to.
      * @return the absolute path to the properties file written in the directory.
      * @throws IOException in case of error while writing out file.
      */
-    public String writeOutProperties(String directory) throws IOException {
-        return this.writeOutProperties(directory, true);
+    public String writeOutProperties() throws IOException {
+        return this.writeOutProperties(true);
     }
 
     /**
      * Writes out the properties to a temporary file in the directory passed.
      *
-     * @param directory the directory in which the properties file needs to be written to.
      * @param sanitizePath boolean indicating whether to sanitize paths for certain properties or
      *     not.
      * @return the absolute path to the properties file written in the directory.
      * @throws IOException in case of error while writing out file.
      */
-    public String writeOutProperties(String directory, boolean sanitizePath) throws IOException {
-        return this.writeOutProperties(directory, sanitizePath, true);
+    private String writeOutProperties(boolean sanitizePath) throws IOException {
+        
+        return this.writeOutProperties(new File(mPropsInSubmitDir), sanitizePath, true);
     }
 
     /**
      * Writes out the properties to a temporary file in the directory passed.
      *
-     * @param directory the directory in which the properties file needs to be written to.
+     * @param file the file to which properties are written out to
      * @param sanitizePath boolean indicating whether to sanitize paths for certain properties or
      *     not.
      * @param setInternalVariable whether to set the internal variable that stores the path to the
@@ -2278,13 +2292,15 @@ public class PegasusProperties implements Cloneable {
      * @return the absolute path to the properties file written in the directory.
      * @throws IOException in case of error while writing out file.
      */
-    public String writeOutProperties(
-            String directory, boolean sanitizePath, boolean setInternalVariable)
+    private String writeOutProperties(
+            File file, boolean sanitizePath, boolean setInternalVariable)
             throws IOException {
-        File dir = new File(directory);
-
-        // sanity check on the directory
-        sanityCheck(dir);
+        
+        
+        if (file == null) {
+            throw new RuntimeException(
+                    "Properties file does not exist  " + file);
+        }
 
         // we only want to write out the Pegasus properties for time being
         // and any profiles that were mentioned in the properties.
@@ -2311,8 +2327,7 @@ public class PegasusProperties implements Cloneable {
             properties.put(key, DEFAULT_DAGMAN_MAX_PRE_VALUE);
         }
 
-        // create a temporary file in directory
-        File f = File.createTempFile("pegasus.", ".properties", dir);
+        
 
         // the header of the file
         StringBuffer header = new StringBuffer(64);
@@ -2320,16 +2335,16 @@ public class PegasusProperties implements Cloneable {
                 .append("#ESCAPES IN VALUES ARE INTRODUCED");
 
         // create an output stream to this file and write out the properties
-        OutputStream os = new FileOutputStream(f);
+        OutputStream os = new FileOutputStream(file);
         properties.store(os, header.toString());
         os.close();
 
         // also set it to the internal variable
         if (setInternalVariable) {
-            mPropsInSubmitDir = f.getAbsolutePath();
+            mPropsInSubmitDir = file.getAbsolutePath();
             return mPropsInSubmitDir;
         } else {
-            return f.getAbsolutePath();
+            return file.getAbsolutePath();
         }
     }
 
