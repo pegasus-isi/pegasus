@@ -1278,8 +1278,8 @@ public class YAML implements ReplicaCatalog {
                 if (rce.isRegex()) {
                     writeStringField(gen, ReplicaCatalogKeywords.REGEX.getReservedName(), "true");
                 }
-                String checksumType = (String) rce.getAttribute(Metadata.CHECKSUM_TYPE_KEY);
-                String checksumValue = (String) rce.getAttribute(Metadata.CHECKSUM_VALUE_KEY);
+                String checksumType = (String) rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY);
+                String checksumValue = (String) rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY);
                 if (checksumType != null || checksumValue != null) {
                     gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
                     gen.writeStartObject();
