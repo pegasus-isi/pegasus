@@ -2226,8 +2226,8 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
-     * Sets the file backend to which properties maybe written out to 
-     * 
+     * Sets the file backend to which properties maybe written out to
+     *
      * @param directory
      * @throws java.io.IOException
      */
@@ -2237,7 +2237,8 @@ public class PegasusProperties implements Cloneable {
 
         // sanity check on the directory
         sanityCheck(dir);
-        this.mPropsInSubmitDir = File.createTempFile("pegasus.", ".properties", dir).getAbsolutePath();
+        this.mPropsInSubmitDir =
+                File.createTempFile("pegasus.", ".properties", dir).getAbsolutePath();
     }
 
     /**
@@ -2257,7 +2258,7 @@ public class PegasusProperties implements Cloneable {
         */
         return mPropsInSubmitDir;
     }
-    
+
     /**
      * Writes out the properties to a temporary file in the directory passed.
      *
@@ -2277,7 +2278,7 @@ public class PegasusProperties implements Cloneable {
      * @throws IOException in case of error while writing out file.
      */
     private String writeOutProperties(boolean sanitizePath) throws IOException {
-        
+
         return this.writeOutProperties(new File(mPropsInSubmitDir), sanitizePath, true);
     }
 
@@ -2292,14 +2293,11 @@ public class PegasusProperties implements Cloneable {
      * @return the absolute path to the properties file written in the directory.
      * @throws IOException in case of error while writing out file.
      */
-    private String writeOutProperties(
-            File file, boolean sanitizePath, boolean setInternalVariable)
+    private String writeOutProperties(File file, boolean sanitizePath, boolean setInternalVariable)
             throws IOException {
-        
-        
+
         if (file == null) {
-            throw new RuntimeException(
-                    "Properties file does not exist  " + file);
+            throw new RuntimeException("Properties file does not exist  " + file);
         }
 
         // we only want to write out the Pegasus properties for time being
@@ -2326,8 +2324,6 @@ public class PegasusProperties implements Cloneable {
             // add defautl value
             properties.put(key, DEFAULT_DAGMAN_MAX_PRE_VALUE);
         }
-
-        
 
         // the header of the file
         StringBuffer header = new StringBuffer(64);
