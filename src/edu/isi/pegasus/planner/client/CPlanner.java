@@ -355,6 +355,9 @@ public class CPlanner extends Executable {
         configurator.loadConfigurationPropertiesAndOptions(mProps, mPOptions);
 
         mLogger.log(
+                "Planner launched in the following directory " + System.getProperty("user.dir"),
+                LogManager.INFO_MESSAGE_LEVEL);
+        mLogger.log(
                 "Planner invoked with following arguments " + mPOptions.getOriginalArgString(),
                 LogManager.INFO_MESSAGE_LEVEL);
 
