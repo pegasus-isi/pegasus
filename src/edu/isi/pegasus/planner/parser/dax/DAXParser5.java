@@ -100,7 +100,7 @@ public class DAXParser5 implements DAXParser {
         try {
             mapper.readValue(reader, DAXParser5.class);
         } catch (IOException ex) {
-            throw new RuntimeException("Exception while parsing yaml file " + file);
+            throw new RuntimeException("Exception while parsing yaml file " + file, ex);
         }
     }
 
