@@ -552,10 +552,6 @@ public class CPlanner extends Executable {
             throw new RuntimeException(error + mPOptions.getSubmitDirectory(), ioe);
         }
 
-        // PM-1535 we only want to write original proerties in the properties file
-        // plus some catalog add on defaults.
-        PegasusProperties propsBeforePlanning = (PegasusProperties) this.mProps.clone();
-
         // we have enough information to pin the metrics file in the submit directory
         mPMetrics.setMetricsFileLocationInSubmitDirectory(
                 new File(
@@ -628,9 +624,6 @@ public class CPlanner extends Executable {
                     LoggingKeys.EVENTS_PEGASUS_CODE_GENERATION,
                     LoggingKeys.DAX_ID,
                     finalDag.getAbstractWorkflowName());
-
-            // PM-1535 write out the properties file in the submit directory
-            propsBeforePlanning.writeOutProperties();
 
             result = codeGenerator.generateCode(finalDag);
 

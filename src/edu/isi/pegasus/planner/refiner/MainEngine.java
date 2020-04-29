@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -106,7 +107,7 @@ public class MainEngine extends Engine {
      *
      * @return the planned worflow.
      */
-    public ADag runPlanner() {
+    public ADag runPlanner() throws IOException {
         String abstractWFName = mOriginalDag.getAbstractWorkflowName();
         // create the main event refinement event
         mLogger.logEventStart(
@@ -114,6 +115,10 @@ public class MainEngine extends Engine {
 
         // refinement process starting
         mOriginalDag.setWorkflowRefinementStarted(true);
+
+        // PM-1535 we only want to write original proerties in the properties file
+        // plus some catalog add on defaults.
+        PegasusProperties propsBeforePlanning = (PegasusProperties) this.mProps.clone();
 
         String message = null;
         mRCBridge = new ReplicaCatalogBridge(mOriginalDag, mBag);
@@ -257,7 +262,8 @@ public class MainEngine extends Engine {
         p.reduce(mReducedDag);
         mLogger.logEventCompletion();
         */
-
+        // PM-1535 write out the properties file in the submit directory
+        propsBeforePlanning.writeOutProperties();
         mLogger.logEventCompletion();
         return mReducedDag;
     }
