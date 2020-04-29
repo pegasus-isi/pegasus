@@ -127,9 +127,12 @@ public class ReplicaStoreTest {
         ReplicaCatalogEntry rce = rl.getPFN(0);
         ReplicaCatalogEntry expected = new ReplicaCatalogEntry("file:///Volumes/data/input/f.a");
         expected.addAttribute("site", "local");
-        expected.addAttribute("checksum.type", "sha256");
-        expected.addAttribute("checksum.value", "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9");
+        // PM-1534 checksum and other attributes are at ReplicaLocation level
+        // expected.addAttribute("checksum.type", "sha256");
+        // expected.addAttribute("checksum.value", "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9");
         assertEquals(expected, rce);
+        assertEquals("sha256", rl.getMetadata("checksum.type"));
+        assertEquals("a08d9d7769cffb96a910a4b6c2be7bfd85d461c9", rl.getMetadata("checksum.value"));
     }
 
     @Test(expected = ReplicaCatalogException.class)
