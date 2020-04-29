@@ -87,7 +87,8 @@ public class ReplicaFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_REPLICA_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "rc.data").getAbsolutePath());
-        File tempFile = new File(props.writeOutProperties(mTestSetup.getInputDirectory()));
+        props.setPropertiesFileBackend(mTestSetup.getInputDirectory());
+        File tempFile = new File(props.writeOutProperties());
         try {
             ReplicaCatalog rc = ReplicaFactory.loadInstance(getPegasusBag(props));
             assertThat(rc, instanceOf(SimpleFile.class));
@@ -104,7 +105,8 @@ public class ReplicaFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_REPLICA_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "rc.data").getAbsolutePath());
-        File tempFile = new File(props.writeOutProperties(mTestSetup.getInputDirectory()));
+        props.setPropertiesFileBackend(mTestSetup.getInputDirectory());
+        File tempFile = new File(props.writeOutProperties());
         try {
             ReplicaCatalog rc = ReplicaFactory.loadInstance(getPegasusBag(props));
             assertThat(rc, instanceOf(SimpleFile.class));
@@ -122,7 +124,8 @@ public class ReplicaFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_REPLICA_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "rc.yml").getAbsolutePath());
-        File tempFile = new File(props.writeOutProperties(mTestSetup.getInputDirectory()));
+        props.setPropertiesFileBackend(mTestSetup.getInputDirectory());
+        File tempFile = new File(props.writeOutProperties());
         try {
             ReplicaCatalog rc = ReplicaFactory.loadInstance(getPegasusBag(props));
             assertThat(rc, instanceOf(YAML.class));
@@ -139,7 +142,8 @@ public class ReplicaFactoryTest {
         props.setProperty(
                 PegasusProperties.PEGASUS_REPLICA_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), "rc.yml").getAbsolutePath());
-        File tempFile = new File(props.writeOutProperties(mTestSetup.getInputDirectory()));
+        props.setPropertiesFileBackend(mTestSetup.getInputDirectory());
+        File tempFile = new File(props.writeOutProperties());
         try {
             ReplicaCatalog rc = ReplicaFactory.loadInstance(getPegasusBag(props));
             assertThat(rc, instanceOf(YAML.class));
@@ -162,7 +166,8 @@ public class ReplicaFactoryTest {
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         Path p = Files.createTempDirectory("pegasus");
         File dir = p.toFile();
-        File tempFile = new File(props.writeOutProperties(dir.getAbsolutePath()));
+        props.setPropertiesFileBackend(mTestSetup.getInputDirectory());
+        File tempFile = new File(props.writeOutProperties());
         File text = new File(dir, ReplicaFactory.DEFAULT_FILE_REPLICA_CATALOG_BASENAME);
         BufferedWriter writer = new BufferedWriter(new FileWriter(text));
         writer.write("text\n");
@@ -189,7 +194,8 @@ public class ReplicaFactoryTest {
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         Path p = Files.createTempDirectory("pegasus");
         File dir = p.toFile();
-        File tempFile = new File(props.writeOutProperties(dir.getAbsolutePath()));
+        props.setPropertiesFileBackend(mTestSetup.getInputDirectory());
+        File tempFile = new File(props.writeOutProperties());
         File yaml = new File(dir, ReplicaFactory.DEFAULT_YAML_REPLICA_CATALOG_BASENAME);
         BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
         writer.write("pegasus: \"5.0\"\n");
@@ -222,7 +228,8 @@ public class ReplicaFactoryTest {
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         Path p = Files.createTempDirectory("pegasus");
         File dir = p.toFile();
-        File tempFile = new File(props.writeOutProperties(dir.getAbsolutePath()));
+        props.setPropertiesFileBackend(mTestSetup.getInputDirectory());
+        File tempFile = new File(props.writeOutProperties());
         File yaml = new File(dir, ReplicaFactory.DEFAULT_YAML_REPLICA_CATALOG_BASENAME);
         BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
         writer.write("pegasus: \"5.0\"\n");
