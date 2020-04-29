@@ -53,9 +53,10 @@ cat > $DAX <<EOF
 <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="main" index="0" count="1">
    <file name="dax">
       <pfn url="file://$TOPDIR/inner.dax" site="local"/>
-      <arguments>-vvv</arguments>
    </file>
-   <dax id="daxid" file="dax"/>
+   <dax id="daxid" file="dax">
+      <arguments>-vvv</arguments>
+   </dax>
 </adag>
 EOF
 
