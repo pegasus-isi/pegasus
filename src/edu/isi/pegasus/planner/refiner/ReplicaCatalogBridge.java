@@ -259,7 +259,12 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
                 // load all the mappings.
                 mReplicaStore = new ReplicaStore(mReplicaCatalog.lookup(mSearchFiles));
 
-                mReplicaFileSources.add(mReplicaCatalog.getFileSource());
+                // PM-1535 if connect props has a file property add it back to the
+                File catalogFile = mReplicaCatalog.getFileSource();
+                if (catalogFile != null && catalogFile.exists()) {
+                    this.mBag.add(PegasusBag.REPLICA_CATALOG_FILE_SOURCE, catalogFile);
+                    mReplicaFileSources.add(catalogFile);
+                }
             }
 
         } catch (Exception ex) {

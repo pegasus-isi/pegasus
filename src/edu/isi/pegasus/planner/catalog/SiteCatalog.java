@@ -42,6 +42,12 @@ public interface SiteCatalog extends Catalog {
     public static final String VARIABLE_EXPANSION_KEY = "expand";
 
     /**
+     * The key that if set, specifies the file to be picked up to connect to transformation catalog
+     * backend.
+     */
+    public static final String FILE_KEY = "file";
+
+    /**
      * Initialize the site catalog instance
      *
      * @param bag

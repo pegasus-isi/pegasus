@@ -40,6 +40,12 @@ public interface TransformationCatalog extends edu.isi.pegasus.planner.catalog.C
     /** Prefix for the property subset to use with this catalog. */
     public static final String c_prefix = "pegasus.catalog.transformation";
 
+    /**
+     * The key that if set, specifies the file to be picked up to connect to transformation catalog
+     * backend.
+     */
+    public static final String FILE_KEY = "file";
+
     /** Key name of property to set variable expansion */
     public static final String VARIABLE_EXPANSION_KEY = "expand";
 

@@ -14,7 +14,6 @@
 package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
@@ -52,10 +51,10 @@ public class PegasusBag implements Bag {
     public static final Integer PLANNER_OPTIONS = new Integer(1);
 
     /**
-     * The constant to be passed to the accessor functions to get or set the handle to the replica
+     * The constant to be passed to the accessor functions to get the file source for replica
      * catalog
      */
-    public static final Integer REPLICA_CATALOG = new Integer(2);
+    public static final Integer REPLICA_CATALOG_FILE_SOURCE = new Integer(2);
 
     /**
      * The constant to be passed to the accessor functions to get or set the handle to the site
@@ -133,7 +132,7 @@ public class PegasusBag implements Bag {
     private PlannerOptions mPOptions;
 
     /** The handle to the replica catalog. */
-    private ReplicaCatalog mRCHandle;
+    private File mReplicaFileSource;
 
     /** The handle to the site catalog. */
     // private PoolInfoProvider mSCHandle;
@@ -210,8 +209,7 @@ public class PegasusBag implements Bag {
                 break;
 
             case 2: // REPLICA_CATALOG:
-                if (value != null && value instanceof ReplicaCatalog)
-                    mRCHandle = (ReplicaCatalog) value;
+                if (value != null && value instanceof File) mReplicaFileSource = (File) value;
                 else valid = false;
                 break;
 
@@ -329,7 +327,7 @@ public class PegasusBag implements Bag {
                 return this.mPOptions;
 
             case 2:
-                return this.mRCHandle;
+                return this.mReplicaFileSource;
 
                 /*
                 case 3:
@@ -437,6 +435,15 @@ public class PegasusBag implements Bag {
      */
     public TransformationCatalog getHandleToTransformationCatalog() {
         return (TransformationCatalog) get(PegasusBag.TRANSFORMATION_CATALOG);
+    }
+
+    /**
+     * A convenience method to return the replica catalog file source
+     *
+     * @return file source else null
+     */
+    public File getReplicaCatalogFileSource() {
+        return (File) get(PegasusBag.REPLICA_CATALOG_FILE_SOURCE);
     }
 
     /**

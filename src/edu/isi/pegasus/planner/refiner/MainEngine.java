@@ -16,6 +16,8 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.FileUtils;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -28,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -129,6 +132,12 @@ public class MainEngine extends Engine {
                 mBag.getHandleToTransformationCatalog(),
                 mRCBridge,
                 new File(this.mPOptions.getSubmitDirectory(), CATALOGS_DIR_BASENAME));
+
+        // PM-1537 add any default catalog file sources
+        Properties catalogProps = catalogFileProps(mBag);
+        for (String property : catalogProps.stringPropertyNames()) {
+            propsBeforePlanning.setProperty(property, catalogProps.getProperty(property));
+        }
 
         // lock down on the workflow task metrics
         // the refinement process will not update them
@@ -360,5 +369,44 @@ public class MainEngine extends Engine {
                         LogManager.WARNING_MESSAGE_LEVEL);
             }
         }
+    }
+
+    /**
+     * Return any catalog related properties related to default file paths that were picked up
+     *
+     * @param bag
+     * @return
+     */
+    private Properties catalogFileProps(PegasusBag bag) {
+
+        Properties p = new Properties();
+        File replicaFileSource = bag.getReplicaCatalogFileSource();
+        if (replicaFileSource != null && replicaFileSource.exists()) {
+            p.setProperty(
+                    ReplicaCatalog.c_prefix + "." + ReplicaCatalog.FILE_KEY,
+                    replicaFileSource.getAbsolutePath());
+        }
+
+        TransformationCatalog c = bag.getHandleToTransformationCatalog();
+        if (c != null) {
+            File catalogFile = c.getFileSource();
+            if (catalogFile != null && catalogFile.exists()) {
+                p.setProperty(
+                        TransformationCatalog.c_prefix + "." + TransformationCatalog.FILE_KEY,
+                        catalogFile.getAbsolutePath());
+            }
+        }
+
+        SiteStore s = bag.getHandleToSiteStore();
+        if (s != null) {
+            File catalogFile = s.getFileSource();
+            if (catalogFile != null && catalogFile.exists()) {
+                p.setProperty(
+                        SiteCatalog.c_prefix + "." + SiteCatalog.FILE_KEY,
+                        catalogFile.getAbsolutePath());
+            }
+        }
+
+        return p;
     }
 }
