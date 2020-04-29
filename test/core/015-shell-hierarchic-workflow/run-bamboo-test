@@ -55,7 +55,7 @@ cat > $DAX <<EOF
       <pfn url="file://$TOPDIR/inner.dax" site="local"/>
    </file>
    <dax id="daxid" file="dax">
-      <arguments>-vvv</arguments>
+      <argument>-vvv</argument>
    </dax>
 </adag>
 EOF
