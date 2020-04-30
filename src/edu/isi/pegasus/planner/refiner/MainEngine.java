@@ -16,7 +16,6 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.FileUtils;
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -384,12 +383,16 @@ public class MainEngine extends Engine {
     private Properties catalogFileProps(PegasusBag bag) {
 
         Properties p = new Properties();
+
+        /* PM-1535 for hierarchal workflows dont pass path to parent replica catalog file
+                   unless user have explicilty specified in the parent workflow property file
         File replicaFileSource = bag.getReplicaCatalogFileSource();
         if (replicaFileSource != null && replicaFileSource.exists()) {
             p.setProperty(
                     ReplicaCatalog.c_prefix + "." + ReplicaCatalog.FILE_KEY,
                     replicaFileSource.getAbsolutePath());
         }
+        */
 
         TransformationCatalog c = bag.getHandleToTransformationCatalog();
         if (c != null) {
