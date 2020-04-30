@@ -239,6 +239,9 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
                     # file
                     if req.dockerPull:
                         container_name = req.dockerPull
+
+                        # planner won't allow deep lfn (for example: opensicencegrid/osg-el7 is invalid)
+                        container_name = container_name.replace("/", "_")
                         image = "docker://" + req.dockerPull
                     elif req.dockerLoad:
                         image = req.dockerLoad

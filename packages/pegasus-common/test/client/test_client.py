@@ -86,6 +86,18 @@ class TestClient:
             stdout=-1,
         )
 
+    def test_plan_invalid_sites(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", sites="local")
+
+        assert "invalid sites: local" in str(e)
+
+    def test_plan_invalid_staging_sites(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", staging_sites="condorpool=origin")
+
+        assert "invalid staging_sites: condorpool=origin" in str(e)
+
     def test_run(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3)
         subprocess.run.assert_called_once_with(

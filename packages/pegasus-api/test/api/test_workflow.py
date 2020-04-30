@@ -344,9 +344,9 @@ class TestAbstractJob:
             "stdout": "stdout",
             "stderr": "stderr",
             "uses": [
-                {"lfn": "stdin", "type": "input", "registerReplica": False,},
-                {"lfn": "if1", "type": "input", "registerReplica": False,},
-                {"lfn": "if2", "type": "input", "registerReplica": False,},
+                {"lfn": "stdin", "type": "input"},
+                {"lfn": "if1", "type": "input"},
+                {"lfn": "if2", "type": "input"},
                 {
                     "lfn": "stdout",
                     "type": "output",
@@ -436,9 +436,9 @@ class TestJob:
             "stdout": "stdout",
             "stderr": "stderr",
             "uses": [
-                {"lfn": "stdin", "type": "input", "registerReplica": False,},
-                {"lfn": "if1", "type": "input", "registerReplica": False,},
-                {"lfn": "if2", "type": "input", "registerReplica": False,},
+                {"lfn": "stdin", "type": "input"},
+                {"lfn": "if1", "type": "input"},
+                {"lfn": "if2", "type": "input"},
                 {
                     "lfn": "stdout",
                     "type": "output",
@@ -534,9 +534,7 @@ class TestSubWorkflow:
                     "id": "test-subworkflow",
                     "nodeLabel": "label",
                     "arguments": ["--sites", "condorpool"],
-                    "uses": [
-                        {"lfn": "file", "type": "input", "registerReplica": False,}
-                    ],
+                    "uses": [{"lfn": "file", "type": "input"}],
                 },
             ),
             (
@@ -547,9 +545,7 @@ class TestSubWorkflow:
                     "id": "test-subworkflow",
                     "nodeLabel": "label",
                     "arguments": [],
-                    "uses": [
-                        {"lfn": "file", "type": "input", "registerReplica": False,}
-                    ],
+                    "uses": [{"lfn": "file", "type": "input"}],
                 },
             ),
         ],
@@ -587,7 +583,7 @@ def expected_json():
                 "stderr": "stderr",
                 "arguments": ["do-nothing", "-n", 1, 1.1],
                 "uses": [
-                    {"lfn": "stdin", "type": "input", "registerReplica": False,},
+                    {"lfn": "stdin", "type": "input"},
                     {
                         "lfn": "stdout",
                         "type": "output",
@@ -620,8 +616,8 @@ def expected_json():
                 "name": "t1",
                 "arguments": [],
                 "uses": [
-                    {"lfn": "f1", "type": "input", "registerReplica": False,},
-                    {"lfn": "f2", "type": "input", "registerReplica": False,},
+                    {"lfn": "f1", "type": "input"},
+                    {"lfn": "f2", "type": "input"},
                     {
                         "lfn": "checkpoint",
                         "type": "checkpoint",
@@ -635,26 +631,14 @@ def expected_json():
                 "file": "subworkflow.dag",
                 "id": "c",
                 "arguments": ["--sites", "condorpool"],
-                "uses": [
-                    {
-                        "lfn": "subworkflow.dag",
-                        "type": "input",
-                        "registerReplica": False,
-                    }
-                ],
+                "uses": [{"lfn": "subworkflow.dag", "type": "input"}],
             },
             {
                 "type": "pegasusWorkflow",
                 "file": "subworkflow.dax",
                 "id": "d",
                 "arguments": [],
-                "uses": [
-                    {
-                        "lfn": "subworkflow.dax",
-                        "type": "input",
-                        "registerReplica": False,
-                    }
-                ],
+                "uses": [{"lfn": "subworkflow.dax", "type": "input"}],
             },
         ],
         "jobDependencies": [{"id": "a", "children": ["b"]}],

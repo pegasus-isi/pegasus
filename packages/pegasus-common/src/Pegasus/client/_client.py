@@ -68,12 +68,23 @@ class Client:
             cmd.extend(("--conf", conf))
 
         if sites:
+            if not isinstance(sites, list):
+                raise TypeError(
+                    "invalid sites: {}; list of str must be given".format(sites)
+                )
             cmd.extend(("--sites", ",".join(sites)))
 
         if output_site:
             cmd.extend(("--output-site", output_site))
 
         if staging_sites:
+            if not isinstance(staging_sites, dict):
+                raise TypeError(
+                    "invalid staging_sites: {}; dict must be given".format(
+                        staging_sites
+                    )
+                )
+
             cmd.extend(
                 (
                     "--staging-site",
