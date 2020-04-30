@@ -244,7 +244,8 @@ public class Condor implements SLS {
                 || !(style.equals(Pegasus.CONDOR_STYLE)
                         || style.equals(Pegasus.GLIDEIN_STYLE)
                         || style.equals(Pegasus.CONDORC_STYLE)
-                        || style.equals(Pegasus.CREAMCE_STYLE))) {
+                        || style.equals(Pegasus.CREAMCE_STYLE)
+                        || style.equals(Pegasus.GLITE_STYLE))) {
 
             mLogger.log(
                     "Invalid style " + style + " for the job " + job.getName(),
