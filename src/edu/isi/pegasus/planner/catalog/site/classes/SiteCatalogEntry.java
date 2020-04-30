@@ -968,6 +968,10 @@ class SiteCatalogEntrySerializer extends PegasusJsonSerializer<SiteCatalogEntry>
                 entry.getArchitecture().toString());
         writeStringField(
                 gen, SiteCatalogKeywords.OS_TYPE.getReservedName(), entry.getOS().toString());
+        writeStringField(
+                gen, SiteCatalogKeywords.OS_RELEASE.getReservedName(), entry.getOSRelease());
+        writeStringField(
+                gen, SiteCatalogKeywords.OS_VERSION.getReservedName(), entry.getOSVersion());
 
         writeArray(gen, SiteCatalogKeywords.DIRECTORIES.getReservedName(), entry.getDirectories());
         writeArray(gen, SiteCatalogKeywords.GRIDS.getReservedName(), entry.getGridGateways());
