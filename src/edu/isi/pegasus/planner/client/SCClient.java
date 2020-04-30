@@ -267,6 +267,7 @@ public class SCClient extends Executable {
                             Boolean.toString(mDoVariableExpansion));
                     PegasusBag bag = new PegasusBag();
                     bag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
+                    bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
 
                     catalog = SiteFactory.loadInstance(bag);
 
