@@ -110,7 +110,7 @@ public class MainEngine extends Engine {
      *
      * @return the planned worflow.
      */
-    public ADag runPlanner() throws IOException {
+    public ADag runPlanner() {
         String abstractWFName = mOriginalDag.getAbstractWorkflowName();
         // create the main event refinement event
         mLogger.logEventStart(
@@ -265,14 +265,18 @@ public class MainEngine extends Engine {
             mRemoveEng = null;
         }
 
-        /* PM-714. The approach does not scale for the planner performace test case.
-        mLogger.logEventStart( "workflow.prune", LoggingKeys.DAX_ID, abstractWFName );
-        ReduceEdges p = new ReduceEdges();
-        p.reduce(mReducedDag);
-        mLogger.logEventCompletion();
-        */
-        // PM-1535 write out the properties file in the submit directory
-        propsBeforePlanning.writeOutProperties();
+        try {
+            /* PM-714. The approach does not scale for the planner performace test case.
+            mLogger.logEventStart( "workflow.prune", LoggingKeys.DAX_ID, abstractWFName );
+            ReduceEdges p = new ReduceEdges();
+            p.reduce(mReducedDag);
+            mLogger.logEventCompletion();
+            */
+            // PM-1535 write out the properties file in the submit directory
+            propsBeforePlanning.writeOutProperties();
+        } catch (IOException ex) {
+            throw new RuntimeException("Unable to write out properties to submit directory", ex);
+        }
         mLogger.logEventCompletion();
         return mReducedDag;
     }
