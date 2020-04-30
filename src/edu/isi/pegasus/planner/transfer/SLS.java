@@ -30,7 +30,7 @@ import java.util.Collection;
 public interface SLS {
 
     /** The version associated with the API. */
-    public static final String VERSION = "1.3";
+    public static final String VERSION = "1.4";
 
     /**
      * Initializes the SLS implementation.
@@ -149,4 +149,11 @@ public interface SLS {
             String stagingSiteURLPrefix,
             String stagingSitedirectory,
             String workerNodeDirectory);
+
+    /**
+     * Returns a textual description of the transfer mode.
+     *
+     * @return a short textual description
+     */
+    public String getDescription();
 }
