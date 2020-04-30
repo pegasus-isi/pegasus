@@ -143,11 +143,10 @@ try:
         dir=str(WORK_DIR),
         verbose=3,
         relative_dir=RUN_ID,
-        sites=CONDOR_POOL,
+        sites=[CONDOR_POOL],
         output_site=LOCAL,
         force=True,
         submit=True,
     )
 except Exception as e:
-    msg, result = e.args
-    print(result.stderr)
+    print(e.args)
