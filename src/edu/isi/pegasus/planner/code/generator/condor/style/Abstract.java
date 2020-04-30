@@ -372,15 +372,16 @@ public abstract class Abstract implements CondorStyle {
      */
     protected String errorMessage(Job job, String style, String universe) {
         StringBuilder sb = new StringBuilder();
-        sb.append("( ")
+        sb.append("(style,universe,site) mismatch for job ")
+                .append(job.getName())
+                .append(" ")
+                .append(". Found (")
                 .append(style)
                 .append(",")
                 .append(universe)
                 .append(",")
                 .append(job.getSiteHandle())
-                .append(")")
-                .append(" mismatch for job ")
-                .append(job.getName());
+                .append(")");
 
         return sb.toString();
     }

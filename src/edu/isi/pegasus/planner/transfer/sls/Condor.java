@@ -348,4 +348,13 @@ public class Condor implements SLS {
             throw new RuntimeException(sb.toString());
         }
     }
+
+    /**
+     * Returns a textual description of the transfer mode.
+     *
+     * @return a short textual description
+     */
+    public String getDescription() {
+        return "SLS backend using Condor File Transfers to the worker node";
+    }
 }

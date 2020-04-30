@@ -780,4 +780,13 @@ public class Transfer implements SLS {
                 .append(site);
         throw new RuntimeException(error.toString());
     }
+
+    /**
+     * Returns a textual description of the transfer mode.
+     *
+     * @return a short textual description
+     */
+    public String getDescription() {
+        return "SLS backend using pegasus-transfer to worker node";
+    }
 }

@@ -1027,7 +1027,10 @@ public class PegasusLite implements GridStart {
                         workerNodeDir)) {
 
             throw new RuntimeException(
-                    "Unable to modify job " + job.getName() + " for worker node execution");
+                    "Unable to modify job "
+                            + job.getName()
+                            + " for worker node execution by "
+                            + sls.getDescription());
         }
 
         return shellWrapper;
