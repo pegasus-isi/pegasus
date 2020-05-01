@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "023-sc4-ssh-http-" + datetime.now().strftime("%s")
-TOP_DIR = Path(__file__).resolve()
+TOP_DIR = Path.cwd()
 WORK_DIR = TOP_DIR / "work"
 
 try:
@@ -106,7 +106,7 @@ sites:
     work_dir=str(WORK_DIR), pegasus_bin_dir=PEGASUS_BIN_DIR
 )
 
-with (WORK_DIR / "sites.yml").open(mode="w") as f:
+with (TOP_DIR / "sites.yml").open(mode="w") as f:
     f.write(sites)
 
 # --- Transformations ----------------------------------------------------------
@@ -132,7 +132,7 @@ def get_files(d: Path) -> None:
         if p.is_file():
             f = File(str(p))
             inputs.append(f)
-            rc.add_replica(LOCAL, p, str(p.resolve()))
+            rc.add_replica(LOCAL, str(p), str(p.resolve()))
         else:
             get_files(p)
 
@@ -169,7 +169,7 @@ for i in range(10):
               "-jd2::ntrials 1"
             )
     
-    rc.add_replica("local", str(current_file), str(current_file.resolve()))
+    rc.add_replica("local", current_file.name, str(current_file.resolve()))
 
     wf.add_jobs(job)
 
@@ -179,11 +179,13 @@ wf.add_replica_catalog(rc)
 try:
   wf.plan(
     dir=str(WORK_DIR),
-    verbose=3,
+    verbose=5,
     sites=[CONDOR_POOL],
     staging_sites={CONDOR_POOL:STAGING_SITE},
     submit=True
   )
 except Exception as e:
   print(e)
+  print(e.args[1].stdout)
+  print(e.args[1].stderr)
 
