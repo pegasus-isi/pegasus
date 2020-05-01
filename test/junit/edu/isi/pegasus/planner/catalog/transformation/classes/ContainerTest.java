@@ -136,6 +136,41 @@ public class ContainerTest {
                 "http:///pegasus.isi.edu/images/singularity/centos-7.cpio.gz");
     }
 
+    @Test
+    public void testSimpleMountPoint() {
+        this.testMountPoint(
+                "/lizard/scratch-90-days/:/existing/data",
+                "/lizard/scratch-90-days/",
+                "/existing/data",
+                null);
+    }
+
+    @Test
+    public void testSimpleMountPointWithOptions() {
+        this.testMountPoint(
+                "/lizard/scratch-90-days/:/existing/data:ro",
+                "/lizard/scratch-90-days/",
+                "/existing/data",
+                "ro");
+    }
+
+    @Test
+    public void testSimpleMountPointWithShellVariable() {
+        this.testMountPoint(
+                "/lizard/scratch-90-days/${TEST_NAME}:/existing/data:ro",
+                "/lizard/scratch-90-days/${TEST_NAME}",
+                "/existing/data",
+                "ro");
+    }
+
+    public void testMountPoint(
+            String actual, String expectedSource, String expectedDest, String options) {
+        MountPoint mp = new MountPoint(actual);
+        assertEquals(expectedSource, mp.getSourceDirectory());
+        assertEquals(expectedDest, mp.getDestinationDirectory());
+        assertEquals(options, mp.getMountOptions());
+    }
+
     public void testSingulartiy(String name, String expectedLFN, String url) {
         Container c = new Container(name);
         c.setType(Container.TYPE.singularity);

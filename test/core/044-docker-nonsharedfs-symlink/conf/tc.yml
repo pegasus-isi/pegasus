@@ -1,53 +1,62 @@
+# file-based transformation catalog in yaml : 2020-05-01T12:23:41.351-07:00
+---
 pegasus: "5.0"
 transformations:
-  - namespace: diamond
-    name: analyze
-    version: "4.0"
-    sites:
-      - name: local
-        arch: x86_64
-        os.type: linux
-        container: centos-osgvo-el7
-        pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
-        type: stageable
-        profiles:
-          condor:
-            foo: bar
-  - namespace: diamond
-    name: findrange
-    version: "4.0"
-    sites:
-      - name: local
-        arch: x86_64
-        os.type: linux
-        container: centos-osgvo-el7
-        pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
-        type: stageable
-        profiles:
-          condor:
-            foo: bar
-  - namespace: diamond
-    name: preprocess
-    version: "4.0"
-    sites:
-      - name: local
-        arch: x86_64
-        os.type: linux
-        container: centos-osgvo-el7
-        pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
-        type: stageable
-        profiles:
-          condor:
-            foo: bar
-
-containers:
-  - image: docker:///opensciencegrid/osgvo-el7
+ -
+  namespace: "diamond"
+  name: "analyze"
+  version: "4.0"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+    arch: "x86_64"
+    os.type: "linux"
     profiles:
-      env:
-        APP_HOME: /tmp/myscratch
-        HELLo: WORLD
-        JAVA_HOME: /bin/java.1.6
-    name: centos-osgvo-el7
-    type: docker
-    mounts:
-      - /lizard/scratch-90-days/${TEST_NAME}:/existing/data
+      condor:
+        foo: "bar"
+    container: "centos-osgvo-el7"
+ -
+  namespace: "diamond"
+  name: "findrange"
+  version: "4.0"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      condor:
+        foo: "bar"
+    container: "centos-osgvo-el7"
+ -
+  namespace: "diamond"
+  name: "preprocess"
+  version: "4.0"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      condor:
+        foo: "bar"
+    container: "centos-osgvo-el7"
+containers:
+ -
+  name: "centos-osgvo-el7"
+  type: "docker"
+  image: "docker:///opensciencegrid/osgvo-el7"
+  image.site: "local"
+  mounts:
+   - "/lizard/scratch-90-days/${TEST_NAME}:/existing/data"
+  profiles:
+    env:
+      JAVA_HOME: "/bin/java.1.6"
+      APP_HOME: "/tmp/myscratch"
+      HELLo: "WORLD"
