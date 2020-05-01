@@ -536,10 +536,12 @@ public class Container implements Cloneable {
     public static class MountPoint implements Cloneable {
 
         /**
-         * Stores the regular expressions necessary to parse a PegasusURL into 3 components
-         * protocol, host and path
+         * Stores the regular expressions necessary to parse a mount point into 3 components source
+         * dir, dest dir and options. allows for shell variable names in source and destination
+         * directory
          */
-        private static final String mRegexExpression = "([\\w-/]+):([\\w-/]+)(:([\\S]+))*";
+        private static final String mRegexExpression =
+                "([\\w-/]+(?:\\$\\{[\\w-]+\\})*):([\\w-/]+(?:\\$\\{[\\w-]+\\})*)(:([\\S]+))*";
 
         /** Stores compiled patterns at first use, quasi-Singleton. */
         private static Pattern mPattern = null;
