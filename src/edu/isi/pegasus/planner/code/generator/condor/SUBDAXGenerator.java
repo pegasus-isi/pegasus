@@ -247,8 +247,18 @@ public class SUBDAXGenerator {
      */
     protected GridStartFactory initializeGridStartFactory(PegasusBag bag, ADag dag) {
         GridStartFactory factory = new GridStartFactory();
-        mGridStartFactory.initialize(
-                mBag, dag, POSTSCRIPT_LOG_SUFFIX); // last parameter can be null
+
+        // PM-1541 we need to disable worker package setup in pegasus lite
+        // so set it local properties instance
+        // should be shallow clone
+        PegasusBag b = (PegasusBag) bag.clone();
+        PegasusProperties props = (PegasusProperties) bag.getPegasusProperties().clone();
+        props.setProperty("pegasus.transfer.worker.package.strict", "false");
+        props.setProperty("pegasus.transfer.worker.package.autodownload", "false");
+        b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
+        b.add(PegasusBag.PEGASUS_PROPERTIES, props);
+
+        factory.initialize(b, dag, POSTSCRIPT_LOG_SUFFIX); // last parameter can be null
 
         return factory;
     }
