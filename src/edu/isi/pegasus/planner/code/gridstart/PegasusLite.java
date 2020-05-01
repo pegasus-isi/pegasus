@@ -768,6 +768,27 @@ public class PegasusLite implements GridStart {
 
             sb.append('\n');
 
+            // PM-1541 for dax jobs (that are setting up pegasus-plan prescript) set
+            // PEGASUS_HOME to ensure that there is no confusion for pegasus-db-admin
+            // what pegasus install to refer to
+            if (job instanceof DAXJob) {
+                if (job.getSiteHandle().equals("locals")) {
+                    sb.append("# set for pegasus-plan invocation ");
+                    sb.append("export PEGASUS_HOME")
+                            .append("=\"")
+                            .append(this.mProps.getBinDir().getParentFile().getAbsolutePath())
+                            .append("\"")
+                            .append('\n');
+                } else {
+                    // log warning
+                    mLogger.log(
+                            "DAX Job wrapped using PegasusLite but not scheduled for site local "
+                                    + job.getID(),
+                            LogManager.WARNING_MESSAGE_LEVEL);
+                }
+            }
+            sb.append('\n');
+
             sb.append(". ").append(PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME).append('\n');
             sb.append('\n');
 
