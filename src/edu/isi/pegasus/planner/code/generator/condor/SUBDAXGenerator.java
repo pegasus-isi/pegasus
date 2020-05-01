@@ -227,9 +227,7 @@ public class SUBDAXGenerator {
         }
 
         // PM-1132 initialize the PegasusLite Wrapper
-        mGridStartFactory = new GridStartFactory();
-        mGridStartFactory.initialize(
-                mBag, dag, POSTSCRIPT_LOG_SUFFIX); // last parameter can be null
+        mGridStartFactory = this.initializeGridStartFactory(bag, dag);
         mPegasusConfiguration = new PegasusConfiguration(bag.getLogger());
 
         File baseShare = mProps.getSharedDir();
@@ -237,6 +235,22 @@ public class SUBDAXGenerator {
         mPegasusLiteCommon = new File(shellShare, PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME);
 
         mMetricsReporter.initialize(bag);
+    }
+
+    /**
+     * Initialize the gridstart factory that is used to instantiate PegasusLite wrapper that wraps
+     * pegasus-plan prescript invocations
+     *
+     * @param bag
+     * @param dag
+     * @return
+     */
+    protected GridStartFactory initializeGridStartFactory(PegasusBag bag, ADag dag) {
+        GridStartFactory factory = new GridStartFactory();
+        mGridStartFactory.initialize(
+                mBag, dag, POSTSCRIPT_LOG_SUFFIX); // last parameter can be null
+
+        return factory;
     }
 
     /**
