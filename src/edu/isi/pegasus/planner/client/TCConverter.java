@@ -321,7 +321,7 @@ public class TCConverter extends Executable {
             PegasusBag bag = new PegasusBag();
             bag.add(PegasusBag.PEGASUS_PROPERTIES, pegasusProperties);
             bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
-            mProps.setProperty(
+            pegasusProperties.setProperty(
                     TransformationCatalog.c_prefix
                             + '.'
                             + TransformationCatalog.VARIABLE_EXPANSION_KEY,
