@@ -1,54 +1,62 @@
+# file-based transformation catalog in yaml : 2020-05-01T11:25:48.759-07:00
+---
 pegasus: "5.0"
 transformations:
-  - namespace: diamond
-    name: analyze
-    version: "4.0"
-    sites:
-      - name: local
-        arch: x86_64
-        os.type: linux
-        container: centos-base
-        pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
-        type: stageable
-        profiles:
-          condor:
-            foo: bar
-  - namespace: diamond
-    name: findrange
-    version: "4.0"
-    sites:
-      - name: local
-        arch: x86_64
-        os.type: linux
-        container: centos-base
-        pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
-        type: stageable
-        profiles:
-          condor:
-            foo: bar
-  - namespace: diamond
-    name: preprocess
-    version: "4.0"
-    sites:
-      - name: local
-        arch: x86_64
-        os.type: linux
-        container: centos-base
-        pfn: ${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg
-        type: stageable
-        profiles:
-          condor:
-            foo: bar
-
-containers:
-  - image: docker:///centos.type:7
-    image.site: local
+ -
+  namespace: "diamond"
+  name: "analyze"
+  version: "4.0"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+    arch: "x86_64"
+    os.type: "linux"
     profiles:
-      env:
-        APP_HOME: /tmp/myscratch
-        HELLo: WORLD
-        JAVA_HOME: /bin/java.1.6
-    name: centos-base
-    type: docker
-    mounts:
-      - /lizard:/lizard
+      condor:
+        foo: "bar"
+    container: "centos-base"
+ -
+  namespace: "diamond"
+  name: "findrange"
+  version: "4.0"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      condor:
+        foo: "bar"
+    container: "centos-base"
+ -
+  namespace: "diamond"
+  name: "preprocess"
+  version: "4.0"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      condor:
+        foo: "bar"
+    container: "centos-base"
+containers:
+ -
+  name: "centos-base"
+  type: "docker"
+  image: "docker:///centos:7"
+  image.site: "local"
+  mounts:
+   - "/lizard:/lizard"
+  profiles:
+    env:
+      JAVA_HOME: "/bin/java.1.6"
+      APP_HOME: "/tmp/myscratch"
+      HELLo: "WORLD"
