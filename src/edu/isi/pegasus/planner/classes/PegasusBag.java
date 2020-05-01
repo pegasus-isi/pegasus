@@ -31,7 +31,7 @@ import java.util.Map;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class PegasusBag implements Bag {
+public class PegasusBag implements Bag, Cloneable {
 
     /** Array storing the names of the attributes that are stored with the site. */
     public static final String PEGASUS_INFO[] = {
@@ -498,6 +498,24 @@ public class PegasusBag implements Bag {
      */
     public File getPlannerDirectory() {
         return (File) get(PegasusBag.PLANNER_DIRECTORY);
+    }
+
+    /**
+     * Returns a new copy of the Object. It is only a shallow clone.
+     *
+     * @return the cloned copy.
+     */
+    public Object clone() {
+        PegasusBag bag = null;
+        try {
+            bag = (PegasusBag) super.clone();
+        } catch (CloneNotSupportedException e) {
+            // somewhere in the hierarch chain clone is not implemented
+            mLogger.log(
+                    "Clone not implemented in the base class of " + this.getClass().getName(),
+                    LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return bag;
     }
 
     /**
