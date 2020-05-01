@@ -57,6 +57,12 @@ public class PegasusProperties implements Cloneable {
     public static final String PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY =
             "pegasus.transfer.worker.package";
 
+    public static final String PEGASUS_TRANSFER_WORKER_PACKAGE_STRICT_PROPERTY =
+            "pegasus.transfer.worker.package.strict";
+
+    public static final String PEGASUS_TRANSFER_WORKER_PACKAGE_AUTODOWNLOAD_PROPERTY =
+            "pegasus.transfer.worker.package.autodownload";
+
     public static final String PEGASUS_TRANSFORMATION_CATALOG_PROPERTY =
             "pegasus.catalog.transformation";
 
@@ -1169,7 +1175,8 @@ public class PegasusProperties implements Cloneable {
      *     being specified or property not being set.
      */
     public boolean enforceStrictChecksForWorkerPackage() {
-        return Boolean.parse(mProps.getProperty("pegasus.transfer.worker.package.strict"), true);
+        return Boolean.parse(
+                mProps.getProperty(PEGASUS_TRANSFER_WORKER_PACKAGE_STRICT_PROPERTY), true);
     }
 
     /**
@@ -1183,7 +1190,7 @@ public class PegasusProperties implements Cloneable {
      */
     public boolean allowDownloadOfWorkerPackageFromPegasusWebsite() {
         return Boolean.parse(
-                mProps.getProperty("pegasus.transfer.worker.package.autodownload"), true);
+                mProps.getProperty(PEGASUS_TRANSFER_WORKER_PACKAGE_AUTODOWNLOAD_PROPERTY), true);
     }
 
     /**

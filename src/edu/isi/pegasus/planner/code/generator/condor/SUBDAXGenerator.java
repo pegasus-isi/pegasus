@@ -253,8 +253,10 @@ public class SUBDAXGenerator {
         // should be shallow clone
         PegasusBag b = (PegasusBag) bag.clone();
         PegasusProperties props = (PegasusProperties) bag.getPegasusProperties().clone();
-        props.setProperty("pegasus.transfer.worker.package.strict", "false");
-        props.setProperty("pegasus.transfer.worker.package.autodownload", "false");
+        props.setProperty(
+                PegasusProperties.PEGASUS_TRANSFER_WORKER_PACKAGE_STRICT_PROPERTY, "false");
+        props.setProperty(
+                PegasusProperties.PEGASUS_TRANSFER_WORKER_PACKAGE_AUTODOWNLOAD_PROPERTY, "false");
         b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
         b.add(PegasusBag.PEGASUS_PROPERTIES, props);
 
