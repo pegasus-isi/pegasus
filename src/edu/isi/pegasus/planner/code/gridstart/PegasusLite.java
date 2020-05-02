@@ -772,7 +772,7 @@ public class PegasusLite implements GridStart {
             // PEGASUS_HOME to ensure that there is no confusion for pegasus-db-admin
             // what pegasus install to refer to
             if (job instanceof DAXJob) {
-                if (job.getSiteHandle().equals("locals")) {
+                if (job.getSiteHandle().equals("local")) {
                     sb.append("# set for pegasus-plan invocation ");
                     sb.append("export PEGASUS_HOME")
                             .append("=\"")
