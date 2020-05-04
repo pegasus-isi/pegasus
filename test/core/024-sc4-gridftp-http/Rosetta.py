@@ -157,7 +157,7 @@ for i in range(10):
         job = (
             Job(rosetta_exe, _id=current_file.name.replace(".pdb", ""))
             .add_inputs(File(current_file.name), *inputs)
-            .add_outputs(File(current_file.name + ".score.sc"))
+            .add_outputs(File(current_file.name + ".score.sc"), register_replica=True)
             .add_args(
                 "-in:file:s",
                 current_file.name,
