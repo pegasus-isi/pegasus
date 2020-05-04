@@ -24,10 +24,7 @@ fi
 
 echo "Running Rosetta.py"
 export PYTHONPATH=`pegasus-config --python`
-python3 Rosetta.py
-
-# test up to this point...
-exit 1
+python3 Rosetta.py | tee plan.out
 
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`
 cd $WORK_DIR
