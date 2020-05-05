@@ -190,7 +190,6 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
         root_workflow = rv.json
 
-        assert root_workflow["_links"]
         assert root_workflow["wf_id"] == 1
 
     def test_get_root_workflow_uuid(self, cli):
@@ -204,7 +203,6 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
         root_workflow = rv.json
 
-        assert root_workflow["_links"]
         assert root_workflow["wf_uuid"] == "7193de8c-a28d-4eca-b576-1b1c3c4f668b"
 
     def test_get_missing_root_workflow(self, cli):
@@ -247,7 +245,6 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
 
         workflow = rv.json
 
-        assert workflow["_links"]
         assert workflow["wf_uuid"] == "7193de8c-a28d-4eca-b576-1b1c3c4f668b"
 
     def test_get_workflow_uuids(self, cli):
@@ -262,7 +259,6 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
 
         workflow = rv.json
 
-        assert workflow["_links"]
         assert workflow["wf_uuid"] == "7193de8c-a28d-4eca-b576-1b1c3c4f668b"
 
     def test_get_missing_workflow(self, cli):

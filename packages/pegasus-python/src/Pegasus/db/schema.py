@@ -1036,14 +1036,13 @@ class RCLFN(Base):
     lfn = Column("lfn", String(245), nullable=False)
 
     # Relationships
-    # TODO: Remove trailing _ from property name, after fixing in monitoring views
-    pfns_ = relation(
+    pfns = relation(
         lambda: RCPFN,
         backref="lfn",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    meta_ = relation(
+    meta = relation(
         lambda: RCMeta,
         backref="lfn",
         cascade="all, delete-orphan",
