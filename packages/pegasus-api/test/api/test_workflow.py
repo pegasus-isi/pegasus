@@ -1088,7 +1088,7 @@ class TestWorkflow:
             wf = Workflow("test")
             wf.add_jobs(SubWorkflow("file", False))
             wf.write(file="workflow.yml", _format="yml")
-        except PegasusError as e:
+        except PegasusError:
             pytest.fail("shouldn't have thrown PegasusError")
 
         Pegasus.api.workflow.Workflow.write.assert_called_once_with(
