@@ -11,7 +11,7 @@ from jsonschema import validate
 import yaml
 
 import Pegasus
-from Pegasus.api.errors import DuplicateError, NotFoundError
+from Pegasus.api.errors import DuplicateError, NotFoundError, PegasusError
 from Pegasus.api.mixins import EventType, Namespace
 from Pegasus.api.replica_catalog import File, ReplicaCatalog
 from Pegasus.api.site_catalog import SiteCatalog
@@ -560,19 +560,6 @@ def expected_json():
     expected = {
         "pegasus": PEGASUS_VERSION,
         "name": "wf",
-        "replicaCatalog": {"replicas": [{"lfn": "lfn", "pfn": "pfn", "site": "site"}]},
-        "transformationCatalog": {
-            "transformations": [
-                {
-                    "name": "t1",
-                    "sites": [{"name": "local", "pfn": "/pfn", "type": "installed"}],
-                },
-                {
-                    "name": "t2",
-                    "sites": [{"name": "local2", "pfn": "/pfn", "type": "stageable"}],
-                },
-            ]
-        },
         "jobs": [
             {
                 "type": "job",
@@ -654,27 +641,13 @@ def expected_json():
     expected["jobs"][1]["uses"] = sorted(
         expected["jobs"][1]["uses"], key=lambda u: u["lfn"]
     )
-    expected["transformationCatalog"]["transformations"] = sorted(
-        expected["transformationCatalog"]["transformations"], key=lambda t: t["name"]
-    )
 
     return expected
 
 
 @pytest.fixture(scope="function")
 def wf():
-    tc = TransformationCatalog()
-    tc.add_transformations(
-        Transformation("t1").add_sites(TransformationSite("local", "/pfn", False)),
-        Transformation("t2").add_sites(TransformationSite("local2", "/pfn", True)),
-    )
-
-    rc = ReplicaCatalog()
-    rc.add_replica("site", "lfn", "pfn")
-
     wf = Workflow("wf", infer_dependencies=True)
-    wf.add_transformation_catalog(tc)
-    wf.add_replica_catalog(rc)
 
     j1 = (
         Job("t1", _id="a")
@@ -993,10 +966,6 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
-        result["transformationCatalog"]["transformations"] = sorted(
-            result["transformationCatalog"]["transformations"], key=lambda t: t["name"]
-        )
-
         assert result == expected_json
 
     @pytest.mark.parametrize(
@@ -1031,10 +1000,6 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
-        result["transformationCatalog"]["transformations"] = sorted(
-            result["transformationCatalog"]["transformations"], key=lambda t: t["name"]
-        )
-
         assert result == expected_json
 
     def test_write_str_filename(self, wf, load_schema, expected_json):
@@ -1058,10 +1023,6 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
-        result["transformationCatalog"]["transformations"] = sorted(
-            result["transformationCatalog"]["transformations"], key=lambda t: t["name"]
-        )
-
         assert result == expected_json
 
         os.remove(path)
@@ -1080,13 +1041,85 @@ class TestWorkflow:
                 result["jobs"][i]["uses"], key=lambda u: u["lfn"]
             )
 
-        result["transformationCatalog"]["transformations"] = sorted(
-            result["transformationCatalog"]["transformations"], key=lambda t: t["name"]
-        )
-
         assert result == expected_json
 
         os.remove(EXPECTED_FILE)
+
+    def test_write_wf_catalogs_included(self):
+        wf = Workflow("test")
+        wf.add_jobs(Job("ls"))
+
+        wf.add_transformation_catalog(TransformationCatalog())
+        wf.add_site_catalog(SiteCatalog())
+        wf.add_replica_catalog(ReplicaCatalog())
+
+        wf_path = Path("workflow.yml")
+        with wf_path.open("w+") as f:
+            wf.write(f)
+            f.seek(0)
+            result = yaml.load(f)
+
+        expected = {
+            "pegasus": "5.0",
+            "name": "test",
+            "siteCatalog": {"sites": []},
+            "replicaCatalog": {"replicas": []},
+            "transformationCatalog": {"transformations": []},
+            "jobs": [
+                {
+                    "type": "job",
+                    "name": "ls",
+                    "id": "ID0000001",
+                    "arguments": [],
+                    "uses": [],
+                }
+            ],
+            "jobDependencies": [],
+        }
+
+        assert expected == result
+
+        wf_path.unlink()
+
+    def test_write_valid_hierarchical_workflow(self, mocker):
+        mocker.patch("Pegasus.api.workflow.Workflow.write")
+
+        try:
+            wf = Workflow("test")
+            wf.add_jobs(SubWorkflow("file", False))
+            wf.write(file="workflow.yml", _format="yml")
+        except PegasusError as e:
+            pytest.fail("shouldn't have thrown PegasusError")
+
+        Pegasus.api.workflow.Workflow.write.assert_called_once_with(
+            file="workflow.yml", _format="yml"
+        )
+
+    @pytest.mark.parametrize(
+        "sc, tc",
+        [
+            (SiteCatalog(), None),
+            (None, TransformationCatalog()),
+            (SiteCatalog(), TransformationCatalog()),
+        ],
+    )
+    def test_write_hierarchical_workflow_when_catalogs_are_inlined(self, sc, tc):
+        wf = Workflow("test")
+        wf.add_jobs(SubWorkflow("file", False))
+
+        if sc:
+            wf.add_site_catalog(sc)
+
+        if tc:
+            wf.add_transformation_catalog(tc)
+
+        with pytest.raises(PegasusError) as e:
+            wf.write()
+
+        assert (
+            "Site Catalog and Transformation Catalog must be written as a separate"
+            in str(e)
+        )
 
     def test_workflow_key_ordering_on_yml_write(self):
         tc = TransformationCatalog()

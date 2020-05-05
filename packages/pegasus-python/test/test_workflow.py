@@ -69,9 +69,6 @@ def wf1():
         .add_metadata(author="ryan")
         .add_jobs(j1, j2, sbwf_pegasus, sbwf_condor)
         .add_dependency(j1, children=[j2])
-        .add_transformation_catalog(TransformationCatalog())
-        .add_site_catalog(SiteCatalog())
-        .add_replica_catalog(ReplicaCatalog())
     )
 
 
@@ -117,6 +114,17 @@ def wf2():
     )
 
 
+@pytest.fixture(scope="module")
+def wf3():
+    wf = Workflow("test")
+    wf.add_jobs(Job("ls"))
+    wf.add_site_catalog(SiteCatalog())
+    wf.add_transformation_catalog(TransformationCatalog())
+    wf.add_replica_catalog(ReplicaCatalog())
+
+    return wf
+
+
 def test_to_wf_with_optional_args_set(wf1):
     expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
     result = json.loads(json.dumps(_to_wf(expected), cls=_CustomEncoder))
@@ -129,6 +137,13 @@ def test_to_wf_without_optional_args(wf2):
     result = json.loads(json.dumps(_to_wf(expected), cls=_CustomEncoder))
 
     assert sort_parts(result) == sort_parts(expected)
+
+
+def test_to_wf_with_catalogs_included(wf3):
+    expected = json.loads(json.dumps(wf3, cls=_CustomEncoder))
+    result = json.loads(json.dumps(_to_wf(expected), cls=_CustomEncoder))
+
+    assert result == expected
 
 
 @pytest.mark.parametrize("_format", [("yml"), ("json")])
