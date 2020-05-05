@@ -3818,12 +3818,13 @@ class WebdavHandler(TransferHandlerBase):
                     + "'"
                 )
 
-            logger.debug(cmd)
+            # ensure we are not logging credentials 
+            cmd_display = cmd.replace(password, 'XXX')
 
             self._pre_transfer_attempt(t)
             try:
                 t_start = time.time()
-                tc = utils.TimedCommand(cmd, env_overrides=env_overrides)
+                tc = utils.TimedCommand(cmd, cmd_display=cmd_display, env_overrides=env_overrides)
                 tc.run()
             except RuntimeError as err:
                 logger.error(err)
@@ -3880,8 +3881,11 @@ class WebdavHandler(TransferHandlerBase):
                 + url
                 + "'"
             )
+            
+            # ensure we are not logging credentials 
+            cmd_display = cmd.replace(password, 'XXX')
 
-            tc = utils.TimedCommand(cmd, log_outerr=False)
+            tc = utils.TimedCommand(cmd, cmd_display=cmd_display, log_outerr=False)
             try:
                 tc.run()
             except Exception as err:
@@ -3936,8 +3940,11 @@ class WebdavHandler(TransferHandlerBase):
                 + url
                 + "'"
             )
-            logger.debug(cmd)
-            tc = utils.TimedCommand(cmd)
+
+            # ensure we are not logging credentials 
+            cmd_display = cmd.replace(password, 'XXX')
+
+            tc = utils.TimedCommand(cmd, cmd_display=cmd_display)
             try:
                 tc.run()
             except Exception as err:
