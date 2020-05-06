@@ -412,7 +412,12 @@ public class MainEngine extends Engine {
         // then we set up a default sqlite based replica catalog in the submit directory
         // for registration purposes
         File replicaFileSource = bag.getReplicaCatalogFileSource();
-        if (replicaFileSource == null && bag.getPegasusProperties().getReplicaMode() == null) {
+        Properties output =
+                bag.getPegasusProperties()
+                        .matchingSubset(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, true);
+        if (replicaFileSource == null
+                && bag.getPegasusProperties().getReplicaMode() == null
+                && output.isEmpty()) {
             p.setProperty(ReplicaCatalog.c_prefix, "JDBCRC");
             p.setProperty(ReplicaCatalog.c_prefix + "." + "db.driver", "sqlite");
             StringBuilder dbURL = new StringBuilder();
