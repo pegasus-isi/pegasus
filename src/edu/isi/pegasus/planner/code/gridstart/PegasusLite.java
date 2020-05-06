@@ -773,7 +773,7 @@ public class PegasusLite implements GridStart {
             // what pegasus install to refer to
             if (job instanceof DAXJob) {
                 if (job.getSiteHandle().equals("local")) {
-                    sb.append("# set for pegasus-plan invocation ");
+                    sb.append("# set for pegasus-plan invocation ").append('\n');
                     sb.append("export PEGASUS_HOME")
                             .append("=\"")
                             .append(this.mProps.getBinDir().getParentFile().getAbsolutePath())
