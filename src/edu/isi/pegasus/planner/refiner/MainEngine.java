@@ -141,8 +141,13 @@ public class MainEngine extends Engine {
             // PM-1549 any generated replica catalog props should be set
             // in the planners copy of properties also so that registration jobs
             // are created
+            boolean createReplicaDB = false;
             if (property.startsWith(ReplicaCatalog.c_prefix)) {
                 this.mProps.setProperty(property, value);
+                createReplicaDB = true;
+            }
+            if (createReplicaDB) {
+                this.mProps.setProperty(ReplicaCatalog.c_prefix + "." + "db.create", "true");
             }
         }
 

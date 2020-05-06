@@ -136,6 +136,19 @@ public class PegasusDBAdmin {
     }
 
     /**
+     * Calls out to the pegasus-db-admin tool to create the jdbcrc backend
+     *
+     * @param propertiesFile
+     * @return
+     */
+    public boolean createJDBCRC(String propertiesFile) {
+        StringBuilder arguments = new StringBuilder();
+        arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
+
+        return this.checkDatabase(DB_ADMIN_COMMANDS.create.name(), arguments.toString());
+    }
+
+    /**
      * Calls out to the pegasus-db-admin tool to check for jdbrc compatibility.
      *
      * @param propertiesFile

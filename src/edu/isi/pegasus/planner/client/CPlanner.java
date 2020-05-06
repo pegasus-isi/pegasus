@@ -15,10 +15,12 @@ package edu.isi.pegasus.planner.client;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
+import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
@@ -1846,14 +1848,29 @@ public class CPlanner extends Executable {
         return dag;
     }
 
-    /**
-     * Calls out to the pegasus-db-admin tool to check for database compatibility.
-     *
-     * @param submitDirectory the submit directory created by the planner
-     */
+    /** Calls out to the pegasus-db-admin tool to check for database compatibility. */
     private void checkMasterDatabaseForVersionCompatibility() {
         PegasusDBAdmin dbCheck = new PegasusDBAdmin(mBag.getLogger());
         dbCheck.checkMasterDatabaseForVersionCompatibility(mProps.getPropertiesInSubmitDirectory());
+    }
+
+    /**
+     * Calls out to the pegasus-db-admin tool to create the JDBCRC backed for output replica catalog
+     */
+    private void createJDBCRCReplicaCatalogBackend() {
+        boolean create =
+                Boolean.parse(
+                        this.mProps.getProperty(ReplicaCatalog.c_prefix + "." + "db.create"),
+                        false);
+        if (create) {
+            PegasusDBAdmin dbCreate = new PegasusDBAdmin(mBag.getLogger());
+            if (dbCreate.createJDBCRC(mProps.getPropertiesInSubmitDirectory())) {
+                mLogger.log(
+                        "Output replica catalog set to "
+                                + this.mProps.getProperty(ReplicaCatalog.c_prefix + "." + "db.url"),
+                        LogManager.CONSOLE_MESSAGE_LEVEL);
+            }
+        }
     }
 
     /**
