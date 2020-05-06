@@ -466,6 +466,28 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Remaps property keys matching a particular prefix to the new prefix, and returns the remapped
+     * properties in a new Properties object
+     *
+     * @param prefix
+     * @param remapToPrefix
+     * @return
+     */
+    public Properties remap(String prefix, String remapToPrefix) {
+        Properties output = this.matchingSubset(prefix, true);
+        Properties result = new Properties();
+        if (!output.isEmpty()) {
+            // remap the properties
+            for (String outputProperty : output.stringPropertyNames()) {
+                String key = outputProperty.replace(prefix, remapToPrefix);
+                String value = output.getProperty(outputProperty);
+                result.setProperty(key, value);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Returns the properties matching a particular prefix as a list of sorted name value pairs,
      * where name is the full name of the matching property (including the prefix) and value is it's
      * value in the properties file.

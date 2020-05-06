@@ -157,27 +157,22 @@ public class PegasusDBAdmin {
         PegasusProperties props = PegasusProperties.nonSingletonInstance(propertiesFile);
         // PM-1549 check if a separate output replica catalog is specified
         Properties output =
-                props.matchingSubset(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, true);
+                props.remap(
+                        ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX,
+                        ReplicaCatalog.c_prefix);
         if (!output.isEmpty()) {
             // we translate the properties to pegasus.catalog.replica prefix and add
             // them to the command line invocation before the conf properties
             // are passed
-            for (String outputProperty : output.stringPropertyNames()) {
-                String property =
-                        outputProperty.replace(
-                                ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX,
-                                ReplicaCatalog.c_prefix);
-                String value = output.getProperty(outputProperty);
-
-                // sanitize the value for property ending in file
-                if (property.endsWith(".file")) {
-                    value = new File(value).getAbsolutePath();
-                }
-
-                arguments.append("-D").append(property).append("=").append(value).append(" ");
+            for (String property : output.stringPropertyNames()) {
+                arguments
+                        .append("-D")
+                        .append(property)
+                        .append("=")
+                        .append(output.getProperty(property))
+                        .append(" ");
             }
         }
-
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
 
         return this.checkDatabase(DB_ADMIN_COMMANDS.create.name(), arguments.toString());

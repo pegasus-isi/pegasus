@@ -710,23 +710,19 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
 
         // PM-985 check if a separate output replica catalog is specified
         Properties output =
-                mProps.matchingSubset(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, true);
+                mProps.remap(
+                        ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX,
+                        ReplicaCatalog.c_prefix);
         if (!output.isEmpty()) {
             // we translate the properties to pegasus.catalog.replica prefix and add
             // them to the command line invocation before the conf properties
             // are passed
-            for (String outputProperty : output.stringPropertyNames()) {
-                String property =
-                        outputProperty.replace(
-                                ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX,
-                                ReplicaCatalog.c_prefix);
-                String value = output.getProperty(outputProperty);
-
+            for (String property : output.stringPropertyNames()) {
+                String value = output.getProperty(property);
                 // sanitize the value for property ending in file
                 if (property.endsWith(".file")) {
                     value = new File(value).getAbsolutePath();
                 }
-
                 arguments.append("-D").append(property).append("=").append(value).append(" ");
             }
         }
