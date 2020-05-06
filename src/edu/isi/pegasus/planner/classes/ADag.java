@@ -376,7 +376,7 @@ public class ADag extends Data implements Graph {
      */
     public String getAbstractWorkflowName() {
         StringBuffer id = new StringBuffer();
-        id.append(this.mDAGInfo.getLabel()).append("_").append(this.mDAGInfo.getIndex());
+        id.append(this.mDAGInfo.getLabel()).append("-").append(this.mDAGInfo.getIndex());
         return id.toString();
     }
 
