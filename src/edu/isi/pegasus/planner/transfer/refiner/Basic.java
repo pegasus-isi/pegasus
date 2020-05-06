@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -77,9 +78,12 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
         mLogMsg = null;
         mFileTable = new HashMap(10000);
         mRelationsMap = new HashMap<String, Set<String>>(dag.size());
-
+        Properties output =
+                bag.getPegasusProperties()
+                        .matchingSubset(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, true);
         mCreateRegistrationJobs =
-                (mProps.getReplicaMode() != null) && mProps.createRegistrationJobs();
+                (mProps.getReplicaMode() != null || !output.isEmpty())
+                        && mProps.createRegistrationJobs();
         if (!mCreateRegistrationJobs) {
             mLogger.log(
                     "No Replica Registration Jobs will be created .",

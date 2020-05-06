@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.transfer.Refiner;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * An Empty implementation for performance evaluation purposes
@@ -62,8 +63,12 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
         mLogMsg = null;
         mFileTable = new HashMap(10000);
 
+        Properties output =
+                bag.getPegasusProperties()
+                        .matchingSubset(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, true);
         mCreateRegistrationJobs =
-                (mProps.getReplicaMode() != null) && mProps.createRegistrationJobs();
+                (mProps.getReplicaMode() != null || !output.isEmpty())
+                        && mProps.createRegistrationJobs();
         if (!mCreateRegistrationJobs) {
             mLogger.log(
                     "No Replica Registration Jobs will be created .",
