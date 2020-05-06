@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.FileUtils;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -133,7 +134,7 @@ public class MainEngine extends Engine {
                 new File(this.mPOptions.getSubmitDirectory(), CATALOGS_DIR_BASENAME));
 
         // PM-1537 add any default catalog file sources
-        Properties catalogProps = catalogFileProps(mBag);
+        Properties catalogProps = catalogFileProps(mBag, abstractWFName);
         for (String property : catalogProps.stringPropertyNames()) {
             propsBeforePlanning.setProperty(property, catalogProps.getProperty(property));
         }
@@ -378,9 +379,11 @@ public class MainEngine extends Engine {
      * Return any catalog related properties related to default file paths that were picked up
      *
      * @param bag
+     * @param workflowName
+     * 
      * @return
      */
-    private Properties catalogFileProps(PegasusBag bag) {
+    private Properties catalogFileProps(PegasusBag bag, String workflowName) {
 
         Properties p = new Properties();
 
@@ -393,6 +396,22 @@ public class MainEngine extends Engine {
                     replicaFileSource.getAbsolutePath());
         }
         */
+        
+        // PM-1549 if a replica catalog is not explicity defined in the properties
+        // then we set up a default sqlite based replica catalog in the submit directory
+        // for registration purposes
+        File replicaFileSource = bag.getReplicaCatalogFileSource();
+        if (replicaFileSource == null && bag.getPegasusProperties().getReplicaMode() == null) {
+            p.setProperty(
+                    ReplicaCatalog.c_prefix, "JDBCRC");
+            p.setProperty( ReplicaCatalog.c_prefix + "." + "db.driver", "sqlite");
+            StringBuilder dbURL = new StringBuilder();
+            dbURL.append("jdbc:sqlite:").
+                  append(bag.getPlannerOptions().getSubmitDirectory()).
+                  append(File.separator).append(workflowName).append(".replicas.db");
+            p.setProperty( ReplicaCatalog.c_prefix + "." + "db.url", dbURL.toString());
+        }
+        
 
         TransformationCatalog c = bag.getHandleToTransformationCatalog();
         if (c != null) {
