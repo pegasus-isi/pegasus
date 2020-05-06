@@ -642,6 +642,9 @@ public class CPlanner extends Executable {
         mPMetrics.setUsesPMC(Braindump.plannerUsedPMC(mBag));
 
         checkMasterDatabaseForVersionCompatibility();
+        
+        // PM-1549 create an output replica catalog for the workflow if required
+        createJDBCRCReplicaCatalogBackend();
 
         if (mPOptions.submitToScheduler()) { // submit the jobs
             StringBuffer invocation = new StringBuffer();
