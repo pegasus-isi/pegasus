@@ -387,7 +387,6 @@ public class MainEngine extends Engine {
      *
      * @param bag
      * @param workflowName
-     * 
      * @return
      */
     private Properties catalogFileProps(PegasusBag bag, String workflowName) {
@@ -403,22 +402,22 @@ public class MainEngine extends Engine {
                     replicaFileSource.getAbsolutePath());
         }
         */
-        
+
         // PM-1549 if a replica catalog is not explicity defined in the properties
         // then we set up a default sqlite based replica catalog in the submit directory
         // for registration purposes
         File replicaFileSource = bag.getReplicaCatalogFileSource();
         if (replicaFileSource == null && bag.getPegasusProperties().getReplicaMode() == null) {
-            p.setProperty(
-                    ReplicaCatalog.c_prefix, "JDBCRC");
-            p.setProperty( ReplicaCatalog.c_prefix + "." + "db.driver", "sqlite");
+            p.setProperty(ReplicaCatalog.c_prefix, "JDBCRC");
+            p.setProperty(ReplicaCatalog.c_prefix + "." + "db.driver", "sqlite");
             StringBuilder dbURL = new StringBuilder();
-            dbURL.append("jdbc:sqlite:").
-                  append(bag.getPlannerOptions().getSubmitDirectory()).
-                  append(File.separator).append(workflowName).append(".replicas.db");
-            p.setProperty( ReplicaCatalog.c_prefix + "." + "db.url", dbURL.toString());
+            dbURL.append("jdbc:sqlite:")
+                    .append(bag.getPlannerOptions().getSubmitDirectory())
+                    .append(File.separator)
+                    .append(workflowName)
+                    .append(".replicas.db");
+            p.setProperty(ReplicaCatalog.c_prefix + "." + "db.url", dbURL.toString());
         }
-        
 
         TransformationCatalog c = bag.getHandleToTransformationCatalog();
         if (c != null) {
