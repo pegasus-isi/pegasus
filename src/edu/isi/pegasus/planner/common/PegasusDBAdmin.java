@@ -154,25 +154,10 @@ public class PegasusDBAdmin {
             mLogger.log("Unable to access file " + file, LogManager.ERROR_MESSAGE_LEVEL);
             return false;
         }
+        // PM-1549 remap any output replica catalog properties to replica catalog properties
+        // as command line options
         PegasusProperties props = PegasusProperties.nonSingletonInstance(propertiesFile);
-        // PM-1549 check if a separate output replica catalog is specified
-        Properties output =
-                props.remap(
-                        ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX,
-                        ReplicaCatalog.c_prefix);
-        if (!output.isEmpty()) {
-            // we translate the properties to pegasus.catalog.replica prefix and add
-            // them to the command line invocation before the conf properties
-            // are passed
-            for (String property : output.stringPropertyNames()) {
-                arguments
-                        .append("-D")
-                        .append(property)
-                        .append("=")
-                        .append(output.getProperty(property))
-                        .append(" ");
-            }
-        }
+        arguments.append(remapOutputRCProperties(props));
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
 
         return this.checkDatabase(DB_ADMIN_COMMANDS.create.name(), arguments.toString());
@@ -186,8 +171,11 @@ public class PegasusDBAdmin {
      */
     public boolean checkJDBCRCForCompatibility(String propertiesFile) {
         StringBuilder arguments = new StringBuilder();
+        // PM-1549 remap any output replica catalog properties to replica catalog properties
+        // as command line options
+        PegasusProperties props = PegasusProperties.nonSingletonInstance(propertiesFile);
+        arguments.append(remapOutputRCProperties(props));
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
-
         return this.checkDatabase(DB_ADMIN_COMMANDS.check.name(), arguments.toString());
     }
 
@@ -248,5 +236,35 @@ public class PegasusDBAdmin {
         }
 
         return true;
+    }
+
+    /**
+     * Remaps properties with pegasus.catalog.replica.output prefix to pegasus.catalog.replica and
+     * creates an argument string where the remapped properties are passed on the command line
+     *
+     * @param props
+     * @return
+     */
+    protected String remapOutputRCProperties(PegasusProperties props) {
+        StringBuilder arguments = new StringBuilder();
+        // PM-1549 check if a separate output replica catalog is specified
+        Properties output =
+                props.remap(
+                        ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX,
+                        ReplicaCatalog.c_prefix);
+        if (!output.isEmpty()) {
+            // we translate the properties to pegasus.catalog.replica prefix and add
+            // them to the command line invocation before the conf properties
+            // are passed
+            for (String property : output.stringPropertyNames()) {
+                arguments
+                        .append("-D")
+                        .append(property)
+                        .append("=")
+                        .append(output.getProperty(property))
+                        .append(" ");
+            }
+        }
+        return arguments.toString();
     }
 }
