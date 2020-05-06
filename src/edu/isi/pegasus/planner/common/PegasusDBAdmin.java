@@ -18,15 +18,18 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.generator.Braindump;
+import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Helper class to call out to pegasus-db-admin to check out the status of various Pegasus
@@ -143,6 +146,38 @@ public class PegasusDBAdmin {
      */
     public boolean createJDBCRC(String propertiesFile) {
         StringBuilder arguments = new StringBuilder();
+        if (propertiesFile == null) {
+            return false;
+        }
+        File file = new File(propertiesFile);
+        if (!file.exists() && !file.canRead()) {
+            mLogger.log("Unable to access file " + file, LogManager.ERROR_MESSAGE_LEVEL);
+            return false;
+        }
+        PegasusProperties props = PegasusProperties.nonSingletonInstance(propertiesFile);
+        // PM-1549 check if a separate output replica catalog is specified
+        Properties output =
+                props.matchingSubset(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, true);
+        if (!output.isEmpty()) {
+            // we translate the properties to pegasus.catalog.replica prefix and add
+            // them to the command line invocation before the conf properties
+            // are passed
+            for (String outputProperty : output.stringPropertyNames()) {
+                String property =
+                        outputProperty.replace(
+                                ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX,
+                                ReplicaCatalog.c_prefix);
+                String value = output.getProperty(outputProperty);
+
+                // sanitize the value for property ending in file
+                if (property.endsWith(".file")) {
+                    value = new File(value).getAbsolutePath();
+                }
+
+                arguments.append("-D").append(property).append("=").append(value).append(" ");
+            }
+        }
+
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
 
         return this.checkDatabase(DB_ADMIN_COMMANDS.create.name(), arguments.toString());
