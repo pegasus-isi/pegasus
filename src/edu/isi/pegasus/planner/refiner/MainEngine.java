@@ -136,7 +136,14 @@ public class MainEngine extends Engine {
         // PM-1537 add any default catalog file sources
         Properties catalogProps = catalogFileProps(mBag, abstractWFName);
         for (String property : catalogProps.stringPropertyNames()) {
-            propsBeforePlanning.setProperty(property, catalogProps.getProperty(property));
+            String value = catalogProps.getProperty(property);
+            propsBeforePlanning.setProperty(property, value);
+            // PM-1549 any generated replica catalog props should be set
+            // in the planners copy of properties also so that registration jobs
+            // are created
+            if (property.startsWith(ReplicaCatalog.c_prefix)) {
+                this.mProps.setProperty(property, value);
+            }
         }
 
         // lock down on the workflow task metrics
