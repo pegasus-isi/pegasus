@@ -4,7 +4,7 @@ from enum import Enum
 from functools import wraps
 
 from ._utils import _chained, _get_enum_str
-from .errors import DuplicateError, NotFoundError
+from .errors import DuplicateError, NotFoundError, PegasusError
 from .mixins import HookMixin, MetadataMixin, ProfileMixin
 from .replica_catalog import File, ReplicaCatalog
 from .site_catalog import SiteCatalog
@@ -1077,7 +1077,21 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         :param file: path or file object (opened in "w" mode) to write to, defaults to None
         :type file: str or file, optional
+        :raises PegasusError: Site Catalog and Transformation Catalog must be written as a separate file for hierarchical workflows.
         """
+
+        # if subworkflow jobs exist,  tc and sc cannot be inlined
+        has_subworkflow_jobs = False
+        for _, job in self.jobs.items():
+            if isinstance(job, SubWorkflow):
+                has_subworkflow_jobs = True
+                break
+
+        if has_subworkflow_jobs:
+            if self.site_catalog or self.transformation_catalog:
+                raise PegasusError(
+                    "Site Catalog and Transformation Catalog must be written as a separate file for hierarchical workflows."
+                )
 
         # default file name
         if file is None:

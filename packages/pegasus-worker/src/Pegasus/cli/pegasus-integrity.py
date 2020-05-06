@@ -587,6 +587,7 @@ def main():
             files = options.verify_files
 
         # now check the files
+        exit_code = 0
         for f in str.split(files, ":"):
             # lfn can be encoded in the file name in the format lfn=pfn
             lfn = None
@@ -595,12 +596,12 @@ def main():
                 (lfn, pfn) = str.split(f, "=", 1)
             results = check_integrity(pfn, lfn, meta_data, options.print_timings)
             if not results:
-                if options.print_timings:
-                    dump_summary_yaml()
-                myexit(1)
+                exit_code = 1
 
         if options.print_timings:
             dump_summary_yaml()
+
+        myexit(exit_code)
 
     myexit(0)
 

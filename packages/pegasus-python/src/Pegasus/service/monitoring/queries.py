@@ -17,19 +17,35 @@ __author__ = "Rajiv Mayani"
 import hashlib
 import logging
 
-from sqlalchemy.orm import aliased, defer
+from sqlalchemy.orm import aliased, defer, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_, desc, distinct, func
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.errors import StampedeDBNotFoundError
-from Pegasus.db.schema import *
+from Pegasus.db.schema import (
+    RCLFN,
+    RCPFN,
+    DashboardWorkflow,
+    DashboardWorkflowstate,
+    Host,
+    Invocation,
+    Job,
+    JobInstance,
+    Jobstate,
+    RCMeta,
+    Task,
+    TaskMeta,
+    Workflow,
+    WorkflowFiles,
+    WorkflowMeta,
+    Workflowstate,
+)
 from Pegasus.service import cache
 from Pegasus.service._query import InvalidQueryError, query_parse
 from Pegasus.service._sort import InvalidSortError, sort_parse
-from Pegasus.service.base import OrderedDict, OrderedSet, PagedResponse
-from Pegasus.service.monitoring.utils import csv_to_json
+from Pegasus.service.base import PagedResponse
 
 log = logging.getLogger(__name__)
 
@@ -524,17 +540,21 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if total_records == 0:
             return PagedResponse([], 0, 0)
 
-        q_in = self.session.query(distinct(RCLFN.lfn_id).label("lfn_id"))
-        q_in = q_in.join(WorkflowFiles, WorkflowFiles.wf_id == wf_id)
-        q_in = q_in.outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
-        q_in = q_in.outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
+        q = (
+            self.session.query(WorkflowFiles)
+            .options(
+                joinedload(WorkflowFiles.lfn).joinedload(RCLFN.pfns),
+                joinedload(WorkflowFiles.lfn).joinedload(RCLFN.meta),
+            )
+            .filter(WorkflowFiles.wf_id == wf_id)
+        )
 
         #
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q_in = self._evaluate_query(q_in, query, l=RCLFN, p=RCPFN, rm=RCMeta)
-            total_filtered = self._get_count(q_in, use_cache)
+            q = self._evaluate_query(q, query, l=RCLFN, p=RCPFN, rm=RCMeta)
+            total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug("total_filtered is 0 or start_index >= total_filtered")
@@ -543,19 +563,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to paginate.
         #
-        q_in = WorkflowQueries._add_pagination(
-            q_in, start_index, max_results, total_filtered
-        )
-
-        #
-        # Finish Construction of Base SQLAlchemy Query `q`
-        #
-        q_in = q_in.subquery("distinct_lfns")
-        q = self.session.query(RCLFN, WorkflowFiles, RCPFN, RCMeta)
-        q = q.outerjoin(WorkflowFiles, RCLFN.lfn_id == WorkflowFiles.lfn_id)
-        q = q.outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
-        q = q.outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
-        q = q.join(q_in, RCLFN.lfn_id == q_in.c.lfn_id)
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -565,20 +573,15 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        schema = OrderedDict(
-            [
-                (RCLFN, "root"),
-                (WorkflowFiles, ("extras", RCLFN, None)),
-                (RCPFN, ("pfns", RCLFN, OrderedSet)),
-                (RCMeta, ("meta", RCLFN, OrderedSet)),
-            ]
-        )
+        _records = []
+        for r in records:
+            o = {k: getattr(r, k) for k in r.__table__.columns.keys()}
+            o["lfn"] = r.lfn.lfn
+            o["pfns"] = r.lfn.pfns
+            o["meta"] = r.lfn.meta
+            _records.append(o)
 
-        index = OrderedDict([(RCLFN, 0), (WorkflowFiles, 1), (RCPFN, 2), (RCMeta, 3)])
-
-        records = csv_to_json(records, schema, index)
-
-        return PagedResponse(records, total_records, total_filtered)
+        return PagedResponse(_records, total_records, total_filtered)
 
     # Workflow State
 

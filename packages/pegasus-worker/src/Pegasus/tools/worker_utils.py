@@ -61,6 +61,7 @@ class TimedCommand(object):
     def __init__(
         self,
         cmd,
+        cmd_display=None,
         env_overrides={},
         timeout_secs=6 * 60 * 60,
         log_cmd=True,
@@ -68,6 +69,10 @@ class TimedCommand(object):
         cwd=None,
     ):
         self._cmd = cmd
+        if cmd_display is None:
+            self._cmd_display = cmd
+        else:
+            self._cmd_display = cmd_display
         self._env_overrides = env_overrides.copy()
         self._timeout_secs = timeout_secs
         self._log_cmd = log_cmd
@@ -77,9 +82,6 @@ class TimedCommand(object):
         self._outerr = ""
         self._duration = 0.0
         self._cwd = cwd
-
-        # used in exceptions
-        self._cmd_for_exc = cmd
 
     def run(self):
         def target():
@@ -102,7 +104,7 @@ class TimedCommand(object):
             self._process.communicate()
 
         if self._log_cmd or logger.isEnabledFor(logging.DEBUG):
-            logger.info(self._cmd)
+            logger.info(self._cmd_display)
 
         sys.stdout.flush()
 
@@ -135,7 +137,7 @@ class TimedCommand(object):
             self._out_file.close()
             raise RuntimeError(
                 "Command timed out after %d seconds: %s"
-                % (self._timeout_secs, self._cmd_for_exc)
+                % (self._timeout_secs, self._cmd_display)
             )
 
         self._duration = time.time() - ts_start
@@ -151,7 +153,7 @@ class TimedCommand(object):
             print(self.get_outerr())
             raise RuntimeError(
                 "Command exited with non-zero exit code (%d): %s"
-                % (self._process.returncode, self._cmd_for_exc)
+                % (self._process.returncode, self._cmd_display)
             )
 
     def get_outerr(self):
