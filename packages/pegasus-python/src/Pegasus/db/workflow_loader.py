@@ -805,7 +805,9 @@ class WorkflowLoader(BaseLoader):
         """
         rc_pfn = self.linedataToObject(linedata, RCPFN())
         lfn = rc_pfn.lfn_id
-        rc_pfn.lfn = lfn
+        # str’ object has no attribute ‘_sa_instance_state’ error if the below is set
+        # in 5.0 schema lfn maps to RCLFN object based on how the sql alchemy schema is defined
+        # rc_pfn.lfn = lfn
         rc_pfn.wf_id = self.wf_uuid_to_id(rc_pfn.wf_uuid)
         rc_pfn.lfn_id = self.get_lfn_id(rc_pfn.wf_id, lfn)
 
@@ -827,7 +829,9 @@ class WorkflowLoader(BaseLoader):
 
         wf_files = self.linedataToObject(linedata, WorkflowFiles())
         lfn = wf_files.lfn_id
-        wf_files.lfn = lfn
+        # str’ object has no attribute ‘_sa_instance_state’ error if the below is set
+        # in 5.0 schema lfn maps to RCLFN object based on how the sql alchemy schema is defined
+        # wf_files.lfn = lfn
         wf_files.wf_id = self.wf_uuid_to_id(wf_files.wf_uuid)
         wf_files.task_id = self.get_task_id(wf_files.wf_id, wf_files.abs_task_id)
         wf_files.lfn_id = self.get_lfn_id(wf_files.wf_id, lfn)
