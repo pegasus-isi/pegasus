@@ -840,12 +840,7 @@ class WorkflowFiles(Base):
     file_type = Column("file_type", String(255))
 
     # Relationships
-    lfn = relation(
-        lambda: RCLFN,
-        cascade="all, delete-orphan",
-        single_parent=True,
-        passive_deletes=True,
-    )
+    lfn = relation(lambda: RCLFN, cascade="all, delete-orphan", single_parent=True)
 
 
 class IntegrityMetrics(Base):
