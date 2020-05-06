@@ -805,6 +805,19 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Returns the properties required for connecting to replica catalog to be used for registering
+     * outputs. If not specified, then input replica catalog is used.
+     *
+     * <p>Referred to by the "pegasus.catalog.replica.output" property.
+     *
+     * @return the replica mode, that is used to load the appropriate implementing class if property
+     *     is specified, else null
+     */
+    public String getOutputReplicaProperites() {
+        return mProps.getProperty(PEGASUS_REPLICA_CATALOG_PROPERTY);
+    }
+
+    /**
      * Returns the url to the RLI of the RLS.
      *
      * <p>Referred to by the "pegasus.rls.url" property.

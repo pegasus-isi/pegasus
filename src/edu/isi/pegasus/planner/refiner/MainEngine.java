@@ -16,7 +16,6 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.FileUtils;
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -142,12 +141,14 @@ public class MainEngine extends Engine {
             // in the planners copy of properties also so that registration jobs
             // are created
             boolean createReplicaDB = false;
-            if (property.startsWith(ReplicaCatalog.c_prefix)) {
+            if (property.startsWith(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX)) {
                 this.mProps.setProperty(property, value);
                 createReplicaDB = true;
             }
             if (createReplicaDB) {
-                this.mProps.setProperty(ReplicaCatalog.c_prefix + "." + "db.create", "true");
+                this.mProps.setProperty(
+                        ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX + "." + "db.create",
+                        "true");
             }
         }
 
@@ -418,15 +419,19 @@ public class MainEngine extends Engine {
         if (replicaFileSource == null
                 && bag.getPegasusProperties().getReplicaMode() == null
                 && output.isEmpty()) {
-            p.setProperty(ReplicaCatalog.c_prefix, "JDBCRC");
-            p.setProperty(ReplicaCatalog.c_prefix + "." + "db.driver", "sqlite");
+            p.setProperty(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, "JDBCRC");
+            p.setProperty(
+                    ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX + "." + "db.driver",
+                    "sqlite");
             StringBuilder dbURL = new StringBuilder();
             dbURL.append("jdbc:sqlite:")
                     .append(bag.getPlannerOptions().getSubmitDirectory())
                     .append(File.separator)
                     .append(workflowName)
                     .append(".replicas.db");
-            p.setProperty(ReplicaCatalog.c_prefix + "." + "db.url", dbURL.toString());
+            p.setProperty(
+                    ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX + "." + "db.url",
+                    dbURL.toString());
         }
 
         TransformationCatalog c = bag.getHandleToTransformationCatalog();

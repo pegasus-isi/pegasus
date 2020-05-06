@@ -20,7 +20,6 @@ import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
@@ -52,6 +51,7 @@ import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.refiner.MainEngine;
+import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.io.BufferedReader;
@@ -1863,14 +1863,20 @@ public class CPlanner extends Executable {
     private void createJDBCRCReplicaCatalogBackend() {
         boolean create =
                 Boolean.parse(
-                        this.mProps.getProperty(ReplicaCatalog.c_prefix + "." + "db.create"),
+                        this.mProps.getProperty(
+                                ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX
+                                        + "."
+                                        + "db.create"),
                         false);
         if (create) {
             PegasusDBAdmin dbCreate = new PegasusDBAdmin(mBag.getLogger());
             if (dbCreate.createJDBCRC(mProps.getPropertiesInSubmitDirectory())) {
                 mLogger.log(
                         "Output replica catalog set to "
-                                + this.mProps.getProperty(ReplicaCatalog.c_prefix + "." + "db.url"),
+                                + this.mProps.getProperty(
+                                        ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX
+                                                + "."
+                                                + "db.url"),
                         LogManager.CONSOLE_MESSAGE_LEVEL);
             }
         }
