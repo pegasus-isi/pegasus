@@ -133,6 +133,7 @@ pegasus-plan \
     --conf pegasusrc \
     --sites CCG \
     --dir work \
+    --input-dir input \
     --output-site local \
     --dax outer.dax \
     --submit \
