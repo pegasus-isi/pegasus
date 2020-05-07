@@ -425,6 +425,9 @@ public class SUBDAXGenerator {
         // do some sanitization of the path to the dax file.
         // if it is a relative path, then ???
         options.setSanitizePath(true);
+        // PM-1150 make sure previously set options are sanitized again
+        options.setInputDirectories(options.getInputDirectories());
+        options.setOutputDirectory(options.getOutputDirectory());
 
         String baseDir = options.getBaseSubmitDirectory();
         String relativeDir = null;
@@ -1350,7 +1353,7 @@ public class SUBDAXGenerator {
      * @param rootUUID the root workflow uuid
      * @param properties the properties file.
      * @param log the log for the prescript output
-     * @return the prescript
+     * @return String[] containing prescript and the arguments
      */
     public Job constructPegasusPlanPrescript(
             Job job, PlannerOptions options, String rootUUID, String properties, String log) {

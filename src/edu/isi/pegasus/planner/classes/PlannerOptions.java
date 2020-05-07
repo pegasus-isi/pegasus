@@ -906,7 +906,21 @@ public class PlannerOptions extends Data implements Cloneable {
      * @param input the input directory for the workflow
      */
     public void setInputDirectories(String input) {
+        Set<String> dirs = new HashSet();
         for (String dir : input.split(",")) {
+            dirs.add(dir);
+        }
+        this.setInputDirectories(dirs);
+    }
+
+    /**
+     * Set the input directory.
+     *
+     * @param inputs the input directories to use for the workflow
+     */
+    public void setInputDirectories(Set<String> inputs) {
+        this.mInputDirs = new HashSet();
+        for (String dir : inputs) {
             this.mInputDirs.add(sanitizePath(dir));
         }
     }
