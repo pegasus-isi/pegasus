@@ -551,9 +551,11 @@ public class SUBDAXGenerator {
                 .append(File.separator)
                 .append(job.getName())
                 .append(".pre.log");
-        Job prescript =
+        String[] prescript =
                 constructPegasusPlanPrescript(
                         job, options, mDAG.getRootWorkflowUUID(), propertiesFile, log.toString());
+        job.setPreScript(prescript[0], prescript[1]);
+
         // job.setPreScript( prescript );
 
         // determine the path to the dag file that will be constructed
@@ -1355,13 +1357,13 @@ public class SUBDAXGenerator {
      * @param log the log for the prescript output
      * @return String[] containing prescript and the arguments
      */
-    public Job constructPegasusPlanPrescript(
+    public String[] constructPegasusPlanPrescript(
             Job job, PlannerOptions options, String rootUUID, String properties, String log) {
         // StringBuffer prescript = new StringBuffer();
 
         String site = job.getSiteHandle();
         TransformationCatalogEntry entry = null;
-
+        String[] result = new String[2];
         // get the path to script wrapper from the
         try {
             List entries =
@@ -1439,9 +1441,18 @@ public class SUBDAXGenerator {
         // add the --dax option explicitly in the end
         arguments.append(" --dax ").append(options.getDAX());
 
-        // prescript.append( script ).append( " " ).append( arguments );
-        job.setPreScript(script.toString(), arguments.toString());
-        return job;
+        // job.setPreScript(script.toString(), arguments.toString());
+        result[0] = script.toString();
+        result[1] = arguments.toString();
+        StringBuilder message = new StringBuilder();
+        message.append("pegasus-plan invocation for job ")
+                .append(job.getID())
+                .append(" determined to be\n")
+                .append(script)
+                .append(" ")
+                .append(arguments);
+        mLogger.log(message.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
+        return result;
     }
 
     /**
