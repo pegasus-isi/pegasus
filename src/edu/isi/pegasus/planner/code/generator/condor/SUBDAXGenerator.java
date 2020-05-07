@@ -47,14 +47,12 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -750,62 +748,6 @@ public class SUBDAXGenerator {
                 throw new RuntimeException(
                         "Unable to copy file " + mPegasusLiteCommon + " to directory " + dest, ex);
             }
-        }
-
-        return wrapper;
-    }
-
-    /**
-     * Construct a pegasus plan wrapper script that changes the directory in which pegasus-plan is
-     * launched.
-     *
-     * @param dagJob the DAG job corresponding to which the prescript is associated.
-     * @param directory the directory where the submit file for dagman job has to be written out to.
-     * @param executable the path to the planner that needs to be called in the prescript
-     * @param arguments the arguments with which the planner is called.
-     * @return the wrapper script that gets called in the prescript for the dag job
-     */
-    protected File constructPlannerPrescriptWrapperOld(
-            Job dagJob, File directory, String executable, String arguments) {
-
-        // determine the basename for the wrapper
-        String basename = this.getBasename(dagJob.getName(), "_pre.sh");
-        File wrapper = new File(directory, basename);
-
-        try {
-            OutputStream ostream = new FileOutputStream(wrapper, true);
-            PrintWriter writer =
-                    new PrintWriter(new BufferedWriter(new OutputStreamWriter(ostream)));
-
-            // determine the launch directory in which the pre script should be
-            // called. it is the scratch directory for local site
-            String launchDir = mSiteStore.getInternalWorkDirectory(dagJob);
-
-            StringBuffer sb = new StringBuffer();
-            sb.append("#!/bin/bash").append('\n');
-            sb.append("set -e").append('\n');
-            sb.append("cd ").append(launchDir);
-            sb.append('\n');
-            sb.append(executable).append(" ").append("$@");
-            sb.append('\n');
-
-            writer.print(sb.toString());
-            writer.flush();
-
-            writer.close();
-            ostream.close();
-
-            // set the xbit on the shell script
-            // for 3.2, we will have 1.6 as the minimum jdk requirement
-            wrapper.setExecutable(true, false);
-
-        } catch (IOException ioe) {
-            throw new RuntimeException(
-                    "Error while writing out prescript wrapper  "
-                            + wrapper
-                            + " for job "
-                            + dagJob.getName(),
-                    ioe);
         }
 
         return wrapper;
