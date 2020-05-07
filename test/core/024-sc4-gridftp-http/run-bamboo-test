@@ -2,6 +2,8 @@
 
 set -e
 
+TOP_DIR=`pwd`
+
 # download rosetta binary - this is to save space in the Pegasus distribution
 if [ ! -e rosetta.exe ]; then
    wget -q -O rosetta.exe http://pegasus.isi.edu/wms/example-workflows/rosetta/fake-rosetta.exe
