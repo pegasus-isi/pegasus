@@ -261,7 +261,7 @@ class Workflow(Base):
     dax_file = Column("dax_file", String(255))
     db_url = Column("db_url", Text)
     parent_wf_id = Column(
-        "parent_wf_id", KeyInteger, ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        "parent_wf_id", KeyInteger, ForeignKey(wf_id, ondelete="CASCADE"),
     )
     # not marked as FK to not screw up the cascade.
     root_wf_id = Column("root_wf_id", KeyInteger)
@@ -322,11 +322,17 @@ class Workflow(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    files = relation(
+    workflow_files = relation(
         lambda: WorkflowFiles,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
+    )
+    files = relation(
+        lambda: RCLFN,
+        secondary=lambda: WorkflowFiles.__table__,
+        primaryjoin=lambda: Workflow.wf_id == WorkflowFiles.wf_id,
+        secondaryjoin=lambda: WorkflowFiles.lfn_id == RCLFN.lfn_id,
     )
     integrity = relation(
         lambda: IntegrityMetrics,
@@ -363,7 +369,7 @@ class Workflowstate(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         primary_key=True,
     )
     state = Column(
@@ -388,7 +394,7 @@ class WorkflowMeta(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         primary_key=True,
     )
     key = Column("key", String(255), primary_key=True)
@@ -424,7 +430,7 @@ class Host(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         nullable=False,
     )
     site = Column("site", String(255), nullable=False)
@@ -452,7 +458,7 @@ class Job(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         nullable=False,
     )
     exec_job_id = Column("exec_job_id", String(255), nullable=False)
@@ -524,7 +530,7 @@ class JobEdge(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         primary_key=True,
     )
     parent_exec_job_id = Column("parent_exec_job_id", String(255), primary_key=True)
@@ -541,11 +547,11 @@ class JobInstance(Base):
     job_id = Column(
         "job_id",
         KeyInteger,
-        ForeignKey("job.job_id", ondelete="CASCADE"),
+        ForeignKey(Job.job_id, ondelete="CASCADE"),
         nullable=False,
     )
     host_id = Column(
-        "host_id", KeyInteger, ForeignKey("host.host_id", ondelete="SET NULL"),
+        "host_id", KeyInteger, ForeignKey(Host.host_id, ondelete="SET NULL"),
     )
     job_submit_seq = Column("job_submit_seq", Integer, nullable=False)
     sched_id = Column("sched_id", String(255))
@@ -556,7 +562,7 @@ class JobInstance(Base):
     cluster_duration = Column("cluster_duration", DurationType)
     local_duration = Column("local_duration", DurationType)
     subwf_id = Column(
-        "subwf_id", KeyInteger, ForeignKey("workflow.wf_id", ondelete="SET NULL"),
+        "subwf_id", KeyInteger, ForeignKey(Workflow.wf_id, ondelete="SET NULL"),
     )
     stdout_file = Column("stdout_file", String(255))
     stdout_text = Column("stdout_text", Text)
@@ -635,7 +641,7 @@ class Jobstate(Base):
     job_instance_id = Column(
         "job_instance_id",
         KeyInteger,
-        ForeignKey("job_instance.job_instance_id", ondelete="CASCADE"),
+        ForeignKey(JobInstance.job_instance_id, ondelete="CASCADE"),
         primary_key=True,
     )
     state = Column("state", String(255), primary_key=True)
@@ -658,13 +664,13 @@ class Tag(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         nullable=False,
     )
     job_instance_id = Column(
         "job_instance_id",
         KeyInteger,
-        ForeignKey("job_instance.job_instance_id", ondelete="CASCADE"),
+        ForeignKey(JobInstance.job_instance_id, ondelete="CASCADE"),
         nullable=False,
     )
     name = Column("name", String(255), nullable=False)
@@ -684,12 +690,10 @@ class Task(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         nullable=False,
     )
-    job_id = Column(
-        "job_id", KeyInteger, ForeignKey("job.job_id", ondelete="SET NULL"),
-    )
+    job_id = Column("job_id", KeyInteger, ForeignKey(Job.job_id, ondelete="SET NULL"),)
     abs_task_id = Column("abs_task_id", String(255), nullable=False)
     transformation = Column("transformation", Text, nullable=False)
     argv = Column("argv", Text)
@@ -712,11 +716,17 @@ class Task(Base):
             Task.abs_task_id == foreign(TaskEdge.parent_abs_task_id),
         ),
     )
-    files = relation(
+    task_files = relation(
         lambda: WorkflowFiles,
         backref="task",
         cascade="all, delete-orphan",
         passive_deletes=True,
+    )
+    files = relation(
+        lambda: RCLFN,
+        secondary=lambda: WorkflowFiles.__table__,
+        primaryjoin=lambda: Task.task_id == WorkflowFiles.task_id,
+        secondaryjoin=lambda: WorkflowFiles.lfn_id == RCLFN.lfn_id,
     )
     meta = relation(
         lambda: TaskMeta,
@@ -740,7 +750,7 @@ class TaskEdge(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         primary_key=True,
     )
     parent_abs_task_id = Column("parent_abs_task_id", String(255), primary_key=True)
@@ -756,7 +766,7 @@ class TaskMeta(Base):
     task_id = Column(
         "task_id",
         KeyInteger,
-        ForeignKey("task.task_id", ondelete="CASCADE"),
+        ForeignKey(Task.task_id, ondelete="CASCADE"),
         primary_key=True,
     )
     key = Column("key", String(255), primary_key=True)
@@ -778,13 +788,13 @@ class Invocation(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         nullable=False,
     )
     job_instance_id = Column(
         "job_instance_id",
         KeyInteger,
-        ForeignKey("job_instance.job_instance_id", ondelete="CASCADE"),
+        ForeignKey(JobInstance.job_instance_id, ondelete="CASCADE"),
         nullable=False,
     )
     task_submit_seq = Column("task_submit_seq", Integer, nullable=False)
@@ -810,39 +820,6 @@ Index(
 )
 
 
-class WorkflowFiles(Base):
-    """."""
-
-    __tablename__ = "workflow_files"
-    __table_args__ = (table_keywords,)
-
-    lfn_id = Column(
-        "lfn_id",
-        KeyInteger,
-        ForeignKey("rc_lfn.lfn_id", ondelete="CASCADE"),
-        primary_key=True,
-        nullable=False,
-    )
-    wf_id = Column(
-        "wf_id",
-        KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
-        primary_key=True,
-        nullable=False,
-    )
-    task_id = Column(
-        "task_id",
-        KeyInteger,
-        ForeignKey("task.task_id", ondelete="CASCADE"),
-        primary_key=True,
-        nullable=False,
-    )
-    file_type = Column("file_type", String(255))
-
-    # Relationships
-    lfn = relation(lambda: RCLFN, cascade="all, delete-orphan", single_parent=True)
-
-
 class IntegrityMetrics(Base):
     """."""
 
@@ -853,13 +830,13 @@ class IntegrityMetrics(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey("workflow.wf_id", ondelete="CASCADE"),
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         nullable=False,
     )
     job_instance_id = Column(
         "job_instance_id",
         KeyInteger,
-        ForeignKey("job_instance.job_instance_id", ondelete="CASCADE"),
+        ForeignKey(JobInstance.job_instance_id, ondelete="CASCADE"),
         nullable=False,
     )
     type = Column(
@@ -877,131 +854,6 @@ Index(
     IntegrityMetrics.job_instance_id,
     IntegrityMetrics.type,
     IntegrityMetrics.file_type,
-    unique=True,
-)
-
-
-# ---------------------------------------------
-# DASHBOARD
-# ---------------------------------------------
-
-
-class DashboardWorkflow(Base):
-    """."""
-
-    __tablename__ = "master_workflow"
-    __table_args__ = (table_keywords,)
-
-    # ==> Information comes from braindump.txt file
-    wf_id = Column("wf_id", KeyInteger, primary_key=True)
-    wf_uuid = Column("wf_uuid", String(255), nullable=False)
-    dax_label = Column("dax_label", String(255))
-    dax_version = Column("dax_version", String(255))
-    dax_file = Column("dax_file", String(255))
-    dag_file_name = Column("dag_file_name", String(255))
-    timestamp = Column("timestamp", TimestampType)
-    submit_hostname = Column("submit_hostname", String(255))
-    submit_dir = Column("submit_dir", Text)
-    planner_arguments = Column("planner_arguments", Text)
-    user = Column("user", String(255))
-    grid_dn = Column("grid_dn", String(255))
-    planner_version = Column("planner_version", String(255))
-    db_url = Column("db_url", Text)
-    archived = Column("archived", Boolean, nullable=False, default=0)
-
-    # Relationships
-    states = relation(
-        lambda: DashboardWorkflowstate,
-        backref="workflow",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
-
-
-Index("UNIQUE_MASTER_WF_UUID", DashboardWorkflow.wf_uuid, unique=True)
-
-
-class DashboardWorkflowstate(Base):
-    """."""
-
-    __tablename__ = "master_workflowstate"
-    __table_args__ = (table_keywords,)
-
-    # All three columns are marked as primary key to produce the desired
-    # effect - ie: it is the combo of the three columns that make a row
-    # unique.
-    wf_id = Column(
-        "wf_id",
-        KeyInteger,
-        ForeignKey("master_workflow.wf_id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    state = Column(
-        "state",
-        Enum("WORKFLOW_STARTED", "WORKFLOW_TERMINATED", name="master_workflow_state"),
-        primary_key=True,
-    )
-    timestamp = Column("timestamp", TimestampType, primary_key=True)
-    restart_count = Column("restart_count", Integer, nullable=False)
-    status = Column("status", Integer)
-    reason = Column("reason", Text)
-
-
-class Ensemble(Base):
-    """."""
-
-    __tablename__ = "ensemble"
-    __table_args__ = (table_keywords,)
-
-    id = Column("id", KeyInteger, primary_key=True)
-    name = Column("name", String(100), nullable=False)
-    created = Column("created", DateTime, nullable=False)
-    updated = Column("updated", DateTime, nullable=False)
-    state = Column(
-        "state", Enum(*EnsembleStates, name="ensemble_state"), nullable=False
-    )
-    max_running = Column("max_running", Integer, nullable=False)
-    max_planning = Column("max_planning", Integer, nullable=False)
-    username = Column("username", String(100), nullable=False)
-
-
-Index("UNIQUE_ENSEMBLE", Ensemble.username, Ensemble.name)
-
-
-class EnsembleWorkflow(Base):
-    """."""
-
-    __tablename__ = "ensemble_workflow"
-    __table_args__ = (table_keywords,)
-
-    id = Column("id", KeyInteger, primary_key=True)
-    name = Column("name", String(100), nullable=False)
-    basedir = Column("basedir", String(512), nullable=False)
-    created = Column("created", DateTime, nullable=False)
-    updated = Column("updated", DateTime, nullable=False)
-    state = Column(
-        "state",
-        Enum(*EnsembleWorkflowStates, name="ensemble_wf_state"),
-        nullable=False,
-    )
-    priority = Column("priority", Integer, nullable=False)
-    wf_uuid = Column("wf_uuid", String(36))
-    submitdir = Column("submitdir", String(512))
-    plan_command = Column(
-        "plan_command", String(1024), nullable=False, default="./plan.sh"
-    )
-    ensemble_id = Column(
-        "ensemble_id", KeyInteger, ForeignKey("ensemble.id"), nullable=False
-    )
-
-    # Relationsips
-    ensemble = relation(Ensemble, backref="workflows")
-
-
-Index(
-    "UNIQUE_ENSEMBLE_WORKFLOW",
-    EnsembleWorkflow.ensemble_id,
-    EnsembleWorkflow.name,
     unique=True,
 )
 
@@ -1058,7 +910,7 @@ class RCPFN(Base):
     lfn_id = Column(
         "lfn_id",
         KeyInteger,
-        ForeignKey("rc_lfn.lfn_id", ondelete="CASCADE"),
+        ForeignKey(RCLFN.lfn_id, ondelete="CASCADE"),
         nullable=False,
     )
     pfn = Column("pfn", String(245), nullable=False)
@@ -1077,8 +929,171 @@ class RCMeta(Base):
     lfn_id = Column(
         "lfn_id",
         KeyInteger,
-        ForeignKey("rc_lfn.lfn_id", ondelete="CASCADE"),
+        ForeignKey(RCLFN.lfn_id, ondelete="CASCADE"),
         primary_key=True,
     )
     key = Column("key", String(245), primary_key=True)
     value = Column("value", String(245), nullable=False)
+
+
+class WorkflowFiles(Base):
+    """."""
+
+    __tablename__ = "workflow_files"
+    __table_args__ = (table_keywords,)
+
+    wf_id = Column(
+        "wf_id",
+        KeyInteger,
+        ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    task_id = Column(
+        "task_id",
+        KeyInteger,
+        ForeignKey(Task.task_id, ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    lfn_id = Column(
+        "lfn_id",
+        KeyInteger,
+        ForeignKey(RCLFN.lfn_id, ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    file_type = Column("file_type", String(255))
+
+    # Relationships
+    lfn = relation(lambda: RCLFN, cascade="all, delete-orphan", single_parent=True)
+
+
+# ---------------------------------------------
+# DASHBOARD
+# ---------------------------------------------
+
+
+class DashboardWorkflow(Base):
+    """."""
+
+    __tablename__ = "master_workflow"
+    __table_args__ = (table_keywords,)
+
+    # ==> Information comes from braindump.txt file
+    wf_id = Column("wf_id", KeyInteger, primary_key=True)
+    wf_uuid = Column("wf_uuid", String(255), nullable=False)
+    dax_label = Column("dax_label", String(255))
+    dax_version = Column("dax_version", String(255))
+    dax_file = Column("dax_file", String(255))
+    dag_file_name = Column("dag_file_name", String(255))
+    timestamp = Column("timestamp", TimestampType)
+    submit_hostname = Column("submit_hostname", String(255))
+    submit_dir = Column("submit_dir", Text)
+    planner_arguments = Column("planner_arguments", Text)
+    user = Column("user", String(255))
+    grid_dn = Column("grid_dn", String(255))
+    planner_version = Column("planner_version", String(255))
+    db_url = Column("db_url", Text)
+    archived = Column("archived", Boolean, nullable=False, default=0)
+
+    # Relationships
+    states = relation(
+        lambda: DashboardWorkflowstate,
+        backref="workflow",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+
+Index("UNIQUE_MASTER_WF_UUID", DashboardWorkflow.wf_uuid, unique=True)
+
+
+class DashboardWorkflowstate(Base):
+    """."""
+
+    __tablename__ = "master_workflowstate"
+    __table_args__ = (table_keywords,)
+
+    # All three columns are marked as primary key to produce the desired
+    # effect - ie: it is the combo of the three columns that make a row
+    # unique.
+    wf_id = Column(
+        "wf_id",
+        KeyInteger,
+        ForeignKey(DashboardWorkflow.wf_id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    state = Column(
+        "state",
+        Enum("WORKFLOW_STARTED", "WORKFLOW_TERMINATED", name="master_workflow_state"),
+        primary_key=True,
+    )
+    timestamp = Column("timestamp", TimestampType, primary_key=True)
+    restart_count = Column("restart_count", Integer, nullable=False)
+    status = Column("status", Integer)
+    reason = Column("reason", Text)
+
+
+# ---------------------------------------------
+# ENSEMBLE MANAGER
+# ---------------------------------------------
+
+
+class Ensemble(Base):
+    """."""
+
+    __tablename__ = "ensemble"
+    __table_args__ = (table_keywords,)
+
+    id = Column("id", KeyInteger, primary_key=True)
+    name = Column("name", String(100), nullable=False)
+    created = Column("created", DateTime, nullable=False)
+    updated = Column("updated", DateTime, nullable=False)
+    state = Column(
+        "state", Enum(*EnsembleStates, name="ensemble_state"), nullable=False
+    )
+    max_running = Column("max_running", Integer, nullable=False)
+    max_planning = Column("max_planning", Integer, nullable=False)
+    username = Column("username", String(100), nullable=False)
+
+
+Index("UNIQUE_ENSEMBLE", Ensemble.username, Ensemble.name)
+
+
+class EnsembleWorkflow(Base):
+    """."""
+
+    __tablename__ = "ensemble_workflow"
+    __table_args__ = (table_keywords,)
+
+    id = Column("id", KeyInteger, primary_key=True)
+    name = Column("name", String(100), nullable=False)
+    basedir = Column("basedir", String(512), nullable=False)
+    created = Column("created", DateTime, nullable=False)
+    updated = Column("updated", DateTime, nullable=False)
+    state = Column(
+        "state",
+        Enum(*EnsembleWorkflowStates, name="ensemble_wf_state"),
+        nullable=False,
+    )
+    priority = Column("priority", Integer, nullable=False)
+    wf_uuid = Column("wf_uuid", String(36))
+    submitdir = Column("submitdir", String(512))
+    plan_command = Column(
+        "plan_command", String(1024), nullable=False, default="./plan.sh"
+    )
+    ensemble_id = Column(
+        "ensemble_id", KeyInteger, ForeignKey(Ensemble.id), nullable=False
+    )
+
+    # Relationsips
+    ensemble = relation(Ensemble, backref="workflows")
+
+
+Index(
+    "UNIQUE_ENSEMBLE_WORKFLOW",
+    EnsembleWorkflow.ensemble_id,
+    EnsembleWorkflow.name,
+    unique=True,
+)
