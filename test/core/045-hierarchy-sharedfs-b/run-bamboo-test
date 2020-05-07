@@ -19,12 +19,6 @@ mkdir -p input
 cp sleep.dax $TOP_DIR/input/
 
 
-# create the replica catalog for outer level workflow
-echo "blackdiamond.dax  $TOP_DIR/input/blackdiamond.dax site=local" > rc.data
-echo "sleep.dax  $TOP_DIR/input/sleep.dax site=local" >> rc.data
-echo "f.a $TOP_DIR/input/f.a site="local"" >> rc.data
-
-
 #create the replica catalog for the inner dax
 cat > input/f.a <<EOF
 Sample input file for the first inner dax job.

@@ -26,7 +26,7 @@ adag = ADAG('local-hierarchy')
 daxfile = File('blackdiamond.dax')
 dax1 = DAX (daxfile)
 #DAX jobs are called with same arguments passed, while planning the root level dax
-dax1.addArguments('--output-site local')
+dax1.addArguments('--input-dir input --output-site local')
 dax1.addArguments( '-vvv')
 adag.addJob(dax1)
 

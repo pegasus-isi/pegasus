@@ -4,9 +4,6 @@ pegasus.catalog.site.file=sites.xml
 pegasus.catalog.transformation=Text
 pegasus.catalog.transformation.file=tc.text
 
-pegasus.catalog.replica=File
-pegasus.catalog.replica.file=rc.data
-
 pegasus.dir.storage.deep=false
 
 pegasus.data.configuration = sharedfs
