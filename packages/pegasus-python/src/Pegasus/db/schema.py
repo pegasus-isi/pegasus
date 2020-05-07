@@ -48,10 +48,6 @@ from Pegasus.db.ensembles import (
 )
 
 __all__ = (
-    "table_keywords",
-    "metadata",
-    "get_missing_tables",
-    "check_table_exists",
     "DBVersion",
     "Workflow",
     "Workflowstate",
@@ -76,7 +72,6 @@ __all__ = (
     "RCLFN",
     "RCPFN",
     "RCMeta",
-    "KeyInteger",
 )
 
 log = logging.getLogger(__name__)

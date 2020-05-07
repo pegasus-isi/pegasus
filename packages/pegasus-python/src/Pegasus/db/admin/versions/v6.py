@@ -7,6 +7,7 @@ from sqlalchemy.types import Integer, String
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
 from Pegasus.db.schema import *
+from Pegasus.db.schema import KeyInteger, check_table_exists, metadata, table_keywords
 
 DB_VERSION = 6
 
