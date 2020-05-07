@@ -127,6 +127,7 @@ rc = ReplicaCatalog()
 # add all files in minirosetta_database
 inputs = list()
 
+
 def get_files(d: Path) -> None:
     for p in d.iterdir():
         if p.is_file():
@@ -151,41 +152,42 @@ wf = Workflow("rosetta", infer_dependencies=True)
 
 pdb_files = list(Path("pdbs").iterdir())
 for i in range(10):
-  current_file = pdb_files[i]
+    current_file = pdb_files[i]
 
-  if current_file.is_file():
-    job = Job(rosetta_exe, _id=current_file.name.replace(".pdb", ""))\
-            .add_inputs(File(current_file.name), *inputs)\
-            .add_outputs(File(current_file.name + ".score.sc"))\
+    if current_file.is_file():
+        job = (
+            Job(rosetta_exe, _id=current_file.name.replace(".pdb", ""))
+            .add_inputs(File(current_file.name), *inputs)
+            .add_outputs(File(current_file.name + ".score.sc"), register_replica=True)
             .add_args(
-              "-in:file:s",
-              current_file.name,
-              "-out:prefix " + current_file.name + ".",
-              "-database ./minirosetta_database",
-              "-linmem_ig 10",
-              "-nstruct 1",
-              "-pert_num 2",
-              "-inner_num 1",
-              "-jd2::ntrials 1"
+                "-in:file:s",
+                current_file.name,
+                "-out:prefix " + current_file.name + ".",
+                "-database ./minirosetta_database",
+                "-linmem_ig 10",
+                "-nstruct 1",
+                "-pert_num 2",
+                "-inner_num 1",
+                "-jd2::ntrials 1",
             )
-    
-    rc.add_replica("local", current_file.name, str(current_file.resolve()))
+        )
 
-    wf.add_jobs(job)
+        rc.add_replica("local", current_file.name, str(current_file.resolve()))
+
+        wf.add_jobs(job)
 
 wf.add_transformation_catalog(tc)
 wf.add_replica_catalog(rc)
 
 try:
-  wf.plan(
-    dir=str(WORK_DIR),
-    verbose=5,
-    sites=[CONDOR_POOL],
-    staging_sites={CONDOR_POOL:STAGING_SITE},
-    submit=True
-  )
+    wf.plan(
+        dir=str(WORK_DIR),
+        verbose=5,
+        sites=[CONDOR_POOL],
+        staging_sites={CONDOR_POOL: STAGING_SITE},
+        submit=True,
+    )
 except Exception as e:
-  print(e)
-  print(e.args[1].stdout)
-  print(e.args[1].stderr)
-
+    print(e)
+    print(e.args[1].stdout)
+    print(e.args[1].stderr)

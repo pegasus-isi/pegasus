@@ -75,7 +75,9 @@ ReplicaCatalog().add_replica(LOCAL, fa, "file://" + str(TOP_DIR / fa.lfn)).write
 
 # --- Transformations ----------------------------------------------------------
 
-print("Generating transformation catalog at: {}".format(TOP_DIR / "transformations.yml"))
+print(
+    "Generating transformation catalog at: {}".format(TOP_DIR / "transformations.yml")
+)
 
 preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0").add_sites(
     TransformationSite(
@@ -122,19 +124,19 @@ Workflow("blÅckƊiamond㒀㑖", infer_dependencies=True).add_jobs(
     Job(preprocess)
     .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
     .add_inputs(fa)
-    .add_outputs(fb1, fb2),
+    .add_outputs(fb1, fb2, register_replica=True),
     Job(findrage)
     .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
     .add_inputs(fb1)
-    .add_outputs(fc1),
+    .add_outputs(fc1, register_replica=True),
     Job(findrage)
     .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
     .add_inputs(fb2)
-    .add_outputs(fc2),
+    .add_outputs(fc2, register_replica=True),
     Job(analyze)
     .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
     .add_inputs(fc1, fc2)
-    .add_outputs(fd),
+    .add_outputs(fd, register_replica=True),
 ).plan(
     dir=str(WORK_DIR),
     verbose=3,

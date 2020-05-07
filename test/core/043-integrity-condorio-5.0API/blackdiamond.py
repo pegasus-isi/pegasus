@@ -12,7 +12,9 @@ logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
 
 # --- Work Dir Setup -----------------------------------------------------------
-RUN_ID = "black-diamond-integrity-checking-condorio-5.0api-" + datetime.now().strftime("%s")
+RUN_ID = "black-diamond-integrity-checking-condorio-5.0api-" + datetime.now().strftime(
+    "%s"
+)
 TOP_DIR = Path(Path.cwd())
 WORK_DIR = TOP_DIR / "work"
 
@@ -78,7 +80,7 @@ rc = ReplicaCatalog().add_replica(
 
 # --- Transformations ----------------------------------------------------------
 
-print("Generating transformation catalog") 
+print("Generating transformation catalog")
 
 preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
@@ -126,19 +128,19 @@ try:
         Job(preprocess)
         .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
         .add_inputs(fa)
-        .add_outputs(fb1, fb2),
+        .add_outputs(fb1, fb2, register_replica=True),
         Job(findrage)
         .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
         .add_inputs(fb1)
-        .add_outputs(fc1),
+        .add_outputs(fc1, register_replica=True),
         Job(findrage)
         .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
         .add_inputs(fb2)
-        .add_outputs(fc2),
+        .add_outputs(fc2, register_replica=True),
         Job(analyze)
         .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
         .add_inputs(fc1, fc2)
-        .add_outputs(fd),
+        .add_outputs(fd, register_replica=True),
     ).add_site_catalog(sc).add_replica_catalog(rc).add_transformation_catalog(tc).plan(
         dir=str(WORK_DIR),
         verbose=3,
