@@ -17,7 +17,6 @@ import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
-import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
@@ -303,12 +302,14 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
             // we set the default category value to 1
             // in the properties
             String key = getDefaultRegistrationMaxJobsPropertyKey();
-            mLogger.log(
-                    "Setting property "
-                            + key
-                            + " to 1 to set max jobs for registrations jobs category",
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-            mProps.setProperty(key, "1");
+            if (mProps.getProperty(key) == null) {
+                mLogger.log(
+                        "Setting property "
+                                + key
+                                + " to 1 to set max jobs for registrations jobs category",
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+                mProps.setProperty(key, "1");
+            }
         }
 
         // incorporate all mappings from input directory if specified
@@ -1050,6 +1051,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      */
     private boolean requireDefaultCategoryForRegistrationJobs(
             ReplicaCatalog rc, PegasusProperties props) {
+        /*
         boolean require = (rc != null);
         if (require) {
             require =
@@ -1060,5 +1062,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
                                     false);
         }
         return require;
+        */
+        return true;
     }
 }
