@@ -780,6 +780,7 @@ public class DeployWorkerPackage extends Engine {
             // the setupTXJob non third party site, has to be the staging site
             setupTXJob.setNonThirdPartySite(stagingSite);
 
+            /*
             // the setup and untar jobs need to be launched without kickstart.
             setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
             // no empty postscript but arguments to exitcode to add -r $RETURN
@@ -788,6 +789,18 @@ public class DeployWorkerPackage extends Engine {
             setupTXJob.dagmanVariables.construct(
                     Dagman.POST_SCRIPT_ARGUMENTS_KEY,
                     POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+            */
+
+            // PM-1552 after 5.0 worker package organization, we cannot just
+            // transfer pegasus-transfer using transfer_executable. Instead we
+            // have to set it up using PegasusLite and also ensure only pegasus-kickstart
+            // basename is used in the generated PegasusLite script
+            setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "PegasusLite");
+            setupTXJob.vdsNS.construct(
+                    Pegasus.DATA_CONFIGURATION_KEY,
+                    PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
+            // setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY,
+            // Kickstart.EXECUTABLE_BASENAME);
 
             GraphNode setupNode = new GraphNode(setupTXJob.getName(), setupTXJob);
 
@@ -934,11 +947,22 @@ public class DeployWorkerPackage extends Engine {
         // data to the submit host directory
         setupTXJob.setNonThirdPartySite(null);
 
+        /*
         // the setup and untar jobs need to be launched without kickstart.
         setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
         // no empty postscript but arguments to exitcode to add -r $RETURN
         setupTXJob.dagmanVariables.construct(
                 Dagman.POST_SCRIPT_ARGUMENTS_KEY, POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+        */
+        // PM-1552 after 5.0 worker package organization, we cannot just
+        // transfer pegasus-transfer using transfer_executable. Instead we
+        // have to set it up using PegasusLite and also ensure only pegasus-kickstart
+        // basename is used in the generated PegasusLite script
+        setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "PegasusLite");
+        setupTXJob.vdsNS.construct(
+                Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
+        // setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY, Kickstart.EXECUTABLE_BASENAME);
+
         GraphNode setupNode = new GraphNode(setupTXJob.getName(), setupTXJob);
 
         // add the original roots as children to setup node
