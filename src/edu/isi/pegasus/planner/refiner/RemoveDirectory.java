@@ -26,6 +26,8 @@ import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.code.gridstart.Kickstart;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.createdir.AbstractStrategy;
@@ -485,12 +487,6 @@ public class RemoveDirectory extends Engine {
         }
         if (mTransferFromSubmitHost) {
             /*
-            //we are using mkdir directly
-            argString = " -p " + mPoolHandle.getExecPoolWorkDir( execPool );
-            execPath  = "mkdir";
-            //path variable needs to be set
-            newJob.envVariables.construct( "PATH", CreateDirectory.PATH_VALUE );
-            */
             newJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
 
             StringBuffer sb = new StringBuffer();
@@ -499,6 +495,17 @@ public class RemoveDirectory extends Engine {
                     .append(RemoveDirectory.REMOVE_DIR_EXECUTABLE_BASENAME);
             execPath = sb.toString();
             newJob.condorVariables.construct("transfer_executable", "true");
+            */
+            // PM-1552 after 5.0 worker package organization, we cannot just
+            // transfer pegasus-transfer using transfer_executable. Instead we
+            // have to set it up using PegasusLite and also ensure only pegasus-kickstart
+            // basename is used in the generated PegasusLite script
+            newJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "PegasusLite");
+            execPath = RemoveDirectory.REMOVE_DIR_EXECUTABLE_BASENAME;
+            newJob.vdsNS.construct(
+                    Pegasus.DATA_CONFIGURATION_KEY,
+                    PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
+            newJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY, Kickstart.EXECUTABLE_BASENAME);
         } else {
             execPath = entry.getPhysicalTransformation();
         }
