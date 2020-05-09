@@ -35,8 +35,7 @@ props.write()
 print("Generating site catalog at: sites.yml")
 
 LOCAL = "local"
-CONDOR_POOL = "condorpool"
-STAGING_SITE = "staging_site"
+CONDOR_POOL = "condor_pool"
 
 try:
     pegasus_config = subprocess.run(
@@ -98,7 +97,7 @@ rosetta_exe = Transformation(
     "rosetta.exe",
     arch=Arch.X86_64,
     os_type=OS.LINUX,
-    site="local",
+    site=LOCAL,
     pfn="file://" + str(TOP_DIR / "rosetta.exe"),
     is_stageable=True,
 ).add_pegasus_profile(clusters_size=3)
@@ -156,7 +155,7 @@ for i in range(10):
             )
         )
 
-        rc.add_replica("local", current_file.name, str(current_file.resolve()))
+        rc.add_replica(LOCAL, current_file.name, str(current_file.resolve()))
 
         wf.add_jobs(job)
 
@@ -168,7 +167,7 @@ try:
         dir=str(WORK_DIR),
         verbose=5,
         sites=[CONDOR_POOL],
-        staging_sites={CONDOR_POOL: STAGING_SITE},
+        staging_sites={CONDOR_POOL: LOCAL},
         submit=True,
     )
 except Exception as e:

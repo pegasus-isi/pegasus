@@ -1,4 +1,7 @@
+"""."""
+
 import glob
+import logging
 import os
 import shutil
 import tarfile
@@ -6,7 +9,13 @@ from os.path import expanduser
 
 from Pegasus.command import CompoundCommand, LoggingCommand
 from Pegasus.db import connection
-from Pegasus.db.schema import *
+from Pegasus.db.schema import (
+    DashboardWorkflow,
+    DashboardWorkflowstate,
+    EnsembleWorkflow,
+    Workflow,
+    Workflowstate,
+)
 from Pegasus.tools import utils
 
 log = logging.getLogger(__name__)
@@ -105,13 +114,12 @@ class SubmitDir:
 
             raise SubmitDirException("Invalid submit dir: %s" % submitdir)
 
-        # Locate braindump file
-        self.braindump_file = os.path.join(self.submitdir, "braindump.txt")
+        self.braindump_file = os.path.join(self.submitdir, "braindump.yml")
         if not os.path.isfile(self.braindump_file):
-            raise SubmitDirException("Not a submit directory: braindump.txt missing")
+            self.braindump_file = os.path.join(self.submitdir, "braindump.txt")
 
         # Read the braindump file
-        self.braindump = utils.read_braindump(self.braindump_file)
+        self.braindump = utils.slurp_braindb(os.path.join(self.submitdir))
 
         # Read some attributes from braindump file
         self.wf_uuid = self.braindump["wf_uuid"]
