@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.code.gridstart.Kickstart;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
@@ -207,12 +208,15 @@ public class DefaultImplementation implements Implementation {
             */
             // PM-1552 after 5.0 worker package organization, we cannot just
             // transfer pegasus-transfer using transfer_executable. Instead we
-            // have to set it up using PegasusLite
+            // have to set it up using PegasusLite and also ensure only pegasus-kickstart
+            // basename is used in the generated PegasusLite script
             newJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "PegasusLite");
             execPath = DefaultImplementation.EXECUTABLE_BASENAME;
             newJob.vdsNS.construct(
                     Pegasus.DATA_CONFIGURATION_KEY,
                     PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
+            newJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY, Kickstart.EXECUTABLE_BASENAME);
+
         } else {
             execPath = entry.getPhysicalTransformation();
             targetURL = directoryURL;
