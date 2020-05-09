@@ -12,7 +12,7 @@ PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
 
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-5.0api-" + datetime.now().strftime("%s")
-TOP_DIR = Path(Path.cwd())
+TOP_DIR = Path.cwd()
 WORK_DIR = TOP_DIR / "work"
 
 try:
