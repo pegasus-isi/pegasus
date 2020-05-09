@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -216,6 +217,7 @@ public class DefaultImplementation implements Implementation {
                     Pegasus.DATA_CONFIGURATION_KEY,
                     PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
             newJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY, Kickstart.EXECUTABLE_BASENAME);
+            targetURL = mSiteStore.getExternalWorkDirectoryURL(site, FileServer.OPERATION.put);
 
         } else {
             execPath = entry.getPhysicalTransformation();
