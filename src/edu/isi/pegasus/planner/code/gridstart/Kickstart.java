@@ -791,19 +791,27 @@ public class Kickstart implements GridStart {
             }
             return entry.getPhysicalTransformation();
         } else {
-            // the vanilla case where kickstart is pre installed.
+            // the vanilla case where kickstart is pre installed or worker package
+            // staging
             TransformationCatalogEntry entry =
                     this.getTransformationCatalogEntry(job.getSiteHandle());
 
             String ksProfilePath = (String) job.vdsNS.get(Pegasus.GRIDSTART_PATH_KEY);
-            String ksPath =
-                    (entry == null)
-                            ?
-                            // rely on the path determined from profiles
-                            ksProfilePath
-                            :
-                            // the tc entry has highest priority
-                            entry.getPhysicalTransformation();
+            // PM-1552 path to kickstart from profile should have higher priority over the
+            // transformation catalog entry. Starting 5.0 release, create-dir is launched via
+            // pegasus lite for
+            // worker package staging and needs to have just the base path to pegasus-kickstart
+            String ksPath = ksProfilePath;
+            if (ksProfilePath == null) {
+                ksPath =
+                        (entry == null)
+                                ?
+                                // rely on the path determined from profiles which is null
+                                ksPath
+                                :
+                                // the tc entry has highest priority
+                                entry.getPhysicalTransformation();
+            }
 
             // we use full paths  for pegasus auxillary jobs
             // even when pegasus lite is used i.e mUseFullPathToGridStart is set to true
