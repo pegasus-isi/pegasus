@@ -17,17 +17,15 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
-import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -191,6 +189,7 @@ public class DefaultImplementation implements Implementation {
         if (mUseMkdir) {
 
             // no gridstart but arguments to exitcode to add -r $RETURN
+            /*
             newJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
             newJob.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
             newJob.dagmanVariables.construct(
@@ -204,9 +203,16 @@ public class DefaultImplementation implements Implementation {
             execPath = sb.toString();
 
             targetURL = mSiteStore.getExternalWorkDirectoryURL(site, FileServer.OPERATION.put);
-
             newJob.condorVariables.setExecutableForTransfer();
-
+            */
+            // PM-1552 after 5.0 worker package organization, we cannot just
+            // transfer pegasus-transfer using transfer_executable. Instead we
+            // have to set it up using PegasusLite
+            newJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "PegasusLite");
+            execPath = DefaultImplementation.EXECUTABLE_BASENAME;
+            newJob.vdsNS.construct(
+                    Pegasus.DATA_CONFIGURATION_KEY,
+                    PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
         } else {
             execPath = entry.getPhysicalTransformation();
             targetURL = directoryURL;
