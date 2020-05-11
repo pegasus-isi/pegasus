@@ -33,6 +33,7 @@ import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -207,13 +208,19 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             // it
             //                is staging to on the local site
 
-            // construct an entry for the local site and transfer it.
-            return this.defaultTCEntry(
-                    Transfer.TRANSFORMATION_NAMESPACE,
-                    Transfer.TRANSFORMATION_NAME,
-                    Transfer.TRANSFORMATION_VERSION,
-                    Transfer.EXECUTABLE_BASENAME,
-                    "local");
+            TransformationCatalogEntry localEntry =
+                    this.defaultTCEntry(
+                            Transfer.TRANSFORMATION_NAMESPACE,
+                            Transfer.TRANSFORMATION_NAME,
+                            Transfer.TRANSFORMATION_VERSION,
+                            Transfer.EXECUTABLE_BASENAME,
+                            "local");
+            // PM-1552 starting 5.0 onwards all stage worker paths are executed
+            // via PegasusLite. So we only need to set basename as the PFN
+            localEntry.setResourceId(siteHandle);
+            localEntry.setPhysicalTransformation(
+                    new File(localEntry.getPhysicalTransformation()).getName());
+            return localEntry;
         }
 
         List tcentries = null;
