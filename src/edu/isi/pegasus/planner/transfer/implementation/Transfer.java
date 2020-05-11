@@ -215,7 +215,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                             Transfer.TRANSFORMATION_VERSION,
                             Transfer.EXECUTABLE_BASENAME,
                             "local");
-            // PM-1552 starting 5.0 onwards all stage worker paths are executed
+            // PM-1552 starting 5.0 onwards all stage worker packages are executed
             // via PegasusLite. So we only need to set basename as the PFN
             localEntry.setResourceId(siteHandle);
             localEntry.setPhysicalTransformation(
@@ -269,13 +269,6 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             // all stage worker jobs are classified as stage in jobs
             // for further use in the planner
             job.setJobType(Job.STAGE_IN_JOB);
-
-            if (!job.getSiteHandle().equalsIgnoreCase("local")) {
-                // PM-538
-                // executable for remote stage worker jobs is transferred
-                // from local site.
-                job.condorVariables.setExecutableForTransfer();
-            }
         }
 
         // associate DAGMan categories with these jobs to enable
