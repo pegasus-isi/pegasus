@@ -2396,6 +2396,9 @@ public class Job extends Data implements GraphNodeContent {
                                 "pegasusWorkflow job has to have file specified" + node);
                     }
                     ((DAXJob) j).setDAXLFN(file);
+
+                    // the job should be tagged type pegasus
+                    j.setTypeRecursive();
                     break;
             }
             return j;
