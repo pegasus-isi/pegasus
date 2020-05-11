@@ -33,6 +33,7 @@ import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.code.gridstart.Kickstart;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 import edu.isi.pegasus.planner.common.CreateWorkerPackage;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
@@ -799,8 +800,7 @@ public class DeployWorkerPackage extends Engine {
             setupTXJob.vdsNS.construct(
                     Pegasus.DATA_CONFIGURATION_KEY,
                     PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
-            // setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY,
-            // Kickstart.EXECUTABLE_BASENAME);
+            setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY, Kickstart.EXECUTABLE_BASENAME);
 
             GraphNode setupNode = new GraphNode(setupTXJob.getName(), setupTXJob);
 
@@ -961,7 +961,7 @@ public class DeployWorkerPackage extends Engine {
         setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "PegasusLite");
         setupTXJob.vdsNS.construct(
                 Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
-        // setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY, Kickstart.EXECUTABLE_BASENAME);
+        setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY, Kickstart.EXECUTABLE_BASENAME);
 
         GraphNode setupNode = new GraphNode(setupTXJob.getName(), setupTXJob);
 
