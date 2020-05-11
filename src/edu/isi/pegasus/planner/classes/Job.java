@@ -2304,7 +2304,8 @@ public class Job extends Data implements GraphNodeContent {
                             for (JsonNode argNode : argsNode) {
                                 args.append(argNode.asText()).append(" ");
                             }
-                            j.setArguments(args.toString());
+                            // trim any trailing whitespace. important for dax jobs
+                            j.setArguments(args.toString().trim());
                         } else {
                             throw new RuntimeException(
                                     WorkflowKeywords.JOB_ARGUMENTS

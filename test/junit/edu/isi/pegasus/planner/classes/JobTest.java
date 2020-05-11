@@ -73,7 +73,7 @@ public class JobTest {
         assertNotNull(job);
         assertEquals("ID000001", job.getLogicalID());
         assertEquals("preprocess", job.getTXName());
-        assertEquals("-a preprocess -T60 -i f.a -o f.b1 f.b2 ", job.getArguments());
+        assertEquals("-a preprocess -T60 -i f.a -o f.b1 f.b2", job.getArguments());
     }
 
     @Test
