@@ -439,7 +439,8 @@ public class DeployWorkerPackage extends Engine {
                             ? "local"
                             : // For PegasusLite Jobs we stage to the submit directory
                             site;
-
+            mLogger.log("Staging site for site " + site + " for worker package deployment - " + stagingSite,
+                         LogManager.DEBUG_MESSAGE_LEVEL);
             // get the set of valid tc entries
             List entries =
                     mapper.getTCList(
