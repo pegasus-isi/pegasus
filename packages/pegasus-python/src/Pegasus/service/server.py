@@ -164,9 +164,13 @@ def configure_monitoring(app):
     app.register_blueprint(monitoring, url_prefix="/api/v1/user/<string:username>")
 
 
-@click.command(name="nrgr-web", help="NRGR Web Server")
+@click.command(name="pegasus-service")
 @click.option(
-    "--host", default="localhost", metavar="<hostname>", help="Hostname",
+    "--host",
+    default="localhost",
+    metavar="<hostname>",
+    show_default=True,
+    help="Hostname",
 )
 @click.option(
     "-p",
@@ -174,6 +178,7 @@ def configure_monitoring(app):
     type=int,
     default=5000,
     metavar="<port-number>",
+    show_default=True,
     help="Port no. on which to listen for requests",
 )
 @click.option(
@@ -192,7 +197,7 @@ def configure_monitoring(app):
     help="Logging verbosity",
 )
 def main(host: str, port: int, debug: bool, verbose: int):
-    """Do main."""
+    """Run the Pegasus Service server."""
     run(host=host, port=port, debug=debug, verbose=verbose)
 
 
