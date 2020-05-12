@@ -192,7 +192,7 @@ public class DeployWorkerPackage extends Engine {
         // singleton access
         if (mOSToNMIOSReleaseAndVersion == null) {
             mOSToNMIOSReleaseAndVersion = new HashMap();
-            mOSToNMIOSReleaseAndVersion.put(SysInfo.OS.linux, "rhel_6");
+            mOSToNMIOSReleaseAndVersion.put(SysInfo.OS.linux, "rhel_7");
             mOSToNMIOSReleaseAndVersion.put(SysInfo.OS.macosx, "macos_10");
         }
         return mOSToNMIOSReleaseAndVersion;
@@ -207,14 +207,14 @@ public class DeployWorkerPackage extends Engine {
     private static Set<String> supportedOSReleaseAndVersions() {
         if (mSupportedOSReleaseVersions == null) {
             mSupportedOSReleaseVersions = new HashSet();
-            mSupportedOSReleaseVersions.add("rhel_6");
             mSupportedOSReleaseVersions.add("rhel_7");
+            mSupportedOSReleaseVersions.add("rhel_8");
             mSupportedOSReleaseVersions.add("deb_8");
             mSupportedOSReleaseVersions.add("deb_9");
             mSupportedOSReleaseVersions.add("deb_10");
             mSupportedOSReleaseVersions.add("ubuntu_16");
-            mSupportedOSReleaseVersions.add("ubuntu_17");
             mSupportedOSReleaseVersions.add("ubuntu_18");
+            mSupportedOSReleaseVersions.add("ubuntu_20");
             mSupportedOSReleaseVersions.add("macos_10");
         }
         return mSupportedOSReleaseVersions;
