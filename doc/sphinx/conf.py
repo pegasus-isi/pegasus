@@ -53,6 +53,7 @@ extensions = [
     "sphinx.ext.viewcode",
     # "javasphinx",
     "sphinx_tabs.tabs",
+    "sphinx_click.ext",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
