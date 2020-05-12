@@ -46,14 +46,13 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="env" key="PATH">/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
-        <profile namespace="pegasus" key="data.configuration">condorio</profile>
         <profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
 
      <site  handle="CCG" arch="x86_64" os="LINUX">
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
-
+	<profile namespace="pegasus" key="data.configuration">sharedfs</profile>
         <directory type="shared-scratch" path="/lizard/scratch-90-days/CCG/${TEST_NAME}/scratch">
             <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/${TEST_NAME}/scratch"/>
         </directory>

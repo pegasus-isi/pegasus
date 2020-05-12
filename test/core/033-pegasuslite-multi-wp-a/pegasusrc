@@ -9,4 +9,4 @@ pegasus.condor.logs.symlink = false
 # correctly both for sharedfs and condorio
 pegasus.transfer.worker.package true
 
-
+pegasus.data.configuration sharedfs
