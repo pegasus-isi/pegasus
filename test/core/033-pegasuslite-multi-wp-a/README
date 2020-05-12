@@ -3,8 +3,7 @@ TEST DESCRIPTION
 - along with transfer of worker package
 - CCG site is sharedfs
 - condorpool defaults to condorio
-- in pegasusrc pegasus.data.configuration is set to sharedfs
-
+- in pegasusrc pegasus.data.configuration is not set.
 
 PURPOSE
 - to execute workflow in multisite configuration with each site having
