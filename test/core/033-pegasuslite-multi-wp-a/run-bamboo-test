@@ -60,7 +60,7 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/${TEST_NAME}/outputs"/>
         </directory>
         <profile namespace="pegasus" key="clusters.num">1</profile>
-        
+        <profile namespace="pegasus" key="data.configuration">sharedfs</profile>
     </site>
 
 
