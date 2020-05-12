@@ -48,7 +48,6 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="env" key="PATH">/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
-        <profile namespace="pegasus" key="data.configuration">condorio</profile>
         <profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
 
@@ -63,6 +62,7 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/${TEST_NAME}/outputs"/>
         </directory>
         <profile namespace="pegasus" key="clusters.num">1</profile>
+        <profile namespace="pegasus" key="data.configuration">sharedfs</profile>	
         <profile namespace="env" key="PEGASUS_HOME">/lizard/scratch-90-days/bamboo/installs/pegasus-${VERSION}</profile>        
     </site>
 
