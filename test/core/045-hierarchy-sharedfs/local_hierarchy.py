@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 import subprocess
+import logging
 
 from datetime import datetime
-from pathlib import path
+from pathlib import Path
 
 from Pegasus.api import *
+
+logging.basicConfig(level=logging.DEBUG)
 
 # --- Work Directory Setup -----------------------------------------------------
 RUN_ID = "local-hierarchy-sharedfs-" + datetime.now().strftime("%s")
@@ -62,7 +65,7 @@ sites:
     jobtype: "auxillary"
   profiles:
     env:
-      PEGASUS_HOME: "{condor_pool_pegasus_home}}"
+      PEGASUS_HOME: "{condor_pool_pegasus_home}"
  -
   name: "local"
   arch: "x86_64"
@@ -88,7 +91,7 @@ sites:
         run_id=RUN_ID, 
         work_dir=str(WORK_DIR),
         condor_pool_pegasus_home="/usr"
-)
+    )
 
 with open("sites.yml", "w") as f:
         f.write(sites)
@@ -174,6 +177,9 @@ transformations:
     os.version: "7"
 """.format(pegasus_bin_dir=PEGASUS_BIN_DIR)
 
+with open("transformations.yml", "w") as f:
+        f.write(transformations)
+
 # --- Input Directory Setup ----------------------------------------------------
 try:
     Path.mkdir(Path("input"))
@@ -193,28 +199,28 @@ fd = File("f.d")
 
 wf = Workflow("blackdiamond", infer_dependencies=True)\
     .add_jobs(
-        Job(preprocess)
+        Job("preprocess", namespace="diamond", version="4.0")
         .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
         .add_inputs(fa)
         .add_outputs(fb1, fb2, register_replica=True),
 
-        Job(findrage)
+        Job("findrange", namespace="diamond", version="4.0")
         .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
         .add_inputs(fb1)
         .add_outputs(fc1, register_replica=True),
 
-        Job(findrage)
+        Job("findrange", namespace="diamond", version="4.0")
         .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
         .add_inputs(fb2)
         .add_outputs(fc2, register_replica=True),
 
-        Job(analyze)
+        Job("analyze", namespace="diamond", version="4.0")
         .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
         .add_inputs(fc1, fc2)
         .add_outputs(fd, register_replica=True),
 
     )\
-    .write(str(TOP_DIR / "input/workflow.yml"))
+    .write(str(TOP_DIR / "input/blackdiamond.yml"))
 
 # --- Sleep Subworkflow --------------------------------------
 j1 = Job("sleep", _id="sleep1", namespace="level1").add_args(2)
@@ -227,10 +233,10 @@ wf = Workflow("sleep-wf")\
 # --- Top Level Workflow -------------------------------------------------------
 wf = Workflow("local-hierarchy")
 
-blackdiamond_wf = SubWorkflow("blackdiamond.yml")\
+blackdiamond_wf = SubWorkflow("blackdiamond.yml", False)\
                 .add_args("--input-dir", "input", "--output-site", "local", "-vvv")
 
-sleep_wf = SubWorkflow("sleep.yml")\
+sleep_wf = SubWorkflow("sleep.yml", False)\
                 .add_args("--output-site", "local", "-vvv")
 
 wf.add_jobs(blackdiamond_wf, sleep_wf)
@@ -238,6 +244,7 @@ wf.add_dependency(blackdiamond_wf, children=[sleep_wf])
 
 try:
     wf.plan(
+        verbose=5,
         site=["CCG"],
         dir=str(WORK_DIR),
         relative_dir=RUN_ID,
@@ -246,3 +253,5 @@ try:
     )
 except Exception as e:
     print(e)
+    print(e.args[1].stdout)
+    print(e.args[1].stderr)
