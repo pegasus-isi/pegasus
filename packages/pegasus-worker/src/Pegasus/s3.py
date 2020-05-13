@@ -654,37 +654,49 @@ def cp(args):
 
             info("Copied %0.1f KB in %0.6f seconds: %0.2f KB/s" % (size, elapsed, rate))
 
-
 def mkdir(args):
     parser = option_parser("mkdir URL...")
+
+    parser.add_option(
+        "-r",
+        "--region",
+        dest="region",
+        action="store_true",
+        default=None,
+        help="Create the destination bucket if it does not already exist",
+    )
+
     options, args = parser.parse_args(args)
 
     if len(args) == 0:
         parser.error("Specify URL")
 
-    buckets = []
-    for arg in args:
-        uri = parse_uri(arg)
-        if uri.bucket is None:
-            raise Exception("URL for mkdir must contain a bucket: %s" % arg)
-        if uri.key is not None:
-            raise Exception("URL for mkdir cannot contain a key: %s" % arg)
-        buckets.append(uri)
+    if uri.bucket is None:
+        raise Exception("URL for mkdir must contain a bucket: %s" % arg)
+    if uri.key is not None:
+        raise Exception("URL for mkdir cannot contain a key: %s" % arg)
 
-    config = get_config(options)
+    s3 = get_s3_client(config, uri)
 
-    for uri in buckets:
-        info("Creating %s" % uri)
-        conn = get_connection(config, uri)
-        try:
-            conn.create_bucket(uri.bucket, location=conn.location)
-        except Exception as e:
-            if (
-                hasattr(e, "error_message")
-                and "bucket succeeded and you already own it" in e.error_message
-            ):
-                continue
-            raise
+    create_bucket_config = {}
+    if parser.region:
+        create_bucket_config = {
+            "LocationConstrain": options.region
+        }
+
+    is_duplicate_bucket = False
+    try:
+        s3.create_bucket(Bucket=uri.bucket, CreateBucketConfiguration=create_bucket_config)
+    except s3.exceptions.BucketAlreadyExists:
+        logging.error("bucket: {} already taken".format(uri.bucket))
+        raise
+    except s3.exceptions.BucketAlreadyOwnedByYou:
+        is_duplicate_bucket = True
+    
+    if is_duplicate_bucket:
+        logging.info("Bucket: {} is already owned by you".format(uri.bucket))
+    else:
+        logging.info("Bucket: {} has been created".format(uri.bucket))
 
 def rm(args):
     parser = option_parser("rm URL...")
@@ -906,11 +918,12 @@ def put(args):
             resp = s3.create_bucket(Bucket=uri.bucket)
         except s3.exceptions.BucketAlreadyExists:
             logging.error(
-                "bucket: {} already exists".format(uri.bucket), 
+                "bucket: {} already taken".format(uri.bucket), 
                 exc_info=True
             )
+            raise
         except s3.exceptions.BucketAlreadyOwnedByYou:
-            # AWS S3 endpoint will throw this, but not all others
+            # AWS S3 endpoint will throw this, but other endpoints may not
             pass
     
     if not options.force:
@@ -934,7 +947,7 @@ def put(args):
                     # 
                     pass
                 else:
-                    logging.exception("Unknown client error").
+                    logging.exception("Unknown client error")
 
         if key_already_exists:
             log.error("Key: {} already exists. Trye --force to overwrite".format(pre_existing_key))
@@ -950,7 +963,7 @@ def put(args):
                 key=key
             ))
         except boto3.exceptions.S3UploadFailedError:
-            log.exception("Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
+            log.error("Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
                 file=f,
                 bucket=uri.bucket,
                 key=key
