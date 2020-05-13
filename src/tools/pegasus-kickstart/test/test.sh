@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KICKSTART=../pegasus-kickstart
+KICKSTART=$PEGASUS_BIN_DIR/pegasus-kickstart
 
 function run_test {
     echo "Running" "$@"
@@ -490,6 +490,11 @@ function test_integrity {
     return $?
 }
 
+function test_integrity_callout_failure {
+    ./testintegrity-callout-failure.sh
+    return $?
+}
+
 function test_integrity_failure {
     alias pegasus-integrity=/bin/false
     kickstart -s testintegrity.data touch testintegrity.data
@@ -502,7 +507,7 @@ function test_integrity_yaml_inc {
     # do this test multiple times
     for I in `seq 100`; do
     
-        kickstart pegasus-integrity --generate-fullstat-yaml=testintegrity.data=testintegrity.data
+        kickstart $PEGASUS_BIN_DIR/pegasus-integrity --generate-fullstat-yaml=testintegrity.data=testintegrity.data
         rc=$?
     
         if [ $rc -ne 0 ]; then
@@ -550,7 +555,6 @@ if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     echo "Please define PEGASUS_BIN_DIR before running these tests" >&2
     exit 1
 fi
-export PATH=$PEGASUS_BIN_DIR:$PATH
 
 # RUN THE TESTS
 run_test lotsofprocs
@@ -591,6 +595,7 @@ run_test test_not_executable
 run_test test_wrapper
 run_test test_metadata
 run_test test_integrity
+#run_test test_integrity_callout_failure
 run_test test_integrity_failure
 run_test test_integrity_yaml_inc
 run_test test_w_with_rel_exec

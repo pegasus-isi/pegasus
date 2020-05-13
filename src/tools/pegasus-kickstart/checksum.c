@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <libgen.h>
 
 #include "checksum.h"
 
@@ -40,10 +41,11 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
 
     cmd[0] = '\0';
 
-    /* use PEGASUS_HOME if set */
-    if (getenv("PEGASUS_HOME") != NULL) {
-        strcat(cmd, getenv("PEGASUS_HOME"));
-        strcat(cmd, "/bin/");
+    /* use the same location for pegasus-integrity as was
+       used for pegasus-kickstart */
+    if (readlink("/proc/self/exe", buf, BUFSIZE)) {
+        strcat(cmd, dirname(buf));
+        strcat(cmd, "/");
     }
 
     strcat(cmd, "pegasus-integrity --generate-yaml=");
