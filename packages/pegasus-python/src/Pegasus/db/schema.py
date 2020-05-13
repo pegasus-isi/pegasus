@@ -329,7 +329,7 @@ class Workflow(Base):
         primaryjoin=lambda: Workflow.wf_id == WorkflowFiles.wf_id,
         secondaryjoin=lambda: WorkflowFiles.lfn_id == RCLFN.lfn_id,
     )
-    integrity = relation(
+    integrity_metrics = relation(
         lambda: IntegrityMetrics,
         backref="workflow",
         cascade="all, delete-orphan",
