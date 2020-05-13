@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -136,6 +137,8 @@ public abstract class Abstract implements CondorStyle {
 
         applyCredentialsForJobSubmission(job);
 
+        Set<String> credentialsForCondorFileTransfer = new HashSet();
+
         // jobs can have multiple credential requirements
         // and may need credentials associated with different sites PM-731
         for (Map.Entry<String, Set<CredentialHandler.TYPE>> entry :
@@ -171,7 +174,7 @@ public abstract class Abstract implements CondorStyle {
                             String existing =
                                     (String) job.condorVariables.get(Condor.X509USERPROXY_KEY);
                             if (!existing.equals(credentialPath)) {
-                                job.condorVariables.addIPFileForTransfer(credentialPath);
+                                credentialsForCondorFileTransfer.add(credentialPath);
                                 job.envVariables.construct(
                                         handler.getEnvironmentVariable(siteHandle),
                                         handler.getBaseName(siteHandle));
@@ -196,11 +199,7 @@ public abstract class Abstract implements CondorStyle {
                     case ssh:
                         // transfer using condor file transfer, and advertise in env
                         // but first make sure it is specified in our environment
-                        /*String path = handler.getPath( siteHandle );
-                        if ( path == null ){
-                            this.complainForCredential( job, handler.getProfileKey(), siteHandle );
-                        }*/
-                        job.condorVariables.addIPFileForTransfer(credentialPath);
+                        credentialsForCondorFileTransfer.add(credentialPath);
                         job.envVariables.construct(
                                 handler.getEnvironmentVariable(siteHandle),
                                 handler.getBaseName(siteHandle));
@@ -212,6 +211,8 @@ public abstract class Abstract implements CondorStyle {
                 }
             } // for each credential for each site
         }
+        // PM-1489 add credentials for job at end ensuring no duplicates
+        job.condorVariables.addIPFileForTransfer(credentialsForCondorFileTransfer);
     }
 
     /**
