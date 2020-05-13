@@ -13,6 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+
+import logging
+
 import fnmatch
 import math
 import os
@@ -34,6 +37,10 @@ try:
     import boto.s3.connection
     from boto.s3.bucket import Bucket
     from boto.s3.key import Key
+
+    # boto3
+    import boto3
+    import botocore
 except ImportError as e:
     sys.stderr.write("ERROR: Unable to load boto library: %s\n" % e)
     exit(1)
@@ -289,6 +296,27 @@ def get_connection(config, uri):
     return conn
 
 
+def get_s3_client(config, uri):
+    if not config.has_section(uri.site):
+        raise Exception("Config file has no section for site '%s'" % uri.site)
+
+    if not config.has_section(uri.ident):
+        raise Exception("Config file has no section for identity '%s'" % uri.ident)
+
+    endpoint = config.get(uri.site, "endpoint")
+    aws_access_key_id = config.get(uri.ident, "access_key")
+    aws_secret_access_key = config.get(uri.ident, "secret_key")
+
+    # what about s3s????
+
+    return boto3.client(
+        "s3",
+        endpoint_url=endpoint,
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+    )
+
+
 def read_command_file(path):
     tokenizer = re.compile(r"\s+")
     f = open(path, "r")
@@ -479,6 +507,7 @@ def ls(args):
                     if isinstance(o, boto.s3.prefix.Prefix):
                         continue
                     print_key(o)
+    # left off here
 
 
 def cp(args):
@@ -657,31 +686,6 @@ def mkdir(args):
                 continue
             raise
 
-
-def rmdir(args):
-    parser = option_parser("rmdir URL...")
-    options, args = parser.parse_args(args)
-
-    if len(args) == 0:
-        parser.error("Specify URL")
-
-    buckets = []
-    for arg in args:
-        uri = parse_uri(arg)
-        if uri.bucket is None:
-            raise Exception("URL for rmdir must contain a bucket: %s" % arg)
-        if uri.key is not None:
-            raise Exception("URL for rmdir cannot contain a key: %s" % arg)
-        buckets.append(uri)
-
-    config = get_config(options)
-
-    for uri in buckets:
-        info("Removing bucket %s" % uri)
-        conn = get_connection(config, uri)
-        conn.delete_bucket(uri.bucket)
-
-
 def rm(args):
     parser = option_parser("rm URL...")
     parser.add_option(
@@ -821,38 +825,9 @@ def get_key_for_path(path, infile, outkey):
     else:
         return outkey
 
-
 def put(args):
     parser = option_parser("put FILE URL")
-    parser.add_option(
-        "-c",
-        "--chunksize",
-        dest="chunksize",
-        action="store",
-        type="int",
-        metavar="X",
-        default=10,
-        help="Set the chunk size for multipart uploads to X MB."
-        "A value of 0 disables multipart uploads. The default is 10MB, the min is 5MB "
-        "and the max is 1024MB. This parameter only applies for sites that support "
-        "multipart uploads (see multipart_uploads configuration parameter). The maximum "
-        "number of chunks is 10,000, so if you are uploading a large file, then the "
-        "chunksize is automatically increased to enable the upload. Choose smaller values "
-        "to reduce the impact of transient failures.",
-    )
-    parser.add_option(
-        "-p",
-        "--parallel",
-        dest="parallel",
-        action="store",
-        type="int",
-        metavar="N",
-        default=4,
-        help="Use N threads to upload FILE in parallel. "
-        "The default value is 4, which enables parallel uploads with 4 threads. This "
-        "parameter is only valid if the site supports mulipart uploads and the "
-        "--chunksize parameter is not 0. Otherwise parallel uploads are disabled.",
-    )
+
     parser.add_option(
         "-b",
         "--create-bucket",
@@ -880,24 +855,11 @@ def put(args):
 
     options, args = parser.parse_args(args)
 
-    if options.chunksize != 0 and (options.chunksize < 5 or options.chunksize > 1024):
-        parser.error("Invalid chunksize")
-
-    if options.parallel <= 0:
-        parser.error("Invalid value for --parallel")
-
-    if len(args) != 2:
-        parser.error("Specify FILE and URL")
-
     path = fix_file(args[0])
     url = args[1]
 
     if not os.path.exists(path):
-        raise Exception("No such file or directory: %s" % path)
-
-    # We need the path to be absolute to make it easier to compute relative
-    # paths in the recursive mode of operation
-    path = os.path.abspath(path)
+        raise Exception("No such file or directory: {}".format(path))
 
     # Get a list of all the files to transfer
     if options.recursive:
@@ -917,11 +879,13 @@ def put(args):
                         result.extend(subtree(path))
                 return result
 
-            infiles = subtree(path)
+            subtree(path)
     else:
         if os.path.isdir(path):
             raise Exception("%s is a directory. Try --recursive." % path)
         infiles = [path]
+
+    log.info("Attempting to upload {} files".format(len(infiles)))
 
     # Validate URL
     uri = parse_uri(url)
@@ -933,206 +897,67 @@ def put(args):
     config = get_config(options)
     max_object_size = config.getint(uri.site, "max_object_size")
 
-    # Does the site support multipart uploads?
-    multipart_uploads = config.getboolean(uri.site, "multipart_uploads")
-
-    # Warn the user
-    if options.parallel > 0:
-        if not multipart_uploads:
-            warn("Multipart uploads disabled, ignoring --parallel ")
-        elif options.chunksize == 0:
-            warn("--chunksize set to 0, ignoring --parallel")
-
-    conn = get_connection(config, uri)
+    # get s3 client with associated endpoint
+    s3 = get_s3_client(config, uri)
 
     # Create the bucket if the user requested it and it does not exist
     if options.create_bucket:
-        if conn.lookup(uri.bucket):
-            info("Bucket %s exists" % uri.bucket)
-        else:
-            info("Creating bucket %s" % uri.bucket)
-            conn.create_bucket(uri.bucket, location=conn.location)
-
-    b = Bucket(connection=conn, name=uri.bucket)
-
-    info("Uploading %d files" % len(infiles))
-
-    start = time.time()
-    totalsize = 0
-    for infile in infiles:
-        keyname = get_key_for_path(path, infile, uri.key)
-
-        info("Uploading %s to %s/%s" % (infile, uri.bucket, keyname))
-
-        # Make sure file is not too large for the service
-        size = os.stat(infile).st_size
-        if size > (max_object_size * GB):
-            raise Exception(
-                "File %s exceeds object size limit"
-                " (%sGB) of service" % (infile, max_object_size)
+        try:
+            resp = s3.create_bucket(Bucket=uri.bucket)
+        except s3.exceptions.BucketAlreadyExists:
+            logging.error(
+                "bucket: {} already exists".format(uri.bucket), 
+                exc_info=True
             )
-        totalsize += size
+        except s3.exceptions.BucketAlreadyOwnedByYou:
+            # AWS S3 endpoint will throw this, but not all others
+            pass
+    
+    if not options.force:
+        # check if all keys do not yet exist
+        # accepted method of checking for existence of a key 
+        key_already_exists = False
+        pre_existing_key = ""
+        for f in infiles:
+            try:
+                s3.head_object(Bucket=uri.bucket, Key=f)
+                
+                key_already_exists = True
+                pre_existing_key = f
+                break
+            except s3.exceptions.ClientError as e:
+                error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
-        k = Key(bucket=b, name=keyname)
+                if error_code == 403:
+                    logging.exception("Access to bucket: {bucket}, key: {key} forbidden".format(bucket=uri.bucket, key=f))
+                elif error_code == 404:
+                    # 
+                    pass
+                else:
+                    logging.exception("Unknown client error").
 
-        # Make sure the key does not exist
-        if not options.force and k.exists():
-            raise Exception("Key exists: '%s'. Try --force." % k.name)
+        if key_already_exists:
+            log.error("Key: {} already exists. Trye --force to overwrite".format(pre_existing_key))
+            raise Exception("Unable overwrite key: {}".format(pre_existing_key))
 
-        if (not multipart_uploads) or (options.chunksize == 0):
-            # no multipart, or chunks disabled, just do it the simple way
-            k.set_contents_from_filename(infile)
-        else:
-            # Multipart supported, chunking requested
-
-            # The target chunk size is user-defined, but we may need
-            # to go larger if the file is big because the maximum number
-            # of chunks is 10,000. So the actual size of a chunk
-            # will range from 5MB to ~525MB if the maximum object size
-            # is 5 TB.
-            part_size = max(options.chunksize * MB, size / 9999)
-            num_parts = int(math.ceil(size / float(part_size)))
-
-            if num_parts <= 1:
-                # Serial
-                k.set_contents_from_filename(infile)
-            else:
-                # Parallel
-
-                # Request upload
-                info("Creating multipart upload")
-                upload = b.initiate_multipart_upload(k.name)
-                try:
-                    # Create all uploads
-                    uploads = []
-                    for i in range(0, num_parts):
-                        length = min(size - (i * part_size), part_size)
-                        up = PartialUpload(
-                            upload, i + 1, num_parts, infile, i * part_size, length
-                        )
-                        uploads.append(up)
-
-                    if options.parallel <= 1:
-                        # Serial
-                        for up in uploads:
-                            up()
-                    else:
-                        # Parallel
-
-                        # Queue up requests
-                        queue = Queue.Queue()
-                        for up in uploads:
-                            queue.put(up)
-
-                        # No sense forking more threads than there are chunks
-                        nthreads = min(options.parallel, num_parts)
-
-                        # Fork threads
-                        threads = []
-                        for i in range(0, nthreads):
-                            t = WorkThread(queue)
-                            threads.append(t)
-                            t.start()
-
-                        # Wait for the threads
-                        for t in threads:
-                            t.join()
-                            # If any of the threads encountered
-                            # an error, then we fail here
-                            if t.exception is not None:
-                                raise t.exception
-
-                    info("Completing upload")
-                    upload.complete_upload()
-                except Exception as e:
-                    # If there is an error, then we need to try and abort
-                    # the multipart upload so that it doesn't hang around
-                    # forever on the server.
-                    try:
-                        info("Aborting multipart upload")
-                        upload.cancel_upload()
-                    except Exception as f:
-                        sys.stderr.write(
-                            "ERROR: Unable to abort multipart"
-                            " upload (use lsup/rmup): %s\n" % f
-                        )
-                    raise e
-
-    end = time.time()
-    totalsize = totalsize / 1024.0
-    elapsed = end - start
-    if elapsed > 0:
-        rate = totalsize / elapsed
-    else:
-        rate = 0.0
-
-    info(
-        "Uploaded %d files of %0.1f KB in %0.6f seconds: %0.2f KB/s"
-        % (len(infiles), totalsize, elapsed, rate)
-    )
-
-
-def lsup(args):
-    parser = option_parser("lsup URL")
-    options, args = parser.parse_args(args)
-
-    if len(args) == 0:
-        parser.error("Specify URL")
-
-    uri = parse_uri(args[0])
-
-    if uri.bucket is None:
-        raise Exception("URL must contain a bucket: %s" % args[0])
-    if uri.key is not None:
-        raise Exception("URL cannot contain a key: %s" % args[0])
-
-    config = get_config(options)
-    conn = get_connection(config, uri)
-
-    b = conn.get_bucket(uri.bucket)
-
-    for up in b.list_multipart_uploads():
-        uri.key = up.key_name
-        sys.stdout.write("%s %s\n" % (uri, up.id))
-
-
-def rmup(args):
-    parser = option_parser("rmup URL [UPLOAD]")
-    parser.add_option(
-        "-a",
-        "--all",
-        dest="all",
-        action="store_true",
-        default=False,
-        help="Cancel all uploads for the specified bucket",
-    )
-    options, args = parser.parse_args(args)
-
-    if options.all:
-        if len(args) < 1:
-            parser.error("Specify bucket URL")
-    else:
-        if len(args) != 2:
-            parser.error("Specify bucket URL and UPLOAD")
-        upload = args[1]
-
-    uri = parse_uri(args[0])
-
-    if uri.bucket is None:
-        raise Exception("URL must contain a bucket: %s" % args[0])
-    if uri.key is not None:
-        raise Exception("URL cannot contain a key: %s" % args[0])
-
-    config = get_config(options)
-    conn = get_connection(config, uri)
-
-    # There is no easy way to do this with boto
-    b = Bucket(connection=conn, name=uri.bucket)
-    for up in b.list_multipart_uploads():
-        if options.all or up.id == upload:
-            info("Removing upload %s" % up.id)
-            up.cancel_upload()
-
+    for f in infiles:
+        try:
+            key = f if uri.key is None else uri.key
+            s3.upload_file(f, uri.bucket, key)
+            logging.info("Uploaded file: {file} to bucket: {bucket} as key: {key}".format(
+                file=f,
+                bucket=uri.bucket,
+                key=key
+            ))
+        except boto3.exceptions.S3UploadFailedError:
+            log.exception("Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
+                file=f,
+                bucket=uri.bucket,
+                key=key
+            ))
+            raise
+    
+    log.info("Successfully uploaded {} files".format(len(infiles)))
 
 def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
     def download():
