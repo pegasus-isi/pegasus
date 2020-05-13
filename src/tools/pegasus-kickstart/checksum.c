@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include <libgen.h>
 
+#ifdef DARWIN
+#include <libproc.h>
+#endif
+
 #include "checksum.h"
 
 #define BUFSIZE 4096
@@ -43,7 +47,13 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
 
     /* use the same location for pegasus-integrity as was
        used for pegasus-kickstart */
+#ifdef LINUX
     if (readlink("/proc/self/exe", buf, BUFSIZE)) {
+#endif
+#ifdef DARWIN
+    pid_t pid = getpid();
+    if (proc_pidpath(pid, buf, sizeof(buf))) {
+#endif
         strcat(cmd, dirname(buf));
         strcat(cmd, "/");
     }
