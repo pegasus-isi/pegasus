@@ -209,15 +209,6 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract implements Sin
         // catalog.
         txJob.updateProfiles(mProps);
 
-        // take care of transfer of credentials file
-        this.checkAndTransferPegasusCredentials(txJob);
-
-        // take care of transfer of proxies
-        this.checkAndTransferProxy(txJob);
-
-        // take care of transfer of irods files
-        this.checkAndTransferIrodsEnvFile(txJob);
-
         // apply the priority to the transfer job
         this.applyPriority(txJob);
 

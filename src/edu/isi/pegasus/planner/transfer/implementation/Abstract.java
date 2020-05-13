@@ -13,10 +13,6 @@
  */
 package edu.isi.pegasus.planner.transfer.implementation;
 
-import edu.isi.pegasus.common.credential.impl.Irods;
-import edu.isi.pegasus.common.credential.impl.PegasusCredentials;
-import edu.isi.pegasus.common.credential.impl.Proxy;
-import edu.isi.pegasus.common.credential.impl.S3CFG;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
@@ -38,7 +34,6 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
-import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
@@ -86,33 +81,6 @@ public abstract class Abstract implements Implementation {
 
     /** The prefix for the NoOP jobs that are created. */
     public static final String NOOP_PREFIX = "noop_";
-
-    /** The path to the credentials file on the submit host (local pool). */
-    protected String mLocalCredentials;
-
-    /** The basename of the user credentials file */
-    protected String mLocalCredentialsBasename;
-
-    /**
-     * The path to the user proxy on the submit host (local pool), that is picked up for use in
-     * transfer of proxies.
-     */
-    protected String mLocalUserProxy;
-
-    /** The basename of the user proxy , that is picked up for use in transfer of proxies. */
-    protected String mLocalUserProxyBasename;
-
-    /** The path to the s3cfg file on the submit host (local pool). */
-    protected String mLocalS3cfg;
-
-    /** The basename of the user s3cfg file */
-    protected String mLocalS3cfgBasename;
-
-    /** The path to the irodsEnv file on the submit host (local pool). */
-    protected String mLocalIrodsEnv;
-
-    /** The basename of the user irodsEnv file */
-    protected String mLocalIrodsEnvBasename;
 
     /** The handle to the properties object holding the properties relevant to Pegasus. */
     protected PegasusProperties mProps;
@@ -183,62 +151,6 @@ public abstract class Abstract implements Implementation {
         mPegasusConfiguration = new PegasusConfiguration(mLogger);
         // mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
 
-        // Pegasus credentials
-        PegasusCredentials creds = new PegasusCredentials();
-        creds.initialize(bag);
-        mLocalCredentials = creds.getPath();
-        // set the path to credentials file only if the file exists
-        if (mLocalCredentials != null && !new File(mLocalCredentials).exists()) {
-            mLogger.log(
-                    "The Pegasus credentials file does not exist - " + mLocalCredentials,
-                    LogManager.ERROR_MESSAGE_LEVEL);
-            mLocalCredentials = null;
-        }
-
-        mLocalCredentialsBasename =
-                (mLocalCredentials == null) ? null : new File(mLocalCredentials).getName();
-
-        Proxy p = new Proxy();
-        p.initialize(bag);
-        mLocalUserProxy = p.getPath();
-        // set the path to user proxy only if the proxy exists
-        if (!new File(mLocalUserProxy).exists()) {
-            mLogger.log(
-                    "The user proxy does not exist - " + mLocalUserProxy,
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-            mLocalUserProxy = null;
-        }
-
-        mLocalUserProxyBasename =
-                (mLocalUserProxy == null) ? null : new File(mLocalUserProxy).getName();
-
-        S3CFG s3cfg = new S3CFG();
-        s3cfg.initialize(bag);
-        mLocalS3cfg = s3cfg.getPath();
-        // set the path to s3cfg only if the scfg exists
-        if (mLocalS3cfg != null && !new File(mLocalS3cfg).exists()) {
-            mLogger.log(
-                    "The s3cfg file does not exist - " + mLocalS3cfg,
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-            mLocalS3cfg = null;
-        }
-
-        mLocalS3cfgBasename = (mLocalS3cfg == null) ? null : new File(mLocalS3cfg).getName();
-
-        // irods
-        Irods irods = new Irods();
-        irods.initialize(bag);
-        mLocalIrodsEnv = irods.getPath();
-        // set the path to irodsEnv file only if the file exists
-        if (mLocalIrodsEnv != null && !new File(mLocalIrodsEnv).exists()) {
-            mLogger.log(
-                    "The irodsEnv file does not exist - " + mLocalIrodsEnv,
-                    LogManager.ERROR_MESSAGE_LEVEL);
-            mLocalIrodsEnv = null;
-        }
-
-        mLocalIrodsEnvBasename =
-                (mLocalIrodsEnv == null) ? null : new File(mLocalIrodsEnv).getName();
     }
 
     /**
@@ -251,150 +163,6 @@ public abstract class Abstract implements Implementation {
         if (priority != null) {
             job.condorVariables.construct(Condor.PRIORITY_KEY, priority);
         }
-    }
-
-    /**
-     * Determines if there is a need to transfer the Pegasus credentials for the transfer job or
-     * not. If there is a need to transfert the file, then the job is modified to create the correct
-     * condor commands to transfer the file. The file is transferred from the submit host (i.e site
-     * local).
-     *
-     * @param job the transfer job .
-     * @return boolean true job was modified to transfer the Pegasus credentials file, else false
-     *     when job is not modified.
-     * @deprecated
-     */
-    public boolean checkAndTransferPegasusCredentials(TransferJob job) {
-
-        // for remote execution, transfer credentials file
-        if (!job.getSiteHandle().equalsIgnoreCase("local")
-                && mLocalIrodsEnv != null
-                && !job.envVariables.containsKey(PegasusCredentials.CREDENTIALS_FILE)) {
-            job.condorVariables.addIPFileForTransfer(mLocalCredentials);
-            // just the basename
-            job.envVariables.checkKeyInNS(
-                    PegasusCredentials.CREDENTIALS_FILE, mLocalCredentialsBasename);
-        }
-
-        return true;
-    }
-
-    /**
-     * Determines if there is a need to transfer proxy for the transfer job or not. If there is a
-     * need to transfer proxy, then the job is modified to create the correct condor commands to
-     * transfer the proxy. Proxy is usually transferred if the Pegasus profile TRANSFER_PROXY is
-     * set, or the job is being run in the condor vanilla universe. The proxy is transferred from
-     * the submit host (i.e site local). The location is determined from the value of the
-     * X509_USER_PROXY profile key associated in the env namespace.
-     *
-     * @param job the transfer job .
-     * @return boolean true job was modified to transfer the proxy, else false when job is not
-     *     modified.
-     * @deprecated
-     */
-    public boolean checkAndTransferProxy(TransferJob job) {
-        boolean transfer = false;
-        // not handling for third party transfers correctly.
-
-        String style =
-                job.vdsNS.containsKey(Pegasus.STYLE_KEY)
-                        ? (String) job.vdsNS.get(Pegasus.STYLE_KEY)
-                        : Pegasus.GLOBUS_STYLE;
-        String universe =
-                job.condorVariables.containsKey(Condor.UNIVERSE_KEY)
-                        ? (String) job.condorVariables.get(Condor.UNIVERSE_KEY)
-                        :
-                        // empty
-                        "";
-        boolean condition1 = job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY);
-        boolean condition2 =
-                ((style.equalsIgnoreCase(Pegasus.CONDOR_STYLE))
-                        || (style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE))
-                        || (job.executionPool.equalsIgnoreCase("local")
-                                && (universe.equalsIgnoreCase(Condor.VANILLA_UNIVERSE)
-                                        || universe.equalsIgnoreCase(Condor.STANDARD_UNIVERSE))));
-
-        // condition1 is explicit request for transfer of proxy
-        // condition2 is determination of the glide in case
-        if (condition1 || condition2) {
-            if (mLocalUserProxyBasename != null) {
-                // set the transfer of proxy from the submit host
-                // to the remote execution pool, using internal
-                // condor transfer mechanism
-
-                // add condor key transfer_input_files
-                // and other required condor keys
-                /*
-                job.condorVariables.checkKeyInNS(Condor.TRANSFER_IP_FILES_KEY,
-                                                 mLocalUserProxy);
-                job.condorVariables.construct("should_transfer_files","YES");
-                job.condorVariables.construct("when_to_transfer_output","ON_EXIT");
-                */
-                job.condorVariables.addIPFileForTransfer(mLocalUserProxy);
-
-                // set the environment variable to basefile name
-                // only for transfer jobs that dont execute on the local site
-                if (job.getSiteHandle().equalsIgnoreCase("local")) {
-                    // the full path
-                    job.envVariables.checkKeyInNS(ENV.X509_USER_PROXY_KEY, this.mLocalUserProxy);
-                } else {
-                    // just the basename
-                    job.envVariables.checkKeyInNS(ENV.X509_USER_PROXY_KEY, mLocalUserProxyBasename);
-                }
-
-                if (!condition2) {
-                    // means the transfer job is not being run in
-                    // condor vanilla universe. This means, that in
-                    // all probability the proxy is being transferred
-                    // by gass_cache, and that does not preserve file
-                    // permissions correctly
-                    if (job.getSiteHandle().equalsIgnoreCase("local")) {
-                        // the full path
-                        job.envVariables.checkKeyInNS(
-                                ENV.GRIDSTART_PREJOB, "/bin/chmod 600 " + mLocalUserProxy);
-
-                    } else {
-                        job.envVariables.checkKeyInNS(
-                                ENV.GRIDSTART_PREJOB, "/bin/chmod 600 " + mLocalUserProxyBasename);
-                    }
-                }
-                if (!condition1) {
-                    // for glide in jobs also tag we are
-                    // transferring proxy
-                    job.vdsNS.checkKeyInNS(Pegasus.TRANSFER_PROXY_KEY, "true");
-                }
-                // we want the transfer job to be run in the
-                // directory that Condor or GRAM decided to run
-                job.condorVariables.removeKey("remote_initialdir");
-                transfer = true;
-            }
-        }
-        return transfer;
-    }
-
-    /**
-     * Determines if there is a need to transfer the IRODS_ENVIRONMENT_FILE for the transfer job or
-     * not. If there is a need to transfert the file, then the job is modified to create the correct
-     * condor commands to transfer the file. The file is transferred from the submit host (i.e site
-     * local).
-     *
-     * @param job the transfer job .
-     * @return boolean true job was modified to transfer the IRODS_ENVIRONMENT_FILE, else false when
-     *     job is not modified.
-     * @deprecated
-     */
-    public boolean checkAndTransferIrodsEnvFile(TransferJob job) {
-
-        // for remote execution, transfer the IRODS_ENVIRONMENT_FILE file
-        if (!job.getSiteHandle().equalsIgnoreCase("local")
-                && mLocalIrodsEnv != null
-                && !job.envVariables.containsKey(Irods.IRODSENVFILE)) {
-            job.condorVariables.addIPFileForTransfer(mLocalIrodsEnv);
-            // just the basename
-            job.envVariables.checkKeyInNS(Irods.IRODSENVFILE, mLocalIrodsEnvBasename);
-        }
-
-        return true;
     }
 
     /**

@@ -182,20 +182,6 @@ public interface Implementation {
     public void applyPriority(TransferJob job);
 
     /**
-     * Determines if there is a need to transfer proxy for the transfer job or not. If there is a
-     * need to transfer proxy, then the job is modified to create the correct condor commands to
-     * transfer the proxy. Proxy is usually transferred if the VDS profile TRANSFER_PROXY is set, or
-     * the job is being run in the condor vanilla universe. The proxy is transferred from the submit
-     * host (i.e site local). The location is determined from the value of the X509_USER_PROXY
-     * profile key associated in the env namespace.
-     *
-     * @param job the transfer job .
-     * @return boolean true job was modified to transfer the proxy, else false when job is not
-     *     modified.
-     */
-    public boolean checkAndTransferProxy(TransferJob job);
-
-    /**
      * Returns a textual description of the transfer implementation.
      *
      * @return a short textual description
