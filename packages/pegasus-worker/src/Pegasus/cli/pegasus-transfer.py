@@ -1344,6 +1344,7 @@ class HttpHandler(TransferHandlerBase):
                     cmd += " -nv"
                 cmd += (
                     " --no-cookies --no-check-certificate"
+                    + " --timeout=300 --tries=1"
                     + " -O '"
                     + t.get_dst_path()
                     + "'"
