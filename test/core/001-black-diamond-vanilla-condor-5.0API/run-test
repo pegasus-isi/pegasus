@@ -12,8 +12,8 @@ $testdir/run-bamboo-test
 $testdir/../../common/wait-for-workflow
 
 # check success with pegasus-analyzer - does it use exit codes correctly?
-cd work/001-black-diamond-vanilla-condor-5.0API-*
+cd work/black-diamond-5.0api-*
 pegasus-analyzer
 
 # show some stats
-pegasus-statistics `pwd`
+pegasus-statistics -s all
