@@ -14,8 +14,6 @@
 #  limitations under the License.
 #
 
-import logging
-
 import fnmatch
 import math
 import os
@@ -82,6 +80,18 @@ KB = 1024
 MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
+
+def human_size(size):
+    if size >= TB:
+        return "{0:6.1f}TB".format(size / float(TB))
+    elif size >= GB:
+        return "{0:6.1f}GB".format(size / float(GB))
+    elif size >= MB:
+        return "{0:6.1f}MB".format(size / float(MB))
+    elif size >= KB:
+        return "{0:6.1f}KB".format(size / float(KB))
+    else:
+        return "{0:6.0f}B".format(size)
 
 # see https://docs.aws.amazon.com/general/latest/gr/s3.html
 LOCATIONS = {
@@ -412,7 +422,6 @@ def parse_uri(uri):
 
     return S3URI(user, site, bucket, key, secure)
 
-
 def ls(args):
     parser = option_parser("ls URL...")
 
@@ -435,80 +444,57 @@ def ls(args):
 
     options, args = parser.parse_args(args)
 
-    if len(args) == 0:
-        parser.error("Specify a URL")
+    if len(args) == 0 or len(args) > 1:
+        parser.error("Specify a single URL")
 
     config = get_config(options)
-
-    items = []
-    for uri in args:
-        items.append(parse_uri(uri))
-
-    def human_sized(sz):
-        if sz > TB:
-            return "%6.1fT" % (sz / (1.0 * TB))
-        elif sz > GB:
-            return "%6.1fG" % (sz / (1.0 * GB))
-        elif sz > MB:
-            return "%6.1fM" % (sz / (1.0 * MB))
-        elif sz > KB:
-            return "%6.1fK" % (sz / (1.0 * KB))
-        else:
-            return "%6dB" % sz
-
-    def print_key(key):
-        if options.long_format:
-            if options.human_sized:
-                size = human_sized(key.size)
+    uri = parse_uri(args.pop())
+    
+    s3 = get_s3_client(config, uri)
+    
+    print(uri)
+    if uri.bucket:
+        # list keys in bucket
+        try:
+            keys = s3.list_objects_v2(
+                        Bucket=uri.bucket,
+                        Prefix=uri.key if uri.key else "",
+                        FetchOwner=True
+                    )
+        except s3.exceptions.NoSuchBucket:
+            print("Invalid bucket: {}".format(uri.bucket))
+            sys.exit(1)
+        except botocore.exceptions.ClientError as e:
+            # endpoint may also raise this for invalid bucket name
+            if e.response["Error"]["Code"] == "InvalidBucketName":
+                print("Invalid bucket: {}".format(uri.bucket))
+                sys.exit(1)
             else:
-                size = "%13d" % key.size
-            name = key.name
-            modified = key.last_modified
-            owner = key.owner.display_name
-            storage_class = key.storage_class
-            if storage_class.startswith("REDUCED"):
-                storage_class = "REDUCED"
-            sys.stdout.write(
-                "\t%15s %s %s %8s %s\n" % (owner, size, modified, storage_class, name)
-            )
-        else:
-            sys.stdout.write("\t%s\n" % key.name)
+                raise e
 
-    def print_bucket(bucket):
-        if options.long_format:
-            # Also list the location of each bucket
-            loc = bucket.get_location()
-            if not loc:
-                loc = "-"
-            sys.stdout.write("\t%-50s%s\n" % (bucket.name, loc))
-        else:
-            sys.stdout.write("\t%s\n" % bucket.name)
+        if keys.get("Contents"):
+            for content in keys["Contents"]:
+                key = content["Key"]
 
-    for uri in items:
-        conn = get_connection(config, uri)
-
-        bucket = uri.bucket
-        uri.key
-
-        sys.stdout.write("%s\n" % uri)
-        if bucket is None:
-            buckets = conn.get_all_buckets()
-            for bucket in buckets:
-                print_bucket(bucket)
-        else:
-            b = conn.get_bucket(uri.bucket)
-            if has_wildcards(uri.key):
-                for o in b.list():
-                    if fnmatch.fnmatch(o.name, uri.key):
-                        print_key(o)
-            else:
-                for o in b.list(prefix=uri.key):
-                    # For some reason, Walrus sometimes returns a Prefix object
-                    if isinstance(o, boto.s3.prefix.Prefix):
-                        continue
-                    print_key(o)
-    # left off here
-
+                if options.long_format:
+                    size = human_size(content["Size"]) if options.human_sized else "{0:13d}".format(content["Size"])
+                    last_modified = content["LastModified"]
+                    owner = content["Owner"]["DisplayName"]
+                    storage_class = content["StorageClass"]
+                    print("\t{owner:15s} {size} {modified} {storage_class:24s} {name}".format(
+                            owner=owner,
+                            size=size,
+                            modified=last_modified,
+                            storage_class=storage_class,
+                            name=key
+                        ))
+                else:
+                    print("\t{}".format(key))
+    else:
+        # list buckets
+        buckets = s3.list_buckets()
+        for b in buckets["Buckets"]:
+            print("\t{}".format(b["Name"]))
 
 def cp(args):
     parser = option_parser("cp SRC[...] DEST")
@@ -672,9 +658,11 @@ def mkdir(args):
         parser.error("Specify URL")
 
     if uri.bucket is None:
-        raise Exception("URL for mkdir must contain a bucket: %s" % arg)
+        print("URL for mkdir must contain a bucket: %s" % arg)
+        sys.exit(1)
     if uri.key is not None:
-        raise Exception("URL for mkdir cannot contain a key: %s" % arg)
+        print("URL for mkdir cannot contain a key: %s" % arg)
+        sys.exit(1)
 
     s3 = get_s3_client(config, uri)
 
@@ -688,15 +676,16 @@ def mkdir(args):
     try:
         s3.create_bucket(Bucket=uri.bucket, CreateBucketConfiguration=create_bucket_config)
     except s3.exceptions.BucketAlreadyExists:
-        logging.error("bucket: {} already taken".format(uri.bucket))
-        raise
+        print("Bucket: {} already taken".format(uri.bucket))
+        sys.exit(1)
+
     except s3.exceptions.BucketAlreadyOwnedByYou:
         is_duplicate_bucket = True
     
     if is_duplicate_bucket:
-        logging.info("Bucket: {} is already owned by you".format(uri.bucket))
+        print("Bucket: {} is already owned by you".format(uri.bucket))
     else:
-        logging.info("Bucket: {} has been created".format(uri.bucket))
+        print("Bucket: {} has been created".format(uri.bucket))
 
 def rm(args):
     parser = option_parser("rm URL...")
@@ -871,7 +860,8 @@ def put(args):
     url = args[1]
 
     if not os.path.exists(path):
-        raise Exception("No such file or directory: {}".format(path))
+        print("No such file or directory: {}".format(path))
+        sys.exit(1)
 
     # Get a list of all the files to transfer
     if options.recursive:
@@ -902,7 +892,8 @@ def put(args):
     # Validate URL
     uri = parse_uri(url)
     if uri.bucket is None:
-        raise Exception("URL for put must have a bucket: %s" % url)
+        print("URL for put must have a bucket: %s" % url)
+        sys.exit(1)
     if uri.key is None:
         uri.key = os.path.basename(path)
 
@@ -917,11 +908,11 @@ def put(args):
         try:
             resp = s3.create_bucket(Bucket=uri.bucket)
         except s3.exceptions.BucketAlreadyExists:
-            logging.error(
-                "bucket: {} already taken".format(uri.bucket), 
+            print(
+                "Bucket: {} already taken".format(uri.bucket), 
                 exc_info=True
             )
-            raise
+            sys.exit(1)
         except s3.exceptions.BucketAlreadyOwnedByYou:
             # AWS S3 endpoint will throw this, but other endpoints may not
             pass
@@ -942,35 +933,36 @@ def put(args):
                 error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
                 if error_code == 403:
-                    logging.exception("Access to bucket: {bucket}, key: {key} forbidden".format(bucket=uri.bucket, key=f))
+                    print("Access to bucket: {bucket}, key: {key} forbidden".format(bucket=uri.bucket, key=f))
                 elif error_code == 404:
                     # 
                     pass
                 else:
-                    logging.exception("Unknown client error")
+                    print("Unknown client error")
+                    sys.exit(1)
 
         if key_already_exists:
-            log.error("Key: {} already exists. Trye --force to overwrite".format(pre_existing_key))
-            raise Exception("Unable overwrite key: {}".format(pre_existing_key))
+            print("Key: {} already exists. Trye --force to overwrite".format(pre_existing_key))
+            sys.exit(1)
 
     for f in infiles:
         try:
             key = f if uri.key is None else uri.key
             s3.upload_file(f, uri.bucket, key)
-            logging.info("Uploaded file: {file} to bucket: {bucket} as key: {key}".format(
+            print("Uploaded file: {file} to bucket: {bucket} as key: {key}".format(
                 file=f,
                 bucket=uri.bucket,
                 key=key
             ))
         except boto3.exceptions.S3UploadFailedError:
-            log.error("Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
+            print("Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
                 file=f,
                 bucket=uri.bucket,
                 key=key
             ))
-            raise
+            sys.exit(1) 
     
-    log.info("Successfully uploaded {} files".format(len(infiles)))
+    print("Successfully uploaded {} files".format(len(infiles)))
 
 def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
     def download():
