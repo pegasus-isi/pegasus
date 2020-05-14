@@ -339,22 +339,27 @@ public class Condor extends Namespace {
             return;
         }
 
-        StringBuffer addon = new StringBuffer();
+        StringBuffer sb = new StringBuffer();
         for (String f : files) {
-            addon.append(f).append(",");
+            sb.append(f).append(",");
         }
         String existing;
         // check if the key is already set.
         if (this.containsKey(key)) {
             // update the existing list.
             existing = (String) this.get(key);
-            addon.append(existing);
+            sb.append(existing);
         } else {
             // set the additional keys only once
             this.construct("should_transfer_files", "YES");
             this.constructWhenToTransferOutput();
         }
-        this.construct(key, addon.toString());
+        // remove any trailing ,
+        int lastIndex = sb.length() - 1;
+        String addOn =
+                (sb.lastIndexOf(",") == lastIndex) ? sb.substring(0, lastIndex) : sb.toString();
+
+        this.construct(key, addOn);
     }
 
     /**
