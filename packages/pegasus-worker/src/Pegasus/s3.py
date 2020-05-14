@@ -66,12 +66,9 @@ boto.config.set("Boto", "http_socket_timeout", "60")
 COMMANDS = {
     "ls": "List the contents of a bucket",
     "mkdir": "Create a bucket in S3",
-    "rmdir": "Delete a bucket from S3",
     "rm": "Delete a key from S3",
     "put": "Upload a key to S3 from a file",
     "get": "Download a key from S3 to a file",
-    "lsup": "List multipart uploads",
-    "rmup": "Cancel multipart uploads",
     "cp": "Copy keys remotely",
     "help": "Print this message",
 }
