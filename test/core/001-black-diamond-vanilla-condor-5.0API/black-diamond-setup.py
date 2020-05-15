@@ -40,7 +40,7 @@ conf.write()
 LOCAL = "local"
 CONDOR_POOL = "⿔condor-pool⼤"
 
-shared_scratch_dir = str(WORK_DIR / RUN_ID)
+shared_scratch_dir = str(WORK_DIR / "shared-scratch")
 local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
 
 print("Generating site catalog at: {}".format(TOP_DIR / "sites.yml"))
