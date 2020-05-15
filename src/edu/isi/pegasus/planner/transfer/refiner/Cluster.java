@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.TransferEngine;
+import edu.isi.pegasus.planner.transfer.classes.TransferContainer;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import java.util.ArrayList;
 import java.util.Collection;
