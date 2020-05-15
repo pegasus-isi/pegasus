@@ -708,4 +708,11 @@ Jens-S. Vöckler ``<voeckler@isi.edu>``
 
 Gideon Juve ``<gideon@isi.edu>``
 
+Mats Rynge ``<rynge@isi.edu>``
+
 Pegasus Team http://pegasus.isi.edu/
+
+sha256 implementation by Dr Brian Gladman, Worcester, UK. Please see
+the source code at https://github.com/pegasus-isi for the full
+copyright notice.
+

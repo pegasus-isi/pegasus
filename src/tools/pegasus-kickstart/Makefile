@@ -29,6 +29,7 @@ OBJS+=mylist.o
 OBJS+=invoke.o
 OBJS+=pegasus-kickstart.o
 OBJS+=procinfo.o
+OBJS+=sha2.o
 OBJS+=checksum.o
 
 ifeq (DARWIN,${SYSTEM})
