@@ -215,7 +215,7 @@ class Properties:
         .. code-block:: python
 
             # Example
-            >>> Properties.ls("pegasus.catalog")
+            >>> Properties.ls("pegasus.pmc")
             pegasus.pmc_priority
             pegasus.pmc_request_cpus
             pegasus.pmc_request_memory
