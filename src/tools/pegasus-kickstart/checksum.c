@@ -62,6 +62,7 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
     strcat(cmd, fname);
     strcat(cmd, " 2>/dev/null");
 
+    printf("      integrity_cmd: \"%s\"\n", cmd);
     FILE *p = popen(cmd, "r");
     if (p == NULL) {
         return 0;
