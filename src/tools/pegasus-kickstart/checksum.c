@@ -39,7 +39,7 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
     char          buf[BUFSIZE];
     sha256_ctx    ctx[1];
     unsigned char hval[SHA256_DIGEST_SIZE];
-    char          chksum_str[SHA256_DIGEST_SIZE * 2];
+    char          chksum_str[(SHA256_DIGEST_SIZE * 2) + 1];
     char          *chksum_cur;
     int           i, len;
     double        start_ts, duration;
@@ -72,6 +72,7 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
         sprintf(chksum_cur, "%02x", hval[i]);
         chksum_cur += 2;
     }
+    chksum_str[SHA256_DIGEST_SIZE * 2] = '\0';
    
     sprintf(buf, "      sha256: %s\n", chksum_str);
     strcat(yaml, buf);
