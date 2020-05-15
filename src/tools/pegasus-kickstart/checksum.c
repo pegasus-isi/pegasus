@@ -20,11 +20,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <libgen.h>
-
-#ifdef DARWIN
-#include <libproc.h>
-#endif
+#include <time.h>
+#include <sys/time.h>
+#include "sha2.h"
 
 #include "checksum.h"
 
@@ -37,44 +35,48 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
      *          yaml: the buffer for the calculated checksum
      * returns: 1 on success
      */
-    char buf[BUFSIZE];
-    char cmd[4096];
+    FILE          *inf;
+    char          buf[BUFSIZE];
+    sha256_ctx    ctx[1];
+    unsigned char hval[SHA256_DIGEST_SIZE];
+    char          chksum_str[SHA256_DIGEST_SIZE * 2];
+    char          *chksum_cur;
+    int           i, len;
+    double        start_ts, duration;
 
     /* in case of failure */
     *yaml = '\0';
+    chksum_str[0] = '\0';
 
-    cmd[0] = '\0';
-
-    /* use the same location for pegasus-integrity as was
-       used for pegasus-kickstart */
-#ifdef LINUX
-    if (readlink("/proc/self/exe", buf, BUFSIZE)) {
-#endif
-#ifdef DARWIN
-    pid_t pid = getpid();
-    if (proc_pidpath(pid, buf, sizeof(buf))) {
-#endif
-        strcat(cmd, dirname(buf));
-        strcat(cmd, "/");
-    }
-
-    strcat(cmd, "pegasus-integrity --generate-yaml=");
-    strcat(cmd, fname);
-    strcat(cmd, " 2>/dev/null");
-
-    printf("      integrity_cmd: \"%s\"\n", cmd);
-    FILE *p = popen(cmd, "r");
-    if (p == NULL) {
+    start_ts = get_ts(); 
+    if (!(inf = fopen(fname, "r"))) {
         return 0;
     }
-    while (fgets(buf, BUFSIZE, p) != NULL) {
-        strcpy(yaml, buf);
-        yaml += strlen(buf);
-    }
 
-    if (pclose(p) != 0) {
-        return 0;
-    } 
+    sha256_begin(ctx);
+    len = 0;
+    do
+    {   
+        len = (int)fread(buf, 1, BUFSIZE, inf);
+        if (len) {
+            sha256_hash((unsigned char*)buf, len, ctx);
+        }
+    }
+    while (len);
+    fclose(inf);
+    sha256_end(hval, ctx);
+    duration = get_ts() - start_ts;
+
+    chksum_cur = chksum_str;
+    for (i = 0; i < SHA256_DIGEST_SIZE; ++i) {
+        sprintf(chksum_cur, "%02x", hval[i]);
+        chksum_cur += 2;
+    }
+   
+    sprintf(buf, "      sha256: %s\n", chksum_str);
+    strcat(yaml, buf);
+    sprintf(buf, "      checksum_timing: %0.2f\n", duration);
+    strcat(yaml, buf);
 
     return 1;
 }
@@ -100,3 +102,11 @@ int print_pegasus_integrity_yaml_blob(FILE *out, const char *fname) {
     return 1;
 }
 
+double get_ts() {
+    struct timeval time;
+    if (gettimeofday(&time,NULL)){
+        //  Handle error
+        return 0;
+    }
+    return (double)time.tv_sec + (double)time.tv_usec * .000001;
+}
