@@ -578,6 +578,8 @@ public class BalancedCluster extends Basic {
             }
             if (makeRNode) {
                 soTC.addRegistrationFiles(ft);
+                // PM-1582 add associated compute job for the registration job
+                soTC.addComputeJob(jobName);
             }
         }
         // add any relation that are required between the compute
@@ -607,21 +609,6 @@ public class BalancedCluster extends Basic {
         // increment the level counter
         this.mCurrentSILevel++;
         this.resetStageInMaps();
-
-        // adding relations that tie in the stagin
-        // jobs to the compute jobs.
-        /*        for (Iterator it = mRelationsParentMap.entrySet().iterator(); it.hasNext(); ) {
-                    Map.Entry entry = (Map.Entry) it.next();
-                    String key = (String) entry.getKey();
-                    mLogger.log("Adding relations for job " + key, LogManager.DEBUG_MESSAGE_LEVEL);
-                    for (Iterator pIt = ((Collection) entry.getValue()).iterator(); pIt.hasNext(); ) {
-                        String value = (String) pIt.next();
-
-                        mLogger.log("Adding Edge " + value + " -> " + key, LogManager.DEBUG_MESSAGE_LEVEL);
-                        this.mDAG.addEdge(value, key);
-                    }
-                }
-        */
         // reset the stageout map too
         this.resetStageOutMaps();
 
@@ -986,6 +973,9 @@ public class BalancedCluster extends Basic {
         /** The name of the registration job. */
         private String mRegName;
 
+        /** Collection of compute jobs this transfer container is responsible for */
+        private Collection<String> mComputeJobsList;
+
         /**
          * The collection of <code>FileTransfer</code> objects containing the transfers the job is
          * responsible for.
@@ -1005,8 +995,9 @@ public class BalancedCluster extends Basic {
         public TransferContainer() {
             mTXName = null;
             mRegName = null;
-            mFileTXList = new Vector();
-            mRegFiles = new Vector();
+            mFileTXList = new LinkedList();
+            mRegFiles = new LinkedList();
+            mComputeJobsList = new LinkedList();
             mTransferType = Job.STAGE_IN_JOB;
         }
 
@@ -1043,14 +1034,14 @@ public class BalancedCluster extends Basic {
          *
          * @param files collection of <code>FileTransfer</code>.
          */
-        public void addTransfer(Collection files) {
+        public void addTransfer(Collection<FileTransfer> files) {
             mFileTXList.addAll(files);
         }
 
         /**
          * Adds a single file for registration.
          *
-         * @param files collection of <code>FileTransfer</code>.
+         * @param file
          */
         public void addRegistrationFiles(FileTransfer file) {
             mRegFiles.add(file);
@@ -1062,8 +1053,17 @@ public class BalancedCluster extends Basic {
          *
          * @param files collection of <code>FileTransfer</code>.
          */
-        public void addRegistrationFiles(Collection files) {
+        public void addRegistrationFiles(Collection<FileTransfer> files) {
             mRegFiles.addAll(files);
+        }
+
+        /**
+         * Add associated compute job name
+         *
+         * @param name
+         */
+        public void addComputeJob(String name) {
+            this.mComputeJobsList.add(name);
         }
 
         /**
@@ -1098,7 +1098,7 @@ public class BalancedCluster extends Basic {
          *
          * @return a collection of <code>FileTransfer</code> objects.
          */
-        public Collection getFileTransfers() {
+        public Collection<FileTransfer> getFileTransfers() {
             return mFileTXList;
         }
 
@@ -1107,8 +1107,17 @@ public class BalancedCluster extends Basic {
          *
          * @return a collection of <code>FileTransfer</code> objects.
          */
-        public Collection getRegistrationFiles() {
+        public Collection<FileTransfer> getRegistrationFiles() {
             return mRegFiles;
+        }
+
+        /**
+         * Returns the collection of compute jobs associated with this transfer container.
+         *
+         * @return a collection of <code>String</code> objects.
+         */
+        public Collection<String> getAssociatedComputeJobs() {
+            return this.mComputeJobsList;
         }
     }
 
