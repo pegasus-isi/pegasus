@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.refiner.TransferEngine;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
+import edu.isi.pegasus.planner.transfer.classes.TransferContainer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -40,7 +41,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 /**
  * An extension of the default refiner, that allows the user to specify the number of transfer nodes
@@ -572,7 +572,7 @@ public class BalancedCluster extends Basic {
                 // get the appropriate pool transfer object for the site
                 PoolTransfer pt = this.getStageOutPoolTransfer(site, localTransfer, bundle);
                 // we add all the file transfers to the pool transfer
-                soTC = pt.addTransfer(new Vector(), level, Job.STAGE_OUT_JOB);
+                soTC = pt.addTransfer(new LinkedList(), level, Job.STAGE_OUT_JOB);
                 // direct link between compute job and registration job
                 children.add(soTC.getRegName());
             }
@@ -959,166 +959,6 @@ public class BalancedCluster extends Basic {
                 .append(" ")
                 .append("in site catalog");
         this.mScalingMessages.add(message.toString());
-    }
-
-    /**
-     * A container class for storing the name of the transfer job, the list of file transfers that
-     * the job is responsible for.
-     */
-    protected class TransferContainer {
-
-        /** The name of the transfer job. */
-        private String mTXName;
-
-        /** The name of the registration job. */
-        private String mRegName;
-
-        /** Collection of compute jobs this transfer container is responsible for */
-        private Collection<String> mComputeJobsList;
-
-        /**
-         * The collection of <code>FileTransfer</code> objects containing the transfers the job is
-         * responsible for.
-         */
-        private Collection<FileTransfer> mFileTXList;
-
-        /**
-         * The collection of <code>FileTransfer</code> objects containing the files that need to be
-         * registered.
-         */
-        private Collection<FileTransfer> mRegFiles;
-
-        /** The type of the transfers the job is responsible for. */
-        private int mTransferType;
-
-        /** The default constructor. */
-        public TransferContainer() {
-            mTXName = null;
-            mRegName = null;
-            mFileTXList = new LinkedList();
-            mRegFiles = new LinkedList();
-            mComputeJobsList = new LinkedList();
-            mTransferType = Job.STAGE_IN_JOB;
-        }
-
-        /**
-         * Sets the name of the transfer job.
-         *
-         * @param name the name of the transfer job.
-         */
-        public void setTXName(String name) {
-            mTXName = name;
-        }
-
-        /**
-         * Sets the name of the registration job.
-         *
-         * @param name the name of the transfer job.
-         */
-        public void setRegName(String name) {
-            mRegName = name;
-        }
-
-        /**
-         * Adds a file transfer to the underlying collection.
-         *
-         * @param transfer the <code>FileTransfer</code> containing the information about a single
-         *     transfer.
-         */
-        public void addTransfer(FileTransfer transfer) {
-            mFileTXList.add(transfer);
-        }
-
-        /**
-         * Adds a file transfer to the underlying collection.
-         *
-         * @param files collection of <code>FileTransfer</code>.
-         */
-        public void addTransfer(Collection<FileTransfer> files) {
-            mFileTXList.addAll(files);
-        }
-
-        /**
-         * Adds a single file for registration.
-         *
-         * @param file
-         */
-        public void addRegistrationFiles(FileTransfer file) {
-            mRegFiles.add(file);
-        }
-
-        /**
-         * Adds a Collection of File transfer to the underlying collection of files to be
-         * registered.
-         *
-         * @param files collection of <code>FileTransfer</code>.
-         */
-        public void addRegistrationFiles(Collection<FileTransfer> files) {
-            mRegFiles.addAll(files);
-        }
-
-        /**
-         * Add associated compute job name
-         *
-         * @param name
-         */
-        public void addComputeJob(String name) {
-            this.mComputeJobsList.add(name);
-        }
-
-        /**
-         * Sets the transfer type for the transfers associated.
-         *
-         * @param type type of transfer.
-         */
-        public void setTransferType(int type) {
-            mTransferType = type;
-        }
-
-        /**
-         * Returns the name of the transfer job.
-         *
-         * @return name of the transfer job.
-         */
-        public String getTXName() {
-            return mTXName;
-        }
-
-        /**
-         * Returns the name of the registration job.
-         *
-         * @return name of the registration job.
-         */
-        public String getRegName() {
-            return mRegName;
-        }
-
-        /**
-         * Returns the collection of transfers associated with this transfer container.
-         *
-         * @return a collection of <code>FileTransfer</code> objects.
-         */
-        public Collection<FileTransfer> getFileTransfers() {
-            return mFileTXList;
-        }
-
-        /**
-         * Returns the collection of registration files associated with this transfer container.
-         *
-         * @return a collection of <code>FileTransfer</code> objects.
-         */
-        public Collection<FileTransfer> getRegistrationFiles() {
-            return mRegFiles;
-        }
-
-        /**
-         * Returns the collection of compute jobs associated with this transfer container.
-         *
-         * @return a collection of <code>String</code> objects.
-         */
-        public Collection<String> getAssociatedComputeJobs() {
-            return this.mComputeJobsList;
-        }
     }
 
     /**
