@@ -21,7 +21,9 @@ import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
@@ -109,6 +111,8 @@ public class RCClient extends Toolkit {
         }
     }
 
+    private ReplicaStore mMetadataStore;
+
     /**
      * Sets a logging level.
      *
@@ -179,6 +183,7 @@ public class RCClient extends Toolkit {
         m_conf_property_file = propertyFile;
         m_rls_logger = LogManagerFactory.loadSingletonInstance(m_pegasus_props);
         m_rls_logger.setLevel(Level.WARN);
+        mMetadataStore = new ReplicaStore();
         m_rls_logger.logEventStart(
                 "pegasus-rc-client", "planner.version", Version.instance().toString());
         m_log.debug("starting instance");
@@ -205,6 +210,10 @@ public class RCClient extends Toolkit {
                         + "                The special filename hyphen reads from pipes"
                         + linefeed
                         + " -c|--conf fn   path to the property file"
+                        + linefeed
+                        + " -m|--meta fns  comma separated list of metafiles from where to pick"
+                        + linefeed
+                        + "                additional attributes for entries"
                         + linefeed
                         + " -v|--verbose   increases the verbosity level"
                         + linefeed
@@ -249,7 +258,7 @@ public class RCClient extends Toolkit {
      * @return an initialized array with the options
      */
     protected LongOpt[] generateValidOptions() {
-        LongOpt[] lo = new LongOpt[9];
+        LongOpt[] lo = new LongOpt[10];
 
         lo[0] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
         lo[1] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
@@ -260,6 +269,7 @@ public class RCClient extends Toolkit {
         lo[6] = new LongOpt("lookup", LongOpt.REQUIRED_ARGUMENT, null, 'l');
         lo[7] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
         lo[8] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, 'c');
+        lo[9] = new LongOpt("meta", LongOpt.REQUIRED_ARGUMENT, null, 'm');
         return lo;
     }
 
@@ -490,6 +500,19 @@ public class RCClient extends Toolkit {
                         }
                     }
                     rce.checkAndUpdateForPoolAttribute();
+
+                    // PM-1582 merge metadata attributes in to the rce
+                    if (this.mMetadataStore.containsLFN(lfn)) {
+                        ReplicaLocation rl = this.mMetadataStore.getReplicaLocation(lfn);
+                        if (rl.getPFNCount() != 1) {
+                            m_log.error(
+                                    "multiple metadata containing replica entries for "
+                                            + rl
+                                            + " entries");
+                        }
+                        rce.addAttribute(rl.getAllMetadata());
+                    }
+
                     // check to see if the lfn is already there
                     // not doing a contains check as most of
                     // the times lfn is expected to be unique
@@ -886,6 +909,39 @@ public class RCClient extends Toolkit {
     }
 
     /**
+     * Parses metadata files and loads them into a ReplicaStore
+     *
+     * @param files
+     * @return
+     */
+    private boolean parseMetadataFiles(String[] files) {
+        boolean connect = true;
+
+        PegasusBag bag = new PegasusBag();
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty(ReplicaCatalog.c_prefix, "Meta");
+        LogManager logger = LogManagerFactory.loadSingletonInstance(this.m_pegasus_props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+
+        for (String file : files) {
+            props.setProperty(ReplicaCatalog.c_prefix + "." + ReplicaCatalog.FILE_KEY, file);
+            bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+            ReplicaCatalog rc = null;
+            try {
+                rc = ReplicaFactory.loadInstance(bag, file);
+            } catch (Exception ex) {
+                m_log.error("Error encountered while connecting to meta file " + file, ex);
+                connect = false;
+                break;
+            }
+            // add all contents of the rc backend into the store
+            mMetadataStore.add(rc.lookup(new HashMap()));
+            m_log.info("Loaded metadata from file " + file);
+        }
+        return connect;
+    }
+
+    /**
      * Manipulate entries in a given replica catalog implementation.
      *
      * @param args are the commandline arguments.
@@ -907,11 +963,12 @@ public class RCClient extends Toolkit {
             // get the command line options
             Getopt opts =
                     new Getopt(
-                            me.m_application, args, "f:hp:vVi:d:l:c:", me.generateValidOptions());
+                            me.m_application, args, "f:hp:vVi:d:l:c:m:", me.generateValidOptions());
             opts.setOpterr(false);
 
             String arg;
             String filename = null;
+            String metaFiles = null;
             int pos, option = -1;
             boolean interactive = false;
             String command = null;
@@ -952,6 +1009,10 @@ public class RCClient extends Toolkit {
                     case 'c': // conf
                         // do nothing
                         break;
+                    case 'm': // meta
+                        arg = opts.getOptarg();
+                        if (arg != null) metaFiles = arg;
+                        break;
                     case 'h':
                     default:
                         me.showUsage();
@@ -964,6 +1025,15 @@ public class RCClient extends Toolkit {
             // now work with me
             me.connect(me.m_pegasus_props, me.m_conf_property_file);
             RCClient.log(Level.DEBUG, "connected to backend");
+
+            // PM-1582 check if there are meta files to parse
+            if (metaFiles != null) {
+                if (!me.parseMetadataFiles(metaFiles.split(","))) {
+                    throw new ReplicaCatalogException(
+                            "unable to parse metadata files " + metaFiles);
+                }
+            }
+
             // are there any remaining CLI arguments?
             if (opts.getOptind() < args.length) {
                 // there are CLI arguments
