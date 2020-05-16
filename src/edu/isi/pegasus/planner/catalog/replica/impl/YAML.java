@@ -1314,7 +1314,7 @@ public class YAML implements ReplicaCatalog {
                     }
                     if (checksumValue != null) {
                         writeStringField(
-                                gen, ReplicaCatalogKeywords.TYPE.getReservedName(), checksumValue);
+                                gen, ReplicaCatalogKeywords.VALUE.getReservedName(), checksumValue);
                     }
                     gen.writeEndObject();
                 }
