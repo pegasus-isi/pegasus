@@ -168,11 +168,10 @@ public class Meta implements ReplicaCatalog {
                     }
                 }
             }
-        }
-        else{
+        } else {
             return false;
         }
-                
+
         return true;
     }
 

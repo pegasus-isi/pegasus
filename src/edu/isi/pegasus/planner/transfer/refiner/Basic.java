@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -523,7 +524,9 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
             if (makeRNode) {
                 // call to make the reg subinfo
                 // added in make registration node
-                addJob(createRegistrationJob(regJob, job, regFiles, rcb));
+                Collection<Job> c = new LinkedList();
+                c.add(job);
+                addJob(createRegistrationJob(regJob, job, regFiles, c, rcb));
             }
         }
     }
@@ -536,12 +539,17 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
      * @param job The job whose output files are to be registered in the Replica Mechanism.
      * @param files Collection of <code>FileTransfer</code> objects containing the information about
      *     source and destURL's.
+     * @param computeJobs
      * @param rcb bridge to the Replica Catalog. Used for creating registration nodes in the
      *     workflow.
      * @return the registration job.
      */
     protected Job createRegistrationJob(
-            String regJobName, Job job, Collection files, ReplicaCatalogBridge rcb) {
+            String regJobName,
+            Job job,
+            Collection files,
+            Collection<Job> computeJobs,
+            ReplicaCatalogBridge rcb) {
 
         Job regJob = rcb.makeRCRegNode(regJobName, job, files);
 

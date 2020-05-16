@@ -561,6 +561,9 @@ public class Bundle extends Basic {
         }
         if (makeRNode) {
             soTC.addRegistrationFiles(regFiles);
+
+            // PM-1582 add associated compute job for the registration job
+            soTC.addComputeJob(job);
             // call to make the reg subinfo
             // added in make registration node
             //           addJob(createRegistrationJob(regJob, job, regFiles, rcb));
@@ -772,7 +775,11 @@ public class Bundle extends Basic {
                                 LogManager.DEBUG_MESSAGE_LEVEL);
                         addJob(
                                 createRegistrationJob(
-                                        tc.getRegName(), job, tc.getRegistrationFiles(), mRCB));
+                                        tc.getRegName(),
+                                        job,
+                                        tc.getRegistrationFiles(),
+                                        tc.getAssociatedComputeJobs(),
+                                        mRCB));
                     }
                 }
             }

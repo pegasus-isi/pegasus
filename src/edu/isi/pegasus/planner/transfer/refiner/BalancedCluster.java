@@ -871,7 +871,11 @@ public class BalancedCluster extends Basic {
                                 LogManager.DEBUG_MESSAGE_LEVEL);
                         addJob(
                                 createRegistrationJob(
-                                        tc.getRegName(), job, tc.getRegistrationFiles(), mRCB));
+                                        tc.getRegName(),
+                                        job,
+                                        tc.getRegistrationFiles(),
+                                        tc.getAssociatedComputeJobs(),
+                                        mRCB));
                     }
                 }
             }
