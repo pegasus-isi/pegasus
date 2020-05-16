@@ -551,54 +551,7 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
             Collection<Job> computeJobs,
             ReplicaCatalogBridge rcb) {
 
-        Job regJob = rcb.makeRCRegNode(regJobName, job, files);
-
-        // log the registration action for provenance purposes
-        StringBuffer sb = new StringBuffer();
-        String indent = "\t";
-        sb.append(indent);
-        sb.append("<register job=\"").append(regJobName).append("\"> ");
-        sb.append("\n");
-
-        // traverse through all the files
-        NameValue dest;
-        String newIndent = indent + "\t";
-        for (Iterator it = files.iterator(); it.hasNext(); ) {
-            FileTransfer ft = (FileTransfer) it.next();
-            dest = ft.getDestURL();
-            sb.append(newIndent);
-            sb.append("<file ");
-            appendAttribute(sb, "lfn", ft.getLFN());
-            appendAttribute(sb, "site", dest.getKey());
-            sb.append(">");
-            sb.append("\n");
-            sb.append(newIndent).append(indent);
-            sb.append(dest.getValue());
-            sb.append("\n");
-            sb.append(newIndent);
-            sb.append("</file>").append("\n");
-        }
-        sb.append(indent);
-        sb.append("</register>").append("\n");
-
-        // log the graph relationship
-        String parent = job.getName();
-        String child = regJob.getName();
-
-        sb.append(indent);
-        sb.append("<child ");
-        appendAttribute(sb, "ref", child);
-        sb.append(">").append("\n");
-
-        sb.append(newIndent);
-        sb.append("<parent ");
-        appendAttribute(sb, "ref", parent);
-        sb.append("/>").append("\n");
-
-        sb.append(indent);
-        sb.append("</child>").append("\n");
-
-        return regJob;
+        return rcb.makeRCRegNode(regJobName, job, files);
     }
 
     /** Signals that the traversal of the workflow is done. */
