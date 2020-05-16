@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.*;
 
 /**
@@ -106,6 +108,31 @@ public class MetaRCTest {
         }
     }
 
+    @Test
+    public void lookupWholeCatalogWithConstraints(){
+        Map<String,Collection<ReplicaCatalogEntry>> m = mMetaRC.lookup(new HashMap());
+        String lfn = "f.b1";
+        assertEquals("Number of Entries in map ", 2, m.entrySet().size());
+        assertTrue("MAP should contain lfn", m.containsKey(lfn));
+        Collection<ReplicaCatalogEntry> rces = m.get(lfn);
+        assertEquals("There should be only one rce for lfn " + lfn, 1, rces.size());
+        for (ReplicaCatalogEntry rce : rces) {
+            assertNull("PFN for RCE should be null", rce.getPFN());
+            assertEquals("Number of attributes found", 6, rce.getAttributeCount());
+            assertAttribute("user", "bamboo", rce);
+
+            assertAttribute("size", "56", rce);
+            assertAttribute("ctime", "2020-05-15T10:05:04-07:00", rce);
+            assertAttribute("checksum.type", "sha256", rce);
+            assertAttribute(
+                    "checksum.value",
+                    "a69fef1a4b597ea5e61ce403b6ef8bb5b4cd3aba19e734bf340ea00f5095c894",
+                    rce);
+            assertAttribute("checksum.timing", "0.0", rce);
+        }
+    }
+    
+    
     @Test
     public void simpleInsert() {
         mMetaRC.insert("a", new ReplicaCatalogEntry("b"));
