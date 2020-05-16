@@ -109,8 +109,8 @@ public class MetaRCTest {
     }
 
     @Test
-    public void lookupWholeCatalogWithConstraints(){
-        Map<String,Collection<ReplicaCatalogEntry>> m = mMetaRC.lookup(new HashMap());
+    public void lookupWholeCatalogWithConstraints() {
+        Map<String, Collection<ReplicaCatalogEntry>> m = mMetaRC.lookup(new HashMap());
         String lfn = "f.b1";
         assertEquals("Number of Entries in map ", 2, m.entrySet().size());
         assertTrue("MAP should contain lfn", m.containsKey(lfn));
@@ -131,8 +131,7 @@ public class MetaRCTest {
             assertAttribute("checksum.timing", "0.0", rce);
         }
     }
-    
-    
+
     @Test
     public void simpleInsert() {
         mMetaRC.insert("a", new ReplicaCatalogEntry("b"));
