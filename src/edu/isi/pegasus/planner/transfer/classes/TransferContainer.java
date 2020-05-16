@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.transfer.classes;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 /**
@@ -33,7 +34,7 @@ public class TransferContainer {
     private String mRegName;
 
     /** Collection of compute jobs this transfer container is responsible for */
-    private Collection<Job> mComputeJobsList;
+    private Collection<Job> mComputeJobs;
 
     /**
      * The collection of <code>FileTransfer</code> objects containing the transfers the job is
@@ -56,7 +57,8 @@ public class TransferContainer {
         mRegName = null;
         mFileTXList = new LinkedList();
         mRegFiles = new LinkedList();
-        mComputeJobsList = new LinkedList();
+        // need a set to filter out duplicates
+        mComputeJobs = new HashSet();
         mTransferType = Job.STAGE_IN_JOB;
     }
 
@@ -121,7 +123,7 @@ public class TransferContainer {
      * @param job
      */
     public void addComputeJob(Job job) {
-        this.mComputeJobsList.add(job);
+        this.mComputeJobs.add(job);
     }
 
     /**
@@ -175,6 +177,6 @@ public class TransferContainer {
      * @return a collection of <code>Job</code> objects.
      */
     public Collection<Job> getAssociatedComputeJobs() {
-        return this.mComputeJobsList;
+        return this.mComputeJobs;
     }
 }
