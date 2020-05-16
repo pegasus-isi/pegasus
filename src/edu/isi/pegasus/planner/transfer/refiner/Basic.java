@@ -17,7 +17,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
@@ -551,7 +550,7 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
             Collection<Job> computeJobs,
             ReplicaCatalogBridge rcb) {
 
-        return rcb.makeRCRegNode(regJobName, job, files);
+        return rcb.makeRCRegNode(regJobName, job, files, computeJobs);
     }
 
     /** Signals that the traversal of the workflow is done. */

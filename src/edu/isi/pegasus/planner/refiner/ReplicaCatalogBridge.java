@@ -494,17 +494,19 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
 
     /**
      * It constructs the Job object for the registration node, which registers the materialized
-     * files on the output pool in the RLS. Note that the relations corresponding to this node
-     * should already have been added to the concerned <code>DagInfo</code> object.
+     * files on the output pool in the RLS.Note that the relations corresponding to this node should
+     * already have been added to the concerned <code>DagInfo</code> object.
      *
      * @param regJobName The name of the job which registers the files in the Replica Location
      *     Service.
      * @param job The job whose output files are to be registered in the Replica Location Service.
      * @param files Collection of <code>FileTransfer</code> objects containing the information about
      *     source and destination URLs. The destination URLs would be our PFNs.
+     * @param computeJobs associated compute jobs
      * @return Job corresponding to the new registration node.
      */
-    public Job makeRCRegNode(String regJobName, Job job, Collection files) {
+    public Job makeRCRegNode(
+            String regJobName, Job job, Collection files, Collection<Job> computeJobs) {
         // making the files string
 
         Job newJob = new Job();
@@ -569,7 +571,8 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
         // where the submit file for the job will be written out
         File dir = new File(mPOptions.getSubmitDirectory(), newJob.getRelativeSubmitDirectory());
 
-        newJob.setArguments(this.generateRepJobArgumentString(site, dir, regJobName, files));
+        newJob.setArguments(
+                this.generateRepJobArgumentString(site, dir, regJobName, files, computeJobs));
         newJob.setUniverse(GridGateway.JOB_TYPE.register.toString());
         newJob.setSiteHandle(tc.getResourceId());
         newJob.setJobType(Job.REPLICA_REG_JOB);
@@ -686,8 +689,12 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      * @return the argument string.
      */
     private String generateRepJobArgumentString(
-            SiteCatalogEntry site, File dir, String regJob, Collection files) {
-        StringBuffer arguments = new StringBuffer();
+            SiteCatalogEntry site,
+            File dir,
+            String regJob,
+            Collection files,
+            Collection<Job> computeJobs) {
+        StringBuilder arguments = new StringBuilder();
 
         // select a LRC. disconnect here. It should be select a RC.
 
@@ -737,6 +744,27 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
 
         // single verbose flag
         arguments.append("-v").append(" ");
+
+        // PM-1582 list all the associated meta files of the compute jobs
+        if (!computeJobs.isEmpty()) {
+            arguments.append("--meta").append(" ");
+            StringBuilder sb = new StringBuilder();
+            for (Job parent : computeJobs) {
+                File parentDir =
+                        new File(
+                                mPOptions.getSubmitDirectory(),
+                                parent.getRelativeSubmitDirectory());
+                File metaFile = new File(parentDir, parent.getID() + ".meta");
+                sb.append(metaFile.getAbsolutePath()).append(",");
+            }
+            // remove any trailing ,
+            int lastIndex = sb.length() - 1;
+            String addOn =
+                    (sb.lastIndexOf(",") == lastIndex) ? sb.substring(0, lastIndex) : sb.toString();
+
+            arguments.append(addOn);
+            arguments.append(" ");
+        }
 
         // append the insert option
         arguments
