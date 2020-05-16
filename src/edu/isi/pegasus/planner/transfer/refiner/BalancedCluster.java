@@ -579,7 +579,7 @@ public class BalancedCluster extends Basic {
             if (makeRNode) {
                 soTC.addRegistrationFiles(ft);
                 // PM-1582 add associated compute job for the registration job
-                soTC.addComputeJob(jobName);
+                soTC.addComputeJob(job);
             }
         }
         // add any relation that are required between the compute

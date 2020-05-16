@@ -33,7 +33,7 @@ public class TransferContainer {
     private String mRegName;
 
     /** Collection of compute jobs this transfer container is responsible for */
-    private Collection<String> mComputeJobsList;
+    private Collection<Job> mComputeJobsList;
 
     /**
      * The collection of <code>FileTransfer</code> objects containing the transfers the job is
@@ -118,10 +118,10 @@ public class TransferContainer {
     /**
      * Add associated compute job name
      *
-     * @param name
+     * @param job
      */
-    public void addComputeJob(String name) {
-        this.mComputeJobsList.add(name);
+    public void addComputeJob(Job job) {
+        this.mComputeJobsList.add(job);
     }
 
     /**
@@ -172,9 +172,9 @@ public class TransferContainer {
     /**
      * Returns the collection of compute jobs associated with this transfer container.
      *
-     * @return a collection of <code>String</code> objects.
+     * @return a collection of <code>Job</code> objects.
      */
-    public Collection<String> getAssociatedComputeJobs() {
+    public Collection<Job> getAssociatedComputeJobs() {
         return this.mComputeJobsList;
     }
 }
