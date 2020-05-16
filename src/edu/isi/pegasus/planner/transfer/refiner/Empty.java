@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 
@@ -183,9 +184,9 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
      */
     protected Job createRegistrationJob(
             String regJobName, Job job, Collection files, ReplicaCatalogBridge rcb) {
-
-        Job regJob = rcb.makeRCRegNode(regJobName, job, files);
-        return regJob;
+        Collection c = new LinkedList();
+        c.add(job);
+        return rcb.makeRCRegNode(regJobName, job, files, c );
     }
 
     /** Signals that the traversal of the workflow is done. */
