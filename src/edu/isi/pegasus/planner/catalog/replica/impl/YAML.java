@@ -57,12 +57,12 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -683,13 +683,27 @@ public class YAML implements ReplicaCatalog {
                     new HashMap<String, Collection<ReplicaCatalogEntry>>();
             for (Map.Entry<String, ReplicaLocation> entry : mLFN.entrySet()) {
                 ReplicaLocation rl = entry.getValue();
-                result.put(entry.getKey(), rl.getPFNList());
+                // merge any metadata associated with the lfn
+                // into the Replica Catalog Entry object
+                Collection<ReplicaCatalogEntry> c = new LinkedList();
+                for (ReplicaCatalogEntry rce : rl.getPFNList()) {
+                    rce.addAttribute(rl.getAllMetadata());
+                    c.add(rce);
+                }
+                result.put(entry.getKey(), c);
             }
             for (Map.Entry<String, ReplicaLocation> entry : mLFNRegex.entrySet()) {
                 ReplicaLocation rl = entry.getValue();
-                result.put(entry.getKey(), rl.getPFNList());
+                // merge any metadata associated with the lfn
+                // into the Replica Catalog Entry object
+                Collection<ReplicaCatalogEntry> c = new LinkedList();
+                for (ReplicaCatalogEntry rce : rl.getPFNList()) {
+                    rce.addAttribute(rl.getAllMetadata());
+                    c.add(rce);
+                }
+                result.put(entry.getKey(), c);
             }
-            return Collections.unmodifiableMap(result);
+            return result;
         } else if (constraints.size() == 1 && constraints.containsKey("lfn")) {
             // return matching LFNs
             Pattern p = Pattern.compile((String) constraints.get("lfn"));
@@ -699,7 +713,18 @@ public class YAML implements ReplicaCatalog {
                     i.hasNext(); ) {
                 Entry<String, ReplicaLocation> e = i.next();
                 String lfn = e.getKey();
-                if (p.matcher(lfn).matches()) result.put(lfn, e.getValue().getPFNList());
+                // if (p.matcher(lfn).matches()) result.put(lfn, e.getValue().getPFNList());
+                if (p.matcher(lfn).matches()) {
+                    ReplicaLocation rl = e.getValue();
+                    // merge any metadata associated with the lfn
+                    // into the Replica Catalog Entry object
+                    Collection<ReplicaCatalogEntry> c = new LinkedList();
+                    for (ReplicaCatalogEntry rce : rl.getPFNList()) {
+                        rce.addAttribute(rl.getAllMetadata());
+                        c.add(rce);
+                    }
+                    result.put(lfn, c);
+                }
             }
 
             return result;
