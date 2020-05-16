@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.catalog.replica;
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import java.util.*;
 
 /**
@@ -103,6 +104,18 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
      */
     public void addAttribute(String key, Object value) {
         this.m_attributeMap.put(key, value);
+    }
+
+    /**
+     * Adds attributes to the existing attributes.
+     *
+     * @param m is metadata attributes to add.
+     */
+    public void addAttribute(Metadata m) {
+        for (Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ) {
+            String key = it.next();
+            this.addAttribute(key, m.get(key));
+        }
     }
 
     /**
