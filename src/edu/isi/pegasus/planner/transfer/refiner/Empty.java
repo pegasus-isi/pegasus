@@ -186,7 +186,7 @@ public class Empty extends MultipleFTPerXFERJobRefiner {
             String regJobName, Job job, Collection files, ReplicaCatalogBridge rcb) {
         Collection c = new LinkedList();
         c.add(job);
-        return rcb.makeRCRegNode(regJobName, job, files, c );
+        return rcb.makeRCRegNode(regJobName, job, files, c);
     }
 
     /** Signals that the traversal of the workflow is done. */
