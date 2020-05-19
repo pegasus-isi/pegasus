@@ -405,6 +405,7 @@ class ProfileMixin:
         ppn="ppn",
         memory=("memory", to_mb),
         diskspace=("diskspace", to_mb),
+        data_configuration="data.configuration"
     )
     def add_pegasus_profile(
         self,
@@ -445,7 +446,8 @@ class ProfileMixin:
         nodes: int = None,
         ppn: int = None,
         memory: str = None,
-        diskspace: str = None
+        diskspace: str = None,
+        data_configuration=None
     ):
         """Add Pegasus profile(s).
 
@@ -523,6 +525,8 @@ class ProfileMixin:
         :type memory: str, optional
         :param diskspace: Indicates the maximum diskspace a job requires in MB. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
         :type diskspace: int, optional
+        :param data_configuration: Indicates the data configuration setup. Can be one of "sharedfs", "condorio", or "nonsharedfs", defaults to None
+        :type data_configuration: str, optional
         """
         ...
 
