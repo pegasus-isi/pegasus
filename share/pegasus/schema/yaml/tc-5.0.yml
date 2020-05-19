@@ -38,8 +38,6 @@ $defs:
               type: string
             os.version:
               $ref: "common.yml#/$defs/versionString"
-            glibc:
-              $ref: "common.yml#/$defs/versionString"
             pfn:
               type: string
             profiles:
