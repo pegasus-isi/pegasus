@@ -57,17 +57,17 @@ class _DirectoryType(Enum):
 
     #: Describes a scratch file systems. Pegasus will use this to store
     #: intermediate `da`ta between jobs and other temporary files.
-    SHAREDSCRATCH = "sharedScratch"
+    SHARED_SCRATCH = "sharedScratch"
 
     # TODO: where is this documented? the others were in user guide
-    SHAREDSTORAGE = "sharedStorage"
+    SHARED_STORAGE = "sharedStorage"
 
     #: Describes the scratch file systems available locally on a compute node.
-    LOCALSCRATCH = "localScratch"
+    LOCAL_SCRATCH = "localScratch"
 
     #: Describes a long term storage file system. This is the directory
     #: Pegasus will stage output files to.
-    LOCALSTORAGE = "localStorage"
+    LOCAL_STORAGE = "localStorage"
 
 
 class _GridType(Enum):
@@ -143,17 +143,17 @@ class Directory:
 
     #: Describes a scratch file systems. Pegasus will use this to store
     #: intermediate data between jobs and other temporary files.
-    SHAREDSCRATCH = _DirectoryType.SHAREDSCRATCH
+    SHARED_SCRATCH = _DirectoryType.SHARED_SCRATCH
 
     # TODO: where is this documented? the others were in user guide
-    SHAREDSTORAGE = _DirectoryType.SHAREDSTORAGE
+    SHARED_STORAGE = _DirectoryType.SHARED_STORAGE
 
     #: Describes the scratch file systems available locally on a compute node.
-    LOCALSCRATCH = _DirectoryType.LOCALSCRATCH
+    LOCAL_SCRATCH = _DirectoryType.LOCAL_SCRATCH
 
     #: Describes a long term storage file system. This is the directory
     #: Pegasus will stage output files to.
-    LOCALSTORAGE = _DirectoryType.LOCALSTORAGE
+    LOCAL_STORAGE = _DirectoryType.LOCAL_STORAGE
 
     # the site catalog schema lists freeSize and totalSize as an attribute
     # however this appears to not be used; removing it as a parameter
