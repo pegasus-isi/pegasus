@@ -10,8 +10,7 @@ logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 # --- Transformations ----------------------------------------------------------
 echo = Transformation(
         "echo", 
-        pfn="/bin/echo", 
-        is_stageable=False, 
+        pfn="/bin/echo",
         site="condorpool"
     )
   
@@ -23,6 +22,8 @@ Workflow("hello-world", infer_dependencies=True)\
     .add_jobs(
         Job(echo)
             .add_args("Hello World")
+            .set_stdout("hello.out")
     ).add_transformation_catalog(tc)\
-    .plan(submit=True)
+    .plan(submit=True)\
+    .wait()
 

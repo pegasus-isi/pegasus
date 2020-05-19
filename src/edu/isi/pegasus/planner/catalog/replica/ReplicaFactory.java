@@ -13,6 +13,7 @@
  */
 package edu.isi.pegasus.planner.catalog.replica;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FileDetector;
@@ -115,12 +116,15 @@ public class ReplicaFactory {
         if (dir == null) {
             throw new NullPointerException("Invalid Directory passed");
         }
-
-        if (bag.getLogger() == null) {
+        LogManager logger = bag.getLogger();
+        if (logger == null) {
             throw new NullPointerException("Invalid Logger passed");
         }
 
         Properties connectProps = properties.matchingSubset(ReplicaCatalog.c_prefix, false);
+        logger.log(
+                "[Replica Factory] Connect properties detected " + connectProps,
+                LogManager.DEBUG_MESSAGE_LEVEL);
 
         // get the default db driver properties in first pegasus.catalog.*.db.driver.*
         Properties db = properties.matchingSubset(ReplicaCatalog.DB_ALL_PREFIX, false);
@@ -203,6 +207,17 @@ public class ReplicaFactory {
         if (catalogImplementor == null) {
             throw new NullPointerException("Invalid catalog implementor passed");
         }
+
+        LogManager logger = bag.getLogger();
+        if (logger == null) {
+            throw new NullPointerException("Invalid Logger passed");
+        }
+        logger.log(
+                "[Replica Factory] Connect properties detected for implementor "
+                        + catalogImplementor
+                        + " -> "
+                        + connectProps,
+                LogManager.DEBUG_MESSAGE_LEVEL);
 
         // File also means SimpleFile
         if (catalogImplementor.equalsIgnoreCase("File")) {

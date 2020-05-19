@@ -928,7 +928,7 @@ public class RCClient extends Toolkit {
             bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
             ReplicaCatalog rc = null;
             try {
-                rc = ReplicaFactory.loadInstance(bag, file);
+                rc = ReplicaFactory.loadInstance(bag);
             } catch (Exception ex) {
                 m_log.error("Error encountered while connecting to meta file " + file, ex);
                 connect = false;
