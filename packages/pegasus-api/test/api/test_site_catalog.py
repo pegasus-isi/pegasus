@@ -185,7 +185,6 @@ class TestSite:
             os_type=OS.LINUX,
             os_release="release",
             os_version="1.1.1",
-            glibc="123",
         )
 
     @pytest.mark.parametrize(
@@ -266,7 +265,6 @@ class TestSite:
             os_type=OS.LINUX,
             os_release="release",
             os_version="1.2.3",
-            glibc="1",
         )
         site.add_directories(
             Directory(Directory.LOCAL_SCRATCH, "/path").add_file_servers(
@@ -291,7 +289,6 @@ class TestSite:
             "os.type": "linux",
             "os.release": "release",
             "os.version": "1.2.3",
-            "glibc": "1",
             "directories": [
                 {
                     "type": "localScratch",

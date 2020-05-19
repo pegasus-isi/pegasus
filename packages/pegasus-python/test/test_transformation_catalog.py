@@ -32,7 +32,6 @@ def tc1():
                     os_type=OS.LINUX,
                     os_release="1",
                     os_version="1",
-                    glibc="1",
                     container="cont",
                 )
                 .add_dagman_profile(retry="3")

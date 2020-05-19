@@ -373,7 +373,6 @@ class Site(ProfileMixin):
         os_type=None,
         os_release=None,
         os_version=None,
-        glibc=None,
     ):
         """
         :param name: name of the site
@@ -386,8 +385,6 @@ class Site(ProfileMixin):
         :type os_release: str, optional
         :param os_version: the version of the site's operating system, defaults to None
         :type os_version: str, optional
-        :param glibc: glibc used on the site, defaults to None
-        :type glibc: str, optional
         :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OSType`
         """
@@ -421,7 +418,6 @@ class Site(ProfileMixin):
 
         self.os_release = os_release
         self.os_version = os_version
-        self.glibc = glibc
 
         self.profiles = defaultdict(dict)
 
@@ -467,7 +463,6 @@ class Site(ProfileMixin):
                 "os.type": self.os_type,
                 "os.release": self.os_release,
                 "os.version": self.os_version,
-                "glibc": self.glibc,
                 "directories": [d for d in self.directories],
                 "grids": [g for g in self.grids] if len(self.grids) > 0 else None,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,

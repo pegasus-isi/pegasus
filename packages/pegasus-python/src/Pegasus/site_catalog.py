@@ -65,7 +65,6 @@ def _to_sc(d: dict) -> SiteCatalog:
                 else None,
                 os_release=s.get("os.release"),
                 os_version=s.get("os.version"),
-                glibc=s.get("glibc"),
             )
 
             # add directories
