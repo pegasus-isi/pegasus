@@ -49,10 +49,10 @@ SiteCatalog().add_sites(
     Site(
         LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7"
     ).add_directories(
-        Directory(Directory.SHAREDSCRATCH, shared_scratch_dir).add_file_servers(
+        Directory(Directory.SHARED_SCRATCH, shared_scratch_dir).add_file_servers(
             FileServer("file://" + shared_scratch_dir, Operation.ALL)
         ),
-        Directory(Directory.LOCALSTORAGE, local_storage_dir).add_file_servers(
+        Directory(Directory.LOCAL_STORAGE, local_storage_dir).add_file_servers(
             FileServer("file://" + local_storage_dir, Operation.ALL)
         ),
     ),
