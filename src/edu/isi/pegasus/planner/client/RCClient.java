@@ -923,6 +923,16 @@ public class RCClient extends Toolkit {
         LogManager logger = LogManagerFactory.loadSingletonInstance(this.m_pegasus_props);
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
 
+        // we need to ensure any replica catalog properties specified by -D option on command line
+        // are unset, as they have the highest priortity and interfere with Replica Factory loading
+        // the meta files backend
+        Properties removeFromSystem = new Properties();
+        for (String name : System.getProperties().stringPropertyNames()) {
+            if (name.startsWith(ReplicaCatalog.c_prefix)) {
+                removeFromSystem.setProperty(name, System.clearProperty(name));
+            }
+        }
+
         for (String file : files) {
             props.setProperty(ReplicaCatalog.c_prefix + "." + ReplicaCatalog.FILE_KEY, file);
             bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
@@ -937,6 +947,11 @@ public class RCClient extends Toolkit {
             // add all contents of the rc backend into the store
             mMetadataStore.add(rc.lookup(new HashMap()));
             m_log.info("Loaded metadata from file " + file);
+        }
+
+        // add back any system properties that were removed
+        for (String name : removeFromSystem.stringPropertyNames()) {
+            System.setProperty(name, removeFromSystem.getProperty(name));
         }
         return connect;
     }
