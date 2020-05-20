@@ -24,6 +24,5 @@ Workflow("hello-world", infer_dependencies=True)\
             .add_args("Hello World")
             .set_stdout("hello.out")
     ).add_transformation_catalog(tc)\
-    .plan(submit=True)\
-    .wait()
+    .plan(submit=True)
 
