@@ -218,8 +218,15 @@ def connect(
     if not create and schema_check:
         try:
             from Pegasus.db.admin.admin_loader import DBAdminError, db_verify
+
             db = orm.scoped_session(Session)
-            db_verify(db, check=True, pegasus_version=pegasus_version, force=force, print_version=print_version)
+            db_verify(
+                db,
+                check=True,
+                pegasus_version=pegasus_version,
+                force=force,
+                print_version=print_version,
+            )
         except DBAdminError as e:
             e.db_type = db_type
             raise (e)

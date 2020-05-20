@@ -179,7 +179,15 @@ def get_class(version, db):
 
 
 # -------------------------------------------------------------------
-def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True, print_version=True):
+def db_create(
+    dburi,
+    engine,
+    db,
+    pegasus_version=None,
+    force=False,
+    verbose=True,
+    print_version=True,
+):
     """
     Create/Update the Pegasus database from the schema.
     :param dburi: URL to the db
@@ -241,7 +249,11 @@ def db_verify(db, check=False, pegasus_version=None, force=False, print_version=
         _verify_tables(db, db_version)
         version = parse_pegasus_version(pegasus_version)
 
-        if db_version and db_version <= CURRENT_DB_VERSION and not version == db_version:
+        if (
+            db_version
+            and db_version <= CURRENT_DB_VERSION
+            and not version == db_version
+        ):
             raise DBAdminError(
                 "Your database is NOT compatible with version %s"
                 % get_compatible_version(version),
@@ -292,7 +304,8 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
         )
     elif version < DB_MIN_VERSION:
         raise DBAdminError(
-            "Cannot downgrade database to a version below Pegasus %s." % get_compatible_version(DB_MIN_VERSION),
+            "Cannot downgrade database to a version below Pegasus %s."
+            % get_compatible_version(DB_MIN_VERSION),
             db=db,
             db_version=current_version,
             given_version=pegasus_version,
@@ -482,7 +495,7 @@ def get_version(db, sanity_check=True):
         )
         if not current_version:
             return -1
-    except OperationalError as e:
+    except OperationalError:
         return -1
 
     if not current_version:
@@ -496,6 +509,7 @@ def get_version(db, sanity_check=True):
 
 
 ################################################################################
+
 
 def _db_current_version(current_version, db, parse=False):
     """
@@ -617,7 +631,11 @@ def _backup_db(db):
         log.info("Backing up MySQL database. This operation may take a while.")
         dest_file = "{}-{}.sql".format(url.database, time.strftime("%Y%m%d-%H%M%S"))
         # mysqldump command preparation
-        command = "mysqldump" if not url.password else "export MYSQL_PWD=%s; mysqldump" % url.password
+        command = (
+            "mysqldump"
+            if not url.password
+            else "export MYSQL_PWD=%s; mysqldump" % url.password
+        )
         if url.username:
             command += " -u %s" % url.username
         if url.host:
@@ -647,7 +665,7 @@ def _verify_tables(db, db_version=None):
             % (" \n    ".join(missing_tables), db.get_bind().url),
             db=db,
             db_version=db_version,
-            )
+        )
 
 
 def _get_minor_version(version):

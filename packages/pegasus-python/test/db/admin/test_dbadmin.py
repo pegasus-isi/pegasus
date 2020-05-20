@@ -195,7 +195,9 @@ def test_upper_version():
     dbversion = DBVersion()
     dbversion.version = CURRENT_DB_VERSION + 1
     dbversion.version_number = CURRENT_DB_VERSION + 1
-    dbversion.version_timestamp = (datetime.datetime.now() + datetime.timedelta(seconds=3)).strftime("%s")
+    dbversion.version_timestamp = (
+        datetime.datetime.now() + datetime.timedelta(seconds=3)
+    ).strftime("%s")
     db.add(dbversion)
     db.commit()
 
