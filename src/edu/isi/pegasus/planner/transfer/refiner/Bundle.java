@@ -563,10 +563,11 @@ public class Bundle extends Basic {
             soTC.addRegistrationFiles(regFiles);
 
             // PM-1582 add associated compute job for the registration job
-            soTC.addComputeJob(job);
-            // call to make the reg subinfo
-            // added in make registration node
-            //           addJob(createRegistrationJob(regJob, job, regFiles, rcb));
+            // only if the registration job is for a compute job that
+            // WAS NOT deleted in data reuse
+            if (!deletedLeaf) {
+                soTC.addComputeJob(job);
+            }
         }
     }
 

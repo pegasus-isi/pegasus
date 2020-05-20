@@ -524,7 +524,11 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                 // call to make the reg subinfo
                 // added in make registration node
                 Collection<Job> c = new LinkedList();
-                c.add(job);
+                // only if the registration job is for a compute job that
+                // WAS NOT deleted in data reuse
+                if (!deletedLeaf) {
+                    c.add(job);
+                }
                 addJob(createRegistrationJob(regJob, job, regFiles, c, rcb));
             }
         }
