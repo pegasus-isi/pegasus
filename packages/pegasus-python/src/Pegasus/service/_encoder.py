@@ -55,7 +55,7 @@ class PegasusJsonEncoder(JSONEncoder):
             return o.__json__()
 
         elif hasattr(o, "__table__"):
-            _v = {k: getattr(o, k) for k in o.__table__.columns.keys()}
+            _v = {k: getattr(o, k) for k in o.__mapper__.column_attrs.keys()}
 
             for k in getattr(o, "__includes__", {}):
                 _v[k] = getattr(o, k)
