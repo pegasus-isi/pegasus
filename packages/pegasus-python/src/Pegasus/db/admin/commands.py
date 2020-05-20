@@ -21,7 +21,7 @@ class CreateCommand(LoggingCommand):
         _add_common_options(self)
 
     def run(self):
-        # _set_log_level(self.options.debug)
+        _set_log_level(self.options.debug)
 
         dburi = None
         if len(self.args) > 0:
@@ -44,8 +44,6 @@ class CreateCommand(LoggingCommand):
                 create=True,
                 force=self.options.force,
             )
-            version = db_current_version(db, parse=True)
-            _print_version(version)
             db.close()
 
         except (DBAdminError, connection.ConnectionError) as e:
@@ -104,8 +102,6 @@ class UpdateCommand(LoggingCommand):
                 create=True,
                 force=self.options.force,
             )
-            version = db_current_version(db, parse=True)
-            _print_version(version)
 
             if self.options.all:
                 all_workflows_db(
@@ -169,13 +165,11 @@ class DowngradeCommand(LoggingCommand):
                 self.options.submit_dir,
                 self.options.db_type,
                 pegasus_version=self.options.pegasus_version,
-                create=False,
                 schema_check=False,
                 force=self.options.force,
             )
             db_downgrade(db, self.options.pegasus_version, self.options.force)
-            version = db_current_version(db, parse=True)
-            _print_version(version)
+            db_verify(db)
 
             if self.options.all:
                 all_workflows_db(
@@ -243,11 +237,6 @@ class CheckCommand(LoggingCommand):
                 pegasus_version=self.options.pegasus_version,
                 force=self.options.force,
             )
-            db_verify(db, self.options.pegasus_version)
-
-            parse_pegasus_version(self.options.pegasus_version)
-            current_version = db_current_version(db, self.options.version_value)
-            _print_version(current_version)
             db.close()
 
         except (DBAdminError, connection.ConnectionError) as e:
@@ -263,14 +252,6 @@ class VersionCommand(LoggingCommand):
     def __init__(self):
         LoggingCommand.__init__(self)
         _add_common_options(self)
-        self.parser.add_option(
-            "-e",
-            "--version-value",
-            action="store_false",
-            dest="version_value",
-            default=True,
-            help="Show actual version values.",
-        )
 
     def run(self):
         _set_log_level(self.options.debug)
@@ -296,8 +277,7 @@ class VersionCommand(LoggingCommand):
                 schema_check=False,
                 force=self.options.force,
             )
-            version = db_current_version(db, self.options.version_value)
-            _print_version(version)
+            db_verify(db)
             db.close()
 
         except (DBAdminError, connection.ConnectionError) as e:
@@ -306,11 +286,6 @@ class VersionCommand(LoggingCommand):
 
 
 # ------------------------------------------------------
-def _print_version(data):
-    if data:
-        print("Your database is compatible with Pegasus version: %s" % data)
-
-
 def _set_log_level(debug):
     if debug:
         logging.getLogger().setLevel(logging.DEBUG)
@@ -410,6 +385,7 @@ def _get_connection(
     schema_check=True,
     create=False,
     force=False,
+    print_version=True,
 ):
     """ Get connection to the database based on the parameters"""
     if dburi:
@@ -420,6 +396,7 @@ def _get_connection(
             create=create,
             force=force,
             db_type=db_type,
+            print_version=print_version,
         )
     elif submit_dir:
         return connection.connect_by_submitdir(
@@ -431,6 +408,7 @@ def _get_connection(
             create=create,
             force=force,
             cl_properties=cl_properties,
+            print_version=print_version,
         )
 
     elif config_properties or _has_connection_properties(cl_properties):
@@ -442,6 +420,7 @@ def _get_connection(
             schema_check=schema_check,
             create=create,
             force=force,
+            print_version=print_version,
         )
 
     if not db_type:
@@ -453,6 +432,7 @@ def _get_connection(
             create=create,
             force=force,
             db_type=db_type,
+            print_version=print_version,
         )
     return None
 
@@ -460,7 +440,7 @@ def _get_connection(
 def _has_connection_properties(cl_properties):
     """
     Verify if provided command-line properties contains connection properties.
-    :param properties: command-line properties
+    :param cl_properties: command-line properties
     """
     for property in cl_properties:
         key = property.split("=")[0]

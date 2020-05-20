@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Copyright 2018 University Of Southern California
+#  Copyright 2018-2020 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -80,7 +80,8 @@ log = logging.getLogger(__name__)
 warnings.filterwarnings("ignore", r".*does \*not\* support Decimal*.")
 
 # These are keywords that all tables should have
-table_keywords = {"mysql_charset": "latin1", "mysql_engine": "InnoDB"}
+# table_keywords = {"mysql_charset": "latin1", "mysql_engine": "InnoDB"}
+table_keywords = {"mysql_charset": "utf8mb4", "mysql_engine": "InnoDB"}
 
 KeyInteger = BigInteger()
 KeyInteger = KeyInteger.with_variant(postgresql.BIGINT(), "postgresql")
