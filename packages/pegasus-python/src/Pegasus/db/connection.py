@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Copyright 2017 University Of Southern California
+#  Copyright 2017-2020 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -97,6 +97,7 @@ def connect(
     backup=False,
     connect_args=None,
     verbose=True,
+    print_version=True,
 ):
     """
     Connect to the provided URL database.
@@ -111,6 +112,7 @@ def connect(
     :param backup: Whether to backup the database
     :param connect_args:
     :param verbose: Whether information log should be printed
+    :param print_version: Whether to print the database version
     :return:
     """
     dburi = _parse_jdbc_uri(dburi)
@@ -213,11 +215,11 @@ def connect(
                     db_type=db_type,
                 )
 
-    if schema_check:
+    if not create and schema_check:
         try:
             from Pegasus.db.admin.admin_loader import DBAdminError, db_verify
-
-            db_verify(db, pegasus_version=pegasus_version, force=force)
+            db = orm.scoped_session(Session)
+            db_verify(db, check=True, pegasus_version=pegasus_version, force=force, print_version=print_version)
         except DBAdminError as e:
             e.db_type = db_type
             raise (e)
@@ -235,6 +237,7 @@ def connect_by_submitdir(
     pegasus_version=None,
     force=False,
     cl_properties=None,
+    print_version=True,
 ):
     """ Connect to the database from submit directory and database type """
     dburi = url_by_submitdir(
@@ -247,6 +250,7 @@ def connect_by_submitdir(
         create=create,
         pegasus_version=pegasus_version,
         force=force,
+        print_version=print_version,
     )
 
 
@@ -260,6 +264,7 @@ def connect_by_properties(
     pegasus_version=None,
     force=False,
     verbose=True,
+    print_version=True,
 ):
     """ Connect to the database from properties file and database type """
     props = properties.Properties()
@@ -277,6 +282,7 @@ def connect_by_properties(
         db_type=db_type,
         props=props,
         verbose=verbose,
+        print_version=print_version,
     )
 
 
@@ -380,7 +386,7 @@ def get_wf_uuid(submit_dir):
 
 
 def connect_to_master_db(user=None):
-    "Connect to 'user's master database"
+    """Connect to 'user's master database"""
 
     if user is None:
         user = getpass.getuser()

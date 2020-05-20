@@ -6,6 +6,7 @@ import pytest
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
+from Pegasus.db.admin.admin_loader import get_version
 from Pegasus.db.schema import *
 
 
@@ -13,41 +14,41 @@ def test_create_database():
     dburi = "sqlite://"
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
 
     db.execute("DROP TABLE dbversion")
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
 
     db.execute("DELETE FROM dbversion")
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
 
     db.execute("DROP TABLE rc_pfn")
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
 
     db.execute("DROP TABLE rc_pfn")
     db.execute("DROP TABLE workflow")
     db.execute("DROP TABLE master_workflow")
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
     with pytest.raises(DBAdminError):
-        db_verify(db), "4.3.0"
+        db_verify(db, check=True), "4.3.0"
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
 
 
@@ -71,15 +72,15 @@ def test_version_operations():
     dburi = "sqlite://"
     db = connection.connect(dburi, create=True, verbose=False)
 
-    db_downgrade(db, pegasus_version="4.5.0", verbose=False)
-    assert db_current_version(db) == 4
+    db_downgrade(db, pegasus_version="4.6.0", verbose=False)
+    assert get_version(db) == 6
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
     RCLFN.__table__._set_parent(metadata)
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
 
     dburi2 = "sqlite://"
@@ -95,11 +96,11 @@ def test_partial_database():
     RCPFN.__table__.create(db.get_bind(), checkfirst=True)
     RCMeta.__table__.create(db.get_bind(), checkfirst=True)
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
 
     db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
@@ -108,11 +109,11 @@ def test_partial_database():
     Ensemble.__table__.create(db.get_bind(), checkfirst=True)
     EnsembleWorkflow.__table__.create(db.get_bind(), checkfirst=True)
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
 
     db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
@@ -127,25 +128,25 @@ def test_partial_database():
     TaskEdge.__table__.create(db.get_bind(), checkfirst=True)
     Invocation.__table__.create(db.get_bind(), checkfirst=True)
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
 
 
 def test_malformed_db():
     dburi = "sqlite://"
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.execute("DROP TABLE rc_pfn")
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
 
 
@@ -169,19 +170,19 @@ def test_connection_from_properties_file(tmp_path):
     db = connection.connect_by_properties(
         props_filename, connection.DBType.JDBCRC, create=True, verbose=False
     )
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
 
     db = connection.connect_by_properties(
         props_filename, connection.DBType.MASTER, create=True, verbose=False
     )
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
 
     db = connection.connect_by_properties(
         props_filename, connection.DBType.WORKFLOW, create=True, verbose=False
     )
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
 
 
@@ -194,14 +195,14 @@ def test_upper_version():
     dbversion = DBVersion()
     dbversion.version = CURRENT_DB_VERSION + 1
     dbversion.version_number = CURRENT_DB_VERSION + 1
-    dbversion.version_timestamp = datetime.datetime.now().strftime("%s")
+    dbversion.version_timestamp = (datetime.datetime.now() + datetime.timedelta(seconds=3)).strftime("%s")
     db.add(dbversion)
     db.commit()
 
     with pytest.raises(DBAdminError):
-        db_current_version(db)
+        get_version(db)
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
 
     db.close()
 
@@ -215,9 +216,9 @@ def test_dbs(input, tmp_path):
 
     db = connection.connect(dburi, create=False, schema_check=False, verbose=False)
     with pytest.raises(DBAdminError):
-        db_verify(db)
+        db_verify(db, check=True)
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
-    assert db_current_version(db) == CURRENT_DB_VERSION
+    assert get_version(db) == CURRENT_DB_VERSION
     db.close()
