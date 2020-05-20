@@ -174,6 +174,9 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
     /** All the replica file sources detected. */
     private Set<File> mReplicaFileSources;
 
+    /** whether integrity checking is enabled */
+    private boolean mIntegrityCheckingEnabled;
+
     /**
      * The overloaded constructor.
      *
@@ -196,6 +199,9 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
         this.mDAXReplicaStore = dag.getReplicaStore();
         this.initialize(dag, bag.getPegasusProperties(), bag.getPlannerOptions());
         this.mRegisterDeepLFN = mProps.registerDeepLFN();
+
+        mIntegrityCheckingEnabled =
+                this.mProps.getIntegrityDial() != PegasusProperties.INTEGRITY_DIAL.none;
     }
 
     /**
@@ -746,7 +752,8 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
         arguments.append("-v").append(" ");
 
         // PM-1582 list all the associated meta files of the compute jobs
-        if (!computeJobs.isEmpty()) {
+        // if integrity checking is enabled
+        if (!computeJobs.isEmpty() && this.mIntegrityCheckingEnabled) {
             arguments.append("--meta").append(" ");
             StringBuilder sb = new StringBuilder();
             for (Job parent : computeJobs) {
