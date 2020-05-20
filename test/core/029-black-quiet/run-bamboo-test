@@ -87,6 +87,12 @@ pegasus-plan \
     --cluster label \
     --dax blackdiamond.dax  | tee $TOPDIR/plan.out
 
+STATUS=$?
+if [ $STATUS != 0 ]; then
+   echo "Workflow submission failed"
+   exit $STATUS
+fi
+
 lines=`wc -l plan.out | sed 's/[ ]*\([0-9]*\) plan.out/\1/'`
 echo "Number of lines in planner output $lines"
 
