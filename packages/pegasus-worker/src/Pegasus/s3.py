@@ -449,7 +449,6 @@ def ls(args):
     
     s3 = get_s3_client(config, uri)
     
-    print(uri)
     if uri.bucket:
         # list keys in bucket
         try:
@@ -735,6 +734,150 @@ def rm(args):
         # Connect to the bucket
         debug("Deleting keys from bucket %s" % bucket)
         uri, keys = buckets[bucket]
+        try:
+            s3 = get_s3_client(config, uri) 
+
+            # Get a final list of all the keys, resolving wildcards as necessary
+            bucket_contents = None
+            keys_to_delete = set()
+            for key in keys:
+                key_name = key.key
+
+                if has_wildcards(key_name):
+
+                    # If we haven't yet queried the bucket, then do so now
+                    # so that we can match the wildcards
+                    if bucket_contents is None:
+                        #bucket_contents = b.list()
+                        keys = s3.list_objects_v2(Bucket=uri.bucket)
+                        try:
+                            bucket_contents = [obj["Key"] for obj in keys["Contents"]]
+                        except KeyError:
+                            print("Unable to fetch objects list from bucket: {}".format(uri.bucket))
+                            sys.exit(1)
+
+                    # Collect all the keys that match
+                    for k in bucket_contents:
+                        if fnmatch.fnmatch(k.name, key_name):
+                            keys_to_delete.add(k.name)
+
+                else:
+                    keys_to_delete.add(key_name)
+
+            info("Deleting %d keys" % len(keys_to_delete))
+
+            batch_delete = config.getboolean(uri.site, "batch_delete")
+
+            # TODO: what about versioned buckets?
+            if batch_delete:
+                debug("Using batch deletes")
+
+                # Delete the keys in batches
+                batch_delete_size = config.getint(uri.site, "batch_delete_size")
+                debug("batch_delete_size: %d" % batch_delete_size)
+                batch = []
+                for k in keys_to_delete:
+                    batch.append(k)
+                    if len(batch) == batch_delete_size:
+                        info("Deleting batch of %d keys" % len(batch))
+                        #b.delete_keys(batch, quiet=True)
+
+                        resp = s3.delete_objects(
+                                    Bucket=uri.bucket,
+                                    Delete={
+                                        "Objects": [{"Key": item} for item in batch]
+                                    }
+                                )
+
+                        if not len(resp["Deleted"]) == len(batch):
+                            print("Incomplete batch delete, some keys were not successfully deleted.")
+                            sys.exit(1)
+
+                        batch = []
+
+                # Delete the final batch
+                if len(batch) > 0:
+                    info("Deleting batch of %d keys" % len(batch))
+                    resp = s3.delete_objects(
+                                Bucket=uri.bucket,
+                                Delete={
+                                    "Objects": [{"Key": item} for item in batch]
+                                }
+                            )
+
+                    if not len(resp["Deleted"]) == len(batch):
+                        print("Incomplete batch delete, some keys were not successfully deleted.")
+                        sys.exit(1)
+
+            else:
+                for key_name in keys_to_delete:
+                    debug("Deleting %s" % key_name)
+                    s3.delete_object(Bucket=uri.bucket, Key=key_name)
+
+
+        except s3.exceptions.NoSuchBucket:
+            print("Invalid bucket: {}".format(uri.bucket))
+            sys.exit(1)
+        except botocore.exceptions.ClientError as e:
+            # endpoint may also raise this for invalid bucket name
+            if e.response["Error"]["Code"] == "InvalidBucketName":
+                print("Invalid bucket: {}".format(uri.bucket))
+                sys.exit(1)
+            else:
+                raise e
+
+
+def rm_old(args):
+    parser = option_parser("rm URL...")
+    parser.add_option(
+        "-f",
+        "--force",
+        dest="force",
+        action="store_true",
+        default=False,
+        help="Ignore nonexistent keys",
+    )
+    parser.add_option(
+        "-F",
+        "--file",
+        dest="file",
+        action="store",
+        default=None,
+        help="File containing a list of URLs to delete",
+    )
+    options, args = parser.parse_args(args)
+
+    if len(args) == 0 and not options.file:
+        parser.error("Specify URL")
+
+    if options.file:
+        for rec in read_command_file(options.file):
+            if len(rec) != 1:
+                raise Exception("Invalid record: %s" % rec)
+            args.append(rec[0])
+
+    buckets = {}
+    for arg in args:
+        uri = parse_uri(arg)
+        if uri.bucket is None:
+            raise Exception("URL for rm must contain a bucket: %s" % arg)
+        if uri.key is None:
+            raise Exception("URL for rm must contain a key: %s" % arg)
+
+        bid = "%s/%s" % (uri.ident, uri.bucket)
+        buri = S3URI(uri.user, uri.site, uri.bucket, uri.secure)
+
+        if bid not in buckets:
+            buckets[bid] = (buri, [])
+        buckets[bid][1].append(uri)
+
+    config = get_config(options)
+
+    for bucket in buckets:
+
+        # Connect to the bucket
+        debug("Deleting keys from bucket %s" % bucket)
+        uri, keys = buckets[bucket]
         conn = get_connection(config, uri)
         b = Bucket(connection=conn, name=uri.bucket)
 
@@ -905,10 +1048,7 @@ def put(args):
         try:
             resp = s3.create_bucket(Bucket=uri.bucket)
         except s3.exceptions.BucketAlreadyExists:
-            print(
-                "Bucket: {} already taken".format(uri.bucket), 
-                exc_info=True
-            )
+            print("Bucket: {} already taken".format(uri.bucket))
             sys.exit(1)
         except s3.exceptions.BucketAlreadyOwnedByYou:
             # AWS S3 endpoint will throw this, but other endpoints may not
@@ -1228,7 +1368,6 @@ def get(args):
         "Downloaded %d keys of %0.1f KB in %0.6f seconds: %0.2f KB/s"
         % (len(keys), totalsize, elapsed, rate)
     )
-
 
 def main():
     if len(sys.argv) < 2:
