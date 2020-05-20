@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
+import sys
 import logging
 
 from datetime import datetime
@@ -7,7 +8,7 @@ from pathlib import Path
 
 from Pegasus.api import *
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 # --- Work Directory Setup -----------------------------------------------------
 RUN_ID = "local-hierarchy-sharedfs-" + datetime.now().strftime("%s")
@@ -244,7 +245,6 @@ wf.add_dependency(blackdiamond_wf, children=[sleep_wf])
 
 try:
     wf.plan(
-        verbose=5,
         site=["CCG"],
         dir=str(WORK_DIR),
         relative_dir=RUN_ID,
