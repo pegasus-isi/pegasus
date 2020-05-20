@@ -409,16 +409,14 @@ public class MainEngine extends Engine {
         }
         */
 
-        // PM-1549 if a replica catalog is not explicity defined in the properties
+        // PM-1549 if a output replica catalog is not explicity defined in the properties
         // then we set up a default sqlite based replica catalog in the submit directory
         // for registration purposes
         File replicaFileSource = bag.getReplicaCatalogFileSource();
         Properties output =
                 bag.getPegasusProperties()
                         .matchingSubset(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, true);
-        if (replicaFileSource == null
-                && bag.getPegasusProperties().getReplicaMode() == null
-                && output.isEmpty()) {
+        if (output.isEmpty()) {
             p.setProperty(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, "JDBCRC");
             p.setProperty(
                     ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX + "." + "db.driver",
