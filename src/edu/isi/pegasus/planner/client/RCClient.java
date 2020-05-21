@@ -296,7 +296,6 @@ public class RCClient extends Toolkit {
                     MissingResourceException {
 
         PegasusBag bag = new PegasusBag();
-        //LogManager logger = LogManagerFactory.loadSingletonInstance(properties);
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, m_pegasus_logger);
         bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
         m_rc = ReplicaFactory.loadInstance(bag, file);
