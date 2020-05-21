@@ -504,14 +504,6 @@ def cp(args):
         help="Create destination bucket if it does not exist",
     )
     parser.add_option(
-        "-r",
-        "--recursive",
-        dest="recurse",
-        action="store_true",
-        default=False,
-        help="If SRC is a bucket, copy all its keys to DEST",
-    )
-    parser.add_option(
         "-f",
         "--force",
         dest="force",
@@ -541,9 +533,9 @@ def cp(args):
 
     # Validate all the URI pairs
     for src in srcs:
-        # The source URI must have a key unless the user specified -r
-        if src.key is None and not options.recurse:
-            raise Exception("Source URL does not contain a key " "(see -r): %s" % src)
+        # The source URI must have a key
+        if src.key is None:
+            raise Exception("Source URL does not contain a key: %s" % src)
 
         # Each source must have the same identity as the destination.
         # Copying from one account to another, or one region to another,
@@ -554,91 +546,93 @@ def cp(args):
                 "do not match: %s -> %s" % (src, dest)
             )
 
-    conn = get_connection(config, dest)
-    destbucket = conn.lookup(dest.bucket)
-    if destbucket is None:
-        if options.create:
-            info("Creating destination bucket %s" % dest.bucket)
-            destbucket = conn.create_bucket(dest.bucket, location=conn.location)
+    # using the first source (from the checks above, it is garuanteed that
+    # identities all match)
+    s3 = get_s3_client(config, srcs[0])
+
+      # Create the bucket if the user requested it and it does not exist
+    if options.create:
+        try:
+            resp = s3.create_bucket(Bucket=dest.bucket)
+        except s3.exceptions.BucketAlreadyExists:
+            print("Destination bucket: {} already taken".format(dest.bucket))
+            sys.exit(1)
+        except s3.exceptions.BucketAlreadyOwnedByYou:
+            # AWS S3 endpoint will throw this, but other endpoints may not
+            pass
+
+    '''
+    s3 = boto3.client('s3')
+    try:
+        s3.head_object(Bucket='bucket_name', Key='file_path')
+    except ClientError:
+        # Not found
+        pass
+    '''
+
+    # ensure that none of the keys in srcs exist in dest
+    if not options.force:
+        if dest.key == None:
+            for src in srcs:
+                try:
+                    s3.head_object(Bucket=dest.bucket, Key=src.key)
+                    print("Key: {key} already exists in destination bucket: {bucket}, (see --force)".format(key=src.key, bucket=dest.bucket))
+                    sys.exit(1)
+                except s3.exceptions.ClientError as e:
+                    error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
+
+                    if error_code == 403:
+                        print("Access to bucket: {bucket} forbidden".format(bucket=dest.bucket))
+                        sys.exit(1)
+                    elif error_code == 404:
+                        # 
+                        pass
+                    else:
+                        print("Unknown client error")
+                        sys.exit(1)
         else:
-            raise Exception(
-                "Destination bucket %s does not exist " "(see -c)" % dest.bucket
+            assert len(srcs) == 1
+            src = srcs[0]
+            try:
+                s3.head_object(Bucket=dest.bucket, Key=dest.key)
+                print("Key: {key} already exists in destination bucket: {bucket}, (see --force)".format(key=dest.key, bucket=dest.bucket))
+                sys.exit(1)
+            except s3.exceptions.ClientError as e:
+                error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
+
+                if error_code == 403:
+                    print("Access to bucket: {bucket}, key: {key} forbidden".format(bucket=dest.bucket, key=dest.key))
+                    sys.exit(1)
+                elif error_code == 404:
+                    # 
+                    pass
+                else:
+                    print("Unknown client error")
+                    sys.exit(1)
+
+
+
+    # TODO: catch possible botocore.exceptions.ClientError and exit
+    if dest.key == None:
+        for src in srcs:
+            s3.copy(
+                CopySource={"Bucket": src.bucket, "Key": src.key},
+                Bucket=dest.bucket,
+                Key=src.key
             )
+    else:
+        assert len(srcs) == 1
+        src = srcs[0]
+        s3.copy(
+            CopySource={"Bucket": src.bucket, "Key": src.key},
+            Bucket=dest.bucket,
+            Key=dest.key
+        )
 
-    # Does the destination site support multipart uploads?
-    multipart_uploads = config.getboolean(dest.site, "multipart_uploads")
-
-    for src in srcs:
-        srcbucket = conn.get_bucket(src.bucket)
-
-        # If there is no src key, then copy all of the keys from
-        # the src bucket. We already checked for -r above.
-        if src.key is None:
-            srckeys = srcbucket.list()
-            info("Copying %d keys from %s to %s" % (len(srckeys), src, dest))
-        else:
-            k = srcbucket.get_key(src.key)
-            if k is None:
-                raise Exception("Source key '%s' does not exist" % src.key)
-            srckeys = [k]
-
-        # It doesn't make sense to copy several keys into one destination
-        if len(srckeys) > 1 and dest.key:
-            raise Exception("Cannot copy %d keys to one destination key" % len(srckeys))
-
-        for srckey in srckeys:
-            # If the destination key is not specified, then just use
-            # the same key name as the source
-            destkeyname = dest.key or srckey
-
-            # If the user did not specify force, then check to make sure
-            # the destination key does not exist
-            if not options.force:
-                info("Checking for existence of %s" % destkeyname)
-                if destbucket.get_key(destkeyname) is not None:
-                    raise Exception(
-                        "Destination key %s exists " "(see -f)" % destkeyname
-                    )
-
-            info(
-                "Copying %s/%s to %s/%s"
-                % (src.bucket, srckey.name, dest.bucket, destkeyname)
-            )
-
-            start_time = time.time()
-
-            # If the source is larger than 5GB we need to use multipart uploads
-            if multipart_uploads and srckey.size > 5 * GB:
-                info("Object is larger than 5GB: Using multipart uploads")
-                i = 1
-                start = 0
-                parts = math.ceil(srckey.size / (1.0 * GB))
-                mp = destbucket.initiate_multipart_upload(destkeyname)
-                while start < srckey.size:
-                    end = min(start + GB - 1, srckey.size - 1)
-                    info("Copying part %d of %d (%d-%d)" % (i, parts, start, end))
-                    mp.copy_part_from_key(src.bucket, srckey.name, i, start, end)
-                    i += 1
-                    start = end + 1
-                mp.complete_upload()
-            else:
-                destbucket.copy_key(
-                    new_key_name=destkeyname,
-                    src_bucket_name=src.bucket,
-                    src_key_name=srckey.name,
-                )
-
-            end_time = time.time()
-
-            size = srckey.size / 1024.0
-            elapsed = end_time - start_time
-            rate = size / elapsed
-
-            info("Copied %0.1f KB in %0.6f seconds: %0.2f KB/s" % (size, elapsed, rate))
 
 def mkdir(args):
     parser = option_parser("mkdir URL...")
-
+    '''
     parser.add_option(
         "-r",
         "--region",
@@ -647,11 +641,15 @@ def mkdir(args):
         default=None,
         help="Create the destination bucket if it does not already exist",
     )
+    '''
 
     options, args = parser.parse_args(args)
 
     if len(args) == 0:
         parser.error("Specify URL")
+
+    assert len(args) == 1
+    uri = parse_uri(args.pop())
 
     if uri.bucket is None:
         print("URL for mkdir must contain a bucket: %s" % arg)
@@ -660,21 +658,22 @@ def mkdir(args):
         print("URL for mkdir cannot contain a key: %s" % arg)
         sys.exit(1)
 
+    config = get_config(options)
     s3 = get_s3_client(config, uri)
-
-    create_bucket_config = {}
-    if parser.region:
-        create_bucket_config = {
-            "LocationConstrain": options.region
-        }
 
     is_duplicate_bucket = False
     try:
-        s3.create_bucket(Bucket=uri.bucket, CreateBucketConfiguration=create_bucket_config)
+        '''
+        if options.region:
+            s3.create_bucket(Bucket=uri.bucket, CreateBucketConfiguration={"LocationConstraint": options.region})
+        else:
+            s3.create_bucket(Bucket=uri.bucket)
+        '''
+        s3.create_bucket(Bucket=uri.bucket)
+
     except s3.exceptions.BucketAlreadyExists:
         print("Bucket: {} already taken".format(uri.bucket))
         sys.exit(1)
-
     except s3.exceptions.BucketAlreadyOwnedByYou:
         is_duplicate_bucket = True
     
@@ -682,6 +681,8 @@ def mkdir(args):
         print("Bucket: {} is already owned by you".format(uri.bucket))
     else:
         print("Bucket: {} has been created".format(uri.bucket))
+
+
 
 def rm(args):
     parser = option_parser("rm URL...")
@@ -967,6 +968,7 @@ def get_key_for_path(path, infile, outkey):
         return outkey
 
 def put(args):
+    # TODO: ensure args list well formed
     parser = option_parser("put FILE URL")
 
     parser.add_option(
@@ -985,6 +987,7 @@ def put(args):
         default=False,
         help="Overwrite key if it already exists",
     )
+    '''
     parser.add_option(
         "-r",
         "--recursive",
@@ -993,6 +996,7 @@ def put(args):
         default=False,
         help="Treat FILE as a directory",
     )
+    '''
 
     options, args = parser.parse_args(args)
 
@@ -1003,6 +1007,7 @@ def put(args):
         print("No such file or directory: {}".format(path))
         sys.exit(1)
 
+    '''
     # Get a list of all the files to transfer
     if options.recursive:
         if os.path.isfile(path):
@@ -1026,8 +1031,16 @@ def put(args):
         if os.path.isdir(path):
             raise Exception("%s is a directory. Try --recursive." % path)
         infiles = [path]
+    '''
 
-    log.info("Attempting to upload {} files".format(len(infiles)))
+    if os.path.isdir(path):
+        raise Exception("%s is a directory. Try --recursive." % path)
+
+    # TODO: without recursive, infile for loops need to be removed
+    # usage is just pegasus-s3 put FILE <uri>
+    infiles = [path]
+
+    print("Attempting to upload {} files".format(len(infiles)))
 
     # Validate URL
     uri = parse_uri(url)
@@ -1061,7 +1074,7 @@ def put(args):
         pre_existing_key = ""
         for f in infiles:
             try:
-                s3.head_object(Bucket=uri.bucket, Key=f)
+                s3.head_object(Bucket=uri.bucket, Key=uri.key)
                 
                 key_already_exists = True
                 pre_existing_key = f
@@ -1071,6 +1084,7 @@ def put(args):
 
                 if error_code == 403:
                     print("Access to bucket: {bucket}, key: {key} forbidden".format(bucket=uri.bucket, key=f))
+                    sys.exit(1)
                 elif error_code == 404:
                     # 
                     pass
@@ -1092,6 +1106,7 @@ def put(args):
                 key=key
             ))
         except boto3.exceptions.S3UploadFailedError:
+            # TODO: specify if bucket doesn't exist so --create-bucket flag can be used
             print("Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
                 file=f,
                 bucket=uri.bucket,
