@@ -79,7 +79,7 @@ public class RCClient extends Toolkit {
     private static Logger m_root;
 
     /** Logger for RLS implementation for the time being. */
-    private LogManager m_rls_logger;
+    private LogManager m_pegasus_logger;
 
     /** The number of lines that are to be parsed for chunking up large input files. */
     private int m_chunk_factor;
@@ -139,7 +139,7 @@ public class RCClient extends Toolkit {
     private void doSet(Level level) {
         m_root.setLevel(level);
         m_log.setLevel(level);
-        m_rls_logger.setLevel(level);
+        m_pegasus_logger.setLevel(level);
     }
 
     /**
@@ -181,10 +181,10 @@ public class RCClient extends Toolkit {
         String propertyFile = lookupConfProperty(opts, confChar);
         m_pegasus_props = PegasusProperties.getInstance(propertyFile);
         m_conf_property_file = propertyFile;
-        m_rls_logger = LogManagerFactory.loadSingletonInstance(m_pegasus_props);
-        m_rls_logger.setLevel(Level.WARN);
+        m_pegasus_logger = LogManagerFactory.loadSingletonInstance(m_pegasus_props);
+        m_pegasus_logger.setLevel(Level.WARN);
         mMetadataStore = new ReplicaStore();
-        m_rls_logger.logEventStart(
+        m_pegasus_logger.logEventStart(
                 "pegasus-rc-client", "planner.version", Version.instance().toString());
         m_log.debug("starting instance");
         determineChunkFactor();
@@ -296,8 +296,8 @@ public class RCClient extends Toolkit {
                     MissingResourceException {
 
         PegasusBag bag = new PegasusBag();
-        LogManager logger = LogManagerFactory.loadSingletonInstance(properties);
-        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+        //LogManager logger = LogManagerFactory.loadSingletonInstance(properties);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, m_pegasus_logger);
         bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
         m_rc = ReplicaFactory.loadInstance(bag, file);
 
@@ -1107,7 +1107,7 @@ public class RCClient extends Toolkit {
         }
 
         // log event completion in rls logger
-        me.m_rls_logger.logEventCompletion();
+        me.m_pegasus_logger.logEventCompletion();
 
         // get out
         if (result != 0) {

@@ -412,7 +412,6 @@ public class MainEngine extends Engine {
         // PM-1549 if a output replica catalog is not explicity defined in the properties
         // then we set up a default sqlite based replica catalog in the submit directory
         // for registration purposes
-        File replicaFileSource = bag.getReplicaCatalogFileSource();
         Properties output =
                 bag.getPegasusProperties()
                         .matchingSubset(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, true);
