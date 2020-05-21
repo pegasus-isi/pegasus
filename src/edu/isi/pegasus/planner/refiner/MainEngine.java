@@ -429,6 +429,9 @@ public class MainEngine extends Engine {
             p.setProperty(
                     ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX + "." + "db.url",
                     dbURL.toString());
+            mLogger.log(
+                    "Set Default output replica catalog properties to " + p,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
         TransformationCatalog c = bag.getHandleToTransformationCatalog();
