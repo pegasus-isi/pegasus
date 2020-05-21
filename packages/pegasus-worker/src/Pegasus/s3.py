@@ -1129,71 +1129,9 @@ def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
 
     return download
 
-
-def get_path_for_key(bucket, searchkey, key, output):
-    # We have to strip any trailing / off the keys so that they can match
-    # Also, if a key is None, then convert it to an empty string
-    key = "" if key is None else key.rstrip("/")
-    searchkey = "" if searchkey is None else searchkey.rstrip("/")
-
-    # If output ends with a /, then we need to add a name onto it
-    if output.endswith("/"):
-        name = bucket if searchkey == "" else os.path.basename(searchkey)
-        output = os.path.join(output, name)
-
-    if searchkey == key:
-        # If they are the same, then return the new output path
-        return output
-    else:
-        # Otherwise we need to compute the relative path and add it
-        relpath = os.path.relpath(key, searchkey)
-        return os.path.join(output, relpath)
-
-
 def get(args):
     parser = option_parser("get URL [FILE]")
-    parser.add_option(
-        "-c",
-        "--chunksize",
-        dest="chunksize",
-        action="store",
-        type="int",
-        metavar="X",
-        default=10,
-        help="Set the chunk size for parallel downloads to X "
-        "megabytes. A value of 0 will avoid chunked reads. This option only applies for "
-        "sites that support ranged downloads (see ranged_downloads configuration "
-        "parameter). The default chunk size is 10MB, the min is 1MB and the max is "
-        "1024MB. Choose smaller values to reduce the impact of transient failures.",
-    )
-    parser.add_option(
-        "-p",
-        "--parallel",
-        dest="parallel",
-        action="store",
-        type="int",
-        metavar="N",
-        default=4,
-        help="Use N threads to upload FILE in parallel. The "
-        "default value is 4, which enables parallel downloads with 4 threads. "
-        "This parameter is only valid if the site supports ranged downloads "
-        "and the --chunksize parameter is not 0. Otherwise parallel downloads are "
-        "disabled.",
-    )
-    parser.add_option(
-        "-r",
-        "--recursive",
-        dest="recursive",
-        action="store_true",
-        help="Get all keys that start with URL",
-    )
     options, args = parser.parse_args(args)
-
-    if options.chunksize < 0 or options.chunksize > 1024:
-        parser.error("Invalid chunksize")
-
-    if options.parallel <= 0:
-        parser.error("Invalid value for --parallel")
 
     if len(args) == 0:
         parser.error("Specify URL")
@@ -1202,172 +1140,37 @@ def get(args):
 
     if uri.bucket is None:
         raise Exception("URL must contain a bucket: %s" % args[0])
-    if uri.key is None and not options.recursive:
-        raise Exception("URL must contain a key or use --recursive")
+    if uri.key is None :
+        raise Exception("URL must contain a key")
 
     if len(args) > 1:
         output = fix_file(args[1])
-    elif uri.key is None:
-        output = "./"
     else:
         output = os.path.basename(uri.key.rstrip("/"))
 
     info("Downloading %s" % uri)
 
-    # Does the site support ranged downloads properly?
     config = get_config(options)
-    ranged_downloads = config.getboolean(uri.site, "ranged_downloads")
+    s3 = get_s3_client(config, uri)
 
-    # Warn the user
-    if options.parallel > 1:
-        if not ranged_downloads:
-            warn("ranged downloads not supported, ignoring --parallel")
-        elif options.chunksize == 0:
-            warn("--chunksize set to 0, ignoring --parallel")
-
-    conn = get_connection(config, uri)
-    b = Bucket(connection=conn, name=uri.bucket)
-
-    if options.recursive:
-        # Get all the keys we need to download
-
-        def keyfilter(k):
-            if uri.key is None:
-                # We want all the keys in the bucket
-                return True
-
-            if uri.key.endswith("/"):
-                # The user specified a "folder", so we should only match keys
-                # in that "folder"
-                return k.name.startswith(uri.key)
-
-            if k.name == uri.key:
-                # Match bare keys in case they specify recursive, but there
-                # is a key that matches the specified path. Note that this
-                # could cause a problem in the case where they have a key
-                # called 'foo' and a "folder" called 'foo' in the same
-                # bucket. In a file system that can't happen, but it can
-                # happen in S3.
-                return True
-
-            if k.name.startswith(uri.key + "/"):
-                # All other keys in the "folder"
-                return True
-
-            return False
-
-        keys = [x for x in b.list(uri.key) if keyfilter(x)]
-    else:
-        # Just get the one key we need to download
-        key = b.get_key(uri.key)
-        if key is None:
-            raise Exception(
-                "No such key. If %s is a folder, try --recursive." % uri.key
-            )
-        keys = [key]
-
-    info("Downloading %d keys" % len(keys))
-
-    start = time.time()
-    totalsize = 0
-    for key in keys:
-        outfile = get_path_for_key(b.name, uri.key, key.name, output)
-
-        info("Downloading %s/%s to %s" % (uri.bucket, key.name, outfile))
-
-        outfile = os.path.abspath(outfile)
-
-        # This means that the key is a "folder", so we just need to create
-        # a directory for it
-        if key.name.endswith("/") and key.size == 0:
-            if not os.path.isdir(outfile):
-                os.makedirs(outfile)
-            continue
-
-        if os.path.isdir(outfile):
-            raise Exception("%s is a directory" % outfile)
-
-        outdir = os.path.dirname(outfile)
-        if not os.path.isdir(outdir):
-            os.makedirs(outdir)
-
-        # We need this for the performance report
-        totalsize += key.size
-
-        if (not ranged_downloads) or (options.chunksize == 0):
-            # Ranged downloads not supported, or chunking disabled
-            key.get_contents_to_filename(outfile)
+    try:            
+        s3.download_file(
+            Bucket=uri.bucket,
+            Key=uri.key,
+            Filename=output
+        )
+    except s3.exceptions.NoSuchBucket:
+        print("Invalid bucket: {}".format(uri.bucket))
+        sys.exit(1)
+    except botocore.exceptions.ClientError as e:
+        # endpoint may also raise this for invalid bucket name
+        if e.response["Error"]["Code"] == "InvalidBucketName":
+            print("Invalid bucket: {}".format(uri.bucket))
+            sys.exit(1)
         else:
-            # Ranged downloads and chunking requested
-
-            # Compute chunks
-            part_size = options.chunksize * MB
-            num_parts = int(math.ceil(key.size / float(part_size)))
-
-            if num_parts <= 1:
-                # No point if there is only one chunk
-                key.get_contents_to_filename(outfile)
-            else:
-                # Create the file and set it to the appropriate size.
-                f = open(outfile, "w+b")
-                f.seek(key.size - 1)
-                f.write(b"0")
-                f.close()
-
-                # Create all the downloads
-                downloads = []
-                for i in range(0, num_parts):
-                    dstart = i * part_size
-                    dend = min(key.size, dstart + part_size - 1)
-                    down = PartialDownload(
-                        b, key.name, outfile, i + 1, num_parts, dstart, dend
-                    )
-                    downloads.append(down)
-
-                if options.parallel <= 1:
-                    # Serial
-                    for down in downloads:
-                        down()
-                else:
-                    # Parallel
-
-                    # No sense forking more threads than there are chunks
-                    nthreads = min(options.parallel, num_parts)
-
-                    info("Starting parallel download with %d threads" % nthreads)
-
-                    # Queue up requests
-                    queue = Queue.Queue()
-                    for down in downloads:
-                        queue.put(down)
-
-                    # Fork threads
-                    threads = []
-                    for i in range(0, nthreads):
-                        t = WorkThread(queue)
-                        threads.append(t)
-                        t.start()
-
-                    # Wait for the threads
-                    for t in threads:
-                        t.join()
-                        # If any of the threads encountered
-                        # an error, then we fail here
-                        if t.exception is not None:
-                            raise t.exception
-
-    end = time.time()
-    totalsize = totalsize / 1024.0
-    elapsed = end - start
-    if elapsed > 0:
-        rate = totalsize / elapsed
-    else:
-        rate = 0.0
-
-    info(
-        "Downloaded %d keys of %0.1f KB in %0.6f seconds: %0.2f KB/s"
-        % (len(keys), totalsize, elapsed, rate)
-    )
+            raise e
+    
+    info("Download: {} complete".format(uri))
 
 def main():
     if len(sys.argv) < 2:
