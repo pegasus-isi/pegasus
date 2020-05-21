@@ -11,18 +11,23 @@ logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 echo = Transformation(
         "echo", 
         pfn="/bin/echo",
-        site="condorpool"
+        site="condorpool",
+        is_stageable=False
     )
   
 tc = TransformationCatalog()\
         .add_transformations(echo)
 
 # --- Workflow -----------------------------------------------------------------
-Workflow("hello-world", infer_dependencies=True)\
-    .add_jobs(
-        Job(echo)
-            .add_args("Hello World")
-            .set_stdout("hello.out")
-    ).add_transformation_catalog(tc)\
-    .plan(submit=True)
-
+try:
+    Workflow("hello-world", infer_dependencies=True)\
+        .add_jobs(
+            Job(echo)
+                .add_args("Hello World")
+                .set_stdout("hello.out")
+        ).add_transformation_catalog(tc)\
+        .plan(submit=True)
+except Exception as e:
+    print(e)
+    print(e.args[1].stdout)
+    print(e.args[1].stderr)
