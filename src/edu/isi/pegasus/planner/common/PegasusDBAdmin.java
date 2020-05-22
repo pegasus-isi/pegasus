@@ -181,7 +181,7 @@ public class PegasusDBAdmin {
         }
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
         // debug turned on
-        arguments.append(" --debug ");
+        // arguments.append(" --debug ");
         return this.checkDatabase(DB_ADMIN_COMMANDS.check.name(), arguments.toString());
     }
 
