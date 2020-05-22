@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -219,6 +220,9 @@ public class RCClient extends Toolkit {
                         + linefeed
                         + " -p|--pref k=v  enters the specified mapping into preferences (multi-use)."
                         + linefeed
+                        + " -P|--prefix property   prefix of properties to use to connect to RC. defaults to "
+                        + ReplicaCatalog.c_prefix
+                        + linefeed
                         + "                remember quoting, e.g. -p 'format=%l %p %a'"
                         + linefeed
                         + " -i|--insert fn the path to the file containing the mappings to be inserted."
@@ -258,7 +262,7 @@ public class RCClient extends Toolkit {
      * @return an initialized array with the options
      */
     protected LongOpt[] generateValidOptions() {
-        LongOpt[] lo = new LongOpt[10];
+        LongOpt[] lo = new LongOpt[11];
 
         lo[0] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
         lo[1] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
@@ -270,6 +274,7 @@ public class RCClient extends Toolkit {
         lo[7] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
         lo[8] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, 'c');
         lo[9] = new LongOpt("meta", LongOpt.REQUIRED_ARGUMENT, null, 'm');
+        lo[10] = new LongOpt("prefix", LongOpt.REQUIRED_ARGUMENT, null, 'P');
         return lo;
     }
 
@@ -290,13 +295,41 @@ public class RCClient extends Toolkit {
      * @exception IOException
      * @exception MissingResourceException
      */
-    void connect(PegasusProperties properties, String file)
+    void connect(PegasusProperties properties, String propertyPrefix, String file)
             throws ClassNotFoundException, IOException, NoSuchMethodException,
                     InstantiationException, IllegalAccessException, InvocationTargetException,
                     MissingResourceException {
 
+        if (propertyPrefix != null) {
+            // we need to remap some output replica catalog props to pegasus.catalog.replica
+            Properties output = properties.remap(propertyPrefix, ReplicaCatalog.c_prefix);
+            if (output.isEmpty()) {
+                throw new ReplicaCatalogException(
+                        "unable to find properties with prefix "
+                                + propertyPrefix
+                                + " to connect with replica catalog backend");
+            }
+            this.m_log.debug(
+                    "Remapped properties with prefix "
+                            + propertyPrefix
+                            + " to "
+                            + ReplicaCatalog.c_prefix);
+            // we translate the properties to pegasus.catalog.replica prefix and add
+            // them to the command line invocation before the conf properties
+            // are passed
+            for (String property : output.stringPropertyNames()) {
+                String value = output.getProperty(property);
+                // sanitize the value for property ending in file
+                if (property.endsWith(".file")) {
+                    value = new File(value).getAbsolutePath();
+                }
+                properties.setProperty(property, value);
+            }
+        }
+
         PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, m_pegasus_logger);
+
         bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
         m_rc = ReplicaFactory.loadInstance(bag, file);
 
@@ -977,12 +1010,16 @@ public class RCClient extends Toolkit {
             // get the command line options
             Getopt opts =
                     new Getopt(
-                            me.m_application, args, "f:hp:vVi:d:l:c:m:", me.generateValidOptions());
+                            me.m_application,
+                            args,
+                            "f:hp:vVi:d:l:c:m:P:",
+                            me.generateValidOptions());
             opts.setOpterr(false);
 
             String arg;
             String filename = null;
             String metaFiles = null;
+            String property_prefix = null;
             int pos, option = -1;
             boolean interactive = false;
             String command = null;
@@ -1004,6 +1041,10 @@ public class RCClient extends Toolkit {
                         arg = opts.getOptarg();
                         if (arg != null && (pos = arg.indexOf('=')) != -1)
                             me.enter(arg.substring(0, pos), arg.substring(pos + 1));
+                        break;
+                    case 'P': // prefix
+                        arg = opts.getOptarg();
+                        if (arg != null) property_prefix = arg;
                         break;
                     case 'i':
                         arg = opts.getOptarg();
@@ -1037,7 +1078,7 @@ public class RCClient extends Toolkit {
             // Set verbosity level
             me.setLevel(level);
             // now work with me
-            me.connect(me.m_pegasus_props, me.m_conf_property_file);
+            me.connect(me.m_pegasus_props, property_prefix, me.m_conf_property_file);
             RCClient.log(Level.DEBUG, "connected to backend");
 
             // PM-1582 check if there are meta files to parse
