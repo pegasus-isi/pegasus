@@ -29,7 +29,7 @@ conf = Properties()
 conf["pegasus.catalog.site"] = "YAML"
 conf["pegasus.catalog.site.file"] = "sites.yml"
 conf["pegasus.catalog.transformation"] = "YAML"
-conf["pegasus.catalog.transformation.file"] = "transformations.yml"
+conf["pegasus.catalog.transformation.file"] = "करण-transformations.yml"
 conf["pegasus.catalog.replica"] = "YAML"
 conf["pegasus.catalog.replica.file"] = "replicas.yml"
 conf["pegasus.data.configuration"] = "condorio"
@@ -76,7 +76,7 @@ ReplicaCatalog().add_replica(LOCAL, fa, "file://" + str(TOP_DIR / fa.lfn)).write
 # --- Transformations ----------------------------------------------------------
 
 print(
-    "Generating transformation catalog at: {}".format(TOP_DIR / "transformations.yml")
+    "Generating transformation catalog at: {}".format(TOP_DIR / "करण-transformations.yml")
 )
 
 preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0").add_sites(
