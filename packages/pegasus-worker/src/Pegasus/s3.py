@@ -186,6 +186,25 @@ def option_parser(usage):
 
     return parser
 
+def get_path_for_key(bucket, searchkey, key, output):
+    # We have to strip any trailing / off the keys so that they can match
+    # Also, if a key is None, then convert it to an empty string
+    key = "" if key is None else key.rstrip("/")
+    searchkey = "" if searchkey is None else searchkey.rstrip("/")
+
+    # If output ends with a /, then we need to add a name onto it
+    if output.endswith("/"):
+        name = bucket if searchkey == "" else os.path.basename(searchkey)
+        output = os.path.join(output, name)
+
+    if searchkey == key:
+        # If they are the same, then return the new output path
+        return output
+    else:
+        # Otherwise we need to compute the relative path and add it
+        relpath = os.path.relpath(key, searchkey)
+        return os.path.join(output, relpath)
+
 
 def get_config(options):
     S3CFG = os.getenv("S3CFG", None)
@@ -760,18 +779,6 @@ def rm(args):
             else:
                 raise e
     '''
-
-def PartialUpload(up, part, parts, fname, offset, length):
-    def upload():
-        info("Uploading part %d of %d" % (part, parts))
-        f = open(fname, "rb")
-        f.seek(offset, os.SEEK_SET)
-        up.upload_part_from_file(f, part, size=length)
-        info("Finished uploading part %d (%s bytes)" % (part, length))
-        f.close()
-
-    return upload
-
 
 def get_key_for_path(path, infile, outkey):
     if outkey is None or outkey == "":
