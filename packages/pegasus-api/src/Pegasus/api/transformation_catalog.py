@@ -32,7 +32,6 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         os_type=None,
         os_release=None,
         os_version=None,
-        glibc=None,
         container=None,
     ):
         """
@@ -50,8 +49,6 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :type os_release: str, optional
         :param os_version: version of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
         :type os_version: str, optional
-        :param glibc: version of glibc this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled against, defaults to None
-        :type glibc: str, optional
         :param container: specify the name of the container to use, optional
         :type container: str
         :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
@@ -88,7 +85,6 @@ class TransformationSite(ProfileMixin, MetadataMixin):
 
         self.os_release = os_release
         self.os_version = os_version
-        self.glibc = glibc
 
         container_name = None
         if container:
@@ -118,7 +114,6 @@ class TransformationSite(ProfileMixin, MetadataMixin):
                 "os.type": self.os_type,
                 "os.release": self.os_release,
                 "os.version": self.os_version,
-                "glibc": self.glibc,
                 "container": self.container,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
                 "metadata": dict(self.metadata) if len(self.metadata) > 0 else None,
@@ -209,14 +204,13 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         os_type=None,
         os_release=None,
         os_version=None,
-        glibc=None,
         container=None,
     ):
         """
         When a transformation resides on a single site, the
         syntax in Example 1 can be used where the args: site, pfn, and is_stageable is
         provided to the constructor. If site, pfn, and is_stageable is specified, then
-        the args: arch, os_type, os_release, os_version, glibc, and container, are
+        the args: arch, os_type, os_release, os_version, and container, are
         applied to the site, else they are ignored. When a transformation resides
         multiple sites, the syntax in Example 2 can be used where multiple
         TransformationSite objects can be added.
@@ -267,8 +261,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :type os_release: str, optional
         :param os_version: version of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
         :type os_version: str, optional
-        :param glibc: version of glibc this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled against, defaults to None
-        :type glibc: str, optional
         :param container: a container object or name of the container to be used for this transformation, optional
         :type container: Container or str
         :raises TypeError: Container must be of type Container or str
@@ -311,7 +303,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                     os_type=os_type,
                     os_release=os_release,
                     os_version=os_version,
-                    glibc=glibc,
                     container=container,
                 )
             )

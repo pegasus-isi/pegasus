@@ -157,8 +157,6 @@ $defs:
         type: string
       os.version:
         $ref: "common.yml#/$defs/versionString"
-      glibc:
-        $ref: "common.yml#/$defs/versionString"
       directories:
         type: array
         items:

@@ -30,10 +30,9 @@ def sc1():
             os_type=OS.LINUX,
             os_release="1",
             os_version="1",
-            glibc="1",
         )
         .add_directories(
-            Directory(Directory.LOCALSCRATCH, "/path").add_file_servers(
+            Directory(Directory.LOCAL_SCRATCH, "/path").add_file_servers(
                 FileServer("url", Operation.ALL).add_dagman_profile(retry=1)
             )
         )
@@ -62,7 +61,7 @@ def sc2():
     return SiteCatalog().add_sites(
         Site("local",)
         .add_directories(
-            Directory(Directory.LOCALSCRATCH, "/path").add_file_servers(
+            Directory(Directory.LOCAL_SCRATCH, "/path").add_file_servers(
                 FileServer("url", Operation.ALL)
             )
         )

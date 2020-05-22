@@ -57,17 +57,17 @@ class _DirectoryType(Enum):
 
     #: Describes a scratch file systems. Pegasus will use this to store
     #: intermediate `da`ta between jobs and other temporary files.
-    SHAREDSCRATCH = "sharedScratch"
+    SHARED_SCRATCH = "sharedScratch"
 
     # TODO: where is this documented? the others were in user guide
-    SHAREDSTORAGE = "sharedStorage"
+    SHARED_STORAGE = "sharedStorage"
 
     #: Describes the scratch file systems available locally on a compute node.
-    LOCALSCRATCH = "localScratch"
+    LOCAL_SCRATCH = "localScratch"
 
     #: Describes a long term storage file system. This is the directory
     #: Pegasus will stage output files to.
-    LOCALSTORAGE = "localStorage"
+    LOCAL_STORAGE = "localStorage"
 
 
 class _GridType(Enum):
@@ -143,17 +143,17 @@ class Directory:
 
     #: Describes a scratch file systems. Pegasus will use this to store
     #: intermediate data between jobs and other temporary files.
-    SHAREDSCRATCH = _DirectoryType.SHAREDSCRATCH
+    SHARED_SCRATCH = _DirectoryType.SHARED_SCRATCH
 
     # TODO: where is this documented? the others were in user guide
-    SHAREDSTORAGE = _DirectoryType.SHAREDSTORAGE
+    SHARED_STORAGE = _DirectoryType.SHARED_STORAGE
 
     #: Describes the scratch file systems available locally on a compute node.
-    LOCALSCRATCH = _DirectoryType.LOCALSCRATCH
+    LOCAL_SCRATCH = _DirectoryType.LOCAL_SCRATCH
 
     #: Describes a long term storage file system. This is the directory
     #: Pegasus will stage output files to.
-    LOCALSTORAGE = _DirectoryType.LOCALSTORAGE
+    LOCAL_STORAGE = _DirectoryType.LOCAL_STORAGE
 
     # the site catalog schema lists freeSize and totalSize as an attribute
     # however this appears to not be used; removing it as a parameter
@@ -373,7 +373,6 @@ class Site(ProfileMixin):
         os_type=None,
         os_release=None,
         os_version=None,
-        glibc=None,
     ):
         """
         :param name: name of the site
@@ -386,8 +385,6 @@ class Site(ProfileMixin):
         :type os_release: str, optional
         :param os_version: the version of the site's operating system, defaults to None
         :type os_version: str, optional
-        :param glibc: glibc used on the site, defaults to None
-        :type glibc: str, optional
         :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OSType`
         """
@@ -421,7 +418,6 @@ class Site(ProfileMixin):
 
         self.os_release = os_release
         self.os_version = os_version
-        self.glibc = glibc
 
         self.profiles = defaultdict(dict)
 
@@ -467,7 +463,6 @@ class Site(ProfileMixin):
                 "os.type": self.os_type,
                 "os.release": self.os_release,
                 "os.version": self.os_version,
-                "glibc": self.glibc,
                 "directories": [d for d in self.directories],
                 "grids": [g for g in self.grids] if len(self.grids) > 0 else None,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,

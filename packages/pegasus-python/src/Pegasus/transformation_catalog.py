@@ -69,7 +69,6 @@ def _to_tc(d: dict) -> TransformationCatalog:
                     else None,
                     os_release=s.get("os.release"),
                     os_version=s.get("os.version"),
-                    glibc=s.get("glibc"),
                     container=s.get("container"),
                 )
 

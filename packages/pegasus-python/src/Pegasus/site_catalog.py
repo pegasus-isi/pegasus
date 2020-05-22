@@ -15,6 +15,7 @@ from Pegasus.api.site_catalog import (
     Site,
     SiteCatalog,
     SupportedJobs,
+    _DirectoryType
 )
 
 """
@@ -64,13 +65,19 @@ def _to_sc(d: dict) -> SiteCatalog:
                 else None,
                 os_release=s.get("os.release"),
                 os_version=s.get("os.version"),
-                glibc=s.get("glibc"),
             )
 
             # add directories
             for _dir in s["directories"]:
+                
+                dir_type = None
+                for enum_name, enum in _DirectoryType.__members__.items():
+                    if _dir["type"] == enum.value:
+                        dir_type = enum_name
+                        break
+
                 directory = Directory(
-                    getattr(Directory, _dir["type"].upper()), _dir["path"]
+                    getattr(Directory, dir_type), _dir["path"]
                 )
 
                 # add file servers

@@ -54,7 +54,7 @@ class TestFileServer:
 
 class TestDirectory:
     def test_valid_directory(self):
-        assert Directory(Directory.LOCALSCRATCH, "/path")
+        assert Directory(Directory.LOCAL_SCRATCH, "/path")
 
     def test_invalid_directory(self):
         with pytest.raises(TypeError) as e:
@@ -63,18 +63,18 @@ class TestDirectory:
         assert "invalid directory_type: invalid type" in str(e)
 
     def test_add_valid_file_server(self):
-        d = Directory(Directory.LOCALSCRATCH, "/path")
+        d = Directory(Directory.LOCAL_SCRATCH, "/path")
         assert d.add_file_servers(FileServer("url", Operation.PUT))
 
     def test_add_invalid_file_server(self):
         with pytest.raises(TypeError) as e:
-            d = Directory(Directory.LOCALSCRATCH, "/path")
+            d = Directory(Directory.LOCAL_SCRATCH, "/path")
             d.add_file_servers(123)
 
             assert "invalid file_server: 123" in str(e)
 
     def test_chaining(self):
-        a = Directory(Directory.LOCALSCRATCH, "/path")
+        a = Directory(Directory.LOCAL_SCRATCH, "/path")
         b = a.add_file_servers(FileServer("url", Operation.PUT)).add_file_servers(
             FileServer("url", Operation.GET)
         )
@@ -82,7 +82,7 @@ class TestDirectory:
         assert id(a) == id(b)
 
     def test_tojson(self):
-        directory = Directory(Directory.LOCALSCRATCH, "/path").add_file_servers(
+        directory = Directory(Directory.LOCAL_SCRATCH, "/path").add_file_servers(
             FileServer("url", Operation.PUT)
         )
 
@@ -185,7 +185,6 @@ class TestSite:
             os_type=OS.LINUX,
             os_release="release",
             os_version="1.1.1",
-            glibc="123",
         )
 
     @pytest.mark.parametrize(
@@ -205,8 +204,8 @@ class TestSite:
 
     def test_add_valid_directory(self):
         site = Site("s")
-        site.add_directories(Directory(Directory.LOCALSCRATCH, "/path"))
-        site.add_directories(Directory(Directory.LOCALSTORAGE, "/path"))
+        site.add_directories(Directory(Directory.LOCAL_SCRATCH, "/path"))
+        site.add_directories(Directory(Directory.LOCAL_STORAGE, "/path"))
 
         assert len(site.directories) == 2
 
@@ -247,7 +246,7 @@ class TestSite:
 
     def test_chaining(self):
         site = Site("s")
-        a = site.add_directories(Directory(Directory.LOCALSCRATCH, "/path"))
+        a = site.add_directories(Directory(Directory.LOCAL_SCRATCH, "/path"))
         b = site.add_grids(
             Grid(
                 Grid.GT5,
@@ -266,10 +265,9 @@ class TestSite:
             os_type=OS.LINUX,
             os_release="release",
             os_version="1.2.3",
-            glibc="1",
         )
         site.add_directories(
-            Directory(Directory.LOCALSCRATCH, "/path").add_file_servers(
+            Directory(Directory.LOCAL_SCRATCH, "/path").add_file_servers(
                 FileServer("url", Operation.GET)
             )
         )
@@ -291,7 +289,6 @@ class TestSite:
             "os.type": "linux",
             "os.release": "release",
             "os.version": "1.2.3",
-            "glibc": "1",
             "directories": [
                 {
                     "type": "localScratch",
@@ -439,19 +436,19 @@ class TestSiteCatalog:
         sc = SiteCatalog().add_sites(
             Site("local", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
                 Directory(
-                    Directory.SHAREDSCRATCH, "/tmp/workflows/scratch"
+                    Directory.SHARED_SCRATCH, "/tmp/workflows/scratch"
                 ).add_file_servers(
                     FileServer("file:///tmp/workflows/scratch", Operation.ALL)
                 ),
                 Directory(
-                    Directory.LOCALSTORAGE, "/tmp/workflows/outputs"
+                    Directory.LOCAL_STORAGE, "/tmp/workflows/outputs"
                 ).add_file_servers(
                     FileServer("file:///tmp/workflows/outputs", Operation.ALL)
                 ),
             ),
             Site("condor_pool", arch=Arch.X86_64, os_type=OS.LINUX)
             .add_directories(
-                Directory(Directory.SHAREDSCRATCH, "/lustre").add_file_servers(
+                Directory(Directory.SHARED_SCRATCH, "/lustre").add_file_servers(
                     FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL)
                 )
             )
@@ -471,7 +468,7 @@ class TestSiteCatalog:
             )
             .add_env(JAVA_HOME="/usr/bin/java"),
             Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
-                Directory(Directory.SHAREDSCRATCH, "/data")
+                Directory(Directory.SHARED_SCRATCH, "/data")
                 .add_file_servers(
                     FileServer("scp://obelix.isi.edu/data", Operation.PUT)
                 )
@@ -509,12 +506,12 @@ class TestSiteCatalog:
             .add_sites(
                 Site("local", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
                     Directory(
-                        Directory.SHAREDSCRATCH, "/tmp/workflows/scratch"
+                        Directory.SHARED_SCRATCH, "/tmp/workflows/scratch"
                     ).add_file_servers(
                         FileServer("file:///tmp/workflows/scratch", Operation.ALL)
                     ),
                     Directory(
-                        Directory.LOCALSTORAGE, "/tmp/workflows/outputs"
+                        Directory.LOCAL_STORAGE, "/tmp/workflows/outputs"
                     ).add_file_servers(
                         FileServer("file:///tmp/workflows/outputs", Operation.ALL)
                     ),
@@ -523,7 +520,7 @@ class TestSiteCatalog:
             .add_sites(
                 Site("condor_pool", arch=Arch.X86_64, os_type=OS.LINUX)
                 .add_directories(
-                    Directory(Directory.SHAREDSCRATCH, "/lustre").add_file_servers(
+                    Directory(Directory.SHARED_SCRATCH, "/lustre").add_file_servers(
                         FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL)
                     )
                 )
@@ -545,7 +542,7 @@ class TestSiteCatalog:
                 Site(
                     "staging_site", arch=Arch.X86_64, os_type=OS.LINUX
                 ).add_directories(
-                    Directory(Directory.SHAREDSCRATCH, "/data").add_file_servers(
+                    Directory(Directory.SHARED_SCRATCH, "/data").add_file_servers(
                         FileServer("scp://obelix.isi.edu/data", Operation.PUT),
                         FileServer("http://obelix.isi.edu/data", Operation.GET),
                     )

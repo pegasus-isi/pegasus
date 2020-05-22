@@ -19,7 +19,6 @@ PACKAGES+=pyjwt
 PACKAGES+=sqlalchemy
 PACKAGES+=werkzeug
 PACKAGES+=attrs
-PACKAGES+=boto
 PACKAGES+=boto3
 PACKAGES+=botocore
 PACKAGES+=certifi
@@ -77,7 +76,6 @@ $(LIBDIR)/pyjwt: PyJWT-1.7.1.tar.gz
 $(LIBDIR)/sqlalchemy: SQLAlchemy-1.3.15.tar.gz
 $(LIBDIR)/werkzeug: Werkzeug-1.0.0.tar.gz
 $(LIBDIR)/attrs: attrs-19.3.0.tar.gz
-$(LIBDIR)/boto: boto-2.49.0.tar.gz
 $(LIBDIR)/boto3: boto3-1.12.37.tar.gz
 $(LIBDIR)/botocore: botocore-1.15.37.tar.gz
 $(LIBDIR)/certifi: certifi-2019.11.28.tar.gz

@@ -311,6 +311,7 @@ class TestProfileMixin:
                 ppn="ppn",
                 memory="2 GB",
                 diskspace="1 GB",
+                data_configuration="condorio"
             )
         ) == id(obj)
 
@@ -351,6 +352,7 @@ class TestProfileMixin:
                 "ppn": "ppn",
                 "memory": 2048,
                 "diskspace": 1024,
+                "data.configuration": "condorio"
             }
         }
 
