@@ -157,7 +157,8 @@ public class PegasusDBAdmin {
         // PM-1549 remap any output replica catalog properties to replica catalog properties
         // as command line options
         PegasusProperties props = PegasusProperties.nonSingletonInstance(propertiesFile);
-        arguments.append(remapOutputRCProperties(props));
+        arguments.append(
+                remapOutputRCProperties(props, ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX));
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
 
         return this.checkDatabase(DB_ADMIN_COMMANDS.create.name(), arguments.toString());
@@ -167,14 +168,17 @@ public class PegasusDBAdmin {
      * Calls out to the pegasus-db-admin tool to check for jdbrc compatibility.
      *
      * @param propertiesFile
+     * @param prefix the property prefix to remap to replica catalog props
      * @return
      */
-    public boolean checkJDBCRCForCompatibility(String propertiesFile) {
+    public boolean checkJDBCRCForCompatibility(String propertiesFile, String prefix) {
         StringBuilder arguments = new StringBuilder();
         // PM-1549 remap any output replica catalog properties to replica catalog properties
         // as command line options
         PegasusProperties props = PegasusProperties.nonSingletonInstance(propertiesFile);
-        arguments.append(remapOutputRCProperties(props));
+        if (prefix != null) {
+            arguments.append(remapOutputRCProperties(props, prefix));
+        }
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
         // debug turned on
         arguments.append(" --debug ");
@@ -245,15 +249,13 @@ public class PegasusDBAdmin {
      * creates an argument string where the remapped properties are passed on the command line
      *
      * @param props
+     * @param prefix the property prefix to remap to replica catalog props
      * @return
      */
-    protected String remapOutputRCProperties(PegasusProperties props) {
+    protected String remapOutputRCProperties(PegasusProperties props, String prefix) {
         StringBuilder arguments = new StringBuilder();
         // PM-1549 check if a separate output replica catalog is specified
-        Properties output =
-                props.remap(
-                        ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX,
-                        ReplicaCatalog.c_prefix);
+        Properties output = props.remap(prefix, ReplicaCatalog.c_prefix);
         if (!output.isEmpty()) {
             // we translate the properties to pegasus.catalog.replica prefix and add
             // them to the command line invocation before the conf properties

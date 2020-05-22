@@ -284,7 +284,8 @@ public class JDBCRC implements ReplicaCatalog {
             removePropertiesFile = true;
         }
         PegasusDBAdmin check = new PegasusDBAdmin(mLogger);
-        check.checkJDBCRCForCompatibility(propertiesFile);
+        check.checkJDBCRCForCompatibility(
+                propertiesFile, props.getProperty(ReplicaCatalog.PREFIX_KEY));
         if (removePropertiesFile && temp != null) {
             temp.delete();
         }

@@ -325,6 +325,10 @@ public class RCClient extends Toolkit {
                 }
                 properties.setProperty(property, value);
             }
+            // PM-1549 also set the prefix that to make sure pegasus-db-admin
+            // connects to right backend
+            properties.setProperty(
+                    ReplicaCatalog.c_prefix + "." + ReplicaCatalog.PREFIX_KEY, propertyPrefix);
         }
 
         PegasusBag bag = new PegasusBag();

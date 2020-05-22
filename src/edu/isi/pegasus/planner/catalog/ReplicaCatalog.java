@@ -68,6 +68,9 @@ public interface ReplicaCatalog extends Catalog {
     /** The name of the key that disables writing back to the backend on close. */
     public static final String READ_ONLY_KEY = "read.only";
 
+    /** The name of the key that indicates property prefixes for pegasus-db-admin to connect with */
+    public static final String PREFIX_KEY = "prefix";
+
     /**
      * Retrieves the entry for a given filename and resource handle from the replica catalog.
      *
