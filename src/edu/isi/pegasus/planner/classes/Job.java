@@ -403,6 +403,8 @@ public class Job extends Data implements GraphNodeContent {
         mNodeLabel = null;
         mGraphNode = null;
         mContainer = null;
+        // PM-1592 each job should have lang set
+        envVariables.construct("LANG", "en_US.UTF-8"); 
     }
 
     /**
