@@ -30,17 +30,10 @@ from six.moves.configparser import ConfigParser
 from six.moves.urllib.parse import urlsplit
 
 try:
-    import boto
-    import boto.exception
-    import boto.s3.connection
-    from boto.s3.bucket import Bucket
-    from boto.s3.key import Key
-
-    # boto3
     import boto3
     import botocore
 except ImportError as e:
-    sys.stderr.write("ERROR: Unable to load boto library: %s\n" % e)
+    sys.stderr.write("ERROR: Unable to load boto3 library: %s\n" % e)
     exit(1)
 
 # do not use http proxies for S3
@@ -49,19 +42,6 @@ if "http_proxy" in os.environ:
 
 # Don't let apple hijack our cacerts
 os.environ["OPENSSL_X509_TEA_DISABLE"] = "1"
-
-# The multipart upload feature we require was introduced in 2.2.2
-boto_version = tuple(int(x) for x in boto.__version__.split("."))
-if boto_version < (2, 2, 2):
-    sys.stderr.write("Requires boto 2.2.2 or later, not %s\n" % boto.__version__)
-    exit(1)
-
-# set boto config options
-try:
-    boto.config.add_section("Boto")
-except Exception:
-    pass
-boto.config.set("Boto", "http_socket_timeout", "60")
 
 COMMANDS = {
     "ls": "List the contents of a bucket",
@@ -118,29 +98,6 @@ DEFAULT_CONFIG = {
 
 DEBUG = False
 VERBOSE = False
-
-
-class WorkThread(threading.Thread):
-    def __init__(self, queue):
-        threading.Thread.__init__(self)
-        self.queue = queue
-        self.exception = None
-        self.daemon = True
-
-    def run(self):
-        try:
-            # Just keep grabbing work units and
-            # executing them until there are no
-            # more to process, then exit
-            while True:
-                fn = self.queue.get(False)
-                fn()
-        except Queue.Empty:
-            return
-        except Exception as e:
-            traceback.print_exc()
-            self.exception = e
-
 
 def debug(message):
     if DEBUG:
@@ -276,32 +233,6 @@ def parse_endpoint(uri):
     location = LOCATIONS.get(result.hostname, "")
 
     return kwargs, location
-
-
-def get_connection(config, uri):
-    if not config.has_section(uri.site):
-        raise Exception("Config file has no section for site '%s'" % uri.site)
-
-    if not config.has_section(uri.ident):
-        raise Exception("Config file has no section for identity '%s'" % uri.ident)
-
-    endpoint = config.get(uri.site, "endpoint")
-    kwargs, location = parse_endpoint(endpoint)
-
-    kwargs["aws_access_key_id"] = config.get(uri.ident, "access_key")
-    kwargs["aws_secret_access_key"] = config.get(uri.ident, "secret_key")
-    kwargs["calling_format"] = boto.s3.connection.OrdinaryCallingFormat()
-
-    # If the URI is s3s, then override the config
-    if uri.secure:
-        kwargs["validate_certs"] = True
-        kwargs["is_secure"] = True
-
-    conn = boto.s3.connection.S3Connection(**kwargs)
-    conn.location = location
-
-    return conn
-
 
 def get_s3_client(config, uri):
     if not config.has_section(uri.site):
