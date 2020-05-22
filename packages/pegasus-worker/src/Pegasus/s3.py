@@ -685,6 +685,8 @@ def mkdir(args):
 
 
 def rm(args):
+    raise NotImplementedError
+    '''
     parser = option_parser("rm URL...")
     parser.add_option(
         "-f",
@@ -826,111 +828,7 @@ def rm(args):
                 sys.exit(1)
             else:
                 raise e
-
-
-def rm_old(args):
-    parser = option_parser("rm URL...")
-    parser.add_option(
-        "-f",
-        "--force",
-        dest="force",
-        action="store_true",
-        default=False,
-        help="Ignore nonexistent keys",
-    )
-    parser.add_option(
-        "-F",
-        "--file",
-        dest="file",
-        action="store",
-        default=None,
-        help="File containing a list of URLs to delete",
-    )
-    options, args = parser.parse_args(args)
-
-    if len(args) == 0 and not options.file:
-        parser.error("Specify URL")
-
-    if options.file:
-        for rec in read_command_file(options.file):
-            if len(rec) != 1:
-                raise Exception("Invalid record: %s" % rec)
-            args.append(rec[0])
-
-    buckets = {}
-    for arg in args:
-        uri = parse_uri(arg)
-        if uri.bucket is None:
-            raise Exception("URL for rm must contain a bucket: %s" % arg)
-        if uri.key is None:
-            raise Exception("URL for rm must contain a key: %s" % arg)
-
-        bid = "%s/%s" % (uri.ident, uri.bucket)
-        buri = S3URI(uri.user, uri.site, uri.bucket, uri.secure)
-
-        if bid not in buckets:
-            buckets[bid] = (buri, [])
-        buckets[bid][1].append(uri)
-
-    config = get_config(options)
-
-    for bucket in buckets:
-
-        # Connect to the bucket
-        debug("Deleting keys from bucket %s" % bucket)
-        uri, keys = buckets[bucket]
-        conn = get_connection(config, uri)
-        b = Bucket(connection=conn, name=uri.bucket)
-
-        # Get a final list of all the keys, resolving wildcards as necessary
-        bucket_contents = None
-        keys_to_delete = set()
-        for key in keys:
-            key_name = key.key
-
-            if has_wildcards(key_name):
-
-                # If we haven't yet queried the bucket, then do so now
-                # so that we can match the wildcards
-                if bucket_contents is None:
-                    bucket_contents = b.list()
-
-                # Collect all the keys that match
-                for k in bucket_contents:
-                    if fnmatch.fnmatch(k.name, key_name):
-                        keys_to_delete.add(k.name)
-
-            else:
-                keys_to_delete.add(key_name)
-
-        info("Deleting %d keys" % len(keys_to_delete))
-
-        batch_delete = config.getboolean(uri.site, "batch_delete")
-
-        if batch_delete:
-            debug("Using batch deletes")
-
-            # Delete the keys in batches
-            batch_delete_size = config.getint(uri.site, "batch_delete_size")
-            debug("batch_delete_size: %d" % batch_delete_size)
-            batch = []
-            for k in keys_to_delete:
-                batch.append(k)
-                if len(batch) == batch_delete_size:
-                    info("Deleting batch of %d keys" % len(batch))
-                    b.delete_keys(batch, quiet=True)
-                    batch = []
-
-            # Delete the final batch
-            if len(batch) > 0:
-                info("Deleting batch of %d keys" % len(batch))
-                b.delete_keys(batch, quiet=True)
-
-        else:
-            for key_name in keys_to_delete:
-                debug("Deleting %s" % key_name)
-                b.delete_key(key_name)
-
+    '''
 
 def PartialUpload(up, part, parts, fname, offset, length):
     def upload():
