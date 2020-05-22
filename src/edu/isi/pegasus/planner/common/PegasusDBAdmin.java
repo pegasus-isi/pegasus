@@ -176,6 +176,8 @@ public class PegasusDBAdmin {
         PegasusProperties props = PegasusProperties.nonSingletonInstance(propertiesFile);
         arguments.append(remapOutputRCProperties(props));
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
+        // debug turned on
+        arguments.append(" --debug ");
         return this.checkDatabase(DB_ADMIN_COMMANDS.check.name(), arguments.toString());
     }
 
