@@ -117,6 +117,9 @@ public class Job extends Data implements GraphNodeContent {
     /** Denotes a chmod job that sets the xbit on the remote end. */
     public static final int DAG_JOB = 11;
 
+    /** Default encoding set to be used for properties * */
+    public static final String DEFAULT_ENV_LANG_VALUE = "en_US.UTF-8";
+
     /**
      * Generate a dagman compliant value. Currently dagman disallows . and + in the names
      *
@@ -404,7 +407,7 @@ public class Job extends Data implements GraphNodeContent {
         mGraphNode = null;
         mContainer = null;
         // PM-1592 each job should have lang set
-        envVariables.construct("LANG", "en_US.UTF-8"); 
+        envVariables.construct("LANG", DEFAULT_ENV_LANG_VALUE);
     }
 
     /**
