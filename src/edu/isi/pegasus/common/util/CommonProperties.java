@@ -13,12 +13,15 @@
  */
 package edu.isi.pegasus.common.util;
 
+import com.google.common.base.Charsets;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -70,6 +73,9 @@ public class CommonProperties implements Cloneable {
 
     /** Basename of the (new) file to read for user properties. */
     public static final String USER_PROPERTY_FILENAME = ".pegasusrc";
+
+    /** Default encoding set to be used for properties * */
+    public static final Charset DEFAULT_ENCODING_SET = Charsets.UTF_8;
 
     /**
      * Adds new properties to an existing set of properties while substituting variables. This
@@ -200,7 +206,8 @@ public class CommonProperties implements Cloneable {
             // if this file exists, read the properties (will throw IOException)
             Properties temp = new Properties();
             InputStream stream = new BufferedInputStream(new FileInputStream(props));
-            temp.load(stream);
+            // PM-1593 load everything in properties as UTF-8
+            temp.load(new InputStreamReader(stream, DEFAULT_ENCODING_SET));
             stream.close();
 
             this.m_props = addProperties(this.m_props, temp);

@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2374,7 +2375,10 @@ public class PegasusProperties implements Cloneable {
 
         // create an output stream to this file and write out the properties
         OutputStream os = new FileOutputStream(file);
-        properties.store(os, header.toString());
+        // PM-1593 write everything in properties as UTF-8
+        properties.store(
+                new OutputStreamWriter(os, CommonProperties.DEFAULT_ENCODING_SET),
+                header.toString());
         os.close();
 
         // also set it to the internal variable
