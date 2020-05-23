@@ -109,7 +109,8 @@ analyze = Transformation("analyze", namespace="pέgasuζ", version="4.0").add_si
     )
 )
 
-TransformationCatalog().add_transformations(preprocess, findrage, analyze).write()
+TransformationCatalog().add_transformations(preprocess, findrage, analyze)\
+        .write("करण-transformations.yml")
 
 # --- Workflow -----------------------------------------------------------------
 print("Generating workflow")
