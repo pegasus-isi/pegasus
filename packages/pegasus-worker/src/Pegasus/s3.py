@@ -15,17 +15,12 @@
 #
 
 import fnmatch
-import math
 import os
 import re
 import stat
 import sys
-import threading
-import time
-import traceback
 from optparse import OptionParser
 
-from six.moves import queue as Queue
 from six.moves.configparser import ConfigParser
 from six.moves.urllib.parse import urlsplit
 
@@ -58,6 +53,7 @@ MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
 
+
 def human_size(size):
     if size >= TB:
         return "{0:6.1f}TB".format(size / float(TB))
@@ -69,6 +65,7 @@ def human_size(size):
         return "{0:6.1f}KB".format(size / float(KB))
     else:
         return "{0:6.0f}B".format(size)
+
 
 # see https://docs.aws.amazon.com/general/latest/gr/s3.html
 LOCATIONS = {
@@ -98,6 +95,7 @@ DEFAULT_CONFIG = {
 
 DEBUG = False
 VERBOSE = False
+
 
 def debug(message):
     if DEBUG:
@@ -186,6 +184,7 @@ def option_parser(usage):
 
     return parser
 
+
 def get_path_for_key(bucket, searchkey, key, output):
     # We have to strip any trailing / off the keys so that they can match
     # Also, if a key is None, then convert it to an empty string
@@ -253,6 +252,7 @@ def parse_endpoint(uri):
 
     return kwargs, location
 
+
 def get_s3_client(config, uri):
     if not config.has_section(uri.site):
         raise Exception("Config file has no section for site '%s'" % uri.site)
@@ -273,6 +273,7 @@ def get_s3_client(config, uri):
         aws_secret_access_key=aws_secret_access_key,
     )
 
+
 def is_bucket_available(s3_client, bucket):
     is_available = False
     try:
@@ -290,6 +291,7 @@ def is_bucket_available(s3_client, bucket):
             raise e
 
     return is_available
+
 
 def read_command_file(path):
     tokenizer = re.compile(r"\s+")
@@ -386,6 +388,7 @@ def parse_uri(uri):
 
     return S3URI(user, site, bucket, key, secure)
 
+
 def ls(args):
     parser = option_parser("ls URL...")
 
@@ -413,17 +416,15 @@ def ls(args):
 
     config = get_config(options)
     uri = parse_uri(args.pop())
-    
+
     s3 = get_s3_client(config, uri)
-    
+
     if uri.bucket:
         # list keys in bucket
         try:
             keys = s3.list_objects_v2(
-                        Bucket=uri.bucket,
-                        Prefix=uri.key if uri.key else "",
-                        FetchOwner=True
-                    )
+                Bucket=uri.bucket, Prefix=uri.key if uri.key else "", FetchOwner=True
+            )
         except s3.exceptions.NoSuchBucket:
             print("Invalid bucket: {}".format(uri.bucket))
             sys.exit(1)
@@ -440,17 +441,23 @@ def ls(args):
                 key = content["Key"]
 
                 if options.long_format:
-                    size = human_size(content["Size"]) if options.human_sized else "{0:13d}".format(content["Size"])
+                    size = (
+                        human_size(content["Size"])
+                        if options.human_sized
+                        else "{0:13d}".format(content["Size"])
+                    )
                     last_modified = content["LastModified"]
                     owner = content["Owner"]["DisplayName"]
                     storage_class = content["StorageClass"]
-                    print("\t{owner:15s} {size} {modified} {storage_class:24s} {name}".format(
+                    print(
+                        "\t{owner:15s} {size} {modified} {storage_class:24s} {name}".format(
                             owner=owner,
                             size=size,
                             modified=last_modified,
                             storage_class=storage_class,
-                            name=key
-                        ))
+                            name=key,
+                        )
+                    )
                 else:
                     print("\t{}".format(key))
     else:
@@ -458,6 +465,7 @@ def ls(args):
         buckets = s3.list_buckets()
         for b in buckets["Buckets"]:
             print("\t{}".format(b["Name"]))
+
 
 def cp(args):
     parser = option_parser("cp SRC[...] DEST")
@@ -522,16 +530,20 @@ def cp(args):
         can_create = True
         try:
             s3.head_bucket(Bucket=dest.bucket)
-            
+
             # no exception, we already own this bucket
-            can_create = False 
+            can_create = False
         except botocore.exceptions.ClientError as e:
             code = e.response["Error"]["Code"]
 
             # 403 forbidden means bucket already taken
             if code == "403":
-                print("Bucket: {} is already taken. Unable to create bucket.".format(dest.bucket))
-                sys.exit(1) 
+                print(
+                    "Bucket: {} is already taken. Unable to create bucket.".format(
+                        dest.bucket
+                    )
+                )
+                sys.exit(1)
 
             # 404 not found means bucket can be created
             elif code != "404":
@@ -539,16 +551,15 @@ def cp(args):
 
         if can_create:
             s3.create_bucket(Bucket=dest.bucket)
-           
 
-    '''
+    """
     s3 = boto3.client('s3')
     try:
         s3.head_object(Bucket='bucket_name', Key='file_path')
     except ClientError:
         # Not found
         pass
-    '''
+    """
 
     # ensure that none of the keys in srcs exist in dest
     if not options.force:
@@ -556,16 +567,24 @@ def cp(args):
             for src in srcs:
                 try:
                     s3.head_object(Bucket=dest.bucket, Key=src.key)
-                    print("Key: {key} already exists in destination bucket: {bucket}, (see --force)".format(key=src.key, bucket=dest.bucket))
+                    print(
+                        "Key: {key} already exists in destination bucket: {bucket}, (see --force)".format(
+                            key=src.key, bucket=dest.bucket
+                        )
+                    )
                     sys.exit(1)
                 except s3.exceptions.ClientError as e:
                     error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
                     if error_code == 403:
-                        print("Access to bucket: {bucket} forbidden".format(bucket=dest.bucket))
+                        print(
+                            "Access to bucket: {bucket} forbidden".format(
+                                bucket=dest.bucket
+                            )
+                        )
                         sys.exit(1)
                     elif error_code == 404:
-                        # 
+                        #
                         pass
                     else:
                         print("Unknown client error")
@@ -575,22 +594,28 @@ def cp(args):
             src = srcs[0]
             try:
                 s3.head_object(Bucket=dest.bucket, Key=dest.key)
-                print("Key: {key} already exists in destination bucket: {bucket}, (see --force)".format(key=dest.key, bucket=dest.bucket))
+                print(
+                    "Key: {key} already exists in destination bucket: {bucket}, (see --force)".format(
+                        key=dest.key, bucket=dest.bucket
+                    )
+                )
                 sys.exit(1)
             except s3.exceptions.ClientError as e:
                 error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
                 if error_code == 403:
-                    print("Access to bucket: {bucket}, key: {key} forbidden".format(bucket=dest.bucket, key=dest.key))
+                    print(
+                        "Access to bucket: {bucket}, key: {key} forbidden".format(
+                            bucket=dest.bucket, key=dest.key
+                        )
+                    )
                     sys.exit(1)
                 elif error_code == 404:
-                    # 
+                    #
                     pass
                 else:
                     print("Unknown client error")
                     sys.exit(1)
-
-
 
     # TODO: catch possible botocore.exceptions.ClientError and exit
     if dest.key == None:
@@ -598,7 +623,7 @@ def cp(args):
             s3.copy(
                 CopySource={"Bucket": src.bucket, "Key": src.key},
                 Bucket=dest.bucket,
-                Key=src.key
+                Key=src.key,
             )
     else:
         assert len(srcs) == 1
@@ -606,13 +631,13 @@ def cp(args):
         s3.copy(
             CopySource={"Bucket": src.bucket, "Key": src.key},
             Bucket=dest.bucket,
-            Key=dest.key
+            Key=dest.key,
         )
 
 
 def mkdir(args):
     parser = option_parser("mkdir URL...")
-    '''
+    """
     parser.add_option(
         "-r",
         "--region",
@@ -621,7 +646,7 @@ def mkdir(args):
         default=None,
         help="Create the destination bucket if it does not already exist",
     )
-    '''
+    """
 
     options, args = parser.parse_args(args)
 
@@ -640,20 +665,24 @@ def mkdir(args):
 
     config = get_config(options)
     s3 = get_s3_client(config, uri)
-    
+
     can_create = True
     try:
         s3.head_bucket(Bucket=uri.bucket)
-        
+
         # no exception, we already own this bucket
-        can_create = False 
+        can_create = False
     except botocore.exceptions.ClientError as e:
         code = e.response["Error"]["Code"]
 
         # 403 forbidden means bucket already taken
         if code == "403":
-            print("Bucket: {} is already taken. Unable to create bucket.".format(uri.bucket))
-            sys.exit(1) 
+            print(
+                "Bucket: {} is already taken. Unable to create bucket.".format(
+                    uri.bucket
+                )
+            )
+            sys.exit(1)
 
         # 404 not found means bucket can be created
         elif code != "404":
@@ -717,7 +746,7 @@ def rm(args):
         debug("Deleting keys from bucket %s" % bucket)
         uri, keys = buckets[bucket]
         try:
-            s3 = get_s3_client(config, uri) 
+            s3 = get_s3_client(config, uri)
 
             # Get a final list of all the keys, resolving wildcards as necessary
             bucket_contents = None
@@ -730,12 +759,16 @@ def rm(args):
                     # If we haven't yet queried the bucket, then do so now
                     # so that we can match the wildcards
                     if bucket_contents is None:
-                        #bucket_contents = b.list()
+                        # bucket_contents = b.list()
                         keys = s3.list_objects_v2(Bucket=uri.bucket)
                         try:
                             bucket_contents = [obj["Key"] for obj in keys["Contents"]]
                         except KeyError:
-                            print("Unable to fetch objects list from bucket: {}".format(uri.bucket))
+                            print(
+                                "Unable to fetch objects list from bucket: {}".format(
+                                    uri.bucket
+                                )
+                            )
                             sys.exit(1)
 
                     # Collect all the keys that match
@@ -762,17 +795,17 @@ def rm(args):
                     batch.append(k)
                     if len(batch) == batch_delete_size:
                         info("Deleting batch of %d keys" % len(batch))
-                        #b.delete_keys(batch, quiet=True)
+                        # b.delete_keys(batch, quiet=True)
 
                         resp = s3.delete_objects(
-                                    Bucket=uri.bucket,
-                                    Delete={
-                                        "Objects": [{"Key": item} for item in batch]
-                                    }
-                                )
+                            Bucket=uri.bucket,
+                            Delete={"Objects": [{"Key": item} for item in batch]},
+                        )
 
                         if not len(resp["Deleted"]) == len(batch):
-                            print("Incomplete batch delete, some keys were not successfully deleted.")
+                            print(
+                                "Incomplete batch delete, some keys were not successfully deleted."
+                            )
                             sys.exit(1)
 
                         batch = []
@@ -781,21 +814,20 @@ def rm(args):
                 if len(batch) > 0:
                     info("Deleting batch of %d keys" % len(batch))
                     resp = s3.delete_objects(
-                                Bucket=uri.bucket,
-                                Delete={
-                                    "Objects": [{"Key": item} for item in batch]
-                                }
-                            )
+                        Bucket=uri.bucket,
+                        Delete={"Objects": [{"Key": item} for item in batch]},
+                    )
 
                     if not len(resp["Deleted"]) == len(batch):
-                        print("Incomplete batch delete, some keys were not successfully deleted.")
+                        print(
+                            "Incomplete batch delete, some keys were not successfully deleted."
+                        )
                         sys.exit(1)
 
             else:
                 for key_name in keys_to_delete:
                     debug("Deleting %s" % key_name)
                     s3.delete_object(Bucket=uri.bucket, Key=key_name)
-
 
         except s3.exceptions.NoSuchBucket:
             print("Invalid bucket: {}".format(uri.bucket))
@@ -807,6 +839,7 @@ def rm(args):
                 sys.exit(1)
             else:
                 raise e
+
 
 def get_key_for_path(path, infile, outkey):
     if outkey is None or outkey == "":
@@ -831,6 +864,7 @@ def get_key_for_path(path, infile, outkey):
     else:
         return outkey
 
+
 def put(args):
     # TODO: ensure args list well formed
     parser = option_parser("put FILE URL")
@@ -851,7 +885,7 @@ def put(args):
         default=False,
         help="Overwrite key if it already exists",
     )
-    '''
+    """
     parser.add_option(
         "-r",
         "--recursive",
@@ -860,7 +894,7 @@ def put(args):
         default=False,
         help="Treat FILE as a directory",
     )
-    '''
+    """
 
     options, args = parser.parse_args(args)
 
@@ -871,7 +905,7 @@ def put(args):
         print("No such file or directory: {}".format(path))
         sys.exit(1)
 
-    '''
+    """
     # Get a list of all the files to transfer
     if options.recursive:
         if os.path.isfile(path):
@@ -895,7 +929,7 @@ def put(args):
         if os.path.isdir(path):
             raise Exception("%s is a directory. Try --recursive." % path)
         infiles = [path]
-    '''
+    """
 
     if os.path.isdir(path):
         raise Exception("%s is a directory. Try --recursive." % path)
@@ -915,7 +949,7 @@ def put(args):
         uri.key = os.path.basename(path)
 
     config = get_config(options)
-    max_object_size = config.getint(uri.site, "max_object_size")
+    config.getint(uri.site, "max_object_size")
 
     # get s3 client with associated endpoint
     s3 = get_s3_client(config, uri)
@@ -925,16 +959,20 @@ def put(args):
         can_create = True
         try:
             s3.head_bucket(Bucket=uri.bucket)
-            
+
             # no exception, we already own this bucket
-            can_create = False 
+            can_create = False
         except botocore.exceptions.ClientError as e:
             code = e.response["Error"]["Code"]
 
             # 403 forbidden means bucket already taken
             if code == "403":
-                print("Bucket: {} is already taken. Unable to create bucket.".format(uri.bucket))
-                sys.exit(1) 
+                print(
+                    "Bucket: {} is already taken. Unable to create bucket.".format(
+                        uri.bucket
+                    )
+                )
+                sys.exit(1)
 
             # 404 not found means bucket can be created
             elif code != "404":
@@ -942,16 +980,16 @@ def put(args):
 
         if can_create:
             s3.create_bucket(Bucket=uri.bucket)
- 
+
     if not options.force:
         # check if all keys do not yet exist
-        # accepted method of checking for existence of a key 
+        # accepted method of checking for existence of a key
         key_already_exists = False
         pre_existing_key = ""
         for f in infiles:
             try:
                 s3.head_object(Bucket=uri.bucket, Key=uri.key)
-                
+
                 key_already_exists = True
                 pre_existing_key = f
                 break
@@ -959,38 +997,47 @@ def put(args):
                 error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
                 if error_code == 403:
-                    print("Access to bucket: {bucket}, key: {key} forbidden".format(bucket=uri.bucket, key=f))
+                    print(
+                        "Access to bucket: {bucket}, key: {key} forbidden".format(
+                            bucket=uri.bucket, key=f
+                        )
+                    )
                     sys.exit(1)
                 elif error_code == 404:
-                    # 
+                    #
                     pass
                 else:
                     print("Unknown client error")
                     sys.exit(1)
 
         if key_already_exists:
-            print("Key: {} already exists. Trye --force to overwrite".format(pre_existing_key))
+            print(
+                "Key: {} already exists. Trye --force to overwrite".format(
+                    pre_existing_key
+                )
+            )
             sys.exit(1)
 
     for f in infiles:
         try:
             key = f if uri.key is None else uri.key
             s3.upload_file(f, uri.bucket, key)
-            print("Uploaded file: {file} to bucket: {bucket} as key: {key}".format(
-                file=f,
-                bucket=uri.bucket,
-                key=key
-            ))
+            print(
+                "Uploaded file: {file} to bucket: {bucket} as key: {key}".format(
+                    file=f, bucket=uri.bucket, key=key
+                )
+            )
         except boto3.exceptions.S3UploadFailedError:
             # TODO: specify if bucket doesn't exist so --create-bucket flag can be used
-            print("Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
-                file=f,
-                bucket=uri.bucket,
-                key=key
-            ))
-            sys.exit(1) 
-    
+            print(
+                "Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
+                    file=f, bucket=uri.bucket, key=key
+                )
+            )
+            sys.exit(1)
+
     print("Successfully uploaded {} files".format(len(infiles)))
+
 
 def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
     def download():
@@ -1020,6 +1067,7 @@ def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
 
     return download
 
+
 def get(args):
     parser = option_parser("get URL [FILE]")
     options, args = parser.parse_args(args)
@@ -1031,7 +1079,7 @@ def get(args):
 
     if uri.bucket is None:
         raise Exception("URL must contain a bucket: %s" % args[0])
-    if uri.key is None :
+    if uri.key is None:
         raise Exception("URL must contain a key")
 
     if len(args) > 1:
@@ -1044,12 +1092,8 @@ def get(args):
     config = get_config(options)
     s3 = get_s3_client(config, uri)
 
-    try:            
-        s3.download_file(
-            Bucket=uri.bucket,
-            Key=uri.key,
-            Filename=output
-        )
+    try:
+        s3.download_file(Bucket=uri.bucket, Key=uri.key, Filename=output)
     except s3.exceptions.NoSuchBucket:
         print("Invalid bucket: {}".format(uri.bucket))
         sys.exit(1)
@@ -1060,8 +1104,9 @@ def get(args):
             sys.exit(1)
         else:
             raise e
-    
+
     info("Download: {} complete".format(uri))
+
 
 def main():
     if len(sys.argv) < 2:
