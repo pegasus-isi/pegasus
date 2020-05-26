@@ -121,7 +121,7 @@ fc1 = File("f.Ҫ1")
 fc2 = File("f.Ͻ2")
 fd = File("f.Ɗ")
 
-Workflow("blÅckƊiamond㒀㑖", infer_dependencies=True).add_jobs(
+Workflow("blÅckƊiamond㒀㑖").add_jobs(
     Job(preprocess)
     .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
     .add_inputs(fa)

@@ -20,7 +20,7 @@ tc = TransformationCatalog()\
 
 # --- Workflow -----------------------------------------------------------------
 try:
-    Workflow("hello-world", infer_dependencies=True)\
+    Workflow("hello-world")\
         .add_jobs(
             Job(echo)
                 .add_args("Hello World")

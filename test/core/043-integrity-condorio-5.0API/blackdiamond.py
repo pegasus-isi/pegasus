@@ -124,7 +124,7 @@ fc2 = File("f.c2")
 fd = File("f.d")
 
 try:
-    Workflow("blackdiamond", infer_dependencies=True).add_jobs(
+    Workflow("blackdiamond").add_jobs(
         Job(preprocess)
         .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
         .add_inputs(fa)

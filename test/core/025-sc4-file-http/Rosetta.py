@@ -131,7 +131,7 @@ f2 = File("repack.resfile")
 inputs.append(f2)
 rc.add_replica(LOCAL, f2, str(Path("repack.resfile").resolve()))
 
-wf = Workflow("rosetta", infer_dependencies=True)
+wf = Workflow("rosetta")
 
 pdb_files = list(Path("pdbs").iterdir())
 for i in range(10):

@@ -198,7 +198,7 @@ fc1 = File("f.c1")
 fc2 = File("f.c2")
 fd = File("f.d")
 
-wf = Workflow("blackdiamond", infer_dependencies=True)\
+wf = Workflow("blackdiamond")\
     .add_jobs(
         Job("preprocess", namespace="diamond", version="4.0")
         .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
