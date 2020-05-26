@@ -273,6 +273,23 @@ def get_s3_client(config, uri):
         aws_secret_access_key=aws_secret_access_key,
     )
 
+def is_bucket_available(s3_client, bucket):
+    is_available = False
+    try:
+        s3_client.head_bucket(Bucket=bucket)
+        is_available = True
+    except botocore.exceptions.ClientError as e:
+        code = e.response["Error"]["Code"]
+
+        # Not Found
+        if code == "404":
+            is_available = True
+
+        # Anything other than 403 Forbidden, won't handle
+        elif code != "403":
+            raise e
+
+    return is_available
 
 def read_command_file(path):
     tokenizer = re.compile(r"\s+")
@@ -500,16 +517,29 @@ def cp(args):
     # identities all match)
     s3 = get_s3_client(config, srcs[0])
 
-      # Create the bucket if the user requested it and it does not exist
+    # Create the bucket if the user requested it and it does not exist
     if options.create:
+        can_create = True
         try:
-            resp = s3.create_bucket(Bucket=dest.bucket)
-        except s3.exceptions.BucketAlreadyExists:
-            print("Destination bucket: {} already taken".format(dest.bucket))
-            sys.exit(1)
-        except s3.exceptions.BucketAlreadyOwnedByYou:
-            # AWS S3 endpoint will throw this, but other endpoints may not
-            pass
+            s3.head_bucket(Bucket=dest.bucket)
+            
+            # no exception, we already own this bucket
+            can_create = False 
+        except botocore.exceptions.ClientError as e:
+            code = e.response["Error"]["Code"]
+
+            # 403 forbidden means bucket already taken
+            if code == "403":
+                print("Bucket: {} is already taken. Unable to create bucket.".format(dest.bucket))
+                sys.exit(1) 
+
+            # 404 not found means bucket can be created
+            elif code != "404":
+                raise e
+
+        if can_create:
+            s3.create_bucket(Bucket=dest.bucket)
+           
 
     '''
     s3 = boto3.client('s3')
@@ -610,33 +640,32 @@ def mkdir(args):
 
     config = get_config(options)
     s3 = get_s3_client(config, uri)
-
-    is_duplicate_bucket = False
-    try:
-        '''
-        if options.region:
-            s3.create_bucket(Bucket=uri.bucket, CreateBucketConfiguration={"LocationConstraint": options.region})
-        else:
-            s3.create_bucket(Bucket=uri.bucket)
-        '''
-        s3.create_bucket(Bucket=uri.bucket)
-
-    except s3.exceptions.BucketAlreadyExists:
-        print("Bucket: {} already taken".format(uri.bucket))
-        sys.exit(1)
-    except s3.exceptions.BucketAlreadyOwnedByYou:
-        is_duplicate_bucket = True
     
-    if is_duplicate_bucket:
-        print("Bucket: {} is already owned by you".format(uri.bucket))
-    else:
-        print("Bucket: {} has been created".format(uri.bucket))
+    can_create = True
+    try:
+        s3.head_bucket(Bucket=uri.bucket)
+        
+        # no exception, we already own this bucket
+        can_create = False 
+    except botocore.exceptions.ClientError as e:
+        code = e.response["Error"]["Code"]
 
+        # 403 forbidden means bucket already taken
+        if code == "403":
+            print("Bucket: {} is already taken. Unable to create bucket.".format(uri.bucket))
+            sys.exit(1) 
+
+        # 404 not found means bucket can be created
+        elif code != "404":
+            raise e
+
+    if can_create:
+        s3.create_bucket(Bucket=dest.bucket)
+    else:
+        print("Bucket: {} is already owned by user: {}".format(uri.bucket, uri.ident))
 
 
 def rm(args):
-    raise NotImplementedError
-    '''
     parser = option_parser("rm URL...")
     parser.add_option(
         "-f",
@@ -778,7 +807,6 @@ def rm(args):
                 sys.exit(1)
             else:
                 raise e
-    '''
 
 def get_key_for_path(path, infile, outkey):
     if outkey is None or outkey == "":
@@ -894,15 +922,27 @@ def put(args):
 
     # Create the bucket if the user requested it and it does not exist
     if options.create_bucket:
+        can_create = True
         try:
-            resp = s3.create_bucket(Bucket=uri.bucket)
-        except s3.exceptions.BucketAlreadyExists:
-            print("Bucket: {} already taken".format(uri.bucket))
-            sys.exit(1)
-        except s3.exceptions.BucketAlreadyOwnedByYou:
-            # AWS S3 endpoint will throw this, but other endpoints may not
-            pass
-    
+            s3.head_bucket(Bucket=uri.bucket)
+            
+            # no exception, we already own this bucket
+            can_create = False 
+        except botocore.exceptions.ClientError as e:
+            code = e.response["Error"]["Code"]
+
+            # 403 forbidden means bucket already taken
+            if code == "403":
+                print("Bucket: {} is already taken. Unable to create bucket.".format(uri.bucket))
+                sys.exit(1) 
+
+            # 404 not found means bucket can be created
+            elif code != "404":
+                raise e
+
+        if can_create:
+            s3.create_bucket(Bucket=uri.bucket)
+ 
     if not options.force:
         # check if all keys do not yet exist
         # accepted method of checking for existence of a key 
