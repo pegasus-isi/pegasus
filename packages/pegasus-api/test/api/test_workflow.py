@@ -647,7 +647,7 @@ def expected_json():
 
 @pytest.fixture(scope="function")
 def wf():
-    wf = Workflow("wf", infer_dependencies=True)
+    wf = Workflow("wf")
 
     j1 = (
         Job("t1", _id="a")
@@ -917,7 +917,7 @@ class TestWorkflow:
         assert "One of the given children does not have an id" in str(e)
 
     def test_infer_dependencies_fork_join_wf(self):
-        wf = Workflow("wf", infer_dependencies=True)
+        wf = Workflow("wf")
 
         f1 = File("f1")
         f2 = File("f2")
@@ -939,7 +939,7 @@ class TestWorkflow:
         assert wf.dependencies["work2"] == _JobDependency("work2", {"join"})
 
     def test_infer_dependencies_when_job_uses_stdin_stdout_and_stderr(self):
-        wf = Workflow("wf", infer_dependencies=True)
+        wf = Workflow("wf")
         j1 = Job("t1", _id="j1").add_outputs(File("f1"))
         j2 = Job("t1", _id="j2").set_stdin(*j1.get_outputs()).set_stdout(File("f2"))
         j3 = Job("t1", _id="j3").add_inputs(*j2.get_outputs())
@@ -1126,7 +1126,7 @@ class TestWorkflow:
         rc = ReplicaCatalog()
         sc = SiteCatalog()
 
-        wf = Workflow("wf", infer_dependencies=True)
+        wf = Workflow("wf")
         wf.add_transformation_catalog(tc)
         wf.add_replica_catalog(rc)
         wf.add_site_catalog(sc)

@@ -600,7 +600,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         fc2 = File("f.c2")
         fd = File("f.d")
 
-        (Workflow("blackdiamond", infer_dependencies=True)
+        (Workflow("blackdiamond")
             .add_jobs(
                 Job(preprocess)
                     .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
@@ -630,11 +630,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
     _DEFAULT_FILENAME = "workflow.yml"
 
-    def __init__(self, name, infer_dependencies=False):
+    def __init__(self, name, infer_dependencies=True):
         """
         :param name: name of the :py:class:`~Pegasus.api.workflow.Workflow`
         :type name: str
-        :param infer_dependencies: whether or not to automatically compute job dependencies based on input and output files used by each job, defaults to False
+        :param infer_dependencies: whether or not to automatically compute job dependencies based on input and output files used by each job, defaults to True
         :type infer_dependencies: bool, optional
         """
         self.name = name
