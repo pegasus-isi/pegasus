@@ -405,7 +405,7 @@ class ProfileMixin:
         ppn="ppn",
         memory=("memory", to_mb),
         diskspace=("diskspace", to_mb),
-        data_configuration="data.configuration"
+        data_configuration="data.configuration",
     )
     def add_pegasus_profile(
         self,

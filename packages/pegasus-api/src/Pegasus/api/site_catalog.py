@@ -367,12 +367,7 @@ class Site(ProfileMixin):
     """
 
     def __init__(
-        self,
-        name,
-        arch=None,
-        os_type=None,
-        os_release=None,
-        os_version=None,
+        self, name, arch=None, os_type=None, os_release=None, os_version=None,
     ):
         """
         :param name: name of the site
