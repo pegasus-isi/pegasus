@@ -237,6 +237,8 @@ class Properties:
 
     def __init__(self):
         self._conf = ConfigParser()
+        # preserve case for keys
+        self._conf.optionxform = str
         self._conf[DEFAULTSECT] = {}
 
     def __setitem__(self, k, v):

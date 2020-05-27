@@ -48,6 +48,17 @@ class TestProperties:
             assert f.read() == "a = b\nc = d\n\n"
 
         os.remove(filename)
+    
+    def test_write_str_filename_ensure_key_case_preserved(self, props):
+        filename = "props"
+        props["a"] = "b"
+        props["C"] = "d"
+        props.write(filename)
+
+        with open(filename) as f:
+            assert f.read() == "a = b\nC = d\n\n"
+
+        os.remove(filename)
 
     def test_write_file(self, props):
         with TemporaryFile(mode="w+") as f:
