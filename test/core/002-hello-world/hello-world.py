@@ -12,7 +12,6 @@ echo = Transformation(
         "echo", 
         pfn="/bin/echo",
         site="condorpool",
-        is_stageable=False
     )
   
 tc = TransformationCatalog()\
