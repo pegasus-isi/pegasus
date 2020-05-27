@@ -3928,6 +3928,7 @@ class SimilarWorkSet:
     _primary_handler = None
     _secondary_handler = None
     _tmp_file = None
+    _excessive_failures = False
 
     def __init__(self, transfers_l, completed_q, failed_q):
 
@@ -4176,6 +4177,21 @@ class SimilarWorkSet:
             self._completed_q.put(t)
         for t in failed_list: 
             self._failed_q.put(t)
+        count_success = self._completed_q.qsize()
+        count_failed = self._failed_q.qsize()
+        count_total = count_success + count_failed
+
+        # determine if we saw excessive failures
+        if count_total > 10 and \
+           (count_failed / float(count_total)) > .8:
+            self._excessive_failures = True
+
+
+    def excessive_failures(self):
+        """
+        Did the last transfer set see excessive failures?
+        """
+        return self._excessive_failures
 
 
     def has_gridftp_transfers(self):
@@ -4282,6 +4298,10 @@ class WorkThread(threading.Thread):
                 logger.debug("Thread " + str(self.thread_id) +
                              " is executing transfer " + str(ts))
                 ts.do_transfers()
+                # if we see excessive failures, stop the thread early
+                if ts.excessive_failures():
+                    break
+
         except Queue.Empty:
             return
         except Exception as e:
@@ -4814,8 +4834,14 @@ def main():
     # After failures, transfers might be regrouped, and then handed of to the
     # thread pool again.
     done = False
+    too_many_failures = False
     attempt_current = 0
     approx_transfer_per_thread = total_transfers / (float)(options.threads)
+
+    # also cap the approx_transfer_per_thread so that we can fail early
+    # if we have to
+    approx_transfer_per_thread = min(approx_transfer_per_thread, 100)
+
     while not done:
     
         tset_q = Queue.Queue()
@@ -4887,13 +4913,21 @@ def main():
                 else:
                     failed_q_updated.put(t)
             failed_q = failed_q_updated
+
+            # if we get here and the transfer sets queue (tset_q) is not
+            # empty, that means the work threads saw too many failures
+            # and short-circuited the rest of the transfers
+            if not tset_q.empty() and not failed_q.empty():
+                logger.error("Too many failures to continue trying - exiting early")
+                too_many_failures = True
+                break
     
         # when we get here, all the tries for one round has been attempted
     
         logger.debug("%d items in failed_q" %(failed_q.qsize()))
         
         # are we done?
-        if attempt_current == attempts_max or failed_q.empty():
+        if attempt_current == attempts_max or failed_q.empty() or too_many_failures:
             done = True
             break
         
