@@ -4518,10 +4518,8 @@ class SimilarWorkSet:
         count_total = count_success + count_failed
 
         # determine if we saw excessive failures
-        if count_total > 10 and \
-           (count_failed / float(count_total)) > .8:
+        if count_total > 10 and (count_failed / float(count_total)) > 0.8:
             self._excessive_failures = True
-
 
     def excessive_failures(self):
         """
@@ -5332,7 +5330,7 @@ def main():
                 logger.error("Too many failures to continue trying - exiting early")
                 too_many_failures = True
                 break
-    
+
         # when we get here, all the tries for one round has been attempted
 
         logger.debug("%d items in failed_q" % (failed_q.qsize()))
