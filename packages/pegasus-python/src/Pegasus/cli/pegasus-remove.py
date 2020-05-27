@@ -44,7 +44,7 @@ def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
 
         config = slurp_braindb(submit_dir)
         dag_log_file = config["dag"] + ".dagman.out"
-        pattern = re.compile("\.([0-9\.]+) \(CONDOR_DAGMAN\) STARTING UP")
+        pattern = re.compile(r"\.([0-9\.]+) \(CONDOR_DAGMAN\) STARTING UP")
 
         with open(dag_log_file) as fp:
             for line in fp.readlines():
