@@ -37,6 +37,7 @@ for TOOL in \
     pegasus-metadata \
     pegasus-monitord \
     pegasus-preflight-check \
+    pegasus-remove \
     pegasus-s3 \
     pegasus-service \
     pegasus-statistics \
