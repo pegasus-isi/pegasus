@@ -94,7 +94,7 @@ class TestTransformationSite:
     def test_valid_transformation_site(
         self, name: str, pfn: str, transformation_type: bool, kwargs: dict
     ):
-        assert TransformationSite(name, pfn, transformation_type, **kwargs)
+        assert TransformationSite(name, pfn, **kwargs)
 
     @pytest.mark.parametrize(
         "name, pfn, transformation_type, kwargs",
@@ -265,17 +265,19 @@ class TestTransformation:
         t1 = Transformation("t1")
         assert len(t1.sites) == 0
 
-        # pfn, and is_stageable is not provided, TransformationSite should not be added
+        # pfn is not provided, TransformationSite should not be added
         t2 = Transformation("t2", site="local")
         assert len(t2.sites) == 0
 
-        # is_stageable is not provided, TransformationSite should not be added
+        # site and pfn provided, TransformationSite should be added
         t3 = Transformation("t3", site="local", pfn="/t3")
-        assert len(t3.sites) == 0
+        assert len(t3.sites) == 1
+        assert t3.sites["local"].transformation_type == "installed"
 
-        # site, pfn, is_stageable provided, TransformationSite should be added
-        t4 = Transformation("t4", site="local", pfn="/t4", is_stageable=False)
+        # site and pfn provided, TransformationSite should be added
+        t4 = Transformation("t4", site="local", pfn="/t4", is_stageable=True)
         assert len(t4.sites) == 1
+        assert t4.sites["local"].transformation_type == "stageable"
 
     @pytest.mark.parametrize(
         "transformation",

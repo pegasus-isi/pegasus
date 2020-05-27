@@ -27,7 +27,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         self,
         name,
         pfn,
-        is_stageable,
+        is_stageable=False,
         arch=None,
         os_type=None,
         os_release=None,
@@ -39,8 +39,8 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :type name: str
         :param pfn: physical file name
         :type pfn: str
-        :param is_stageable: whether or not this transformation is stageable or installed
-        :type type: bool
+        :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
+        :type type: bool, optional
         :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
         :type arch: Arch, optional
         :param os_type: name of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS`), defaults to None
@@ -199,7 +199,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         version=None,
         site=None,
         pfn=None,
-        is_stageable=None,
+        is_stageable=False,
         arch=None,
         os_type=None,
         os_release=None,
@@ -208,9 +208,9 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     ):
         """
         When a transformation resides on a single site, the
-        syntax in Example 1 can be used where the args: site, pfn, and is_stageable is
-        provided to the constructor. If site, pfn, and is_stageable is specified, then
-        the args: arch, os_type, os_release, os_version, and container, are
+        syntax in Example 1 can be used where the args: site and pfn are
+        provided to the constructor. If site and pfn are specified, then
+        the args: is_stageable, arch, os_type, os_release, os_version, and container, are
         applied to the site, else they are ignored. When a transformation resides
         multiple sites, the syntax in Example 2 can be used where multiple
         TransformationSite objects can be added.
@@ -224,7 +224,6 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                     version="4.0",
                     site=CONDOR_POOL,
                     pfn=PEGASUS_LOCATION,
-                    is_stageable=False
                 )
 
             # Example 2: transformation that resides on multiple sites
@@ -251,8 +250,8 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :type site: str, optional
         :param pfn: the physical filename of this transformation (e.g. "/usr/bin/tar"), defaults to None
         :type pfn: str, optional
-        :param is_stageable: whether or not this transformation is stageable or installed
-        :type type: bool
+        :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
+        :type type: bool, optional
         :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
         :type arch: Arch, optional
         :param os_type: name of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS`), defaults to None
@@ -293,7 +292,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.metadata = dict()
 
         # add site if site if given
-        if site is not None and pfn is not None and is_stageable is not None:
+        if site is not None and pfn is not None:
             self.add_sites(
                 TransformationSite(
                     site,
