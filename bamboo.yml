@@ -909,6 +909,125 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: UTCUF
+              name: Ubuntu Focal Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_UBUNTU_20}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer test-integrity
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: UTJUF
+              name: Ubuntu Focal Java Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Java Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_UBUNTU_20}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-java
+                - !junitParser
+                  description: Parse Test Report
+                  testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: UTPUF
+              name: Ubuntu Focal Python Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Python Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_UBUNTU_20}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --entrypoint ant \
+                      --env "USER=bamboo" \
+                      --env "LANG=C.UTF-8" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      pegasus/pegasus:${TAG} test-python
+                - !junitParser
+                  description: Parse Test Report
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: Coverage Report - Pegasus Common
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-common/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus API
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-api/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus DAX
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus Worker
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-worker/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus WMS
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-python/htmlcov/
+                  isShared: false
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
 
         - name: Lint
           description: Lint source code
@@ -1428,6 +1547,49 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXUF
+              name: Build x86_64 Ubuntu 20.04 LTS
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_UBUNTU_20}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} \
+                      clean dist-deb dist-worker dist-release
+              artifactDefinitions:
+                - name: pegasus-binary-x86_64_ubuntu_20
+                  copyPattern: "pegasus-binary-*-x86_64_ubuntu_20.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-deb-x86_64_ubuntu_20
+                  copyPattern: "*.deb"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-x86_64_ubuntu_20
+                  copyPattern: "pegasus-worker-*-x86_64_ubuntu_20.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
 
         - name: Deploy
           description: Deploy Artifacts
@@ -1479,10 +1641,10 @@ project:
                       # ubuntu
                       mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
-                      #mkdir -p $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64
-                      #cp $DOWNLOADS/pegasus_*ubuntu17_amd64.deb $DOWNLOADS/ubuntu/dists/zesty/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/ubuntu/dists/focal/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*ubuntu20_amd64.deb $DOWNLOADS/ubuntu/dists/focal/main/binary-amd64/
 
                       # rhel
                       mkdir -p $DOWNLOADS/rhel/src
@@ -1521,25 +1683,21 @@ project:
                 - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_macos
-                #- name: pegasus-binary-x86_64_rhel_6
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_rhel_8
                 - name: pegasus-binary-x86_64_ubuntu_16
-                #- name: pegasus-binary-x86_64_ubuntu_17
                 - name: pegasus-binary-x86_64_ubuntu_18
-                #- name: pegasus-binary-x86_rhel_6
+                - name: pegasus-binary-x86_64_ubuntu_20
                 - name: pegasus-deb-x86_64_deb_9
                 - name: pegasus-deb-x86_64_deb_10
                 - name: pegasus-deb-x86_64_ubuntu_16
-                #- name: pegasus-deb-x86_64_ubuntu_17
                 - name: pegasus-deb-x86_64_ubuntu_18
+                - name: pegasus-deb-x86_64_ubuntu_20
                 - name: pegasus-doc
                 - name: pegasus-python-source-versioned
                 - name: pegasus-r-dax3
-                #- name: pegasus-rpm-x86_64_rhel_6
                 - name: pegasus-rpm-x86_64_rhel_7
                 - name: pegasus-rpm-x86_64_rhel_8
-                #- name: pegasus-rpm-x86_rhel_6
                 - name: pegasus-source
                 - name: pegasus-source-versioned
                 - name: pegasus-source-versioned-swamp-c
@@ -1549,13 +1707,11 @@ project:
                 - name: pegasus-worker-x86_64_deb_9
                 - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_macos
-                #- name: pegasus-worker-x86_64_rhel_6
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_rhel_8
                 - name: pegasus-worker-x86_64_ubuntu_16
-                #- name: pegasus-worker-x86_64_ubuntu_17
                 - name: pegasus-worker-x86_64_ubuntu_18
-                #- name: pegasus-worker-x86_rhel_6
+                - name: pegasus-worker-x86_64_ubuntu_20
               requirements:
                 - capabilityKey: hostname
                   matchType: !equals
@@ -1625,6 +1781,8 @@ project:
           value: zesty
         - key: TAG_UBUNTU_18
           value: bionic
+        - key: TAG_UBUNTU_20
+          value: focal
 
     - key: TVM50
       name: Tutorial VM (master)

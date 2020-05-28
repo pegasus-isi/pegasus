@@ -604,6 +604,10 @@ function pegasus_lite_get_system()
                 if (grep -i "bionic" /etc/issue) >/dev/null 2>&1; then
                     osversion="18"
                 fi
+                # 20 LTS
+                if (grep -i "focal" /etc/issue) >/dev/null 2>&1; then
+                    osversion="20"
+                fi
             elif [ -e /etc/debian_version ]; then
                 osname="deb"
                 osversion=`cat /etc/debian_version`
