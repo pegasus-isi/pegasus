@@ -39,10 +39,20 @@ def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
         try:
             os.chdir(submit_dir)
         except PermissionError:
-            print("ERROR: Cannot change to directory %s" % submit_dir)
+            click.secho(
+                click.style("Error: ", fg="red", bold=True)
+                + "Cannot change to directory %s" % submit_dir
+            )
             ctx.exit(1)
 
         config = slurp_braindb(submit_dir)
+        if not config:
+            click.secho(
+                click.style("Error: ", fg="red", bold=True)
+                + "%s is not a valid submit-dir" % submit_dir
+            )
+            ctx.exit(1)
+
         dag_log_file = config["dag"] + ".dagman.out"
         pattern = re.compile(r"\.([0-9\.]+) \(CONDOR_DAGMAN\) STARTING UP")
 
@@ -53,8 +63,9 @@ def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
                     dag_id = match.group(1)
             else:
                 if not dag_id:
-                    print(
-                        "You must provide either a dag-id or dag-directory to remove a workflow."
+                    click.secho(
+                        click.style("Error: ", fg="red", bold=True)
+                        + "You must provide either a dag-id or dag-directory to remove a workflow."
                     )
                     ctx.exit(1)
 
