@@ -1,367 +1,325 @@
-#!/usr/bin/env perl
-#
-# Wrapper around pegasus-submit-dag to run a workflow
-#
-# Usage: pegasus-run rundir
-##
-#  Copyright 2007-2010 University Of Southern California
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-##
-#
-# Author: Jens-S. Vöckler voeckler at isi dot edu
-# Author: Gaurang Mehta gmehta at isi dot edu
-# Revision : $Revision$
-#
-use 5.006;
-use strict;
-use Carp;
-use Cwd;
-use File::Spec;
-use File::Basename qw(basename dirname);
-use Getopt::Long qw(:config bundling no_ignore_case);
-use File::Copy;
+#!/usr/bin/env python3
 
-# path to load our libs..
-BEGIN {
-    my $pegasus_config = File::Spec->catfile( dirname($0), 'pegasus-config' );
-    eval `$pegasus_config --perl-dump`;
-    die("Unable to eval pegasus-config output. $@") if $@;
-}
+import logging
+import os
+import shutil
+import subprocess
+from json import dumps
+from pathlib import Path
 
-# load our own local modules
-use Pegasus::Common;
-use Pegasus::Properties qw(%initial); # parses -Dprop=val from @ARGV
+import click
 
-sub make_path($) {
-    my $p = File::Spec->catfile( Cwd::realpath( dirname($0) ), shift() );
-    warn "# make_path = $p\n" if $main::DEBUG;
-    $p;
-}
+from Pegasus.tools.utils import slurp_braindb
 
-sub usage(;$);			# { }
-
-# constants
-$main::DEBUG = 0;		# for now
-
-my $grid=0;                     # if set, enable grid checks, disabled by default
-
-my $dagman = make_path( 'pegasus-dagman' );
-my $conffile;
-GetOptions( "help|h" => \&usage
-	  , "debug|d=o" => \$main::DEBUG
-	  , "verbose|v+" => \$main::DEBUG
-          , "grid!" => \$grid
-	  , 'conf|c=s' => \$conffile
-	  );
-
-my $run = shift;
-# NEW: Default to cwd if nothing was specified
-unless ( defined $run ) {
-    $run = getcwd();
-    my $braindb = File::Spec->catfile( $run, $Pegasus::Common::brainbase );
-    usage("You need to provide a valid run directory. Cannot find pegasus brain file")
-	unless -r $braindb;
-}
-
-# extra sanity
-usage( "$run is not a directory." ) unless -d $run;
-usage( "$run is not accessible." ) unless -r _;
-my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
-
-# pre-condition: The planner writes all properties per workflow into the DAG dir.
-my $props = Pegasus::Properties->new( $conffile, File::Spec->catfile($run,$config{properties}) );
+log = logging.getLogger("pegasus-run")
 
 
-#
-# --- functions -------------------------------------------------
-#
+def check_dag(dag_file):
+    """Check if DAG file exists."""
+    dag_file = Path(dag_file)
 
-sub usage(;$) {
-    my $msg = shift;
-    my $flag = ( defined $msg && lc($msg) ne 'help' );
-    if ( $flag ) {
-	my $tty = -t STDOUT;
-	print "\033[1m" if $tty;
-	print "ERROR: $msg\n";
-	print "\033[0m" if $tty;
-    }
+    if not dag_file.is_file():
+        raise FileNotFoundError("%s not found" % dag_file)
+    elif not os.access(str(dag_file), os.R_OK):
+        raise PermissionError("%s is not readable" % dag_file)
 
-    my $basename = basename($0,'.pl');
-    print << "EOF";
-
-Usage: $basename [options] [rundir]
-
-SemiMandatory arguments:
-  rundir  is the directory where the workflow resides as well as ancilliary
-          files related to the workflow. Defaults to current working directory if not specified.
-
-Optional arguments:
- -Dprop=val         Explicit settings of a property (multi-option) (only use if really required)
- -c|--conf fn	    Use file fn as pegasus properties file. (only use for debugging purposes.
-                    pegasus-run will pick the correct planned properties by default.
- -h|--help          Print this help message and exit.
- -d|--debug lvl     Sets the debug level (verbosity), default is $main::DEBUG.
- -v|--verbose       Raises debug level by 1, see --debug.
- --nogrid           Disable checking for grids (default).
- --grid             Enable checking for grids.
-
-EOF
-    exit( $flag ? 1 : 0 );
-}
-
-sub salvage_logfile($) {
-    # purpose: salvage Condor common log file from truncation
-    # paramtr: $dagfn (IN): Name of dag filename
-    # returns: -
-    #
-    my $dagfn = shift;
-    my $result = undef;
-    local(*DAG,*SUB,*LOG);
-    if ( open( DAG, "<$dagfn" ) ) {
-	# read to to figure out submit files
-	my @x;
-	my %submit = ();
-	while ( <DAG> ) {
-	    next unless /^\s*job/i;
-	    s/[\r\n]+$//;	# safe chomp
-	    @x = split;
-	    $submit{$x[1]} = $x[2]; # dagjobid -> subfn
-	}
-	close DAG;
-
-	if ( $main::DEBUG > 2 ) {
-	    print STDERR "# found the following associations:\n";
-
-	    local $Data::Dumper::Indent = 1;
-	    local $Data::Dumper::Pad = "# ";
-	    print STDERR Data::Dumper->Dump( [\%submit], [qw(config)] );
-	}
-
-	# read two submit files to figure out condor common log file
-	foreach my $subfn ( values %submit ) {
-	    if ( open( SUB, "<$subfn" ) ) {
-		my $logfile = undef;
-		while ( <SUB> ) {
-		    next unless /^log(=|\s)/i;
-		    s/[\r\n]+$//; # safe chomp
-		    @x = split /\s*=\s*/, $_, 2;
-		    $logfile = ( substr( $x[1], 0, 1 ) =~ /[''""]/ ?
-				 substr( $x[1], 1, -1 ) : $x[1] );
-		    last;
-		}
-		close SUB;
-
-		print STDERR "# $subfn points to $logfile\n"
-		    if ( $main::DEBUG > 1 );
-
-		if ( ! defined $result ) {
-		    $result = $logfile;
-		} else {
-		    last if $result eq $logfile;
-		    warn "# Using distinct, different log files, skipping preservation.\n";
-		    return undef;
-		}
-	    } else {
-		warn "Unable to read sub file $subfn: $!\n";
-	    }
-	}
-
-	# try to preserve log file
-	if ( defined $result && -s $result ) {
-	    my $newfn;
-	    print STDERR "# log $result exists, rescuing from DAGMan.\n"
-		if $main::DEBUG;
-	    for ( my $i=0; $i<1000; ++$i ) {
-		$newfn = sprintf "%s.%03d", $result, $i;
-		if ( open( LOG, "<$newfn" ) ) {
-		    # file exists
-		    close LOG;
-		} else {
-		    # file does not exist, use that
-		    my $newresult=$result;
-		    #check if the file is a smylink then dereference it.
-		    if ( -l $result ) {
-			$newresult=readlink($result);
-		    }
-		    print STDOUT "Rescued $result as $newfn\n"
-			if copy( $newresult, $newfn )  or warn "Could not rescue the log file $newresult to $newfn\n $! \nTrying to continue\n";
-		    last;
-		}
-	    }
-	} else {
-	    print STDERR "# log $result does not yet exist (good)\n"
-		if ( $main::DEBUG );
-	}
-    } else {
-	die "ERROR: Unable to read dag file $dagfn: $!\n";
-    }
-
-    $result;
-}
+    log.debug("# found %s", dag_file)
 
 
+def check_dag_sub_file(dag_sub_file):
+    """Check if DAGman submit file exists."""
+    dag_sub_file = Path(dag_sub_file)
+
+    if not dag_sub_file.is_file():
+        raise FileNotFoundError("%s not found" % dag_sub_file)
+    elif not os.access(str(dag_sub_file), os.R_OK):
+        raise PermissionError("%s is not readable" % dag_sub_file)
+
+    log.debug("# dagman condor submit file is %s", dag_sub_file)
 
 
-#
-# --- main ------------------------------------------------------
-#
+def get_condor_submit():
+    """Locate `condor_submit` and check if it is executable."""
+    condor_submit = shutil.which("condor_submit")
 
-# sanity check: lower umask
-umask 0002;
+    if condor_submit is None:
+        raise FileNotFoundError("condor_submit not found")
+    elif not os.access(condor_submit, os.X_OK):
+        raise PermissionError("%s is not executable" % condor_submit)
 
-# where were we...
-my $here = File::Spec->curdir();
-$SIG{'__DIE__'} = sub {
-    chdir($here) if defined $here;
-};
-chdir($run) || die "ERROR: chdir $run: $!\n";
+    log.debug("# found %s", condor_submit)
+    return condor_submit
 
-# Do GRID check if $grid enabled
-if ( $grid ) {
+
+def get_grid_proxy_info(globus_location):
+    """Locate `condor_submit` and check if it is executable."""
+    grid_proxy_info = Path(globus_location) / "bin" / "grid-proxy-info"
+
+    if not grid_proxy_info.exists():
+        raise FileNotFoundError("%s not found" % grid_proxy_info)
+    elif not os.access(str(grid_proxy_info), os.X_OK):
+        raise PermissionError("%s is not executable" % grid_proxy_info)
+
+    log.debug("# found %s", grid_proxy_info)
+    return str(grid_proxy_info)
+
+
+def salvage_log_file(condor_log):
+    """Salvage jobs log files."""
+    condor_log = Path(condor_log)
+
+    if condor_log.exists():
+        cl = str(condor_log)
+        for i in range(1000):
+            _cl = cl + ".%03d" % i
+            if not Path(_cl).exists():
+                log.debug("# log $result exists, rescuing from DAGMan.")
+                try:
+                    shutil.copyfile(cl, _cl)
+                    click.secho("Rescued {} as {}".format(cl, _cl), err=True)
+                except OSError as e:
+                    raise ValueError(str(e))
+                break
+
+
+def grid_check():
+    """Perform grid checks if enabled."""
     # sanity check: Is there a GLOBUS_LOCATION?
+    globus_location = os.environ.get("GLOBUS_LOCATION", None)
+    if globus_location is None:
+        raise ValueError(
+            "Your environment setup misses GLOBUS_LOCATION.\n"
+            + "Please check carefully that you have sourced the correct setup files!",
+        )
 
-    die ( "ERROR: Your environment setup misses GLOBUS_LOCATION.\n",
-	  "Please check carefully that you have sourced the correct setup files!\n" )
-	unless exists $ENV{'GLOBUS_LOCATION'};
+    log.debug("# GLOBUS_LOCATION=%s" % globus_location)
 
-    # sanity check: find grid-proxy-init from GLOBUS_LOCATION
-    my $g_l = $ENV{'GLOBUS_LOCATION'};
-    print STDERR "# GLOBUS_LOCATION=$g_l\n" if $main::DEBUG;
+    # sanity check: Is GLOBUS_LOCCATION part of LD_LIBRARY_PATH?
+    llp = os.environ.get("LD_LIBRARY_PATH", "")
+    if not llp:
+        llp = str(Path(globus_location) / "lib")
+        os.putenv("LD_LIBRARY_PATH", llp)
+        log.info("Setting LD_LIBRARY_PATH=%s", llp)
 
-    # sanity check: Is G_L part of L_L_P?
-    my @llp = grep { /^$g_l/ } split /:/, $ENV{'LD_LIBRARY_PATH'};
-    $ENV{'LD_LIBRARY_PATH'}=File::Spec->catfile($ENV{'GLOBUS_LOCATION'},"/lib") if @llp == 0;
-
-    # Find grid-proxy-init (should we use openssl instead?? )
-    my $gpi = File::Spec->catfile( $g_l, 'bin', 'grid-proxy-info' );
-    die "ERROR: Unable to find $gpi\n" unless -x $gpi;
-    print STDERR "# found $gpi\n" if $main::DEBUG;
+    # Find grid-proxy-info (should we use openssl instead? )
+    gpi = get_grid_proxy_info(globus_location)
 
     # common user error
     # sanity check: Sufficient time left on grid proxy certificate
-    open( GPI, "$gpi -timeleft 2>&1|" ) || die "open $gpi: $!\n";
-    my $timeleft = <GPI>;
-    chomp($timeleft);
-    $timeleft += 0;			# make numeric
-    close GPI;
-    die( "ERROR: $gpi died on signal ", ($? & 127) ) if ( ($? & 127) > 0 );
-    die( "ERROR: Grid proxy not initialized, Please generate a new proxy\n" ) if $timeleft == -1;
-    die( "ERROR: Grid proxy expired, please refresh\n" ) if $timeleft == 0;
-    die( "ERROR: $gpi exited with status ", $?>>8 ) if ( $? != 0 );
-    warn( "ERROR: Too little time left ($timeleft s) on grid proxy. Please refresh your proxy\n" )
-	if $timeleft < 7200;
-    print STDERR "# grid proxy has $timeleft s left\n" if $main::DEBUG;
-} # end if($grid) checks only if grid option is enabled.
+    cmd = (gpi, "-timeleft")
 
-if ( $config{dag} ) {
-    #PM-797 move away from using pegasus-submit-dag
-    my $c_s = find_exec('condor_submit') || die "Unable to locate condor_submit\n";
-    die "ERROR: Unable to access condor_submit $c_s\n" unless -x $c_s;
-    print STDERR "# found $c_s\n" if $main::DEBUG;
+    rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    ec = rv.returncode
 
-    # PM-870 we have already changed to the directory, don't prepend $run again
-    my $dag_submit_file = "$config{dag}.condor.sub";
-    print STDOUT "# dagman condor submit file is $dag_submit_file\n" if $main::DEBUG;
+    if ec & 127:
+        raise ValueError("%s died on signal %d" % (gpi, ec & 127))
+    elif ec != 0:
+        raise ValueError("%s exited with status %d" % (gpi, ec))
 
-    # sanity check: Is the DAG file there?
-    die "ERROR: Unable to locate $config{dag}\n" unless -r $config{dag};
-    print STDERR "# found $config{dag}\n" if $main::DEBUG;
+    time_left = int(rv.stdout.decode().strip())
+    if time_left == -1:
+        raise ValueError("Grid proxy not initialized, Please generate a new proxy")
+    elif time_left == 0:
+        raise ValueError("Grid proxy expired, please refresh")
+    elif time_left < 7200:
+        raise ValueError(
+            "Too little time left (%d s) on grid proxy. Please refresh your proxy"
+            % time_left
+        )
 
-    # PM-702: clean up .halt files from pegasus-halt
-    my $just_released = 0;
-    if ( -e $config{dag}.".halt" ) {
-        print STDOUT "Found a previously halted workflow. Releasing it now.\n";
-        system("find . -name \\*.dag.halt -exec rm {} \\;");
-        $just_released = 1;
-    }
+    log.debug("# grid proxy has %d s left" % time_left)
 
-    # After the switch from condor_submit_dag, we lost the check to see if
-    # a workflow is already running. This replaces those checks.
-    if ( -e "monitord.pid" ) {
-        if ($just_released) {
-            # Support the rare instance were a user want to release a halted
-            # workflow while it is still running. In that case, we just
-            # quietly exit here
-            exit 0;
-        }
-        else {
-            print STDERR "ERROR: It looks like the workflow is already running! If you are sure\n" .
-                         "       that is not the case, please remove the monitord.pid file and try\n" .
-                         "       again.\n";
-            exit 1;
-        }
-    }
 
-    # find the workflow name and timestamp for pegasus-status
-    my $workflow=$config{'pegasus_wf_name'};
-    my $time=$config{timestamp};
+def exec_dag(dag_sub_file, condor_log):
+    """Execute `condor_submit` on dagman.condor.sub."""
+    # PM-797 move away from using pegasus-submit-dag
+    condor_submit = get_condor_submit()
 
-    # start DAGMan with default throttles
-    my @extra = ();
-    foreach my $k ( keys %initial ) {
-	push( @extra, "-D$k=$initial{$k}" );
-    }
+    check_dag_sub_file(dag_sub_file)
 
-    if( -r $dag_submit_file ) {
-        #PM-797 do condor_submit on dagman.condor.sub file if it exists
-        salvage_logfile( $config{dag} );
-        print STDOUT "Submitting to condor $dag_submit_file\n";
-        my @args = ( $c_s );
-        push( @args, $dag_submit_file);
-        system(@args) == 0
-            or die( "ERROR: Running condor_submit @args failed with ", parse_exit($?));
-        print STDERR "# dagman is running\n" if $main::DEBUG;
-    }
+    salvage_log_file(condor_log)
+    click.secho("Submitting to condor %s" % dag_sub_file, err=True)
+    cmd = (condor_submit, dag_sub_file)
 
-    my $did=undef;
-    my $daglogfile=$config{dag}.".dagman.out";
-    if ( open( DID, "<$daglogfile" ) ) {
-	while (<DID>) {
-	    if ( /condor_scheduniv_exec/ ) {
-		# this part was written by a python programmer?
-		$did=(split "condor_scheduniv_exec.",  (split)[3],2)[1];
-		last;
-	    }
-	}
-	close(DID);
-    }
-    print << "EOF";
+    rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    rv.check_returncode()
 
+
+def exec_script(script):
+    """Locate `condor_submit` and check if it is executable."""
+    script = Path(script)
+
+    if not script.is_file():
+        raise FileNotFoundError("%s not found" % script)
+    elif os.access(str(script), os.X_OK):
+        raise PermissionError("%s not executable" % script)
+
+    log.debug("# found %s" % script)
+
+    cmd = ("/bin/bash", script)
+    rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    rv.check_returncode()
+
+
+@click.command(
+    context_settings=dict(ignore_unknown_options=True, allow_extra_args=True)
+)
+@click.pass_context
+@click.option(
+    "props",
+    "-D",
+    multiple=True,
+    help="Explicit settings of a property (multi-option) (only use if really required). Example: -Dprop=value.",
+)
+@click.option(
+    "-c",
+    "--conf",
+    metavar="<properties-file>",
+    help="The id of the dag to be removed.",
+)
+@click.option(
+    "--grid/--nogrid",
+    default=False,
+    show_default=True,
+    help="Enable/Disable checking for grids.",
+)
+@click.option(
+    "-j",
+    "--json",
+    default=False,
+    show_default=True,
+    is_flag=True,
+    help="Output in JSON format.",
+)
+@click.option(
+    "-v", "--verbose", default=0, count=True, help="Raises debug level by 1.",
+)
+@click.argument(
+    "submit-dir",
+    required=False,
+    default=".",
+    type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
+)
+def pegasus_run(
+    ctx, props=None, conf=None, grid=False, json=False, verbose=0, submit_dir=None
+):
+    """."""
+    logging.basicConfig(level=logging.INFO)
+
+    os.umask(0o022)
+    cwd = os.getcwd()
+    config = slurp_braindb(submit_dir)
+    submit_dir = str(Path(submit_dir).resolve())
+
+    if not config:
+        click.secho(
+            click.style("Error: ", fg="red", bold=True)
+            + "%s is not a valid submit-dir" % submit_dir
+        )
+        ctx.exit(1)
+
+    try:
+        os.chdir(submit_dir)
+    except PermissionError:
+        click.secho(
+            click.style("Error: ", fg="red", bold=True)
+            + "Cannot change to directory %s" % submit_dir
+        )
+        ctx.exit(1)
+
+    if grid:
+        try:
+            grid_check()
+        except (FileNotFoundError, PermissionError, ValueError) as e:
+            click.secho(click.style("Error: ", fg="red", bold=True) + str(e))
+            ctx.exit(1)
+
+    if config["dag"]:
+        try:
+            # sanity check: Is the DAG file there?
+            check_dag(config["dag"])
+
+            # PM-870 we have already changed to the directory, don't prepend $run again
+            dag_sub_file = config["dag"] + ".condor.sub"
+
+            # PM-702: clean up .halt files from pegasus-halt
+            halt_released = False
+            if Path(config["dag"] + ".halt").exists():
+                click.echo("Found a previously halted workflow. Releasing it now.")
+                os.system("find . -name '*.dag.halt' -exec rm {} \\;")
+                halt_released = True
+
+            # After the switch from condor_submit_dag, we lost the check to see if
+            # a workflow is already running. This replaces those checks.
+            if Path("monitord.pid").exists():
+                if halt_released:
+                    ctx.exit(0)
+                else:
+                    click.secho(
+                        click.style("Error: ", fg="red", bold=True)
+                        + "It looks like the workflow is already running! If you are sure\n"
+                        + "       that is not the case, please remove the monitord.pid file and try\n"
+                        + "       again.",
+                        err=True,
+                    )
+                    ctx.exit(1)
+
+            # find the workflow name and timestamp for pegasus-status
+            props = ("-D%s" % p for p in props)
+
+            # PM-797 do condor_submit on dagman.condor.sub file if it exists
+            exec_dag(dag_sub_file, config["condor_log"])
+            log.debug("# dagman is running")
+            if json:
+                click.echo(dumps(config))
+            else:
+                click.secho(
+                    """
 Your workflow has been started and is running in the base directory:
 
-  $run
+%(submit_dir)s
 
 *** To monitor the workflow you can run ***
 
-  pegasus-status -l $run
+pegasus-status -l %(submit_dir)s
 
 *** To remove your workflow run ***
 
-  pegasus-remove $run
+pegasus-remove %(submit_dir)s
+"""
+                    % {"submit_dir": submit_dir}
+                    + click.style("✨ Success", fg="green")
+                )
+        except (FileNotFoundError, PermissionError, ValueError) as e:
+            click.secho(click.style("Error: ", fg="red", bold=True) + str(e))
+            ctx.exit(1)
+        except subprocess.CalledProcessError as e:
+            rc = e.returncode
+            if rc != 0:
+                click.secho(
+                    click.style("Error: ", fg="red", bold=True)
+                    + "Running %s failed with %d" % (e.cmd, rc)
+                )
+                ctx.exit(rc)
 
-EOF
+    elif config["type"] == "shell":
+        try:
+            exec_script(config["script"])
+            click.secho("✨ Success", fg="green")
+        except (FileNotFoundError, PermissionError) as e:
+            click.secho(click.style("Error: ", fg="red", bold=True) + str(e))
+            ctx.exit(1)
+        except subprocess.CalledProcessError as e:
+            rc = e.returncode
+            if rc != 0:
+                click.secho(
+                    click.style("Error: ", fg="red", bold=True)
+                    + "Running %s failed with %d" % (config["script"], rc)
+                )
+                ctx.exit(rc)
 
-} elsif ( $config{type}=="shell" ) {
-    # sanity check: Is the SCRIPT file there?
-    die "ERROR: Unable to execute $config{script}\n" unless -x $config{script};
-    print STDERR "# found $config{script}\n" if $main::DEBUG;
+    os.chdir(cwd)
 
-    my @args=( "/bin/bash", $config{script} );
-    system(@args) == 0
-	or die( "ERROR: Running $config{script} failed with ",
-		parse_exit($?) );
-}
 
-chdir($here);
-exit 0;
+if __name__ == "__main__":
+    pegasus_run()
