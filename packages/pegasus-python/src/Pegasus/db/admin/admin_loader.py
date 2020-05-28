@@ -116,17 +116,10 @@ def get_compatible_version(version):
     :return: the equivalent Pegasus version
     """
     if version == CURRENT_DB_VERSION:
-        # find pegasus-version path
         pegasus_version = None
-        if "PATH" in os.environ:
-            paths = os.environ.get("PATH").split(os.pathsep)
-            for p in paths:
-                f = os.path.join(p, "pegasus-version")
-                if os.path.isfile(f):
-                    pegasus_version = f
-                    break
 
-        if not pegasus_version and "PEGASUS_HOME" in os.environ:
+        # PM-1596 - Python codes now get PEGASUS_HOME set correctly
+        if "PEGASUS_HOME" in os.environ:
             f = os.path.join(os.environ.get("PEGASUS_HOME"), "bin/pegasus-version")
             if os.path.isfile(f):
                 pegasus_version = f
