@@ -771,6 +771,7 @@ public class PegasusLite implements GridStart {
             // PM-1541 for dax jobs (that are setting up pegasus-plan prescript) set
             // PEGASUS_HOME to ensure that there is no confusion for pegasus-db-admin
             // what pegasus install to refer to
+            boolean relyOnPegasusLiteToSetupWorkerPackage = true;
             if (job instanceof DAXJob) {
                 if (job.getSiteHandle().equals("local")) {
                     sb.append("# set for pegasus-plan invocation ").append('\n');
@@ -779,6 +780,9 @@ public class PegasusLite implements GridStart {
                             .append(this.mProps.getBinDir().getParentFile().getAbsolutePath())
                             .append("\"")
                             .append('\n');
+                    // PM-1541 we don't want any addition worker package setup. we
+                    // know what pegasus install to use
+                    relyOnPegasusLiteToSetupWorkerPackage = false;
                 } else {
                     // log warning
                     mLogger.log(
@@ -847,10 +851,12 @@ public class PegasusLite implements GridStart {
             sb.append("pegasus_lite_setup_work_dir").append('\n');
             sb.append('\n');
 
-            appendStderrFragment(sb, "Figuring out the worker package to use");
-            sb.append("# figure out the worker package to use").append('\n');
-            sb.append("pegasus_lite_worker_package").append('\n');
-            sb.append('\n');
+            if (relyOnPegasusLiteToSetupWorkerPackage) {
+                appendStderrFragment(sb, "Figuring out the worker package to use");
+                sb.append("# figure out the worker package to use").append('\n');
+                sb.append("pegasus_lite_worker_package").append('\n');
+                sb.append('\n');
+            }
 
             if (isCompute
                     && // PM-971 for non compute jobs we don't do any sls transfers
