@@ -495,6 +495,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
       <fileset dir="lib/pegasus/externals/python">
           <include name="**/boto3/**/*"/>
+          <include name="**/botocore/**/*"/>
           <include name="**/globus_sdk/**/*"/>
           <include name="six"/>
           <include name="six.py"/>
