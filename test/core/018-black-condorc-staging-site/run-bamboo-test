@@ -28,6 +28,8 @@ sites:
   name: "isi-condorc"
   arch: "x86_64"
   os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
   grids:
    -
     type: "condor"
@@ -51,6 +53,8 @@ sites:
   name: "cartman-data"
   arch: "x86"
   os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
   directories:
    -
     type: "sharedScratch"
@@ -63,6 +67,8 @@ sites:
   name: "local"
   arch: "x86_64"
   os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
   directories:
    -
     type: "sharedStorage"

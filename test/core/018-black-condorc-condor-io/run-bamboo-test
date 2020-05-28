@@ -28,6 +28,8 @@ sites:
   name: "isi-condorc"
   arch: "x86_64"
   os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
   grids:
    -
     type: "condor"
@@ -49,6 +51,8 @@ sites:
   name: "condorpool"
   arch: "x86_64"
   os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
   profiles:
     condor:
       universe: "vanilla"
@@ -58,6 +62,8 @@ sites:
   name: "local"
   arch: "x86_64"
   os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
   directories:
    -
     type: "sharedStorage"
