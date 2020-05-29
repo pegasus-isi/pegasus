@@ -976,9 +976,15 @@ public class RCClient extends Toolkit {
             try {
                 rc = ReplicaFactory.loadInstance(bag);
             } catch (Exception ex) {
-                m_log.error("Error encountered while connecting to meta file " + file, ex);
-                connect = false;
-                break;
+                // connection failed can be ignored, as some meta files may not exist
+                // in case where jobs are not launched via kickstart
+                if (ex.getMessage().startsWith(ReplicaFactory.CONNECT_TO_RC_FAILED_MESSAGE)) {
+                    m_log.warn("Unable to connect to meta file " + file, ex);
+                } else {
+                    m_log.error("Error encountered while connecting to meta file " + file, ex);
+                    connect = false;
+                    break;
+                }
             }
             // add all contents of the rc backend into the store
             mMetadataStore.add(rc.lookup(new HashMap()));

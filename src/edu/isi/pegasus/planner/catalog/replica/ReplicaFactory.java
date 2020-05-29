@@ -57,6 +57,10 @@ public class ReplicaFactory {
     /** The default basename of the transformation catalog file. */
     public static final String DEFAULT_FILE_REPLICA_CATALOG_BASENAME = "rc.txt";
 
+    /** connection to replica catalog failed message */
+    public static String CONNECT_TO_RC_FAILED_MESSAGE =
+            "Unable to connect to replica catalog implementation";
+
     /**
      * Connects the interface with the replica catalog implementation. The choice of backend is
      * configured through properties. This class is useful for non-singleton instances that may
@@ -235,7 +239,8 @@ public class ReplicaFactory {
 
         if (!result.connect(connectProps))
             throw new RuntimeException(
-                    "Unable to connect to replica catalog implementation "
+                    CONNECT_TO_RC_FAILED_MESSAGE
+                            + " "
                             + catalogImplementor
                             + " with props "
                             + connectProps);
