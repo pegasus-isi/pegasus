@@ -202,7 +202,7 @@ def pegasus_run(
     ctx, props=None, conf=None, grid=False, json=False, verbose=0, submit_dir=None
 ):
     """."""
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.ERROR - (min(verbose, 3) * 10))
 
     os.umask(0o022)
     cwd = os.getcwd()
