@@ -80,10 +80,10 @@ public class PlannerOptions extends Data implements Cloneable {
     private String mPDAXFile;
 
     /** List of execution pools on which the user wants the Dag to be executed. */
-    private Set<String> mvExecSites;
+    private Set<String> mExecSites;
     
     /** The output pool on which the data products are needed to be transferred to. */
-    private String mOutputSite;
+    private Set<String> mOutputSites;
 
     /**
      * Set of cache files that need to be used, to determine the location of the transiency files.
@@ -210,12 +210,12 @@ public class PlannerOptions extends Data implements Cloneable {
         mRelativeSubmitDir = null;
         mDAXFile = null;
         mPDAXFile = null;
-        mvExecSites = new java.util.HashSet();
+        mExecSites = new java.util.HashSet();
         mCacheFiles = new java.util.HashSet();
         mInheritedRCFiles = new java.util.HashSet();
         mNonStandardJavaOptions = new java.util.HashSet();
         mForwardOptions = new java.util.LinkedList<NameValue>();
-        mOutputSite = null;
+        mOutputSites = null;
         mDisplayHelp = false;
         mLoggingLevel = DEFAULT_LOGGING_LEVEL;
         mForce = false;
@@ -313,8 +313,8 @@ public class PlannerOptions extends Data implements Cloneable {
      *
      * @return <code>Set</code> of execution site names.
      */
-    public Collection getExecutionSites() {
-        return mvExecSites;
+    public Collection<String> getExecutionSites() {
+        return mExecSites;
     }
 
     /**
@@ -415,13 +415,14 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
-     * Returns the output site where to stage the output .
+     * Returns the names of the execution sites where the concrete workflow can be run.
      *
-     * @return the output site.
+     * @return <code>Set</code> of output site names.
      */
-    public String getOutputSite() {
-        return mOutputSite;
+    public Collection<String> getOutputSites() {
+        return mOutputSites;
     }
+
 
     /**
      * Returns the path to the PDAX file being used by the planner.
@@ -780,7 +781,7 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public void setExecutionSites(String siteList) {
 
-        mvExecSites = this.generateSet(siteList);
+        mExecSites = this.generateSet(siteList);
     }
 
     /**
@@ -789,7 +790,7 @@ public class PlannerOptions extends Data implements Cloneable {
      * @param sites <code>Collection</code> of execution site names.
      */
     public void setExecutionSites(Collection sites) {
-        mvExecSites = new HashSet(sites);
+        mExecSites = new HashSet(sites);
     }
 
     /**
@@ -940,8 +941,8 @@ public class PlannerOptions extends Data implements Cloneable {
      *
      * @param site the output site.
      */
-    public void setOutputSite(String site) {
-        mOutputSite = site;
+    public void addOutputSite(String site) {
+        mOutputSites.add(site);
     }
 
     /**
@@ -1204,7 +1205,7 @@ public class PlannerOptions extends Data implements Cloneable {
                         + "\n Partition File       "
                         + mPDAXFile
                         + "\n Execution Sites      "
-                        + this.setToString(mvExecSites, ",")
+                        + this.setToString(mExecSites, ",")
                         + "\n Staging Sites        "
                         + this.stagingSiteMappingToString()
                         + "\n Cache Files          "
@@ -1215,9 +1216,9 @@ public class PlannerOptions extends Data implements Cloneable {
                         + this.setToString(mInputDirs, ",")
                         + "\n Output Directory     "
                         + this.mOutputDir
-                        + "\n Output Site          "
-                        + mOutputSite
-                        + "\n Submit to CondorG    "
+                        + "\n Output Sites          "
+                        +  this.setToString(mOutputSites, ",")
+                        + "\n Submit to HTCondor Schedd    "
                         + mSubmit
                         + "\n Display Help         "
                         + mDisplayHelp
@@ -1286,11 +1287,11 @@ public class PlannerOptions extends Data implements Cloneable {
             sb.append(" --job-prefix ").append(mJobPrefix);
         }
 
-        if (!mvExecSites.isEmpty()) {
+        if (!mExecSites.isEmpty()) {
             sb.append(" --sites ");
             // generate the comma separated string
             // for the execution pools
-            sb.append(setToString(mvExecSites, ","));
+            sb.append(setToString(mExecSites, ","));
         }
 
         if (!this.mStagingSitesMap.isEmpty()) {
@@ -1322,8 +1323,12 @@ public class PlannerOptions extends Data implements Cloneable {
             sb.append(" --output-dir ").append(this.mOutputDir);
         }
         // specify the output site
-        if (mOutputSite != null) {
-            sb.append(" --output-site ").append(mOutputSite);
+        if (!mOutputSites.isEmpty()) {
+            sb.append(" --output-site ");
+            // generate the comma separated string
+            // for the execution pools
+            sb.append(setToString(mOutputSites, ","));
+        
         }
 
         // the condor submit option
@@ -1483,14 +1488,14 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mRelativeDir = this.mRelativeDir;
         pOpt.mDAXFile = this.mDAXFile;
         pOpt.mPDAXFile = this.mPDAXFile;
-        pOpt.mvExecSites = cloneSet(this.mvExecSites);
+        pOpt.mExecSites = cloneSet(this.mExecSites);
         pOpt.mStagingSitesMap = new HashMap<String, String>(this.mStagingSitesMap);
         pOpt.mCacheFiles = cloneSet(this.mCacheFiles);
         pOpt.mInheritedRCFiles = cloneSet(this.mInheritedRCFiles);
         pOpt.mNonStandardJavaOptions = cloneSet(this.mNonStandardJavaOptions);
         pOpt.mInputDirs = cloneSet(this.mInputDirs);
         pOpt.mOutputDir = this.mOutputDir;
-        pOpt.mOutputSite = this.mOutputSite;
+        pOpt.mOutputSites = cloneSet(this.mOutputSites);
         pOpt.mDisplayHelp = this.mDisplayHelp;
         pOpt.mLoggingLevel = this.mLoggingLevel;
         pOpt.mForce = this.mForce;

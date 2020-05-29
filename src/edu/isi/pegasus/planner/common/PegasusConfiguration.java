@@ -179,9 +179,7 @@ public class PegasusConfiguration {
      * @param options the planner options.
      */
     public void updateSiteStoreAndOptions(SiteStore store, PlannerOptions options) {
-        // sanity check to make sure that output outputSite is loaded
-        String outputSite = options.getOutputSite();
-
+        
         File pegasusBinDir = FindExecutable.findExec("pegasus-version").getParentFile();
         String pegasusHome = pegasusBinDir.getParent();
 
@@ -202,13 +200,15 @@ public class PegasusConfiguration {
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
 
-        if (options.getOutputSite() != null) {
-            if (!store.list().contains(outputSite)) {
-                StringBuffer error = new StringBuffer();
-                error.append("The output site [")
-                        .append(outputSite)
-                        .append("] not loaded from the site catalog.");
-                throw new RuntimeException(error.toString());
+        for(String outputSite: options.getOutputSites()){
+            if (outputSite != null) {
+                if (!store.list().contains(outputSite)) {
+                    StringBuffer error = new StringBuffer();
+                    error.append("The output site [")
+                            .append(outputSite)
+                            .append("] not loaded from the site catalog.");
+                    throw new RuntimeException(error.toString());
+                }
             }
         }
 
@@ -223,7 +223,7 @@ public class PegasusConfiguration {
                             : // user did not specify an output site, default to local
                             outputSite; // stick with what user specified
 
-            options.setOutputSite(outputSite);
+            options.addOutputSite(outputSite);
 
             SiteCatalogEntry entry = store.lookup(outputSite);
             if (entry == null) {

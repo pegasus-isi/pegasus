@@ -172,7 +172,7 @@ public class CPlanner extends Executable {
         this.mPOptions = new PlannerOptions();
         mPOptions.setSubmitDirectory(".", null);
         mPOptions.setExecutionSites(new java.util.HashSet());
-        mPOptions.setOutputSite("");
+        mPOptions.addOutputSite("");
 
         mUser = mProps.getProperty("user.name");
         if (mUser == null) {
@@ -890,7 +890,7 @@ public class CPlanner extends Executable {
                     break;
 
                 case 'y': // output option
-                    options.setOutputSite(g.getOptarg());
+                    options.addOutputSite(g.getOptarg());
                     // warn
                     mLogger.log(
                             "--output option is deprecated. Replaced by --output-site ",
@@ -898,7 +898,7 @@ public class CPlanner extends Executable {
                     break;
 
                 case 'o': // output-site
-                    options.setOutputSite(g.getOptarg());
+                    options.addOutputSite(g.getOptarg());
                     break;
 
                 case 'O': // output-dir

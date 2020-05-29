@@ -106,7 +106,7 @@ public class OutputMapperTestSetup implements TestSetup {
      */
     public PlannerOptions loadPlannerOptions() {
         PlannerOptions options = new PlannerOptions();
-        options.setOutputSite("local");
+        options.addOutputSite("local");
         return options;
     }
 
