@@ -33,7 +33,6 @@ Command Line Tools
     manpages/pegasus-service.rst
     manpages/pegasus-statistics.rst
     manpages/pegasus-status.rst
-    manpages/pegasus-submit-dag.rst
     manpages/pegasus-submitdir.rst
     manpages/pegasus-tc-client.rst
     manpages/pegasus-tc-converter.rst
