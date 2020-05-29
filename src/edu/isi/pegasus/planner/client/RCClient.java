@@ -980,6 +980,7 @@ public class RCClient extends Toolkit {
                 // in case where jobs are not launched via kickstart
                 if (ex.getMessage().startsWith(ReplicaFactory.CONNECT_TO_RC_FAILED_MESSAGE)) {
                     m_log.warn("Unable to connect to meta file " + file, ex);
+                    continue;
                 } else {
                     m_log.error("Error encountered while connecting to meta file " + file, ex);
                     connect = false;
