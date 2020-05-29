@@ -81,7 +81,7 @@ public class PlannerOptions extends Data implements Cloneable {
 
     /** List of execution pools on which the user wants the Dag to be executed. */
     private Set<String> mExecSites;
-    
+
     /** The output pool on which the data products are needed to be transferred to. */
     private Set<String> mOutputSites;
 
@@ -95,7 +95,6 @@ public class PlannerOptions extends Data implements Cloneable {
      * file have a lower priority than the file locations mentioned in the DAX Replica Store
      */
     private Set<String> mInheritedRCFiles;
-
 
     /**
      * If specified, then it submits to the underlying CondorG using the kickstart-Condorscript
@@ -422,7 +421,6 @@ public class PlannerOptions extends Data implements Cloneable {
     public Collection<String> getOutputSites() {
         return mOutputSites;
     }
-
 
     /**
      * Returns the path to the PDAX file being used by the planner.
@@ -1217,7 +1215,7 @@ public class PlannerOptions extends Data implements Cloneable {
                         + "\n Output Directory     "
                         + this.mOutputDir
                         + "\n Output Sites          "
-                        +  this.setToString(mOutputSites, ",")
+                        + this.setToString(mOutputSites, ",")
                         + "\n Submit to HTCondor Schedd    "
                         + mSubmit
                         + "\n Display Help         "
@@ -1328,7 +1326,6 @@ public class PlannerOptions extends Data implements Cloneable {
             // generate the comma separated string
             // for the execution pools
             sb.append(setToString(mOutputSites, ","));
-        
         }
 
         // the condor submit option

@@ -35,6 +35,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -179,10 +180,10 @@ public class PegasusConfiguration {
      * @param options the planner options.
      */
     public void updateSiteStoreAndOptions(SiteStore store, PlannerOptions options) {
-        
+
         File pegasusBinDir = FindExecutable.findExec("pegasus-version").getParentFile();
         String pegasusHome = pegasusBinDir.getParent();
-
+        Collection<String> outputSites = options.getOutputSites();
         // check for local site or create a default entry
         if (!store.list().contains("local")) {
             store.addEntry(constructDefaultLocalSiteEntry(options, pegasusHome));
@@ -200,7 +201,7 @@ public class PegasusConfiguration {
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
 
-        for(String outputSite: options.getOutputSites()){
+        for (String outputSite : outputSites) {
             if (outputSite != null) {
                 if (!store.list().contains(outputSite)) {
                     StringBuffer error = new StringBuffer();
@@ -217,11 +218,21 @@ public class PegasusConfiguration {
         String externalDirectory =
                 options.getOutputDirectory(); // the external view of the directory if relative
         if (directory != null) {
-            outputSite =
-                    (outputSite == null)
-                            ? "local"
-                            : // user did not specify an output site, default to local
-                            outputSite; // stick with what user specified
+            // here outputSite is the site that corresponds to the output-dir
+            String outputSite = null;
+            if (outputSites.size() == 1) {
+                // stick with what user specified
+                for (String s : outputSites) {
+                    outputSite = s;
+                }
+            } else {
+                // either no output sites passed , or more than 1
+                // in both cases set output site to local
+                outputSite = "local";
+            }
+            mLogger.log(
+                    "Output Dir specified in options associated with site " + outputSite,
+                    LogManager.CONFIG_MESSAGE_LEVEL);
 
             options.addOutputSite(outputSite);
 
