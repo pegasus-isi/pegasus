@@ -773,8 +773,8 @@ def rm(args):
 
                     # Collect all the keys that match
                     for k in bucket_contents:
-                        if fnmatch.fnmatch(k.name, key_name):
-                            keys_to_delete.add(k.name)
+                        if fnmatch.fnmatch(k, key_name):
+                            keys_to_delete.add(k)
 
                 else:
                     keys_to_delete.add(key_name)
