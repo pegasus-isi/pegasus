@@ -164,18 +164,6 @@ def exec_script(script):
 @click.command()
 @click.pass_context
 @click.option(
-    "props",
-    "-D",
-    multiple=True,
-    help="Explicit settings of a property (multi-option) (only use if really required). Example: -Dprop=value.",
-)
-@click.option(
-    "-c",
-    "--conf",
-    metavar="<properties-file>",
-    help="The id of the dag to be removed.",
-)
-@click.option(
     "--grid/--nogrid",
     default=False,
     show_default=True,
@@ -198,9 +186,7 @@ def exec_script(script):
     default=".",
     type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
 )
-def pegasus_run(
-    ctx, props=None, conf=None, grid=False, json=False, verbose=0, submit_dir=None
-):
+def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
     """."""
     logging.basicConfig(level=logging.ERROR - (min(verbose, 3) * 10))
 
@@ -262,9 +248,6 @@ def pegasus_run(
                     )
                     ctx.exit(1)
 
-            # find the workflow name and timestamp for pegasus-status
-            props = ("-D%s" % p for p in props)
-
             # PM-797 do condor_submit on dagman.condor.sub file if it exists
             exec_dag(dag_sub_file, config["condor_log"])
             log.debug("# dagman is running")
@@ -283,10 +266,8 @@ pegasus-status -l %(submit_dir)s
 
 *** To remove your workflow run ***
 
-pegasus-remove %(submit_dir)s
-"""
+pegasus-remove %(submit_dir)s"""
                     % {"submit_dir": submit_dir}
-                    + click.style("✨ Success", fg="green")
                 )
         except (FileNotFoundError, PermissionError, ValueError) as e:
             click.secho(click.style("Error: ", fg="red", bold=True) + str(e))
