@@ -156,7 +156,7 @@ def exec_script(script):
 
     log.debug("# found %s" % script)
 
-    cmd = ("/bin/bash", script)
+    cmd = ("/bin/bash", str(script))
     rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     rv.check_returncode()
 
