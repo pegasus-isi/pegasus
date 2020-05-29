@@ -151,8 +151,8 @@ def exec_script(script):
 
     if not script.is_file():
         raise FileNotFoundError("%s not found" % script)
-    elif os.access(str(script), os.X_OK):
-        raise PermissionError("%s not executable" % script)
+    elif not os.access(str(script), os.X_OK):
+        raise PermissionError("%s is not executable" % script)
 
     log.debug("# found %s" % script)
 
