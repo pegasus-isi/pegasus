@@ -153,9 +153,13 @@ static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream)
 static int fclose_untraced(FILE *fp);
 static int dup_untraced(int fd);
 
+/* The gettid() system call first appeared on Linux in kernel 2.4.11. 
+ * Library support was added in glibc 2.30. */
+#if !defined(_GNU_SOURCE) || !defined(__GLIBC__) || __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 30)
 static pid_t gettid(void) {
     return (pid_t)syscall(SYS_gettid);
 }
+#endif
 
 /* Open the trace file */
 static int topen() {
