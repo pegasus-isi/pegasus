@@ -161,9 +161,7 @@ def exec_script(script):
     rv.check_returncode()
 
 
-@click.command(
-    context_settings=dict(ignore_unknown_options=True, allow_extra_args=True)
-)
+@click.command()
 @click.pass_context
 @click.option(
     "props",
