@@ -80,7 +80,10 @@ public class PlannerOptions extends Data implements Cloneable {
     private String mPDAXFile;
 
     /** List of execution pools on which the user wants the Dag to be executed. */
-    private Set mvExecPools;
+    private Set<String> mvExecSites;
+    
+    /** The output pool on which the data products are needed to be transferred to. */
+    private String mOutputSite;
 
     /**
      * Set of cache files that need to be used, to determine the location of the transiency files.
@@ -93,8 +96,6 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     private Set<String> mInheritedRCFiles;
 
-    /** The output pool on which the data products are needed to be transferred to. */
-    private String mOutputPool;
 
     /**
      * If specified, then it submits to the underlying CondorG using the kickstart-Condorscript
@@ -209,12 +210,12 @@ public class PlannerOptions extends Data implements Cloneable {
         mRelativeSubmitDir = null;
         mDAXFile = null;
         mPDAXFile = null;
-        mvExecPools = new java.util.HashSet();
+        mvExecSites = new java.util.HashSet();
         mCacheFiles = new java.util.HashSet();
         mInheritedRCFiles = new java.util.HashSet();
         mNonStandardJavaOptions = new java.util.HashSet();
         mForwardOptions = new java.util.LinkedList<NameValue>();
-        mOutputPool = null;
+        mOutputSite = null;
         mDisplayHelp = false;
         mLoggingLevel = DEFAULT_LOGGING_LEVEL;
         mForce = false;
@@ -313,7 +314,7 @@ public class PlannerOptions extends Data implements Cloneable {
      * @return <code>Set</code> of execution site names.
      */
     public Collection getExecutionSites() {
-        return mvExecPools;
+        return mvExecSites;
     }
 
     /**
@@ -419,7 +420,7 @@ public class PlannerOptions extends Data implements Cloneable {
      * @return the output site.
      */
     public String getOutputSite() {
-        return mOutputPool;
+        return mOutputSite;
     }
 
     /**
@@ -779,7 +780,7 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public void setExecutionSites(String siteList) {
 
-        mvExecPools = this.generateSet(siteList);
+        mvExecSites = this.generateSet(siteList);
     }
 
     /**
@@ -788,7 +789,7 @@ public class PlannerOptions extends Data implements Cloneable {
      * @param sites <code>Collection</code> of execution site names.
      */
     public void setExecutionSites(Collection sites) {
-        mvExecPools = new HashSet(sites);
+        mvExecSites = new HashSet(sites);
     }
 
     /**
@@ -940,7 +941,7 @@ public class PlannerOptions extends Data implements Cloneable {
      * @param site the output site.
      */
     public void setOutputSite(String site) {
-        mOutputPool = site;
+        mOutputSite = site;
     }
 
     /**
@@ -1203,7 +1204,7 @@ public class PlannerOptions extends Data implements Cloneable {
                         + "\n Partition File       "
                         + mPDAXFile
                         + "\n Execution Sites      "
-                        + this.setToString(mvExecPools, ",")
+                        + this.setToString(mvExecSites, ",")
                         + "\n Staging Sites        "
                         + this.stagingSiteMappingToString()
                         + "\n Cache Files          "
@@ -1215,7 +1216,7 @@ public class PlannerOptions extends Data implements Cloneable {
                         + "\n Output Directory     "
                         + this.mOutputDir
                         + "\n Output Site          "
-                        + mOutputPool
+                        + mOutputSite
                         + "\n Submit to CondorG    "
                         + mSubmit
                         + "\n Display Help         "
@@ -1285,11 +1286,11 @@ public class PlannerOptions extends Data implements Cloneable {
             sb.append(" --job-prefix ").append(mJobPrefix);
         }
 
-        if (!mvExecPools.isEmpty()) {
+        if (!mvExecSites.isEmpty()) {
             sb.append(" --sites ");
             // generate the comma separated string
             // for the execution pools
-            sb.append(setToString(mvExecPools, ","));
+            sb.append(setToString(mvExecSites, ","));
         }
 
         if (!this.mStagingSitesMap.isEmpty()) {
@@ -1321,8 +1322,8 @@ public class PlannerOptions extends Data implements Cloneable {
             sb.append(" --output-dir ").append(this.mOutputDir);
         }
         // specify the output site
-        if (mOutputPool != null) {
-            sb.append(" --output-site ").append(mOutputPool);
+        if (mOutputSite != null) {
+            sb.append(" --output-site ").append(mOutputSite);
         }
 
         // the condor submit option
@@ -1482,14 +1483,14 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mRelativeDir = this.mRelativeDir;
         pOpt.mDAXFile = this.mDAXFile;
         pOpt.mPDAXFile = this.mPDAXFile;
-        pOpt.mvExecPools = cloneSet(this.mvExecPools);
+        pOpt.mvExecSites = cloneSet(this.mvExecSites);
         pOpt.mStagingSitesMap = new HashMap<String, String>(this.mStagingSitesMap);
         pOpt.mCacheFiles = cloneSet(this.mCacheFiles);
         pOpt.mInheritedRCFiles = cloneSet(this.mInheritedRCFiles);
         pOpt.mNonStandardJavaOptions = cloneSet(this.mNonStandardJavaOptions);
         pOpt.mInputDirs = cloneSet(this.mInputDirs);
         pOpt.mOutputDir = this.mOutputDir;
-        pOpt.mOutputPool = this.mOutputPool;
+        pOpt.mOutputSite = this.mOutputSite;
         pOpt.mDisplayHelp = this.mDisplayHelp;
         pOpt.mLoggingLevel = this.mLoggingLevel;
         pOpt.mForce = this.mForce;
