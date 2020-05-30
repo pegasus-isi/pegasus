@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -75,6 +76,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return;
         }
+        mStageoutDirectoriesStore = new HashMap();
         for (String outputSite : mOutputSites) {
             this.mStageoutDirectoriesStore.put(outputSite, this.lookupStorageDirectory(outputSite));
         }
