@@ -43,9 +43,6 @@ public abstract class Engine {
     public static final String REGISTRATION_UNIVERSE = "registration";
     public static final String TRANSFER_UNIVERSE = "transfer";
 
-    /** The pool on which all the output data should be transferred. */
-    protected static String mOutputPool;
-
     /** The object holding all the properties pertaining to Pegasus. */
     protected PegasusProperties mProps;
 

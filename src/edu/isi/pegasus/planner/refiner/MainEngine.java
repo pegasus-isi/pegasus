@@ -58,8 +58,11 @@ public class MainEngine extends Engine {
     /** The cleanup dag for the final concrete dag. */
     private ADag mCleanupDag;
 
-    /** The pools on which the Dag should be executed as specified by the user. */
-    private Set mExecPools;
+    /** The sites on which the Dag should be executed as specified by the user. */
+    private Set mExecSites;
+    
+    /** The sites on which all the output data should be transferred. */
+    private Set<String> mOutputSites;
 
     /** The bridge to the Replica Catalog. */
     private ReplicaCatalogBridge mRCBridge;
@@ -93,15 +96,10 @@ public class MainEngine extends Engine {
      * @param bag the bag of initialization objects
      */
     public MainEngine(ADag orgDag, PegasusBag bag) {
-
         super(bag);
         mOriginalDag = orgDag;
-        mExecPools = (Set) mPOptions.getExecutionSites();
-        mOutputPool = mPOptions.getOutputSite();
-
-        if (mOutputPool != null && mOutputPool.length() > 0) {
-            Engine.mOutputPool = mOutputPool;
-        }
+        mExecSites = (Set) mPOptions.getExecutionSites();
+        mOutputSites = (Set)mPOptions.getOutputSites();
     }
 
     /**
