@@ -160,14 +160,14 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
      * @param addOn
      */
     private void trackLFNAddOn(String site, String lfn, String addOn) {
-        if (site.equals(mOutputSite) || mSiteLFNAddOnMap.containsKey(site)) {
+        if (mSiteLFNAddOnMap.containsKey(site)) {
             // we know output site  it is initialized already
             Map m = mSiteLFNAddOnMap.get(site);
             m.put(lfn, addOn);
         } else {
             Map<String, String> m = new HashMap();
             m.put(lfn, addOn);
-            mSiteLFNAddOnMap.put(mOutputSite, m);
+            mSiteLFNAddOnMap.put(site, m);
         }
         mNumberOfExistingLFNS++;
     }
@@ -195,10 +195,12 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
         // this is also relying on the fact that registration URL's (for which existing = true)
         // are retrieved in conjuction with the PUT urls on the stageout site.
         mSiteLFNAddOnMap = new HashMap();
-        if (mOutputSite != null) {
+        if (mOutputSites != null) {
             // add a default lfn to add on map for the site
             Map<String, String> m = new HashMap();
-            mSiteLFNAddOnMap.put(mOutputSite, m);
+            for (String outputSite : this.mOutputSites) {
+                mSiteLFNAddOnMap.put(outputSite, m);
+            }
         }
         mNumberOfExistingLFNS = 0;
     }

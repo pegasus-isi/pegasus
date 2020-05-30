@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.mapper.OutputMapper;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A convenience mapper implementation that stages output files to a fixed directory, specified
@@ -56,8 +57,8 @@ public class Fixed implements OutputMapper {
     /** Handle to the Site Catalog contents. */
     protected SiteStore mSiteStore;
 
-    /** The output site where the data needs to be placed. */
-    protected String mOutputSite;
+    /** The output sites where the data needs to be placed. */
+    protected Set<String> mOutputSites;
 
     /** Externally accessible URL */
     private String mDirectoryURL;
@@ -73,12 +74,10 @@ public class Fixed implements OutputMapper {
      */
     public void initialize(PegasusBag bag, ADag workflow) throws MapperException {
         PlannerOptions options = bag.getPlannerOptions();
-        String outputSite = options.getOutputSite();
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
-        mOutputSite = outputSite;
-
-        boolean stageOut = ((outputSite != null) && (outputSite.trim().length() > 0));
+        mOutputSites = (Set<String>) options.getOutputSites();
+        boolean stageOut = ((this.mOutputSites != null) && (!this.mOutputSites.isEmpty()));
 
         if (!stageOut) {
             // no initialization and return

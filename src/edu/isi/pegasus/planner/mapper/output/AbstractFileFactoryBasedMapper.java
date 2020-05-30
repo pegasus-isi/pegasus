@@ -27,6 +27,8 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.griphyn.vdl.euryale.FileFactory;
 
 /**
@@ -44,11 +46,11 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
     /** Handle to the Site Catalog contents. */
     protected SiteStore mSiteStore;
 
-    /** The output site where the data needs to be placed. */
-    protected String mOutputSite;
+    /** The output sites where the data needs to be placed. */
+    protected Set<String> mOutputSites;
 
-    /** The stage out directory where the outputs are staged to. */
-    protected Directory mStageoutDirectory;
+    /** The stage out directories where the outputs are staged to indexed by site name */
+    protected Map<String, Directory> mStageoutDirectoriesStore;
 
     /** The default constructor. */
     public AbstractFileFactoryBasedMapper() {}
@@ -61,11 +63,10 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      */
     public void initialize(PegasusBag bag, ADag workflow) throws MapperException {
         PlannerOptions options = bag.getPlannerOptions();
-        String outputSite = options.getOutputSite();
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
-        mOutputSite = outputSite;
-        boolean stageOut = ((outputSite != null) && (outputSite.trim().length() > 0));
+        mOutputSites = (Set<String>) options.getOutputSites();
+        boolean stageOut = ((this.mOutputSites != null) && (!this.mOutputSites.isEmpty()));
 
         if (!stageOut) {
             // no initialization and return
@@ -74,9 +75,9 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return;
         }
-
-        mStageoutDirectory = this.lookupStorageDirectory(outputSite);
-
+        for (String outputSite : mOutputSites) {
+            this.mStageoutDirectoriesStore.put(outputSite, this.lookupStorageDirectory(outputSite));
+        }
         mFactory = this.instantiateFileFactory(bag, workflow);
     }
 
@@ -164,12 +165,10 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      */
     public String map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
             throws MapperException {
-        Directory directory = null;
-        if (mOutputSite != null && mOutputSite.equals(site)) {
-            directory = this.mStageoutDirectory;
-        } else {
-            directory = this.lookupStorageDirectory(site);
-        }
+        Directory directory =
+                mStageoutDirectoriesStore.containsKey(site)
+                        ? mStageoutDirectoriesStore.get(site)
+                        : this.lookupStorageDirectory(site);
 
         FileServer server = directory.selectFileServer(operation);
         if (server == null) {
@@ -191,17 +190,15 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      * @param lfn the lfn
      * @param site the output site
      * @param operation whether we want a GET or a PUT URL
-     * @return List<String> of externally accessible URLs to the mapped file.
+     * @return List of externally accessible URLs to the mapped file.
      * @throws MapperException if unable to construct URL for any reason
      */
     public List<String> mapAll(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException {
-        Directory directory = null;
-        if (mOutputSite != null && mOutputSite.equals(site)) {
-            directory = this.mStageoutDirectory;
-        } else {
-            directory = this.lookupStorageDirectory(site);
-        }
+        Directory directory =
+                mStageoutDirectoriesStore.containsKey(site)
+                        ? mStageoutDirectoriesStore.get(site)
+                        : this.lookupStorageDirectory(site);
 
         // sanity check
         if (!directory.hasFileServerForOperations(operation)) {
