@@ -214,7 +214,7 @@ public class PlannerOptions extends Data implements Cloneable {
         mInheritedRCFiles = new java.util.HashSet();
         mNonStandardJavaOptions = new java.util.HashSet();
         mForwardOptions = new java.util.LinkedList<NameValue>();
-        mOutputSites = null;
+        mOutputSites = new java.util.HashSet();
         mDisplayHelp = false;
         mLoggingLevel = DEFAULT_LOGGING_LEVEL;
         mForce = false;
