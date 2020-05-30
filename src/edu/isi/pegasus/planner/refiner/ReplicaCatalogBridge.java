@@ -527,9 +527,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
                 ReplicaCatalogBridge.RC_DERIVATION_NAME,
                 ReplicaCatalogBridge.RC_DERIVATION_VERSION);
 
-        //        SiteInfo site = mPoolHandle.getPoolEntry( mOutputPool, "vanilla" );
-        SiteCatalogEntry site = mSiteStore.lookup(mOutputPool);
-
+        
         // change this function
         List tcentries = null;
         try {
@@ -578,7 +576,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
         File dir = new File(mPOptions.getSubmitDirectory(), newJob.getRelativeSubmitDirectory());
 
         newJob.setArguments(
-                this.generateRepJobArgumentString(site, dir, regJobName, files, computeJobs));
+                this.generateRepJobArgumentString(dir, regJobName, files, computeJobs));
         newJob.setUniverse(GridGateway.JOB_TYPE.register.toString());
         newJob.setSiteHandle(tc.getResourceId());
         newJob.setJobType(Job.REPLICA_REG_JOB);
@@ -687,7 +685,6 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      * Generates the argument string to be given to the replica registration job. At present by
      * default it would be picking up the file containing the mappings.
      *
-     * @param site the <code>SiteCatalogEntry</code> object
      * @param dir the directory where the .in file should be written to
      * @param regJob The name of the registration job.
      * @param files Collection of <code>FileTransfer</code> objects containing the information about
@@ -695,32 +692,11 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      * @return the argument string.
      */
     private String generateRepJobArgumentString(
-            SiteCatalogEntry site,
             File dir,
             String regJob,
             Collection files,
             Collection<Job> computeJobs) {
         StringBuilder arguments = new StringBuilder();
-
-        // select a LRC. disconnect here. It should be select a RC.
-
-        edu.isi.pegasus.planner.catalog.site.classes.ReplicaCatalog rc =
-                (site == null) ? null : site.selectReplicaCatalog();
-
-        // we append the url property if a user has specified a
-        // URL in the site catalog entry, else we rely on what
-        // was specified in properties
-        if (!(rc == null || rc.getURL() == null || rc.getURL().length() == 0)) {
-            // we have a lrc selected . construct vds.rc.url property
-            arguments
-                    .append("-D")
-                    .append(ReplicaCatalog.c_prefix)
-                    .append(".")
-                    .append(ReplicaCatalogBridge.REPLICA_CATALOG_URL_KEY)
-                    .append("=")
-                    .append(rc.getURL())
-                    .append(" ");
-        }
 
         // PM-1549 set the the type to be output to indicate registration to output replica catalog
         arguments
