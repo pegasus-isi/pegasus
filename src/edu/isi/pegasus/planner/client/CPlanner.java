@@ -898,7 +898,7 @@ public class CPlanner extends Executable {
                     break;
 
                 case 'o': // output-site
-                    options.addOutputSite(g.getOptarg());
+                    options.setOutputSites(g.getOptarg());
                     break;
 
                 case 'O': // output-dir
@@ -1093,7 +1093,7 @@ public class CPlanner extends Executable {
         longopts[31] = new LongOpt("staging-site", LongOpt.REQUIRED_ARGUMENT, null, '9');
         longopts[32] = new LongOpt("input-dir", LongOpt.REQUIRED_ARGUMENT, null, 'I');
         longopts[33] = new LongOpt("output-dir", LongOpt.REQUIRED_ARGUMENT, null, 'O');
-        longopts[34] = new LongOpt("output-site", LongOpt.REQUIRED_ARGUMENT, null, 'o');
+        longopts[34] = new LongOpt("output-sites", LongOpt.REQUIRED_ARGUMENT, null, 'o');
         longopts[35] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
         return longopts;
     }
@@ -1136,7 +1136,7 @@ public class CPlanner extends Executable {
                 .append(
                         "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] ")
                 .append(
-                        "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] ")
+                        "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output-sites output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] ")
                 .append("\n")
                 .append("\n Options ")
                 .append("\n -d  fn ")
@@ -1181,7 +1181,7 @@ public class CPlanner extends Executable {
                 .append(
                         "\n                      the directory specified is asscociated with the local-storage directory for the output site.")
                 .append(
-                        "\n -o |--output-site  the output site where the data products during workflow execution are transferred to.")
+                        "\n -o |--output-sites comma separated list of output sites where the data products during workflow execution are transferred to.")
                 .append(
                         "\n --output           deprecated option . Replaced by --output-site option")
                 .append(

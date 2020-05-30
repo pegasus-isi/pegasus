@@ -778,7 +778,6 @@ public class PlannerOptions extends Data implements Cloneable {
      * @param siteList comma separated list of sites.
      */
     public void setExecutionSites(String siteList) {
-
         mExecSites = this.generateSet(siteList);
     }
 
@@ -932,6 +931,15 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public void setOutputDirectory(String output) {
         this.mOutputDir = output;
+    }
+
+    /**
+     * Sets the names of the execution sites where the concrete workflow can be run.
+     *
+     * @param siteList comma separated list of sites.
+     */
+    public void setOutputSites(String siteList) {
+        mOutputSites = this.generateSet(siteList);
     }
 
     /**
