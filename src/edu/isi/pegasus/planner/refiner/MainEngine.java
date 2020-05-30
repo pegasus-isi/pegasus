@@ -60,7 +60,7 @@ public class MainEngine extends Engine {
 
     /** The sites on which the Dag should be executed as specified by the user. */
     private Set mExecSites;
-    
+
     /** The sites on which all the output data should be transferred. */
     private Set<String> mOutputSites;
 
@@ -99,7 +99,7 @@ public class MainEngine extends Engine {
         super(bag);
         mOriginalDag = orgDag;
         mExecSites = (Set) mPOptions.getExecutionSites();
-        mOutputSites = (Set)mPOptions.getOutputSites();
+        mOutputSites = (Set) mPOptions.getOutputSites();
     }
 
     /**

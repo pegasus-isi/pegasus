@@ -22,7 +22,6 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -527,7 +526,6 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
                 ReplicaCatalogBridge.RC_DERIVATION_NAME,
                 ReplicaCatalogBridge.RC_DERIVATION_VERSION);
 
-        
         // change this function
         List tcentries = null;
         try {
@@ -575,8 +573,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
         // where the submit file for the job will be written out
         File dir = new File(mPOptions.getSubmitDirectory(), newJob.getRelativeSubmitDirectory());
 
-        newJob.setArguments(
-                this.generateRepJobArgumentString(dir, regJobName, files, computeJobs));
+        newJob.setArguments(this.generateRepJobArgumentString(dir, regJobName, files, computeJobs));
         newJob.setUniverse(GridGateway.JOB_TYPE.register.toString());
         newJob.setSiteHandle(tc.getResourceId());
         newJob.setJobType(Job.REPLICA_REG_JOB);
@@ -692,10 +689,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      * @return the argument string.
      */
     private String generateRepJobArgumentString(
-            File dir,
-            String regJob,
-            Collection files,
-            Collection<Job> computeJobs) {
+            File dir, String regJob, Collection files, Collection<Job> computeJobs) {
         StringBuilder arguments = new StringBuilder();
 
         // PM-1549 set the the type to be output to indicate registration to output replica catalog

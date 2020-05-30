@@ -162,7 +162,7 @@ public class TransferEngine extends Engine {
     private PegasusConfiguration mPegasusConfiguration;
 
     /** The output site where files need to be staged to. */
-    private final String mOutputSite;
+    private final Set<String> mOutputSites;
 
     /** The dial for integrity checking */
     protected PegasusProperties.INTEGRITY_DIAL mIntegrityDial;
@@ -211,7 +211,7 @@ public class TransferEngine extends Engine {
             throw new FactoryException("Transfer Engine ", e);
         }
 
-        mOutputSite = mPOptions.getOutputSite();
+        mOutputSites = (Set<String>) mPOptions.getOutputSites();
         mOutputMapper = OutputMapperFactory.loadInstance(reducedDag, bag);
 
         mWorkflowCache = this.initializeWorkflowCacheFile(reducedDag);
@@ -376,18 +376,13 @@ public class TransferEngine extends Engine {
 
         Job currentJob;
         String currentJobName;
-        Vector vOutPoolTX;
         String msg;
-        String outputSite = mPOptions.getOutputSite();
 
         // convert the dax to a graph representation and walk it
         // in a top down manner
         // PM-747 no need for conversion as ADag now implements Graph interface
         Graph workflow = mDag;
-
-        // go through each job in turn
-
-        boolean stageOut = ((outputSite != null) && (outputSite.trim().length() > 0));
+        boolean stageOut = ((this.mOutputSites != null) && (!this.mOutputSites.isEmpty()));
 
         for (Iterator it = workflow.iterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
@@ -413,7 +408,7 @@ public class TransferEngine extends Engine {
             processParents(currentJob, parents);
 
             // transfer the nodes output files
-            // to the output pool
+            // to the output sites
             if (stageOut) {
                 SiteCatalogEntry stagingSite = mSiteStore.lookup(currentJob.getStagingSiteHandle());
                 if (stagingSite == null) {
@@ -436,8 +431,12 @@ public class TransferEngine extends Engine {
                 boolean localTransfer =
                         runTransferOnLocalSite(
                                 stagingSite, stagingSiteURLPrefix, Job.STAGE_OUT_JOB);
-                vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer);
-                mTXRefiner.addStageOutXFERNodes(currentJob, vOutPoolTX, rcb, localTransfer);
+                Collection<FileTransfer> transfersToOutputSites = new LinkedList();
+                for (String outputSite : this.mOutputSites) {
+                    transfersToOutputSites.addAll(getFileTX(outputSite, currentJob, localTransfer));
+                }
+                mTXRefiner.addStageOutXFERNodes(
+                        currentJob, transfersToOutputSites, rcb, localTransfer);
             } else {
                 // create the cache file always
                 // Pegasus Bug PM-32 and PM-356
@@ -448,10 +447,8 @@ public class TransferEngine extends Engine {
         // we are done with the traversal.
         // mTXRefiner.done();
 
-        // get the deleted leaf jobs o/p files to output pool
-        // only if output pool is specified
-        // should be moved upwards in the pool. redundancy at present
-        if (outputSite != null && outputSite.trim().length() > 0 && !mDeletedJobs.isEmpty()) {
+        // get the deleted leaf jobs o/p files to output sites
+        if (stageOut && !mDeletedJobs.isEmpty()) {
 
             mLogger.log(
                     "Adding stage out jobs for jobs deleted from the workflow",
@@ -470,15 +467,18 @@ public class TransferEngine extends Engine {
 
                 // for jobs deleted during data reuse we dont
                 // go through the staging site. they are transferred
-                // directly to the output site.
-                vOutPoolTX = getDeletedFileTX(outputSite, currentJob);
-                if (!vOutPoolTX.isEmpty()) {
+                // directly to the output sites
+                Collection<FileTransfer> deletedFileTransfers = new LinkedList();
+                for (String outputSite : this.mOutputSites) {
+                    deletedFileTransfers.addAll(getDeletedFileTX(outputSite, currentJob));
+                }
+                if (!deletedFileTransfers.isEmpty()) {
                     // the job is deleted anyways. The files exist somewhere
                     // as mentioned in the Replica Catalog. We assume it is
                     // URL remotely accessible
                     boolean localTransfer = true;
                     mTXRefiner.addStageOutXFERNodes(
-                            currentJob, vOutPoolTX, rcb, localTransfer, true);
+                            currentJob, deletedFileTransfers, rcb, localTransfer, true);
                 }
             }
         }
@@ -514,10 +514,10 @@ public class TransferEngine extends Engine {
      * @param destSite this the output pool which the user specifies at runtime.
      * @param job The Job object corresponding to the leaf job which was deleted by the Reduction
      *     algorithm
-     * @return Vector of <code>FileTransfer</code> objects
+     * @return Collection of <code>FileTransfer</code> objects
      */
-    private Vector getDeletedFileTX(String destSite, Job job) {
-        Vector vFileTX = new Vector();
+    private Collection<FileTransfer> getDeletedFileTX(String destSite, Job job) {
+        Collection<FileTransfer> fileTransfers = new LinkedList();
         SiteCatalogEntry outputSite = mSiteStore.lookup(destSite);
         for (Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
@@ -581,10 +581,10 @@ public class TransferEngine extends Engine {
 
             }
             if (!flag) { //  adding the last pfn
-                vFileTX.addElement(ft);
+                fileTransfers.add(ft);
             }
         }
-        return vFileTX;
+        return fileTransfers;
     }
 
     /**
@@ -657,10 +657,10 @@ public class TransferEngine extends Engine {
      * @param job The <code>Job</code>object of the job whose output files are needed at the
      *     destination pool.
      * @param localTransfer boolean indicating that associated transfer job will run on local site.
-     * @return Vector of <code>FileTransfer</code> objects
+     * @return Collection of <code>FileTransfer</code> objects
      */
-    private Vector getFileTX(String destPool, Job job, boolean localTransfer) {
-        Vector vFileTX = new Vector();
+    private Collection<FileTransfer> getFileTX(String destPool, Job job, boolean localTransfer) {
+        Collection fileTransfers = new LinkedList();
 
         // check if there is a remote initialdir set
         String path = job.vdsNS.getStringValue(Pegasus.REMOTE_INITIALDIR_KEY);
@@ -683,11 +683,11 @@ public class TransferEngine extends Engine {
                         ft.setChecksumComputedInWF(false);
                     }
                 }
-                vFileTX.add(ft);
+                fileTransfers.add(ft);
             }
         }
 
-        return vFileTX;
+        return fileTransfers;
     }
 
     /**
@@ -1185,7 +1185,7 @@ public class TransferEngine extends Engine {
      *     need to have their mapping looked up from the Replica Mechanism.
      */
     private void getFilesFromRC(Job job, Collection searchFiles) {
-        // Vector vFileTX = new Vector();
+        // Vector fileTransfers = new Vector();
         // Collection<FileTransfer> symLinkFileTransfers = new LinkedList();
         Collection<FileTransfer> localFileTransfers = new LinkedList();
         Collection<FileTransfer> remoteFileTransfers = new LinkedList();
