@@ -769,7 +769,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:1:",
+                        "vqhfSnzpVr::aD:d:s:o:O:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:1:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -888,15 +888,7 @@ public class CPlanner extends Executable {
                             LogManager.WARNING_MESSAGE_LEVEL);
                     options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.none);
                     break;
-
-                case 'y': // output option
-                    options.addOutputSite(g.getOptarg());
-                    // warn
-                    mLogger.log(
-                            "--output option is deprecated. Replaced by --output-site ",
-                            LogManager.WARNING_MESSAGE_LEVEL);
-                    break;
-
+                    
                 case 'o': // output-site
                     options.setOutputSites(g.getOptarg());
                     break;
@@ -1061,7 +1053,6 @@ public class CPlanner extends Executable {
         longopts[0] = new LongOpt("dir", LongOpt.REQUIRED_ARGUMENT, null, '8');
         longopts[1] = new LongOpt("dax", LongOpt.REQUIRED_ARGUMENT, null, 'd');
         longopts[2] = new LongOpt("sites", LongOpt.REQUIRED_ARGUMENT, null, 's');
-        longopts[3] = new LongOpt("output", LongOpt.REQUIRED_ARGUMENT, null, 'y');
         longopts[4] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
         longopts[5] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
         longopts[6] = new LongOpt("force", LongOpt.NO_ARGUMENT, null, 'f');
@@ -1184,8 +1175,6 @@ public class CPlanner extends Executable {
                         "\n                      the directory specified is asscociated with the local-storage directory for the output site.")
                 .append(
                         "\n -o |--output-sites comma separated list of output sites where the data products during workflow execution are transferred to.")
-                .append(
-                        "\n --output           deprecated option . Replaced by --output-site option")
                 .append(
                         "\n -s |--sites        comma separated list of executions sites on which to map the workflow.")
                 .append(
