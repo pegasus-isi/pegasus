@@ -1,4 +1,6 @@
 import json
+import logging
+import sys
 from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import wraps
@@ -17,6 +19,9 @@ PEGASUS_VERSION = "5.0"
 
 __all__ = ["Job", "SubWorkflow", "Workflow"]
 
+# Any logs coming from the client (which are just wrappers around pegasus tools
+# should pass logs through as is. 
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format="%(message)s")
 
 class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     """An abstract representation of a workflow job"""
