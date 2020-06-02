@@ -23,7 +23,8 @@ class NoAuthFlaskTestCase:
 class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
     def test_get_root_workflows(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root" % self.user, pre_callable=self.pre_callable
+            "/api/v1/user/%s/root?pretty-print=true" % self.user,
+            pre_callable=self.pre_callable,
         )
 
         assert rv.status_code == 200
@@ -43,7 +44,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_query_with_prefix(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?query=r.wf_id == 1" % self.user,
+            "/api/v1/user/%s/root?pretty-print=false&query=r.wf_id == 1" % self.user,
             pre_callable=self.pre_callable,
         )
 
@@ -371,21 +372,6 @@ class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
 
         assert job["dax_label"], "hello_world"
 
-    def test_get_recent_workflow_state(self, cli):
-        rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/state;recent=true" % self.user,
-            pre_callable=self.pre_callable,
-        )
-
-        assert rv.status_code == 200
-        assert rv.content_type.lower() == "application/json"
-
-        workflow_states = rv.json
-
-        assert len(workflow_states["records"]) == 1
-        assert workflow_states["_meta"]["records_total"] == 8
-        assert workflow_states["_meta"]["records_filtered"] == 1
-
 
 class TestStampedeJobQueries(NoAuthFlaskTestCase):
     def test_get_workflow_jobs(self, cli):
@@ -481,22 +467,6 @@ class TestStampedeJobstateQueries(NoAuthFlaskTestCase):
             job_states["_meta"]["records_total"]
             == job_states["_meta"]["records_filtered"]
         )
-
-    def test_get_recent_job_state(self, cli):
-        rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/1/job-instance/3/state;recent=true"
-            % self.user,
-            pre_callable=self.pre_callable,
-        )
-
-        assert rv.status_code == 200
-        assert rv.content_type.lower() == "application/json"
-
-        job_states = rv.json
-
-        assert len(job_states["records"]) == 1
-        assert job_states["_meta"]["records_total"] == 7
-        assert job_states["_meta"]["records_filtered"] == 1
 
 
 class TestStampedeTaskQueries(NoAuthFlaskTestCase):
@@ -605,7 +575,7 @@ class TestStampedeJobInstanceQueries(NoAuthFlaskTestCase):
 
     def test_get_recent_job_instance(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/6/job-instance;recent=true"
+            "/api/v1/user/%s/root/1/workflow/1/job/6/job-instance?recent=true"
             % self.user,
             pre_callable=self.pre_callable,
         )
@@ -621,7 +591,7 @@ class TestStampedeJobInstanceQueries(NoAuthFlaskTestCase):
 
     def test_get_job_instance(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/6/job-instance;recent=true"
+            "/api/v1/user/%s/root/1/workflow/1/job/6/job-instance?recent=true"
             % self.user,
             pre_callable=self.pre_callable,
         )

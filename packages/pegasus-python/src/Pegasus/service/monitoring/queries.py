@@ -102,7 +102,7 @@ class WorkflowQueries:
         else:
             log.debug("Cache Miss: %s" % cache_key)
             count = q.count()
-            t = timeout(count) if hasattr(timeout, "__call__") else timeout
+            t = timeout(count) if callable(timeout) else timeout
             cache.set(cache_key, count, t)
 
         return count
@@ -116,7 +116,7 @@ class WorkflowQueries:
         else:
             log.debug("Cache Miss: %s" % cache_key)
             record = q.all()
-            t = timeout(record) if hasattr(timeout, "__call__") else timeout
+            t = timeout(record) if callable(timeout) else timeout
             cache.set(cache_key, record, t)
 
         return record
@@ -130,7 +130,7 @@ class WorkflowQueries:
         else:
             log.debug("Cache Miss: %s" % cache_key)
             record = q.one()
-            t = timeout(record) if hasattr(timeout, "__call__") else timeout
+            t = timeout(record) if callable(timeout) else timeout
             cache.set(cache_key, record, t)
 
         return record
@@ -588,7 +588,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
     def get_workflow_state(
         self,
         wf_id,
-        recent=False,
         start_index=None,
         max_results=None,
         query=None,
@@ -600,7 +599,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         Returns a collection of the Workflowstate objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
-        :param recent: Get the most recent results
         :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
@@ -625,21 +623,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if total_records == 0:
             return PagedResponse([], 0, 0)
 
-        if recent:
-            qws = self._get_recent_workflow_state(wf_id)
-            qws = qws.subquery("max_ws")
-            q = q.join(
-                qws,
-                and_(
-                    Workflowstate.wf_id == qws.c.wf_id,
-                    Workflowstate.timestamp == qws.c.max_time,
-                ),
-            )
-
         #
         # Construct SQLAlchemy Query `q` to filter.
         #
-        if query or recent:
+        if query:
             q = self._evaluate_query(q, query, ws=Workflowstate)
             total_filtered = self._get_count(q, use_cache, timeout=timeout)
 
@@ -858,7 +845,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         wf_id,
         job_id,
         job_instance_id,
-        recent=False,
         start_index=None,
         max_results=None,
         query=None,
@@ -872,7 +858,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: job_id associated with the job instance states
         :param job_instance_id: job_instance_id associated with the job instance states
-        :param recent: Get the most recent results
         :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
@@ -898,21 +883,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if total_records == 0:
             return PagedResponse([], 0, 0)
 
-        if recent:
-            qjsss = self._get_recent_job_state(job_instance_id)
-            qjsss = qjsss.subquery("max_jsss")
-            q = q.join(
-                qjsss,
-                and_(
-                    Jobstate.job_instance_id == qjsss.c.job_instance_id,
-                    Jobstate.jobstate_submit_seq == qjsss.c.max_jsss,
-                ),
-            )
-
         #
         # Construct SQLAlchemy Query `q` to filter.
         #
-        if query or recent:
+        if query:
             q = self._evaluate_query(q, query, js=Jobstate)
             total_filtered = self._get_count(q, use_cache)
 
@@ -1706,8 +1680,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = q.filter(Job.job_id == JobInstance.job_id)
 
         # Running
-        j = orm.aliased(Job, name="j")
-        ji = orm.aliased(JobInstance, name="ji")
+        j = aliased(Job, name="j")
+        ji = aliased(JobInstance, name="ji")
 
         qr = self.session.query(distinct(j.job_id))
 
