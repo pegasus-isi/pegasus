@@ -991,10 +991,12 @@ public class CPlanner extends Executable {
                     new StreamGobbler(
                             p.getInputStream(),
                             new DefaultStreamGobblerCallback(LogManager.CONSOLE_MESSAGE_LEVEL));
+            // error stream is also logged to console, as 5.0 pegasus-run always 
+            // logs to stderr and reserves stdout for it's --json option
             StreamGobbler eps =
                     new StreamGobbler(
                             p.getErrorStream(),
-                            new DefaultStreamGobblerCallback(LogManager.ERROR_MESSAGE_LEVEL));
+                            new DefaultStreamGobblerCallback(LogManager.CONSOLE_MESSAGE_LEVEL));
 
             ips.start();
             eps.start();
