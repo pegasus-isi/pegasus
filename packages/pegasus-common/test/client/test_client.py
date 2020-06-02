@@ -1,12 +1,21 @@
 import shutil
 import subprocess
+from collections import namedtuple
 from subprocess import CompletedProcess
 from textwrap import dedent
 
 import pytest
 
-from Pegasus.client._client import Client, Result, from_env
+from Pegasus.client._client import Client, Result, from_env, PegasusClientError
 
+def test_PegasusClientError():
+    return_value = namedtuple("return_value", ["stdout", "stderr"])
+    rv = return_value("stdout", "stderr")
+    try:
+        raise PegasusClientError("pegasus command failed", rv)
+    except PegasusClientError as e:
+        assert e.output == "stdout\nstderr"
+        assert e.result == rv
 
 def test_from_env(mocker):
     mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
