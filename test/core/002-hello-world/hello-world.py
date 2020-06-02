@@ -4,9 +4,6 @@ import sys
 
 from Pegasus.api import *
 
-# launch-bamboo-test needs these logs to be sent to stdout
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-
 # --- Transformations ----------------------------------------------------------
 echo = Transformation(
         "echo", 

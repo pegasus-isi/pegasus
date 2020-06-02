@@ -8,8 +8,6 @@ from datetime import datetime
 
 from Pegasus.api import *
 
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "025-sc4-file-http" + datetime.now().strftime("%s")
 TOP_DIR = Path.cwd()
