@@ -9,6 +9,13 @@ from os import path
 
 from Pegasus import yaml
 
+class PegasusClientError(Exception):
+    """Exception raised when an invoked pegasus command line tool returns non 0"""
+    def __init__(self, message, result):
+        super().__init__(message)
+
+        self.output = result.stdout + "\n" + result.stderr
+        self.result = result 
 
 def from_env(pegasus_home: str = None):
     if not pegasus_home:
@@ -311,7 +318,8 @@ class Client:
         r = Client._make_result(rv)
 
         if r.exit_code != 0:
-            raise ValueError("Pegasus command failed", r)
+            raise PegasusClientError(
+                "Pegasus command: {} FAILED".format(cmd), r)
 
         return r
 

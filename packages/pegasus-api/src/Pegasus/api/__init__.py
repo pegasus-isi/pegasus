@@ -19,3 +19,5 @@ from .transformation_catalog import (
     TransformationSite,
 )
 from .workflow import Job, SubWorkflow, Workflow
+
+from Pegasus.client._client import PegasusClientError
