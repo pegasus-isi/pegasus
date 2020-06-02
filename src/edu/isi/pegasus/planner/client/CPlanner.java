@@ -1138,7 +1138,7 @@ public class CPlanner extends Executable {
                 .append(
                         "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] ")
                 .append(
-                        "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output-sites output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] ")
+                        "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output-sites <output sites>] [--randomdir=[dir name]]   [--verbose] [--version][--help] ")
                 .append("\n")
                 .append("\n Options ")
                 .append("\n -d  fn ")
