@@ -769,7 +769,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSnzpVr::aD:d:s:o:O:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:1:",
+                        "vqhfSnzpVr::aD:d:s:o:O:P:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -856,10 +856,6 @@ public class CPlanner extends Executable {
 
                 case 'F': // forward
                     options.addToForwardOptions(g.getOptarg());
-                    break;
-
-                case 'g': // group
-                    options.setVOGroup(g.getOptarg());
                     break;
 
                 case 'h': // help
@@ -1071,7 +1067,6 @@ public class CPlanner extends Executable {
         longopts[16] = new LongOpt("basename", LongOpt.REQUIRED_ARGUMENT, null, 'b');
         longopts[17] = new LongOpt("monitor", LongOpt.NO_ARGUMENT, null, 1);
         longopts[18] = new LongOpt("nocleanup", LongOpt.NO_ARGUMENT, null, 'n');
-        longopts[19] = new LongOpt("group", LongOpt.REQUIRED_ARGUMENT, null, 'g');
         longopts[20] = new LongOpt("deferred", LongOpt.NO_ARGUMENT, null, 'z');
         longopts[21] = new LongOpt("relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2');
         longopts[22] = new LongOpt("pap", LongOpt.NO_ARGUMENT, null, 'p');
@@ -1164,7 +1159,6 @@ public class CPlanner extends Executable {
                 .append(
                         "\n                    where value can be optional. e.g -F nogrid will result in --nogrid . The option ")
                 .append("\n                    can be repeated multiple times.")
-                .append("\n -g |--group        the VO Group to which the user belongs ")
                 .append(
                         "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames ")
                 .append(
