@@ -275,6 +275,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         for i in range(len(records)):
             new_record = records[i][0]
             new_record.workflow_state = records[i][1]
+            new_record.__includes__ = ("workflow_state",)
             records[i] = new_record
 
         return PagedResponse(records, total_records, total_filtered)
@@ -1748,6 +1749,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             for i in range(len(records)):
                 new_record = records[i][0]
                 new_record.job_instance = records[i][1]
+                new_record.__includes__ = ("job_instance",)
                 records[i] = new_record
 
         return records

@@ -41,6 +41,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
             root_workflows["_meta"]["records_total"]
             == root_workflows["_meta"]["records_filtered"]
         )
+        assert "workflow_state" in root_workflows["records"][0]
 
     def test_query_with_prefix(self, cli):
         rv = cli.get_context(
@@ -409,6 +410,22 @@ class TestStampedeJobQueries(NoAuthFlaskTestCase):
         )
 
         assert rv.status_code == 404
+
+    def test_get_running_jobs(self, cli):
+        rv = cli.get_context(
+            "/api/v1/user/%s/root/1/workflow/1/job/successful" % self.user,
+            pre_callable=self.pre_callable,
+        )
+
+        assert rv.status_code == 200
+        assert rv.content_type.lower() == "application/json"
+
+        jobs = rv.json
+
+        assert len(jobs["records"]) == 5
+        assert len(jobs["records"]) == jobs["_meta"]["records_total"]
+        assert jobs["_meta"]["records_total"] == jobs["_meta"]["records_filtered"]
+        assert "job_instance" in jobs["records"][0]
 
 
 class TestStampedeHostQueries(NoAuthFlaskTestCase):
