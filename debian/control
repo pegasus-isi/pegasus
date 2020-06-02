@@ -15,7 +15,6 @@ Build-Depends: debhelper (>= 9),
        python3-setuptools,
        python3-yaml,
        r-base-dev,
-       texlive-latex-base, texlive-fonts-recommended,
        zlib1g-dev
 Standards-Version: 3.9.4
 X-Python-Version: >= 2.7
