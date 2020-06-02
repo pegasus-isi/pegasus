@@ -148,5 +148,5 @@ try:
         force=True,
         submit=True,
     )
-except Exception as e:
-    print(e.args)
+except PegasusClientError as e:
+    print(e.output)

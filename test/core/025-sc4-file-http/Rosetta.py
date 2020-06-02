@@ -168,7 +168,5 @@ try:
         staging_sites={CONDOR_POOL: LOCAL},
         submit=True,
     )
-except Exception as e:
-    print(e)
-    print(e.args[1].stdout)
-    print(e.args[1].stderr)
+except PegasusClientError as e:
+    print(e.output)

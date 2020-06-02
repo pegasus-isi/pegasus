@@ -23,7 +23,5 @@ try:
                 .set_stdout("hello.out")
         ).add_transformation_catalog(tc)\
         .plan(submit=True)
-except Exception as e:
-    print(e)
-    print(e.args[1].stdout)
-    print(e.args[1].stderr)
+except PegasusClientError as e:
+    print(e.output)
