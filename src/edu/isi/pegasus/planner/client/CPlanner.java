@@ -757,7 +757,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSnzpVr::D:d:s:o:O:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
+                        "vqhfSnzVr::D:d:s:o:O:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -1039,7 +1039,6 @@ public class CPlanner extends Executable {
         longopts[18] = new LongOpt("nocleanup", LongOpt.NO_ARGUMENT, null, 'n');
         longopts[20] = new LongOpt("deferred", LongOpt.NO_ARGUMENT, null, 'z');
         longopts[21] = new LongOpt("relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2');
-        longopts[22] = new LongOpt("pap", LongOpt.NO_ARGUMENT, null, 'p');
         longopts[23] = new LongOpt("job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j');
         longopts[24] = new LongOpt("rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
         longopts[25] = new LongOpt("forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
