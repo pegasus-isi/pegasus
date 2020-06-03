@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
 # DB Admin configuration
 # -------------------------------------------------------------------
 CURRENT_DB_VERSION = 11
-DB_MIN_VERSION = 8
+DB_MIN_VERSION = 6
 
 COMPATIBILITY = {
     "4.3.0": 1,
