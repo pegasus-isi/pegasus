@@ -151,7 +151,6 @@ public class PlannerOptions extends Data implements Cloneable {
     /** Stores the time at which the planning process started. */
     private Date mDate;
 
-    
     /** A boolean storing whether to sanitize paths or not */
     private boolean mSanitizePath;
 
@@ -368,7 +367,6 @@ public class PlannerOptions extends Data implements Cloneable {
     public int getLoggingLevel() {
         return mLoggingLevel;
     }
-
 
     /**
      * Returns the input directory.
@@ -827,7 +825,6 @@ public class PlannerOptions extends Data implements Cloneable {
                         // argument
                         1;
     }
-
 
     /**
      * Set the input directory.

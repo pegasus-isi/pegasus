@@ -868,7 +868,7 @@ public class CPlanner extends Executable {
                             LogManager.WARNING_MESSAGE_LEVEL);
                     options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.none);
                     break;
-                    
+
                 case 'o': // output-site
                     options.setOutputSites(g.getOptarg());
                     break;
