@@ -10,13 +10,16 @@ from typing import Dict, List
 
 from Pegasus import yaml
 
+
 class PegasusClientError(Exception):
     """Exception raised when an invoked pegasus command line tool returns non 0"""
+
     def __init__(self, message, result):
         super().__init__(message)
 
         self.output = result.stdout + "\n" + result.stderr
-        self.result = result 
+        self.result = result
+
 
 def from_env(pegasus_home: str = None):
     if not pegasus_home:
@@ -85,7 +88,9 @@ class Client:
         if output_sites:
             if not isinstance(output_sites, list):
                 raise TypeError(
-                    "invalid output_sites: {}; list of str must be given".format(output_sites)
+                    "invalid output_sites: {}; list of str must be given".format(
+                        output_sites
+                    )
                 )
 
             cmd.extend(("--output-sites", ",".join(output_sites)))
@@ -108,7 +113,9 @@ class Client:
         if input_dirs:
             if not isinstance(input_dirs, list):
                 raise TypeError(
-                    "invalid input_dirs: {} list of str must be given".format(input_dirs)
+                    "invalid input_dirs: {} list of str must be given".format(
+                        input_dirs
+                    )
                 )
 
             cmd.extend(("--input-dir", ",".join(input_dirs)))
@@ -329,8 +336,7 @@ class Client:
         r = Client._make_result(rv)
 
         if r.exit_code != 0:
-            raise PegasusClientError(
-                "Pegasus command: {} FAILED".format(cmd), r)
+            raise PegasusClientError("Pegasus command: {} FAILED".format(cmd), r)
 
         return r
 

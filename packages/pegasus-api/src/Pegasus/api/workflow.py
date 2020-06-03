@@ -674,7 +674,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         conf: str = None,
         sites: List[str] = None,
         output_sites: List[str] = ["local"],
-        staging_sites: Dict[str,str] = None,
+        staging_sites: Dict[str, str] = None,
         input_dirs: List[str] = None,
         output_dir: str = None,
         dir: str = None,

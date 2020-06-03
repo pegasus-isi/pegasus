@@ -6,7 +6,8 @@ from textwrap import dedent
 
 import pytest
 
-from Pegasus.client._client import Client, Result, from_env, PegasusClientError
+from Pegasus.client._client import Client, PegasusClientError, Result, from_env
+
 
 def test_PegasusClientError():
     return_value = namedtuple("return_value", ["stdout", "stderr"])
@@ -16,6 +17,7 @@ def test_PegasusClientError():
     except PegasusClientError as e:
         assert e.output == "stdout\nstderr"
         assert e.result == rv
+
 
 def test_from_env(mocker):
     mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
@@ -110,13 +112,13 @@ class TestClient:
     def test_plan_invalid_output_sites(self, client):
         with pytest.raises(TypeError) as e:
             client.plan("wf.yml", output_sites="site1,site2")
-        
+
         assert "invalid output_sites: site1,site2" in str(e)
 
     def test_plan_invalid_input_dirs(self, client):
         with pytest.raises(TypeError) as e:
             client.plan("wf.yml", input_dirs="/input_dir")
-        
+
         assert "invalid input_dirs: /input_dir" in str(e)
 
     def test_run(self, mock_subprocess, client):
