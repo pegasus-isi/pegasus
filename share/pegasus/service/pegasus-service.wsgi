@@ -5,13 +5,14 @@
 #
 # If Pegasus Service is installed in a virtualenv,
 # Set VIRTUALENV to point to the virtualenv directory.
-# VIRTUALENV = '/var/virtualenv/pegasus-service' 
+# VIRTUALENV = '/var/virtualenv/pegasus-service'
 #
 VIRTUALENV = None
 
 if VIRTUALENV:
     import os
-    activate_this = os.path.join(VIRTUALENV, 'bin/activate_this.py')
+
+    activate_this = os.path.join(VIRTUALENV, "bin/activate_this.py")
     execfile(activate_this, dict(__file__=activate_this))
 
 
@@ -48,9 +49,10 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 #
 # Start Pegasus Service
 #
-from Pegasus.service import app
+from Pegasus.service.server import create_app
+
+app = create_app(env="production")
 
 app.config.from_object(__name__)
 
 application = app
-

@@ -10,8 +10,8 @@ Service Administration
 Service Configuration
 ---------------------
 
-Create a file called service.py in $HOME/.pegasus/ OR modify the
-lib/pegasus/python/Pegasus/service/defaults.py file. The servuce can be
+Create a file called service.py in $HOME/.pegasus OR modify the
+lib/pegasus/python/Pegasus/service/defaults.py file. The service can be
 configured using the properties described below.
 
 .. table:: Pegasus Service Configuration Options
@@ -65,7 +65,7 @@ executed.
 Running Pegasus Service under Apache HTTPD
 ==========================================
 
-**Prerequisites** Apache HTTPD, mod_ssl, and mod_wsgi to be installed.
+**Prerequisites** Apache HTTPD v2.4.x, mod_ssl, and mod_wsgi (for Python 3) to be installed.
 
 To run pegasus-service under Apache HTTPD
 
