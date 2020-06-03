@@ -16,7 +16,6 @@
 #
 
 import datetime
-import glob
 import logging
 import os
 import shutil
@@ -65,6 +64,9 @@ COMPATIBILITY = {
     "4.8.2": 8,
     "4.8.3": 8,
     "4.9.0": 11,
+    "4.9.1": 11,
+    "4.9.2": 11,
+    "4.9.3": 11,
     "5.0.0": 11,
 }
 
@@ -191,7 +193,7 @@ def db_create(
     :param verbose: whether messages should be printed in the prompt
     :param print_version: whether to print the database version
     """
-    table_names = engine.table_names(connection=db)
+    table_names = engine.table_names()
     db_version = DBVersion.__table__
     db_version.create(engine, checkfirst=True)
 
@@ -607,32 +609,41 @@ def _backup_db(db):
     :param db: DB session object
     """
     url = db.get_bind().url
-    # Backup SQLite databases
+    # Backup SQLite database
     if url.drivername == "sqlite" and str(url).lower() != "sqlite://":
-        db_list = glob.glob(url.database + ".[0-9][0-9][0-9]")
-        max_index = -1
-        for file in db_list:
-            index = int(file[-3:])
-            if index > max_index:
-                max_index = index
-        dest_file = url.database + ".%03d" % (max_index + 1)
+        dest_file = "{}-{}".format(url.database, time.strftime("%Y%m%d-%H%M%S"))
         shutil.copy(url.database, dest_file)
         log.debug("Created backup database file at: %s" % dest_file)
 
-    # Backup MySQL databases
-    elif url.drivername == "mysql":
-        log.info("Backing up MySQL database. This operation may take a while.")
-        dest_file = "{}-{}.sql".format(url.database, time.strftime("%Y%m%d-%H%M%S"))
-        # mysqldump command preparation
-        command = (
-            "mysqldump"
-            if not url.password
-            else "export MYSQL_PWD=%s; mysqldump" % url.password
-        )
-        if url.username:
-            command += " -u %s" % url.username
+    elif url.drivername == "mysql" or url.drivername == "postgresql":
+        # Backup MySQL database
+        if url.drivername == "mysql":
+            log.info("Backing up MySQL database. This operation may take a while.")
+            # mysqldump command preparation
+            command = (
+                "mysqldump"
+                if not url.password
+                else "export MYSQL_PWD=%s; mysqldump" % url.password
+            )
+            if url.username:
+                command += " -u %s" % url.username
+
+        # Backup PostgreSQL database
+        elif url.drivername == "postgresql":
+            log.info("Backing up PostgreSQL database. This operation may take a while.")
+            # pg_dump command preparation
+            command = (
+                "pg_dump"
+                if not url.password
+                else "export PGPASSWORD=%s; pg_dump" % url.password
+            )
+            if url.username:
+                command += " -U %s" % url.username
+
         if url.host:
             command += " -h %s" % url.host
+
+        dest_file = "{}-{}.sql".format(url.database, time.strftime("%Y%m%d-%H%M%S"))
         command += " {} > {}".format(url.database, dest_file)
         child = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True

@@ -6,16 +6,20 @@ import subprocess
 import time
 from functools import partial
 from os import path
+from typing import Dict, List
 
 from Pegasus import yaml
 
+
 class PegasusClientError(Exception):
     """Exception raised when an invoked pegasus command line tool returns non 0"""
+
     def __init__(self, message, result):
         super().__init__(message)
 
         self.output = result.stdout + "\n" + result.stderr
-        self.result = result 
+        self.result = result
+
 
 def from_env(pegasus_home: str = None):
     if not pegasus_home:
@@ -53,10 +57,10 @@ class Client:
         self,
         dax: str,
         conf: str = None,
-        sites: list = None,
-        output_site: str = "local",
-        staging_sites: dict = None,
-        input_dir: str = None,
+        sites: List[str] = None,
+        output_sites: List[str] = ["local"],
+        staging_sites: Dict[str, str] = None,
+        input_dirs: List[str] = None,
         output_dir: str = None,
         dir: str = None,
         relative_dir: str = None,
@@ -81,13 +85,20 @@ class Client:
                 )
             cmd.extend(("--sites", ",".join(sites)))
 
-        if output_site:
-            cmd.extend(("--output-site", output_site))
+        if output_sites:
+            if not isinstance(output_sites, list):
+                raise TypeError(
+                    "invalid output_sites: {}; list of str must be given".format(
+                        output_sites
+                    )
+                )
+
+            cmd.extend(("--output-sites", ",".join(output_sites)))
 
         if staging_sites:
             if not isinstance(staging_sites, dict):
                 raise TypeError(
-                    "invalid staging_sites: {}; dict must be given".format(
+                    "invalid staging_sites: {}; dict<str, str> must be given".format(
                         staging_sites
                     )
                 )
@@ -99,8 +110,15 @@ class Client:
                 )
             )
 
-        if input_dir:
-            cmd.extend(("--input-dir", input_dir))
+        if input_dirs:
+            if not isinstance(input_dirs, list):
+                raise TypeError(
+                    "invalid input_dirs: {} list of str must be given".format(
+                        input_dirs
+                    )
+                )
+
+            cmd.extend(("--input-dir", ",".join(input_dirs)))
 
         if output_dir:
             cmd.extend(("--output-dir", output_dir))
@@ -318,8 +336,7 @@ class Client:
         r = Client._make_result(rv)
 
         if r.exit_code != 0:
-            raise PegasusClientError(
-                "Pegasus command: {} FAILED".format(cmd), r)
+            raise PegasusClientError("Pegasus command: {} FAILED".format(cmd), r)
 
         return r
 
