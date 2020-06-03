@@ -4,6 +4,7 @@ import sys
 from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import wraps
+from typing import Dict, List
 
 from ._utils import _chained, _get_enum_str
 from .errors import DuplicateError, NotFoundError, PegasusError
@@ -671,9 +672,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def plan(
         self,
         conf: str = None,
-        sites: list = None,
-        output_site: str = "local",
-        staging_sites: dict = None,
+        sites: List[str] = None,
+        output_sites: List[str] = ["local"],
+        staging_sites: Dict[str,str] = None,
         input_dir: str = None,
         output_dir: str = None,
         dir: str = None,
@@ -689,11 +690,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :param conf:  the path to the properties file to use for planning, defaults to None
         :type conf: str, optional
         :param sites: list of execution sites on which to map the workflow, defaults to None
-        :type sites: list, optional
-        :param output_site: the output site where the data products during workflow execution are transferred to, defaults to "local"
-        :type output_site: str, optional
+        :type sites: List[str], optional
+        :param output_sites: the output sites where the data products during workflow execution are transferred to, defaults to ["local"]
+        :type output_sites: List[str], optional
         :param staging_sites: key, value pairs of execution site to staging site mappings, defaults to None
-        :type staging_sites: dict, optional
+        :type staging_sites: Dict[str,str], optional
         :param input_dir: comma separated list of optional input directories where the input files reside on submit host, defaults to None
         :type input_dir: str, optional
         :param output_dir: an optional output directory where the output files should be transferred to on submit host, defaults to None
@@ -721,7 +722,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             self._path,
             conf=conf,
             sites=sites,
-            output_site=output_site,
+            output_sites=output_sites,
             staging_sites=staging_sites,
             input_dir=input_dir,
             output_dir=output_dir,

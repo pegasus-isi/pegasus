@@ -51,7 +51,7 @@ class TestClient:
             "dax.yml",
             conf="pegasus.conf",
             sites=["site1", "site2"],
-            output_site="local",
+            output_sites=["local", "other_site"],
             staging_sites={"es1": "ss1", "es2": "ss2"},
             input_dir="/input_dir",
             output_dir="/output_dir",
@@ -71,8 +71,8 @@ class TestClient:
                 "pegasus.conf",
                 "--sites",
                 "site1,site2",
-                "--output-site",
-                "local",
+                "--output-sites",
+                "local,other_site",
                 "--staging-site",
                 "es1=ss1,es2=ss2",
                 "--input-dir",
@@ -106,6 +106,12 @@ class TestClient:
             client.plan("wf.yml", staging_sites="condorpool=origin")
 
         assert "invalid staging_sites: condorpool=origin" in str(e)
+
+    def test_plan_invalid_output_sites(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", output_sites="site1,site2")
+        
+        assert "invalid output_sites: site1,site2" in str(e)
 
     def test_run(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3)
