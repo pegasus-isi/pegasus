@@ -1292,9 +1292,6 @@ Root Workflow
        "dag_file_name"     : <string:dag_file_name>,
        "timestamp"         : <int:timestamp>,
        "workflow_state"    : <object:workflow_state>,
-       "_links"            : {
-           "workflow" : <href:workflow>
-       }
    }
 
 .. _resource-workflow:
@@ -1320,14 +1317,6 @@ Workflow
        "dax_file"          : <string:dax_file>,
        "dag_file_name"     : <string:dag_file_name>,
        "timestamp"         : <int:timestamp>,
-       "_links"            : {
-           "workflow_meta"  : <href:workflow_meta>,
-           "workflow_state" : <href:workflow_state>,
-           "job"            : <href:job>,
-           "task"           : <href:task>,
-           "host"           : <href:host>,
-           "invocation"     : <href:invocation>
-       }
    }
 
 .. _resource-workflow-metadata:
@@ -1340,9 +1329,6 @@ Workflow Metadata
    {
        "key"    : <string:key>,
        "value"  : <string:value>,
-       "_links" : {
-           "workflow" : <href:workflow>
-       }
    }
 
 .. _resource-workflow-files:
@@ -1370,9 +1356,6 @@ Workflow Files
                "value"   : <string:value>
             }
        ],
-       "_links"      : {
-           "workflow" : <href:workflow>
-       }
    }
 
 .. _resource-workflow-state:
@@ -1388,9 +1371,6 @@ Workflow State
        "status"        : <int:status>,
        "restart_count" : <int:restart_count>,
        "timestamp"     : <datetime:timestamp>,
-       "_links"        : {
-           "workflow" : "<href:workflow>"
-       }
    }
 
 .. _resource-job:
@@ -1411,11 +1391,6 @@ Job
        "executable"  : <string: executable>,
        "argv"        : <string: argv>,
        "task_count"  : <int:task_count>,
-       "_links"      : {
-           "workflow"     : <href:workflow>,
-           "task"         : <href:task>,
-           "job_instance" : <href:job_instance>
-       }
    }
 
 .. _resource-host:
@@ -1432,9 +1407,6 @@ Host
        "ip"           : <string:ip>,
        "uname"        : <string:uname>,
        "total_memory" : <string:total_memory>,
-       "_links"       : {
-           "workflow" : <href:workflow>
-       }
    }
 
 .. _resource-job-state:
@@ -1449,9 +1421,6 @@ Job State
        "state"               : <string:state>,
        "jobstate_submit_seq" : <int:jobstate_submit_seq>,
        "timestamp"           : <int:timestamp>,
-       "_links"              : {
-           "job_instance" : "href:job_instance"
-       }
    }
 
 .. _resource-task:
@@ -1467,11 +1436,6 @@ Task
        "type_desc"      : <string: type_desc>,
        "transformation" : <string:transformation>,
        "argv"           : <string:argv>,
-       "_links"         : {
-           "workflow"  : <href:workflow>,
-           "job"       : <href:job>,
-           "task_meta" : <href:task_meta>
-       }
    }
 
 .. _resource-task-metadata:
@@ -1484,9 +1448,6 @@ Task Metadata
    {
        "key"    : <string:key>,
        "value"  : <string:value>,
-       "_links" : {
-           "task" : <href:task>
-       }
    }
 
 .. _resource-job-instance:
@@ -1515,12 +1476,6 @@ Job Instance
        "stderr_file"       : <string:stderr_file>,
        "multiplier_factor" : <int:multiplier_factor>,
        "exitcode"          : <int:exitcode>,
-       "_links"            : {
-           "job_state"  : <href:job_state>,
-           "host"       : <href:host>,
-           "invocation" : <href:invocation>,
-           "job"        : <href:job>
-       }
    }
 
 .. _resource-invocation:
@@ -1542,10 +1497,6 @@ Invocation
        "transformation"  : <string:transformation>,
        "executable"      : <string:executable>,
        "argv"            : <string:argv>,
-       "_links"          : {
-           "workflow"     : <href:workflow>,
-           "job_instance" : <href:job_instance>
-       }
    }
 
 RC LFN
@@ -1589,7 +1540,7 @@ All URIs are prefixed by\ **/api/v1/user/<string:user>**.
 
 All endpoints return response with content-type as application/json.
 
-All endpoints support **\`pretty-print\`** query argument, to return a
+All endpoints support **pretty-print** query argument, to return a
 formatted JSON response.
 
 All endpoints return status code **401** for\ **Authentication
@@ -1597,566 +1548,12 @@ failure**.
 
 All endpoints return status code **403** for\ **Authorization failure**.
 
-GET /root OR POST /root/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Root Workflow <#resource-root-workflow>`__
-resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ====================================
-   Status Code Description
-   =========== ====================================
-   200         OK
-   204         No content; when no workflows found.
-   400         Bad request
-   =========== ====================================
-
-GET /root/<m_wf_id>
-~~~~~~~~~~~~~~~~~~~
-
-Returns a `Root Workflow <#resource-root-workflow>`__ resource
-identified by m_wf_id.
-
-.. table:: Returns
-
-   =========== ===========
-   Status Code Description
-   =========== ===========
-   200         OK
-   404         Not found
-   =========== ===========
-
-GET /root/<m_wf_id>/workflow OR POST /root/<m_wf_id>/workflow/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Workflow <#resource-workflow>`__ resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ====================================
-   Status Code Description
-   =========== ====================================
-   200         OK
-   204         No content; when no workflows found.
-   400         Bad request
-   =========== ====================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a `Workflow <#resource-workflow>`__ resource identified by
-m_wf_id, wf_id.
-
-.. table:: Returns
-
-   =========== ===========
-   Status Code Description
-   =========== ===========
-   200         OK
-   404         Not found
-   =========== ===========
-
-GET /root/<m_wf_id>/workflow/<wf_id>/meta OR POST /root/<m_wf_id>/workflow/<wf_id>/meta/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the
-`WorkflowMetadata <#resource-workflow-metadata>`__ resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ====================================
-   Status Code Description
-   =========== ====================================
-   200         OK
-   204         No content; when no workflows found.
-   400         Bad request
-   =========== ====================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/files OR POST /root/<m_wf_id>/workflow/<wf_id>/files/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `WorkflowFiles <#resource-workflow-files>`__
-resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ====================================
-   Status Code Description
-   =========== ====================================
-   200         OK
-   204         No content; when no workflows found.
-   400         Bad request
-   =========== ====================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/state[;recent=true] OR POST /root/<m_wf_id>/workflow/<wf_id>/state[;recent=true]/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Workflow
-State <#resource-workflow-state>`__ resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   recent      Get most recent results. See `Recent <#recent>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== =========================================
-   Status Code Description
-   =========== =========================================
-   200         OK
-   204         No content; when no workflow-state found.
-   400         Bad request
-   =========== =========================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/host OR POST /root/<m_wf_id>/workflow/<wf_id>/host/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Host <#resource-host>`__ resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ================================
-   Status Code Description
-   =========== ================================
-   200         OK
-   204         No content; when no hosts found.
-   400         Bad request
-   =========== ================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/host/<host_id>
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a `Host <#resource-host>`__ resource identified by m_wf_id,
-wf_id, host_id.
-
-.. table:: Returns
-
-   =========== ===========
-   Status Code Description
-   =========== ===========
-   200         OK
-   404         Not found
-   =========== ===========
-
-GET /root/<m_wf_id>/workflow/<wf_id>/task OR POST /root/<m_wf_id>/workflow/<wf_id>/task/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Task <#resource-task>`__ resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ================================
-   Status Code Description
-   =========== ================================
-   200         OK
-   204         No content; when no tasks found.
-   400         Bad request
-   =========== ================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/task/<task_id>
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a `Task <#resource-task>`__ resource identified by m_wf_id,
-wf_id, task_id.
-
-.. table:: Returns
-
-   =========== ===========
-   Status Code Description
-   =========== ===========
-   200         OK
-   404         Not found
-   =========== ===========
-
-GET /root/<m_wf_id>/workflow/<wf_id>/task/<task_id>/meta OR POST /root/<m_wf_id>/workflow/<wf_id>/task/<task_id>/meta/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `TaskMetadata <#resource-task-metadata>`__
-resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ====================================
-   Status Code Description
-   =========== ====================================
-   200         OK
-   204         No content; when no workflows found.
-   400         Bad request
-   =========== ====================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/invocation OR POST /root/<m_wf_id>/workflow/<wf_id>/invocation/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Invocation <#resource-invocation>`__
-resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ======================================
-   Status Code Description
-   =========== ======================================
-   200         OK
-   204         No content; when no invocations found.
-   400         Bad request
-   =========== ======================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/invocation/<invocation_id>
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a `Invocation <#resource-invocation>`__ resource identified by
-m_wf_id, wf_id, invocation_id.
-
-.. table:: Returns
-
-   =========== ===========
-   Status Code Description
-   =========== ===========
-   200         OK
-   404         Not found
-   =========== ===========
-
-GET /root/<m_wf_id>/workflow/<wf_id>/job OR POST /root/<m_wf_id>/workflow/<wf_id>/job/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Job <#resource-job>`__ resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ===============================
-   Status Code Description
-   =========== ===============================
-   200         OK
-   204         No content; when no jobs found.
-   400         Bad request
-   =========== ===============================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a `Job <#resource-job>`__ resource identified by m_wf_id, wf_id,
-job_id.
-
-.. table:: Returns
-
-   =========== ===========
-   Status Code Description
-   =========== ===========
-   200         OK
-   404         Not foun
-   =========== ===========
-
-GET /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/task OR POST /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/task/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Task <#resource-task>`__ resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ================================
-   Status Code Description
-   =========== ================================
-   200         OK
-   204         No content; when no tasks found.
-   400         Bad request
-   =========== ================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance[;recent=true] OR POST /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance[;recent=true]/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Job Instance <#resource-job-instance>`__
-resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   recent      Get most recent results. See `Recent <#recent>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ========================================
-   Status Code Description
-   =========== ========================================
-   200         OK
-   204         No content; when no job-instances found.
-   400         Bad request
-   =========== ========================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a `Job Instance <#resource-job-instance>`__ resource identified
-by m_wf_id, wf_id, job_id, job_instance_id.
-
-.. table:: Returns
-
-   =========== ===========
-   Status Code Description
-   =========== ===========
-   200         OK
-   404         Not found
-   =========== ===========
-
-GET /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state[;recent=true] OR POST /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state[;recent=true]/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Job State <#resource-job-state>`__
-resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   recent      Get most recent results. See `Recent <#recent>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ====================================
-   Status Code Description
-   =========== ====================================
-   200         OK
-   204         No content; when no job-state found.
-   400         Bad request
-   =========== ====================================
-
-GET /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation OR POST /root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of the `Invocation <#resource-invocation>`__
-resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ======================================
-   Status Code Description
-   =========== ======================================
-   200         OK
-   204         No content; when no invocations found.
-   400         Bad request
-   =========== ======================================
-
-POST /batch
-~~~~~~~~~~~
-
-Returns an array of responses; one entry for each request.
-
-**Batch Request**
-
-::
-
-   [
-       {
-           "method" : <string:method>,
-           "path"   : <string:path>,
-           "body"   : <dict:body>
-       },
-       {
-           "method" : <string:method>,
-           "path"   : <string:path>,
-           "body"   : <dict:body>
-       }
-   ]
-
-**Batch Response**
-
-::
-
-   [
-       {
-           "status"   : <int:status_code>,
-           "response" : <string:response>
-       },
-       {
-           "status"   : <int:status_code>,
-           "response" : <string:response>
-       }
-   ]
-
-.. table:: Returns
-
-   =========== ============
-   Status Code Description
-   =========== ============
-   207         Multi status
-   =========== ============
-
-GET /root/<m_wf_id>/workflow/<wf_id>/job/<[running|successful|failed|failing]> OR POST /root/<m_wf_id>/workflow/<wf_id>/job/<[running|successful|failed|failing]>/query
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a collection of running, successful, failed, or failing
-`Job <#resource-job>`__ resource.
-
-**Note:** Queries, Sorting can include fields from Job and JobInstance
-resource.
-
-.. table:: Options
-
-   =========== =============================================================
-   Argument    Description
-   =========== =============================================================
-   start-index Return results starting from record <start-index> (0 indexed)
-   max-results Return a maximum of <max-results> records
-   query       Search criteria. See `Querying <#querying>`__.
-   order       Order criteria. See `Ordering <#ordering>`__.
-   =========== =============================================================
-
-.. table:: Returns
-
-   =========== ===============================
-   Status Code Description
-   =========== ===============================
-   200         OK
-   204         No content; when no jobs found.
-   400         Bad request
-   =========== ===============================
+.. openapi:: ../../packages/pegasus-python/src/Pegasus/service/monitoring/swagger.yml
 
 Querying
 --------
 
-Querying is supported through query string argument **\`query\`**.
+Querying is supported through query string argument **query**.
 
 Querying is supported only on endpoints returning collections.
 
@@ -2165,15 +1562,17 @@ Syntax
 
 Query clauses are rudimentary and must follow some rules.
 
--  Supported comparators are =, !=, <, <=, >, >=, LIKE, IN.
+-  Supported comparators are **==**, **!=**, **<**, **<=**, **>**, **>=**, **in**.
 
--  Supported operators are AND, OR.
+-  Supported operators are **and**, **or**, **not**.
+
+-  Supported functions **like**, **ilike**.
 
 -  Comparision clauses must have the form <FIELDNAME> SPACE <COMPARATOR>
    SPACE <STRING LITERAL OR INTEGER LITERAL OR FLOAT LITERAL>
 
 -  <FIELDNAME> must be prefixed with resource query prefix Example:
-   **r.\ wf_id** is valid, but **wf_id** is not.
+   **r.wf_id** is valid, but **wf_id** is not.
 
 -  <FIELDNAMES> which can be used in a query caluse depends on the
    resource being queries. Example: For endpoint
@@ -2201,7 +1600,7 @@ Query clauses are rudimentary and must follow some rules.
 
    For Root Workflow https://www.domain.com/api/v1/user/user-a/root?query<QUERY>
 
-   Where QUERY can be( r.wf_id >= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.wf_id IN ( 1, 2 ) )
+   Where QUERY can be( r.wf_id >= 5 AND r.planner_version.like( '4.5%' ) OR ( r.wf_id in ( 1, 2 ) )
 
 Resource - Query Prefix
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -2231,17 +1630,15 @@ Resource - Query Prefix
 Recent
 ~~~~~~
 
-Workflow State, Job State, and Job Instance resources have historical
-records.
+Job Instance resources have historical records.
 
 For use cases where developers need to get the most recent record, we
-set **path** argument **\`recent\`** to true. Recent argument is always
-true when requesting for root-workflow's resource.
+set **query** argument **recent** to **true**.
 
 Ordering
 --------
 
-Ordering is supported through query string argument **\`order\`**.
+Ordering is supported through query string argument **order**.
 
 Ordering is supported only on endpoints returning collections.
 
@@ -2261,7 +1658,7 @@ by commas.
 
 ::
 
-   https://www.domain.com/api/v1/user/user-a/root?order=r.submit_hostname, -r.wf_id
+   https://www.domain.com/api/v1/user/user-a/root?order=r.submit_hostname,-r.wf_id
 
 Examples
 --------
@@ -2293,14 +1690,7 @@ Resource - Single
        "dax_version"       : "3.5",
        "dax_file"          : "/home/tutorial/hello-world.xml",
        "dag_file_name"     : "hello_world-0.dag",
-       "timestamp"         : 1421432530.0,
-       "_links"            : {
-           "workflow_state" : "/user/user-a/root/1/workflow/1/state",
-           "job"            : "/user/user-a/root/1/workflow/1/job",
-           "task"           : "/user/user-a/root/1/workflow/1/task",
-           "host"           : "/user/user-a/root/1/workflow/1/host",
-           "invocation"     : "/user/user-a/root/1/workflow/1/job"
-       }
+       "timestamp"         : 1421432530.0
    }
 
 Resource - Collection
@@ -2308,10 +1698,9 @@ Resource - Collection
 
 ::
 
-   $ curl --request POST \
+   $ curl --request GET \
           --user user-a:user-a-password \
-          --data 'pretty-print=true' \
-          https://www.domain.com/api/v1/user/user-a/root/1/workflow/query
+          https://www.domain.com/api/v1/user/user-a/root/1/workflow?pretty-print=true
 
    HTTP/1.1 200 OK
 
@@ -2332,14 +1721,7 @@ Resource - Collection
                "dax_version"       : "3.5",
                "dax_file"          : "/home/tutorial/hello-world.xml",
                "dag_file_name"     : "hello_world-0.dag",
-               "timestamp"         : 1421432530.0,
-               "_links"            : {
-                   "workflow_state" : "/user/user-a/root/1/workflow/1/state",
-                   "job"            : "/user/user-a/root/1/workflow/1/job",
-                   "task"           : "/user/user-a/root/1/workflow/1/task",
-                   "host"           : "/user/user-a/root/1/workflow/1/host",
-                   "invocation"     : "/user/user-a/root/1/workflow/1/job"
-               }
+               "timestamp"         : 1421432530.0
            },
            {
                "wf_id"             : 2,
@@ -2356,14 +1738,7 @@ Resource - Collection
                "dax_version"       : "3.5",
                "dax_file"          : "/home/tutorial/hello-world.xml",
                "dag_file_name"     : "hello_world-0.dag",
-               "timestamp"         : 1427759551.0,
-               "_links"            : {
-                   "workflow_state" : "/user/user-a/root/2/workflow/1/state",
-                   "job"            : "/user/user-a/root/2/workflow/1/job",
-                   "task"           : "/user/user-a/root/2/workflow/1/task",
-                   "host"           : "/user/user-a/root/2/workflow/1/host",
-                   "invocation"     : "/user/user-a/root/2/workflow/1/job"
-               }
+               "timestamp"         : 1427759551.0
            },
            {
                "wf_id"             : 3,
@@ -2380,15 +1755,7 @@ Resource - Collection
                "dax_version"       : "3.5",
                "dax_file"          : "/home/tutorial/hello-world.xml",
                "dag_file_name"     : "hello_world-0.dag",
-               "timestamp"         : 1427760148.0,
-               "_links"            : {
-                   "workflow_state" : "/user/user-a/root/3/workflow/1/state",
-                   "job"            : "/user/user-a/root/3/workflow/1/job",
-                   "task"           : "/user/user-a/root/3/workflow/1/task",
-                   "host"           : "/user/user-a/root/3/workflow/1/host",
-                   "invocation"     : "/user/user-a/root/3/workflow/1/job"
-               }
-
+               "timestamp"         : 1427760148.0
            }
        ],
        "_meta"   : {
@@ -2405,7 +1772,7 @@ Querying
    $ curl --request GET \
           --get \
           --data-urlencode "pretty-print=true" \
-          --data-urlencode "query=w.wf_uuid = '41920a57-7882-4990-854e-658b7a797745'" \
+          --data-urlencode "query=w.wf_uuid == '41920a57-7882-4990-854e-658b7a797745'" \
           --user user-a:user-a-password \
           https://www.domain.com/api/v1/user/user-a/root/1/workflow
 
@@ -2428,14 +1795,7 @@ Querying
                "dax_version"       : "3.5",
                "dax_file"          : "/home/tutorial/hello-world.xml",
                "dag_file_name"     : "hello_world-0.dag",
-               "timestamp"         : 1427759551.0,
-               "_links"            : {
-                   "workflow_state" : "/user/user-a/root/2/workflow/1/state",
-                   "job"            : "/user/user-a/root/2/workflow/1/job",
-                   "task"           : "/user/user-a/root/2/workflow/1/task",
-                   "host"           : "/user/user-a/root/2/workflow/1/host",
-                   "invocation"     : "/user/user-a/root/2/workflow/1/job"
-               }
+               "timestamp"         : 1427759551.0
            }
        ],
        "_meta"   : {
@@ -2472,14 +1832,7 @@ Ordering
                "dax_version"       : "3.5",
                "dax_file"          : "/home/tutorial/hello-world.xml",
                "dag_file_name"     : "hello_world-0.dag",
-               "timestamp"         : 1427760148.0,
-               "_links"            : {
-                   "workflow_state" : "/user/user-a/root/3/workflow/1/state",
-                   "job"            : "/user/user-a/root/3/workflow/1/job",
-                   "task"           : "/user/user-a/root/3/workflow/1/task",
-                   "host"           : "/user/user-a/root/3/workflow/1/host",
-                   "invocation"     : "/user/user-a/root/3/workflow/1/job"
-               }
+               "timestamp"         : 1427760148.0
            },
            {
                "wf_id"             : 2,
@@ -2496,14 +1849,7 @@ Ordering
                "dax_version"       : "3.5",
                "dax_file"          : "/home/tutorial/hello-world.xml",
                "dag_file_name"     : "hello_world-0.dag",
-               "timestamp"         : 1427759551.0,
-               "_links"            : {
-                   "workflow_state" : "/user/user-a/root/2/workflow/1/state",
-                   "job"            : "/user/user-a/root/2/workflow/1/job",
-                   "task"           : "/user/user-a/root/2/workflow/1/task",
-                   "host"           : "/user/user-a/root/2/workflow/1/host",
-                   "invocation"     : "/user/user-a/root/2/workflow/1/job"
-               }
+               "timestamp"         : 1427759551.0
            },
            {
                "wf_id"             : 1,
@@ -2520,14 +1866,7 @@ Ordering
                "dax_version"       : "3.5",
                "dax_file"          : "/home/tutorial/hello-world.xml",
                "dag_file_name"     : "hello_world-0.dag",
-               "timestamp"         : 1421432530.0,
-               "_links"            : {
-                   "workflow_state" : "/user/user-a/root/1/workflow/1/state",
-                   "job"            : "/user/user-a/root/1/workflow/1/job",
-                   "task"           : "/user/user-a/root/1/workflow/1/task",
-                   "host"           : "/user/user-a/root/1/workflow/1/host",
-                   "invocation"     : "/user/user-a/root/1/workflow/1/job"
-               }
+               "timestamp"         : 1421432530.0
            }
        ],
        "_meta"   : {
@@ -2535,101 +1874,3 @@ Ordering
            "records_filtered" : 3
        }
    }
-
-Recent
-~~~~~~
-
-::
-
-   $ curl --request GET \
-          --user user-a:user-a-password \
-          https://www.domain.com/api/v1/user/user-a/root/1/workflow/1/state;recent=true?pretty-print=true
-
-   HTTP/1.1 200 OK
-
-   {
-       "records": [
-           {
-               "wf_id": 1,
-               "state": "WORKFLOW_TERMINATED",
-               "status": 1,
-               "restart_count": 3,
-               "timestamp": 1421885063.0,
-               "_links": {
-                   "workflow": "/api/v1/user/user-a/root/1/workflow/1"
-               }
-           }
-       ],
-       "_meta": {
-           "records_total": 8,
-           "records_filtered": 1
-       }
-   }
-
-Batch Request
-~~~~~~~~~~~~~
-
-**Example**
-
-::
-
-   $ curl --request POST \
-          --user user-a:user-a-password \
-          --header "Content-Type: application/json" \
-          --data '[
-               {
-                   "path"   : "/api/v1/user/user-a/root?query=r.wf_id = 1&pretty-print=True",
-                   "method" : "GET"
-               },
-               {
-                   "path"   : "/api/v1/user/user-a/root",
-                   "method" : "POST",
-                   "body"   : {
-                       "query"        : "r.wf_id = 2",
-                       "pretty-print" : "True"
-                   }
-               }
-          ]' \
-          https://www.domain.com/api/v1/user/user-a/batch
-
-   [
-       {
-           "status"   : 200,
-           "response" : {
-               "records" : [
-                   {
-                       "wf_id"             : 1,
-                       "wf_uuid"           : "7193de8c-a28d-4eca-b576-1b1c3c4f668b",
-                       ..
-                       "_links"            : {
-                           "workflow" : "/api/v1/user/user-a/root/1/workflow"
-                       }
-                   }
-               ],
-               "_meta"   : {
-                   "records_total"    : 5,
-                   "records_filtered" : 1
-               }
-           }
-       },
-       {
-           "status"   : 200,
-           "response" : {
-               "records" : [
-                   {
-                       "wf_id"             : 2,
-                       "wf_uuid"           : "41920a57-7882-4990-854e-658b7a797745",
-                       ..
-                       "_links"            : {
-                           "workflow" : "/api/v1/user/user-a/root/2/workflow"
-                       }
-                   }
-               ],
-               "_meta"   : {
-                   "records_total"    : 5,
-                   "records_filtered" : 1
-               }
-           }
-       }
-   ]
-
