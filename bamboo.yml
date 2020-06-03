@@ -342,98 +342,6 @@ project:
                     matchValue: macos
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: R6CUT
-              name: RHEL 6 Unit Tests
-              enabled: false
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Unit Tests
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_6}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: R6JUT
-              name: RHEL 6 Java Unit Tests
-              enabled: false
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Java Unit Tests
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_6}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-java
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: R6PUT
-              name: RHEL 6 Python Unit Tests
-              enabled: false
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Python Unit Tests
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_6}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-python
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: R7CUT
               name: RHEL 7 Unit Tests
               tasks:
@@ -672,7 +580,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUZ
-              name: Ubuntu Xenial Unit Tests
+              name: Ubuntu 16.04 Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -701,7 +609,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUZ
-              name: Ubuntu Xenial Java Unit Tests
+              name: Ubuntu 16.04 Java Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -735,7 +643,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUZ
-              name: Ubuntu Xenial Python Unit Tests
+              name: Ubuntu 16.04 Python Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -791,7 +699,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUB
-              name: Ubuntu Bionic Unit Tests
+              name: Ubuntu 18.04 Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -820,7 +728,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUB
-              name: Ubuntu Bionic Java Unit Tests
+              name: Ubuntu 18.04 Java Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -854,7 +762,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUB
-              name: Ubuntu Bionic Python Unit Tests
+              name: Ubuntu 18.04 Python Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -910,7 +818,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUF
-              name: Ubuntu Focal Unit Tests
+              name: Ubuntu 20.04 Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -939,7 +847,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUF
-              name: Ubuntu Focal Java Unit Tests
+              name: Ubuntu 20.04 Java Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -973,7 +881,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUF
-              name: Ubuntu Focal Python Unit Tests
+              name: Ubuntu 20.04 Python Unit Tests
               tasks:
                 - !script
                   description: Untar source
@@ -1155,96 +1063,8 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXR632
-              name: Build x86 RHEL 6
-              enabled: false
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !customTask
-                  pluginKey: com.atlassian.bamboo.plugins.ant:task.builder.ant
-                  description: Binary Packages
-                  taskConfig:
-                    label: Ant
-                    target: dist-rpm dist-worker dist-release
-                    buildJdk: JDK
-                    workingSubDirectory: pegasus-source
-              artifactDefinitions:
-                - name: pegasus-binary-x86_rhel_6
-                  copyPattern: "pegasus-binary-*-x86_rhel_6.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-rpm-x86_rhel_6
-                  copyPattern: "pegasus-*i?86.rpm"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_rhel_6
-                  copyPattern: "pegasus-worker-*-x86_rhel_6.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: arch
-                  matchType: !equals
-                    matchValue: x86
-                - capabilityKey: platform
-                  matchType: !equals
-                    matchValue: rhel
-                - capabilityKey: release
-                  matchType: !matches
-                    regex: 6.*
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXR6
-              name: Build x86_64 RHEL 6
-              enabled: false
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_6}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      dist-rpm dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_rhel_6
-                  copyPattern: "pegasus-binary-*-x86_64_rhel_6.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-rpm-x86_64_rhel_6
-                  copyPattern: "*x86_64.rpm"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_rhel_6
-                  copyPattern: "pegasus-worker-*-x86_64_rhel_6.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR7
-              name: Build x86_64 RHEL 7
+              name: Build RHEL 7
               tasks:
                 - !script
                   description: Untar source
@@ -1288,7 +1108,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR8
-              name: Build x86_64 RHEL 8
+              name: Build RHEL 8
               tasks:
                 - !script
                   description: Untar source
@@ -1335,7 +1155,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXDS
-              name: Build x86_64 Debian 9
+              name: Build Debian 9
               tasks:
                 - !script
                   description: Untar source
@@ -1378,7 +1198,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
-              name: Build x86_64 Debian 10
+              name: Build Debian 10
               enabled: true
               tasks:
                 - !script
@@ -1422,7 +1242,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXOSX
-              name: Build x86_64 OSX
+              name: Build OSX
               tasks:
                 - !script
                   description: Untar source
@@ -1462,7 +1282,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUX
-              name: Build x86_64 Ubuntu 16.04 LTS
+              name: Build Ubuntu 16.04 LTS
               tasks:
                 - !script
                   description: Untar source
@@ -1505,7 +1325,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUB
-              name: Build x86_64 Ubuntu 18.04 LTS
+              name: Build Ubuntu 18.04 LTS
               tasks:
                 - !script
                   description: Untar source
@@ -1548,7 +1368,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUF
-              name: Build x86_64 Ubuntu 20.04 LTS
+              name: Build Ubuntu 20.04 LTS
               tasks:
                 - !script
                   description: Untar source
@@ -1763,22 +1583,16 @@ project:
             channel: ["#github-notifications"]
             botName: [Bamboo]
       variables:
-        - key: TAG_CENTOS_6
-          value: centos6
         - key: TAG_CENTOS_7
           value: centos7
         - key: TAG_CENTOS_8
           value: centos8
-        - key: TAG_DEBIAN_8
-          value: jessie
         - key: TAG_DEBIAN_9
           value: stretch
         - key: TAG_DEBIAN_10
           value: buster
         - key: TAG_UBUNTU_16
           value: xenial
-        - key: TAG_UBUNTU_17
-          value: zesty
         - key: TAG_UBUNTU_18
           value: bionic
         - key: TAG_UBUNTU_20
