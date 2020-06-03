@@ -26,11 +26,11 @@ if [ $? -eq 127 ]; then
 fi
 
 # generate the input file
-echo "This is sample input to KEG" >f.a
+# echo "This is sample input to KEG" >f.a
 
-cat > ./conf/rc.data <<EOF
-f.a file:///${TOPDIR}/f.a site="condorpool"
-EOF
+# cat > ./conf/rc.data <<EOF
+# f.a file:///${TOPDIR}/f.a site="condorpool"
+# EOF
 
 # generate the dax
 if [ -z "$DYLD_LIBRARY_PATH" ]; then
@@ -43,6 +43,7 @@ pegasus-plan \
     --sites condorpool \
     --output-site local \
     --dir dags \
-    --dax decaf-v4.dax \
-    --force \
+    --dax tess-dense.dax \
+    --submit \
+	--force \
     -v 
