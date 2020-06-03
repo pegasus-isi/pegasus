@@ -68,7 +68,6 @@ __all__ = (
     "DashboardWorkflowstate",
     "Ensemble",
     "EnsembleWorkflow",
-    "Sequence",
     "RCLFN",
     "RCPFN",
     "RCMeta",
@@ -80,7 +79,6 @@ log = logging.getLogger(__name__)
 warnings.filterwarnings("ignore", r".*does \*not\* support Decimal*.")
 
 # These are keywords that all tables should have
-# table_keywords = {"mysql_charset": "latin1", "mysql_engine": "InnoDB"}
 table_keywords = {"mysql_charset": "utf8mb4", "mysql_engine": "InnoDB"}
 
 KeyInteger = BigInteger()
@@ -174,7 +172,6 @@ def get_missing_tables(db):
         Ensemble,
         EnsembleWorkflow,
         # JDBCRC
-        Sequence,
         RCLFN,
         RCPFN,
         RCMeta,
@@ -857,16 +854,6 @@ Index(
 # ---------------------------------------------
 # JDBCRC
 # ---------------------------------------------
-
-
-class Sequence(Base):
-    """."""
-
-    __tablename__ = "sequences"
-    __table_args__ = (table_keywords,)
-
-    name = Column("name", String(32), primary_key=True)
-    currval = Column("currval", BigInteger, nullable=False)
 
 
 class RCLFN(Base):
