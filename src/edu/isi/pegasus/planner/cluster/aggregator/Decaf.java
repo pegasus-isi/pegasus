@@ -371,6 +371,21 @@ public class Decaf implements JobAggregator {
             Job j = (Job) n.getContent();
             int cores = j.vdsNS.getIntValue(Pegasus.CORES_KEY, -1);
 
+            if (cores == 0) {
+                if (j instanceof DataFlowJob.Link) {
+                    // PM-1602 skip the job in the mpirun invocation
+                    mLogger.log(
+                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                                    + j.getLogicalID(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    continue;
+                }
+                // log warning for non link job
+                mLogger.log(
+                        "Number of cores is 0 for job " + j.getLogicalID(),
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            }
+
             if (!first) {
                 sb.append(" ").append(":").append(" ");
             }
