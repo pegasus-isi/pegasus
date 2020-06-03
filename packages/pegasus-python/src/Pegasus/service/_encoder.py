@@ -6,6 +6,7 @@ from decimal import Decimal
 from enum import Enum
 
 from flask.json import JSONEncoder
+from sqlalchemy import inspect
 
 from Pegasus.service.base import ErrorResponse, OrderedDict, PagedResponse
 
@@ -55,7 +56,12 @@ class PegasusJsonEncoder(JSONEncoder):
             return o.__json__()
 
         elif hasattr(o, "__table__"):
-            _v = {k: getattr(o, k) for k in o.__mapper__.column_attrs.keys()}
+            unloaded = inspect(o).unloaded
+            _v = {
+                k: getattr(o, k)
+                for k in o.__mapper__.column_attrs.keys()
+                if k not in unloaded
+            }
 
             for k in getattr(o, "__includes__", {}):
                 _v[k] = getattr(o, k)

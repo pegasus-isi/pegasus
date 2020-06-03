@@ -4,9 +4,6 @@ import sys
 
 from Pegasus.api import *
 
-# launch-bamboo-test needs these logs to be sent to stdout
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-
 # --- Transformations ----------------------------------------------------------
 echo = Transformation(
         "echo", 
@@ -26,7 +23,5 @@ try:
                 .set_stdout("hello.out")
         ).add_transformation_catalog(tc)\
         .plan(submit=True)
-except Exception as e:
-    print(e)
-    print(e.args[1].stdout)
-    print(e.args[1].stderr)
+except PegasusClientError as e:
+    print(e.output)

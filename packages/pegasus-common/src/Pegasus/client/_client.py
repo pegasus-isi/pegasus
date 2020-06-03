@@ -6,8 +6,19 @@ import subprocess
 import time
 from functools import partial
 from os import path
+from typing import Dict, List
 
 from Pegasus import yaml
+
+
+class PegasusClientError(Exception):
+    """Exception raised when an invoked pegasus command line tool returns non 0"""
+
+    def __init__(self, message, result):
+        super().__init__(message)
+
+        self.output = result.stdout + "\n" + result.stderr
+        self.result = result
 
 
 def from_env(pegasus_home: str = None):
@@ -46,10 +57,10 @@ class Client:
         self,
         dax: str,
         conf: str = None,
-        sites: list = None,
-        output_site: str = "local",
-        staging_sites: dict = None,
-        input_dir: str = None,
+        sites: List[str] = None,
+        output_sites: List[str] = ["local"],
+        staging_sites: Dict[str, str] = None,
+        input_dirs: List[str] = None,
         output_dir: str = None,
         dir: str = None,
         relative_dir: str = None,
@@ -74,13 +85,20 @@ class Client:
                 )
             cmd.extend(("--sites", ",".join(sites)))
 
-        if output_site:
-            cmd.extend(("--output-site", output_site))
+        if output_sites:
+            if not isinstance(output_sites, list):
+                raise TypeError(
+                    "invalid output_sites: {}; list of str must be given".format(
+                        output_sites
+                    )
+                )
+
+            cmd.extend(("--output-sites", ",".join(output_sites)))
 
         if staging_sites:
             if not isinstance(staging_sites, dict):
                 raise TypeError(
-                    "invalid staging_sites: {}; dict must be given".format(
+                    "invalid staging_sites: {}; dict<str, str> must be given".format(
                         staging_sites
                     )
                 )
@@ -92,8 +110,15 @@ class Client:
                 )
             )
 
-        if input_dir:
-            cmd.extend(("--input-dir", input_dir))
+        if input_dirs:
+            if not isinstance(input_dirs, list):
+                raise TypeError(
+                    "invalid input_dirs: {} list of str must be given".format(
+                        input_dirs
+                    )
+                )
+
+            cmd.extend(("--input-dir", ",".join(input_dirs)))
 
         if output_dir:
             cmd.extend(("--output-dir", output_dir))
@@ -121,9 +146,9 @@ class Client:
         rv = self._exec(cmd)
 
         if rv.exit_code:
-            self._log.fatal("Plan: {} \n {}".format(rv.stdout, rv.stderr))
+            self._log.fatal("Plan:\n{} \n{}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Plan: {} \n {}".format(rv.stdout, rv.stderr))
+        self._log.info("Plan:\n{} \n{}".format(rv.stdout, rv.stderr))
 
         submit_dir = self._get_submit_dir(rv.stdout)
         workflow = Workflow(submit_dir, self)
@@ -140,9 +165,9 @@ class Client:
         rv = self._exec(cmd)
 
         if rv.exit_code:
-            self._log.fatal("Run: {} \n {}".format(rv.stdout, rv.stderr))
+            self._log.fatal("Run:\n{} \n{}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Run: {} \n {}".format(rv.stdout, rv.stderr))
+        self._log.info("Run:\n{} \n{}".format(rv.stdout, rv.stderr))
 
     def status(self, submit_dir: str, long: bool = False, verbose: int = 0):
         cmd = [self._status]
@@ -158,9 +183,9 @@ class Client:
         rv = self._exec(cmd)
 
         if rv.exit_code:
-            self._log.fatal("Status: {} \n {}".format(rv.stdout, rv.stderr))
+            self._log.fatal("Status:\n{} \n{}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Status: {} \n {}".format(rv.stdout, rv.stderr))
+        self._log.info("Status:\n{} \n{}".format(rv.stdout, rv.stderr))
 
     def wait(self, submit_dir: str, delay: int = 2):
         """Prints progress bar and blocks until workflow completes or fails"""
@@ -268,9 +293,9 @@ class Client:
         rv = self._exec(cmd)
 
         if rv.exit_code:
-            self._log.fatal("Remove: {} \n {}".format(rv.stdout, rv.stderr))
+            self._log.fatal("Remove:\n{} \n{}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Remove: {} \n {}".format(rv.stdout, rv.stderr))
+        self._log.info("Remove:\n{} \n{}".format(rv.stdout, rv.stderr))
 
     def analyzer(self, submit_dir: str, verbose: int = 0):
         cmd = [self._analyzer]
@@ -283,9 +308,9 @@ class Client:
         rv = self._exec(cmd)
 
         if rv.exit_code:
-            self._log.fatal("Analyzer: {} \n {}".format(rv.stdout, rv.stderr))
+            self._log.fatal("Analyzer:\n{} \n{}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Analyzer: {} \n {}".format(rv.stdout, rv.stderr))
+        self._log.info("Analyzer:\n{} \n{}".format(rv.stdout, rv.stderr))
 
     def statistics(self, submit_dir: str, verbose: int = 0):
         cmd = [self._statistics]
@@ -298,9 +323,9 @@ class Client:
         rv = self._exec(cmd)
 
         if rv.exit_code:
-            self._log.fatal("Statistics: {} \n {}".format(rv.stdout, rv.stderr))
+            self._log.fatal("Statistics:\n{} \n{}".format(rv.stdout, rv.stderr))
 
-        self._log.info("Statistics: {} \n {}".format(rv.stdout, rv.stderr))
+        self._log.info("Statistics:\n{} \n{}".format(rv.stdout, rv.stderr))
 
     @staticmethod
     def _exec(cmd):
@@ -311,7 +336,7 @@ class Client:
         r = Client._make_result(rv)
 
         if r.exit_code != 0:
-            raise ValueError("Pegasus command failed", r)
+            raise PegasusClientError("Pegasus command: {} FAILED".format(cmd), r)
 
         return r
 

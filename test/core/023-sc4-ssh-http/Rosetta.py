@@ -8,8 +8,6 @@ from datetime import datetime
 
 from Pegasus.api import *
 
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "023-sc4-ssh-http-" + datetime.now().strftime("%s")
 TOP_DIR = Path.cwd()
@@ -187,7 +185,5 @@ try:
         staging_sites={CONDOR_POOL: STAGING_SITE},
         submit=True,
     )
-except Exception as e:
-    print(e)
-    print(e.args[1].stdout)
-    print(e.args[1].stderr)
+except PegasusClientError as e:
+    print(e.output)

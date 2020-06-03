@@ -212,9 +212,6 @@ public class SUBDAXGenerator {
             mUser = "user";
         }
 
-        // hardcoded options for time being.
-        mPegasusPlanOptions.setPartitioningType("Whole");
-
         mCondorVersion = CondorVersion.getInstance(mLogger).numericValue();
         if (mCondorVersion == -1) {
             mLogger.log(

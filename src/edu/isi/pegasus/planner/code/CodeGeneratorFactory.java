@@ -62,16 +62,7 @@ public class CodeGeneratorFactory {
             throw new RuntimeException("Invalid Options specified");
         }
 
-        // resolve the basename of the class on the basis of the megadag mode
-        String mode = (options == null) ? null : options.getMegaDAGMode();
         String className = null;
-        if (mode != null) {
-            // try to see if a special writer needs to be loaded
-            className =
-                    (mode.equalsIgnoreCase("daglite"))
-                            ? "DAGLite"
-                            : null; // we pick from the properties.
-        }
 
         if (className == null) {
             // pick up the basename/classname from the properties.

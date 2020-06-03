@@ -8,8 +8,6 @@ from pathlib import Path
 
 from Pegasus.api import *
 
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-
 # --- Work Directory Setup -----------------------------------------------------
 RUN_ID = "local-hierarchy-sharedfs-" + datetime.now().strftime("%s")
 TOP_DIR = Path.cwd()
@@ -251,7 +249,5 @@ try:
         input_dir="input",
         submit=True
     )
-except Exception as e:
-    print(e)
-    print(e.args[1].stdout)
-    print(e.args[1].stderr)
+except PegasusClientError as e:
+    print(e.output)

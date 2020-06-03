@@ -1,13 +1,11 @@
 import hashlib
-import json
 import logging
-from io import StringIO
 
-from flask import current_app, g, make_response, request
+from flask import g, make_response, request
 
 from Pegasus.service import cache
 from Pegasus.service._serialize import jsonify
-from Pegasus.service.base import InvalidJSONError, OrderedDict
+from Pegasus.service.base import OrderedDict
 from Pegasus.service.monitoring import monitoring as blueprint
 from Pegasus.service.monitoring.queries import (
     MasterWorkflowQueries,
@@ -28,19 +26,6 @@ def pull_m_wf_id(endpoint, values):
         g.m_wf_id = values["m_wf_id"]
 
 
-@blueprint.url_defaults
-def add_m_wf_id(endpoint, values):
-    """
-    If the endpoint expects m_wf_id, then set it's value to g.url_m_wf_id.
-    """
-    if (
-        current_app.url_map.is_endpoint_expecting(endpoint, "m_wf_id")
-        and "m_wf_id" not in values
-        and "url_m_wf_id" in g
-    ):
-        values.setdefault("m_wf_id", g.url_m_wf_id)
-
-
 @blueprint.url_value_preprocessor
 def pull_url_context(endpoint, values):
     """
@@ -57,17 +42,6 @@ def pull_url_context(endpoint, values):
         else:
             if url_context:
                 g.url_context = url_context
-
-
-@blueprint.url_defaults
-def add_url_context(endpoint, values):
-    """
-    If there is a URL context, gene
-    """
-    if values and "url_context" in g:
-        for key, value in g.url_context.items():
-            if current_app.url_map.is_endpoint_expecting(endpoint, key):
-                values.setdefault(key, value)
 
 
 @blueprint.before_request
@@ -159,15 +133,9 @@ def get_query_args():
         ]
     )
 
-    is_post = request.method == "POST"
-
     for arg, cast in query_args.items():
         if arg in request.args:
             g.query_args[arg.replace("-", "_")] = cast(arg, request.args.get(arg))
-
-        # POST Query Argument overrides GET Query Argument with the same name
-        if is_post and arg in request.form:
-            g.query_args[arg.replace("-", "_")] = cast(arg, request.form[arg])
 
 
 """
@@ -196,7 +164,6 @@ Root Workflow
 
 
 @blueprint.route("/root")
-@blueprint.route("/root/query", methods=["POST"])
 def get_root_workflows(username):
     """
     Returns a collection of root level workflows.
@@ -289,7 +256,6 @@ Workflow
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow")
-@blueprint.route("/root/<string:m_wf_id>/workflow/query", methods=["POST"])
 def get_workflows(username, m_wf_id):
     """
     Returns a collection of workflows.
@@ -366,9 +332,6 @@ Workflow Meta
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/meta")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/meta/query", methods=["POST"]
-)
 def get_workflow_meta(username, m_wf_id, wf_id):
     """
     Returns a collection of workflow's metadata.
@@ -433,9 +396,6 @@ Workflow Files
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/files")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/files/query", methods=["POST"]
-)
 def get_workflow_files(username, m_wf_id, wf_id):
     """
     Returns a collection of workflows.
@@ -488,17 +448,7 @@ Workflow State
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/state")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>"
-)
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/state/query", methods=["POST"]
-)
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>/query",
-    methods=["POST"],
-)
-def get_workflow_state(username, m_wf_id, wf_id, recent=False):
+def get_workflow_state(username, m_wf_id, wf_id):
     """
     Returns a collection of Workflow States.
 
@@ -506,7 +456,6 @@ def get_workflow_state(username, m_wf_id, wf_id, recent=False):
     :query int max-results: Return a maximum of <max-results> records
     :query string query: Search criteria
     :query string order: Sorting criteria
-    :query boolean recent: Get most recent workflow state
     :query boolean pretty-print: Return formatted JSON response
 
     :statuscode 200: OK
@@ -520,7 +469,7 @@ def get_workflow_state(username, m_wf_id, wf_id, recent=False):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    paged_response = queries.get_workflow_state(wf_id, recent=recent, **g.query_args)
+    paged_response = queries.get_workflow_state(wf_id, **g.query_args)
 
     if paged_response.total_records == 0:
         log.debug("Total records is 0; returning HTTP 204 No content")
@@ -558,9 +507,6 @@ Job
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/query", methods=["POST"]
-)
 def get_workflow_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of Jobs.
@@ -641,9 +587,6 @@ Host
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/host")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/host/query", methods=["POST"]
-)
 def get_workflow_hosts(username, m_wf_id, wf_id):
     """
     Returns a collection of Hosts.
@@ -724,20 +667,7 @@ Job State
 @blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state"
 )
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>"
-)
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state/query",
-    methods=["POST"],
-)
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>/query",
-    methods=["POST"],
-)
-def get_job_instance_states(
-    username, m_wf_id, wf_id, job_id, job_instance_id, recent=False
-):
+def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id):
     """
     Returns a collection of Job States.
 
@@ -745,7 +675,6 @@ def get_job_instance_states(
     :query int max-results: Return a maximum of <max-results> records
     :query string query: Search criteria
     :query string order: Sorting criteria
-    :query boolean recent: Get most recent job state
     :query boolean pretty-print: Return formatted JSON response
 
     :statuscode 200: OK
@@ -760,7 +689,7 @@ def get_job_instance_states(
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     paged_response = queries.get_job_instance_states(
-        wf_id, job_id, job_instance_id, recent=recent, **g.query_args
+        wf_id, job_id, job_instance_id, **g.query_args
     )
 
     if paged_response.total_records == 0:
@@ -795,9 +724,6 @@ Task
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/task")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/task/query", methods=["POST"]
-)
 def get_workflow_tasks(username, m_wf_id, wf_id):
     """
     Returns a collection of Tasks.
@@ -834,10 +760,6 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task/query",
-    methods=["POST"],
-)
 def get_job_tasks(username, m_wf_id, wf_id, job_id):
     """
     Returns a collection of Tasks.
@@ -916,10 +838,6 @@ Task Meta
 @blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta"
 )
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta/query",
-    methods=["POST"],
-)
 def get_task_meta(username, m_wf_id, wf_id, task_id):
     """
     Returns a collection of task's metadata.
@@ -990,18 +908,7 @@ Job Instance
 @blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance"
 )
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>"
-)
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/query",
-    methods=["POST"],
-)
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>/query",
-    methods=["POST"],
-)
-def get_job_instances(username, m_wf_id, wf_id, job_id, recent=False):
+def get_job_instances(username, m_wf_id, wf_id, job_id):
     """
     Returns a collection of JobInstances.
 
@@ -1023,7 +930,10 @@ def get_job_instances(username, m_wf_id, wf_id, job_id, recent=False):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     paged_response = queries.get_job_instances(
-        wf_id, job_id, recent=recent, **g.query_args
+        wf_id,
+        job_id,
+        recent=request.args.get("recent", "false") == "true",
+        **g.query_args,
     )
 
     if paged_response.total_records == 0:
@@ -1091,9 +1001,6 @@ Invocation
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/query", methods=["POST"]
-)
 def get_workflow_invocations(username, m_wf_id, wf_id):
     """
     Returns a collection of Invocations.
@@ -1131,10 +1038,6 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
 
 @blueprint.route(
     "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation"
-)
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/query",
-    methods=["POST"],
 )
 def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
@@ -1185,124 +1088,11 @@ def get_invocation(username, m_wf_id, wf_id, invocation_id):
 
 
 """
-Batch Request
-
-[
-    {
-        "method" : <string:method>,
-        "path"   : <string:path>,
-        "body"   : <dict:body>
-    },
-    {
-        "method" : <string:method>,
-        "path"   : <string:path>,
-        "body"   : <dict:body>
-    }
-]
-
-Batch Response
-
-[
-    {
-        "status"   : <int:status_code>,
-        "response" : <string:response>
-    },
-    {
-        "status"   : <int:status_code>,
-        "response" : <string:response>
-    }
-]
-
-"""
-
-
-def _read_response(response):
-    output = StringIO()
-    try:
-        for line in response.response:
-            output.write(line)
-
-        return output.getvalue()
-
-    finally:
-        output.close()
-
-
-@blueprint.route("/batch", methods=["POST"])
-def batch(username):
-    """
-    Execute multiple requests, submitted as a batch.
-
-    :statuscode 207: Multi status
-    :statuscode 400: Bad request
-    :statuscode 401: Authentication failure
-    :statuscode 403: Authorization failure
-
-    :return type: Collection
-    :return resource: Responses
-    """
-    try:
-        requests = json.loads(request.data)
-    except ValueError as e:
-        log.exception("Invalid JSON")
-        raise InvalidJSONError(e.message)
-
-    responses = StringIO()
-    responses.write("[")
-    headers = (
-        [("Authorization", request.headers.get("Authorization"))]
-        if request.authorization
-        else []
-    )
-
-    application = current_app._get_current_object()
-    for index, req in enumerate(requests):
-        method = req["method"]
-        path = req["path"]
-        body = req.get("body", None)
-
-        with application.app_context():
-            with application.test_request_context(
-                path, method=method, data=body, headers=headers
-            ):
-                try:
-                    # Pre process Request
-                    rv = application.preprocess_request()
-
-                    if rv is None:
-                        # Main Dispatch
-                        rv = application.dispatch_request()
-
-                except Exception as e:
-                    rv = application.handle_user_exception(e)
-
-                response = application.make_response(rv)
-
-                # Post process Request
-                response = application.process_response(response)
-
-        responses.write(
-            '{"status": %d,"response": %s}'
-            % (response.status_code, _read_response(response))
-        )
-
-        if index + 1 < len(requests):
-            responses.write(",")
-
-    responses.write("]")
-
-    return make_response(responses.getvalue(), 207, JSON_HEADER)
-
-
-"""
-Views
+Utilities
 """
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running/query", methods=["POST"]
-)
 def get_running_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of running Jobs.
@@ -1339,10 +1129,6 @@ def get_running_jobs(username, m_wf_id, wf_id):
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful/query",
-    methods=["POST"],
-)
 def get_successful_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of successful Jobs.
@@ -1379,9 +1165,6 @@ def get_successful_jobs(username, m_wf_id, wf_id):
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed/query", methods=["POST"]
-)
 def get_failed_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of failed Jobs.
@@ -1418,9 +1201,6 @@ def get_failed_jobs(username, m_wf_id, wf_id):
 
 
 @blueprint.route("/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing")
-@blueprint.route(
-    "/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing/query", methods=["POST"]
-)
 def get_failing_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of failing Jobs.

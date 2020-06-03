@@ -65,19 +65,10 @@ public class PlannerOptions extends Data implements Cloneable {
     private String mRelativeSubmitDir;
 
     /**
-     * This is the directory where the submit files are generated on the submit host (the site
-     * running the concrete planner).
-     */
-    // private String mSubmitFileDir ;
-
-    /**
      * The dax file which contains the abstract dag. This dax is created by the Abstract Planner
      * using the gendax command.
      */
     private String mDAXFile;
-
-    /** The path to the pdax file that contains the partition graph. */
-    private String mPDAXFile;
 
     /** List of execution pools on which the user wants the Dag to be executed. */
     private Set<String> mExecSites;
@@ -121,9 +112,6 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     private boolean mGenRandomDir;
 
-    /** The megadag generation mode. */
-    private String mMegadag;
-
     /**
      * The list of VDS properties set at runtime by the user on commandline. It is a list of <code>
      * NameValue</code> pairs, with name as vds property name and value as the corresponding value.
@@ -162,9 +150,6 @@ public class PlannerOptions extends Data implements Cloneable {
 
     /** Stores the time at which the planning process started. */
     private Date mDate;
-
-    /** Stores the type of partitioning to be done. */
-    private String mPartitioningType;
 
     /** A boolean storing whether to sanitize paths or not */
     private boolean mSanitizePath;
@@ -208,7 +193,6 @@ public class PlannerOptions extends Data implements Cloneable {
         mRelativeDir = null;
         mRelativeSubmitDir = null;
         mDAXFile = null;
-        mPDAXFile = null;
         mExecSites = new java.util.HashSet();
         mCacheFiles = new java.util.HashSet();
         mInheritedRCFiles = new java.util.HashSet();
@@ -222,7 +206,6 @@ public class PlannerOptions extends Data implements Cloneable {
         mGenRandomDir = false;
         mRandomDirName = null;
         mOptArg = false;
-        mMegadag = null;
         mVDSProps = null;
         mClusterer = null;
         mBasenamePrefix = null;
@@ -230,7 +213,6 @@ public class PlannerOptions extends Data implements Cloneable {
         mVOGroup = "pegasus";
         mDeferredRun = false;
         mDate = new Date();
-        mPartitioningType = null;
         mSanitizePath = true;
         mJobPrefix = null;
         mNumOfRescueTries = DEFAULT_NUMBER_OF_RESCUE_TRIES;
@@ -387,15 +369,6 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
-     * Returns the megadag generation option .
-     *
-     * @return the mode if mode is set else null
-     */
-    public String getMegaDAGMode() {
-        return this.mMegadag;
-    }
-
-    /**
      * Returns the input directory.
      *
      * @return the input directory for the workflow
@@ -420,15 +393,6 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public Collection<String> getOutputSites() {
         return mOutputSites;
-    }
-
-    /**
-     * Returns the path to the PDAX file being used by the planner.
-     *
-     * @return path to PDAX file.
-     */
-    public String getPDAX() {
-        return mPDAXFile;
     }
 
     /**
@@ -634,24 +598,6 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public boolean optionalArgSet() {
         return this.mOptArg;
-    }
-
-    /**
-     * Sets the partitioning type in case of partition and plan.
-     *
-     * @param type the type of partitioning technique
-     */
-    public void setPartitioningType(String type) {
-        mPartitioningType = type;
-    }
-
-    /**
-     * Returns the partitioning type in case of partition and plan.
-     *
-     * @return the type of partitioning technique
-     */
-    public String getPartitioningType() {
-        return mPartitioningType;
     }
 
     /**
@@ -878,25 +824,6 @@ public class PlannerOptions extends Data implements Cloneable {
                         // but to 1, as --verbose is an optional
                         // argument
                         1;
-    }
-
-    /**
-     * Sets the megadag generation option
-     *
-     * @param mode the mode.
-     */
-    public void setMegaDAGMode(String mode) {
-        this.mMegadag = mode;
-    }
-
-    /**
-     * Sets the PDAX that has to be worked on by the planner.
-     *
-     * @param pdax the path to the PDAX file.
-     */
-    public void setPDAX(String pdax) {
-        pdax = sanitizePath(pdax);
-        mPDAXFile = pdax;
     }
 
     /**
@@ -1208,8 +1135,6 @@ public class PlannerOptions extends Data implements Cloneable {
                         + mJobPrefix
                         + "\n Abstract Dag File    "
                         + mDAXFile
-                        + "\n Partition File       "
-                        + mPDAXFile
                         + "\n Execution Sites      "
                         + this.setToString(mExecSites, ",")
                         + "\n Staging Sites        "
@@ -1384,11 +1309,6 @@ public class PlannerOptions extends Data implements Cloneable {
             }
         }
 
-        // specify the megadag option if set
-        if (mMegadag != null) {
-            sb.append(" --megadag ").append(mMegadag);
-        }
-
         // specify the vogroup
         sb.append(" --group ").append(mVOGroup);
 
@@ -1492,7 +1412,6 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mBaseDir = this.mBaseDir;
         pOpt.mRelativeDir = this.mRelativeDir;
         pOpt.mDAXFile = this.mDAXFile;
-        pOpt.mPDAXFile = this.mPDAXFile;
         pOpt.mExecSites = cloneSet(this.mExecSites);
         pOpt.mStagingSitesMap = new HashMap<String, String>(this.mStagingSitesMap);
         pOpt.mCacheFiles = cloneSet(this.mCacheFiles);
@@ -1516,7 +1435,6 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mVOGroup = this.mVOGroup;
         pOpt.mDeferredRun = this.mDeferredRun;
         pOpt.mDate = (Date) this.mDate.clone();
-        pOpt.mPartitioningType = this.mPartitioningType;
         pOpt.mNumOfRescueTries = this.mNumOfRescueTries;
         pOpt.mOriginalArgumentString = this.mOriginalArgumentString;
         pOpt.mConfFile = this.mConfFile;

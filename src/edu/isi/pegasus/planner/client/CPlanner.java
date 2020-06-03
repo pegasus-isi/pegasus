@@ -90,9 +90,6 @@ import java.util.regex.Pattern;
  */
 public class CPlanner extends Executable {
 
-    /** The default megadag mode that is used for generation of megadags in deferred planning. */
-    public static final String DEFAULT_MEGADAG_MODE = "dag";
-
     /**
      * The basename of the directory that contains the submit files for the cleanup DAG that for the
      * concrete dag generated for the workflow.
@@ -365,7 +362,6 @@ public class CPlanner extends Executable {
 
         // do sanity check on dax file
         String dax = mPOptions.getDAX();
-        String pdax = mPOptions.getPDAX();
         String baseDir = mPOptions.getBaseSubmitDirectory();
         dax = (dax == null) ? CPlanner.DEFAULT_WORKFLOW_DAX_FILE : dax;
         if (dax == null) {
@@ -375,13 +371,6 @@ public class CPlanner extends Executable {
                     LogManager.CONSOLE_MESSAGE_LEVEL);
             this.printShortVersion();
             return result;
-        }
-
-        // a sanity check for an old unsupported option
-        if (pdax != null) {
-            // do the deferreed planning by parsing
-            // the partition graph in the pdax file.
-            throw new UnsupportedOperationException("The --pdax option is no longer supported ");
         }
 
         // try to get hold of the vds properties
@@ -605,7 +594,6 @@ public class CPlanner extends Executable {
         // the planner metrics
         mPMetrics.setWorkflowMetrics(finalDag.getWorkflowMetrics());
 
-        // we only need the script writer for daglite megadag generator mode
         CodeGenerator codeGenerator = null;
         codeGenerator = CodeGeneratorFactory.loadInstance(cwmain.getPegasusBag());
 
@@ -769,7 +757,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:1:",
+                        "vqhfSnzVr::D:d:s:o:O:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -858,10 +846,6 @@ public class CPlanner extends Executable {
                     options.addToForwardOptions(g.getOptarg());
                     break;
 
-                case 'g': // group
-                    options.setVOGroup(g.getOptarg());
-                    break;
-
                 case 'h': // help
                     options.setHelp(true);
                     break;
@@ -878,23 +862,11 @@ public class CPlanner extends Executable {
                     options.setJobnamePrefix(g.getOptarg());
                     break;
 
-                case 'm': // megadag option
-                    options.setMegaDAGMode(g.getOptarg());
-                    break;
-
                 case 'n': // nocleanup option
                     mLogger.log(
                             "--nocleanup option is deprecated. Use --cleanup none  ",
                             LogManager.WARNING_MESSAGE_LEVEL);
                     options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.none);
-                    break;
-
-                case 'y': // output option
-                    options.addOutputSite(g.getOptarg());
-                    // warn
-                    mLogger.log(
-                            "--output option is deprecated. Replaced by --output-site ",
-                            LogManager.WARNING_MESSAGE_LEVEL);
                     break;
 
                 case 'o': // output-site
@@ -904,16 +876,6 @@ public class CPlanner extends Executable {
                 case 'O': // output-dir
                     options.setOutputDirectory(g.getOptarg());
                     break;
-
-                    /* no longer supported
-                    case 'p'://partition and plan
-                        options.setPartitioningType( "Whole" );
-                        break;
-
-                    case 'P'://pdax file
-                        options.setPDAX(g.getOptarg());
-                        break;
-                    */
 
                 case 'q': // quiet
                     options.decrementLogging();
@@ -991,7 +953,7 @@ public class CPlanner extends Executable {
                     new StreamGobbler(
                             p.getInputStream(),
                             new DefaultStreamGobblerCallback(LogManager.CONSOLE_MESSAGE_LEVEL));
-            // error stream is also logged to console, as 5.0 pegasus-run always 
+            // error stream is also logged to console, as 5.0 pegasus-run always
             // logs to stderr and reserves stdout for it's --json option
             StreamGobbler eps =
                     new StreamGobbler(
@@ -1056,47 +1018,39 @@ public class CPlanner extends Executable {
      * @return array of <code>LongOpt</code> objects , corresponding to the valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[36];
+        LongOpt[] longopts = new LongOpt[29];
 
         longopts[0] = new LongOpt("dir", LongOpt.REQUIRED_ARGUMENT, null, '8');
         longopts[1] = new LongOpt("dax", LongOpt.REQUIRED_ARGUMENT, null, 'd');
         longopts[2] = new LongOpt("sites", LongOpt.REQUIRED_ARGUMENT, null, 's');
-        longopts[3] = new LongOpt("output", LongOpt.REQUIRED_ARGUMENT, null, 'y');
-        longopts[4] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
-        longopts[5] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
-        longopts[6] = new LongOpt("force", LongOpt.NO_ARGUMENT, null, 'f');
-        longopts[7] = new LongOpt("submit", LongOpt.NO_ARGUMENT, null, 'S');
-        longopts[8] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
-        longopts[9] = new LongOpt("randomdir", LongOpt.OPTIONAL_ARGUMENT, null, 'r');
-        longopts[10] = new LongOpt("authenticate", LongOpt.NO_ARGUMENT, null, 'a');
-        longopts[11] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, '6');
-        // deferred planning options
-        longopts[12] = new LongOpt("pdax", LongOpt.REQUIRED_ARGUMENT, null, 'P');
-        longopts[13] = new LongOpt("cache", LongOpt.REQUIRED_ARGUMENT, null, 'c');
-        longopts[14] = new LongOpt("megadag", LongOpt.REQUIRED_ARGUMENT, null, 'm');
+        longopts[3] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
+        longopts[4] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
+        longopts[5] = new LongOpt("force", LongOpt.NO_ARGUMENT, null, 'f');
+        longopts[6] = new LongOpt("submit", LongOpt.NO_ARGUMENT, null, 'S');
+        longopts[7] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
+        longopts[8] = new LongOpt("randomdir", LongOpt.OPTIONAL_ARGUMENT, null, 'r');
+        longopts[9] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, '6');
+        longopts[10] = new LongOpt("cache", LongOpt.REQUIRED_ARGUMENT, null, 'c');
         // collapsing for mpi
-        longopts[15] = new LongOpt("cluster", LongOpt.REQUIRED_ARGUMENT, null, 'C');
+        longopts[11] = new LongOpt("cluster", LongOpt.REQUIRED_ARGUMENT, null, 'C');
         // more deferred planning stuff
-        longopts[16] = new LongOpt("basename", LongOpt.REQUIRED_ARGUMENT, null, 'b');
-        longopts[17] = new LongOpt("monitor", LongOpt.NO_ARGUMENT, null, 1);
-        longopts[18] = new LongOpt("nocleanup", LongOpt.NO_ARGUMENT, null, 'n');
-        longopts[19] = new LongOpt("group", LongOpt.REQUIRED_ARGUMENT, null, 'g');
-        longopts[20] = new LongOpt("deferred", LongOpt.NO_ARGUMENT, null, 'z');
-        longopts[21] = new LongOpt("relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2');
-        longopts[22] = new LongOpt("pap", LongOpt.NO_ARGUMENT, null, 'p');
-        longopts[23] = new LongOpt("job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j');
-        longopts[24] = new LongOpt("rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
-        longopts[25] = new LongOpt("forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
-        longopts[26] = new LongOpt("X", LongOpt.REQUIRED_ARGUMENT, null, 'X');
-        longopts[27] = new LongOpt("relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4');
-        longopts[28] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
-        longopts[29] = new LongOpt("inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5');
-        longopts[30] = new LongOpt("force-replan", LongOpt.NO_ARGUMENT, null, '7');
-        longopts[31] = new LongOpt("staging-site", LongOpt.REQUIRED_ARGUMENT, null, '9');
-        longopts[32] = new LongOpt("input-dir", LongOpt.REQUIRED_ARGUMENT, null, 'I');
-        longopts[33] = new LongOpt("output-dir", LongOpt.REQUIRED_ARGUMENT, null, 'O');
-        longopts[34] = new LongOpt("output-sites", LongOpt.REQUIRED_ARGUMENT, null, 'o');
-        longopts[35] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
+        longopts[12] = new LongOpt("basename", LongOpt.REQUIRED_ARGUMENT, null, 'b');
+        longopts[13] = new LongOpt("nocleanup", LongOpt.NO_ARGUMENT, null, 'n');
+        longopts[14] = new LongOpt("deferred", LongOpt.NO_ARGUMENT, null, 'z');
+        longopts[15] = new LongOpt("relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2');
+        longopts[16] = new LongOpt("job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j');
+        longopts[17] = new LongOpt("rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
+        longopts[18] = new LongOpt("forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
+        longopts[19] = new LongOpt("X", LongOpt.REQUIRED_ARGUMENT, null, 'X');
+        longopts[20] = new LongOpt("relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4');
+        longopts[21] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
+        longopts[22] = new LongOpt("inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5');
+        longopts[23] = new LongOpt("force-replan", LongOpt.NO_ARGUMENT, null, '7');
+        longopts[24] = new LongOpt("staging-site", LongOpt.REQUIRED_ARGUMENT, null, '9');
+        longopts[25] = new LongOpt("input-dir", LongOpt.REQUIRED_ARGUMENT, null, 'I');
+        longopts[26] = new LongOpt("output-dir", LongOpt.REQUIRED_ARGUMENT, null, 'O');
+        longopts[27] = new LongOpt("output-sites", LongOpt.REQUIRED_ARGUMENT, null, 'o');
+        longopts[28] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
         return longopts;
     }
 
@@ -1138,7 +1092,7 @@ public class CPlanner extends Executable {
                 .append(
                         "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] ")
                 .append(
-                        "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output-sites output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] ")
+                        "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output-sites <output sites>] [--randomdir=[dir name]]   [--verbose] [--version][--help] ")
                 .append("\n")
                 .append("\n Options ")
                 .append("\n -d  fn ")
@@ -1173,7 +1127,6 @@ public class CPlanner extends Executable {
                 .append(
                         "\n                    where value can be optional. e.g -F nogrid will result in --nogrid . The option ")
                 .append("\n                    can be repeated multiple times.")
-                .append("\n -g |--group        the VO Group to which the user belongs ")
                 .append(
                         "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames ")
                 .append(
@@ -1184,8 +1137,6 @@ public class CPlanner extends Executable {
                         "\n                      the directory specified is asscociated with the local-storage directory for the output site.")
                 .append(
                         "\n -o |--output-sites comma separated list of output sites where the data products during workflow execution are transferred to.")
-                .append(
-                        "\n --output           deprecated option . Replaced by --output-site option")
                 .append(
                         "\n -s |--sites        comma separated list of executions sites on which to map the workflow.")
                 .append(

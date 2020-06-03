@@ -1,11 +1,22 @@
 import shutil
 import subprocess
+from collections import namedtuple
 from subprocess import CompletedProcess
 from textwrap import dedent
 
 import pytest
 
-from Pegasus.client._client import Client, Result, from_env
+from Pegasus.client._client import Client, PegasusClientError, Result, from_env
+
+
+def test_PegasusClientError():
+    return_value = namedtuple("return_value", ["stdout", "stderr"])
+    rv = return_value("stdout", "stderr")
+    try:
+        raise PegasusClientError("pegasus command failed", rv)
+    except PegasusClientError as e:
+        assert e.output == "stdout\nstderr"
+        assert e.result == rv
 
 
 def test_from_env(mocker):
@@ -42,9 +53,9 @@ class TestClient:
             "dax.yml",
             conf="pegasus.conf",
             sites=["site1", "site2"],
-            output_site="local",
+            output_sites=["local", "other_site"],
             staging_sites={"es1": "ss1", "es2": "ss2"},
-            input_dir="/input_dir",
+            input_dirs=["/input_dir1", "/input_dir2"],
             output_dir="/output_dir",
             dir="/dir",
             relative_dir="/relative_dir",
@@ -62,12 +73,12 @@ class TestClient:
                 "pegasus.conf",
                 "--sites",
                 "site1,site2",
-                "--output-site",
-                "local",
+                "--output-sites",
+                "local,other_site",
                 "--staging-site",
                 "es1=ss1,es2=ss2",
                 "--input-dir",
-                "/input_dir",
+                "/input_dir1,/input_dir2",
                 "--output-dir",
                 "/output_dir",
                 "--dir",
@@ -97,6 +108,18 @@ class TestClient:
             client.plan("wf.yml", staging_sites="condorpool=origin")
 
         assert "invalid staging_sites: condorpool=origin" in str(e)
+
+    def test_plan_invalid_output_sites(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", output_sites="site1,site2")
+
+        assert "invalid output_sites: site1,site2" in str(e)
+
+    def test_plan_invalid_input_dirs(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", input_dirs="/input_dir")
+
+        assert "invalid input_dirs: /input_dir" in str(e)
 
     def test_run(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3)
