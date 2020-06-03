@@ -65,12 +65,6 @@ public class PlannerOptions extends Data implements Cloneable {
     private String mRelativeSubmitDir;
 
     /**
-     * This is the directory where the submit files are generated on the submit host (the site
-     * running the concrete planner).
-     */
-    // private String mSubmitFileDir ;
-
-    /**
      * The dax file which contains the abstract dag. This dax is created by the Abstract Planner
      * using the gendax command.
      */
@@ -118,9 +112,6 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     private boolean mGenRandomDir;
 
-    /** The megadag generation mode. */
-    private String mMegadag;
-
     /**
      * The list of VDS properties set at runtime by the user on commandline. It is a list of <code>
      * NameValue</code> pairs, with name as vds property name and value as the corresponding value.
@@ -160,9 +151,7 @@ public class PlannerOptions extends Data implements Cloneable {
     /** Stores the time at which the planning process started. */
     private Date mDate;
 
-    /** Stores the type of partitioning to be done. */
-    private String mPartitioningType;
-
+    
     /** A boolean storing whether to sanitize paths or not */
     private boolean mSanitizePath;
 
@@ -218,7 +207,6 @@ public class PlannerOptions extends Data implements Cloneable {
         mGenRandomDir = false;
         mRandomDirName = null;
         mOptArg = false;
-        mMegadag = null;
         mVDSProps = null;
         mClusterer = null;
         mBasenamePrefix = null;
@@ -226,7 +214,6 @@ public class PlannerOptions extends Data implements Cloneable {
         mVOGroup = "pegasus";
         mDeferredRun = false;
         mDate = new Date();
-        mPartitioningType = null;
         mSanitizePath = true;
         mJobPrefix = null;
         mNumOfRescueTries = DEFAULT_NUMBER_OF_RESCUE_TRIES;
@@ -382,14 +369,6 @@ public class PlannerOptions extends Data implements Cloneable {
         return mLoggingLevel;
     }
 
-    /**
-     * Returns the megadag generation option .
-     *
-     * @return the mode if mode is set else null
-     */
-    public String getMegaDAGMode() {
-        return this.mMegadag;
-    }
 
     /**
      * Returns the input directory.
@@ -624,24 +603,6 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
-     * Sets the partitioning type in case of partition and plan.
-     *
-     * @param type the type of partitioning technique
-     */
-    public void setPartitioningType(String type) {
-        mPartitioningType = type;
-    }
-
-    /**
-     * Returns the partitioning type in case of partition and plan.
-     *
-     * @return the type of partitioning technique
-     */
-    public String getPartitioningType() {
-        return mPartitioningType;
-    }
-
-    /**
      * Sets the flag to denote that the run is part of a larger deferred run.
      *
      * @param value the value
@@ -867,14 +828,6 @@ public class PlannerOptions extends Data implements Cloneable {
                         1;
     }
 
-    /**
-     * Sets the megadag generation option
-     *
-     * @param mode the mode.
-     */
-    public void setMegaDAGMode(String mode) {
-        this.mMegadag = mode;
-    }
 
     /**
      * Set the input directory.
@@ -1359,11 +1312,6 @@ public class PlannerOptions extends Data implements Cloneable {
             }
         }
 
-        // specify the megadag option if set
-        if (mMegadag != null) {
-            sb.append(" --megadag ").append(mMegadag);
-        }
-
         // specify the vogroup
         sb.append(" --group ").append(mVOGroup);
 
@@ -1490,7 +1438,6 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mVOGroup = this.mVOGroup;
         pOpt.mDeferredRun = this.mDeferredRun;
         pOpt.mDate = (Date) this.mDate.clone();
-        pOpt.mPartitioningType = this.mPartitioningType;
         pOpt.mNumOfRescueTries = this.mNumOfRescueTries;
         pOpt.mOriginalArgumentString = this.mOriginalArgumentString;
         pOpt.mConfFile = this.mConfFile;
