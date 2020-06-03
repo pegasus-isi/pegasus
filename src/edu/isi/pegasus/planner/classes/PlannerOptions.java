@@ -76,9 +76,6 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     private String mDAXFile;
 
-    /** The path to the pdax file that contains the partition graph. */
-    private String mPDAXFile;
-
     /** List of execution pools on which the user wants the Dag to be executed. */
     private Set<String> mExecSites;
 
@@ -208,7 +205,6 @@ public class PlannerOptions extends Data implements Cloneable {
         mRelativeDir = null;
         mRelativeSubmitDir = null;
         mDAXFile = null;
-        mPDAXFile = null;
         mExecSites = new java.util.HashSet();
         mCacheFiles = new java.util.HashSet();
         mInheritedRCFiles = new java.util.HashSet();
@@ -420,15 +416,6 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public Collection<String> getOutputSites() {
         return mOutputSites;
-    }
-
-    /**
-     * Returns the path to the PDAX file being used by the planner.
-     *
-     * @return path to PDAX file.
-     */
-    public String getPDAX() {
-        return mPDAXFile;
     }
 
     /**
@@ -890,16 +877,6 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
-     * Sets the PDAX that has to be worked on by the planner.
-     *
-     * @param pdax the path to the PDAX file.
-     */
-    public void setPDAX(String pdax) {
-        pdax = sanitizePath(pdax);
-        mPDAXFile = pdax;
-    }
-
-    /**
      * Set the input directory.
      *
      * @param input the input directory for the workflow
@@ -1208,8 +1185,6 @@ public class PlannerOptions extends Data implements Cloneable {
                         + mJobPrefix
                         + "\n Abstract Dag File    "
                         + mDAXFile
-                        + "\n Partition File       "
-                        + mPDAXFile
                         + "\n Execution Sites      "
                         + this.setToString(mExecSites, ",")
                         + "\n Staging Sites        "
@@ -1492,7 +1467,6 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mBaseDir = this.mBaseDir;
         pOpt.mRelativeDir = this.mRelativeDir;
         pOpt.mDAXFile = this.mDAXFile;
-        pOpt.mPDAXFile = this.mPDAXFile;
         pOpt.mExecSites = cloneSet(this.mExecSites);
         pOpt.mStagingSitesMap = new HashMap<String, String>(this.mStagingSitesMap);
         pOpt.mCacheFiles = cloneSet(this.mCacheFiles);

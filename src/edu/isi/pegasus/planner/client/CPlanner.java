@@ -362,7 +362,6 @@ public class CPlanner extends Executable {
 
         // do sanity check on dax file
         String dax = mPOptions.getDAX();
-        String pdax = mPOptions.getPDAX();
         String baseDir = mPOptions.getBaseSubmitDirectory();
         dax = (dax == null) ? CPlanner.DEFAULT_WORKFLOW_DAX_FILE : dax;
         if (dax == null) {
@@ -372,13 +371,6 @@ public class CPlanner extends Executable {
                     LogManager.CONSOLE_MESSAGE_LEVEL);
             this.printShortVersion();
             return result;
-        }
-
-        // a sanity check for an old unsupported option
-        if (pdax != null) {
-            // do the deferreed planning by parsing
-            // the partition graph in the pdax file.
-            throw new UnsupportedOperationException("The --pdax option is no longer supported ");
         }
 
         // try to get hold of the vds properties
@@ -765,7 +757,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSnzpVr::D:d:s:o:O:P:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
+                        "vqhfSnzpVr::D:d:s:o:O:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -1038,8 +1030,6 @@ public class CPlanner extends Executable {
         longopts[8] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
         longopts[9] = new LongOpt("randomdir", LongOpt.OPTIONAL_ARGUMENT, null, 'r');
         longopts[11] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, '6');
-        // deferred planning options
-        longopts[12] = new LongOpt("pdax", LongOpt.REQUIRED_ARGUMENT, null, 'P');
         longopts[13] = new LongOpt("cache", LongOpt.REQUIRED_ARGUMENT, null, 'c');
         // collapsing for mpi
         longopts[15] = new LongOpt("cluster", LongOpt.REQUIRED_ARGUMENT, null, 'C');
