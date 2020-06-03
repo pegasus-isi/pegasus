@@ -90,9 +90,6 @@ import java.util.regex.Pattern;
  */
 public class CPlanner extends Executable {
 
-    /** The default megadag mode that is used for generation of megadags in deferred planning. */
-    public static final String DEFAULT_MEGADAG_MODE = "dag";
-
     /**
      * The basename of the directory that contains the submit files for the cleanup DAG that for the
      * concrete dag generated for the workflow.
@@ -605,7 +602,6 @@ public class CPlanner extends Executable {
         // the planner metrics
         mPMetrics.setWorkflowMetrics(finalDag.getWorkflowMetrics());
 
-        // we only need the script writer for daglite megadag generator mode
         CodeGenerator codeGenerator = null;
         codeGenerator = CodeGeneratorFactory.loadInstance(cwmain.getPegasusBag());
 
@@ -874,10 +870,6 @@ public class CPlanner extends Executable {
                     options.setJobnamePrefix(g.getOptarg());
                     break;
 
-                case 'm': // megadag option
-                    options.setMegaDAGMode(g.getOptarg());
-                    break;
-
                 case 'n': // nocleanup option
                     mLogger.log(
                             "--nocleanup option is deprecated. Use --cleanup none  ",
@@ -892,16 +884,6 @@ public class CPlanner extends Executable {
                 case 'O': // output-dir
                     options.setOutputDirectory(g.getOptarg());
                     break;
-
-                    /* no longer supported
-                    case 'p'://partition and plan
-                        options.setPartitioningType( "Whole" );
-                        break;
-
-                    case 'P'://pdax file
-                        options.setPDAX(g.getOptarg());
-                        break;
-                    */
 
                 case 'q': // quiet
                     options.decrementLogging();
@@ -1060,7 +1042,6 @@ public class CPlanner extends Executable {
         // deferred planning options
         longopts[12] = new LongOpt("pdax", LongOpt.REQUIRED_ARGUMENT, null, 'P');
         longopts[13] = new LongOpt("cache", LongOpt.REQUIRED_ARGUMENT, null, 'c');
-        longopts[14] = new LongOpt("megadag", LongOpt.REQUIRED_ARGUMENT, null, 'm');
         // collapsing for mpi
         longopts[15] = new LongOpt("cluster", LongOpt.REQUIRED_ARGUMENT, null, 'C');
         // more deferred planning stuff
