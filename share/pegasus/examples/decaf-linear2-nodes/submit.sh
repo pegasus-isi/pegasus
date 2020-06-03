@@ -39,10 +39,11 @@ fi
 
 # plan and submit the  workflow
 pegasus-plan \
-    --conf ./pegasusrc \
+    --conf pegasus.properties \
     --sites condorpool \
     --output-site local \
     --dir dags \
     --dax decaf-v4.dax \
     --force \
-    -v 
+    --submit \
+	-v 
