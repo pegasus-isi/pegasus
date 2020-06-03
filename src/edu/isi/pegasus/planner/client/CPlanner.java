@@ -765,7 +765,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSnzpVr::aD:d:s:o:O:P:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
+                        "vqhfSnzpVr::D:d:s:o:O:P:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -1037,7 +1037,6 @@ public class CPlanner extends Executable {
         longopts[7] = new LongOpt("submit", LongOpt.NO_ARGUMENT, null, 'S');
         longopts[8] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
         longopts[9] = new LongOpt("randomdir", LongOpt.OPTIONAL_ARGUMENT, null, 'r');
-        longopts[10] = new LongOpt("authenticate", LongOpt.NO_ARGUMENT, null, 'a');
         longopts[11] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, '6');
         // deferred planning options
         longopts[12] = new LongOpt("pdax", LongOpt.REQUIRED_ARGUMENT, null, 'P');
