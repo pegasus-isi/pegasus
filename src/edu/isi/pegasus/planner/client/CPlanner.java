@@ -1018,40 +1018,39 @@ public class CPlanner extends Executable {
      * @return array of <code>LongOpt</code> objects , corresponding to the valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[36];
+        LongOpt[] longopts = new LongOpt[29];
 
         longopts[0] = new LongOpt("dir", LongOpt.REQUIRED_ARGUMENT, null, '8');
         longopts[1] = new LongOpt("dax", LongOpt.REQUIRED_ARGUMENT, null, 'd');
         longopts[2] = new LongOpt("sites", LongOpt.REQUIRED_ARGUMENT, null, 's');
-        longopts[4] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
-        longopts[5] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
-        longopts[6] = new LongOpt("force", LongOpt.NO_ARGUMENT, null, 'f');
-        longopts[7] = new LongOpt("submit", LongOpt.NO_ARGUMENT, null, 'S');
-        longopts[8] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
-        longopts[9] = new LongOpt("randomdir", LongOpt.OPTIONAL_ARGUMENT, null, 'r');
-        longopts[11] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, '6');
-        longopts[13] = new LongOpt("cache", LongOpt.REQUIRED_ARGUMENT, null, 'c');
+        longopts[3] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
+        longopts[4] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
+        longopts[5] = new LongOpt("force", LongOpt.NO_ARGUMENT, null, 'f');
+        longopts[6] = new LongOpt("submit", LongOpt.NO_ARGUMENT, null, 'S');
+        longopts[7] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
+        longopts[8] = new LongOpt("randomdir", LongOpt.OPTIONAL_ARGUMENT, null, 'r');
+        longopts[9] = new LongOpt("conf", LongOpt.REQUIRED_ARGUMENT, null, '6');
+        longopts[10] = new LongOpt("cache", LongOpt.REQUIRED_ARGUMENT, null, 'c');
         // collapsing for mpi
-        longopts[15] = new LongOpt("cluster", LongOpt.REQUIRED_ARGUMENT, null, 'C');
+        longopts[11] = new LongOpt("cluster", LongOpt.REQUIRED_ARGUMENT, null, 'C');
         // more deferred planning stuff
-        longopts[16] = new LongOpt("basename", LongOpt.REQUIRED_ARGUMENT, null, 'b');
-        longopts[17] = new LongOpt("monitor", LongOpt.NO_ARGUMENT, null, 1);
-        longopts[18] = new LongOpt("nocleanup", LongOpt.NO_ARGUMENT, null, 'n');
-        longopts[20] = new LongOpt("deferred", LongOpt.NO_ARGUMENT, null, 'z');
-        longopts[21] = new LongOpt("relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2');
-        longopts[23] = new LongOpt("job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j');
-        longopts[24] = new LongOpt("rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
-        longopts[25] = new LongOpt("forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
-        longopts[26] = new LongOpt("X", LongOpt.REQUIRED_ARGUMENT, null, 'X');
-        longopts[27] = new LongOpt("relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4');
-        longopts[28] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
-        longopts[29] = new LongOpt("inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5');
-        longopts[30] = new LongOpt("force-replan", LongOpt.NO_ARGUMENT, null, '7');
-        longopts[31] = new LongOpt("staging-site", LongOpt.REQUIRED_ARGUMENT, null, '9');
-        longopts[32] = new LongOpt("input-dir", LongOpt.REQUIRED_ARGUMENT, null, 'I');
-        longopts[33] = new LongOpt("output-dir", LongOpt.REQUIRED_ARGUMENT, null, 'O');
-        longopts[34] = new LongOpt("output-sites", LongOpt.REQUIRED_ARGUMENT, null, 'o');
-        longopts[35] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
+        longopts[12] = new LongOpt("basename", LongOpt.REQUIRED_ARGUMENT, null, 'b');
+        longopts[13] = new LongOpt("nocleanup", LongOpt.NO_ARGUMENT, null, 'n');
+        longopts[14] = new LongOpt("deferred", LongOpt.NO_ARGUMENT, null, 'z');
+        longopts[15] = new LongOpt("relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2');
+        longopts[16] = new LongOpt("job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j');
+        longopts[17] = new LongOpt("rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
+        longopts[18] = new LongOpt("forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
+        longopts[19] = new LongOpt("X", LongOpt.REQUIRED_ARGUMENT, null, 'X');
+        longopts[20] = new LongOpt("relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4');
+        longopts[21] = new LongOpt("quiet", LongOpt.NO_ARGUMENT, null, 'q');
+        longopts[22] = new LongOpt("inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5');
+        longopts[23] = new LongOpt("force-replan", LongOpt.NO_ARGUMENT, null, '7');
+        longopts[24] = new LongOpt("staging-site", LongOpt.REQUIRED_ARGUMENT, null, '9');
+        longopts[25] = new LongOpt("input-dir", LongOpt.REQUIRED_ARGUMENT, null, 'I');
+        longopts[26] = new LongOpt("output-dir", LongOpt.REQUIRED_ARGUMENT, null, 'O');
+        longopts[27] = new LongOpt("output-sites", LongOpt.REQUIRED_ARGUMENT, null, 'o');
+        longopts[28] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
         return longopts;
     }
 
