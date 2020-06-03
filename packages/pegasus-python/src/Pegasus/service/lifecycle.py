@@ -37,9 +37,9 @@ def _is_user_an_admin(username):
     """
         Check if user ia a valid admin user.
     """
-    admin_users = app.config["ADMIN_USERS"]
+    admin_users = current_app.config["ADMIN_USERS"]
 
-    if isinstance(admin_users, str) or isinstance(admin_users, unicode):
+    if isinstance(admin_users, str):
         admin_users = admin_users.strip()
 
     if admin_users is None or admin_users is False or admin_users == "":
