@@ -86,7 +86,7 @@ public class Decaf implements JobAggregator {
             throw new RuntimeException(
                     "Data flow job with id "
                             + job.getID()
-                            + " should be mapped to a json file in TC. Is mapped to "
+                            + " should be mapped to a json file in Transformation Catalog. Is mapped to "
                             + name);
         }
 
@@ -374,8 +374,13 @@ public class Decaf implements JobAggregator {
             if (!first) {
                 sb.append(" ").append(":").append(" ");
             }
-
             sb.append("-np").append(" ").append(cores).append(" ").append(j.getRemoteExecutable());
+
+            String args = j.getArguments();
+            if (args != null && args.length() > 0) {
+                // PM-1602 set arguments associated with the job
+                sb.append(" ").append(args);
+            }
             first = false;
         }
         pw.println(sb);
