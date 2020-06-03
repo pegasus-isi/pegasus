@@ -57,7 +57,7 @@ class Client:
         sites: List[str] = None,
         output_sites: List[str] = ["local"],
         staging_sites: Dict[str, str] = None,
-        input_dir: str = None,
+        input_dirs: List[str] = None,
         output_dir: str = None,
         dir: str = None,
         relative_dir: str = None,
@@ -105,8 +105,13 @@ class Client:
                 )
             )
 
-        if input_dir:
-            cmd.extend(("--input-dir", input_dir))
+        if input_dirs:
+            if not isinstance(input_dirs, list):
+                raise TypeError(
+                    "invalid input_dirs: {} list of str must be given".format(input_dirs)
+                )
+
+            cmd.extend(("--input-dir", ",".join(input_dirs)))
 
         if output_dir:
             cmd.extend(("--output-dir", output_dir))

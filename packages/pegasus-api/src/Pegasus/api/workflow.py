@@ -675,7 +675,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         sites: List[str] = None,
         output_sites: List[str] = ["local"],
         staging_sites: Dict[str,str] = None,
-        input_dir: str = None,
+        input_dirs: List[str] = None,
         output_dir: str = None,
         dir: str = None,
         relative_dir: str = None,
@@ -695,8 +695,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type output_sites: List[str], optional
         :param staging_sites: key, value pairs of execution site to staging site mappings, defaults to None
         :type staging_sites: Dict[str,str], optional
-        :param input_dir: comma separated list of optional input directories where the input files reside on submit host, defaults to None
-        :type input_dir: str, optional
+        :param input_dirs: comma separated list of optional input directories where the input files reside on submit host, defaults to None
+        :type input_dirs: List[str], optional
         :param output_dir: an optional output directory where the output files should be transferred to on submit host, defaults to None
         :type output_dir: str, optional
         :param dir: the directory where to generate the executable workflow, defaults to None
@@ -724,7 +724,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             sites=sites,
             output_sites=output_sites,
             staging_sites=staging_sites,
-            input_dir=input_dir,
+            input_dirs=input_dirs,
             output_dir=output_dir,
             dir=dir,
             relative_dir=relative_dir,

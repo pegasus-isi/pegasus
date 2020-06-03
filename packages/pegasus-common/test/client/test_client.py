@@ -53,7 +53,7 @@ class TestClient:
             sites=["site1", "site2"],
             output_sites=["local", "other_site"],
             staging_sites={"es1": "ss1", "es2": "ss2"},
-            input_dir="/input_dir",
+            input_dirs=["/input_dir1", "/input_dir2"],
             output_dir="/output_dir",
             dir="/dir",
             relative_dir="/relative_dir",
@@ -76,7 +76,7 @@ class TestClient:
                 "--staging-site",
                 "es1=ss1,es2=ss2",
                 "--input-dir",
-                "/input_dir",
+                "/input_dir1,/input_dir2",
                 "--output-dir",
                 "/output_dir",
                 "--dir",
@@ -112,6 +112,12 @@ class TestClient:
             client.plan("wf.yml", output_sites="site1,site2")
         
         assert "invalid output_sites: site1,site2" in str(e)
+
+    def test_plan_invalid_input_dirs(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", input_dirs="/input_dir")
+        
+        assert "invalid input_dirs: /input_dir" in str(e)
 
     def test_run(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3)
