@@ -20,7 +20,6 @@ import re
 import stat
 import sys
 from argparse import ArgumentParser, Namespace
-from typing import Tuple, List
 
 from six.moves.configparser import ConfigParser
 from six.moves.urllib.parse import urlsplit
@@ -935,7 +934,7 @@ def get(args):
     info("Download: {} complete".format(uri))
 
 # --- Handle Command Line Arguments --------------------------------------------
-def parse_args(args: List[str]) -> Tuple[ArgumentParser, Namespace]:
+def parse_args(args):
     parser = ArgumentParser(prog="pegasus-s3")
 
     # add top level arguments

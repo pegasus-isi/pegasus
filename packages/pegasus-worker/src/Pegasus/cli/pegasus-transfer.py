@@ -2028,10 +2028,11 @@ class S3Handler(TransferHandlerBase):
 
             env = self._s3_cred_env(t.get_site_label())
 
-            cmd = tools.full_path("pegasus-s3") + " mkdir"
+            cmd = tools.full_path("pegasus-s3")
             if logger.isEnabledFor(logging.DEBUG):
                 cmd += " -v"
-            cmd += " " + bucket
+            cmd += " mkdir " + bucket
+
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=env)
                 tc.run()
@@ -2149,10 +2150,10 @@ class S3Handler(TransferHandlerBase):
 
         env = self._s3_cred_env(removes_list[0].get_site_label())
 
-        cmd = tools.full_path("pegasus-s3") + " rm -f"
+        cmd = tools.full_path("pegasus-s3") 
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " -v"
-        cmd += " -F " + tmp_name
+        cmd += " rm -f -F " + tmp_name
 
         success = False
         try:
