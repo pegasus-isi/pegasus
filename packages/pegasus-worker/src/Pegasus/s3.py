@@ -19,7 +19,7 @@ import os
 import re
 import stat
 import sys
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 from six.moves.configparser import ConfigParser
 from six.moves.urllib.parse import urlsplit
@@ -96,7 +96,7 @@ DEFAULT_CONFIG = {
 DEBUG = False
 VERBOSE = False
 
-
+# TODO: use logging instead
 def debug(message):
     if DEBUG:
         sys.stderr.write("%s\n" % message)
@@ -137,8 +137,8 @@ def help(*args):
 def option_parser(usage):
     command = os.path.basename(sys.argv[0])
 
-    parser = OptionParser(usage="usage: %s %s" % (command, usage))
-    parser.add_option(
+    parser = ArgumentParser(usage="usage: %s %s" % (command, usage))
+    parser.add_argument(
         "-d",
         "--debug",
         dest="debug",
@@ -146,7 +146,7 @@ def option_parser(usage):
         default=False,
         help="Turn on debugging",
     )
-    parser.add_option(
+    parser.add_argument(
         "-v",
         "--verbose",
         dest="verbose",
@@ -154,7 +154,7 @@ def option_parser(usage):
         default=False,
         help="Show progress messages",
     )
-    parser.add_option(
+    parser.add_argument(
         "-C",
         "--conf",
         dest="config",
@@ -167,18 +167,19 @@ def option_parser(usage):
     fn = parser.parse_args
 
     def parse(*args, **kwargs):
-        options, args = fn(*args, **kwargs)
+        args = fn(*args, **kwargs)
 
-        if options.debug:
+        if args.debug:
+            # TODO: no more boto, using boto3
             boto.set_stream_logger("boto")
             global DEBUG
             DEBUG = True
 
-        if options.verbose:
+        if args.verbose:
             global VERBOSE
             VERBOSE = True
 
-        return options, args
+        return args
 
     parser.parse_args = parse
 
@@ -392,7 +393,9 @@ def parse_uri(uri):
 def ls(args):
     parser = option_parser("ls URL...")
 
-    parser.add_option(
+    parser.add_argument("url", metavar="URL")
+
+    parser.add_argument(
         "-l",
         "--long",
         dest="long_format",
@@ -400,7 +403,7 @@ def ls(args):
         default=False,
         help="Use long listing format",
     )
-    parser.add_option(
+    parser.add_argument(
         "-H",
         "--human-sized",
         dest="human_sized",
@@ -409,13 +412,10 @@ def ls(args):
         help="Use human readable sizes",
     )
 
-    options, args = parser.parse_args(args)
+    args = parser.parse_args(args)
 
-    if len(args) == 0 or len(args) > 1:
-        parser.error("Specify a single URL")
-
-    config = get_config(options)
-    uri = parse_uri(args.pop())
+    config = get_config(args)
+    uri = parse_uri(args.url)
 
     s3 = get_s3_client(config, uri)
 
@@ -440,10 +440,10 @@ def ls(args):
             for content in keys["Contents"]:
                 key = content["Key"]
 
-                if options.long_format:
+                if args.long_format:
                     size = (
                         human_size(content["Size"])
-                        if options.human_sized
+                        if args.human_sized
                         else "{0:13d}".format(content["Size"])
                     )
                     last_modified = content["LastModified"]
@@ -470,6 +470,19 @@ def ls(args):
 def cp(args):
     parser = option_parser("cp SRC[...] DEST")
 
+    parser.add_argument(
+        "srcs",
+        nargs="+",
+        metavar="SRC",
+        help="Sources to copy from"
+    )
+
+    parser.add_argument(
+        "dest",
+        metavar="DST",
+        help="Destination to copy to"
+    )
+
     parser.add_option(
         "-c",
         "--create-dest",
@@ -487,19 +500,12 @@ def cp(args):
         help="If DEST key exists, then overwrite it",
     )
 
-    options, args = parser.parse_args(args)
+    args = parser.parse_args(args)
 
-    if len(args) < 2:
-        parser.error("Specify a SRC and DEST")
+    config = get_config(args)
 
-    config = get_config(options)
-
-    items = [parse_uri(uri) for uri in args]
-
-    # The last one is the DEST
-    dest = items[-1]
-    # Everything else is a SRC
-    srcs = items[0:-1]
+    srcs = [parse_uri(uri) for uri in args.srcs]
+    dest = parse_uri(args.dst)
 
     # If there is more than one source, then the destination must be
     # a bucket and not a bucket+key.
@@ -526,7 +532,7 @@ def cp(args):
     s3 = get_s3_client(config, srcs[0])
 
     # Create the bucket if the user requested it and it does not exist
-    if options.create:
+    if args.create:
         can_create = True
         try:
             s3.head_bucket(Bucket=dest.bucket)
@@ -552,17 +558,8 @@ def cp(args):
         if can_create:
             s3.create_bucket(Bucket=dest.bucket)
 
-    """
-    s3 = boto3.client('s3')
-    try:
-        s3.head_object(Bucket='bucket_name', Key='file_path')
-    except ClientError:
-        # Not found
-        pass
-    """
-
     # ensure that none of the keys in srcs exist in dest
-    if not options.force:
+    if not args.force:
         if dest.key == None:
             for src in srcs:
                 try:
@@ -637,6 +634,13 @@ def cp(args):
 
 def mkdir(args):
     parser = option_parser("mkdir URL...")
+
+    parser.add_argument(
+        "url",
+        metavar="URL",
+        help="URL specifying bucket to be created"
+    )
+
     """
     parser.add_option(
         "-r",
@@ -648,12 +652,8 @@ def mkdir(args):
     )
     """
 
-    options, args = parser.parse_args(args)
+    args = parser.parse_args(args)
 
-    if len(args) == 0:
-        parser.error("Specify URL")
-
-    assert len(args) == 1
     uri = parse_uri(args.pop())
 
     if uri.bucket is None:
@@ -663,7 +663,7 @@ def mkdir(args):
         print("URL for mkdir cannot contain a key: %s" % arg)
         sys.exit(1)
 
-    config = get_config(options)
+    config = get_config(args)
     s3 = get_s3_client(config, uri)
 
     can_create = True
@@ -696,6 +696,15 @@ def mkdir(args):
 
 def rm(args):
     parser = option_parser("rm URL...")
+
+    parser.add_argument(
+        "url",
+        metavar="URL",
+        nargs="?"
+        default=None,
+        help="URL specifying key to be removed"
+    )
+
     parser.add_option(
         "-f",
         "--force",
@@ -712,24 +721,25 @@ def rm(args):
         default=None,
         help="File containing a list of URLs to delete",
     )
-    options, args = parser.parse_args(args)
+    args = parser.parse_args(args)
 
-    if len(args) == 0 and not options.file:
+    if args.url is None and args.file is None:
         parser.error("Specify URL")
 
-    if options.file:
-        for rec in read_command_file(options.file):
+    uris = []
+    if args.file:
+        for rec in read_command_file(args.file):
             if len(rec) != 1:
                 raise Exception("Invalid record: %s" % rec)
-            args.append(rec[0])
+            uris.append(rec[0])
 
     buckets = {}
-    for arg in args:
-        uri = parse_uri(arg)
+    for uri in uris:
+        uri = parse_uri(uri)
         if uri.bucket is None:
-            raise Exception("URL for rm must contain a bucket: %s" % arg)
+            raise Exception("URL for rm must contain a bucket: %s" % uri)
         if uri.key is None:
-            raise Exception("URL for rm must contain a key: %s" % arg)
+            raise Exception("URL for rm must contain a key: %s" % uri)
 
         bid = "%s/%s" % (uri.ident, uri.bucket)
         buri = S3URI(uri.user, uri.site, uri.bucket, uri.secure)
@@ -738,7 +748,7 @@ def rm(args):
             buckets[bid] = (buri, [])
         buckets[bid][1].append(uri)
 
-    config = get_config(options)
+    config = get_config(args)
 
     for bucket in buckets:
 
@@ -869,6 +879,18 @@ def put(args):
     # TODO: ensure args list well formed
     parser = option_parser("put FILE URL")
 
+    parser.add_argument(
+        "file",
+        metavar="FILE",
+        help="The file to be uploaded"
+    )
+
+    parser.add_argument(
+        "url",
+        metavar="URL",
+        help="URL to which the file will be uploaded"
+    )
+
     parser.add_option(
         "-b",
         "--create-bucket",
@@ -896,10 +918,10 @@ def put(args):
     )
     """
 
-    options, args = parser.parse_args(args)
+    args = parser.parse_args(args)
 
-    path = fix_file(args[0])
-    url = args[1]
+    path = fix_file(args.file)
+    url = args.url
 
     if not os.path.exists(path):
         print("No such file or directory: {}".format(path))
@@ -948,14 +970,14 @@ def put(args):
     if uri.key is None:
         uri.key = os.path.basename(path)
 
-    config = get_config(options)
+    config = get_config(args)
     config.getint(uri.site, "max_object_size")
 
     # get s3 client with associated endpoint
     s3 = get_s3_client(config, uri)
 
     # Create the bucket if the user requested it and it does not exist
-    if options.create_bucket:
+    if args.create_bucket:
         can_create = True
         try:
             s3.head_bucket(Bucket=uri.bucket)
@@ -981,7 +1003,7 @@ def put(args):
         if can_create:
             s3.create_bucket(Bucket=uri.bucket)
 
-    if not options.force:
+    if not args.force:
         # check if all keys do not yet exist
         # accepted method of checking for existence of a key
         key_already_exists = False
@@ -1004,7 +1026,6 @@ def put(args):
                     )
                     sys.exit(1)
                 elif error_code == 404:
-                    #
                     pass
                 else:
                     print("Unknown client error")
@@ -1038,58 +1059,40 @@ def put(args):
 
     print("Successfully uploaded {} files".format(len(infiles)))
 
-
-def PartialDownload(bucketname, keyname, fname, part, parts, start, end):
-    def download():
-        info("Downloading part %d of %d" % (part, parts))
-        f = open(fname, "r+b")
-
-        attempt = 0
-        done = False
-        saved_ex = None
-        while attempt < 3 and done is False:
-            attempt += 1
-            try:
-                f.seek(start, os.SEEK_SET)
-                # Need to use a different key object to each thread because
-                # the Key object in boto is not thread-safe
-                key = Key(bucket=bucketname, name=keyname)
-                key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
-                done = True
-            except Exception as e:
-                saved_ex = e
-                debug("Attempt %d failed for part %d" % (attempt, part))
-        if done is False:
-            raise saved_ex
-
-        info("Part %d finished" % (part))
-        f.close()
-
-    return download
-
-
 def get(args):
     parser = option_parser("get URL [FILE]")
-    options, args = parser.parse_args(args)
 
-    if len(args) == 0:
-        parser.error("Specify URL")
+    parser.add_argument(
+        "url",
+        metavar="URL",
+        help="URL of the key to download"
+    )
 
-    uri = parse_uri(args[0])
+    parser.add_argument(
+        "file",
+        nargs="?",
+        default=None,
+        metavar="FILE",
+        help="File that key will be downloaded as"
+    )
+
+    args = parser.parse_args(args)
+
+    uri = parse_uri(args.url)
 
     if uri.bucket is None:
         raise Exception("URL must contain a bucket: %s" % args[0])
     if uri.key is None:
         raise Exception("URL must contain a key")
 
-    if len(args) > 1:
-        output = fix_file(args[1])
+    if args.file:
+        output = fix_file(args.file)
     else:
         output = os.path.basename(uri.key.rstrip("/"))
 
     info("Downloading %s" % uri)
 
-    config = get_config(options)
+    config = get_config(args)
     s3 = get_s3_client(config, uri)
 
     try:
