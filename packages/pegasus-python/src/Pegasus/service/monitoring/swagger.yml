@@ -43,8 +43,8 @@ parameters:
     in: query
     default: 1
     minimum: 1
-    description: Return results starting from record <start-index> (0 indexed)
     type: integer
+    description: Return results starting from record <start-index> (0 indexed)
     x-nrgr-extension:
       include: false
   max-results:
@@ -59,8 +59,8 @@ parameters:
     name: pretty-print
     in: query
     default: False
-    description: Enable or disable pretty printing of the output
     type: boolean
+    description: Enable or disable pretty printing of the output
     x-nrgr-extension:
       include: false
   recent:
@@ -75,50 +75,50 @@ parameters:
     in: path
     required: true
     minimum: 0
-    description: Master Workflow Id
-    type: integer
+    type: string
+    description: Master Workflow's ID or UUID
   wf-id:
     name: wf-id
     in: path
     required: true
     minimum: 0
-    description: Workflow Id
-    type: integer
+    type: string
+    description: Workflow's ID or UUID
   host-id:
     name: host-id
     in: path
     required: true
     minimum: 0
-    description: Host Id
     type: integer
+    description: Host Id
   task-id:
     name: task-id
     in: path
     required: true
     minimum: 0
-    description: Task Id
     type: integer
+    description: Task Id
   invocation-id:
     name: invocation-id
     in: path
     required: true
     minimum: 0
-    description: Invocation Id
     type: integer
+    description: Invocation Id
   job-id:
     name: job-id
     in: path
     required: true
     minimum: 0
-    description: job Id
     type: integer
+    description: job Id
   job-instance-id:
     name: job-instance-id
     in: path
     required: true
     minimum: 0
-    description: job-instance Id
     type: integer
+    description: job-instance Id
 
 responses:
   no-content:
