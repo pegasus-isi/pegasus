@@ -39,7 +39,6 @@ def test_create_database():
     assert get_version(db) == CURRENT_DB_VERSION
 
     db.execute("DROP TABLE rc_pfn")
-    db.execute("DROP TABLE workflow")
     db.execute("DROP TABLE master_workflow")
     with pytest.raises(DBAdminError):
         db_verify(db, check=True)

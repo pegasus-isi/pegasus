@@ -18,6 +18,7 @@
 __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 __author__ = "Rafael Ferreira da Silva"
+__author__ = "Rajiv Mayani"
 
 import logging
 import time
@@ -27,7 +28,7 @@ from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import foreign, relation
-from sqlalchemy.schema import Column, ForeignKey, Index, MetaData
+from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, UniqueConstraint
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.types import (
     BigInteger,
@@ -88,6 +89,7 @@ KeyInteger = KeyInteger.with_variant(sqlite.INTEGER(), "sqlite")
 
 TimestampType = Numeric(precision=16, scale=6)
 DurationType = Numeric(precision=10, scale=3)
+
 
 # --------------------------------------------------------------------
 
@@ -346,8 +348,8 @@ class Workflow(Base):
         passive_deletes=True,
     )
 
-
-Index("wf_uuid_UNIQUE", Workflow.wf_uuid, unique=True)
+    # constraint
+    wf_uuid_uc = UniqueConstraint(wf_uuid, name="UNIQUE_WF_UUID")
 
 
 class Workflowstate(Base):
@@ -378,6 +380,9 @@ class Workflowstate(Base):
     reason = Column("reason", Text)
 
 
+Index("workflowstate_timestamp_COL", Workflowstate.timestamp)
+
+
 class WorkflowMeta(Base):
     """."""
 
@@ -391,16 +396,7 @@ class WorkflowMeta(Base):
         primary_key=True,
     )
     key = Column("key", String(255), primary_key=True)
-    value = Column("value", String(255), nullable=False)
-
-
-Index(
-    "UNIQUE_WORKFLOW_META",
-    WorkflowMeta.wf_id,
-    WorkflowMeta.key,
-    WorkflowMeta.value,
-    unique=True,
-)
+    value = Column("value", String(255), primary_key=True)
 
 
 # Host definition
@@ -431,11 +427,8 @@ class Host(Base):
     ip = Column("ip", String(255), nullable=False)
     uname = Column("uname", String(255))
     total_memory = Column("total_memory", Integer)
-
-
-Index(
-    "UNIQUE_HOST", Host.wf_id, Host.site, Host.hostname, Host.ip, unique=True,
-)
+    # Constraints
+    uc_host = UniqueConstraint(wf_id, site, hostname, ip, name="UNIQUE_HOST")
 
 
 # static job table
@@ -507,11 +500,12 @@ class Job(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    # Constraints
+    job_uc = UniqueConstraint(wf_id, exec_job_id, name="UNIQUE_JOB")
 
 
 Index("job_type_desc_COL", Job.type_desc)
 Index("job_exec_job_id_COL", Job.exec_job_id)
-Index("UNIQUE_JOB", Job.wf_id, Job.exec_job_id, unique=True)
 
 
 class JobEdge(Base):
@@ -526,8 +520,18 @@ class JobEdge(Base):
         ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         primary_key=True,
     )
-    parent_exec_job_id = Column("parent_exec_job_id", String(255), primary_key=True)
-    child_exec_job_id = Column("child_exec_job_id", String(255), primary_key=True)
+    parent_exec_job_id = Column(
+        "parent_exec_job_id",
+        String(255),
+        ForeignKey(Job.exec_job_id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    child_exec_job_id = Column(
+        "child_exec_job_id",
+        String(255),
+        ForeignKey(Job.exec_job_id, ondelete="CASCADE"),
+        primary_key=True,
+    )
 
 
 class JobInstance(Base):
@@ -606,11 +610,10 @@ class JobInstance(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-
-
-Index(
-    "UNIQUE_JOB_INSTANCE", JobInstance.job_id, JobInstance.job_submit_seq, unique=True,
-)
+    # Constraints
+    job_instance_uc = UniqueConstraint(
+        job_id, job_submit_seq, name="UNIQUE_JOB_INSTANCE"
+    )
 
 
 # Jobstate definition
@@ -647,6 +650,9 @@ class Jobstate(Base):
     reason = Column("reason", Text)
 
 
+Index("jobstate_timestamp_COL", Jobstate.timestamp)
+
+
 class Tag(Base):
     """."""
 
@@ -668,9 +674,8 @@ class Tag(Base):
     )
     name = Column("name", String(255), nullable=False)
     count = Column("count", Integer, nullable=False)
-
-
-Index("UNIQUE_TAG", Tag.job_instance_id, Tag.wf_id, unique=True)
+    # Constraints
+    tag_uc = UniqueConstraint(job_instance_id, wf_id, name="UNIQUE_TAG")
 
 
 class Task(Base):
@@ -727,11 +732,12 @@ class Task(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    # Constraints
+    task_uc = UniqueConstraint(wf_id, abs_task_id, name="UNIQUE_TASK")
 
 
 Index("task_abs_task_id_COL", Task.abs_task_id)
 Index("task_wf_id_COL", Task.wf_id)
-Index("UNIQUE_TASK", Task.wf_id, Task.abs_task_id, unique=True)
 
 
 class TaskEdge(Base):
@@ -746,8 +752,18 @@ class TaskEdge(Base):
         ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         primary_key=True,
     )
-    parent_abs_task_id = Column("parent_abs_task_id", String(255), primary_key=True)
-    child_abs_task_id = Column("child_abs_task_id", String(255), primary_key=True)
+    parent_abs_task_id = Column(
+        "parent_abs_task_id",
+        String(255),
+        ForeignKey(Task.abs_task_id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    child_abs_task_id = Column(
+        "child_abs_task_id",
+        String(255),
+        ForeignKey(Task.abs_task_id, ondelete="CASCADE"),
+        primary_key=True,
+    )
 
 
 class TaskMeta(Base):
@@ -763,12 +779,7 @@ class TaskMeta(Base):
         primary_key=True,
     )
     key = Column("key", String(255), primary_key=True)
-    value = Column("value", String(255), nullable=False)
-
-
-Index(
-    "UNIQUE_TASK_META", TaskMeta.task_id, TaskMeta.key, TaskMeta.value, unique=True,
-)
+    value = Column("value", String(255), primary_key=True)
 
 
 class Invocation(Base):
@@ -801,16 +812,14 @@ class Invocation(Base):
     executable = Column("executable", Text, nullable=False)
     argv = Column("argv", Text)
     abs_task_id = Column("abs_task_id", String(255))
+    # Constraints
+    invocation_uc = UniqueConstraint(
+        job_instance_id, task_submit_seq, name="UNIQUE_INVOCATION"
+    )
 
 
 Index("invoc_abs_task_id_COL", Invocation.abs_task_id)
 Index("invoc_wf_id_COL", Invocation.wf_id)
-Index(
-    "UNIQUE_INVOCATION",
-    Invocation.job_instance_id,
-    Invocation.task_submit_seq,
-    unique=True,
-)
 
 
 class IntegrityMetrics(Base):
@@ -840,15 +849,10 @@ class IntegrityMetrics(Base):
     )
     count = Column("count", Integer, nullable=False)
     duration = Column("duration", DurationType, nullable=False)
-
-
-Index(
-    "UNIQUE_INTEGRITY",
-    IntegrityMetrics.job_instance_id,
-    IntegrityMetrics.type,
-    IntegrityMetrics.file_type,
-    unique=True,
-)
+    # Constraints
+    integrity_uc = UniqueConstraint(
+        job_instance_id, type, file_type, name="UNIQUE_INTEGRITY"
+    )
 
 
 # ---------------------------------------------
@@ -878,9 +882,8 @@ class RCLFN(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-
-
-Index("ix_rc_lfn", RCLFN.lfn, unique=True)
+    # Constraints
+    lfn_uc = UniqueConstraint(lfn, name="UNIQUE_LFN")
 
 
 class RCPFN(Base):
@@ -898,9 +901,8 @@ class RCPFN(Base):
     )
     pfn = Column("pfn", String(245), nullable=False)
     site = Column("site", String(245))
-
-
-Index("UNIQUE_PFN", RCPFN.lfn_id, RCPFN.pfn, RCPFN.site, unique=True)
+    # Constraints
+    pfn_uc = UniqueConstraint(lfn_id, pfn, site, name="UNIQUE_PFN")
 
 
 class RCMeta(Base):
@@ -987,9 +989,8 @@ class DashboardWorkflow(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-
-
-Index("UNIQUE_MASTER_WF_UUID", DashboardWorkflow.wf_uuid, unique=True)
+    # Constraints
+    master_wf_uuid_uc = UniqueConstraint(wf_uuid, name="UNIQUE_MASTER_WF_UUID")
 
 
 class DashboardWorkflowstate(Base):
@@ -1039,9 +1040,8 @@ class Ensemble(Base):
     max_running = Column("max_running", Integer, nullable=False)
     max_planning = Column("max_planning", Integer, nullable=False)
     username = Column("username", String(100), nullable=False)
-
-
-Index("UNIQUE_ENSEMBLE", Ensemble.username, Ensemble.name)
+    # Constraints
+    ensemble_uc = UniqueConstraint(username, name, name="UNIQUE_ENSEMBLE")
 
 
 class EnsembleWorkflow(Base):
@@ -1070,13 +1070,7 @@ class EnsembleWorkflow(Base):
         "ensemble_id", KeyInteger, ForeignKey(Ensemble.id), nullable=False
     )
 
-    # Relationsips
+    # Relationships
     ensemble = relation(Ensemble, backref="workflows")
-
-
-Index(
-    "UNIQUE_ENSEMBLE_WORKFLOW",
-    EnsembleWorkflow.ensemble_id,
-    EnsembleWorkflow.name,
-    unique=True,
-)
+    # Constraints
+    ensemble_uc = UniqueConstraint(ensemble_id, name, name="UNIQUE_ENSEMBLE_WORKFLOW")

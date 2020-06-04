@@ -2,6 +2,8 @@ import logging
 import os
 import subprocess
 
+from sqlalchemy.schema import Index
+
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
 from Pegasus.db.schema import *
@@ -21,17 +23,78 @@ class Version(BaseVersion):
         :param force:
         :return:
         """
-        log.info("Updating to version %s" % DB_VERSION)
+        log.debug("Updating to version %s" % DB_VERSION)
         try:
             self.db.execute("DROP TABLE sequences")
         except Exception:
             pass
 
-        self.db.commit()
+        # updating primary keys
+        log.debug("Updating primary keys")
+        self._update_primary_keys()
+
+        # fixing indexes
+        log.debug("Updating indexes")
+        self._drop_indexes(
+            [
+                ("wf_id_KEY", Workflow),
+                ("UNIQUE_WORKFLOWSTATE", Workflowstate),
+                ("job_id_KEY", Job),
+                ("UNIQUE_JOB_EDGE", JobEdge),
+                ("job_instance_id_KEY", JobInstance),
+                ("UNIQUE_JOBSTATE", Jobstate),
+                ("tag_id_KEY", Tag),
+                ("task_id_KEY", Task),
+                ("UNIQUE_TASK_EDGE", TaskEdge),
+                ("invocation_id_KEY", Invocation),
+                ("integrity_id_KEY", IntegrityMetrics),
+                ("UNIQUE_MASTER_WORKFLOWSTATE", DashboardWorkflowstate),
+                ("rc_meta_unique", RCMeta),
+                ("wf_uuid_UNIQUE", Workflow),
+                ("UNIQUE_HOST", Host),
+                ("UNIQUE_JOB", Job),
+                ("UNIQUE_JOB_INSTANCE", JobInstance),
+                ("UNIQUE_TAG", Tag),
+                ("UNIQUE_TASK", Task),
+                ("UNIQUE_INVOCATION", Invocation),
+                ("UNIQUE_INTEGRITY", IntegrityMetrics),
+                ("UNIQUE_MASTER_WF_UUID", DashboardWorkflow),
+                ("UNIQUE_ENSEMBLE_WORKFLOW", EnsembleWorkflow),
+                ("ix_rc_lfn", RCLFN),
+                ("UNIQUE_PFN", RCPFN),
+                ("UNIQUE_ENSEMBLE", Ensemble),
+                ("UNIQUE_WORKFLOW_META", WorkflowMeta),
+                ("UNIQUE_TASK_META", TaskMeta),
+            ]
+        )
+        if self.db.get_bind().driver == "pysqlite":
+            self._drop_indexes(
+                [
+                    ("job_exec_job_id_COL", None),
+                    ("task_abs_task_id_COL", None),
+                    ("invoc_abs_task_id_COL", None),
+                    ("job_type_desc_COL", None),
+                    ("task_wf_id_COL", None),
+                    ("invoc_wf_id_COL", None),
+                ]
+            )
+
+        # self._create_indexes(
+        #     [[Workflowstate, Workflowstate.timestamp], [Jobstate, Jobstate.timestamp]]
+        # )
+
+        # updating foreign keys
+        log.debug("Updating foreign keys")
+        self._update_foreign_keys()
+
+        # updating unique constraints
+        log.debug("Updating unique constraints")
+        self._update_unique_constraints()
 
         # update charset
         if self.db.get_bind().driver == "mysqldb":
             log.debug("Updating table charsets")
+            self.db.execute("SET FOREIGN_KEY_CHECKS=0")
             tables = (
                 DBVersion,
                 # WORKFLOW
@@ -61,18 +124,26 @@ class Version(BaseVersion):
                 RCMeta,
             )
             for table in tables:
-                self.db.execute("ALTER TABLE %s CONVERT TO CHARACTER SET utf8mb4" % tbl_name)
+                self.db.execute(
+                    "ALTER TABLE %s CONVERT TO CHARACTER SET utf8mb4"
+                    % table.__tablename__
+                )
+            self.db.execute("SET FOREIGN_KEY_CHECKS=1")
             self.db.commit()
 
         elif self.db.get_bind().driver == "psycopg2":
             url = self.db.get_bind().url
-            command = ("psql %s" % url.database
-                       if not url.password
-                       else "export PGPASSWORD=%s; psql %s" % (url.password, url.database)
-                       )
+            command = (
+                "psql %s" % url.database
+                if not url.password
+                else "export PGPASSWORD={}; psql {}".format(url.password, url.database)
+            )
             if url.username:
                 command += " -U %s" % url.username
-            command += " -c \"UPDATE pg_database SET encoding = pg_char_to_encoding('UTF8') WHERE datname = '%s'\"" % url.database
+            command += (
+                " -c \"UPDATE pg_database SET encoding = pg_char_to_encoding('UTF8') WHERE datname = '%s'\""
+                % url.database
+            )
             log.debug("Executing: %s" % command)
             child = subprocess.Popen(
                 command,
@@ -86,7 +157,182 @@ class Version(BaseVersion):
                 raise DBAdminError(err.decode("utf8").strip())
 
     def downgrade(self, force=False):
-        """
+        """."""
+        log.debug("Downgrading from version %s" % DB_VERSION)
 
-        """
-        log.info("Downgrading from version %s" % DB_VERSION)
+    def _drop_indexes(self, index_list):
+        """"."""
+        for index in index_list:
+            try:
+                if self.db.get_bind().driver == "mysqldb":
+                    self.db.execute(
+                        "DROP INDEX {} ON {}".format(index[0], index[1].__tablename__)
+                    )
+                else:
+                    self.db.execute("DROP INDEX %s" % index[0])
+            except (OperationalError, ProgrammingError):
+                pass
+            except Exception as e:
+                self.db.rollback()
+                raise DBAdminError(e)
+        self.db.commit()
+
+    def _create_indexes(self, index_list):
+        """"."""
+        for index in index_list:
+            try:
+                Index(
+                    "{}_{}_COL".format(index[0].__tablename__, index[1].name), index[1]
+                ).create(bind=self.db.get_bind())
+            except (OperationalError, ProgrammingError):
+                pass
+            except Exception as e:
+                self.db.rollback()
+                raise DBAdminError(e)
+        self.db.commit()
+
+    def _update_foreign_keys(self):
+        """"."""
+        if self.db.get_bind().driver == "pysqlite":
+            for tbl in [JobEdge, TaskEdge]:
+                self._update_sqlite_table(tbl)
+        else:
+            fk_list = [
+                (JobEdge, JobEdge.parent_exec_job_id, Job, Job.exec_job_id),
+                (JobEdge, JobEdge.child_exec_job_id, Job, Job.exec_job_id),
+                (TaskEdge, TaskEdge.parent_abs_task_id, Task, Task.abs_task_id),
+                (TaskEdge, TaskEdge.child_abs_task_id, Task, Task.abs_task_id),
+            ]
+            for fk in fk_list:
+                try:
+                    self.db.execute(
+                        "ALTER TABLE {} ADD FOREIGN KEY ({}) REFERENCES {} ({}) ON DELETE CASCADE;".format(
+                            fk[0].__tablename__,
+                            fk[1].name,
+                            fk[2].__tablename__,
+                            fk[3].name,
+                        )
+                    )
+                except (OperationalError, ProgrammingError):
+                    pass
+                except Exception as e:
+                    self.db.rollback()
+                    raise DBAdminError(e)
+        self.db.commit()
+
+    def _update_unique_constraints(self):
+        """."""
+        uc_list = [
+            (Workflow, "UNIQUE_WF_UUID", [Workflow.wf_uuid.name]),
+            (
+                Host,
+                "UNIQUE_HOST",
+                [Host.wf_id.name, Host.site.name, Host.hostname.name, Host.ip.name,],
+            ),
+            (Job, "UNIQUE_JOB", [Job.wf_id.name, Job.exec_job_id.name]),
+            (
+                JobInstance,
+                "UNIQUE_JOB_INSTANCE",
+                [JobInstance.job_id.name, JobInstance.job_submit_seq.name],
+            ),
+            (Tag, "UNIQUE_TAG", [Tag.job_instance_id.name, Tag.wf_id.name]),
+            (Task, "UNIQUE_TASK", [Task.wf_id.name, Task.abs_task_id.name]),
+            (
+                Invocation,
+                "UNIQUE_INVOCATION",
+                [Invocation.job_instance_id.name, Invocation.task_submit_seq.name,],
+            ),
+            (
+                IntegrityMetrics,
+                "UNIQUE_INTEGRITY",
+                [
+                    IntegrityMetrics.job_instance_id.name,
+                    IntegrityMetrics.type.name,
+                    IntegrityMetrics.file_type.name,
+                ],
+            ),
+            (
+                DashboardWorkflow,
+                "UNIQUE_MASTER_WF_UUID",
+                [DashboardWorkflow.wf_uuid.name],
+            ),
+            (
+                EnsembleWorkflow,
+                "UNIQUE_ENSEMBLE_WORKFLOW",
+                [EnsembleWorkflow.ensemble_id.name, EnsembleWorkflow.name.name],
+            ),
+            (RCLFN, "UNIQUE_LFN", [RCLFN.lfn.name]),
+            (
+                RCPFN,
+                "UNIQUE_PFN",
+                [RCPFN.lfn_id.name, RCPFN.pfn.name, RCPFN.site.name],
+            ),
+            (Ensemble, "UNIQUE_ENSEMBLE", [Ensemble.username.name, Ensemble.name.name]),
+        ]
+        for uc in uc_list:
+            if self.db.get_bind().driver == "pysqlite":
+                self._update_sqlite_table(uc[0])
+            else:
+                try:
+                    self.db.execute(
+                        "ALTER TABLE {} ADD CONSTRAINT {} UNIQUE ({})".format(
+                            uc[0].__tablename__, uc[1], ",".join(uc[2])
+                        )
+                    )
+                except (OperationalError, ProgrammingError):
+                    pass
+                except Exception as e:
+                    self.db.rollback()
+                    raise DBAdminError(e)
+        self.db.commit()
+
+    def _update_primary_keys(self):
+        """"."""
+        pk_list = [
+            (
+                WorkflowMeta,
+                [
+                    WorkflowMeta.wf_id.name,
+                    WorkflowMeta.key.name,
+                    WorkflowMeta.value.name,
+                ],
+            ),
+            (TaskMeta, [TaskMeta.task_id.name, TaskMeta.key.name, TaskMeta.value.name]),
+        ]
+        for pk in pk_list:
+            if self.db.get_bind().driver == "pysqlite":
+                self._update_sqlite_table(pk[0])
+            else:
+                self.db.execute(
+                    "ALTER TABLE {} DROP PRIMARY KEY".format(pk[0].__tablename__)
+                )
+                self.db.execute(
+                    "ALTER TABLE {} ADD CONSTRAINT PRIMARY KEY ({})".format(
+                        pk[0].__tablename__, ", ".join("`{}`".format(c) for c in pk[1])
+                    )
+                )
+        self.db.commit()
+
+    def _update_sqlite_table(self, tbl):
+        """"."""
+        try:
+            self.db.execute("PRAGMA foreign_keys=off")
+            self.db.execute(
+                "ALTER TABLE {} RENAME TO _{}_old".format(
+                    tbl.__tablename__, tbl.__tablename__
+                )
+            )
+            tbl.__table__.create(self.db.get_bind(), checkfirst=True)
+            self.db.execute(
+                "INSERT INTO {} SELECT * FROM _{}_old".format(
+                    tbl.__tablename__, tbl.__tablename__
+                )
+            )
+            self.db.execute("DROP TABLE _%s_old" % tbl.__tablename__)
+            self.db.execute("PRAGMA foreign_keys=on")
+            self.db.commit()
+        except (OperationalError, ProgrammingError):
+            pass
+        except Exception as e:
+            self.db.rollback()
+            raise DBAdminError(e)

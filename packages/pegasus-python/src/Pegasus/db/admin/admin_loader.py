@@ -213,13 +213,12 @@ def db_create(
         )
 
     try:
-        metadata.create_all(engine)
+        metadata.create_all(engine, checkfirst=True)
     except OperationalError as e:
         raise DBAdminError(e, db=db, given_version=pegasus_version)
 
     if verbose and v > 0:
         print("Your database has been updated.")
-        log.debug("V: %s" % v)
 
     print_db_version(print_version, v if v > 0 else CURRENT_DB_VERSION, db, parse=True)
 
