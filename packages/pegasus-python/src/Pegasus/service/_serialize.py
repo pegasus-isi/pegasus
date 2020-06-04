@@ -40,8 +40,10 @@ def jsonify(*args, **kwargs):
     else:
         data = args or kwargs
 
-    pretty_print = request.args.get(
-        "pretty-print", current_app.config["JSONIFY_PRETTYPRINT_REGULAR"]
+    pretty_print = bool(
+        request.args.get(
+            "pretty-print", current_app.config["JSONIFY_PRETTYPRINT_REGULAR"]
+        )
     )
 
     indent = None

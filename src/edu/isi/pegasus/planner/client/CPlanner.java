@@ -1065,7 +1065,7 @@ public class CPlanner extends Executable {
                         + "\n [-f] [--force-replan]  [-b basename] [-C t1[,t2[..]]  [--dir  <base dir  for o/p files>] [-j <job-prefix>] "
                         + "\n [--relative-dir <relative directory to base directory> ] [--relative-submit-dir <relative submit directory to base directory>]"
                         + "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] "
-                        + "\n [-g <vogroup>] [-I <input dir>] [-O <output dir>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] "
+                        + "\n [-I <input dir>] [-O <output dir>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] "
                         +
                         // "[--rescue <number of rescues before replanning>]"
                         "\n [-S] [-n] [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
@@ -1090,7 +1090,7 @@ public class CPlanner extends Executable {
                 .append(
                         "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] ")
                 .append(
-                        "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] ")
+                        "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ]")
                 .append(
                         "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output-sites <output sites>] [--randomdir=[dir name]]   [--verbose] [--version][--help] ")
                 .append("\n")

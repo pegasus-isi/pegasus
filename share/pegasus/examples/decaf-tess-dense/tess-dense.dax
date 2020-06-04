@@ -25,16 +25,19 @@
 	    <decaf key="start_proc">0</decaf>
 	    <decaf key="nprocs">4</decaf>
 	    <decaf key="func">prod</decaf>
+		<argument>80 3 4 dense</argument>
 	  </job>
 	  <job id="ID0000003" name="tessellate">
 	    <decaf key="start_proc">8</decaf>
 	    <decaf key="nprocs">2</decaf>
 	    <decaf key="func">tessellate</decaf>
+		<argument>80 3 4 dense</argument>
 	  </job>
 	  <job id="ID0000004" name="density_estimate">
 	    <decaf key="start_proc">10</decaf>
 	    <decaf key="nprocs">1</decaf>
 	    <decaf key="func">density_estimate</decaf>
+		<argument>80 3 4 dense</argument>
 	  </job>
 
 	  <!-- dependencies between the jobs are represented as link
@@ -54,6 +57,7 @@
 		<decaf key="prod_dflow_redist">proc</decaf>
 		<decaf key="path">${DECAF_PREFIX}/examples/tess_dense/mod_pts_dflow.so</decaf>
 		<decaf key="dflow_con_redist">proc</decaf>
+		<argument>80 3 4 dense</argument>
 	  </link>
 
 	  <link id="ID0000006" name="tess_dense">

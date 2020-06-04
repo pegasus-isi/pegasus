@@ -86,7 +86,7 @@ public class Decaf implements JobAggregator {
             throw new RuntimeException(
                     "Data flow job with id "
                             + job.getID()
-                            + " should be mapped to a json file in TC. Is mapped to "
+                            + " should be mapped to a json file in Transformation Catalog. Is mapped to "
                             + name);
         }
 
@@ -371,11 +371,31 @@ public class Decaf implements JobAggregator {
             Job j = (Job) n.getContent();
             int cores = j.vdsNS.getIntValue(Pegasus.CORES_KEY, -1);
 
+            if (cores == 0) {
+                if (j instanceof DataFlowJob.Link) {
+                    // PM-1602 skip the job in the mpirun invocation
+                    mLogger.log(
+                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                                    + j.getLogicalID(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    continue;
+                }
+                // log warning for non link job
+                mLogger.log(
+                        "Number of cores is 0 for job " + j.getLogicalID(),
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            }
+
             if (!first) {
                 sb.append(" ").append(":").append(" ");
             }
-
             sb.append("-np").append(" ").append(cores).append(" ").append(j.getRemoteExecutable());
+
+            String args = j.getArguments();
+            if (args != null && args.length() > 0) {
+                // PM-1602 set arguments associated with the job
+                sb.append(" ").append(args);
+            }
             first = false;
         }
         pw.println(sb);
