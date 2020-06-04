@@ -27,7 +27,7 @@ pegasus.stageout.clusters = 20
 dagman.retry 0
 EOF
 
-cat $HOME/.jdbcrc-test.conf >> ../pegasusrc
+cat $HOME/.jdbcrc-test-49.conf >> ../pegasusrc
 
 
 echo "Updating the database..."

@@ -19,7 +19,7 @@ set -e
 
 TOPDIR=`pwd`
 
-cat $HOME/.jdbcrc-scec.conf >> pegasusrc
+cat $HOME/.jdbcrc-scec-49.conf >> pegasusrc
 
 # clean the database
 echo
