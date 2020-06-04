@@ -226,7 +226,6 @@ class DBVersion(Base):
     version_number = Column("version_number", Integer, default=5)
     version = Column("version", String(50), nullable=False)
     version_timestamp = Column("version_timestamp", Integer, nullable=False)
-    # sqlite_autoincrement=True,
 
 
 # ---------------------------------------------
@@ -238,7 +237,6 @@ class Workflow(Base):
     """."""
 
     __tablename__ = "workflow"
-    __table_args__ = (table_keywords,)
 
     # ==> Information comes from braindump.txt file
     wf_id = Column("wf_id", KeyInteger, primary_key=True)
@@ -348,8 +346,11 @@ class Workflow(Base):
         passive_deletes=True,
     )
 
-    # constraint
-    wf_uuid_uc = UniqueConstraint(wf_uuid, name="UNIQUE_WF_UUID")
+
+Workflow.__table_args__ = (
+    UniqueConstraint(Workflow.wf_uuid.name, name="UNIQUE_WF_UUID"),
+    table_keywords,
+)
 
 
 class Workflowstate(Base):
@@ -396,7 +397,7 @@ class WorkflowMeta(Base):
         primary_key=True,
     )
     key = Column("key", String(255), primary_key=True)
-    value = Column("value", String(255), primary_key=True)
+    value = Column("value", String(255), nullable=False)
 
 
 # Host definition
@@ -413,7 +414,6 @@ class Host(Base):
     """."""
 
     __tablename__ = "host"
-    __table_args__ = (table_keywords,)
 
     host_id = Column("host_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -427,18 +427,18 @@ class Host(Base):
     ip = Column("ip", String(255), nullable=False)
     uname = Column("uname", String(255))
     total_memory = Column("total_memory", Integer)
-    # Constraints
-    uc_host = UniqueConstraint(wf_id, site, hostname, ip, name="UNIQUE_HOST")
 
 
-# static job table
+Host.__table_args__ = (
+    UniqueConstraint(Host.wf_id, Host.site, Host.hostname, Host.ip, name="UNIQUE_HOST"),
+    table_keywords,
+)
 
 
 class Job(Base):
     """."""
 
     __tablename__ = "job"
-    __table_args__ = (table_keywords,)
 
     job_id = Column("job_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -475,8 +475,6 @@ class Job(Base):
     task_count = Column("task_count", Integer, nullable=False)
 
     # Relationships
-    # TODO: Add foreign keys, remove primaryjoin and secondaryjoin,
-    # TODO: add passive_deletes=True, and append delete-orphan to cascade
     parents = relation(
         lambda: Job,
         backref="children",
@@ -500,10 +498,12 @@ class Job(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    # Constraints
-    job_uc = UniqueConstraint(wf_id, exec_job_id, name="UNIQUE_JOB")
 
 
+Job.__table_args__ = (
+    UniqueConstraint(Job.wf_id, Job.exec_job_id, name="UNIQUE_JOB"),
+    table_keywords,
+)
 Index("job_type_desc_COL", Job.type_desc)
 Index("job_exec_job_id_COL", Job.exec_job_id)
 
@@ -538,7 +538,6 @@ class JobInstance(Base):
     """."""
 
     __tablename__ = "job_instance"
-    __table_args__ = (table_keywords,)
 
     job_instance_id = Column("job_instance_id", KeyInteger, primary_key=True)
     job_id = Column(
@@ -610,11 +609,14 @@ class JobInstance(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    # Constraints
-    job_instance_uc = UniqueConstraint(
-        job_id, job_submit_seq, name="UNIQUE_JOB_INSTANCE"
-    )
 
+
+JobInstance.__table_args__ = (
+    UniqueConstraint(
+        JobInstance.job_id, JobInstance.job_submit_seq, name="UNIQUE_JOB_INSTANCE"
+    ),
+    table_keywords,
+)
 
 # Jobstate definition
 # ==> Same information that currently goes into jobstate.log file,
@@ -650,14 +652,13 @@ class Jobstate(Base):
     reason = Column("reason", Text)
 
 
-Index("jobstate_timestamp_COL", Jobstate.timestamp)
+Index("jobstate_jobstate_submit_seq_COL", Jobstate.jobstate_submit_seq)
 
 
 class Tag(Base):
     """."""
 
     __tablename__ = "tag"
-    __table_args__ = (table_keywords,)
 
     tag_id = Column("tag_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -674,15 +675,18 @@ class Tag(Base):
     )
     name = Column("name", String(255), nullable=False)
     count = Column("count", Integer, nullable=False)
-    # Constraints
-    tag_uc = UniqueConstraint(job_instance_id, wf_id, name="UNIQUE_TAG")
+
+
+Tag.__table_args__ = (
+    UniqueConstraint(Tag.job_instance_id, Tag.wf_id, name="UNIQUE_TAG"),
+    table_keywords,
+)
 
 
 class Task(Base):
     """."""
 
     __tablename__ = "task"
-    __table_args__ = (table_keywords,)
 
     task_id = Column("task_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -732,10 +736,12 @@ class Task(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    # Constraints
-    task_uc = UniqueConstraint(wf_id, abs_task_id, name="UNIQUE_TASK")
 
 
+Task.__table_args__ = (
+    UniqueConstraint(Task.wf_id, Task.abs_task_id, name="UNIQUE_TASK"),
+    table_keywords,
+)
 Index("task_abs_task_id_COL", Task.abs_task_id)
 Index("task_wf_id_COL", Task.wf_id)
 
@@ -779,14 +785,13 @@ class TaskMeta(Base):
         primary_key=True,
     )
     key = Column("key", String(255), primary_key=True)
-    value = Column("value", String(255), primary_key=True)
+    value = Column("value", String(255), nullable=False)
 
 
 class Invocation(Base):
     """."""
 
     __tablename__ = "invocation"
-    __table_args__ = (table_keywords,)
 
     invocation_id = Column("invocation_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -812,12 +817,14 @@ class Invocation(Base):
     executable = Column("executable", Text, nullable=False)
     argv = Column("argv", Text)
     abs_task_id = Column("abs_task_id", String(255))
-    # Constraints
-    invocation_uc = UniqueConstraint(
-        job_instance_id, task_submit_seq, name="UNIQUE_INVOCATION"
-    )
 
 
+Invocation.__table_args__ = (
+    UniqueConstraint(
+        Invocation.job_instance_id, Invocation.task_submit_seq, name="UNIQUE_INVOCATION"
+    ),
+    table_keywords,
+)
 Index("invoc_abs_task_id_COL", Invocation.abs_task_id)
 Index("invoc_wf_id_COL", Invocation.wf_id)
 
@@ -826,7 +833,6 @@ class IntegrityMetrics(Base):
     """."""
 
     __tablename__ = "integrity"
-    __table_args__ = (table_keywords,)
 
     integrity_id = Column("integrity_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -849,10 +855,17 @@ class IntegrityMetrics(Base):
     )
     count = Column("count", Integer, nullable=False)
     duration = Column("duration", DurationType, nullable=False)
-    # Constraints
-    integrity_uc = UniqueConstraint(
-        job_instance_id, type, file_type, name="UNIQUE_INTEGRITY"
-    )
+
+
+IntegrityMetrics.__table_args__ = (
+    UniqueConstraint(
+        IntegrityMetrics.job_instance_id,
+        IntegrityMetrics.type,
+        IntegrityMetrics.file_type,
+        name="UNIQUE_INTEGRITY",
+    ),
+    table_keywords,
+)
 
 
 # ---------------------------------------------
@@ -864,7 +877,6 @@ class RCLFN(Base):
     """."""
 
     __tablename__ = "rc_lfn"
-    __table_args__ = (table_keywords,)
 
     lfn_id = Column("lfn_id", KeyInteger, primary_key=True)
     lfn = Column("lfn", String(245), nullable=False)
@@ -882,15 +894,18 @@ class RCLFN(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    # Constraints
-    lfn_uc = UniqueConstraint(lfn, name="UNIQUE_LFN")
+
+
+RCLFN.__table_args__ = (
+    UniqueConstraint(RCLFN.lfn, name="UNIQUE_LFN"),
+    table_keywords,
+)
 
 
 class RCPFN(Base):
     """."""
 
     __tablename__ = "rc_pfn"
-    __table_args__ = (table_keywords,)
 
     pfn_id = Column("pfn_id", KeyInteger, primary_key=True)
     lfn_id = Column(
@@ -901,8 +916,12 @@ class RCPFN(Base):
     )
     pfn = Column("pfn", String(245), nullable=False)
     site = Column("site", String(245))
-    # Constraints
-    pfn_uc = UniqueConstraint(lfn_id, pfn, site, name="UNIQUE_PFN")
+
+
+RCPFN.__table_args__ = (
+    UniqueConstraint(RCPFN.lfn_id, RCPFN.pfn, RCPFN.site, name="UNIQUE_PFN"),
+    table_keywords,
+)
 
 
 class RCMeta(Base):
@@ -963,7 +982,6 @@ class DashboardWorkflow(Base):
     """."""
 
     __tablename__ = "master_workflow"
-    __table_args__ = (table_keywords,)
 
     # ==> Information comes from braindump.txt file
     wf_id = Column("wf_id", KeyInteger, primary_key=True)
@@ -989,8 +1007,12 @@ class DashboardWorkflow(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    # Constraints
-    master_wf_uuid_uc = UniqueConstraint(wf_uuid, name="UNIQUE_MASTER_WF_UUID")
+
+
+DashboardWorkflow.__table_args__ = (
+    UniqueConstraint(DashboardWorkflow.wf_uuid, name="UNIQUE_MASTER_WF_UUID"),
+    table_keywords,
+)
 
 
 class DashboardWorkflowstate(Base):
@@ -1028,7 +1050,6 @@ class Ensemble(Base):
     """."""
 
     __tablename__ = "ensemble"
-    __table_args__ = (table_keywords,)
 
     id = Column("id", KeyInteger, primary_key=True)
     name = Column("name", String(100), nullable=False)
@@ -1040,15 +1061,18 @@ class Ensemble(Base):
     max_running = Column("max_running", Integer, nullable=False)
     max_planning = Column("max_planning", Integer, nullable=False)
     username = Column("username", String(100), nullable=False)
-    # Constraints
-    ensemble_uc = UniqueConstraint(username, name, name="UNIQUE_ENSEMBLE")
+
+
+Ensemble.__table_args__ = (
+    UniqueConstraint(Ensemble.username, Ensemble.name, name="UNIQUE_ENSEMBLE"),
+    table_keywords,
+)
 
 
 class EnsembleWorkflow(Base):
     """."""
 
     __tablename__ = "ensemble_workflow"
-    __table_args__ = (table_keywords,)
 
     id = Column("id", KeyInteger, primary_key=True)
     name = Column("name", String(100), nullable=False)
@@ -1072,5 +1096,13 @@ class EnsembleWorkflow(Base):
 
     # Relationships
     ensemble = relation(Ensemble, backref="workflows")
-    # Constraints
-    ensemble_uc = UniqueConstraint(ensemble_id, name, name="UNIQUE_ENSEMBLE_WORKFLOW")
+
+
+EnsembleWorkflow.__table_args__ = (
+    UniqueConstraint(
+        EnsembleWorkflow.ensemble_id,
+        EnsembleWorkflow.name,
+        name="UNIQUE_ENSEMBLE_WORKFLOW",
+    ),
+    table_keywords,
+)

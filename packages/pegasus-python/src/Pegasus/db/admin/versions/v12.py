@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 
+from sqlalchemy import inspect
 from sqlalchemy.schema import Index
 
 from Pegasus.db.admin.admin_loader import *
@@ -28,10 +29,6 @@ class Version(BaseVersion):
             self.db.execute("DROP TABLE sequences")
         except Exception:
             pass
-
-        # updating primary keys
-        log.debug("Updating primary keys")
-        self._update_primary_keys()
 
         # fixing indexes
         log.debug("Updating indexes")
@@ -80,7 +77,7 @@ class Version(BaseVersion):
             )
 
         # self._create_indexes(
-        #     [[Workflowstate, Workflowstate.timestamp], [Jobstate, Jobstate.timestamp]]
+        #     [[Workflowstate, Workflowstate.timestamp], [Jobstate, Jobstate.jobstate_submit_seq]]
         # )
 
         # updating foreign keys
@@ -286,33 +283,6 @@ class Version(BaseVersion):
                     raise DBAdminError(e)
         self.db.commit()
 
-    def _update_primary_keys(self):
-        """"."""
-        pk_list = [
-            (
-                WorkflowMeta,
-                [
-                    WorkflowMeta.wf_id.name,
-                    WorkflowMeta.key.name,
-                    WorkflowMeta.value.name,
-                ],
-            ),
-            (TaskMeta, [TaskMeta.task_id.name, TaskMeta.key.name, TaskMeta.value.name]),
-        ]
-        for pk in pk_list:
-            if self.db.get_bind().driver == "pysqlite":
-                self._update_sqlite_table(pk[0])
-            else:
-                self.db.execute(
-                    "ALTER TABLE {} DROP PRIMARY KEY".format(pk[0].__tablename__)
-                )
-                self.db.execute(
-                    "ALTER TABLE {} ADD CONSTRAINT PRIMARY KEY ({})".format(
-                        pk[0].__tablename__, ", ".join("`{}`".format(c) for c in pk[1])
-                    )
-                )
-        self.db.commit()
-
     def _update_sqlite_table(self, tbl):
         """"."""
         try:
@@ -323,9 +293,11 @@ class Version(BaseVersion):
                 )
             )
             tbl.__table__.create(self.db.get_bind(), checkfirst=True)
+
+            cols = ", ".join(inspect(tbl).column_attrs.keys())
             self.db.execute(
-                "INSERT INTO {} SELECT * FROM _{}_old".format(
-                    tbl.__tablename__, tbl.__tablename__
+                "INSERT INTO {} ({}) SELECT {} FROM _{}_old".format(
+                    tbl.__tablename__, cols, cols, tbl.__tablename__
                 )
             )
             self.db.execute("DROP TABLE _%s_old" % tbl.__tablename__)
