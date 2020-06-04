@@ -177,19 +177,19 @@ class Version(BaseVersion):
                 raise DBAdminError(e)
         self.db.commit()
 
-    def _create_indexes(self, index_list):
-        """"."""
-        for index in index_list:
-            try:
-                Index(
-                    "{}_{}_COL".format(index[0].__tablename__, index[1].name), index[1]
-                ).create(bind=self.db.get_bind())
-            except (OperationalError, ProgrammingError):
-                pass
-            except Exception as e:
-                self.db.rollback()
-                raise DBAdminError(e)
-        self.db.commit()
+    # def _create_indexes(self, index_list):
+    #     """"."""
+    #     for index in index_list:
+    #         try:
+    #             Index(
+    #                 "{}_{}_COL".format(index[0].__tablename__, index[1].name), index[1]
+    #             ).create(bind=self.db.get_bind())
+    #         except (OperationalError, ProgrammingError):
+    #             pass
+    #         except Exception as e:
+    #             self.db.rollback()
+    #             raise DBAdminError(e)
+    #     self.db.commit()
 
     def _update_foreign_keys(self):
         """"."""
