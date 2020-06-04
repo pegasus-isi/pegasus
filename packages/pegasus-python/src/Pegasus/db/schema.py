@@ -348,7 +348,7 @@ class Workflow(Base):
 
 
 Workflow.__table_args__ = (
-    UniqueConstraint(Workflow.wf_uuid.name, name="UNIQUE_WF_UUID"),
+    UniqueConstraint(Workflow.wf_uuid, name="UNIQUE_WF_UUID"),
     table_keywords,
 )
 
@@ -678,7 +678,7 @@ class Tag(Base):
 
 
 Tag.__table_args__ = (
-    UniqueConstraint(Tag.job_instance_id, Tag.wf_id, name="UNIQUE_TAG"),
+    UniqueConstraint(Tag.wf_id, Tag.job_instance_id, name="UNIQUE_TAG"),
     table_keywords,
 )
 
@@ -702,8 +702,6 @@ class Task(Base):
     type_desc = Column("type_desc", String(255), nullable=False)
 
     # Relationships
-    # TODO: Add foreign keys, remove primaryjoin and secondaryjoin,
-    # TODO: add passive_deletes=True, and append delete-orphan to cascade
     parents = relation(
         lambda: Task,
         backref="children",
@@ -1064,7 +1062,7 @@ class Ensemble(Base):
 
 
 Ensemble.__table_args__ = (
-    UniqueConstraint(Ensemble.username, Ensemble.name, name="UNIQUE_ENSEMBLE"),
+    UniqueConstraint(Ensemble.name, Ensemble.username, name="UNIQUE_ENSEMBLE"),
     table_keywords,
 )
 
@@ -1075,6 +1073,9 @@ class EnsembleWorkflow(Base):
     __tablename__ = "ensemble_workflow"
 
     id = Column("id", KeyInteger, primary_key=True)
+    ensemble_id = Column(
+        "ensemble_id", KeyInteger, ForeignKey(Ensemble.id), nullable=False
+    )
     name = Column("name", String(100), nullable=False)
     basedir = Column("basedir", String(512), nullable=False)
     created = Column("created", DateTime, nullable=False)
@@ -1089,9 +1090,6 @@ class EnsembleWorkflow(Base):
     submitdir = Column("submitdir", String(512))
     plan_command = Column(
         "plan_command", String(1024), nullable=False, default="./plan.sh"
-    )
-    ensemble_id = Column(
-        "ensemble_id", KeyInteger, ForeignKey(Ensemble.id), nullable=False
     )
 
     # Relationships

@@ -3,7 +3,6 @@ import os
 import subprocess
 
 from sqlalchemy import inspect
-from sqlalchemy.schema import Index
 
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
@@ -232,7 +231,7 @@ class Version(BaseVersion):
                 "UNIQUE_JOB_INSTANCE",
                 [JobInstance.job_id.name, JobInstance.job_submit_seq.name],
             ),
-            (Tag, "UNIQUE_TAG", [Tag.job_instance_id.name, Tag.wf_id.name]),
+            (Tag, "UNIQUE_TAG", [Tag.wf_id.name, Tag.job_instance_id.name]),
             (Task, "UNIQUE_TASK", [Task.wf_id.name, Task.abs_task_id.name]),
             (
                 Invocation,
@@ -264,7 +263,7 @@ class Version(BaseVersion):
                 "UNIQUE_PFN",
                 [RCPFN.lfn_id.name, RCPFN.pfn.name, RCPFN.site.name],
             ),
-            (Ensemble, "UNIQUE_ENSEMBLE", [Ensemble.username.name, Ensemble.name.name]),
+            (Ensemble, "UNIQUE_ENSEMBLE", [Ensemble.name.name, Ensemble.username.name]),
         ]
         for uc in uc_list:
             if self.db.get_bind().driver == "pysqlite":
