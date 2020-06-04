@@ -19,7 +19,7 @@ import os
 import re
 import stat
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 
 from six.moves.configparser import ConfigParser
 from six.moves.urllib.parse import urlsplit
@@ -47,9 +47,6 @@ COMMANDS = {
     "cp": "Copy keys remotely",
     "help": "Print this message",
 }
-
-
-
 
 
 KB = 1024
@@ -900,6 +897,7 @@ def put(args):
 
     print("Successfully uploaded {} files".format(len(infiles)))
 
+
 def get(args):
     uri = parse_uri(args.url)
 
@@ -933,40 +931,27 @@ def get(args):
 
     info("Download: {} complete".format(uri))
 
+
 # --- Handle Command Line Arguments --------------------------------------------
 def parse_args(args):
     parser = ArgumentParser(prog="pegasus-s3")
 
     # add top level arguments
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Enable verbose mode"
+        "-v", "--verbose", action="store_true", help="Enable verbose mode"
     )
 
     parser.add_argument(
-        "-C",
-        "--conf",
-        dest="config",
-        default=None,
-        help="Path to configuration file"
+        "-C", "--conf", dest="config", default=None, help="Path to configuration file"
     )
 
     # create a subparser that will handle s3 commands
-    subparser = parser.add_subparsers(
-        dest="cmd", 
-        help="Available s3 commands"
-    )
+    subparser = parser.add_subparsers(dest="cmd", help="Available s3 commands")
 
     # create subcommands for each of the supported s3 commands
     # LS command --------------------------
     parser_ls = subparser.add_parser("ls")
-    parser_ls.add_argument(
-        "url", 
-        metavar="URL", 
-        help="URL to be looked up"
-    )
+    parser_ls.add_argument("url", metavar="URL", help="URL to be looked up")
     parser_ls.add_argument(
         "-l",
         "--long",
@@ -988,9 +973,7 @@ def parse_args(args):
     # MKDIR command -----------------------------
     parser_mkdir = subparser.add_parser("mkdir")
     parser_mkdir.add_argument(
-        "url",
-        metavar="URL",
-        help="URL specifying bucket to be created"
+        "url", metavar="URL", help="URL specifying bucket to be created"
     )
     parser_mkdir.set_defaults(func=mkdir)
 
@@ -1001,7 +984,7 @@ def parse_args(args):
         metavar="URL",
         nargs="?",
         default=None,
-        help="URL specifying key to be removed"
+        help="URL specifying key to be removed",
     )
 
     parser_rm.add_argument(
@@ -1024,16 +1007,10 @@ def parse_args(args):
 
     # PUT command ---------------------------
     parser_put = subparser.add_parser("put")
-    parser_put.add_argument(
-        "file",
-        metavar="FILE",
-        help="The file to be uploaded"
-    )
+    parser_put.add_argument("file", metavar="FILE", help="The file to be uploaded")
 
     parser_put.add_argument(
-        "url",
-        metavar="URL",
-        help="URL to which the file will be uploaded"
+        "url", metavar="URL", help="URL to which the file will be uploaded"
     )
 
     parser_put.add_argument(
@@ -1057,35 +1034,24 @@ def parse_args(args):
 
     # GET command --------------------------
     parser_get = subparser.add_parser("get")
-    parser_get.add_argument(
-        "url",
-        metavar="URL",
-        help="URL of the key to download"
-    )
+    parser_get.add_argument("url", metavar="URL", help="URL of the key to download")
 
     parser_get.add_argument(
         "file",
         nargs="?",
         default=None,
         metavar="FILE",
-        help="File that key will be downloaded as"
+        help="File that key will be downloaded as",
     )
     parser_get.set_defaults(func=get)
 
     # CP command -------------------------
     parser_cp = subparser.add_parser("cp")
     parser_cp.add_argument(
-        "srcs",
-        nargs="+",
-        metavar="SRC",
-        help="Sources to copy from"
+        "srcs", nargs="+", metavar="SRC", help="Sources to copy from"
     )
 
-    parser_cp.add_argument(
-        "dest",
-        metavar="DST",
-        help="Destination to copy to"
-    )
+    parser_cp.add_argument("dest", metavar="DST", help="Destination to copy to")
 
     parser_cp.add_argument(
         "-c",
@@ -1106,6 +1072,7 @@ def parse_args(args):
     parser_cp.set_defaults(func=cp)
 
     return parser, parser.parse_args(args)
+
 
 # --- Entrypoint ---------------------------------------------------------------
 def main():

@@ -2150,7 +2150,7 @@ class S3Handler(TransferHandlerBase):
 
         env = self._s3_cred_env(removes_list[0].get_site_label())
 
-        cmd = tools.full_path("pegasus-s3") 
+        cmd = tools.full_path("pegasus-s3")
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " -v"
         cmd += " rm -f -F " + tmp_name
