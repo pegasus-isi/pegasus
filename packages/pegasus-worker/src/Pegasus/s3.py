@@ -19,7 +19,8 @@ import os
 import re
 import stat
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+from typing import Tuple, List
 
 from six.moves.configparser import ConfigParser
 from six.moves.urllib.parse import urlsplit
@@ -47,6 +48,10 @@ COMMANDS = {
     "cp": "Copy keys remotely",
     "help": "Print this message",
 }
+
+
+
+
 
 KB = 1024
 MB = 1024 * KB
@@ -391,29 +396,6 @@ def parse_uri(uri):
 
 
 def ls(args):
-    parser = option_parser("ls URL...")
-
-    parser.add_argument("url", metavar="URL")
-
-    parser.add_argument(
-        "-l",
-        "--long",
-        dest="long_format",
-        action="store_true",
-        default=False,
-        help="Use long listing format",
-    )
-    parser.add_argument(
-        "-H",
-        "--human-sized",
-        dest="human_sized",
-        action="store_true",
-        default=False,
-        help="Use human readable sizes",
-    )
-
-    args = parser.parse_args(args)
-
     config = get_config(args)
     uri = parse_uri(args.url)
 
@@ -468,44 +450,10 @@ def ls(args):
 
 
 def cp(args):
-    parser = option_parser("cp SRC[...] DEST")
-
-    parser.add_argument(
-        "srcs",
-        nargs="+",
-        metavar="SRC",
-        help="Sources to copy from"
-    )
-
-    parser.add_argument(
-        "dest",
-        metavar="DST",
-        help="Destination to copy to"
-    )
-
-    parser.add_option(
-        "-c",
-        "--create-dest",
-        dest="create",
-        action="store_true",
-        default=False,
-        help="Create destination bucket if it does not exist",
-    )
-    parser.add_option(
-        "-f",
-        "--force",
-        dest="force",
-        action="store_true",
-        default=False,
-        help="If DEST key exists, then overwrite it",
-    )
-
-    args = parser.parse_args(args)
-
     config = get_config(args)
 
     srcs = [parse_uri(uri) for uri in args.srcs]
-    dest = parse_uri(args.dst)
+    dest = parse_uri(args.dest)
 
     # If there is more than one source, then the destination must be
     # a bucket and not a bucket+key.
@@ -633,14 +581,6 @@ def cp(args):
 
 
 def mkdir(args):
-    parser = option_parser("mkdir URL...")
-
-    parser.add_argument(
-        "url",
-        metavar="URL",
-        help="URL specifying bucket to be created"
-    )
-
     """
     parser.add_option(
         "-r",
@@ -695,34 +635,6 @@ def mkdir(args):
 
 
 def rm(args):
-    parser = option_parser("rm URL...")
-
-    parser.add_argument(
-        "url",
-        metavar="URL",
-        nargs="?"
-        default=None,
-        help="URL specifying key to be removed"
-    )
-
-    parser.add_option(
-        "-f",
-        "--force",
-        dest="force",
-        action="store_true",
-        default=False,
-        help="Ignore nonexistent keys",
-    )
-    parser.add_option(
-        "-F",
-        "--file",
-        dest="file",
-        action="store",
-        default=None,
-        help="File containing a list of URLs to delete",
-    )
-    args = parser.parse_args(args)
-
     if args.url is None and args.file is None:
         parser.error("Specify URL")
 
@@ -876,50 +788,6 @@ def get_key_for_path(path, infile, outkey):
 
 
 def put(args):
-    # TODO: ensure args list well formed
-    parser = option_parser("put FILE URL")
-
-    parser.add_argument(
-        "file",
-        metavar="FILE",
-        help="The file to be uploaded"
-    )
-
-    parser.add_argument(
-        "url",
-        metavar="URL",
-        help="URL to which the file will be uploaded"
-    )
-
-    parser.add_option(
-        "-b",
-        "--create-bucket",
-        dest="create_bucket",
-        action="store_true",
-        default=False,
-        help="Create the destination bucket if it does not already exist",
-    )
-    parser.add_option(
-        "-f",
-        "--force",
-        dest="force",
-        action="store_true",
-        default=False,
-        help="Overwrite key if it already exists",
-    )
-    """
-    parser.add_option(
-        "-r",
-        "--recursive",
-        dest="recursive",
-        action="store_true",
-        default=False,
-        help="Treat FILE as a directory",
-    )
-    """
-
-    args = parser.parse_args(args)
-
     path = fix_file(args.file)
     url = args.url
 
@@ -927,34 +795,8 @@ def put(args):
         print("No such file or directory: {}".format(path))
         sys.exit(1)
 
-    """
-    # Get a list of all the files to transfer
-    if options.recursive:
-        if os.path.isfile(path):
-            infiles = [path]
-            # We can turn off the recursive option if it is a single file
-            options.recursive = False
-        elif os.path.isdir(path):
-
-            def subtree(dirname):
-                result = []
-                for name in os.listdir(dirname):
-                    path = os.path.join(dirname, name)
-                    if os.path.isfile(path):
-                        result.append(path)
-                    elif os.path.isdir(path):
-                        result.extend(subtree(path))
-                return result
-
-            subtree(path)
-    else:
-        if os.path.isdir(path):
-            raise Exception("%s is a directory. Try --recursive." % path)
-        infiles = [path]
-    """
-
     if os.path.isdir(path):
-        raise Exception("%s is a directory. Try --recursive." % path)
+        raise Exception("FILE: %s is a directory. FILE must be a file." % path)
 
     # TODO: without recursive, infile for loops need to be removed
     # usage is just pegasus-s3 put FILE <uri>
@@ -1033,7 +875,7 @@ def put(args):
 
         if key_already_exists:
             print(
-                "Key: {} already exists. Trye --force to overwrite".format(
+                "Key: {} already exists. Try --force to overwrite".format(
                     pre_existing_key
                 )
             )
@@ -1060,24 +902,6 @@ def put(args):
     print("Successfully uploaded {} files".format(len(infiles)))
 
 def get(args):
-    parser = option_parser("get URL [FILE]")
-
-    parser.add_argument(
-        "url",
-        metavar="URL",
-        help="URL of the key to download"
-    )
-
-    parser.add_argument(
-        "file",
-        nargs="?",
-        default=None,
-        metavar="FILE",
-        help="File that key will be downloaded as"
-    )
-
-    args = parser.parse_args(args)
-
     uri = parse_uri(args.url)
 
     if uri.bucket is None:
@@ -1110,33 +934,187 @@ def get(args):
 
     info("Download: {} complete".format(uri))
 
+# --- Handle Command Line Arguments --------------------------------------------
+def parse_args(args: List[str]) -> Tuple[ArgumentParser, Namespace]:
+    parser = ArgumentParser(prog="pegasus-s3")
 
+    # add top level arguments
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose mode"
+    )
+
+    parser.add_argument(
+        "-C",
+        "--conf",
+        dest="config",
+        default=None,
+        help="Path to configuration file"
+    )
+
+    # create a subparser that will handle s3 commands
+    subparser = parser.add_subparsers(
+        dest="cmd", 
+        help="Available s3 commands"
+    )
+
+    # create subcommands for each of the supported s3 commands
+    # LS command --------------------------
+    parser_ls = subparser.add_parser("ls")
+    parser_ls.add_argument(
+        "url", 
+        metavar="URL", 
+        help="URL to be looked up"
+    )
+    parser_ls.add_argument(
+        "-l",
+        "--long",
+        dest="long_format",
+        action="store_true",
+        default=False,
+        help="Use long listing format",
+    )
+    parser_ls.add_argument(
+        "-H",
+        "--human-sized",
+        dest="human_sized",
+        action="store_true",
+        default=False,
+        help="Use human readable sizes",
+    )
+    parser_ls.set_defaults(func=ls)
+
+    # MKDIR command -----------------------------
+    parser_mkdir = subparser.add_parser("mkdir")
+    parser_mkdir.add_argument(
+        "url",
+        metavar="URL",
+        help="URL specifying bucket to be created"
+    )
+    parser_mkdir.set_defaults(func=mkdir)
+
+    # RM command --------------------------
+    parser_rm = subparser.add_parser("rm")
+    parser_rm.add_argument(
+        "url",
+        metavar="URL",
+        nargs="?",
+        default=None,
+        help="URL specifying key to be removed"
+    )
+
+    parser_rm.add_argument(
+        "-f",
+        "--force",
+        dest="force",
+        action="store_true",
+        default=False,
+        help="Ignore nonexistent keys",
+    )
+    parser_rm.add_argument(
+        "-F",
+        "--file",
+        dest="file",
+        action="store",
+        default=None,
+        help="File containing a list of URLs to delete",
+    )
+    parser_rm.set_defaults(func=rm)
+
+    # PUT command ---------------------------
+    parser_put = subparser.add_parser("put")
+    parser_put.add_argument(
+        "file",
+        metavar="FILE",
+        help="The file to be uploaded"
+    )
+
+    parser_put.add_argument(
+        "url",
+        metavar="URL",
+        help="URL to which the file will be uploaded"
+    )
+
+    parser_put.add_argument(
+        "-b",
+        "--create-bucket",
+        dest="create_bucket",
+        action="store_true",
+        default=False,
+        help="Create the destination bucket if it does not already exist",
+    )
+
+    parser_put.add_argument(
+        "-f",
+        "--force",
+        dest="force",
+        action="store_true",
+        default=False,
+        help="Overwrite key if it already exists",
+    )
+    parser_put.set_defaults(func=put)
+
+    # GET command --------------------------
+    parser_get = subparser.add_parser("get")
+    parser_get.add_argument(
+        "url",
+        metavar="URL",
+        help="URL of the key to download"
+    )
+
+    parser_get.add_argument(
+        "file",
+        nargs="?",
+        default=None,
+        metavar="FILE",
+        help="File that key will be downloaded as"
+    )
+    parser_get.set_defaults(func=get)
+
+    # CP command -------------------------
+    parser_cp = subparser.add_parser("cp")
+    parser_cp.add_argument(
+        "srcs",
+        nargs="+",
+        metavar="SRC",
+        help="Sources to copy from"
+    )
+
+    parser_cp.add_argument(
+        "dest",
+        metavar="DST",
+        help="Destination to copy to"
+    )
+
+    parser_cp.add_argument(
+        "-c",
+        "--create-dest",
+        dest="create",
+        action="store_true",
+        default=False,
+        help="Create destination bucket if it does not exist",
+    )
+    parser_cp.add_argument(
+        "-f",
+        "--force",
+        dest="force",
+        action="store_true",
+        default=False,
+        help="If DEST key exists, then overwrite it",
+    )
+    parser_cp.set_defaults(func=cp)
+
+    return parser, parser.parse_args(args)
+
+# --- Entrypoint ---------------------------------------------------------------
 def main():
-    if len(sys.argv) < 2:
-        help()
-        exit(1)
+    parser, args = parse_args(sys.argv[1:])
 
-    command = sys.argv[1].lower()
-    args = sys.argv[2:]
-
-    if command in COMMANDS:
-        fn = globals()[command]
-        try:
-            fn(args)
-        except Exception as e:
-            # Just raise the exception if the user wants more info
-            if VERBOSE or DEBUG:
-                raise
-
-            error = str(e)
-
-            # This is for boto S3ResponseError
-            if hasattr(e, "error_message"):
-                error = e.error_message or error
-
-            sys.stderr.write("ERROR: %s\n" % error)
-            exit(1)
+    if args.cmd is None:
+        parser.print_usage()
     else:
-        sys.stderr.write("ERROR: Unknown command: %s\n" % command)
-        help()
-        exit(1)
+        args.func(args)
+
+    # TODO: if verbose raise exception
