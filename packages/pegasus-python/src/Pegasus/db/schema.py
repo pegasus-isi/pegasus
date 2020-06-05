@@ -520,18 +520,8 @@ class JobEdge(Base):
         ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         primary_key=True,
     )
-    parent_exec_job_id = Column(
-        "parent_exec_job_id",
-        String(255),
-        ForeignKey(Job.exec_job_id, ondelete="CASCADE"),
-        primary_key=True,
-    )
-    child_exec_job_id = Column(
-        "child_exec_job_id",
-        String(255),
-        ForeignKey(Job.exec_job_id, ondelete="CASCADE"),
-        primary_key=True,
-    )
+    parent_exec_job_id = Column("parent_exec_job_id", String(255), primary_key=True,)
+    child_exec_job_id = Column("child_exec_job_id", String(255), primary_key=True,)
 
 
 class JobInstance(Base):
@@ -756,18 +746,8 @@ class TaskEdge(Base):
         ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         primary_key=True,
     )
-    parent_abs_task_id = Column(
-        "parent_abs_task_id",
-        String(255),
-        ForeignKey(Task.abs_task_id, ondelete="CASCADE"),
-        primary_key=True,
-    )
-    child_abs_task_id = Column(
-        "child_abs_task_id",
-        String(255),
-        ForeignKey(Task.abs_task_id, ondelete="CASCADE"),
-        primary_key=True,
-    )
+    parent_abs_task_id = Column("parent_abs_task_id", String(255), primary_key=True,)
+    child_abs_task_id = Column("child_abs_task_id", String(255), primary_key=True,)
 
 
 class TaskMeta(Base):
