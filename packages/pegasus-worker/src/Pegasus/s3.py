@@ -135,58 +135,6 @@ def help(*args):
         sys.stderr.write("    %-8s%s\n" % (cmd, COMMANDS[cmd]))
 
 
-def option_parser(usage):
-    command = os.path.basename(sys.argv[0])
-
-    parser = ArgumentParser(usage="usage: %s %s" % (command, usage))
-    parser.add_argument(
-        "-d",
-        "--debug",
-        dest="debug",
-        action="store_true",
-        default=False,
-        help="Turn on debugging",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="verbose",
-        action="store_true",
-        default=False,
-        help="Show progress messages",
-    )
-    parser.add_argument(
-        "-C",
-        "--conf",
-        dest="config",
-        metavar="FILE",
-        default=None,
-        help="Path to configuration file",
-    )
-
-    # Add a hook so we can handle global arguments
-    fn = parser.parse_args
-
-    def parse(*args, **kwargs):
-        args = fn(*args, **kwargs)
-
-        if args.debug:
-            # TODO: no more boto, using boto3
-            boto.set_stream_logger("boto")
-            global DEBUG
-            DEBUG = True
-
-        if args.verbose:
-            global VERBOSE
-            VERBOSE = True
-
-        return args
-
-    parser.parse_args = parse
-
-    return parser
-
-
 def get_path_for_key(bucket, searchkey, key, output):
     # We have to strip any trailing / off the keys so that they can match
     # Also, if a key is None, then convert it to an empty string
@@ -588,9 +536,7 @@ def mkdir(args):
     )
     """
 
-    args = parser.parse_args(args)
-
-    uri = parse_uri(args.pop())
+    uri = parse_uri(args.url)
 
     if uri.bucket is None:
         print("URL for mkdir must contain a bucket: %s" % arg)
