@@ -1255,7 +1255,7 @@ public class PlannerOptions extends Data implements Cloneable {
         }
         // specify the output site
         if (!mOutputSites.isEmpty()) {
-            sb.append(" --output-site ");
+            sb.append(" --output-sites ");
             // generate the comma separated string
             // for the execution pools
             sb.append(setToString(mOutputSites, ","));
@@ -1308,9 +1308,6 @@ public class PlannerOptions extends Data implements Cloneable {
                 sb.append("=").append(getRandomDir());
             }
         }
-
-        // specify the vogroup
-        sb.append(" --group ").append(mVOGroup);
 
         // specify the number of times to try rescue
         // only if it does not match the default value!
