@@ -233,10 +233,10 @@ wf = Workflow("sleep-wf")\
 wf = Workflow("local-hierarchy")
 
 blackdiamond_wf = SubWorkflow("blackdiamond.yml", False)\
-                .add_args("--input-dir", "input", "--output-site", "local", "-vvv")
+                .add_args("--input-dir", "input", "--output-sites", "local", "-vvv")
 
 sleep_wf = SubWorkflow("sleep.yml", False)\
-                .add_args("--output-site", "local", "-vvv")
+                .add_args("--output-sites", "local", "-vvv")
 
 wf.add_jobs(blackdiamond_wf, sleep_wf)
 wf.add_dependency(blackdiamond_wf, children=[sleep_wf])

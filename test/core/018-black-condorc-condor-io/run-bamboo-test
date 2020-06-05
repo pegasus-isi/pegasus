@@ -85,7 +85,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites isi-condorc \
-    --output-site local \
+    --output-sites local \
     --dir work/submit \
     --cleanup leaf \
     --cluster horizontal \

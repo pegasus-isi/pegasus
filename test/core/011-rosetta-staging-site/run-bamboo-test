@@ -114,7 +114,7 @@ pegasus-plan \
     --dax dax.xml \
     --sites CCG \
     --staging-site CCG_Staging \
-    --output-site local \
+    --output-sites local \
     --submit | tee $TOP_DIR/plan.out
 
 

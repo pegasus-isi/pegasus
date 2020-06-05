@@ -92,7 +92,7 @@ pegasus-plan \
     --sites CCG \
     --staging-site CCGData \
     --dir work \
-    --output-site local \
+    --output-sites local \
     --cleanup leaf \
     --dax data/montage-workflow.yml \
     --cluster horizontal \

@@ -94,7 +94,7 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --dir work \
     --sites CCG \
-    --output-site CCG \
+    --output-sites CCG \
     --cleanup leaf \
     --dax data/montage-workflow.yml \
     --cluster horizontal \

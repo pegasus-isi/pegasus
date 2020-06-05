@@ -42,7 +42,7 @@ pegasus-plan \
         --relative-dir `date +'%s'` \
         --dax data/montage.dax \
         --sites condor_pool \
-        --output-site local \
+        --output-sites local \
         --cluster horizontal \
         | tee $TOP_DIR/plan.out
 

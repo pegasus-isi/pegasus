@@ -95,7 +95,7 @@ pegasus-plan \
     --dir $WORK_DIR \
     --relative-dir $RUN_ID \
     --sites condorpool \
-    --output-site local \
+    --output-sites local \
     --dax blackdiamond.yml \
     --cluster horizontal \
     --submit

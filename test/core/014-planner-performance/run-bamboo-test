@@ -65,7 +65,7 @@ START_TS=`/bin/date +'%s'`
     --sites condorpool \
     --staging-site local \
     --dir submit \
-    --output-site local \
+    --output-sites local \
     --cleanup leaf \
     --dax dax.xml \
     | tee plan.out

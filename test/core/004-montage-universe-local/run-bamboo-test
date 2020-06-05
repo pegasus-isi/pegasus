@@ -74,7 +74,7 @@ pegasus-plan \
         --relative-dir $RUN_ID \
         --dax data/montage-workflow.yml \
         --sites local \
-        --output-site local \
+        --output-sites local \
         --cluster horizontal \
         --submit \
         | tee $TOP_DIR/plan.out

@@ -39,7 +39,7 @@ adag.addJob(gen_dax)
 dax1 = DAX(daxfile)
 # DAX jobs are called with same arguments passed, while planning the root level dax
 dax1.addArguments("--conf dax1.properties")
-dax1.addArguments("--output-site local")
+dax1.addArguments("--output-sites local")
 dax1.addArguments("-vvv")
 # the dax job needs a basename option as DAX doesnt exist when outer level workflow is planned
 dax1.addArguments("--basename inner")
@@ -55,7 +55,7 @@ adag.addJob(dax1)
 daxfile2 = File("inner2.dax")
 dax2 = DAX(daxfile2)
 # pegasus-plan arguments for the DAX jobs can be overwritten
-dax2.addArguments("--output-site local")
+dax2.addArguments("--output-sites local")
 dax2.addArguments("-vvv")
 adag.addJob(dax2)
 

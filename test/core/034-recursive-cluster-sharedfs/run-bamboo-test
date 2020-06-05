@@ -88,7 +88,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
     --dir work/dags \
-    --output-site local \
+    --output-sites local \
     --cluster label,horizontal \
     --dax blackdiamond.dax \
     -vvvv \

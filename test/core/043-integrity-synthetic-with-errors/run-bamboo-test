@@ -44,7 +44,7 @@ pegasus-plan \
     --dax dax.xml \
     --sites condor_pool \
     --staging-site staging_site \
-    --output-site local \
+    --output-sites local \
     --submit
 
 

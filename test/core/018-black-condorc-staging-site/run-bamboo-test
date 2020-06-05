@@ -91,7 +91,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites isi-condorc \
     --staging-site cartman-data \
-    --output-site local \
+    --output-sites local \
     --dir work \
     --cleanup leaf \
     --cluster horizontal \

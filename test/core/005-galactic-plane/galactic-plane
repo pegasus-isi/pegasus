@@ -195,7 +195,7 @@ def add_tile(mode, uberdax, tile_id, lon, lat):
                        "--basename", tile_id,
                        "--force",
                        "--force-replan",
-                       "--output-site", output_name)
+                       "--output-sites", output_name)
     subwf.addProfile(Profile("dagman", "CATEGORY", "subworkflow"))
     subwf.uses(subdax_file, link=Link.INPUT, register=False)
     subwf.invoke('at_end',  local_galacticplane_location + "/notify")
@@ -363,7 +363,7 @@ def main():
     print "Planning and submitting the uberdax..."
     os.chdir(work_dir)
     os.environ["JAVA_HEAPMAX"] = "512"
-    cmd = "pegasus-plan --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output-site local --dax gp.dax --cleanup leaf --submit 2>&1 | tee pegasus-plan.out"
+    cmd = "pegasus-plan --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output-sites local --dax gp.dax --cleanup leaf --submit 2>&1 | tee pegasus-plan.out"
     myexec(cmd)
 
 
