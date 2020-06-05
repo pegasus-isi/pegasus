@@ -172,7 +172,7 @@ def db(request):
     _docker = docker.from_env()
     env = "MYSQL_ROOT_PASSWORD" if is_mysql else "POSTGRES_PASSWORD"
     _db = _docker.containers.run(
-        request.param, environment={env: password}, detach=True, ports={port: None},
+        image, environment={env: password}, detach=True, ports={port: None},
     )
 
     count = 15
