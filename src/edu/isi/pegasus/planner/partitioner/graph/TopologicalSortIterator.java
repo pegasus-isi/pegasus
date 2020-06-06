@@ -76,7 +76,7 @@ public class TopologicalSortIterator implements Iterator {
         // each of the root nodes have in degree of 0
         for (Iterator it = mGraph.getRoots().iterator(); it.hasNext(); ) {
             GraphNode root = (GraphNode) it.next();
-            mIndexMap.put(root.getID(), new Integer(index));
+            mIndexMap.put(root.getID(), index);
             mInDegree[index++] = 0;
         }
 
@@ -89,7 +89,7 @@ public class TopologicalSortIterator implements Iterator {
                 continue;
             }
 
-            mIndexMap.put(node.getID(), new Integer(index));
+            mIndexMap.put(node.getID(), index);
             mInDegree[index++] = node.getParents().size();
         }
 

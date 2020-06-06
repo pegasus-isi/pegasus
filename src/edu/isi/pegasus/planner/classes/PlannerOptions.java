@@ -818,7 +818,7 @@ public class PlannerOptions extends Data implements Cloneable {
                 (level != null && level.length() > 0)
                         ?
                         // the value that was passed by the user
-                        new Integer(level).intValue()
+                        Integer.parseInt(level)
                         :
                         // by default not setting it to 0,
                         // but to 1, as --verbose is an optional

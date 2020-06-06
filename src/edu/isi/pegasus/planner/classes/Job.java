@@ -1880,7 +1880,7 @@ public class Job extends Data implements GraphNodeContent {
         append(sb, "Transformation", this.getCompleteTCName(), newline);
         append(sb, "Derivation", this.getCompleteDVName(), newline);
         append(sb, "Node Label", this.getNodeLabel(), newline);
-        append(sb, "Level", new Integer(this.level).toString(), newline);
+        append(sb, "Level", Integer.toString(this.level), newline);
         append(sb, "Job Type Description", getJobTypeDescription(this.jobClass), newline);
         append(sb, "Job Id", this.jobID, newline);
         append(sb, "Runtime", this.mRuntime, newline);

@@ -42,88 +42,88 @@ public class PegasusBag implements Bag, Cloneable {
     };
 
     /** The constant to be passed to the accessor functions to get or set the PegasusProperties. */
-    public static final Integer PEGASUS_PROPERTIES = new Integer(0);
+    public static final Integer PEGASUS_PROPERTIES = 0;
 
     /**
      * The constant to be passed to the accessor functions to get or set the options passed to the
      * planner.
      */
-    public static final Integer PLANNER_OPTIONS = new Integer(1);
+    public static final Integer PLANNER_OPTIONS = 1;
 
     /**
      * The constant to be passed to the accessor functions to get the file source for replica
      * catalog
      */
-    public static final Integer REPLICA_CATALOG_FILE_SOURCE = new Integer(2);
+    public static final Integer REPLICA_CATALOG_FILE_SOURCE = 2;
 
     /**
      * The constant to be passed to the accessor functions to get or set the handle to the site
      * catalog.
      */
-    public static final Integer SITE_CATALOG = new Integer(3);
+    public static final Integer SITE_CATALOG = 3;
 
     /**
      * The constant to be passed to the accessor functions to get or set the handle to the
      * transformation catalog.
      */
-    public static final Integer TRANSFORMATION_CATALOG = new Integer(4);
+    public static final Integer TRANSFORMATION_CATALOG = 4;
 
     /**
      * The constant to be passed to the accessor functions to get or set the handle to the
      * Transformation Mapper.
      */
-    public static final Integer TRANSFORMATION_MAPPER = new Integer(5);
+    public static final Integer TRANSFORMATION_MAPPER = 5;
 
     /**
      * The constant to be passed to the accessor functions to get or set the handle to the Logging
      * manager
      */
-    public static final Integer PEGASUS_LOGMANAGER = new Integer(6);
+    public static final Integer PEGASUS_LOGMANAGER = 6;
 
     /**
      * The constant to be passed to the accessor functions to get or set the handle to the Site
      * Store
      */
-    public static final Integer SITE_STORE = new Integer(7);
+    public static final Integer SITE_STORE = 7;
 
     /**
      * The constant to be passed to the accessor functions to get or set the handle to the planner
      * cache for planning purposes.
      */
-    public static final Integer PLANNER_CACHE = new Integer(8);
+    public static final Integer PLANNER_CACHE = 8;
 
     /**
      * The constant to be passed to the accessor functions to get or set the handle to the worker
      * package maps
      */
-    public static final Integer WORKER_PACKAGE_MAP = new Integer(9);
+    public static final Integer WORKER_PACKAGE_MAP = 9;
 
     /**
      * The constant to be passed to the accessor functions to get or set the whether the planner
      * used PMC or not
      */
-    public static final Integer USES_PMC = new Integer(10);
+    public static final Integer USES_PMC = 10;
 
     /**
      * The constant to be passed to the accessor functions to get or set the the planner metrics
      * that are logged during the planning purpose
      */
-    public static final Integer PLANNER_METRICS = new Integer(11);
+    public static final Integer PLANNER_METRICS = 11;
 
     /**
      * The handle to the file factory that is used to create the relative submit directories in the
      * deep hierarchy structure.
      */
-    public static final Integer PEGASUS_SUBMIT_MAPPER = new Integer(12);
+    public static final Integer PEGASUS_SUBMIT_MAPPER = 12;
 
     /**
      * The handle to the file factory that is used to create the relative directories on the staging
      * site
      */
-    public static final Integer PEGASUS_STAGING_MAPPER = new Integer(13);
+    public static final Integer PEGASUS_STAGING_MAPPER = 13;
 
     /** The directory from which the planner is invoked */
-    public static final Integer PLANNER_DIRECTORY = new Integer(14);
+    public static final Integer PLANNER_DIRECTORY = 14;
 
     /** The handle to the <code>PegasusProperties</code>. */
     private PegasusProperties mProps;
