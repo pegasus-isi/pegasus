@@ -46,8 +46,8 @@ class Client:
     """
 
     def __init__(self, pegasus_home: str):
-        self._log = logging.getLogger("PegasusClient")
-        self._log.addFilter(console_handler)
+        self._log = logging.getLogger("pegasus.client")
+        self._log.addHandler(console_handler)
         self._log.propagate = False
 
         self._pegasus_home = pegasus_home
@@ -150,14 +150,14 @@ class Client:
             cmd.append("--submit")
 
         cmd.extend(("--dax", dax))
-
+   
         rv = self._exec(cmd)
 
         if rv.exit_code:
             self._log.fatal("Plan:\n{} \n{}".format(rv.stdout, rv.stderr))
-
+        
         self._log.info("Plan:\n{} \n{}".format(rv.stdout, rv.stderr))
-
+        
         submit_dir = self._get_submit_dir(rv.stdout)
         workflow = Workflow(submit_dir, self)
         return workflow
@@ -376,7 +376,7 @@ class Client:
 
 class Workflow:
     def __init__(self, submit_dir: str, client: Client = None):
-        self._log = logging.getLogger("PegasusClientWorkflow")
+        self._log = logging.getLogger("pegasus.client.workflow")
         self._log.addHandler(console_handler)
         self._log.propagate = False
 
