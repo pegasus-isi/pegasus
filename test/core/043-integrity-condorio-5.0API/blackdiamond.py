@@ -7,6 +7,8 @@ from datetime import datetime
 
 from Pegasus.api import *
 
+logging.basicConfig(level=logging.DEBUG)
+
 PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
 
 # --- Work Dir Setup -----------------------------------------------------------

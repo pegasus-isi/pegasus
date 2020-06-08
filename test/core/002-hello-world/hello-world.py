@@ -4,6 +4,8 @@ import sys
 
 from Pegasus.api import *
 
+logging.basicConfig(level=logging.DEBUG)
+
 # --- Transformations ----------------------------------------------------------
 echo = Transformation(
         "echo", 
