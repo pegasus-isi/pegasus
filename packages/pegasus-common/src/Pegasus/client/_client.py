@@ -16,6 +16,7 @@ from Pegasus import yaml
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter("%(message)s"))
 
+
 class PegasusClientError(Exception):
     """Exception raised when an invoked pegasus command line tool returns non 0"""
 
@@ -150,14 +151,14 @@ class Client:
             cmd.append("--submit")
 
         cmd.extend(("--dax", dax))
-   
+
         rv = self._exec(cmd)
 
         if rv.exit_code:
             self._log.fatal("Plan:\n{} \n{}".format(rv.stdout, rv.stderr))
-        
+
         self._log.info("Plan:\n{} \n{}".format(rv.stdout, rv.stderr))
-        
+
         submit_dir = self._get_submit_dir(rv.stdout)
         workflow = Workflow(submit_dir, self)
         return workflow
