@@ -1,9 +1,12 @@
 import logging
+import time
 from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
 from flask import _request_ctx_stack
+
+import docker
 
 log = logging.getLogger(__name__)
 
@@ -150,3 +153,79 @@ def runner():
 def tmp_path(runner):
     with runner.isolated_filesystem():
         yield Path.cwd()
+
+
+@pytest.fixture(scope="session", params=("mysql/mysql-server:8.0", "postgres:12"))
+def db(request):
+    image = request.param
+    is_mysql = image.startswith("mysql")
+
+    # Database Information
+    username = "root" if is_mysql else "postgres"
+    password = "pass"
+    host = "localhost"
+    port = "3306" if is_mysql else "5432"
+    database = "pegasus"
+
+    log.info("Starting %s container", image)
+
+    _docker = docker.from_env()
+    env = "MYSQL_ROOT_PASSWORD" if is_mysql else "POSTGRES_PASSWORD"
+    _db = _docker.containers.run(
+        image, environment={env: password}, detach=True, ports={port: None},
+    )
+
+    count = 15
+    while count:
+        count -= 1
+        time.sleep(2)
+        if is_mysql:
+            done = "MySQL init process done. Ready for start up."
+        else:
+            done = "database system is ready to accept connections"
+
+        if _db.logs().find(done.encode()) > 0:
+            time.sleep(2)
+            log.info("Creating database(s)")
+
+            if is_mysql:
+                out = _db.exec_run(
+                    (
+                        "mysql",
+                        "-u%s" % username,
+                        "-p%s" % password,
+                        "-e",
+                        "CREATE DATABASE a CHARACTER SET utf8mb4 COLLATE utf8mb4_bin; SHOW DATABASES;",
+                    )
+                )
+            else:
+                out = _db.exec_run(
+                    ("psql", "-U", username, "-c", "CREATE DATABASE a"),
+                    environment={"PGPASSWORD": password},
+                )
+                out += _db.exec_run(
+                    ("psql", "-U", username, "-c", "\\l"),
+                    environment={"PGPASSWORD": password},
+                )
+            break
+        else:
+            log.info("Waiting for %s container to initialize", image)
+
+    # Get Host Port
+    port_map = _docker.api.port(_db.name, port)[0]
+    if is_mysql:
+        url = "jdbc:mysql://{}:{}@{}:{}/{}".format(
+            username, password, host, port_map["HostPort"], database,
+        )
+    else:
+        url = "jdbc:postgresql://{}:{}@{}:{}/{}".format(
+            username, password, host, port_map["HostPort"], database,
+        )
+
+    log.info(url)
+    yield url
+
+    # Remove container
+    if _db:
+        log.info("remove")
+        _db.remove(force=True)

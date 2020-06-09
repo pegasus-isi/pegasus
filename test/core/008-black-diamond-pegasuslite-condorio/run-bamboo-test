@@ -48,7 +48,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
-    --output-site local \
+    --output-sites local \
     --dir work/dags \
     --cleanup leaf \
     --dax blackdiamond.dax \

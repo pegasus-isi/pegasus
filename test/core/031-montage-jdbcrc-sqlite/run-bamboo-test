@@ -47,7 +47,7 @@ pegasus-plan \
     --conf ../pegasusrc \
     --sites condor_pool \
     --dir work \
-    --output-site local \
+    --output-sites local \
     --cleanup leaf \
     --dax data/montage.dax \
     --cluster horizontal \

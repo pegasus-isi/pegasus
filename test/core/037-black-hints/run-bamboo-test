@@ -67,7 +67,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites fake-site,CCG \
     --dir work \
-    --output-site local \
+    --output-sites local \
     --cluster horizontal \
     --dax blackdiamond.dax  | tee $TOPDIR/plan.out
 

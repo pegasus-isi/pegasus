@@ -59,7 +59,7 @@ pegasus-plan \
     --sites condorpool \
     --staging-site cartman-data \
     --dir work \
-    --output-site local \
+    --output-sites local \
     --dax blackdiamond.dax  | tee $TOPDIR/plan.out
 
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`

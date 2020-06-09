@@ -39,7 +39,6 @@ def test_create_database():
     assert get_version(db) == CURRENT_DB_VERSION
 
     db.execute("DROP TABLE rc_pfn")
-    db.execute("DROP TABLE workflow")
     db.execute("DROP TABLE master_workflow")
     with pytest.raises(DBAdminError):
         db_verify(db, check=True)
@@ -72,8 +71,8 @@ def test_version_operations():
     dburi = "sqlite://"
     db = connection.connect(dburi, create=True, verbose=False)
 
-    db_downgrade(db, pegasus_version="4.6.0", verbose=False)
-    assert get_version(db) == 6
+    db_downgrade(db, pegasus_version="4.7.0", verbose=False)
+    assert get_version(db) == 8
     with pytest.raises(DBAdminError):
         db_verify(db, check=True)
     RCLFN.__table__._set_parent(metadata)
@@ -91,7 +90,6 @@ def test_version_operations():
 def test_partial_database():
     dburi = "sqlite://"
     db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
-    Sequence.__table__.create(db.get_bind(), checkfirst=True)
     RCLFN.__table__.create(db.get_bind(), checkfirst=True)
     RCPFN.__table__.create(db.get_bind(), checkfirst=True)
     RCMeta.__table__.create(db.get_bind(), checkfirst=True)

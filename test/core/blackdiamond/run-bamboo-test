@@ -150,7 +150,7 @@ pegasus-plan \
     --conf ${CONFIG}/pegasusrc \
     --sites $execution_site \
     --staging-site $staging_site \
-    --output-site $output_site \
+    --output-sites $output_site \
     --dir work/submit \
     --cleanup $clean_up \
     --dax ${DAX} \

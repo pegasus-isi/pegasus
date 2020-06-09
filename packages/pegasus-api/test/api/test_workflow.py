@@ -351,31 +351,31 @@ class TestAbstractJob:
                     "lfn": "stdout",
                     "type": "output",
                     "stageOut": True,
-                    "registerReplica": False,
+                    "registerReplica": True,
                 },
                 {
                     "lfn": "stderr",
                     "type": "output",
                     "stageOut": True,
-                    "registerReplica": False,
+                    "registerReplica": True,
                 },
                 {
                     "lfn": "of1",
                     "type": "output",
                     "stageOut": True,
-                    "registerReplica": False,
+                    "registerReplica": True,
                 },
                 {
                     "lfn": "of2",
                     "type": "output",
                     "stageOut": True,
-                    "registerReplica": False,
+                    "registerReplica": True,
                 },
                 {
                     "lfn": "cpf",
                     "type": "checkpoint",
                     "stageOut": True,
-                    "registerReplica": False,
+                    "registerReplica": True,
                 },
             ],
         }
@@ -443,25 +443,25 @@ class TestJob:
                     "lfn": "stdout",
                     "type": "output",
                     "stageOut": True,
-                    "registerReplica": False,
+                    "registerReplica": True,
                 },
                 {
                     "lfn": "stderr",
                     "type": "output",
                     "stageOut": True,
-                    "registerReplica": False,
+                    "registerReplica": True,
                 },
                 {
                     "lfn": "of1",
                     "type": "output",
                     "stageOut": True,
-                    "registerReplica": False,
+                    "registerReplica": True,
                 },
                 {
                     "lfn": "of2",
                     "type": "output",
                     "stageOut": True,
-                    "registerReplica": False,
+                    "registerReplica": True,
                 },
             ],
         }
@@ -575,13 +575,13 @@ def expected_json():
                         "lfn": "stdout",
                         "type": "output",
                         "stageOut": True,
-                        "registerReplica": False,
+                        "registerReplica": True,
                     },
                     {
                         "lfn": "stderr",
                         "type": "output",
                         "stageOut": True,
-                        "registerReplica": False,
+                        "registerReplica": True,
                     },
                     {
                         "lfn": "f1",
@@ -609,7 +609,7 @@ def expected_json():
                         "lfn": "checkpoint",
                         "type": "checkpoint",
                         "stageOut": True,
-                        "registerReplica": False,
+                        "registerReplica": True,
                     },
                 ],
             },
@@ -651,7 +651,7 @@ def wf():
 
     j1 = (
         Job("t1", _id="a")
-        .add_outputs(File("f1"), File("f2"))
+        .add_outputs(File("f1"), File("f2"), register_replica=False)
         .add_args(File("do-nothing"), "-n", 1, 1.1)
         .set_stdin("stdin")
         .set_stdout("stdout")

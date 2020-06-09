@@ -56,7 +56,7 @@ pegasus-plan \
     --dax super-blackdiamond.dax \
     --sites condor_pool \
     --staging-site local \
-    --output-site local \
+    --output-sites local \
     --submit | tee $TOP_DIR/plan.out
 
 

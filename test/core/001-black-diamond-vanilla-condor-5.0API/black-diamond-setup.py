@@ -6,6 +6,8 @@ from datetime import datetime
 
 from Pegasus.api import *
 
+logging.basicConfig(level=logging.DEBUG)
+
 PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
 
 # --- Work Dir Setup -----------------------------------------------------------
@@ -119,29 +121,32 @@ fc1 = File("f.Ҫ1")
 fc2 = File("f.Ͻ2")
 fd = File("f.Ɗ")
 
-Workflow("blÅckƊiamond㒀㑖").add_jobs(
-    Job(preprocess)
-    .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
-    .add_inputs(fa)
-    .add_outputs(fb1, fb2, register_replica=True),
-    Job(findrage)
-    .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
-    .add_inputs(fb1)
-    .add_outputs(fc1, register_replica=True),
-    Job(findrage)
-    .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
-    .add_inputs(fb2)
-    .add_outputs(fc2, register_replica=True),
-    Job(analyze)
-    .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
-    .add_inputs(fc1, fc2)
-    .add_outputs(fd, register_replica=True),
-).plan(
-    dir=str(WORK_DIR),
-    verbose=3,
-    relative_dir=RUN_ID,
-    sites=[CONDOR_POOL],
-    output_site=LOCAL,
-    force=True,
-    submit=True,
-)
+try:
+    Workflow("blÅckƊiamond㒀㑖").add_jobs(
+        Job(preprocess)
+        .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+        .add_inputs(fa)
+        .add_outputs(fb1, fb2, register_replica=True),
+        Job(findrage)
+        .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
+        .add_inputs(fb1)
+        .add_outputs(fc1, register_replica=True),
+        Job(findrage)
+        .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
+        .add_inputs(fb2)
+        .add_outputs(fc2, register_replica=True),
+        Job(analyze)
+        .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
+        .add_inputs(fc1, fc2)
+        .add_outputs(fd, register_replica=True),
+    ).plan(
+        dir=str(WORK_DIR),
+        verbose=3,
+        relative_dir=RUN_ID,
+        sites=[CONDOR_POOL],
+        output_site=LOCAL,
+        force=True,
+        submit=True,
+    )
+except PegasusClientError as e:
+    print(e.output)

@@ -36,7 +36,7 @@ else
 fi
 
 #Launch the test
-./run-bamboo-test "$@" | tee $PLANFILE
+./run-bamboo-test "$@" 2>&1 | tee $PLANFILE
 
 STATUS=$?
 if [ $STATUS != 0 ]; then

@@ -68,7 +68,7 @@ public class PegRandom {
         // rounding it off.
         upperIndex += 1;
         value = lowerIndex + ((upperIndex - lowerIndex) * value);
-        val = new Double(value).intValue();
+        val = (int) value;
 
         if (val == upperIndex)
             // get the one lower value

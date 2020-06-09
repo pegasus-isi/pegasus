@@ -38,7 +38,7 @@ pegasus-plan \
     --dir submit \
     --dax dax.xml \
     --sites local \
-    --output-site local \
+    --output-sites local \
     --cleanup leaf
 
 exit $?

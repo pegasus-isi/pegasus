@@ -42,7 +42,7 @@ pegasus-plan \
     --conf ./pegasusrc \
     --sites condorpool \
     --staging-site cartman-data \
-    --output-site local \
+    --output-sites local \
     --dir dags \
     --dax blackdiamond.dax \
     --cluster horizontal \

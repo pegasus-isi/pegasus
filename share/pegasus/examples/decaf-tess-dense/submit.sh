@@ -39,7 +39,7 @@ fi
 
 # plan and submit the  workflow
 pegasus-plan \
-    --conf ./pegasusrc \
+    --conf pegasus.properties \
     --sites condorpool \
     --output-site local \
     --dir dags \

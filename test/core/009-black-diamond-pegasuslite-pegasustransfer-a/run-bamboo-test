@@ -64,7 +64,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
     --staging-site cartman-data \
-    --output-site local \
+    --output-sites local \
     --dir work \
     --cleanup leaf \
     --dax blackdiamond.dax \

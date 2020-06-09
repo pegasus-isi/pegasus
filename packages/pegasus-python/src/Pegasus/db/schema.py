@@ -18,6 +18,7 @@
 __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 __author__ = "Rafael Ferreira da Silva"
+__author__ = "Rajiv Mayani"
 
 import logging
 import time
@@ -27,7 +28,7 @@ from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import foreign, relation
-from sqlalchemy.schema import Column, ForeignKey, Index, MetaData
+from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, UniqueConstraint
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.types import (
     BigInteger,
@@ -68,7 +69,6 @@ __all__ = (
     "DashboardWorkflowstate",
     "Ensemble",
     "EnsembleWorkflow",
-    "Sequence",
     "RCLFN",
     "RCPFN",
     "RCMeta",
@@ -80,7 +80,6 @@ log = logging.getLogger(__name__)
 warnings.filterwarnings("ignore", r".*does \*not\* support Decimal*.")
 
 # These are keywords that all tables should have
-# table_keywords = {"mysql_charset": "latin1", "mysql_engine": "InnoDB"}
 table_keywords = {"mysql_charset": "utf8mb4", "mysql_engine": "InnoDB"}
 
 KeyInteger = BigInteger()
@@ -90,6 +89,7 @@ KeyInteger = KeyInteger.with_variant(sqlite.INTEGER(), "sqlite")
 
 TimestampType = Numeric(precision=16, scale=6)
 DurationType = Numeric(precision=10, scale=3)
+
 
 # --------------------------------------------------------------------
 
@@ -174,7 +174,6 @@ def get_missing_tables(db):
         Ensemble,
         EnsembleWorkflow,
         # JDBCRC
-        Sequence,
         RCLFN,
         RCPFN,
         RCMeta,
@@ -227,7 +226,6 @@ class DBVersion(Base):
     version_number = Column("version_number", Integer, default=5)
     version = Column("version", String(50), nullable=False)
     version_timestamp = Column("version_timestamp", Integer, nullable=False)
-    # sqlite_autoincrement=True,
 
 
 # ---------------------------------------------
@@ -239,7 +237,6 @@ class Workflow(Base):
     """."""
 
     __tablename__ = "workflow"
-    __table_args__ = (table_keywords,)
 
     # ==> Information comes from braindump.txt file
     wf_id = Column("wf_id", KeyInteger, primary_key=True)
@@ -350,7 +347,10 @@ class Workflow(Base):
     )
 
 
-Index("wf_uuid_UNIQUE", Workflow.wf_uuid, unique=True)
+Workflow.__table_args__ = (
+    UniqueConstraint(Workflow.wf_uuid, name="UNIQUE_WF_UUID"),
+    table_keywords,
+)
 
 
 class Workflowstate(Base):
@@ -381,6 +381,9 @@ class Workflowstate(Base):
     reason = Column("reason", Text)
 
 
+Index("workflowstate_timestamp_COL", Workflowstate.timestamp)
+
+
 class WorkflowMeta(Base):
     """."""
 
@@ -397,15 +400,6 @@ class WorkflowMeta(Base):
     value = Column("value", String(255), nullable=False)
 
 
-Index(
-    "UNIQUE_WORKFLOW_META",
-    WorkflowMeta.wf_id,
-    WorkflowMeta.key,
-    WorkflowMeta.value,
-    unique=True,
-)
-
-
 # Host definition
 # ==> Information from kickstart output file
 #
@@ -420,7 +414,6 @@ class Host(Base):
     """."""
 
     __tablename__ = "host"
-    __table_args__ = (table_keywords,)
 
     host_id = Column("host_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -436,19 +429,16 @@ class Host(Base):
     total_memory = Column("total_memory", Integer)
 
 
-Index(
-    "UNIQUE_HOST", Host.wf_id, Host.site, Host.hostname, Host.ip, unique=True,
+Host.__table_args__ = (
+    UniqueConstraint(Host.wf_id, Host.site, Host.hostname, Host.ip, name="UNIQUE_HOST"),
+    table_keywords,
 )
-
-
-# static job table
 
 
 class Job(Base):
     """."""
 
     __tablename__ = "job"
-    __table_args__ = (table_keywords,)
 
     job_id = Column("job_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -485,8 +475,6 @@ class Job(Base):
     task_count = Column("task_count", Integer, nullable=False)
 
     # Relationships
-    # TODO: Add foreign keys, remove primaryjoin and secondaryjoin,
-    # TODO: add passive_deletes=True, and append delete-orphan to cascade
     parents = relation(
         lambda: Job,
         backref="children",
@@ -512,9 +500,12 @@ class Job(Base):
     )
 
 
+Job.__table_args__ = (
+    UniqueConstraint(Job.wf_id, Job.exec_job_id, name="UNIQUE_JOB"),
+    table_keywords,
+)
 Index("job_type_desc_COL", Job.type_desc)
 Index("job_exec_job_id_COL", Job.exec_job_id)
-Index("UNIQUE_JOB", Job.wf_id, Job.exec_job_id, unique=True)
 
 
 class JobEdge(Base):
@@ -537,7 +528,6 @@ class JobInstance(Base):
     """."""
 
     __tablename__ = "job_instance"
-    __table_args__ = (table_keywords,)
 
     job_instance_id = Column("job_instance_id", KeyInteger, primary_key=True)
     job_id = Column(
@@ -611,10 +601,12 @@ class JobInstance(Base):
     )
 
 
-Index(
-    "UNIQUE_JOB_INSTANCE", JobInstance.job_id, JobInstance.job_submit_seq, unique=True,
+JobInstance.__table_args__ = (
+    UniqueConstraint(
+        JobInstance.job_id, JobInstance.job_submit_seq, name="UNIQUE_JOB_INSTANCE"
+    ),
+    table_keywords,
 )
-
 
 # Jobstate definition
 # ==> Same information that currently goes into jobstate.log file,
@@ -650,11 +642,13 @@ class Jobstate(Base):
     reason = Column("reason", Text)
 
 
+Index("jobstate_jobstate_submit_seq_COL", Jobstate.jobstate_submit_seq)
+
+
 class Tag(Base):
     """."""
 
     __tablename__ = "tag"
-    __table_args__ = (table_keywords,)
 
     tag_id = Column("tag_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -673,14 +667,16 @@ class Tag(Base):
     count = Column("count", Integer, nullable=False)
 
 
-Index("UNIQUE_TAG", Tag.job_instance_id, Tag.wf_id, unique=True)
+Tag.__table_args__ = (
+    UniqueConstraint(Tag.wf_id, Tag.job_instance_id, name="UNIQUE_TAG"),
+    table_keywords,
+)
 
 
 class Task(Base):
     """."""
 
     __tablename__ = "task"
-    __table_args__ = (table_keywords,)
 
     task_id = Column("task_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -696,8 +692,6 @@ class Task(Base):
     type_desc = Column("type_desc", String(255), nullable=False)
 
     # Relationships
-    # TODO: Add foreign keys, remove primaryjoin and secondaryjoin,
-    # TODO: add passive_deletes=True, and append delete-orphan to cascade
     parents = relation(
         lambda: Task,
         backref="children",
@@ -732,9 +726,12 @@ class Task(Base):
     )
 
 
+Task.__table_args__ = (
+    UniqueConstraint(Task.wf_id, Task.abs_task_id, name="UNIQUE_TASK"),
+    table_keywords,
+)
 Index("task_abs_task_id_COL", Task.abs_task_id)
 Index("task_wf_id_COL", Task.wf_id)
-Index("UNIQUE_TASK", Task.wf_id, Task.abs_task_id, unique=True)
 
 
 class TaskEdge(Base):
@@ -769,16 +766,10 @@ class TaskMeta(Base):
     value = Column("value", String(255), nullable=False)
 
 
-Index(
-    "UNIQUE_TASK_META", TaskMeta.task_id, TaskMeta.key, TaskMeta.value, unique=True,
-)
-
-
 class Invocation(Base):
     """."""
 
     __tablename__ = "invocation"
-    __table_args__ = (table_keywords,)
 
     invocation_id = Column("invocation_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -806,21 +797,20 @@ class Invocation(Base):
     abs_task_id = Column("abs_task_id", String(255))
 
 
+Invocation.__table_args__ = (
+    UniqueConstraint(
+        Invocation.job_instance_id, Invocation.task_submit_seq, name="UNIQUE_INVOCATION"
+    ),
+    table_keywords,
+)
 Index("invoc_abs_task_id_COL", Invocation.abs_task_id)
 Index("invoc_wf_id_COL", Invocation.wf_id)
-Index(
-    "UNIQUE_INVOCATION",
-    Invocation.job_instance_id,
-    Invocation.task_submit_seq,
-    unique=True,
-)
 
 
 class IntegrityMetrics(Base):
     """."""
 
     __tablename__ = "integrity"
-    __table_args__ = (table_keywords,)
 
     integrity_id = Column("integrity_id", KeyInteger, primary_key=True)
     wf_id = Column(
@@ -845,12 +835,14 @@ class IntegrityMetrics(Base):
     duration = Column("duration", DurationType, nullable=False)
 
 
-Index(
-    "UNIQUE_INTEGRITY",
-    IntegrityMetrics.job_instance_id,
-    IntegrityMetrics.type,
-    IntegrityMetrics.file_type,
-    unique=True,
+IntegrityMetrics.__table_args__ = (
+    UniqueConstraint(
+        IntegrityMetrics.job_instance_id,
+        IntegrityMetrics.type,
+        IntegrityMetrics.file_type,
+        name="UNIQUE_INTEGRITY",
+    ),
+    table_keywords,
 )
 
 
@@ -859,21 +851,10 @@ Index(
 # ---------------------------------------------
 
 
-class Sequence(Base):
-    """."""
-
-    __tablename__ = "sequences"
-    __table_args__ = (table_keywords,)
-
-    name = Column("name", String(32), primary_key=True)
-    currval = Column("currval", BigInteger, nullable=False)
-
-
 class RCLFN(Base):
     """."""
 
     __tablename__ = "rc_lfn"
-    __table_args__ = (table_keywords,)
 
     lfn_id = Column("lfn_id", KeyInteger, primary_key=True)
     lfn = Column("lfn", String(245), nullable=False)
@@ -893,14 +874,16 @@ class RCLFN(Base):
     )
 
 
-Index("ix_rc_lfn", RCLFN.lfn, unique=True)
+RCLFN.__table_args__ = (
+    UniqueConstraint(RCLFN.lfn, name="UNIQUE_LFN"),
+    table_keywords,
+)
 
 
 class RCPFN(Base):
     """."""
 
     __tablename__ = "rc_pfn"
-    __table_args__ = (table_keywords,)
 
     pfn_id = Column("pfn_id", KeyInteger, primary_key=True)
     lfn_id = Column(
@@ -913,7 +896,10 @@ class RCPFN(Base):
     site = Column("site", String(245))
 
 
-Index("UNIQUE_PFN", RCPFN.lfn_id, RCPFN.pfn, RCPFN.site, unique=True)
+RCPFN.__table_args__ = (
+    UniqueConstraint(RCPFN.lfn_id, RCPFN.pfn, RCPFN.site, name="UNIQUE_PFN"),
+    table_keywords,
+)
 
 
 class RCMeta(Base):
@@ -974,7 +960,6 @@ class DashboardWorkflow(Base):
     """."""
 
     __tablename__ = "master_workflow"
-    __table_args__ = (table_keywords,)
 
     # ==> Information comes from braindump.txt file
     wf_id = Column("wf_id", KeyInteger, primary_key=True)
@@ -1002,7 +987,10 @@ class DashboardWorkflow(Base):
     )
 
 
-Index("UNIQUE_MASTER_WF_UUID", DashboardWorkflow.wf_uuid, unique=True)
+DashboardWorkflow.__table_args__ = (
+    UniqueConstraint(DashboardWorkflow.wf_uuid, name="UNIQUE_MASTER_WF_UUID"),
+    table_keywords,
+)
 
 
 class DashboardWorkflowstate(Base):
@@ -1040,7 +1028,6 @@ class Ensemble(Base):
     """."""
 
     __tablename__ = "ensemble"
-    __table_args__ = (table_keywords,)
 
     id = Column("id", KeyInteger, primary_key=True)
     name = Column("name", String(100), nullable=False)
@@ -1054,16 +1041,21 @@ class Ensemble(Base):
     username = Column("username", String(100), nullable=False)
 
 
-Index("UNIQUE_ENSEMBLE", Ensemble.username, Ensemble.name)
+Ensemble.__table_args__ = (
+    UniqueConstraint(Ensemble.name, Ensemble.username, name="UNIQUE_ENSEMBLE"),
+    table_keywords,
+)
 
 
 class EnsembleWorkflow(Base):
     """."""
 
     __tablename__ = "ensemble_workflow"
-    __table_args__ = (table_keywords,)
 
     id = Column("id", KeyInteger, primary_key=True)
+    ensemble_id = Column(
+        "ensemble_id", KeyInteger, ForeignKey(Ensemble.id), nullable=False
+    )
     name = Column("name", String(100), nullable=False)
     basedir = Column("basedir", String(512), nullable=False)
     created = Column("created", DateTime, nullable=False)
@@ -1079,17 +1071,16 @@ class EnsembleWorkflow(Base):
     plan_command = Column(
         "plan_command", String(1024), nullable=False, default="./plan.sh"
     )
-    ensemble_id = Column(
-        "ensemble_id", KeyInteger, ForeignKey(Ensemble.id), nullable=False
-    )
 
-    # Relationsips
+    # Relationships
     ensemble = relation(Ensemble, backref="workflows")
 
 
-Index(
-    "UNIQUE_ENSEMBLE_WORKFLOW",
-    EnsembleWorkflow.ensemble_id,
-    EnsembleWorkflow.name,
-    unique=True,
+EnsembleWorkflow.__table_args__ = (
+    UniqueConstraint(
+        EnsembleWorkflow.ensemble_id,
+        EnsembleWorkflow.name,
+        name="UNIQUE_ENSEMBLE_WORKFLOW",
+    ),
+    table_keywords,
 )

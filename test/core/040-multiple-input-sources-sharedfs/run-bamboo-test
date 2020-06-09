@@ -56,7 +56,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
-    --output-site local \
+    --output-sites local \
     --dir work \
     --dax blackdiamond.dax  | tee $TOPDIR/plan.out
 

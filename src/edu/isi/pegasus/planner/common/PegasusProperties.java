@@ -1522,12 +1522,12 @@ public class PegasusProperties implements Cloneable {
      * @see #DEFAULT_INVOKE_LENGTH
      */
     public long getGridStartInvokeLength() {
-        long value = new Long(this.DEFAULT_INVOKE_LENGTH).longValue();
+        long value = Long.parseLong(this.DEFAULT_INVOKE_LENGTH);
 
         String st =
                 mProps.getProperty("pegasus.gridstart.invoke.length", this.DEFAULT_INVOKE_LENGTH);
         try {
-            value = new Long(st).longValue();
+            value = Long.parseLong(st);
         } catch (Exception e) {
             // ignore malformed values from
             // the property file

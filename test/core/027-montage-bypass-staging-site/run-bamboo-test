@@ -84,7 +84,7 @@ pegasus-plan \
         --dax data/montage.dax \
         --sites CCG \
         --staging-site CCGData \
-        --output-site local \
+        --output-sites local \
         --cluster horizontal \
         | tee $TOP_DIR/plan.out
 

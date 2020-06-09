@@ -95,7 +95,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites local \
-    --output-site local \
+    --output-sites local \
     --dir work \
     --cleanup leaf \
     --cluster horizontal \

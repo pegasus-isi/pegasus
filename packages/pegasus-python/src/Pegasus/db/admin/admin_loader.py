@@ -39,8 +39,8 @@ log = logging.getLogger(__name__)
 # -------------------------------------------------------------------
 # DB Admin configuration
 # -------------------------------------------------------------------
-CURRENT_DB_VERSION = 11
-DB_MIN_VERSION = 6
+CURRENT_DB_VERSION = 12
+DB_MIN_VERSION = 8
 
 COMPATIBILITY = {
     "4.3.0": 1,
@@ -67,7 +67,7 @@ COMPATIBILITY = {
     "4.9.1": 11,
     "4.9.2": 11,
     "4.9.3": 11,
-    "5.0.0": 11,
+    "5.0.0": 12,
 }
 
 
@@ -213,13 +213,12 @@ def db_create(
         )
 
     try:
-        metadata.create_all(engine)
+        metadata.create_all(engine, checkfirst=True)
     except OperationalError as e:
         raise DBAdminError(e, db=db, given_version=pegasus_version)
 
     if verbose and v > 0:
         print("Your database has been updated.")
-        log.debug("V: %s" % v)
 
     print_db_version(print_version, v if v > 0 else CURRENT_DB_VERSION, db, parse=True)
 

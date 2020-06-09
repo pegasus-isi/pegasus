@@ -10,6 +10,12 @@ from typing import Dict, List
 
 from Pegasus import yaml
 
+# Set log formatting s.t. only messages are shown. Output from pegasus
+# commands will already contain log level categories so it isn't necessary
+# in these logs.
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter("%(message)s"))
+
 
 class PegasusClientError(Exception):
     """Exception raised when an invoked pegasus command line tool returns non 0"""
@@ -41,7 +47,10 @@ class Client:
     """
 
     def __init__(self, pegasus_home: str):
-        self._log = logging.getLogger(__name__)
+        self._log = logging.getLogger("pegasus.client")
+        self._log.addHandler(console_handler)
+        self._log.propagate = False
+
         self._pegasus_home = pegasus_home
 
         base = path.normpath(path.join(pegasus_home, "bin"))
@@ -368,7 +377,10 @@ class Client:
 
 class Workflow:
     def __init__(self, submit_dir: str, client: Client = None):
-        self._log = logging.getLogger(__name__)
+        self._log = logging.getLogger("pegasus.client.workflow")
+        self._log.addHandler(console_handler)
+        self._log.propagate = False
+
         self._client = None
         self._submit_dir = submit_dir
         self.client = client or from_env()

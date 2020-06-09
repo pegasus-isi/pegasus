@@ -8,6 +8,8 @@ from datetime import datetime
 
 from Pegasus.api import *
 
+logging.basicConfig(level=logging.DEBUG)
+
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "023-sc4-ssh-http-" + datetime.now().strftime("%s")
 TOP_DIR = Path.cwd()

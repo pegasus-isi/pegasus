@@ -818,7 +818,7 @@ public class PlannerOptions extends Data implements Cloneable {
                 (level != null && level.length() > 0)
                         ?
                         // the value that was passed by the user
-                        new Integer(level).intValue()
+                        Integer.parseInt(level)
                         :
                         // by default not setting it to 0,
                         // but to 1, as --verbose is an optional
@@ -1255,7 +1255,7 @@ public class PlannerOptions extends Data implements Cloneable {
         }
         // specify the output site
         if (!mOutputSites.isEmpty()) {
-            sb.append(" --output-site ");
+            sb.append(" --output-sites ");
             // generate the comma separated string
             // for the execution pools
             sb.append(setToString(mOutputSites, ","));

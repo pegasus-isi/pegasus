@@ -88,7 +88,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
-    --output-site local \
+    --output-sites local \
     --dir work \
     --cluster horizontal \
     --dax blackdiamond.dax  | tee plan.out

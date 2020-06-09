@@ -60,7 +60,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
     --staging-site staging \
-    --output-site local \
+    --output-sites local \
     --dir work \
     --dax blackdiamond.dax  | tee $TOPDIR/plan.out
 

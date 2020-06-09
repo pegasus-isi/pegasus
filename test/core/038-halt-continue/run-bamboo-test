@@ -81,7 +81,7 @@ pegasus-plan \
     --sites condorpool \
     --staging-site local \
     --dir work \
-    --output-site local \
+    --output-sites local \
     --cleanup leaf \
     --dax top.dax \
     --submit | tee plan.out
