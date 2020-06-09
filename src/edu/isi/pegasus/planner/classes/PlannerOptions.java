@@ -1309,9 +1309,6 @@ public class PlannerOptions extends Data implements Cloneable {
             }
         }
 
-        // specify the vogroup
-        sb.append(" --group ").append(mVOGroup);
-
         // specify the number of times to try rescue
         // only if it does not match the default value!
         if (this.getNumberOfRescueTries() != PlannerOptions.DEFAULT_NUMBER_OF_RESCUE_TRIES) {
