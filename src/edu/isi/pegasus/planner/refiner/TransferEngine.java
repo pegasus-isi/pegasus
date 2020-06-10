@@ -933,21 +933,6 @@ public class TransferEngine extends Engine {
 
             String sourceURI = null;
 
-            // PM-590 Stricter checks
-            /* PM-833
-            String thirdPartyDestPutURI = this.getURLOnSharedScratch( destSite, job, OPERATION.put, null );
-
-
-            //definite inconsitency as url prefix and mount point
-            //are not picked up from the same server
-            boolean localTransfer = runTransferOnLocalSite( destSite, thirdPartyDestPutURI, Job.INTER_POOL_JOB );
-            String destURI = localTransfer ?
-                //construct for third party transfer
-                thirdPartyDestPutURI :
-                //construct for normal transfer
-                "file://" + mSiteStore.getInternalWorkDirectory( destSiteHandle, destRemoteDir );
-            */
-
             for (Iterator fileIt = pJob.getOutputFiles().iterator(); fileIt.hasNext(); ) {
                 PegasusFile pf = (PegasusFile) fileIt.next();
                 String outFile = pf.getLFN();
@@ -994,6 +979,23 @@ public class TransferEngine extends Engine {
                     // only the destination is tracked as source will have been
                     // tracked for the parent jobs
                     trackInPlannerCache(outFile, thirdPartyDestPutURL, destSiteHandle);
+
+                    if (pJob instanceof DAXJob) {
+                        // PM-1608 we don't create inter site transfers instead we need
+                        // to create an output map for the sub workflow referred to by the dax job
+                        // the output map should transfer files to the staging site of the compute
+                        // job in question. we log in the output map file for the DAX job
+                        mLogger.log(
+                                "Parent DAX job "
+                                        + pJob.getID()
+                                        + " will transfer output file to "
+                                        + ft.getDestURL()
+                                        + " which is required by "
+                                        + job.getID(),
+                                LogManager.DEBUG_MESSAGE_LEVEL);
+                        ((DAXJob) pJob).addOutputFileLocation(mBag, ft);
+                        continue;
+                    }
 
                     // in the workflow cache we track the get URL for the outfile
                     String thirdPartyDestGetURL =

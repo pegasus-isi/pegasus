@@ -285,6 +285,9 @@ public class SUBDAXGenerator {
         // convert the args to pegasus-plan options
         PlannerOptions options = new CPlanner(mLogger).parseCommandLineArguments(args, false);
 
+        // PM-1608 close and flush out output map file
+        ((DAXJob) job).closeOutputMapper();
+
         // figure out the label and index for SUBDAX
         String label = null;
         String index = null;

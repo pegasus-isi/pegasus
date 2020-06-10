@@ -13,6 +13,10 @@
  */
 package edu.isi.pegasus.planner.classes;
 
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+
 /**
  * This is a data class that stores the contents of the DAX job in a DAX conforming to schema 3.0 or
  * higher.
@@ -25,6 +29,15 @@ public class DAXJob extends Job {
     /** The prefix to be attached for the DAX jobs */
     public static final String JOB_PREFIX = "subdax_";
 
+    /**
+     * The name of the Replica Catalog Implementer that is used to write out the output ma file in
+     * the submit directory.
+     */
+    public static final String OUTPUT_MAPPER_IMPLEMENTOR = "FlushedCache";
+
+    /** suffix to use for generating the output file map */
+    private static final String OUTPUT_MAP_SUFFIX = ".output.map";
+
     /** The DAX LFN. */
     private String mDAXLFN;
 
@@ -33,6 +46,15 @@ public class DAXJob extends Job {
 
     /** The directory in which the DAX needs to execute. */
     private String mDirectory;
+
+    /**
+     * Handle to the to the backend that serves as an output mapper for the sub workflow that is run
+     * as a result of executing this DAXJob
+     */
+    private ReplicaCatalog mOutputMapperBackend;
+
+    /** The corresponding backend path */
+    private String mOutputMapperBackendPath;
 
     /** The default constructor. */
     public DAXJob() {
@@ -91,6 +113,23 @@ public class DAXJob extends Job {
     }
 
     /**
+     * Add an output file location into the output mapper backend.
+     *
+     * @param bag
+     * @param ft
+     * @return
+     */
+    public boolean addOutputFileLocation(PegasusBag bag, FileTransfer ft) {
+        // check if the backend is initialized
+        if (this.mOutputMapperBackend == null) {
+            intializeOutputMapperBackend(bag);
+        }
+        NameValue nv = ft.getDestURL();
+        int result = this.mOutputMapperBackend.insert(ft.getLFN(), nv.getValue(), nv.getKey());
+        return result == 1;
+    }
+
+    /**
      * Generates a name for the job that serves as the primary id for the job
      *
      * @param prefix any prefix that needs to be applied while constructing the job name
@@ -143,6 +182,15 @@ public class DAXJob extends Job {
     }
 
     /**
+     * Returns the relative file path to the associated output mapper backend
+     *
+     * @return
+     */
+    public String getOutputMapperBackendPath() {
+        return mOutputMapperBackendPath;
+    }
+
+    /**
      * Returns a textual description of the DAX Job.
      *
      * @return the textual description.
@@ -165,5 +213,43 @@ public class DAXJob extends Job {
         newJob.setDAXFile(this.getDAXFile());
         newJob.setDirectory(this.getDirectory());
         return newJob;
+    }
+
+    /** Close any output mapper associated with the file */
+    public void closeOutputMapper() {
+        if (this.mOutputMapperBackend != null) {
+            this.mOutputMapperBackend.close();
+        }
+    }
+
+    /**
+     * Initializes the output map file for the DAX job
+     *
+     * @param bag
+     */
+    private void intializeOutputMapperBackend(PegasusBag bag) {
+        this.mOutputMapperBackendPath =
+                this.getFileFullPath(
+                        bag.getPlannerOptions().getSubmitDirectory(), DAXJob.OUTPUT_MAP_SUFFIX);
+
+        PegasusBag b = new PegasusBag();
+        b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
+
+        // set the properties for initialization
+        PegasusProperties p = PegasusProperties.nonSingletonInstance();
+        // set the appropriate property to designate path to file
+        p.setProperty(ReplicaCatalog.c_prefix, OUTPUT_MAPPER_IMPLEMENTOR);
+        p.setProperty(
+                ReplicaCatalog.c_prefix + "." + ReplicaCatalog.FILE_KEY, mOutputMapperBackendPath);
+
+        b.add(PegasusBag.PEGASUS_PROPERTIES, p);
+        try {
+            mOutputMapperBackend = ReplicaFactory.loadInstance(b);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Unable to initialize job output mapper in the Submit Directory  "
+                            + mOutputMapperBackendPath,
+                    e);
+        }
     }
 }
