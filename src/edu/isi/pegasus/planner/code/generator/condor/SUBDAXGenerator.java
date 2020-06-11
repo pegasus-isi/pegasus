@@ -285,9 +285,6 @@ public class SUBDAXGenerator {
         // convert the args to pegasus-plan options
         PlannerOptions options = new CPlanner(mLogger).parseCommandLineArguments(args, false);
 
-        // PM-1608 close and flush out output map file
-        ((DAXJob) job).closeOutputMapper();
-
         // figure out the label and index for SUBDAX
         String label = null;
         String index = null;
@@ -381,6 +378,14 @@ public class SUBDAXGenerator {
                     "Setting list of execution sites to the same as outer workflow",
                     LogManager.DEBUG_MESSAGE_LEVEL);
             options.getExecutionSites().addAll(mPegasusPlanOptions.getExecutionSites());
+        }
+
+        String outputMap = ((DAXJob) job).getOutputMapperBackendPath();
+        if (outputMap != null) {
+            // PM-1608 set up option for output-map is required
+            options.setOutputMap(outputMap);
+            // PM-1608 close and flush out output map file
+            ((DAXJob) job).closeOutputMapper();
         }
 
         // we propogate force-replan  if set in outer level workflow
