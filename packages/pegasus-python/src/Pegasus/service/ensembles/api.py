@@ -4,7 +4,7 @@ JSON_HEADERS = {"Content-Type": "application/json"}
 
 
 def json_api_error(e):
-    response = {"message": e.message}
+    response = {"message": str(e)}
     status_code = 500
     if hasattr(e, "status_code"):
         status_code = e.status_code
