@@ -757,7 +757,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSnzVr::D:d:s:o:O:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
+                        "vqhfSzVr::D:d:s:o:O:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -860,13 +860,6 @@ public class CPlanner extends Executable {
 
                 case 'j': // job-prefix
                     options.setJobnamePrefix(g.getOptarg());
-                    break;
-
-                case 'n': // nocleanup option
-                    mLogger.log(
-                            "--nocleanup option is deprecated. Use --cleanup none  ",
-                            LogManager.WARNING_MESSAGE_LEVEL);
-                    options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.none);
                     break;
 
                 case 'o': // output-site
@@ -1148,7 +1141,6 @@ public class CPlanner extends Executable {
                 // workflows before triggering re-planning" +
                 append(
                         "\n                    can optionally specify the basename of the remote directories")
-                .append("\n -n |--nocleanup    deprecated option. use --cleanup none instead")
                 .append("\n -S |--submit       submit the executable workflow generated")
                 .append(
                         "\n --staging-site     comma separated list of key=value pairs, where key is the execution site and value is the staging site")
