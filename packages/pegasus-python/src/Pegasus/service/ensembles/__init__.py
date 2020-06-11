@@ -13,4 +13,4 @@ if os.path.isfile(conf):
     emapp.config.from_pyfile(conf)
 del conf
 
-from Pegasus.service.ensembles import api, views, auth  # noqa: E402,F401 isort:skip
+from Pegasus.service.ensembles import api, views # noqa: E402,F401 isort:skip
