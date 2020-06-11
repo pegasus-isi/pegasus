@@ -757,7 +757,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSzVr::D:d:s:o:O:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
+                        "vqhfSzVr::D:d:s:o:O:m:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -869,7 +869,11 @@ public class CPlanner extends Executable {
                 case 'O': // output-dir
                     options.setOutputDirectory(g.getOptarg());
                     break;
-
+                
+                case 'm': // output-map
+                    options.setOutputMap(g.getOptarg());
+                    break;
+                    
                 case 'q': // quiet
                     options.decrementLogging();
                     break;
@@ -1011,7 +1015,7 @@ public class CPlanner extends Executable {
      * @return array of <code>LongOpt</code> objects , corresponding to the valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[29];
+        LongOpt[] longopts = new LongOpt[30];
 
         longopts[0] = new LongOpt("dir", LongOpt.REQUIRED_ARGUMENT, null, '8');
         longopts[1] = new LongOpt("dax", LongOpt.REQUIRED_ARGUMENT, null, 'd');
@@ -1043,7 +1047,8 @@ public class CPlanner extends Executable {
         longopts[25] = new LongOpt("input-dir", LongOpt.REQUIRED_ARGUMENT, null, 'I');
         longopts[26] = new LongOpt("output-dir", LongOpt.REQUIRED_ARGUMENT, null, 'O');
         longopts[27] = new LongOpt("output-sites", LongOpt.REQUIRED_ARGUMENT, null, 'o');
-        longopts[28] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
+        longopts[28] = new LongOpt("output-map", LongOpt.REQUIRED_ARGUMENT, null, 'm');
+        longopts[29] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
         return longopts;
     }
 

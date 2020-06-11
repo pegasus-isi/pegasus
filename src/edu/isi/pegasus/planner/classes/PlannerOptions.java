@@ -186,6 +186,9 @@ public class PlannerOptions extends Data implements Cloneable {
     /** The conf option passed to the planner pointing to the properties file. */
     private String mConfFile;
 
+    /** output map file of where outputs are required **/
+    private String mOutputMap;
+    
     /** Default Constructor. */
     public PlannerOptions() {
         //        mSubmitFileDir    = ".";
@@ -222,6 +225,7 @@ public class PlannerOptions extends Data implements Cloneable {
         mStagingSitesMap = new HashMap<String, String>();
         mInputDirs = new LinkedHashSet<String>();
         mOutputDir = null;
+        mOutputMap = null;
         mConfFile = null;
     }
 
@@ -393,6 +397,16 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public Collection<String> getOutputSites() {
         return mOutputSites;
+    }
+    
+    /**
+     * Returns the path to the output map file that lists where some outputs need to be
+     * placed. 
+     * 
+     * @return map file 
+     */
+    public String getOutputMap() {
+        return this.mOutputMap;
     }
 
     /**
@@ -870,6 +884,16 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
+     * Sets the path to the output map file that lists where some outputs need to be
+     * placed. 
+     * 
+     * @param map 
+     */
+    public void setOutputMap(String map) {
+        this.mOutputMap = map;
+    }
+    
+    /**
      * Sets the output site specified by the user.
      *
      * @param site the output site.
@@ -1147,6 +1171,8 @@ public class PlannerOptions extends Data implements Cloneable {
                         + this.setToString(mInputDirs, ",")
                         + "\n Output Directory     "
                         + this.mOutputDir
+                        + "\n Output Map     "
+                        + this.mOutputMap
                         + "\n Output Sites          "
                         + this.setToString(mOutputSites, ",")
                         + "\n Submit to HTCondor Schedd    "
@@ -1253,6 +1279,12 @@ public class PlannerOptions extends Data implements Cloneable {
         if (this.mOutputDir != null) {
             sb.append(" --output-dir ").append(this.mOutputDir);
         }
+        
+        // specify the output directory
+        if (this.mOutputMap != null) {
+            sb.append(" --output-map ").append(this.mOutputMap);
+        }
+        
         // specify the output site
         if (!mOutputSites.isEmpty()) {
             sb.append(" --output-sites ");
@@ -1416,6 +1448,7 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mNonStandardJavaOptions = cloneSet(this.mNonStandardJavaOptions);
         pOpt.mInputDirs = cloneSet(this.mInputDirs);
         pOpt.mOutputDir = this.mOutputDir;
+        pOpt.mOutputMap = this.mOutputMap;
         pOpt.mOutputSites = cloneSet(this.mOutputSites);
         pOpt.mDisplayHelp = this.mDisplayHelp;
         pOpt.mLoggingLevel = this.mLoggingLevel;
