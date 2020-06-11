@@ -186,9 +186,9 @@ public class PlannerOptions extends Data implements Cloneable {
     /** The conf option passed to the planner pointing to the properties file. */
     private String mConfFile;
 
-    /** output map file of where outputs are required **/
+    /** output map file of where outputs are required * */
     private String mOutputMap;
-    
+
     /** Default Constructor. */
     public PlannerOptions() {
         //        mSubmitFileDir    = ".";
@@ -398,12 +398,11 @@ public class PlannerOptions extends Data implements Cloneable {
     public Collection<String> getOutputSites() {
         return mOutputSites;
     }
-    
+
     /**
-     * Returns the path to the output map file that lists where some outputs need to be
-     * placed. 
-     * 
-     * @return map file 
+     * Returns the path to the output map file that lists where some outputs need to be placed.
+     *
+     * @return map file
      */
     public String getOutputMap() {
         return this.mOutputMap;
@@ -884,15 +883,14 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
-     * Sets the path to the output map file that lists where some outputs need to be
-     * placed. 
-     * 
-     * @param map 
+     * Sets the path to the output map file that lists where some outputs need to be placed.
+     *
+     * @param map
      */
     public void setOutputMap(String map) {
         this.mOutputMap = map;
     }
-    
+
     /**
      * Sets the output site specified by the user.
      *
@@ -1279,12 +1277,12 @@ public class PlannerOptions extends Data implements Cloneable {
         if (this.mOutputDir != null) {
             sb.append(" --output-dir ").append(this.mOutputDir);
         }
-        
+
         // specify the output directory
         if (this.mOutputMap != null) {
             sb.append(" --output-map ").append(this.mOutputMap);
         }
-        
+
         // specify the output site
         if (!mOutputSites.isEmpty()) {
             sb.append(" --output-sites ");
