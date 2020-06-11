@@ -373,6 +373,12 @@ public class CPlanner extends Executable {
             return result;
         }
 
+        // output-map is only supported for hierarchal workflows and an internal option
+        if (options.getOutputMap() != null && !options.partOfDeferredRun()) {
+            throw new RuntimeException(
+                    "output map option is only for internal use for hierarchal worfklows");
+        }
+
         // try to get hold of the vds properties
         // set in the jvm that user specifed at command line
         mPOptions.setVDSProperties(mProps.getMatchingProperties("pegasus.", false));
@@ -869,11 +875,11 @@ public class CPlanner extends Executable {
                 case 'O': // output-dir
                     options.setOutputDirectory(g.getOptarg());
                     break;
-                
+
                 case 'm': // output-map
                     options.setOutputMap(g.getOptarg());
                     break;
-                    
+
                 case 'q': // quiet
                     options.decrementLogging();
                     break;
