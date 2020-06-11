@@ -454,7 +454,14 @@ public class TransferEngine extends Engine {
                         runTransferOnLocalSite(
                                 stagingSite, stagingSiteURLPrefix, Job.STAGE_OUT_JOB);
                 Collection<FileTransfer> transfersToOutputSites = new LinkedList();
-                for (String outputSite : this.mOutputSites) {
+                Set<String> outputSites = new HashSet();
+                outputSites.addAll(this.mOutputSites);
+                if (this.mParentScratchOutputMapper != null) {
+                    // PM-1608 special null site notation to indicate that mapper should return
+                    // locations of files without matching on site name
+                    outputSites.add(null);
+                }
+                for (String outputSite : outputSites) {
                     transfersToOutputSites.addAll(getFileTX(outputSite, currentJob, localTransfer));
                 }
                 mTXRefiner.addStageOutXFERNodes(
@@ -687,11 +694,16 @@ public class TransferEngine extends Engine {
         // check if there is a remote initialdir set
         String path = job.vdsNS.getStringValue(Pegasus.REMOTE_INITIALDIR_KEY);
 
+        OutputMapper m =
+                destPool == null
+                        ? this.mParentScratchOutputMapper // the one specified on command line
+                        : this.mOutputMapper;
+
         for (Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String file = pf.getLFN();
 
-            FileTransfer ft = this.constructFileTX(pf, job, destPool, path, localTransfer);
+            FileTransfer ft = this.constructFileTX(pf, job, m, destPool, path, localTransfer);
 
             if (ft != null) {
                 if (this.mDoIntegrityChecking
@@ -718,16 +730,21 @@ public class TransferEngine extends Engine {
      * execution directory, as this is the entry that has to be registered in the ReplicaMechanism
      *
      * @param pf the PegasusFile for which the transfer has to be done.
-     * @param stagingSiteHandle the staging site at which file is placed after execution.
-     * @param destSiteHandle the output pool where the job should be transferred
      * @param job the name of the associated job.
+     * @param outputMapper the outputMapper to use to map the output file locations
+     * @param destSiteHandle the output pool where the job should be transferred
      * @param path the path that a user specifies in the profile for key remote_initialdir that
      *     results in the workdir being changed for a job on a execution pool.
      * @param localTransfer boolean indicating that associated transfer job will run on local site.
      * @return the corresponding FileTransfer object
      */
     private FileTransfer constructFileTX(
-            PegasusFile pf, Job job, String destSiteHandle, String path, boolean localTransfer) {
+            PegasusFile pf,
+            Job job,
+            OutputMapper outputMapper,
+            String destSiteHandle,
+            String path,
+            boolean localTransfer) {
 
         String stagingSiteHandle = job.getStagingSiteHandle();
         String lfn = pf.getLFN();
@@ -735,7 +752,8 @@ public class TransferEngine extends Engine {
 
         SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
         SiteCatalogEntry destinationSite = mSiteStore.lookup(destSiteHandle);
-        if (stagingSite == null || destinationSite == null) {
+        boolean transferToParentScratch = destSiteHandle == null;
+        if (stagingSite == null || (destinationSite == null && destSiteHandle != null)) {
             mLogMsg =
                     (stagingSite == null)
                             ? this.poolNotFoundMsg(stagingSiteHandle, "vanilla")
@@ -753,10 +771,13 @@ public class TransferEngine extends Engine {
         String sharedScratchPutURL =
                 this.getURLOnSharedScratch(stagingSite, job, OPERATION.put, addOn, lfn);
 
-        // in the planner cache we track the output files put url on staging site
-        trackInPlannerCache(lfn, sharedScratchPutURL, stagingSiteHandle);
-        // in the workflow cache we track the output files put url on staging site
-        trackInWorkflowCache(lfn, sharedScratchGetURL, stagingSiteHandle);
+        // we dont track URL's when we are using the output-map specified on cmd line
+        if (!transferToParentScratch) {
+            // in the planner cache we track the output files put url on staging site
+            trackInPlannerCache(lfn, sharedScratchPutURL, stagingSiteHandle);
+            // in the workflow cache we track the output files put url on staging site
+            trackInWorkflowCache(lfn, sharedScratchGetURL, stagingSiteHandle);
+        }
 
         // if both transfer and registration
         // are transient return null
@@ -816,21 +837,7 @@ public class TransferEngine extends Engine {
             ft.setMetadata(pf.getAllMetadata());
             ft.setType(pf.getType());
 
-            // add all the possible destination urls iterating through
-            // the list of grid ftp servers associated with the dest pool.
-            /*
-                        Directory storageDirectory = mSiteStore.lookup( destSiteHandle ).getHeadNodeStorageDirectory();
-                        if( storageDirectory == null ){
-                            throw new RuntimeException( "No Storage directory specified for site " + destSiteHandle );
-                        }
-
-                        //sanity check
-                        if( !storageDirectory.hasFileServerForPUTOperations() ){
-                            //no file servers for put operations
-                            throw new RuntimeException( " No File Servers specified for PUT Operation on Shared Storage on Headnode for site " + destSiteHandle );
-                        }
-            */
-            for (String destURL : mOutputMapper.mapAll(lfn, destSiteHandle, OPERATION.put)) {
+            for (String destURL : outputMapper.mapAll(lfn, destSiteHandle, OPERATION.put)) {
                 // if the paths match of dest URI
                 // and execDirURL we return null
                 if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
@@ -847,7 +854,7 @@ public class TransferEngine extends Engine {
 
             // construct a registration URL
             ft.setURLForRegistrationOnDestination(
-                    mOutputMapper.map(lfn, destSiteHandle, FileServer.OPERATION.get, true));
+                    outputMapper.map(lfn, destSiteHandle, FileServer.OPERATION.get, true));
         }
 
         return ft;
