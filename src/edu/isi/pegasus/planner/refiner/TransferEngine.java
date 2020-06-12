@@ -908,23 +908,20 @@ public class TransferEngine extends Engine {
         ft.setMetadata(pf.getAllMetadata());
         ft.setType(pf.getType());
 
-        for (String destURL : this.mParentScratchOutputMapper.mapAll(lfn, null, OPERATION.put)) {
-            if (destURL == null) {
-                return null;
-            }
-            // if the paths match of dest URI
-            // and execDirURL we return null
-            if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
-                /*ft = new FileTransfer(file, job);
-                ft.addSource(stagingSiteHandle, sharedScratchGetURL);*/
-                ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
-                ft.setURLForRegistrationOnDestination(sharedScratchGetURL);
-                // make the transfer transient?
-                ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
-                return ft;
-            }
-            ft.addDestination(null, destURL);
+        String destURL = this.mParentScratchOutputMapper.map(lfn, null, OPERATION.put);
+        if (destURL == null) {
+            return null;
         }
+        // if the paths match of dest URI
+        // and execDirURL we return null
+        if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
+            ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
+            ft.setURLForRegistrationOnDestination(sharedScratchGetURL);
+            // make the transfer transient?
+            ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
+            return ft;
+        }
+        ft.addDestination(null, destURL);
 
         return ft;
     }
