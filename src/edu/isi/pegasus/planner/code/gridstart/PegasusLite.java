@@ -991,7 +991,7 @@ public class PegasusLite implements GridStart {
                     }
                 }
 
-                // PM-1608 any output files associated with the dax job should 
+                // PM-1608 any output files associated with the dax job should
                 // not be transferred in PegasusLite as only the planner is executed
                 // in the prescript
                 if (!outputFiles.isEmpty() && !(job instanceof DAXJob)) {

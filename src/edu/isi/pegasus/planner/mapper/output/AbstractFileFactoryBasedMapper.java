@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
@@ -113,13 +114,15 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
 
     /**
      * Returns the full path on remote output site, where the lfn will reside, using the FileServer
-     * passed. This method creates a new File in the FileFactory space.
+     * passed.This method creates a new File in the FileFactory space.
      *
+     * @param site
      * @param server the file server to use
      * @param addOn the addOn part containing the LFN
-     * @return the URL for the LFN
+     * @return NameValue object with name as site, and value as the URL for the LFN
      */
-    protected String constructURL(FileServer server, String addOn) throws MapperException {
+    protected NameValue constructURL(String site, FileServer server, String addOn)
+            throws MapperException {
         StringBuilder url = new StringBuilder(server.getURL());
 
         // the factory will give us the relative
@@ -132,7 +135,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
         }
         url.append(addOn);
 
-        return url.toString();
+        return new NameValue(site, url.toString());
     }
 
     /**
@@ -144,10 +147,11 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      * @param lfn the lfn
      * @param site the output site
      * @param operation whether we want a GET or a PUT URL
-     * @return the URL to file that was mapped
+     * @return NameValue with name referring to the site and value as externally accessible URL to
+     *     the mapped file
      * @throws MapperException if unable to construct URL for any reason
      */
-    public String map(String lfn, String site, FileServer.OPERATION operation)
+    public NameValue map(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException {
         // in this case we want to create an entry in factory namespace and use that addOn
         return this.map(lfn, site, operation, false);
@@ -162,10 +166,11 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      * @param operation whether we want a GET or a PUT URL
      * @param existing indicates whether to create a new location/placement for a file, or rely on
      *     existing placement on the site.
-     * @return externally accessible URL to the mapped file.
+     * @return NameValue with name referring to the site and value as externally accessible URL to
+     *     the mapped file
      * @throws MapperException if unable to construct URL for any reason
      */
-    public String map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
+    public NameValue map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
             throws MapperException {
         Directory directory =
                 mStageoutDirectoriesStore.containsKey(site)
@@ -180,7 +185,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
         // create a file in the virtual namespace and get the
         // addOn part
         String addOn = this.createAndGetAddOn(lfn, site, existing);
-        return this.constructURL(server, addOn);
+        return this.constructURL(site, server, addOn);
     }
 
     /**
@@ -192,10 +197,11 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      * @param lfn the lfn
      * @param site the output site
      * @param operation whether we want a GET or a PUT URL
-     * @return List of externally accessible URLs to the mapped file.
+     * @return List<NameValue> objects referring to mapped URL's along with their corresponding site
+     *     information
      * @throws MapperException if unable to construct URL for any reason
      */
-    public List<String> mapAll(String lfn, String site, FileServer.OPERATION operation)
+    public List<NameValue> mapAll(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException {
         Directory directory =
                 mStageoutDirectoriesStore.containsKey(site)
@@ -213,7 +219,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
                             + site);
         }
 
-        List<String> urls = new LinkedList();
+        List<NameValue> urls = new LinkedList();
 
         // figure out the addon only once first.
         // the factory will give us the relative
@@ -222,7 +228,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
         for (FileServer.OPERATION op : FileServer.OPERATION.operationsFor(operation)) {
             for (Iterator it = directory.getFileServersIterator(op); it.hasNext(); ) {
                 FileServer fs = (FileServer) it.next();
-                urls.add(this.constructURL(fs, addOn));
+                urls.add(this.constructURL(site, fs, addOn));
             }
         } // end
 

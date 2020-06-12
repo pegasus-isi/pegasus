@@ -572,8 +572,10 @@ public class TransferEngine extends Engine {
                                 + lfn);
             }
 
-            String putDestURL = mOutputMapper.map(lfn, destSite, FileServer.OPERATION.put);
-            String getDestURL = mOutputMapper.map(lfn, destSite, FileServer.OPERATION.get);
+            String putDestURL =
+                    mOutputMapper.map(lfn, destSite, FileServer.OPERATION.put).getValue();
+            String getDestURL =
+                    mOutputMapper.map(lfn, destSite, FileServer.OPERATION.get).getValue();
 
             // selLocs are all the locations found in ReplicaMechanism corr
             // to the pool pool
@@ -831,7 +833,8 @@ public class TransferEngine extends Engine {
             ft.setMetadata(pf.getAllMetadata());
             ft.setType(pf.getType());
 
-            for (String destURL : this.mOutputMapper.mapAll(lfn, destSiteHandle, OPERATION.put)) {
+            for (NameValue nv : this.mOutputMapper.mapAll(lfn, destSiteHandle, OPERATION.put)) {
+                String destURL = nv.getValue();
                 // if the paths match of dest URI
                 // and execDirURL we return null
                 if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
@@ -848,7 +851,9 @@ public class TransferEngine extends Engine {
 
             // construct a registration URL
             ft.setURLForRegistrationOnDestination(
-                    mOutputMapper.map(lfn, destSiteHandle, FileServer.OPERATION.get, true));
+                    mOutputMapper
+                            .map(lfn, destSiteHandle, FileServer.OPERATION.get, true)
+                            .getValue());
         }
 
         return ft;
@@ -908,10 +913,11 @@ public class TransferEngine extends Engine {
         ft.setMetadata(pf.getAllMetadata());
         ft.setType(pf.getType());
 
-        String destURL = this.mParentScratchOutputMapper.map(lfn, null, OPERATION.put);
-        if (destURL == null) {
+        NameValue nv = this.mParentScratchOutputMapper.map(lfn, null, OPERATION.put);
+        if (nv == null) {
             return null;
         }
+        String destURL = nv.getValue();
         // if the paths match of dest URI
         // and execDirURL we return null
         if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
@@ -921,7 +927,7 @@ public class TransferEngine extends Engine {
             ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
             return ft;
         }
-        ft.addDestination(null, destURL);
+        ft.addDestination(nv.getKey(), destURL);
 
         return ft;
     }

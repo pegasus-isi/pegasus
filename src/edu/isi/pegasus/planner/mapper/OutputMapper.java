@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.mapper;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import java.util.List;
 
@@ -26,7 +27,7 @@ import java.util.List;
 public interface OutputMapper extends Mapper {
 
     /** The version of the API of the Output Mapper */
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
 
     /**
      * Initializes the mappers.
@@ -45,11 +46,12 @@ public interface OutputMapper extends Mapper {
      * @param lfn the lfn
      * @param site the output site
      * @param operation whether we want a GET or a PUT URL
-     * @return the URL to file that was mapped
+     * @return NameValue with name referring to the site and value as externally accessible URL to
+     *     the mapped file
      * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
      *     reason
      */
-    public String map(String lfn, String site, FileServer.OPERATION operation)
+    public NameValue map(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException;
 
     /**
@@ -61,11 +63,12 @@ public interface OutputMapper extends Mapper {
      * @param operation whether we want a GET or a PUT URL
      * @param existing indicates whether to create a new location/placement for a file, or rely on
      *     existing placement on the site.
-     * @return externally accessible URL to the mapped file.
+     * @return NameValue with name referring to the site and value as externally accessible URL to
+     *     the mapped file
      * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
      *     reason
      */
-    public String map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
+    public NameValue map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
             throws MapperException;
 
     /**
@@ -77,10 +80,11 @@ public interface OutputMapper extends Mapper {
      * @param lfn the lfn
      * @param site the output site
      * @param operation whether we want a GET or a PUT URL
-     * @return List<String> of externally accessible URLs to the mapped file.
+     * @return List of NameValue objects referring to mapped URL's along with their corresponding
+     *     site information
      * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
      *     reason
      */
-    public List<String> mapAll(String lfn, String site, FileServer.OPERATION operation)
+    public List<NameValue> mapAll(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException;
 }

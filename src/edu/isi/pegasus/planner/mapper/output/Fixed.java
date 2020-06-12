@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
@@ -100,10 +101,11 @@ public class Fixed implements OutputMapper {
      * @param lfn the lfn
      * @param site the output site
      * @param operation whether we want a GET or a PUT URL
-     * @return the URL to file that was mapped
+     * @return NameValue with name referring to the site and value as externally accessible URL to
+     *     the mapped file
      * @throws MapperException if unable to construct URL for any reason
      */
-    public String map(String lfn, String site, FileServer.OPERATION operation)
+    public NameValue map(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException {
         // in this case we want to create an entry in factory namespace and use that addOn
         return this.map(lfn, site, operation, false);
@@ -118,14 +120,15 @@ public class Fixed implements OutputMapper {
      * @param operation whether we want a GET or a PUT URL
      * @param existing indicates whether to create a new location/placement for a file, or rely on
      *     existing placement on the site.
-     * @return externally accessible URL to the mapped file.
+     * @return NameValue with name referring to the site and value as externally accessible URL to
+     *     the mapped file
      * @throws MapperException if unable to construct URL for any reason
      */
-    public String map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
+    public NameValue map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
             throws MapperException {
         StringBuilder url = new StringBuilder();
         url.append(this.mDirectoryURL).append(File.separator).append(lfn);
-        return url.toString();
+        return new NameValue(site, url.toString());
     }
 
     /**
@@ -136,14 +139,15 @@ public class Fixed implements OutputMapper {
      * @param lfn the lfn
      * @param site the output site
      * @param operation whether we want a GET or a PUT URL
-     * @return List<String> of externally accessible URLs to the mapped file.
+     * @return List of NameValue objects referring to mapped URL's along with their corresponding
+     *     site information
      * @throws MapperException if unable to construct URL for any reason
      */
-    public List<String> mapAll(String lfn, String site, FileServer.OPERATION operation)
+    public List<NameValue> mapAll(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException {
-        String url = this.map(lfn, site, operation);
+        NameValue nv = this.map(lfn, site, operation);
         List result = new LinkedList();
-        result.add(url);
+        result.add(nv);
         return result;
     }
 
