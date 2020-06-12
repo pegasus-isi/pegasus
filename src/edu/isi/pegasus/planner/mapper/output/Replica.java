@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -167,8 +168,19 @@ public class Replica implements OutputMapper {
     public String map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
             throws MapperException {
 
-        // we just return the first matching URL
-        String url = mRCCatalog.lookup(lfn, site);
+        String url = null;
+        if (site == null) {
+            Collection<String> c = mRCCatalog.lookupNoAttributes(lfn);
+            if (c != null) {
+                for (String pfn : c) {
+                    url = pfn;
+                    break;
+                }
+            }
+        } else {
+            // we just return the first matching URL
+            url = mRCCatalog.lookup(lfn, site);
+        }
 
         if (url == null && this.mThrowExceptionInCaseOfReplicaNotFound) {
             throw new MapperException(
