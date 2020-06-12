@@ -41,6 +41,7 @@ import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
+import edu.isi.pegasus.planner.mapper.output.Replica;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
@@ -752,7 +753,9 @@ public class TransferEngine extends Engine {
 
         SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
         SiteCatalogEntry destinationSite = mSiteStore.lookup(destSiteHandle);
-        boolean transferToParentScratch = destSiteHandle == null;
+        // null destination site indicates we are going to rely on mapper to
+        // return locations it knows of irrespective of the site
+        boolean transferToParentWFScratch = destSiteHandle == null;
         if (stagingSite == null || (destinationSite == null && destSiteHandle != null)) {
             mLogMsg =
                     (stagingSite == null)
@@ -772,7 +775,8 @@ public class TransferEngine extends Engine {
                 this.getURLOnSharedScratch(stagingSite, job, OPERATION.put, addOn, lfn);
 
         // we dont track URL's when we are using the output-map specified on cmd line
-        if (!transferToParentScratch) {
+        // as these are extra transfers being done
+        if (!transferToParentWFScratch) {
             // in the planner cache we track the output files put url on staging site
             trackInPlannerCache(lfn, sharedScratchPutURL, stagingSiteHandle);
             // in the workflow cache we track the output files put url on staging site
@@ -2148,8 +2152,9 @@ public class TransferEngine extends Engine {
         key += ".replica";
         props.setProperty(key, "File");
         // set path to output mapper
-        key += ".file";
-        props.setProperty(key, mapFile);
+        props.setProperty(key + ".file", mapFile);
+        // disable execption thrown by mapper
+        props.setProperty(key + "." + Replica.DISABLE_EXCEPTIONS_KEY, "true");
 
         PegasusBag b = new PegasusBag();
         b.add(PegasusBag.PLANNER_OPTIONS, options);

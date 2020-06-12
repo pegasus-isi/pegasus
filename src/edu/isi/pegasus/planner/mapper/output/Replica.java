@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.mapper.output;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -61,6 +62,12 @@ public class Replica implements OutputMapper {
      */
     public static final String READ_ONLY_KEY = "read.only";
 
+    /**
+     * The name of the key that disables exception thown in case of unable to map a file. Instead
+     * return null in that case.
+     */
+    public static final String DISABLE_EXCEPTIONS_KEY = "disable.exceptions";
+
     /** The short name for this backend. */
     private static final String SHORT_NAME = "Replica";
 
@@ -78,6 +85,8 @@ public class Replica implements OutputMapper {
 
     protected ReplicaCatalog mRCCatalog;
 
+    protected boolean mThrowExceptionInCaseOfReplicaNotFound;
+
     /** The default constructor. */
     public Replica() {}
 
@@ -91,7 +100,6 @@ public class Replica implements OutputMapper {
         PlannerOptions options = bag.getPlannerOptions();
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
-
         mOutputSites = (Set<String>) options.getOutputSites();
         boolean stageOut = ((this.mOutputSites != null) && (!this.mOutputSites.isEmpty()));
 
@@ -104,6 +112,9 @@ public class Replica implements OutputMapper {
         }
 
         Properties props = bag.getPegasusProperties().matchingSubset(PROPERTY_PREFIX, false);
+
+        mThrowExceptionInCaseOfReplicaNotFound =
+                !Boolean.parse(props.getProperty(Replica.DISABLE_EXCEPTIONS_KEY), false);
         String catalogImplementor = bag.getPegasusProperties().getProperty(Replica.PROPERTY_PREFIX);
 
         // we only are reading not inserting any entries
@@ -150,7 +161,8 @@ public class Replica implements OutputMapper {
      * @param existing indicates whether to create a new location/placement for a file, or rely on
      *     existing placement on the site.
      * @return externally accessible URL to the mapped file.
-     * @throws MapperException if unable to construct URL for any reason
+     * @throws MapperException if unable to construct URL for any reason and exception throwing is
+     *     enabled.
      */
     public String map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
             throws MapperException {
@@ -158,7 +170,7 @@ public class Replica implements OutputMapper {
         // we just return the first matching URL
         String url = mRCCatalog.lookup(lfn, site);
 
-        if (url == null) {
+        if (url == null && this.mThrowExceptionInCaseOfReplicaNotFound) {
             throw new MapperException(
                     this.getErrorMessagePrefix()
                             + "Unable to retrive location from Mapper Replica Backend for lfn "
