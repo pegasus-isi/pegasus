@@ -16,7 +16,7 @@ from Pegasus.db.ensembles import (
     EnsembleWorkflowStates,
 )
 from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
-from Pegasus.service import app
+from Pegasus.service.ensembles import emapp
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def get_bin(name, exe):
     # variable, 3) PATH env var
     exepath = None
 
-    HOME = os.getenv(name, app.config.get(name, None))
+    HOME = os.getenv(name, emapp.config.get(name, None))
 
     if HOME is not None:
         if not os.path.isdir(HOME):
@@ -533,7 +533,7 @@ class EnsembleManager(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         if interval is None:
-            interval = float(app.config["EM_INTERVAL"])
+            interval = float(emapp.config["EM_INTERVAL"])
         self.interval = interval
 
     def run(self):

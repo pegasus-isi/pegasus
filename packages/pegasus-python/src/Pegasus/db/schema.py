@@ -27,7 +27,7 @@ import warnings
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import foreign, relation
+from sqlalchemy.orm import foreign, relation, mapper
 from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, UniqueConstraint
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.types import (
@@ -42,9 +42,9 @@ from sqlalchemy.types import (
 )
 
 from Pegasus.db.ensembles import (
-    Ensemble,
+    Ensemble as _Ensemble,
     EnsembleStates,
-    EnsembleWorkflow,
+    EnsembleWorkflow as _EnsembleWorkflow,
     EnsembleWorkflowStates,
 )
 
@@ -1046,6 +1046,8 @@ Ensemble.__table_args__ = (
     table_keywords,
 )
 
+# User mapper(..,...) to extend ensembles.Ensemble to the schema.Ensemble table
+mapper(_Ensemble, Ensemble.__table__)
 
 class EnsembleWorkflow(Base):
     """."""
@@ -1084,3 +1086,5 @@ EnsembleWorkflow.__table_args__ = (
     ),
     table_keywords,
 )
+
+mapper(_EnsembleWorkflow, EnsembleWorkflow.__table__)

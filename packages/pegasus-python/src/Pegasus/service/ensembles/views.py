@@ -4,15 +4,19 @@ import subprocess
 
 from flask import g, make_response, request, url_for
 
+from Pegasus import user
+from Pegasus.service.auth import BaseAuthentication, PAMAuthentication, NoAuthentication
+from Pegasus.service.lifecycle import authenticate
 from Pegasus.db import connection
 from Pegasus.db.ensembles import EMError, Ensembles, EnsembleWorkflowStates
-from Pegasus.service.ensembles import api, auth, emapp
+from Pegasus.service.ensembles import api, emapp
 
 log = logging.getLogger(__name__)
 
 
 def connect():
     log.debug("Connecting to database")
+    g.master_db_url = g.user.get_master_db_url()
     g.session = connection.connect(g.master_db_url)
 
 
@@ -26,14 +30,8 @@ def disconnect():
 def handle_error(e):
     return api.json_api_error(e)
 
-
-@emapp.before_request
-def setup_request():
-    resp = auth.authorize_request()
-    if resp:
-        return resp
-    connect()
-
+emapp.before_request(authenticate)
+emapp.before_request(connect)
 
 @emapp.teardown_request
 def teardown_request(exception):
