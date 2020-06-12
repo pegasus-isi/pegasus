@@ -249,7 +249,7 @@ wf = (
 wf = Workflow("local-hierarchy")
 
 blackdiamond_wf = SubWorkflow("blackdiamond.yml", False).add_args(
-    "--input-dir", "input", "--output-sites", "local", "-vvv"
+    "--input-dir", "input", "--output-sites", "local", "-vvv", "--force"
 ).add_outputs(fd)
 
 sleep_wf = SubWorkflow("sleep.yml", False).add_args("--output-sites", "local", "-vvv")
