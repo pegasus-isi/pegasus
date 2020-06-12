@@ -28,7 +28,6 @@ import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
-import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -915,7 +914,8 @@ public class PegasusLite implements GridStart {
                     sb.append("EOF").append('\n');
                     sb.append('\n');
                 }
-                */ // end of PM-1608 not sure why this is not handled in wrapper
+                */
+                // end of PM-1608 not sure why this is not handled in wrapper
             }
 
             writer.print(sb.toString());
@@ -950,7 +950,6 @@ public class PegasusLite implements GridStart {
             // arguments passed
             job.setArguments("");
 
-            
             /* PM-1608 not sure why this is not handled in container wrappers
             // transfer any output files created by dax/dag jobs
             if ((job instanceof DAXJob || job instanceof DAGJob)
@@ -1014,7 +1013,7 @@ public class PegasusLite implements GridStart {
             }
             */
             // end of PM-1608 not sure why this is not handled in wrapper
-            
+
             sb.append("\n");
             sb.append("# clear the trap, and exit cleanly").append('\n');
             sb.append("trap - EXIT").append('\n');

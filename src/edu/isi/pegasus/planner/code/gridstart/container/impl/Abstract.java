@@ -437,7 +437,11 @@ public abstract class Abstract implements ContainerShellWrapper {
                 sb.append(checkPointFragment);
             }
 
-            if (!outputFiles.isEmpty()) {
+            // PM-1608 any output files associated with the dax job should
+            // not be transferred in PegasusLite as only the planner is executed
+            // in the prescript for the DAX job and condor files for sub workflow have been
+            // generated but not executed.
+            if (!outputFiles.isEmpty() && !(job instanceof DAXJob)) {
                 // generate the stage out fragment for staging out outputs
                 String postJob = sls.invocationString(job, null);
                 appendStderrFragment(sb, "", "Staging out output files");
