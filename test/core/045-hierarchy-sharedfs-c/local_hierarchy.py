@@ -230,7 +230,7 @@ wf = (
         Job("analyze", namespace="diamond", version="4.0")
         .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
         .add_inputs(fc1, fc2)
-        .add_outputs(fd, register_replica=True),
+        .add_outputs(fd, register_replica=False, stage_out=False),
     )
     .write(str(TOP_DIR / "input/blackdiamond.yml"))
 )
@@ -254,10 +254,10 @@ blackdiamond_wf = SubWorkflow("blackdiamond.yml", False).add_args(
 
 sleep_wf = SubWorkflow("sleep.yml", False).add_args("--output-sites", "local", "-vvv")
 
-post_analyze_job = Job("post-analyze", namespace="diamond", version="4.0")
-        .add_args("-a", "post-analyze", "-T", "60", "-i", fd, "-o", fe)
-        .add_inputs(fd)
-        .add_outputs(fe, register_replica=False, transfer=False)
+post_analyze_job = Job("post-analyze", namespace="diamond", version="4.0")\
+                   .add_args("-a", "post-analyze", "-T", "60", "-i", fd, "-o", fe)\
+                   .add_inputs(fd)\
+                   .add_outputs(fe, register_replica=True, stage_out=True)
 
 wf.add_jobs(blackdiamond_wf, sleep_wf,post_analyze_job)
 wf.add_dependency(blackdiamond_wf, children=[sleep_wf,post_analyze_job])
