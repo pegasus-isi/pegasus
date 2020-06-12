@@ -24,7 +24,7 @@ except FileExistsError:
 props = Properties()
 
 props["pegasus.dir.storage.deep"] = "false"
-props["pegasus.data.configuration"] = "sharedfs"
+props["pegasus.data.configuration"] = "nonsharedfs"
 
 props.write()
 
@@ -174,6 +174,20 @@ transformations:
     os.type: "linux"
     os.release: "rhel"
     os.version: "7"
+
+ -
+  namespace: "diamond"
+  name: "post-analyze"
+  version: "4.0"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "{pegasus_bin_dir}/pegasus-keg"
+    arch: "x86_64"
+    os.type: "linux"
+    os.release: "rhel"
+    os.version: "7"
 """.format(
     pegasus_bin_dir=PEGASUS_BIN_DIR
 )
@@ -197,7 +211,7 @@ fb2 = File("f.b2")
 fc1 = File("f.c1")
 fc2 = File("f.c2")
 fd = File("f.d")
-
+fe = File("f.e")
 wf = (
     Workflow("blackdiamond")
     .add_jobs(
@@ -236,12 +250,17 @@ wf = Workflow("local-hierarchy")
 
 blackdiamond_wf = SubWorkflow("blackdiamond.yml", False).add_args(
     "--input-dir", "input", "--output-sites", "local", "-vvv"
-)
+).add_outputs(fd)
 
 sleep_wf = SubWorkflow("sleep.yml", False).add_args("--output-sites", "local", "-vvv")
 
-wf.add_jobs(blackdiamond_wf, sleep_wf)
-wf.add_dependency(blackdiamond_wf, children=[sleep_wf])
+post_analyze_job = Job("post-analyze", namespace="diamond", version="4.0")
+        .add_args("-a", "post-analyze", "-T", "60", "-i", fd, "-o", fe)
+        .add_inputs(fd)
+        .add_outputs(fe, register_replica=False, transfer=False)
+
+wf.add_jobs(blackdiamond_wf, sleep_wf,post_analyze_job)
+wf.add_dependency(blackdiamond_wf, children=[sleep_wf,post_analyze_job])
 
 try:
     wf.plan(
