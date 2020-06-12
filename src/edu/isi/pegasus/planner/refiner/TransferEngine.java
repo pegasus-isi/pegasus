@@ -927,55 +927,6 @@ public class TransferEngine extends Engine {
     }
 
     /**
-     * Constructs a Registration URL for a LFN
-     *
-     * @param site the site handle
-     * @param lfn the LFN for which the URL needs to be constructed
-     * @return the URL
-     */
-    private String constructRegistrationURL(String site, String lfn) {
-        // assumption of same external mount point for each storage
-        // file server on output site
-        //                url = this.getURLOnStageoutSite( fs, lfn );
-        return mOutputMapper.map(lfn, site, FileServer.OPERATION.get);
-    }
-
-    /**
-     * Constructs a Registration URL for a LFN
-     *
-     * @param directory the storage directory
-     * @param site the site handle
-     * @param lfn the LFN for which the URL needs to be constructed
-     * @return the URL
-     */
-    /*
-        private String constructRegistrationURL(  Directory directory , String site, String lfn ){
-            //sanity check
-            if( !directory.hasFileServerForGETOperations() ){
-                //no file servers for GET operations
-                throw new RuntimeException( " No File Servers specified for GET Operation on Shared Storage for site " + site );
-            }
-
-            String url = null;
-            for( FileServer.OPERATION op : FileServer.OPERATION.operationsForGET() ){
-                for( Iterator it = directory.getFileServersIterator(op); it.hasNext();){
-                    FileServer fs = (FileServer)it.next();
-
-
-                    //assumption of same external mount point for each storage
-                    //file server on output site
-    //                url = this.getURLOnStageoutSite( fs, lfn );
-                    url = mOutputMapper.map( lfn, site, FileServer.OPERATION.get );
-
-                    return url;
-                }
-
-            }//end of different get operations
-            return url;
-        }
-    */
-
-    /**
      * This generates a error message for pool not found in the pool config file.
      *
      * @param poolName the name of pool that is not found.
