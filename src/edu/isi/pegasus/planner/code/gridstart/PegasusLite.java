@@ -899,6 +899,7 @@ public class PegasusLite implements GridStart {
                 }
 
                 // stage input files if this is a dax or a dag job
+                /* PM-1608 not sure why this is not handled in container wrappers
                 if ((job instanceof DAXJob || job instanceof DAGJob) && (!inputFiles.isEmpty())) {
                     appendStderrFragment(sb, "Staging in input data and executables");
                     sb.append("# stage in data and executables").append('\n');
@@ -914,6 +915,7 @@ public class PegasusLite implements GridStart {
                     sb.append("EOF").append('\n');
                     sb.append('\n');
                 }
+                */ // end of PM-1608 not sure why this is not handled in wrapper
             }
 
             writer.print(sb.toString());
@@ -933,9 +935,6 @@ public class PegasusLite implements GridStart {
                 sb.append(containerWrapper.wrap((AggregatedJob) job));
             } else {
                 jobGridStartImplementation.enable(job, isGlobusJob);
-                // sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n'
-                // );
-
                 sb.append(containerWrapper.wrap(job));
             }
             sb.append("\n");
@@ -951,6 +950,8 @@ public class PegasusLite implements GridStart {
             // arguments passed
             job.setArguments("");
 
+            
+            /* PM-1608 not sure why this is not handled in container wrappers
             // transfer any output files created by dax/dag jobs
             if ((job instanceof DAXJob || job instanceof DAGJob)
                     && isCompute
@@ -1011,7 +1012,9 @@ public class PegasusLite implements GridStart {
                 // associate any credentials if required with the job
                 associateCredentials(job, files);
             }
-
+            */
+            // end of PM-1608 not sure why this is not handled in wrapper
+            
             sb.append("\n");
             sb.append("# clear the trap, and exit cleanly").append('\n');
             sb.append("trap - EXIT").append('\n');
