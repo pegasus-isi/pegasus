@@ -106,7 +106,7 @@ public class HashedOutputMapperTest {
 
         for (int i = 1; i < NUM_OF_OUTPUT_FILES; i++) {
             String lfn = OUTPUT_FILE_PREFIX + i;
-            String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put);
+            String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
             String dir = "00" + (i) / 225;
             String expected =
                     "file:///test/junit/output/mapper/blackdiamond/outputs/"
@@ -115,7 +115,7 @@ public class HashedOutputMapperTest {
                             + lfn;
             assertEquals(lfn + " not mapped to right location ", expected, pfn);
 
-            pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true);
+            pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true).getValue();
             expected =
                     "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
                             + dir
@@ -146,7 +146,7 @@ public class HashedOutputMapperTest {
 
         for (int i = 1; i < NUM_OF_OUTPUT_FILES; i++) {
             String lfn = OUTPUT_FILE_PREFIX + i;
-            String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put);
+            String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
             String dir = "00" + (i) / 225;
             String expected =
                     "file:///test/junit/output/mapper/blackdiamond/outputs/"
@@ -157,7 +157,7 @@ public class HashedOutputMapperTest {
                             + lfn;
             assertEquals(lfn + " not mapped to right location ", expected, pfn);
 
-            pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true);
+            pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true).getValue();
             expected =
                     "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
                             + relativeDir
@@ -189,7 +189,7 @@ public class HashedOutputMapperTest {
 
         for (int i = 1; i < NUM_OF_OUTPUT_FILES; i++) {
             String lfn = OUTPUT_FILE_PREFIX + i;
-            String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put);
+            String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
             String dir = "00" + (i) / 225;
             String expected =
                     "file:///test/junit/output/mapper/blackdiamond/outputs/"
@@ -200,7 +200,7 @@ public class HashedOutputMapperTest {
                             + lfn;
             assertEquals(lfn + " not mapped to right location ", expected, pfn);
 
-            pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true);
+            pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true).getValue();
             expected =
                     "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
                             + relativeDir
@@ -232,7 +232,7 @@ public class HashedOutputMapperTest {
 
         for (int i = 1; i < NUM_OF_OUTPUT_FILES; i++) {
             String lfn = OUTPUT_FILE_PREFIX + i;
-            String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put);
+            String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
             String dir = "00" + (i) / 225;
             String expected =
                     "file:///test/junit/output/mapper/blackdiamond/outputs/"
@@ -243,7 +243,7 @@ public class HashedOutputMapperTest {
                             + lfn;
             assertEquals(lfn + " not mapped to right location ", expected, pfn);
 
-            pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true);
+            pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true).getValue();
             expected =
                     "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
                             + relativeDir

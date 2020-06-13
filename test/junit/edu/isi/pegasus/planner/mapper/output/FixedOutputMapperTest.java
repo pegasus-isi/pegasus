@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
@@ -89,20 +90,21 @@ public class FixedOutputMapperTest {
         OutputMapper mapper = OutputMapperFactory.loadInstance(new ADag(), mBag);
 
         String lfn = "f.a";
-        String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put);
+        String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
         assertEquals(
                 lfn + " not mapped to right location ",
                 "gsiftp://outputs.isi.edu/shared/outputs/f.a",
                 pfn);
 
-        pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get);
+        pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
         assertEquals(
                 lfn + " not mapped to right location ",
                 "gsiftp://outputs.isi.edu/shared/outputs/f.a",
                 pfn);
 
-        List<String> pfns = mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
-        String[] expected = {"gsiftp://outputs.isi.edu/shared/outputs/f.a"};
+        List<NameValue> pfns = mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
+        NameValue[] expected = new NameValue[1];
+        expected[0] = new NameValue("local", "gsiftp://outputs.isi.edu/shared/outputs/f.a");
         assertArrayEquals(expected, pfns.toArray());
         mLogger.logEventCompletion();
     }

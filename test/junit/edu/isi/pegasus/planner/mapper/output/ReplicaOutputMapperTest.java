@@ -19,6 +19,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
@@ -97,10 +98,11 @@ public class ReplicaOutputMapperTest {
             // replica mapper maps all operations to the same pfn
             String lfn = "f.a1";
             String expected = "gsiftp://corbusier.isi.edu/Volumes/data/output/nonregex/" + lfn;
-            String pfn = mapper.map(lfn, "local", operation);
+            String pfn = mapper.map(lfn, "local", operation).getValue();
             assertEquals(lfn + " not mapped to right location ", expected, pfn);
-            String[] expectedPFNS = {pfn};
-            List<String> pfns = mapper.mapAll(lfn, "local", operation);
+            NameValue[] expectedPFNS = new NameValue[1];
+            expectedPFNS[0] = new NameValue("local", expected);
+            List<NameValue> pfns = mapper.mapAll(lfn, "local", operation);
             assertArrayEquals(expectedPFNS, pfns.toArray());
         }
         mLogger.logEventCompletion();
@@ -112,10 +114,11 @@ public class ReplicaOutputMapperTest {
             for (FileServer.OPERATION operation : FileServer.OPERATION.values()) {
                 // replica mapper maps all operations to the same pfn
                 String expected = "gsiftp://corbusier.isi.edu/Volumes/data/output/" + lfn;
-                String pfn = mapper.map(lfn, "local", operation);
+                String pfn = mapper.map(lfn, "local", operation).getValue();
                 assertEquals(lfn + " not mapped to right location ", expected, pfn);
-                String[] expectedPFNS = {pfn};
-                List<String> pfns = mapper.mapAll(lfn, "local", operation);
+                NameValue[] expectedPFNS = new NameValue[1];
+                expectedPFNS[0] = new NameValue("local", expected);
+                List<NameValue> pfns = mapper.mapAll(lfn, "local", operation);
                 assertArrayEquals(expectedPFNS, pfns.toArray());
             }
         }
