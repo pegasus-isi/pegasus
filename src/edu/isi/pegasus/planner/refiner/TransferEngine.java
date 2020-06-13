@@ -699,37 +699,41 @@ public class TransferEngine extends Engine {
 
         for (Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
+            Collection<FileTransfer> fts = null;
+            if (destPool == null) {
+                // PM-1608 construct file transfers to parent workflow scratch
+                // directories
+                // specified via --output-map option . can return multiple locations
+                // from the output map file
+                fts = this.constructFileTXToParentWFScratchDirs(pf, job, path, localTransfer);
+            } else {
+                fts = new LinkedList();
+                // construct file transfer to output site
+                fts.add(this.constructFileTX(pf, job, destPool, path, localTransfer));
+            }
 
-            FileTransfer ft =
-                    destPool == null
-                            ?
-                            // PM-1608 construct file transfers to parent workflow scratch
-                            // directories
-                            // specified via --output-map option
-                            this.constructFileTXToParentWFScratchDirs(pf, job, path, localTransfer)
-                            :
-                            // construct file transfer to output site
-                            this.constructFileTX(pf, job, destPool, path, localTransfer);
+            for (FileTransfer ft : fts) {
+                if (ft != null) {
+                    if (this.mDoIntegrityChecking
+                            && this.mPegasusConfiguration.jobSetupForWorkerNodeExecution(job)) {
+                        // PM-1252 for files generated in the workflow , the checksum will be
+                        // computed
+                        // in the PegasusLite invocation
+                        ft.setChecksumComputedInWF(true);
 
-            if (ft != null) {
-                if (this.mDoIntegrityChecking
-                        && this.mPegasusConfiguration.jobSetupForWorkerNodeExecution(job)) {
-                    // PM-1252 for files generated in the workflow , the checksum will be computed
-                    // in the PegasusLite invocation
-                    ft.setChecksumComputedInWF(true);
+                        // PM-1254 disable for time being for checkpoint files
+                        if (ft.isCheckpointFile()) {
+                            ft.setChecksumComputedInWF(false);
+                        }
 
-                    // PM-1254 disable for time being for checkpoint files
-                    if (ft.isCheckpointFile()) {
-                        ft.setChecksumComputedInWF(false);
+                        // PM-1608 disable integrity checking for files that transferred out of a
+                        // sub workflow as we don't transfer any meta files from the sub workflow
+                        if (job instanceof DAXJob) {
+                            ft.setChecksumComputedInWF(false);
+                        }
                     }
-
-                    // PM-1608 disable integrity checking for files that transferred out of a
-                    // sub workflow as we don't transfer any meta files from the sub workflow
-                    if (job instanceof DAXJob) {
-                        ft.setChecksumComputedInWF(false);
-                    }
+                    fileTransfers.add(ft);
                 }
-                fileTransfers.add(ft);
             }
         }
 
@@ -885,14 +889,14 @@ public class TransferEngine extends Engine {
      * @param path the path that a user specifies in the profile for key remote_initialdir that
      *     results in the workdir being changed for a job on a execution pool.
      * @param localTransfer boolean indicating that associated transfer job will run on local site.
-     * @return the corresponding FileTransfer object
+     * @return Collection of FileTransfer objects
      */
-    private FileTransfer constructFileTXToParentWFScratchDirs(
+    private Collection<FileTransfer> constructFileTXToParentWFScratchDirs(
             PegasusFile pf, Job job, String path, boolean localTransfer) {
         String stagingSiteHandle = job.getStagingSiteHandle();
         String lfn = pf.getLFN();
         FileTransfer ft = null;
-
+        List<FileTransfer> result = new LinkedList<FileTransfer>();
         SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
         if (stagingSite == null) {
             mLogMsg = this.poolNotFoundMsg(stagingSiteHandle, "vanilla");
@@ -921,32 +925,35 @@ public class TransferEngine extends Engine {
             sourceURL = sb.toString();
         }
 
-        ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
-        // we are only transferring outputs to the scratch dir of parent workflow
-        // without registering them ever
-        ft.setTransferFlag(true);
-        ft.setRegisterFlag(false);
-        ft.addSource(stagingSiteHandle, sourceURL);
-        ft.setMetadata(pf.getAllMetadata());
-        ft.setType(pf.getType());
-
-        NameValue nv = this.mParentScratchOutputMapper.map(lfn, null, OPERATION.put);
-        if (nv == null) {
-            return null;
+        List<NameValue> nvs = this.mParentScratchOutputMapper.mapAll(lfn, null, OPERATION.put);
+        if (nvs == null) {
+            return result;
         }
-        String destURL = nv.getValue();
-        // if the paths match of dest URI
-        // and execDirURL we return null
-        if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
-            ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
-            ft.setURLForRegistrationOnDestination(sharedScratchGetURL);
-            // make the transfer transient?
-            ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
-            return ft;
-        }
-        ft.addDestination(nv.getKey(), destURL);
+        for (NameValue nv : nvs) {
+            ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
+            // we are only transferring outputs to the scratch dir of parent workflow
+            // without registering them ever
+            ft.setTransferFlag(true);
+            ft.setRegisterFlag(false);
+            ft.addSource(stagingSiteHandle, sourceURL);
+            ft.setMetadata(pf.getAllMetadata());
+            ft.setType(pf.getType());
 
-        return ft;
+            String destURL = nv.getValue();
+            // if the paths match of dest URI
+            // and execDirURL we return null
+            if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
+                ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
+                ft.setURLForRegistrationOnDestination(sharedScratchGetURL);
+                // make the transfer transient?
+                ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
+                result.add(ft);
+            }
+            ft.addDestination(nv.getKey(), destURL);
+            result.add(ft);
+        }
+
+        return result;
     }
 
     /**
