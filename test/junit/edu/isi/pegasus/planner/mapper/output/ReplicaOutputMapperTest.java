@@ -97,11 +97,13 @@ public class ReplicaOutputMapperTest {
         for (FileServer.OPERATION operation : FileServer.OPERATION.values()) {
             // replica mapper maps all operations to the same pfn
             String lfn = "f.a1";
-            String expected = "gsiftp://corbusier.isi.edu/Volumes/data/output/nonregex/" + lfn;
+            String expected1 = "gsiftp://corbusier.isi.edu/Volumes/data/output/nonregex/" + lfn;
+            String expected2 = "gsiftp://corbusier.isi.edu/Volumes/data/output/" + lfn;
             String pfn = mapper.map(lfn, "local", operation).getValue();
-            assertEquals(lfn + " not mapped to right location ", expected, pfn);
-            NameValue[] expectedPFNS = new NameValue[1];
-            expectedPFNS[0] = new NameValue("local", expected);
+            assertEquals(lfn + " not mapped to right location ", expected1, pfn);
+            NameValue[] expectedPFNS = new NameValue[2];
+            expectedPFNS[0] = new NameValue("local", expected1);
+            expectedPFNS[1] = new NameValue("local", expected2);
             List<NameValue> pfns = mapper.mapAll(lfn, "local", operation);
             assertArrayEquals(expectedPFNS, pfns.toArray());
         }
