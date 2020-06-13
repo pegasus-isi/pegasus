@@ -722,6 +722,12 @@ public class TransferEngine extends Engine {
                     if (ft.isCheckpointFile()) {
                         ft.setChecksumComputedInWF(false);
                     }
+
+                    // PM-1608 disable integrity checking for files that transferred out of a
+                    // sub workflow as we don't transfer any meta files from the sub workflow
+                    if (job instanceof DAXJob) {
+                        ft.setChecksumComputedInWF(false);
+                    }
                 }
                 fileTransfers.add(ft);
             }
