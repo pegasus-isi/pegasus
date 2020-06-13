@@ -972,6 +972,8 @@ public class TransferEngine extends Engine {
         Collection<FileTransfer> localTransfers = new LinkedList();
         Collection<FileTransfer> remoteTransfers = new LinkedList();
 
+        // PM-1602 tracks input files for which to disable integrity
+        Set<PegasusFile> integrityDisabledFiles = new HashSet();
         for (GraphNode parent : parents) {
             // get the parent job
             Job pJob = (Job) parent.getContent();
@@ -984,7 +986,6 @@ public class TransferEngine extends Engine {
             }
 
             String sourceURI = null;
-
             for (Iterator fileIt = pJob.getOutputFiles().iterator(); fileIt.hasNext(); ) {
                 PegasusFile pf = (PegasusFile) fileIt.next();
                 String outFile = pf.getLFN();
@@ -1046,6 +1047,11 @@ public class TransferEngine extends Engine {
                                         + job.getID(),
                                 LogManager.DEBUG_MESSAGE_LEVEL);
                         ((DAXJob) pJob).addOutputFileLocation(mBag, ft);
+
+                        // PM-1608 explicitly disable integrity checking as we don't
+                        // know which job in the sub workflow referred to by the parent DAX job pJob
+                        // generates the file. we are adding parent output file
+                        integrityDisabledFiles.add(pf);
                         continue;
                     }
 
@@ -1101,6 +1107,21 @@ public class TransferEngine extends Engine {
                         }
                     }
                 }
+            }
+        }
+
+        // PM-1608 disable integrity for some of job input files that are outputs
+        // of parent dax jobs
+        for (PegasusFile ip : job.getInputFiles()) {
+            if (integrityDisabledFiles.contains(ip)) {
+                ip.setForIntegrityChecking(false);
+                mLogger.log(
+                        "Disabled file "
+                                + ip.getLFN()
+                                + " for job "
+                                + job.getID()
+                                + " for integrity checking",
+                        LogManager.TRACE_MESSAGE_LEVEL);
             }
         }
 
