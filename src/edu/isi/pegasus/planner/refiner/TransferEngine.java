@@ -772,7 +772,7 @@ public class TransferEngine extends Engine {
 
         // in the planner cache we track the output files put url on staging site
         trackInPlannerCache(lfn, sharedScratchPutURL, stagingSiteHandle);
-        // in the workflow cache we track the output files put url on staging site
+        // in the workflow cache we track the output files get url on staging site
         trackInWorkflowCache(lfn, sharedScratchGetURL, stagingSiteHandle);
 
         // if both transfer and registration
@@ -854,6 +854,17 @@ public class TransferEngine extends Engine {
                     mOutputMapper
                             .map(lfn, destSiteHandle, FileServer.OPERATION.get, true)
                             .getValue());
+
+            if (job instanceof DAXJob) {
+                // PM-1608 if the dax job itself wants to transfer the output
+                // then we log the put URL of the shared scratch in the output map
+                // so that when sub workflow runs, it can put the file to the source
+                // location required for this file transfer
+                FileTransfer scratchPutFT = new FileTransfer();
+                scratchPutFT.setLFN(lfn);
+                scratchPutFT.addDestination(stagingSiteHandle, sharedScratchPutURL);
+                ((DAXJob) job).addOutputFileLocation(mBag, ft);
+            }
         }
 
         return ft;
