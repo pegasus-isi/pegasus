@@ -215,10 +215,30 @@ public class Replica implements OutputMapper {
      */
     public List<NameValue> mapAll(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException {
-        NameValue nv = this.map(lfn, site, operation);
         List result = new LinkedList();
-        result.add(nv);
-        return result;
+
+        Collection<ReplicaCatalogEntry> c = mRCCatalog.lookup(lfn);
+        if (c != null) {
+            for (ReplicaCatalogEntry rce : c) {
+                String s = rce.getResourceHandle();
+                if (site == null || site.equals(s)) {
+                    result.add(new NameValue(s, rce.getPFN()));
+                }
+            }
+        }
+
+        if (result.isEmpty() && this.mThrowExceptionInCaseOfReplicaNotFound) {
+            throw new MapperException(
+                    this.getErrorMessagePrefix()
+                            + "Unable to retrive location from Mapper Replica Backend for lfn "
+                            + lfn
+                            + " for site "
+                            + site
+                            + " and operation "
+                            + operation);
+        }
+
+        return result.isEmpty() ? null : result;
     }
 
     /**
