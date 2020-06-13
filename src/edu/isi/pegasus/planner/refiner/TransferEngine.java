@@ -863,7 +863,7 @@ public class TransferEngine extends Engine {
                 FileTransfer scratchPutFT = new FileTransfer();
                 scratchPutFT.setLFN(lfn);
                 scratchPutFT.addDestination(stagingSiteHandle, sharedScratchPutURL);
-                ((DAXJob) job).addOutputFileLocation(mBag, ft);
+                ((DAXJob) job).addOutputFileLocation(mBag, scratchPutFT);
             }
         }
 
