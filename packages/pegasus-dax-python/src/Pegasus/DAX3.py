@@ -159,6 +159,13 @@ SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX"
 SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.6.xsd"
 SCHEMA_VERSION = "3.6"
 
+warnings.filterwarnings("once", category=DeprecationWarning)
+warnings.warn(
+    "Pegasus.DAX3 API has been deprecated and will be removed in v5.1.0. "
+    "Please use the new API released in v5.0.0.",
+    DeprecationWarning,
+)
+
 
 class DAX3Error(Exception):
     pass
