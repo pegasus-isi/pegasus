@@ -4,12 +4,10 @@ import subprocess
 
 from flask import g, make_response, request, url_for
 
-from Pegasus import user
-from Pegasus.service.auth import BaseAuthentication, PAMAuthentication, NoAuthentication
-from Pegasus.service.lifecycle import authenticate
 from Pegasus.db import connection
 from Pegasus.db.ensembles import EMError, Ensembles, EnsembleWorkflowStates
 from Pegasus.service.ensembles import api, emapp
+from Pegasus.service.lifecycle import authenticate
 
 log = logging.getLogger(__name__)
 
@@ -30,8 +28,10 @@ def disconnect():
 def handle_error(e):
     return api.json_api_error(e)
 
+
 emapp.before_request(authenticate)
 emapp.before_request(connect)
+
 
 @emapp.teardown_request
 def teardown_request(exception):
