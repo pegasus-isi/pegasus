@@ -13,7 +13,7 @@ python -m virtualenv -p python3.6 $VIRTUAL_ENV_DIR
 
 source cwl_venv/bin/activate
 
-pip install "cwl-utils==0.3" "jsonschema==3.2.0" "PyYAML"
+pip install "cwl-utils==0.5" "jsonschema==3.2.0" "PyYAML"
 
 echo
 echo "Creating input.yml from input.yml.template"
