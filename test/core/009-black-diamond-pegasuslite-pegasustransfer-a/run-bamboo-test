@@ -45,6 +45,7 @@ cat > sites.xml <<EOF
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="pegasus" key="style" >condor</profile>
         <directory  path="${LOCALSCRATCH}/local-scratch" type="local-scratch" free-size="" total-size=""> 
+	    <file-server  operation="all" url="file://${LOCALSCRATCH}/local-scratch"/>
         </directory>            
 </site>
 <site  handle="cartman-data" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
