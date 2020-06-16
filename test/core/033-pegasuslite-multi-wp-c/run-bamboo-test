@@ -53,13 +53,13 @@ cat >sites.xml <<EOF
      <site  handle="CCG" arch="x86_64" os="LINUX">
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
-        <profile namespace="pegasus" key="data.configuration">sharedfs</profile>
         <directory type="shared-scratch" path="/lizard/scratch-90-days/CCG/${TEST_NAME}/scratch">
             <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/${TEST_NAME}/scratch"/>
         </directory>
         <directory type="local-storage" path="/lizard/scratch-90-days/CCG/${TEST_NAME}/outputs">
             <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/${TEST_NAME}/outputs"/>
         </directory>
+        <profile namespace="pegasus" key="data.configuration">sharedfs</profile>
         <profile namespace="pegasus" key="clusters.num">1</profile>
         <profile namespace="env" key="PEGASUS_HOME">/lizard/scratch-90-days/bamboo/installs/pegasus-${VERSION}</profile>
     </site>
