@@ -865,6 +865,52 @@ public class YAML implements ReplicaCatalog {
     }
 
     /**
+     * Inserts a new mapping into the replica catalog. Any existing mapping of the same LFN, PFN,
+     * and HANDLE will be replaced, including all of its attributes.
+     *
+     * @param tuple is the ReplicaLocation object containing lfn, and multiple pfn's associated with it
+     * 
+     * @return number of insertions can be more than 1. On failure, throw an exception, don't use
+     *     zero.
+     */
+    public int insert(ReplicaLocation tuple) {
+        if (tuple == null) throw new NullPointerException();
+        String lfn = tuple.getLFN();
+        if (lfn == null) throw new NullPointerException();
+        int count = 0;
+        
+        boolean isRegex = tuple.isRegex();
+        if( isRegex && tuple.getPFNCount() > 1 ){
+            throw new ReplicaCatalogException("PFN count cannot be more than 1 for replicas with regex true " + tuple);
+        }
+        ReplicaLocation existing = null;
+
+        if (mLFN.containsKey(lfn)) {
+            existing = mLFN.get(lfn);
+            count += existing.merge(tuple, false);
+        }
+
+        if (mLFNRegex.containsKey(lfn)) {
+            existing = mLFNRegex.get(lfn);
+            count += existing.merge(tuple, false);
+        }
+
+        existing = isRegex ? mLFNRegex.get(lfn) : mLFN.get(lfn);
+        if (existing == null){
+            count += tuple.getPFNCount();
+            if (isRegex) {
+                mLFNRegex.put(lfn, tuple);
+                mLFNPattern.put(lfn, Pattern.compile(lfn));
+            } else {
+                mLFN.put(lfn, tuple);
+            }
+        }
+        
+        return count;
+    }
+    
+    
+    /**
      * Inserts a new mapping into the replica catalog. This is a convenience function exposing the
      * resource handle. Internally, the <code>ReplicaCatalogEntry</code> element will be
      * constructed, and passed to the appropriate insert function.
@@ -1216,9 +1262,7 @@ public class YAML implements ReplicaCatalog {
                             if (replicaNodes.isArray()) {
                                 for (JsonNode replicaNode : replicaNodes) {
                                     ReplicaLocation rl = this.createReplicaLocation(replicaNode);
-                                    for(ReplicaCatalogEntry rce: rl.getPFNList()){
-                                        yamlRC.insert(rl.getLFN(), rce);
-                                    }
+                                    yamlRC.insert(rl);
                                 }
                             }
                         }
