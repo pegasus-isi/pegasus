@@ -13,13 +13,25 @@
  */
 package edu.isi.pegasus.planner.classes;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A Data Class that associates a LFN with the PFN's. Attributes associated with the LFN go here.
@@ -29,6 +41,7 @@ import java.util.List;
  * @version $Revision$
  * @see edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry
  */
+@JsonDeserialize(using = ReplicaLocation.JsonDeserializer.class)
 public class ReplicaLocation extends Data implements Cloneable {
 
     /**
@@ -471,6 +484,208 @@ public class ReplicaLocation extends Data implements Cloneable {
         // sanity check
         if (tuple.getResourceHandle() == null) {
             tuple.setResourceHandle(this.UNDEFINED_SITE_NAME);
+        }
+    }
+
+    /**
+     * Custom deserializer for YAML representation of Container
+     *
+     * @author Karan Vahi
+     */
+    static class JsonDeserializer extends CatalogEntryJsonDeserializer<ReplicaLocation> {
+
+        public JsonDeserializer() {}
+
+        /**
+         * The exception to be thrown while deserializing on error
+         *
+         * @param message the error message
+         * @return
+         */
+        @Override
+        public RuntimeException getException(String message) {
+            return new ReplicaCatalogException(message);
+        }
+
+        /**
+         * Deserializes a Replica YAML description of the type
+         *
+         * <pre>
+         * - lfn: f1
+         *   pfns:
+         *     - site: local
+         *       pfn: /path/to/file
+         *     - site: condorpool
+         *       pfn: /path/to/file
+         *   checksum:
+         *      sha256: abc123
+         *   metadata:
+         *     owner: vahi
+         *     size: 1024
+         * </pre>
+         *
+         * @param node the json node
+         * @return ReplicaLocation
+         */
+        public ReplicaLocation deserialize(JsonParser parser, DeserializationContext dc)
+                throws IOException, JsonProcessingException {
+            ObjectCodec oc = parser.getCodec();
+            JsonNode node = oc.readTree(parser);
+            String lfn = null;
+            ReplicaLocation rl = new ReplicaLocation();
+
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                Map.Entry<String, JsonNode> e = it.next();
+                String key = e.getKey();
+                ReplicaCatalogKeywords reservedKey = ReplicaCatalogKeywords.getReservedKey(key);
+                if (reservedKey == null) {
+                    this.complainForIllegalKey(
+                            ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+                }
+
+                String keyValue = node.get(key).asText();
+                switch (reservedKey) {
+                    case LFN:
+                        lfn = keyValue;
+                        break;
+
+                    case PFNS:
+                        JsonNode pfnNodes = node.get(key);
+                        if (pfnNodes != null) {
+                            if (pfnNodes.isArray()) {
+                                for (JsonNode pfnNode : pfnNodes) {
+                                    rl.addPFN(this.createPFN(pfnNode));
+                                }
+                            }
+                        }
+                        break;
+
+                    case REGEX:
+                        rl.setRegex(Boolean.parseBoolean(keyValue));
+                        break;
+
+                    case CHECKSUM:
+                        addChecksum(rl, node.get(key));
+                        break;
+
+                    case METADATA:
+                        addMetadata(rl, node.get(key));
+                        break;
+
+                    default:
+                        this.complainForUnsupportedKey(
+                                ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+                }
+            }
+            if (lfn == null) {
+                throw getException("Replica needs to be defined with a lfn " + node);
+            }
+            rl.setLFN(lfn);
+
+            if (rl.isRegex()) {
+                // apply to all PFN entries
+                if (rl.getPFNCount() > 1) {
+                    throw getException(
+                            "PFN count cannot be more than 1 for replicas with regex true " + node);
+                }
+                for (ReplicaCatalogEntry rce : rl.getPFNList()) {
+                    rce.addAttribute(ReplicaCatalogEntry.REGEX_KEY, "true");
+                }
+            }
+            return rl;
+        }
+
+        /**
+         * Parses checksum information and adds it to the replica catalog entry object
+         *
+         * @param rl
+         * @param node
+         */
+        private void addChecksum(ReplicaLocation rl, JsonNode node) {
+
+            if (node instanceof ObjectNode) {
+                for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                    Map.Entry<String, JsonNode> e = it.next();
+                    String key = e.getKey();
+                    ReplicaCatalogKeywords reservedKey = ReplicaCatalogKeywords.getReservedKey(key);
+                    if (reservedKey == null) {
+                        this.complainForIllegalKey(
+                                ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+                    }
+
+                    String keyValue = node.get(key).asText();
+                    switch (reservedKey) {
+                        case SHA256:
+                            rl.addMetadata(Metadata.CHECKSUM_TYPE_KEY, "sha256");
+                            rl.addMetadata(Metadata.CHECKSUM_VALUE_KEY, keyValue);
+                            break;
+
+                        default:
+                            this.complainForUnsupportedKey(
+                                    ReplicaCatalogKeywords.CHECKSUM.getReservedName(), key, node);
+                    }
+                }
+            } else {
+                throw getException("Checksum needs to be object node. Found for replica" + node);
+            }
+        }
+
+        /**
+         * Deserializes a pfn of type below
+         *
+         * <pre>
+         * - site: local
+         *   pfn: /url/to/file
+         * </pre>
+         *
+         * @param node
+         * @return
+         */
+        private ReplicaCatalogEntry createPFN(JsonNode node) {
+            ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
+            if (node instanceof ObjectNode) {
+                for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                    Map.Entry<String, JsonNode> e = it.next();
+                    String key = e.getKey();
+                    ReplicaCatalogKeywords reservedKey = ReplicaCatalogKeywords.getReservedKey(key);
+                    if (reservedKey == null) {
+                        this.complainForIllegalKey(
+                                ReplicaCatalogKeywords.PFNS.getReservedName(), key, node);
+                    }
+
+                    String keyValue = node.get(key).asText();
+                    switch (reservedKey) {
+                        case PFN:
+                            rce.setPFN(keyValue);
+                            break;
+
+                        case SITE:
+                            rce.setResourceHandle(keyValue);
+                            break;
+
+                        default:
+                            this.complainForUnsupportedKey(
+                                    ReplicaCatalogKeywords.PFNS.getReservedName(), key, node);
+                    }
+                }
+            } else {
+                throw getException("PFN needs to be object node. Found for replica" + node);
+            }
+
+            return rce;
+        }
+
+        /**
+         * Parses any metadata into the ReplicaLocation object
+         *
+         * @param rl
+         * @param node
+         */
+        private void addMetadata(ReplicaLocation rl, JsonNode node) {
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                Map.Entry<String, JsonNode> entry = it.next();
+                rl.addMetadata(entry.getKey(), entry.getValue().asText());
+            }
         }
     }
 }

@@ -1196,7 +1196,8 @@ public class YAML implements ReplicaCatalog {
                         if (replicaNodes != null) {
                             if (replicaNodes.isArray()) {
                                 for (JsonNode replicaNode : replicaNodes) {
-                                    ReplicaLocation rl = this.createReplicaLocation(replicaNode);
+                                    parser = replicaNode.traverse(oc);
+                                    ReplicaLocation rl = parser.readValueAs(ReplicaLocation.class);
                                     yamlRC.insert(rl);
                                 }
                             }

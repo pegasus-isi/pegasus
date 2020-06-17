@@ -368,7 +368,8 @@ class ReplicaStoreDeserializer extends ReplicaCatalogJsonDeserializer<ReplicaSto
                     if (replicaNodes != null) {
                         if (replicaNodes.isArray()) {
                             for (JsonNode replicaNode : replicaNodes) {
-                                ReplicaLocation rl = this.createReplicaLocation(replicaNode);
+                                parser = replicaNode.traverse(oc);
+                                ReplicaLocation rl = parser.readValueAs(ReplicaLocation.class);
                                 int count = rl.getPFNCount();
                                 if (count == 0) {
                                     throw new ReplicaCatalogException(
