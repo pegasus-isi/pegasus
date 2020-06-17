@@ -39,7 +39,7 @@ public class PFN {
     }
 
     public PFN() {
-        this( null, null );
+        this(null, null);
     }
 
     public String getURL() {
@@ -50,7 +50,7 @@ public class PFN {
         mSite = site;
         return this;
     }
-    
+
     public PFN setURL(String url) {
         mURL = url;
         return this;

@@ -868,8 +868,8 @@ public class YAML implements ReplicaCatalog {
      * Inserts a new mapping into the replica catalog. Any existing mapping of the same LFN, PFN,
      * and HANDLE will be replaced, including all of its attributes.
      *
-     * @param tuple is the ReplicaLocation object containing lfn, and multiple pfn's associated with it
-     * 
+     * @param tuple is the ReplicaLocation object containing lfn, and multiple pfn's associated with
+     *     it
      * @return number of insertions can be more than 1. On failure, throw an exception, don't use
      *     zero.
      */
@@ -878,10 +878,11 @@ public class YAML implements ReplicaCatalog {
         String lfn = tuple.getLFN();
         if (lfn == null) throw new NullPointerException();
         int count = 0;
-        
+
         boolean isRegex = tuple.isRegex();
-        if( isRegex && tuple.getPFNCount() > 1 ){
-            throw new ReplicaCatalogException("PFN count cannot be more than 1 for replicas with regex true " + tuple);
+        if (isRegex && tuple.getPFNCount() > 1) {
+            throw new ReplicaCatalogException(
+                    "PFN count cannot be more than 1 for replicas with regex true " + tuple);
         }
         ReplicaLocation existing = null;
 
@@ -896,7 +897,7 @@ public class YAML implements ReplicaCatalog {
         }
 
         existing = isRegex ? mLFNRegex.get(lfn) : mLFN.get(lfn);
-        if (existing == null){
+        if (existing == null) {
             count += tuple.getPFNCount();
             if (isRegex) {
                 mLFNRegex.put(lfn, tuple);
@@ -905,11 +906,10 @@ public class YAML implements ReplicaCatalog {
                 mLFN.put(lfn, tuple);
             }
         }
-        
+
         return count;
     }
-    
-    
+
     /**
      * Inserts a new mapping into the replica catalog. This is a convenience function exposing the
      * resource handle. Internally, the <code>ReplicaCatalogEntry</code> element will be
@@ -1386,8 +1386,7 @@ public class YAML implements ReplicaCatalog {
                     gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
                     gen.writeStartObject();
                     if (checksumType != null) {
-                        writeStringField(
-                                gen, checksumType, checksumValue);
+                        writeStringField(gen, checksumType, checksumValue);
                     }
                     gen.writeEndObject();
                 }

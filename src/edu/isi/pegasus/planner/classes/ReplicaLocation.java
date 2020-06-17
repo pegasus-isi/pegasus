@@ -39,10 +39,8 @@ public class ReplicaLocation extends Data implements Cloneable {
 
     /** The LFN associated with the entry. */
     private String mLFN;
-    
-    /**
-     * whether an entry is of type regex
-     */
+
+    /** whether an entry is of type regex */
     private boolean mIsRegex;
 
     /**
@@ -128,20 +126,19 @@ public class ReplicaLocation extends Data implements Cloneable {
      *
      * @param tuple the <code>ReplicaCatalogEntry</code> object containing the PFN and the
      *     attributes.
-     * 
+     *
      * @param sanitize add site handle if not specified
      */
-    public void addPFN(ReplicaCatalogEntry tuple){
+    public void addPFN(ReplicaCatalogEntry tuple) {
         this.addPFN(tuple, true);
     }
-    
+
     /**
      * Add a PFN and it's attributes. Any existing mapping with the same PFN and site attribute will
      * be replaced, including all its attributes.
      *
      * @param tuple the <code>ReplicaCatalogEntry</code> object containing the PFN and the
      *     attributes.
-     * 
      * @param sanitize add site handle if not specified
      */
     public void addPFN(ReplicaCatalogEntry tuple, boolean sanitize) {
@@ -149,7 +146,7 @@ public class ReplicaLocation extends Data implements Cloneable {
         String pfn = tuple.getPFN();
         String site = tuple.getResourceHandle();
 
-        if(sanitize){
+        if (sanitize) {
             sanitize(tuple);
         }
         // traverse through the existing PFN's to check for the
@@ -208,15 +205,16 @@ public class ReplicaLocation extends Data implements Cloneable {
     public String getLFN() {
         return this.mLFN;
     }
-    
+
     /**
      * Sets the regex attribute
-     * @param regex 
+     *
+     * @param regex
      */
-    public void setRegex(boolean regex){
+    public void setRegex(boolean regex) {
         this.mIsRegex = regex;
     }
-    
+
     /**
      * Checks if the 'regex' attribute is set to true for the given tuple
      *
@@ -340,37 +338,33 @@ public class ReplicaLocation extends Data implements Cloneable {
         return result;
     }
     */
-    
+
     /**
-     * Merges content of the passed replica location into the existing
-     * one.During the merge, any existing RCE that match pfn and site handle,
-     * are removed. If after removal, the pfn list is empty, all the metadata is
-     * purged, else metadata is add to existing metadata.
+     * Merges content of the passed replica location into the existing one.During the merge, any
+     * existing RCE that match pfn and site handle, are removed. If after removal, the pfn list is
+     * empty, all the metadata is purged, else metadata is add to existing metadata.
      *
      * @param rl
-     *
      * @return number of PFN inserted
      */
     public int merge(ReplicaLocation rl) {
         return this.merge(rl, true);
     }
-    
+
     /**
-     * Merges content of the passed replica location into the existing one.
-     * During the merge, any existing RCE that match pfn and site handle, are
-     * removed. If after removal, the pfn list is empty, all the metadata is
-     * purged, else metadata is add to existing metadata.
+     * Merges content of the passed replica location into the existing one. During the merge, any
+     * existing RCE that match pfn and site handle, are removed. If after removal, the pfn list is
+     * empty, all the metadata is purged, else metadata is add to existing metadata.
      *
      * @param rl
      * @param sanitize add site handle if not specified
-     *
      * @return number of PFN inserted
      */
     public int merge(ReplicaLocation rl, boolean sanitize) {
         String lfn1 = this.getLFN();
         String lfn2 = (rl == null) ? null : rl.getLFN();
-        boolean lfnMatch
-                = (lfn1 == null && lfn2 == null || lfn1 != null && lfn2 != null && lfn1.equals(lfn2));
+        boolean lfnMatch =
+                (lfn1 == null && lfn2 == null || lfn1 != null && lfn2 != null && lfn1.equals(lfn2));
         int count = 0;
         if (!lfnMatch) {
             return count;
@@ -381,13 +375,13 @@ public class ReplicaLocation extends Data implements Cloneable {
             String handle = toInsert.getResourceHandle();
 
             Collection<ReplicaCatalogEntry> c = this.getPFNList();
-            for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext();) {
+            for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
                 ReplicaCatalogEntry rce = i.next();
                 // loop through existing entries and see if they match
                 // what we are trying to insert
                 if (pfn.equals(rce.getPFN())
                         && ((handle == null && rce.getResourceHandle() == null)
-                        || (handle != null && handle.equals(rce.getResourceHandle())))) {
+                                || (handle != null && handle.equals(rce.getResourceHandle())))) {
                     try {
                         i.remove();
                     } catch (UnsupportedOperationException uoe) {
@@ -408,13 +402,12 @@ public class ReplicaLocation extends Data implements Cloneable {
         }
         // we just add in metadata overwriting existing
         Metadata m = rl.getAllMetadata();
-        for (Iterator<String> it = m.getProfileKeyIterator(); it.hasNext();) {
+        for (Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ) {
             String key = it.next();
             rl.addMetadata(key, (String) m.get(key));
         }
         return count;
     }
-
 
     /**
      * Returns the textual description of the data class.
@@ -423,7 +416,7 @@ public class ReplicaLocation extends Data implements Cloneable {
      */
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append(mLFN).append( " regex ").append(this.mIsRegex).append(" -> {");
+        sb.append(mLFN).append(" regex ").append(this.mIsRegex).append(" -> {");
         for (Iterator it = this.pfnIterator(); it.hasNext(); ) {
             sb.append(it.next());
             sb.append(",");

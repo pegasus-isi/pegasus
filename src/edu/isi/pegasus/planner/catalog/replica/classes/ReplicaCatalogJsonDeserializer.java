@@ -24,7 +24,6 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.namespace.Metadata;
-
 import java.util.Iterator;
 import java.util.Map;
 
@@ -71,7 +70,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
 
         String lfn = null;
         ReplicaLocation rl = new ReplicaLocation();
-            
+
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
@@ -105,7 +104,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                 case CHECKSUM:
                     addChecksum(rl, node.get(key));
                     break;
-                    
+
                 case METADATA:
                     addMetadata(rl, node.get(key));
                     break;
@@ -119,13 +118,14 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
             throw getException("Replica needs to be defined with a lfn " + node);
         }
         rl.setLFN(lfn);
-        
-        if (rl.isRegex()){
+
+        if (rl.isRegex()) {
             // apply to all PFN entries
-            if( rl.getPFNCount() > 1 ){
-                throw getException("PFN count cannot be more than 1 for replicas with regex true " + node);
+            if (rl.getPFNCount() > 1) {
+                throw getException(
+                        "PFN count cannot be more than 1 for replicas with regex true " + node);
             }
-            for( ReplicaCatalogEntry rce: rl.getPFNList()){
+            for (ReplicaCatalogEntry rce : rl.getPFNList()) {
                 rce.addAttribute(ReplicaCatalogEntry.REGEX_KEY, "true");
             }
         }
@@ -163,21 +163,20 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                 }
             }
         } else {
-            throw  getException(
-                    "Checksum needs to be object node. Found for replica" + node);
+            throw getException("Checksum needs to be object node. Found for replica" + node);
         }
     }
 
     /**
      * Deserializes a pfn of type below
-     * 
+     *
      * <pre>
      * - site: local
      *   pfn: /url/to/file
      * </pre>
-     * 
+     *
      * @param node
-     * @return 
+     * @return
      */
     private ReplicaCatalogEntry createPFN(JsonNode node) {
         ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
@@ -207,10 +206,9 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                 }
             }
         } else {
-            throw getException(
-                    "PFN needs to be object node. Found for replica" + node);
+            throw getException("PFN needs to be object node. Found for replica" + node);
         }
-        
+
         return rce;
     }
 
@@ -221,7 +219,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
      * @param node
      */
     private void addMetadata(ReplicaLocation rl, JsonNode node) {
-        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> entry = it.next();
             rl.addMetadata(entry.getKey(), entry.getValue().asText());
         }
