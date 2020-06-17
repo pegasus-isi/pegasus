@@ -50,8 +50,9 @@ public class YAMLRCTest {
         writer.write(
                 "# matches \"f.a\"\n"
                         + "  - lfn: \"f.a\"\n"
-                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                        + "    site: \"local\"");
+                        + "    pfns:\n"
+                        + "      - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "        site: \"local\"");
         writer.close();
         mYAMLRC.connect(mRCFile.getAbsolutePath());
     }

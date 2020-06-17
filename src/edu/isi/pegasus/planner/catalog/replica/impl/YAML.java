@@ -794,74 +794,9 @@ public class YAML implements ReplicaCatalog {
      *     zero.
      */
     public int insert(String lfn, ReplicaCatalogEntry tuple) {
-        if (lfn == null || tuple == null) throw new NullPointerException();
-
-        boolean isRegex = tuple.isRegex();
-        ReplicaLocation rl = null;
-
-        // Collection<ReplicaCatalogEntry> c = null;
-
-        String pfn = tuple.getPFN();
-        String handle = tuple.getResourceHandle();
-
-        if (mLFN.containsKey(lfn)) {
-            rl = mLFN.get(lfn);
-            Collection<ReplicaCatalogEntry> c = rl.getPFNList();
-
-            for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
-                ReplicaCatalogEntry rce = i.next();
-
-                if (pfn.equals(rce.getPFN())
-                        && ((handle == null && rce.getResourceHandle() == null)
-                                || (handle != null && handle.equals(rce.getResourceHandle())))) {
-                    try {
-                        i.remove();
-                        break;
-                    } catch (UnsupportedOperationException uoe) {
-                        return 0;
-                    }
-                }
-            }
-        }
-
-        if (mLFNRegex.containsKey(lfn)) {
-            rl = mLFNRegex.get(lfn);
-            Collection<ReplicaCatalogEntry> c = rl.getPFNList();
-
-            for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
-                ReplicaCatalogEntry rce = i.next();
-
-                if (pfn.equals(rce.getPFN())
-                        && ((handle == null && rce.getResourceHandle() == null)
-                                || (handle != null && handle.equals(rce.getResourceHandle())))) {
-                    try {
-                        i.remove();
-                        break;
-                    } catch (UnsupportedOperationException uoe) {
-                        return 0;
-                    }
-                }
-            }
-        }
-
-        rl = isRegex ? mLFNRegex.get(lfn) : mLFN.get(lfn);
-        Collection<ReplicaCatalogEntry> c = null;
-        if (rl != null) {
-            c = rl.getPFNList();
-        }
-        // c = isRegex ? mLFNRegex.get(lfn).getPFNList():mLFN.get(lfn).getPFNList();
-
-        c = (c == null) ? new ArrayList<ReplicaCatalogEntry>() : c;
-
+        Collection<ReplicaCatalogEntry> c = new ArrayList();
         c.add(tuple);
-        if (isRegex) {
-            mLFNRegex.put(lfn, new ReplicaLocation(lfn, c, false));
-            mLFNPattern.put(lfn, Pattern.compile(lfn));
-        } else {
-            mLFN.put(lfn, new ReplicaLocation(lfn, c, false));
-        }
-
-        return 1;
+        return this.insert(new ReplicaLocation(lfn, c, false));
     }
 
     /**
