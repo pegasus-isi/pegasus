@@ -378,8 +378,7 @@ class ReplicaStoreDeserializer extends ReplicaCatalogJsonDeserializer<ReplicaSto
                                                     + " can  have one pfn or more pfns. Found "
                                                     + count);
                                 }
-                                ReplicaCatalogEntry rce = rl.getPFNList().get(0);
-                                if (rce.isRegex()) {
+                                if (rl.isRegex()) {
                                     StringBuffer error = new StringBuffer();
                                     error.append(
                                                     "Unable to deserialize into Replica Store an entry")
