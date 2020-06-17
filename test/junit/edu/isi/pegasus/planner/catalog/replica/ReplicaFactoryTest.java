@@ -82,6 +82,11 @@ public class ReplicaFactoryTest {
 
     @Test
     public void testWithTypeMentionedFile() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.replica.factory",
+                "testWithTypeMentionedFile",
+                Integer.toString(mTestNumber++));
+
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty(PegasusProperties.PEGASUS_REPLICA_CATALOG_PROPERTY, FILE_CATALOG_TYPE);
         props.setProperty(
@@ -97,10 +102,16 @@ public class ReplicaFactoryTest {
                 tempFile.delete();
             }
         }
+        mLogger.logEventCompletion();
     }
 
     @Test
     public void testWithOnlyPathToFile() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.replica.factory",
+                "testWithOnlyPathToFile",
+                Integer.toString(mTestNumber++));
+
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty(
                 PegasusProperties.PEGASUS_REPLICA_CATALOG_FILE_PROPERTY,
@@ -115,10 +126,16 @@ public class ReplicaFactoryTest {
                 tempFile.delete();
             }
         }
+        mLogger.logEventCompletion();
     }
 
     @Test
     public void testWithTypeMentionedYAML() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.replica.ReplicaFactory",
+                "testWithOnlyPathToFile",
+                Integer.toString(mTestNumber++));
+
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty(PegasusProperties.PEGASUS_REPLICA_CATALOG_PROPERTY, YAML_CATALOG_TYPE);
         props.setProperty(
@@ -134,10 +151,16 @@ public class ReplicaFactoryTest {
                 tempFile.delete();
             }
         }
+        mLogger.logEventCompletion();
     }
 
     @Test
     public void testWithOnlyPathToYAMLFile() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.replica.ReplicaFactory",
+                "testWithOnlyPathToFile",
+                Integer.toString(mTestNumber++));
+
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty(
                 PegasusProperties.PEGASUS_REPLICA_CATALOG_FILE_PROPERTY,
@@ -152,6 +175,7 @@ public class ReplicaFactoryTest {
                 tempFile.delete();
             }
         }
+        mLogger.logEventCompletion();
     }
 
     @Test
@@ -203,8 +227,9 @@ public class ReplicaFactoryTest {
         writer.write(
                 "# matches \"f.a\"\n"
                         + "  - lfn: \"f.a\"\n"
-                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                        + "    site: \"local\"");
+                        + "    pfns:\n"
+                        + "      - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "        site: \"local\"");
         writer.close();
         bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
         try {
@@ -237,8 +262,9 @@ public class ReplicaFactoryTest {
         writer.write(
                 "# matches \"f.a\"\n"
                         + "  - lfn: \"f.a\"\n"
-                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                        + "    site: \"local\"");
+                        + "    pfns:\n"
+                        + "      - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "        site: \"local\"");
         writer.close();
 
         File text = new File(dir, ReplicaFactory.DEFAULT_FILE_REPLICA_CATALOG_BASENAME);
