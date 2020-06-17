@@ -122,20 +122,36 @@ public class ReplicaLocation extends Data implements Cloneable {
         }
     }
 
+    /*
+     * Add a PFN and it's attributes. Any existing mapping with the same PFN and site attribute will
+     * be replaced, including all its attributes.
+     *
+     * @param tuple the <code>ReplicaCatalogEntry</code> object containing the PFN and the
+     *     attributes.
+     * 
+     * @param sanitize add site handle if not specified
+     */
+    public void addPFN(ReplicaCatalogEntry tuple){
+        this.addPFN(tuple, true);
+    }
+    
     /**
      * Add a PFN and it's attributes. Any existing mapping with the same PFN and site attribute will
      * be replaced, including all its attributes.
      *
      * @param tuple the <code>ReplicaCatalogEntry</code> object containing the PFN and the
      *     attributes.
+     * 
+     * @param sanitize add site handle if not specified
      */
-    public void addPFN(ReplicaCatalogEntry tuple) {
+    public void addPFN(ReplicaCatalogEntry tuple, boolean sanitize) {
         boolean seen = false;
         String pfn = tuple.getPFN();
         String site = tuple.getResourceHandle();
 
-        sanitize(tuple);
-
+        if(sanitize){
+            sanitize(tuple);
+        }
         // traverse through the existing PFN's to check for the
         // same pfn
         for (Iterator i = this.pfnIterator(); i.hasNext() && !seen; ) {
@@ -304,6 +320,7 @@ public class ReplicaLocation extends Data implements Cloneable {
      * @param location is another <code>ReplicaLocations</code> to merge with.
      * @return true if a merge was successful, false if the LFNs did not match.
      */
+    /*
     public boolean merge(ReplicaLocation location) {
         String lfn1 = this.getLFN();
         String lfn2 = (location == null) ? null : location.getLFN();
@@ -322,6 +339,82 @@ public class ReplicaLocation extends Data implements Cloneable {
 
         return result;
     }
+    */
+    
+    /**
+     * Merges content of the passed replica location into the existing
+     * one.During the merge, any existing RCE that match pfn and site handle,
+     * are removed. If after removal, the pfn list is empty, all the metadata is
+     * purged, else metadata is add to existing metadata.
+     *
+     * @param rl
+     *
+     * @return number of PFN inserted
+     */
+    public int merge(ReplicaLocation rl) {
+        return this.merge(rl, true);
+    }
+    
+    /**
+     * Merges content of the passed replica location into the existing one.
+     * During the merge, any existing RCE that match pfn and site handle, are
+     * removed. If after removal, the pfn list is empty, all the metadata is
+     * purged, else metadata is add to existing metadata.
+     *
+     * @param rl
+     * @param sanitize add site handle if not specified
+     *
+     * @return number of PFN inserted
+     */
+    public int merge(ReplicaLocation rl, boolean sanitize) {
+        String lfn1 = this.getLFN();
+        String lfn2 = (rl == null) ? null : rl.getLFN();
+        boolean lfnMatch
+                = (lfn1 == null && lfn2 == null || lfn1 != null && lfn2 != null && lfn1.equals(lfn2));
+        int count = 0;
+        if (!lfnMatch) {
+            return count;
+        }
+
+        for (ReplicaCatalogEntry toInsert : rl.getPFNList()) {
+            String pfn = toInsert.getPFN();
+            String handle = toInsert.getResourceHandle();
+
+            Collection<ReplicaCatalogEntry> c = this.getPFNList();
+            for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext();) {
+                ReplicaCatalogEntry rce = i.next();
+                // loop through existing entries and see if they match
+                // what we are trying to insert
+                if (pfn.equals(rce.getPFN())
+                        && ((handle == null && rce.getResourceHandle() == null)
+                        || (handle != null && handle.equals(rce.getResourceHandle())))) {
+                    try {
+                        i.remove();
+                    } catch (UnsupportedOperationException uoe) {
+                        return 0;
+                    }
+                }
+            }
+        }
+        // if existing is empty now, then also purge all metadata
+        if (this.getPFNCount() == 0) {
+            this.getAllMetadata().reset();
+        }
+
+        // now we can insert all the entries into the existing entry
+        for (ReplicaCatalogEntry toInsert : rl.getPFNList()) {
+            this.addPFN(toInsert, sanitize);
+            count += 1;
+        }
+        // we just add in metadata overwriting existing
+        Metadata m = rl.getAllMetadata();
+        for (Iterator<String> it = m.getProfileKeyIterator(); it.hasNext();) {
+            String key = it.next();
+            rl.addMetadata(key, (String) m.get(key));
+        }
+        return count;
+    }
+
 
     /**
      * Returns the textual description of the data class.
