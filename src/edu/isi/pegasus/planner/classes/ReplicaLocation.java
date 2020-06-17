@@ -713,7 +713,7 @@ public class ReplicaLocation extends Data implements Cloneable {
          */
         public void serialize(ReplicaLocation rl, JsonGenerator gen, SerializerProvider sp)
                 throws IOException {
-
+            gen.writeStartObject();
             writeStringField(gen, ReplicaCatalogKeywords.LFN.getReservedName(), rl.getLFN());
             if (rl.isRegex()) {
                 writeStringField(gen, ReplicaCatalogKeywords.REGEX.getReservedName(), "true");
@@ -744,6 +744,8 @@ public class ReplicaLocation extends Data implements Cloneable {
                 }
                 gen.writeEndObject();
             }*/
+            
+            gen.writeEndObject();
         }
     }
 }
