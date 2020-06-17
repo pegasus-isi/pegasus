@@ -13,17 +13,21 @@
  */
 package edu.isi.pegasus.planner.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.IOException;
@@ -42,6 +46,7 @@ import java.util.Map;
  * @see edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry
  */
 @JsonDeserialize(using = ReplicaLocation.JsonDeserializer.class)
+@JsonSerialize(using = ReplicaLocation.JsonSerializer.class)
 public class ReplicaLocation extends Data implements Cloneable {
 
     /**
@@ -488,7 +493,7 @@ public class ReplicaLocation extends Data implements Cloneable {
     }
 
     /**
-     * Custom deserializer for YAML representation of Container
+     * Custom deserializer for YAML representation of ReplicaLocation
      *
      * @author Karan Vahi
      */
@@ -686,6 +691,59 @@ public class ReplicaLocation extends Data implements Cloneable {
                 Map.Entry<String, JsonNode> entry = it.next();
                 rl.addMetadata(entry.getKey(), entry.getValue().asText());
             }
+        }
+    }
+
+    /**
+     * Custom serializer for YAML representation of ReplicaLocation
+     *
+     * @author Karan Vahi
+     */
+    static class JsonSerializer extends PegasusJsonSerializer<ReplicaLocation> {
+
+        public JsonSerializer() {}
+
+        /**
+         * Serializes contents into YAML representation
+         *
+         * @param r;
+         * @param gen
+         * @param sp
+         * @throws IOException
+         */
+        public void serialize(ReplicaLocation rl, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+
+            writeStringField(gen, ReplicaCatalogKeywords.LFN.getReservedName(), rl.getLFN());
+            if (rl.isRegex()) {
+                writeStringField(gen, ReplicaCatalogKeywords.REGEX.getReservedName(), "true");
+            }
+            if (rl.getPFNCount() > 0) {
+                gen.writeArrayFieldStart(ReplicaCatalogKeywords.PFNS.getReservedName());
+                for (ReplicaCatalogEntry rce : rl.getPFNList()) {
+                    gen.writeStartObject();
+                    // we don't quote or escape anything as serializer
+                    // always adds enclosing quotes
+                    writeStringField(
+                            gen, ReplicaCatalogKeywords.PFN.getReservedName(), rce.getPFN());
+                    writeStringField(
+                            gen,
+                            ReplicaCatalogKeywords.SITE.getReservedName(),
+                            rce.getResourceHandle());
+                    gen.writeEndObject();
+                }
+                gen.writeEndArray();
+            }
+            /*String checksumType = (String) rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY);
+            String checksumValue = (String) rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY);
+            if (checksumType != null || checksumValue != null) {
+                gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
+                gen.writeStartObject();
+                if (checksumType != null) {
+                    writeStringField(gen, checksumType, checksumValue);
+                }
+                gen.writeEndObject();
+            }*/
         }
     }
 }

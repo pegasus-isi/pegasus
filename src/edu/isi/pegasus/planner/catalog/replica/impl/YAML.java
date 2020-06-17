@@ -1281,11 +1281,11 @@ public class YAML implements ReplicaCatalog {
 
             // first serialize the non regex entries
             for (ReplicaLocation rl : catalog.mLFN.values()) {
-                serialize(rl, gen, sp);
+                gen.writeObject(rl);
             }
             // serialize the regex entries
             for (ReplicaLocation rl : catalog.mLFNRegex.values()) {
-                serialize(rl, gen, sp);
+                gen.writeObject(rl);
             }
 
             gen.writeEndArray();
