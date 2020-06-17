@@ -1291,43 +1291,5 @@ public class YAML implements ReplicaCatalog {
             gen.writeEndArray();
             gen.writeEndObject();
         }
-
-        /**
-         * Serializes contents into YAML representation
-         *
-         * @param entry
-         * @param gen
-         * @param sp
-         * @throws IOException
-         */
-        private void serialize(ReplicaLocation rl, JsonGenerator gen, SerializerProvider sp)
-                throws IOException {
-
-            for (ReplicaCatalogEntry rce : rl.getPFNList()) {
-                gen.writeStartObject();
-                // we don't quote or escape anything as serializer
-                // always adds enclosing quotes
-                writeStringField(gen, ReplicaCatalogKeywords.LFN.getReservedName(), rl.getLFN());
-                writeStringField(gen, ReplicaCatalogKeywords.PFN.getReservedName(), rce.getPFN());
-                writeStringField(
-                        gen,
-                        ReplicaCatalogKeywords.SITE.getReservedName(),
-                        rce.getResourceHandle());
-                if (rce.isRegex()) {
-                    writeStringField(gen, ReplicaCatalogKeywords.REGEX.getReservedName(), "true");
-                }
-                String checksumType = (String) rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY);
-                String checksumValue = (String) rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY);
-                if (checksumType != null || checksumValue != null) {
-                    gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
-                    gen.writeStartObject();
-                    if (checksumType != null) {
-                        writeStringField(gen, checksumType, checksumValue);
-                    }
-                    gen.writeEndObject();
-                }
-                gen.writeEndObject();
-            }
-        }
     }
 }
