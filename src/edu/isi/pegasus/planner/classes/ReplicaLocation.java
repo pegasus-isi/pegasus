@@ -734,17 +734,38 @@ public class ReplicaLocation extends Data implements Cloneable {
                 }
                 gen.writeEndArray();
             }
-            /*String checksumType = (String) rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY);
-            String checksumValue = (String) rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY);
-            if (checksumType != null || checksumValue != null) {
-                gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
-                gen.writeStartObject();
-                if (checksumType != null) {
-                    writeStringField(gen, checksumType, checksumValue);
+            Metadata m = rl.getAllMetadata();
+            if (m != null && !m.isEmpty()) {
+                // check for checksum info first
+                String checksumType = (String) m.removeKey(Metadata.CHECKSUM_TYPE_KEY);
+                String checksumValue = (String) m.removeKey(Metadata.CHECKSUM_VALUE_KEY);
+                if (checksumType != null || checksumValue != null) {
+                    if (checksumType != null) {
+                        gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
+                        gen.writeStartObject();
+                        writeStringField(gen, checksumType, checksumValue);
+                    }
+                    gen.writeEndObject();
                 }
-                gen.writeEndObject();
-            }*/
-            
+                // write out remaining metadata
+                if (m != null && !m.isEmpty()) {
+                    gen.writeFieldName(ReplicaCatalogKeywords.METADATA.getReservedName());
+                    gen.writeStartObject();
+                    for (Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ) {
+                        String key = it.next();
+                        writeStringField(gen, key, m.get(key));
+                    }
+                    gen.writeEndObject();
+                }
+                // add back the checksum info into metadata
+                if (checksumType != null) {
+                    m.construct(Metadata.CHECKSUM_TYPE_KEY, checksumType);
+                }
+                if (checksumValue != null) {
+                    m.construct(Metadata.CHECKSUM_VALUE_KEY, checksumValue);
+                }
+            }
+
             gen.writeEndObject();
         }
     }
