@@ -19,7 +19,6 @@ package edu.isi.pegasus.planner.catalog.replica.classes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
@@ -44,7 +43,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
      */
     @Override
     public RuntimeException getException(String message) {
-        return new CatalogException(message);
+        return new ReplicaCatalogException(message);
     }
 
     /**
@@ -115,10 +114,9 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
             }
         }
         if (lfn == null) {
-            throw new ReplicaCatalogException("Replica needs to be defined with a lfn " + node);
+            throw getException("Replica needs to be defined with a lfn " + node);
         }
         rl.setLFN(lfn);
-        System.err.println(rl);
         return rl;
     }
 
@@ -153,7 +151,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                 }
             }
         } else {
-            throw new RuntimeException(
+            throw  getException(
                     "Checksum needs to be object node. Found for replica" + node);
         }
     }
@@ -197,7 +195,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                 }
             }
         } else {
-            throw new RuntimeException(
+            throw getException(
                     "PFN needs to be object node. Found for replica" + node);
         }
         
