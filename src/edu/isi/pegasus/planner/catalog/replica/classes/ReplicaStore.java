@@ -370,11 +370,11 @@ class ReplicaStoreDeserializer extends ReplicaCatalogJsonDeserializer<ReplicaSto
                             for (JsonNode replicaNode : replicaNodes) {
                                 ReplicaLocation rl = this.createReplicaLocation(replicaNode);
                                 int count = rl.getPFNCount();
-                                if (count == 0 || count > 1) {
+                                if (count == 0) {
                                     throw new ReplicaCatalogException(
-                                            "ReplicaLocation for ReplicaLocation "
+                                            "ReplicaLocation "
                                                     + rl
-                                                    + " can only have one pfn. Found "
+                                                    + " can  have one pfn or more pfns. Found "
                                                     + count);
                                 }
                                 ReplicaCatalogEntry rce = rl.getPFNList().get(0);

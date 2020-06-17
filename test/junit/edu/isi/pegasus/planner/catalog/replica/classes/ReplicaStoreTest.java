@@ -67,8 +67,9 @@ public class ReplicaStoreTest {
                         + "replicas:\n"
                         + "  # matches \"f.a\"\n"
                         + "  - lfn: \"f.a\"\n"
-                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                        + "    site: \"local\"";
+                        + "    pfns:\n"
+                        + "      - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "        site: \"local\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
         assertNotNull(store);
@@ -87,12 +88,14 @@ public class ReplicaStoreTest {
                         + "replicas:\n"
                         + "  # matches \"f.a\"\n"
                         + "  - lfn: \"f.a\"\n"
-                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                        + "    site: \"local\"\n"
+                        + "    pfns:\n"
+                        + "      - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "        site: \"local\"\n"
                         + "  # matches \"f.b\"\n"
                         + "  - lfn: \"f.b\"\n"
-                        + "    pfn: \"file:///Volumes/data/input/f.b\"\n"
-                        + "    site: \"isi\"";
+                        + "    pfns:\n"
+                        + "      - pfn: \"file:///Volumes/data/input/f.b\"\n"
+                        + "        site: \"isi\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
         assertNotNull(store);
@@ -112,11 +115,11 @@ public class ReplicaStoreTest {
                         + "replicas:\n"
                         + "  # matches \"f.a\"\n"
                         + "  - lfn: \"f.a\"\n"
-                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                        + "    site: \"local\"\n"
+                        + "    pfns:\n"
+                        + "      - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "        site: \"local\"\n"
                         + "    checksum:\n"
-                        + "       type: \"sha256\"\n"
-                        + "       value: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"";
+                        + "      sha256: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
         assertNotNull(store);
@@ -145,8 +148,9 @@ public class ReplicaStoreTest {
                         + "replicas:\n"
                         + "  - lfn: \"f.a\"\n"
                         + "    regex: true\n"
-                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
-                        + "    site: \"local\"";
+                        + "    pfns:\n"
+                        + "      - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "        site: \"local\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
     }
@@ -159,8 +163,9 @@ public class ReplicaStoreTest {
         String test =
                 "pegasus: \"5.0\"\n"
                         + "replicas:\n"
-                        + "  - pfn: \"file:///Volumes/data/input/f.a\"\n"
-                        + "    site: \"local\"";
+                        + "  - pfns:\n"
+                        + "     - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "       site: \"local\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
     }
