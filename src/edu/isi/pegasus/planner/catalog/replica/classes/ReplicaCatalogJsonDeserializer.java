@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.util.Iterator;
 import java.util.Map;
 
@@ -70,6 +71,8 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
 
         String lfn = null;
         ReplicaLocation rl = new ReplicaLocation();
+        boolean regex = false;
+            
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
@@ -97,7 +100,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                     break;
 
                 case REGEX:
-                    rl.addMetadata(key, keyValue);
+                    regex = Boolean.parseBoolean(keyValue);
                     break;
 
                 case CHECKSUM:
@@ -117,6 +120,13 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
             throw getException("Replica needs to be defined with a lfn " + node);
         }
         rl.setLFN(lfn);
+        
+        if (regex){
+            // apply to all PFN entries
+            for( ReplicaCatalogEntry rce: rl.getPFNList()){
+                rce.addAttribute(ReplicaCatalogEntry.REGEX_KEY, "true");
+            }
+        }
         return rl;
     }
 
