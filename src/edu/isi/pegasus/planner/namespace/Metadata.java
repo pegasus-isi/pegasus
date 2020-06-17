@@ -13,9 +13,16 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -24,6 +31,7 @@ import java.util.Map;
  * @author Karan Vahi
  * @version $Revision$
  */
+@JsonSerialize(using = Metadata.JsonSerializer.class)
 public class Metadata extends Namespace {
 
     /** The name of the namespace that this class implements. */
@@ -188,5 +196,74 @@ public class Metadata extends Namespace {
      */
     public Object clone() {
         return (mProfileMap == null) ? new Metadata() : new Metadata(this.mProfileMap);
+    }
+    
+    /**
+     * Custom serializer for YAML representation of Metadata
+     *
+     * @author Karan Vahi
+     */
+    static class JsonSerializer extends PegasusJsonSerializer<Metadata> {
+
+        public JsonSerializer() {}
+
+        /**
+         * Serializes contents into YAML representation.
+         * Sample representation
+         * <pre>
+         * checksum:
+         *   sha256: "991232132abc"
+         * metadata:
+         *   owner: "pegasus"
+         *   abc: "123"
+         *   size: "1024"
+         *   k: "v"
+         * </pre>
+         * @param r;
+         * @param gen
+         * @param sp
+         * @throws IOException
+         */
+        public void serialize(Metadata m, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+            
+            
+            if (!m.isEmpty()) {
+                // since we are actually writing out the field name ourselves
+                // gen.writeStartObject();
+                
+                // check for checksum info first
+                String checksumType = (String) m.removeKey(Metadata.CHECKSUM_TYPE_KEY);
+                String checksumValue = (String) m.removeKey(Metadata.CHECKSUM_VALUE_KEY);
+                if (checksumType != null || checksumValue != null) {
+                    if (checksumType != null) {
+                        gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
+                        gen.writeStartObject();
+                        writeStringField(gen, checksumType, checksumValue);
+                    }
+                    gen.writeEndObject();
+                }
+                // write out remaining metadata
+                if (m != null && !m.isEmpty()) {
+                    gen.writeFieldName(ReplicaCatalogKeywords.METADATA.getReservedName());
+                    gen.writeStartObject();
+                    for (Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ) {
+                        String key = it.next();
+                        writeStringField(gen, key, m.get(key));
+                    }
+                    gen.writeEndObject();
+                }
+                // add back the checksum info into metadata
+                if (checksumType != null) {
+                    m.construct(Metadata.CHECKSUM_TYPE_KEY, checksumType);
+                }
+                if (checksumValue != null) {
+                    m.construct(Metadata.CHECKSUM_VALUE_KEY, checksumValue);
+                }
+                // since we are actually writing out the field name ourselves
+                // gen.writeEndObject();
+            }
+
+        }
     }
 }

@@ -705,6 +705,25 @@ public class ReplicaLocation extends Data implements Cloneable {
 
         /**
          * Serializes contents into YAML representation
+         * Sample representation below
+         * 
+         * <pre>
+         * lfn: "f2"
+         * pfns:
+         *   -
+         *     pfn: "file:///path/to/file"
+         *     site: "local"
+         *   -
+         *     pfn: "file:///path/to/file"
+         *     site: "condorpool"
+         * checksum:
+         *   sha256: "991232132abc"
+         * metadata:
+         *   owner: "pegasus"
+         *   abc: "123"
+         *   size: "1024"
+         *   k: "v"
+         * </pre>
          *
          * @param r;
          * @param gen
@@ -736,34 +755,7 @@ public class ReplicaLocation extends Data implements Cloneable {
             }
             Metadata m = rl.getAllMetadata();
             if (m != null && !m.isEmpty()) {
-                // check for checksum info first
-                String checksumType = (String) m.removeKey(Metadata.CHECKSUM_TYPE_KEY);
-                String checksumValue = (String) m.removeKey(Metadata.CHECKSUM_VALUE_KEY);
-                if (checksumType != null || checksumValue != null) {
-                    if (checksumType != null) {
-                        gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
-                        gen.writeStartObject();
-                        writeStringField(gen, checksumType, checksumValue);
-                    }
-                    gen.writeEndObject();
-                }
-                // write out remaining metadata
-                if (m != null && !m.isEmpty()) {
-                    gen.writeFieldName(ReplicaCatalogKeywords.METADATA.getReservedName());
-                    gen.writeStartObject();
-                    for (Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ) {
-                        String key = it.next();
-                        writeStringField(gen, key, m.get(key));
-                    }
-                    gen.writeEndObject();
-                }
-                // add back the checksum info into metadata
-                if (checksumType != null) {
-                    m.construct(Metadata.CHECKSUM_TYPE_KEY, checksumType);
-                }
-                if (checksumValue != null) {
-                    m.construct(Metadata.CHECKSUM_VALUE_KEY, checksumValue);
-                }
+                gen.writeObject(m);
             }
 
             gen.writeEndObject();
