@@ -39,6 +39,11 @@ public class ReplicaLocation extends Data implements Cloneable {
 
     /** The LFN associated with the entry. */
     private String mLFN;
+    
+    /**
+     * whether an entry is of type regex
+     */
+    private boolean mIsRegex;
 
     /**
      * A list of <code>ReplicaCatalogEntry</code> objects containing the PFN's and associated
@@ -82,7 +87,7 @@ public class ReplicaLocation extends Data implements Cloneable {
      */
     public ReplicaLocation(String lfn, Collection<ReplicaCatalogEntry> pfns, boolean sanitize) {
         mLFN = lfn;
-
+        mIsRegex = false;
         // PM-1001 always create a separate list only if required
         mPFNList = new ArrayList(pfns);
         mMetadata = this.removeMetadata(pfns);
@@ -187,6 +192,23 @@ public class ReplicaLocation extends Data implements Cloneable {
     public String getLFN() {
         return this.mLFN;
     }
+    
+    /**
+     * Sets the regex attribute
+     * @param regex 
+     */
+    public void setRegex(boolean regex){
+        this.mIsRegex = regex;
+    }
+    
+    /**
+     * Checks if the 'regex' attribute is set to true for the given tuple
+     *
+     * @return true if regex attribute is set to true, false otherwise
+     */
+    public boolean isRegex() {
+        return this.mIsRegex;
+    }
 
     /**
      * Return a PFN as a <code>ReplicaCatalogEntry</code>
@@ -262,6 +284,7 @@ public class ReplicaLocation extends Data implements Cloneable {
         }
         rc.mPFNList = new ArrayList();
         rc.setLFN(this.mLFN);
+        rc.setRegex(this.mIsRegex);
         rc.mMetadata = (Metadata) this.mMetadata.clone();
 
         // add all the RCE's
@@ -307,7 +330,7 @@ public class ReplicaLocation extends Data implements Cloneable {
      */
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append(mLFN).append(" -> {");
+        sb.append(mLFN).append( " regex ").append(this.mIsRegex).append(" -> {");
         for (Iterator it = this.pfnIterator(); it.hasNext(); ) {
             sb.append(it.next());
             sb.append(",");

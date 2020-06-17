@@ -71,7 +71,6 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
 
         String lfn = null;
         ReplicaLocation rl = new ReplicaLocation();
-        boolean regex = false;
             
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
@@ -100,7 +99,7 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                     break;
 
                 case REGEX:
-                    regex = Boolean.parseBoolean(keyValue);
+                    rl.setRegex(Boolean.parseBoolean(keyValue));
                     break;
 
                 case CHECKSUM:
@@ -121,8 +120,11 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
         }
         rl.setLFN(lfn);
         
-        if (regex){
+        if (rl.isRegex()){
             // apply to all PFN entries
+            if( rl.getPFNCount() > 1 ){
+                throw getException("PFN count cannot be more than 1 for replicas with regex true " + node);
+            }
             for( ReplicaCatalogEntry rce: rl.getPFNList()){
                 rce.addAttribute(ReplicaCatalogEntry.REGEX_KEY, "true");
             }
