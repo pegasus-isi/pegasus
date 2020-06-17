@@ -25,12 +25,13 @@ public enum ReplicaCatalogKeywords {
     PEGASUS("pegasus"),
     REPLICAS("replicas"),
     LFN("lfn"),
+    PFNS("pfns"),
     PFN("pfn"),
     SITE("site"),
     REGEX("regex"),
+    METADATA("metadata"),
     CHECKSUM("checksum"),
-    TYPE("type"),
-    VALUE("value");
+    SHA256("sha256");
 
     private String mName;
 

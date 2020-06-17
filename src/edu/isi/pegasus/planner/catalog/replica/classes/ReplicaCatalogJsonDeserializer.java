@@ -51,12 +51,18 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
      * Deserializes a Replica YAML description of the type
      *
      * <pre>
-     *  # matches faa, f.a, f0a, etc.
-     *  - lfn: "f.a"
-     *    pfn: "file:///Volumes/data/input/f.a"
-     *    site: "local"
-     *    regex: true
-     * </pre>
+    - lfn: f1
+      pfns:
+        - site: local
+          rce: /url/to/file
+        - site: condorpool
+          rce: /url/to/file
+      checksum:
+        sha256: abc123
+      metadata:
+        owner: ryan
+        size: 1024
+ </pre>
      *
      * @param node the json node
      * @return ReplicaLocation
@@ -65,7 +71,6 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
 
         String lfn = null;
         ReplicaLocation rl = new ReplicaLocation();
-        ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
@@ -81,20 +86,27 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
                     lfn = keyValue;
                     break;
 
-                case PFN:
-                    rce.setPFN(keyValue);
-                    break;
-
-                case SITE:
-                    rce.setResourceHandle(keyValue);
+                case PFNS:
+                    JsonNode pfnNodes = node.get(key);
+                    if (pfnNodes != null) {
+                        if (pfnNodes.isArray()) {
+                            for (JsonNode pfnNode : pfnNodes) {
+                                rl.addPFN(this.createPFN(pfnNode));
+                            }
+                        }
+                    }
                     break;
 
                 case REGEX:
-                    rce.addAttribute(key, keyValue);
+                    rl.addMetadata(key, keyValue);
                     break;
 
                 case CHECKSUM:
                     addChecksum(rl, node.get(key));
+                    break;
+                    
+                case METADATA:
+                    addMetadata(rl, node.get(key));
                     break;
 
                 default:
@@ -103,21 +115,17 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
             }
         }
         if (lfn == null) {
-            throw new ReplicaCatalogException("Replica needs to be defined with a lfn " + rce);
-        }
-        if (rce.getPFN() == null) {
-            throw new ReplicaCatalogException(
-                    "Replica needs to be defined with a pfn for replica " + lfn + " " + rce);
+            throw new ReplicaCatalogException("Replica needs to be defined with a lfn " + node);
         }
         rl.setLFN(lfn);
-        rl.addPFN(rce);
+        System.err.println(rl);
         return rl;
     }
 
     /**
      * Parses checksum information and adds it to the replica catalog entry object
      *
-     * @param rce
+     * @param rl
      * @param node
      */
     private void addChecksum(ReplicaLocation rl, JsonNode node) {
@@ -134,22 +142,78 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
 
                 String keyValue = node.get(key).asText();
                 switch (reservedKey) {
-                    case TYPE:
-                        rl.addMetadata(Metadata.CHECKSUM_TYPE_KEY, keyValue);
-                        break;
-
-                    case VALUE:
+                    case SHA256:
+                        rl.addMetadata(Metadata.CHECKSUM_TYPE_KEY, "sha256");
                         rl.addMetadata(Metadata.CHECKSUM_VALUE_KEY, keyValue);
                         break;
 
                     default:
                         this.complainForUnsupportedKey(
-                                ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
+                                ReplicaCatalogKeywords.CHECKSUM.getReservedName(), key, node);
                 }
             }
         } else {
             throw new RuntimeException(
                     "Checksum needs to be object node. Found for replica" + node);
+        }
+    }
+
+    /**
+     * Deserializes a pfn of type below
+     * 
+     * <pre>
+     * - site: local
+     *   pfn: /url/to/file
+     * </pre>
+     * 
+     * @param node
+     * @return 
+     */
+    private ReplicaCatalogEntry createPFN(JsonNode node) {
+        ReplicaCatalogEntry rce = new ReplicaCatalogEntry();
+        if (node instanceof ObjectNode) {
+            for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+                Map.Entry<String, JsonNode> e = it.next();
+                String key = e.getKey();
+                ReplicaCatalogKeywords reservedKey = ReplicaCatalogKeywords.getReservedKey(key);
+                if (reservedKey == null) {
+                    this.complainForIllegalKey(
+                            ReplicaCatalogKeywords.PFNS.getReservedName(), key, node);
+                }
+
+                String keyValue = node.get(key).asText();
+                switch (reservedKey) {
+                    case PFN:
+                        rce.setPFN(keyValue);
+                        break;
+
+                    case SITE:
+                        rce.setResourceHandle(keyValue);
+                        break;
+
+                    default:
+                        this.complainForUnsupportedKey(
+                                ReplicaCatalogKeywords.PFNS.getReservedName(), key, node);
+                }
+            }
+        } else {
+            throw new RuntimeException(
+                    "PFN needs to be object node. Found for replica" + node);
+        }
+        
+        return rce;
+    }
+
+    /**
+     * Parses any metadata into the ReplicaLocation object
+     *
+     * @param rl
+     * @param node
+     */
+    private void addMetadata(ReplicaLocation rl, JsonNode node) {
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
+            Map.Entry<String, JsonNode> entry = it.next();
+            rl.addMetadata(entry.getKey(), entry.getValue().asText());
         }
     }
 }

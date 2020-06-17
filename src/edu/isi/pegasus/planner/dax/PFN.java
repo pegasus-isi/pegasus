@@ -38,12 +38,21 @@ public class PFN {
         mProfiles = new LinkedList<Profile>();
     }
 
+    public PFN() {
+        this( null, null );
+    }
+
     public String getURL() {
         return mURL;
     }
 
     public PFN setSite(String site) {
         mSite = site;
+        return this;
+    }
+    
+    public PFN setURL(String url) {
+        mURL = url;
         return this;
     }
 

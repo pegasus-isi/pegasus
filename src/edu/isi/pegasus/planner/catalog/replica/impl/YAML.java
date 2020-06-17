@@ -115,7 +115,7 @@ public class YAML implements ReplicaCatalog {
     /** The default transformation Catalog version to which this maps to */
     public static final String DEFAULT_REPLICA_CATALOG_VERSION = "5.0";
 
-    /** The "not-so-official" location URL of the Replica Catalog Schema. */
+    /** The "not-so-official" location PFN of the Replica Catalog Schema. */
     public static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/rc-5.0.yml";
 
     /** File object of the schema.. */
@@ -1123,21 +1123,41 @@ public class YAML implements ReplicaCatalog {
     static class CallbackJsonDeserializer extends ReplicaCatalogJsonDeserializer<ReplicaCatalog> {
 
         /**
-         * Deserializes a Transformation YAML description of the type
+         * Deserializes a Replica Catalog representation YAML description of the type
          *
          * <pre>
-         *  pegasus: 5.0
+         *  pegasus: "5.0"
          *  replicas:
-         *    # matches "f.a"
-         *    - lfn: "f.a"
-         *      pfn: "file:///Volumes/data/input/f.a"
-         *      site: "local"
-         *
-         *    # matches faa, f.a, f0a, etc.
-         *    - lfn: "f.a"
-         *    pfn: "file:///Volumes/data/input/f.a"
-         *    site: "local"
-         *    regex: true
+         *    - lfn: f1
+         *      pfns:
+         *        - site: local
+         *          path: /path/to/file
+         *        - site: condorpool
+         *          path: /path/to/file
+         *      checksum:
+         *        sha256: abc123
+         *      metadata:
+         *        owner: ryan
+         *        size: 1024
+         *    - lfn: f2
+         *      pfns:
+         *        - site: local
+         *          path: /path/to/file
+         *        - site: condorpool
+         *          path: /path/to/file
+         *      checksum:
+         *        sha256: 991232132abc
+         *      metadata:
+         *        owner: pegasus
+         *        size: 1024
+         *    - lfn: .*\.gz
+         *      pfns:
+         *        - site: local
+         *          path: input/mono/[0]
+         *          # cant have checksum
+         *      metadata:
+         *        owner: pegasus
+         *        regex: true
          * </pre>
          *
          * @param parser
@@ -1176,16 +1196,9 @@ public class YAML implements ReplicaCatalog {
                             if (replicaNodes.isArray()) {
                                 for (JsonNode replicaNode : replicaNodes) {
                                     ReplicaLocation rl = this.createReplicaLocation(replicaNode);
-                                    int count = rl.getPFNCount();
-                                    if (count == 0 || count > 1) {
-                                        throw new ReplicaCatalogException(
-                                                "ReplicaLocation for ReplicaLocation "
-                                                        + rl
-                                                        + " can only have one pfn. Found "
-                                                        + count);
+                                    for(ReplicaCatalogEntry rce: rl.getPFNList()){
+                                        yamlRC.insert(rl.getLFN(), rce);
                                     }
-                                    ReplicaCatalogEntry rce = rl.getPFNList().get(0);
-                                    yamlRC.insert(rl.getLFN(), rce);
                                 }
                             }
                         }
@@ -1310,16 +1323,10 @@ public class YAML implements ReplicaCatalog {
                     gen.writeStartObject();
                     if (checksumType != null) {
                         writeStringField(
-                                gen, ReplicaCatalogKeywords.TYPE.getReservedName(), checksumType);
-                    }
-                    if (checksumValue != null) {
-                        writeStringField(
-                                gen, ReplicaCatalogKeywords.VALUE.getReservedName(), checksumValue);
+                                gen, checksumType, checksumValue);
                     }
                     gen.writeEndObject();
                 }
-                // gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
-                //    gen.writeObject(entry.getAllProfiles());
                 gen.writeEndObject();
             }
         }
