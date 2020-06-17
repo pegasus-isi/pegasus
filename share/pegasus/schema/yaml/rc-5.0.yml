@@ -24,27 +24,34 @@ $defs:
     properties:
       lfn:
         type: string
-      pfn:
-        type: string
-      site:
-        type: string
+      pfns:
+        type: array
+        items:
+          type: object
+          properties:
+            site:
+              type: string
+            pfn:
+              type: string
+          additionalProperties: false
+          required:
+            - site
+            - pfn
+        minItems: 1
       regex:
         type: boolean
       checksum:
         type: object
-        properties:
-          type:
+        description: "To add new checksum types update pattern '^(sha256|<new type>|..)$'"
+        patternProperties:
+          "^(sha256)$":
             type: string
-          value:
-            type: string
-        required:
-          - type
-          - value
         additionalProperties: false
+      metadata:
+        $ref: "common.yml#/$defs/metadata"
     required:
       - lfn
-      - pfn
-      - site
+      - pfns
     additionalProperties: false
     patternProperties:
       ^x-:

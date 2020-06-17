@@ -42,11 +42,11 @@ cat > sites.xml <<EOF
         </directory>
 </site>
 <site handle="condorpool" arch="x86_64" os="LINUX" >
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="pegasus" key="style" >condor</profile>
         <directory  path="${LOCALSCRATCH}/local-scratch" type="local-scratch" free-size="" total-size=""> 
 	    <file-server  operation="all" url="file://${LOCALSCRATCH}/local-scratch"/>
         </directory>            
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="pegasus" key="style" >condor</profile>
 </site>
 <site  handle="cartman-data" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
         <directory  path="${TOPDIR}/staging-site/scratch" type="shared-scratch" free-size="" total-size="">
