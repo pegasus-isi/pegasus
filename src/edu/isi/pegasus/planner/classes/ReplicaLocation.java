@@ -704,9 +704,8 @@ public class ReplicaLocation extends Data implements Cloneable {
         public JsonSerializer() {}
 
         /**
-         * Serializes contents into YAML representation
-         * Sample representation below
-         * 
+         * Serializes contents into YAML representation Sample representation below
+         *
          * <pre>
          * lfn: "f2"
          * pfns:

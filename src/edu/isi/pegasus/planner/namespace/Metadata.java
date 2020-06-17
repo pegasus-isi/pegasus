@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.IOException;
@@ -197,7 +196,7 @@ public class Metadata extends Namespace {
     public Object clone() {
         return (mProfileMap == null) ? new Metadata() : new Metadata(this.mProfileMap);
     }
-    
+
     /**
      * Custom serializer for YAML representation of Metadata
      *
@@ -208,8 +207,8 @@ public class Metadata extends Namespace {
         public JsonSerializer() {}
 
         /**
-         * Serializes contents into YAML representation.
-         * Sample representation
+         * Serializes contents into YAML representation. Sample representation
+         *
          * <pre>
          * checksum:
          *   sha256: "991232132abc"
@@ -219,6 +218,7 @@ public class Metadata extends Namespace {
          *   size: "1024"
          *   k: "v"
          * </pre>
+         *
          * @param r;
          * @param gen
          * @param sp
@@ -226,12 +226,11 @@ public class Metadata extends Namespace {
          */
         public void serialize(Metadata m, JsonGenerator gen, SerializerProvider sp)
                 throws IOException {
-            
-            
+
             if (!m.isEmpty()) {
                 // since we are actually writing out the field name ourselves
                 // gen.writeStartObject();
-                
+
                 // check for checksum info first
                 String checksumType = (String) m.removeKey(Metadata.CHECKSUM_TYPE_KEY);
                 String checksumValue = (String) m.removeKey(Metadata.CHECKSUM_VALUE_KEY);
@@ -263,7 +262,6 @@ public class Metadata extends Namespace {
                 // since we are actually writing out the field name ourselves
                 // gen.writeEndObject();
             }
-
         }
     }
 }
