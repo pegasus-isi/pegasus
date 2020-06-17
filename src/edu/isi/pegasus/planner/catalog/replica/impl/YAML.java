@@ -89,18 +89,38 @@ import java.util.regex.Pattern;
  * <p>
  *
  * <pre>
- * pegasus: "5.0"
- * replicas:
- * # matches "f.a"
- * - lfn: "f.a"
- *   pfn: "file:///Volumes/data/input/f.a"
- *   site: "local"
- *
- * # matches faa, f.a, f0a, etc.
- * - lfn: "f.a"
- *   pfn: "file:///Volumes/data/input/f.a"
- *   site: "local"
- *   regex: true
+ *  pegasus: "5.0"
+ *  replicas:
+ *    - lfn: f1
+ *      pfns:
+ *        - site: local
+ *          pfn: /path/to/file
+ *        - site: condorpool
+ *          pfn: /path/to/file
+ *      checksum:
+ *        sha256: abc123
+ *      metadata:
+ *        owner: vahi
+ *        size: 1024
+ *    - lfn: f2
+ *      pfns:
+ *        - site: local
+ *          pfn: /path/to/file
+ *        - site: condorpool
+ *          pfn: /path/to/file
+ *      checksum:
+ *        sha256: 991232132abc
+ *      metadata:
+ *        owner: pegasus
+ *        size: 1024
+ *    - lfn: .*\.gz
+ *      pfns:
+ *        - site: local
+ *          pfn: input/mono/[0]
+ *          # cant have checksum
+ *      metadata:
+ *        owner: pegasus
+ *        regex: true
  * </pre>
  *
  * <p>The class is strict when producing (storing) results. The LFN and PFN are only quoted and
@@ -1131,20 +1151,20 @@ public class YAML implements ReplicaCatalog {
          *    - lfn: f1
          *      pfns:
          *        - site: local
-         *          path: /path/to/file
+         *          pfn: /path/to/file
          *        - site: condorpool
-         *          path: /path/to/file
+         *          pfn: /path/to/file
          *      checksum:
          *        sha256: abc123
          *      metadata:
-         *        owner: ryan
+         *        owner: vahi
          *        size: 1024
          *    - lfn: f2
          *      pfns:
          *        - site: local
-         *          path: /path/to/file
+         *          pfn: /path/to/file
          *        - site: condorpool
-         *          path: /path/to/file
+         *          pfn: /path/to/file
          *      checksum:
          *        sha256: 991232132abc
          *      metadata:
@@ -1153,7 +1173,7 @@ public class YAML implements ReplicaCatalog {
          *    - lfn: .*\.gz
          *      pfns:
          *        - site: local
-         *          path: input/mono/[0]
+         *          pfn: input/mono/[0]
          *          # cant have checksum
          *      metadata:
          *        owner: pegasus

@@ -51,18 +51,18 @@ public abstract class ReplicaCatalogJsonDeserializer<T> extends CatalogEntryJson
      * Deserializes a Replica YAML description of the type
      *
      * <pre>
-    - lfn: f1
-      pfns:
-        - site: local
-          rce: /url/to/file
-        - site: condorpool
-          rce: /url/to/file
-      checksum:
-        sha256: abc123
-      metadata:
-        owner: ryan
-        size: 1024
- </pre>
+     * - lfn: f1
+     *   pfns:
+     *     - site: local
+     *       pfn: /path/to/file
+     *     - site: condorpool
+     *       pfn: /path/to/file
+     *   checksum:
+     *      sha256: abc123
+     *   metadata:
+     *     owner: vahi
+     *     size: 1024
+     * </pre>
      *
      * @param node the json node
      * @return ReplicaLocation
