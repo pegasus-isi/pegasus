@@ -31,16 +31,13 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.parser.ScannerException;
 import edu.isi.pegasus.planner.parser.TransformationCatalogYAMLParser;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Date;
@@ -85,6 +82,8 @@ public class YAML extends Abstract implements TransformationCatalog {
     /** Boolean indicating whether to modify the file URL or not */
     private boolean modifyFileURL = true;
 
+    private PegasusBag mBag;
+
     /** Default constructor. */
     public YAML() {}
 
@@ -95,6 +94,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @param bag the bag of Pegasus initialization objects.
      */
     public void initialize(PegasusBag bag) {
+        mBag = bag;
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mFlushOnClose = false;
@@ -123,10 +123,9 @@ public class YAML extends Abstract implements TransformationCatalog {
             java.io.File f = new java.io.File(mTCFile);
 
             if (f.exists() && f.length() > 0) {
-                Reader reader = new VariableExpansionReader(new FileReader(mTCFile));
                 File schemaDir = this.mProps.getSchemaDir();
-                yamlParser = new TransformationCatalogYAMLParser(reader, schemaDir, mLogger);
-                mTCStore = yamlParser.parse(modifyFileURL);
+                yamlParser = new TransformationCatalogYAMLParser(mBag, schemaDir);
+                mTCStore = yamlParser.parse(mTCFile, modifyFileURL);
             } else {
                 // empty TCStore
                 mTCStore = new TransformationStore();

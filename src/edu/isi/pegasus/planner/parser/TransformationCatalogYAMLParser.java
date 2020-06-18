@@ -17,10 +17,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -31,12 +29,12 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCata
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.Notifications;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -102,146 +100,77 @@ import java.util.Map.Entry;
  *              JAVA_HOME: /opt/java/1.6
  * </pre>
  *
- * @author Mukund Murrali
  * @author Karan Vahi
  * @version $Revision$
  */
-public class TransformationCatalogYAMLParser {
+public class TransformationCatalogYAMLParser extends YAMLParser {
 
     /** Schema file name; */
     private static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/tc-5.0.yml";
+
     /** Schema File Object; */
     private static File SCHEMA_FILENAME = null;
-
-    /** The transformation to the logger used to log messages. */
-    private LogManager mLogger;
-
-    /** This reader is used for reading the contents of the YAML file */
-    private Reader mReader;
 
     /**
      * Initializes the parser with an input stream to read from.
      *
-     * @param stream
+     * @param bag
      * @param schemaDir
-     * @param logger the transformation to the logger.
      * @throws IOException
      * @throws ScannerException
      */
-    public TransformationCatalogYAMLParser(Reader stream, File schemaDir, LogManager logger)
+    public TransformationCatalogYAMLParser(PegasusBag bag, File schemaDir)
             throws IOException, ScannerException {
+        super(bag);
         File yamlSchemaDir = new File(schemaDir, "yaml");
         SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
-        mReader = stream;
-        mLogger = logger;
-    }
-
-    /** @param logger */
-    public TransformationCatalogYAMLParser(LogManager logger) {
-        mLogger = logger;
     }
 
     /**
      * Parses the complete input stream
      *
+     * @param file
      * @param modifyFileURL Boolean indicating whether to modify the file URL or not
      * @return TransformationStore
      * @throws ScannerException
      * @throws
      */
     @SuppressWarnings("unchecked")
-    public TransformationStore parse(boolean modifyFileURL) throws ScannerException {
+    public TransformationStore parse(String file, boolean modifyFileURL) throws ScannerException {
         TransformationStore store = new TransformationStore();
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-        JsonNode root = null;
-        try {
-            root = mapper.readTree(mReader);
-
-        } catch (JacksonYAMLParseException e) {
-            throw new ScannerException(e.getLocation().getLineNr(), parseError(e));
-        } catch (Exception e) {
-            throw new ScannerException("Error in loading the yaml file " + mReader, e);
+        File f = new File(file);
+        if (!(f.exists() && f.length() > 0)) {
+            mLogger.log(
+                    "The Transformation Catalog file " + file + " was not found or empty",
+                    LogManager.INFO_MESSAGE_LEVEL);
+            return store;
         }
-        if (root != null) {
-            YAMLSchemaValidationResult result =
-                    YAMLSchemaValidator.getInstance()
-                            .validate(root, SCHEMA_FILENAME, "transformation");
-
-            // schema validation is done here.. in case of any validation error we throw the
-            // result..
-            if (!result.isSuccess()) {
-                List<String> errors = result.getErrorMessage();
-                StringBuilder errorResult = new StringBuilder();
-                int i = 1;
-                for (String error : errors) {
-                    if (i > 1) {
-                        errorResult.append(",");
+        try {
+            // first attempt to validate
+            if (validate(f, SCHEMA_FILENAME)) {
+                // validation succeeded. load.
+                Reader reader = new VariableExpansionReader(new FileReader(f));
+                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+                store = mapper.readValue(reader, TransformationStore.class);
+                for (TransformationCatalogEntry entry : store.getAllEntries()) {
+                    if (modifyFileURL) {
+                        Abstract.modifyForFileURLS(entry);
                     }
-                    errorResult.append("Error ").append(i++).append(":{");
-                    errorResult.append(error).append("}");
+                    // we have information about one transformation catalog c
+                    mLogger.log(
+                            "Transformation Catalog Entry parsed is - " + entry,
+                            LogManager.DEBUG_MESSAGE_LEVEL);
                 }
-                throw new ScannerException(errorResult.toString());
-            }
-            JsonNode node = root;
-            if (root.has(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName())) {
-                node = node.get(TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName());
-                if (node.isArray()) {
-                    for (JsonNode transformation : node) {
-                        List<TransformationCatalogEntry> entries =
-                                this.createTransformationCatalogEntry(transformation);
-                        for (TransformationCatalogEntry entry : entries) {
-                            if (modifyFileURL) {
-                                store.addEntry(Abstract.modifyForFileURLS(entry));
-                            } else {
-                                store.addEntry(entry);
-                            }
-                            // we have information about one transformation catalog c
-                            mLogger.log(
-                                    "Transformation Catalog Entry parsed is - " + entry,
-                                    LogManager.DEBUG_MESSAGE_LEVEL);
-                        }
-                    }
-                } else {
-                    throw new ScannerException("transformations: value should be of type array ");
+                for (Container c : store.getAllContainers()) {
+                    // we have information about one transformation catalog c
+                    mLogger.log("Container Entry parsed is - " + c, LogManager.DEBUG_MESSAGE_LEVEL);
                 }
             }
-            if (root.has(TransformationCatalogKeywords.CONTAINERS.getReservedName())) {
-                node = root.get(TransformationCatalogKeywords.CONTAINERS.getReservedName());
-                if (node.isArray()) {
-                    for (JsonNode contNode : node) {
-                        Container c = this.createContainer(contNode);
-                        // we have information about one transformation catalog c
-                        mLogger.log(
-                                "Container Entry parsed is - " + c, LogManager.DEBUG_MESSAGE_LEVEL);
-                        store.addContainer(c);
-                    }
-                } else {
-                    throw new ScannerException("transformations: value should be of type array ");
-                }
-            }
-            // connect container references
-            store.resolveContainerReferences();
+        } catch (IOException ioe) {
+            mLogger.log("IO Error :" + ioe.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
         }
         return store;
-    }
-
-    /**
-     * This method is used to extract the necessary information from the parsing exception
-     *
-     * @param e The parsing exception generated from the yaml.
-     * @return String representing the line number and the problem is returned
-     */
-    private String parseError(JacksonYAMLParseException e) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Problem in the line :")
-                .append(e.getLocation().getLineNr())
-                .append(", column:")
-                .append(e.getLocation().getColumnNr())
-                .append(" ")
-                .append(e.getMessage());
-
-        return builder.toString();
     }
 
     /**
@@ -674,38 +603,6 @@ public class TransformationCatalogYAMLParser {
             return input.substring(1, l - 1);
         } else {
             return input;
-        }
-    }
-
-    /**
-     * Test function.
-     *
-     * @param args
-     * @throws ProcessingException
-     */
-    public static void main(String[] args) throws ScannerException {
-        try {
-            Reader r =
-                    new VariableExpansionReader(
-                            new FileReader(
-                                    new File(
-                                            "/home/mukund/pegasus-5.0.0dev/bin/split_work/tc.yaml")));
-
-            LogManager logger = LogManagerFactory.loadSingletonInstance();
-            logger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
-            logger.logEventStart(
-                    "event.pegasus.catalog.transformation.test", "planner.version", "2");
-
-            TransformationCatalogYAMLParser p =
-                    new TransformationCatalogYAMLParser(r, new File(""), logger);
-            p.parse(true);
-
-        } catch (FileNotFoundException ex) {
-            ex.printStackTrace();
-        } catch (ScannerException se) {
-            se.printStackTrace();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
         }
     }
 }
