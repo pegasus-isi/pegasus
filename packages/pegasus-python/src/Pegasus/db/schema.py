@@ -1045,7 +1045,11 @@ Ensemble.__table_args__ = (
 )
 
 # User mapper(..,...) to extend ensembles.Ensemble to the schema.Ensemble table
-mapper(_Ensemble, Ensemble.__table__)
+mapper(
+    _Ensemble,
+    Ensemble.__table__,
+    properties={"workflows": relation(lambda: _EnsembleWorkflow)},
+)
 
 
 class EnsembleWorkflow(Base):
@@ -1073,9 +1077,6 @@ class EnsembleWorkflow(Base):
         "plan_command", String(1024), nullable=False, default="./plan.sh"
     )
 
-    # Relationships
-    ensemble = relation(Ensemble, backref="workflows")
-
 
 EnsembleWorkflow.__table_args__ = (
     UniqueConstraint(
@@ -1086,4 +1087,8 @@ EnsembleWorkflow.__table_args__ = (
     table_keywords,
 )
 
-mapper(_EnsembleWorkflow, EnsembleWorkflow.__table__)
+mapper(
+    _EnsembleWorkflow,
+    EnsembleWorkflow.__table__,
+    properties={"ensemble": relation(_Ensemble)},
+)
