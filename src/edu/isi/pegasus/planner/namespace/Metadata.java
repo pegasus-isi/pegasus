@@ -198,7 +198,8 @@ public class Metadata extends Namespace {
     }
 
     /**
-     * Custom serializer for YAML representation of Metadata
+     * Custom serializer for YAML representation of Metadata Cannot be used directly, unless
+     * enclosed in another object such as Replica Location.
      *
      * @author Karan Vahi
      */
@@ -239,8 +240,8 @@ public class Metadata extends Namespace {
                         gen.writeFieldName(ReplicaCatalogKeywords.CHECKSUM.getReservedName());
                         gen.writeStartObject();
                         writeStringField(gen, checksumType, checksumValue);
+                        gen.writeEndObject();
                     }
-                    gen.writeEndObject();
                 }
                 // write out remaining metadata
                 if (m != null && !m.isEmpty()) {
