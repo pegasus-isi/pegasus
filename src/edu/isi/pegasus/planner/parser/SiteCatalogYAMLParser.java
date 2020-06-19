@@ -114,7 +114,7 @@ public class SiteCatalogYAMLParser extends YAMLParser {
             }
 
             // first attempt to validate
-            if (validate(f, SCHEMA_FILENAME)) {
+            if (validate(f, SCHEMA_FILENAME, "site")) {
                 // validation succeeded. load.
                 Reader reader = new VariableExpansionReader(new FileReader(f));
                 ObjectMapper mapper = new ObjectMapper(new YAMLFactory());

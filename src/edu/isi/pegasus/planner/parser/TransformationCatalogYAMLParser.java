@@ -147,7 +147,7 @@ public class TransformationCatalogYAMLParser extends YAMLParser {
         }
         try {
             // first attempt to validate
-            if (validate(f, SCHEMA_FILENAME)) {
+            if (validate(f, SCHEMA_FILENAME, "transformation")) {
                 // validation succeeded. load.
                 Reader reader = new VariableExpansionReader(new FileReader(f));
                 ObjectMapper mapper = new ObjectMapper(new YAMLFactory());

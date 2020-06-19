@@ -55,9 +55,10 @@ public abstract class YAMLParser {
      *
      * @param f
      * @param schemaFile
+     * @param catalogType
      * @return
      */
-    protected boolean validate(File f, File schemaFile) {
+    protected boolean validate(File f, File schemaFile, String catalogType) {
         boolean validate = true;
         Reader reader = null;
         try {
@@ -79,7 +80,7 @@ public abstract class YAMLParser {
         }
         if (root != null) {
             YAMLSchemaValidationResult result =
-                    YAMLSchemaValidator.getInstance().validate(root, schemaFile, "site");
+                    YAMLSchemaValidator.getInstance().validate(root, schemaFile, catalogType);
 
             // schema validation is done here.. in case of any validation error we throw the
             // result..
