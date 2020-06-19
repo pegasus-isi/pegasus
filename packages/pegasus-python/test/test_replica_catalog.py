@@ -5,7 +5,7 @@ import pytest
 
 import Pegasus
 from Pegasus import yaml
-from Pegasus.api.replica_catalog import ReplicaCatalog, _ReplicaCatalogEntry
+from Pegasus.api.replica_catalog import _PFN, ReplicaCatalog, _ReplicaCatalogEntry
 from Pegasus.replica_catalog import _to_rc, dump, dumps, load, loads
 
 
@@ -14,30 +14,39 @@ def rc_as_dict():
     return {
         "pegasus": "5.0",
         "replicas": [
-            {"lfn": "a", "pfn": "/a", "site": "local", "regex": True},
-            {"lfn": "b", "pfn": "/b", "site": "local"},
             {
-                "lfn": "c",
-                "pfn": "/c",
-                "site": "local",
-                "checksum": {"type": "sha256", "value": "abc123"},
+                "lfn": "a",
+                "pfns": [{"site": "local", "pfn": "/a"}, {"site": "condorpool", "pfn": "/a"}],
+                "checksum": {"sha256": "abc123"},
+                "metadata": {"key": "value"}
             },
-        ],
+            {
+                "lfn": "b*",
+                "pfns": [{"site": "local", "pfn": "/b"}],
+                "metadata": {"key": "value"},
+                "regex": True
+            }
+        ]
     }
 
+@pytest.fixture(scope="function")
+def rc():
+    return ReplicaCatalog()\
+        .add_replica("local", "a", "/a", checksum={"sha256": "abc123"}, metadata={"key": "value"})\
+        .add_replica("condorpool", "a", "/a")\
+        .add_regex_replica("local", "b*", "/b", metadata={"key": "value"})
 
-def test_to_rc(rc_as_dict):
-
-    expected = ReplicaCatalog()
-    expected.add_replica("local", "a", "/a", regex=True)
-    expected.add_replica("local", "b", "/b")
-    expected.add_replica(
-        "local", "c", "/c", checksum_type="sha256", checksum_value="abc123"
-    )
-
+def test_to_rc(rc, rc_as_dict):
     result = _to_rc(rc_as_dict)
 
-    assert result.replicas == expected.replicas
+    assert result.entries[("a", False)].lfn == rc.entries[("a", False)].lfn
+    assert result.entries[("a", False)].pfns == rc.entries[("a", False)].pfns
+    assert result.entries[("a", False)].metadata == rc.entries[("a", False)].metadata
+    assert result.entries[("a", False)].checksum == rc.entries[("a", False)].checksum
+
+    assert result.entries[("b*", True)].lfn == rc.entries[("b*", True)].lfn
+    assert result.entries[("b*", True)].pfns == rc.entries[("b*", True)].pfns
+    assert result.entries[("b*", True)].metadata == rc.entries[("b*", True)].metadata
 
 
 def test_load(mocker, rc_as_dict):
@@ -46,25 +55,30 @@ def test_load(mocker, rc_as_dict):
         rc = load(f)
         Pegasus.yaml.load.assert_called_once_with(f)
 
-        assert len(rc.replicas) == 3
-        assert _ReplicaCatalogEntry("local", "a", "/a", regex=True) in rc.replicas
-        assert _ReplicaCatalogEntry("local", "b", "/b") in rc.replicas
-        assert _ReplicaCatalogEntry(
-            "local", "c", "/c", checksum_type="sha256", checksum_value="abc123"
-        )
+        assert len(rc.entries) == 2
+        assert rc.entries[("a", False)].lfn == "a"
+        assert rc.entries[("a", False)].pfns == {_PFN("local", "/a"), _PFN("condorpool", "/a")}
+        assert rc.entries[("a", False)].metadata == {"key": "value"}
+        assert rc.entries[("a", False)].checksum == {"sha256": "abc123"}
+
+        assert rc.entries[("b*", True)].lfn == "b*"
+        assert rc.entries[("b*", True)].pfns == {_PFN("local", "/b")}
+        assert rc.entries[("b*", True)].metadata == {"key": "value"}
 
 
 def test_loads(mocker, rc_as_dict):
     mocker.patch("Pegasus.yaml.load", return_value=rc_as_dict)
     rc = loads(json.dumps(rc_as_dict))
 
-    assert len(rc.replicas) == 3
-    assert _ReplicaCatalogEntry("local", "a", "/a", regex=True) in rc.replicas
-    assert _ReplicaCatalogEntry("local", "b", "/b") in rc.replicas
-    assert _ReplicaCatalogEntry(
-        "local", "c", "/c", checksum_type="sha256", checksum_value="abc123"
-    )
+    assert len(rc.entries) == 2
+    assert rc.entries[("a", False)].lfn == "a"
+    assert rc.entries[("a", False)].pfns == {_PFN("local", "/a"), _PFN("condorpool", "/a")}
+    assert rc.entries[("a", False)].metadata == {"key": "value"}
+    assert rc.entries[("a", False)].checksum == {"sha256": "abc123"}
 
+    assert rc.entries[("b*", True)].lfn == "b*"
+    assert rc.entries[("b*", True)].pfns == {_PFN("local", "/b")}
+    assert rc.entries[("b*", True)].metadata == {"key": "value"}
 
 def test_dump(mocker):
     mocker.patch("Pegasus.api.writable.Writable.write")
@@ -74,15 +88,15 @@ def test_dump(mocker):
         Pegasus.api.writable.Writable.write.assert_called_once_with(f, _format="yml")
 
 
-def test_dumps(rc_as_dict):
-    rc = ReplicaCatalog()
-    rc.add_replica("local", "a", "/a", regex=True)
-    rc.add_replica("local", "b", "/b")
-    rc.add_replica("local", "c", "/c", checksum_type="sha256", checksum_value="abc123")
+def test_dumps(rc):
+    result = _to_rc(yaml.load(dumps(rc)))
+    
+    assert len(result.entries) == 2
+    assert result.entries[("a", False)].lfn == "a"
+    assert result.entries[("a", False)].pfns == {_PFN("local", "/a"), _PFN("condorpool", "/a")}
+    assert result.entries[("a", False)].metadata == {"key": "value"}
+    assert result.entries[("a", False)].checksum == {"sha256": "abc123"}
 
-    rc_as_dict["replicas"] = sorted(rc_as_dict["replicas"], key=lambda r: r["lfn"])
-
-    result = yaml.load(dumps(rc))
-    result["replicas"] = sorted(result["replicas"], key=lambda r: r["lfn"])
-
-    assert result["replicas"] == rc_as_dict["replicas"]
+    assert result.entries[("b*", True)].lfn == "b*"
+    assert result.entries[("b*", True)].pfns == {_PFN("local", "/b")}
+    assert result.entries[("b*", True)].metadata == {"key": "value"}
