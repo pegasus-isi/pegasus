@@ -1233,8 +1233,8 @@ public class JDBCRC implements ReplicaCatalog {
                     String indexID =
                             mUsingSQLiteBackend
                                     ? Integer.toString(
-                                    (Integer.parseInt(generatedKeys.get(0))
-                                            - (countInserts-- - 1)))
+                                            (Integer.parseInt(generatedKeys.get(0))
+                                                    - (countInserts-- - 1)))
                                     : generatedKeys.get(index);
 
                     for (ReplicaCatalogEntry tuple : value) {
