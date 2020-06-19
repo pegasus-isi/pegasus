@@ -141,7 +141,7 @@ class ReplicaCatalog(Writable):
         pfn: str,
         metadata: Dict[str, Union[int, str, float]] = {},
     ):
-        """
+        r"""
         Add an entry to this replica catalog using a regular expression pattern.
            Note that regular expressions should follow Java regular expression syntax
            as the underlying code that handles this catalog is Java based.

@@ -260,14 +260,14 @@ class TestReplicaCatalog:
             "regex": True,
         }
 
-    def test_tojson(self):
+    def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         rc = ReplicaCatalog()
         rc.add_replica(
             "local", "f.a", "/f.a", checksum={"sha256": "123"}, metadata={"size": 1024}
         )
         rc.add_regex_replica("local", "*.txt", "/path", metadata={"creator": "ryan"})
-
-        assert _tojson(rc) == {
+        result = _tojson(rc)
+        expected = {
             "pegasus": "5.0",
             "replicas": [
                 {
@@ -284,6 +284,11 @@ class TestReplicaCatalog:
                 },
             ],
         }
+
+        assert result == expected
+
+        rc_schema = load_schema("rc-5.0.json")
+        validate(instance=result, schema=rc_schema)
 
     @pytest.mark.parametrize(
         "_format, loader", [("json", json.load), ("yml", yaml.safe_load)]
