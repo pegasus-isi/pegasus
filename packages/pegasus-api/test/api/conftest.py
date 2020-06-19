@@ -2,9 +2,16 @@ import json
 import os
 import re
 
+from Pegasus.api.writable import _CustomEncoder
+
 import pytest
 
 import yaml
+
+
+def _tojson(obj):
+    """Returns dict representation of obj using writable._CustomEncoder"""
+    return json.loads(json.dumps(obj, cls=_CustomEncoder))
 
 
 @pytest.fixture(scope="module")
