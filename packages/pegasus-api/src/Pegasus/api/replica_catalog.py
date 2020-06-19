@@ -107,7 +107,9 @@ class _ReplicaCatalogEntry:
 
 
 class ReplicaCatalog(Writable):
-    """Maintains a mapping of logical filenames to physical filenames
+    """Maintains a mapping of logical filenames to physical filenames. Any input
+       files to the workflow are specified here so that Pegasus knows where to
+       obtain them.
 
         .. code-block:: python
 
@@ -139,17 +141,37 @@ class ReplicaCatalog(Writable):
         pfn: str,
         metadata: Dict[str, Union[int, str, float]] = {},
     ):
-        """[summary]
+        """Add an entry to this replica catalog using a regular expression pattern.
+           Note that regular expressions should follow Java regular expression syntax
+           as the underlying code that handles this catalog is Java based.
 
-        :param site: [description]
+            .. code-block:: python
+
+                # Example 1: Match f<any-character>a i.e. faa, f.a, f0a, etc.
+                rc.add_regex_replica("local", "f.a", "/Volumes/data/input/f.a")
+
+                # Example 2: Using groupings
+                rc.add_regex_replica("local", "alpha\.(csv|txt|xml)", "/Volumes/data/input/[1]/[0]")
+
+                # If the file being looked up is alpha.csv, the pfn for the file will be
+                # generated as /Volumes/data/input/csv/alpha.csv
+
+                # Example 3: Specifying a default location for all lfns that don't match any
+                # regular expressions. Note that this should be the last entry into the replica
+                # catalog if used. 
+
+                rc.add_regex("local", ".*", "/Volumes/data/input/[0]")
+
+
+        :param site: the site at which this replica (file) resides
         :type site: str
-        :param pattern: [description]
+        :param pattern: regular expression used to match a file
         :type pattern: str
-        :param pfn: [description]
+        :param pfn: path to the file
         :type pfn: str
-        :param metadata: [description]
+        :param metadata: any metadate to be associated with the matched files, for example: {"creator": "pegasus"}
         :type metadata: Dict[str, Union[int, str, float]]
-        :raises DuplicateError: [description]
+        :raises DuplicateError: Duplicate patterns with different PFNs are currently not supported
         """
 
         # restricting pattern to single pfn (may be relaxed in future release)
@@ -171,27 +193,46 @@ class ReplicaCatalog(Writable):
         checksum: Dict[str, str] = dict(),
         metadata: Dict[str, Union[int, str, float]] = dict(),
     ):
-        """[summary]
+        """Add an entry to this replica catalog. 
 
-        :param site: [description]
+            ..code-block:: python
+
+                # Example 1
+                f = File("in.txt").add_metadata(creator="pegasus")
+                rc.add_replica("local", f, Path(".") / "in.txt")
+
+                # Example 2: Adding metadata and a checksum
+                rc.add_replica(
+                    "local", 
+                    "in.txt", 
+                    "/home/ryan/wf/in.txt", 
+                    checksum={"sha256": "abc123"}, 
+                    metadata={"creator": "pegasus"}
+                )
+
+                # Example 3: Adding multiple pfns for the same lfn (metadata and checksum will be
+                # updated for that lfn if given.
+                rc.add_replica("local", "in.txt", Path(".") / "in.txt")
+                rc.add_replica("condorpool", "in.txt", "/path/to/file/in.txt")
+
+        :param site: the site at which this replica (file) resides
         :type site: str
-        :param lfn: [description]
+        :param lfn: logical file name
         :type lfn: Union[str, File]
-        :param pfn: [description]
+        :param pfn: physical file name such as Path("f.txt"), /home/ryan/file.txt, or http://pegasus.isi.edu/file.txt 
         :type pfn: str
-        :param checksum: [description], defaults to {}
+        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to {}
         :type checksum: Dict[str, str], optional
-        :param metadata: [description], defaults to {}
+        :param metadata: metadata key value pairs associated with this lfn such as {"created": "Thu Jun 18 22:18:36 PDT 2020", "owner": "pegasus"}, defaults to {}
         :type metadata: Dict[str, Union[int, str, float]], optional
-        :raises ValueError: [description]
-        :raises DuplicateError: [description]
-        :raises ValueError: [description]
+        :raises ValueError: if pfn is given as a Path object and points to a directory, an error will be thrown
+        :raises ValueError: an unsupported checksum type was given 
         """
 
         # handle Path obj if given for pfn
         if isinstance(pfn, Path):
             if pfn.is_dir():
-                raise ValueError("Invalid pfn: {}, the given path must not be a directory".format(pfn))
+                raise ValueError("Invalid pfn: {}, the given path must not be a directory".format(str(pfn)))
             
             pfn = str(pfn.resolve())
 
