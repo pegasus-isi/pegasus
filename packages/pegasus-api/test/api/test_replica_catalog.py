@@ -263,7 +263,11 @@ class TestReplicaCatalog:
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         rc = ReplicaCatalog()
         rc.add_replica(
-            "local", "f.a", "/f.a", checksum={"sha256": "123"}, metadata={"size": 1024}
+            "local",
+            "f.a",
+            "/f.a",
+            checksum={"sha256": "123"},
+            metadata={"size": 1024, "㐦": "㐦"},
         )
         rc.add_regex_replica("local", "*.txt", "/path", metadata={"creator": "ryan"})
         result = _tojson(rc)
@@ -274,7 +278,7 @@ class TestReplicaCatalog:
                     "lfn": "f.a",
                     "pfns": [{"site": "local", "pfn": "/f.a"}],
                     "checksum": {"sha256": "123"},
-                    "metadata": {"size": 1024},
+                    "metadata": {"size": 1024, "㐦": "㐦"},
                 },
                 {
                     "lfn": "*.txt",

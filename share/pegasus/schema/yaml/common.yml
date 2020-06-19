@@ -14,13 +14,14 @@ $defs:
 
   filenameSafeString:
     type: string
-    pattern: '^[\-0-9a-zA-Z\_]+$'
+    pattern: '^[\u0161-\u55295\u57344-\u65533\u65535-\u1114111\-0-9a-zA-Z\_]+$'
+    description: Valid filenames (cannot contain /)
 
   # --- metadata ---------------------------------------------------------------
   metadata:
     type: object
     patternProperties:
-      '[a-zA-Z0-9\._]+':
+      '[\u0161-\u55295\u57344-\u65533\u65535-\u1114111a-zA-Z0-9\._]+':
         oneOf:
           - type: string
           - type: number
