@@ -117,4 +117,28 @@ public abstract class YAMLParser {
                   */
         return e.toString();
     }
+
+    /**
+     * Remove potential leading and trailing quotes from a string.
+     *
+     * @param input is a string which may have leading and trailing quotes
+     * @return a string that is either identical to the input, or a substring thereof.
+     */
+    public String niceString(String input) {
+        // sanity
+        if (input == null) {
+            return input;
+        }
+        int l = input.length();
+        if (l < 2) {
+            return input;
+        }
+
+        // check for leading/trailing quotes
+        if (input.charAt(0) == '"' && input.charAt(l - 1) == '"') {
+            return input.substring(1, l - 1);
+        } else {
+            return input;
+        }
+    }
 }

@@ -49,7 +49,59 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
- * A YAML based Transformation Catalog
+ * A YAML based Transformation Catalog. Sample format is illustrated below
+ *
+ * <pre>
+ * pegasus: "5.0"
+ * transformations:
+ *    - namespace: "example"
+ *      name: "keg"
+ *      version: "1.0"
+ *      profiles:
+ *          env:
+ *              APP_HOME: "/tmp/myscratch"
+ *              JAVA_HOME: "/opt/java/1.6"
+ *          pegasus:
+ *              clusters.num: "1"
+ *       *      requires:
+ *          - anotherTr
+ *
+ *      sites:
+ *       - name: "isi"
+ *          type: "installed"
+ *          pfn: "/path/to/keg"
+ *          arch: "x86_64"
+ *          os.type: "linux"
+ *          os.release: "fc"
+ *          os.version: "1.0"
+ *          profiles:
+ *            env:
+ *                Hello: World
+ *                JAVA_HOME: /bin/java.1.6
+ *            condor:
+ *                FOO: bar
+ *          container: centos-pegasus
+ *
+ *    - namespace: example
+ *      name: anotherTr
+ *      version: "1.2.3"
+ *
+ *      sites:
+ *          - name: isi
+ *            type: installed
+ *            pfn: /path/to/anotherTr
+ *
+ * containers:
+ *    - name: centos-pegasus
+ *      type: docker
+ *      image: docker:///rynge/montage:latest
+ *      mount:
+ *         - /Volumes/Work/lfs1:/shared-data/:ro
+ *         - /Volumes/Work/lfs12:/shared-data1/:ro
+ *      profiles:
+ *          env:
+ *              JAVA_HOME: /opt/java/1.6
+ * </pre>
  *
  * @author Karan Vahi
  */

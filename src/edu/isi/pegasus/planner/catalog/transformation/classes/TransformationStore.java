@@ -477,8 +477,9 @@ public class TransformationStore {
          *    - name: centos-pegasus
          *      type: docker
          *      image: docker:///rynge/montage:latest
-         *      mount: /Volumes/Work/lfs1:/shared-data/:ro
-         *      mount: /Volumes/Work/lfs12:/shared-data1/:ro
+         *      mount:
+         *         - /Volumes/Work/lfs1:/shared-data/:ro
+         *         - /Volumes/Work/lfs12:/shared-data1/:ro
          *      profiles:
          *          env:
          *              JAVA_HOME: /opt/java/1.6
