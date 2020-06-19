@@ -20,6 +20,13 @@ try:
 except FileExistsError:
     pass
 
+# --- Output Dir Setup for condorpool Site -------------------------------------
+condorpool_local_storage_dir = Path("/lizard/scratch-90-days/bamboo/outputs") / RUN_ID
+try:
+    Path.mkdir(condorpool_local_storage_dir)
+except FileExistsError:
+    pass
+
 # --- Configuration ------------------------------------------------------------
 
 print("Generating pegasus.conf at: {}".format(TOP_DIR / "pegasus.properties"))
@@ -57,6 +64,10 @@ SiteCatalog().add_sites(
         ),
     ),
     Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
+    .add_directories(
+        Directory(Directory.LOCAL_STORAGE, str(condorpool_local_storage_dir))
+        .add_file_servers(FileServer("file://" + str(condorpool_local_storage_dir), Operation.ALL))
+    )
     .add_pegasus_profile(style="condor")
     .add_pegasus_profile(auxillary_local="true")
     .add_condor_profile(universe="vanilla"),
@@ -71,7 +82,7 @@ with open("f.å", "w") as f:
     f.write("This is sample input to KEG\n")
 
 fa = File("f.å").add_metadata({"㐦": "㒦"})
-ReplicaCatalog().add_replica(LOCAL, fa, "file://" + str(TOP_DIR / fa.lfn)).write()
+ReplicaCatalog().add_replica(LOCAL, fa, TOP_DIR / fa.lfn).write()
 
 # --- Transformations ----------------------------------------------------------
 
@@ -144,7 +155,7 @@ try:
         verbose=3,
         relative_dir=RUN_ID,
         sites=[CONDOR_POOL],
-        output_site=LOCAL,
+        output_sites=[LOCAL, CONDOR_POOL],
         force=True,
         submit=True,
     )
