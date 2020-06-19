@@ -85,7 +85,7 @@ class Test_Use:
                 {
                     "lfn": "a",
                     "size": 2048,
-                    "metadata": {"createdBy": "ryan"},
+                    "metadata": {"createdBy": "ryan", "size": 2048},
                     "type": "output",
                     "stageOut": False,
                     "registerReplica": True,
@@ -101,6 +101,7 @@ class Test_Use:
                 {
                     "lfn": "a",
                     "size": 1024,
+                    "metadata": {"size": 1024},
                     "type": "checkpoint",
                     "stageOut": True,
                     "registerReplica": True,

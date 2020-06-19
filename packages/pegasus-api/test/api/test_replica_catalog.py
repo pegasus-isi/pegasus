@@ -146,7 +146,7 @@ class TestReplicaCatalog:
 
     def test_add_replica_pfn_with_path_obj(self):
         rc = ReplicaCatalog()
-        rc.add_replica("local", "test_replica_catalog", Path("test_replica_catalog.py"))
+        rc.add_replica("local", "test_replica_catalog", Path(__file__))
 
         # ensure that the path was resolved
         assert "packages/pegasus-api/test/api/test_replica_catalog.py" in rc.entries[("test_replica_catalog", False)].pfns.pop().pfn
