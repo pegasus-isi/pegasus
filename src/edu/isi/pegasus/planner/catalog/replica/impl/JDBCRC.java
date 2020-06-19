@@ -1207,16 +1207,15 @@ public class JDBCRC implements ReplicaCatalog {
 
             // insert LFNs
             int countInserts = 0;
+            int totalInserts = 0;
             for (String lfn : lfns) {
                 List<ReplicaCatalogEntry> value = (List<ReplicaCatalogEntry>) x.get(lfn);
                 if (value != null) {
-                    for (ReplicaCatalogEntry tuple : value) {
-                        st.addBatch("INSERT INTO rc_lfn(lfn) VALUES('" + lfn + "')");
-                        countInserts++;
-                    }
+                    st.addBatch("INSERT INTO rc_lfn(lfn) VALUES('" + lfn + "')");
+                    countInserts++;
+                    totalInserts += value.size();
                 }
             }
-            int totalInserts = countInserts;
             st.executeBatch();
             ResultSet rs = st.getGeneratedKeys();
             List<String> generatedKeys = new ArrayList<String>();
@@ -1231,13 +1230,14 @@ public class JDBCRC implements ReplicaCatalog {
             for (String lfn : lfns) {
                 List<ReplicaCatalogEntry> value = (List<ReplicaCatalogEntry>) x.get(lfn);
                 if (value != null) {
+                    String indexID =
+                            mUsingSQLiteBackend
+                                    ? Integer.toString(
+                                    (Integer.parseInt(generatedKeys.get(0))
+                                            - (countInserts-- - 1)))
+                                    : generatedKeys.get(index);
+
                     for (ReplicaCatalogEntry tuple : value) {
-                        String indexID =
-                                mUsingSQLiteBackend
-                                        ? Integer.toString(
-                                                (Integer.parseInt(generatedKeys.get(0))
-                                                        - (countInserts-- - 1)))
-                                        : generatedKeys.get(index);
                         String rh =
                                 tuple.getResourceHandle() == null
                                         ? "NULL"
@@ -1277,7 +1277,7 @@ public class JDBCRC implements ReplicaCatalog {
                 index++;
             }
             st.executeBatch();
-            result = mUsingSQLiteBackend ? totalInserts : generatedKeys.size();
+            result = totalInserts;
             mConnection.setAutoCommit(true);
 
         } catch (SQLException e) {
