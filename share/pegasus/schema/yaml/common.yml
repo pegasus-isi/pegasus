@@ -21,7 +21,9 @@ $defs:
     type: object
     patternProperties:
       '[a-zA-Z0-9\._]+':
-        type: string
+        oneOf:
+          - type: string
+          - type: number
       ^x-:
         $ref: "#/$defs/vendorExtension"
     minProperties: 1
