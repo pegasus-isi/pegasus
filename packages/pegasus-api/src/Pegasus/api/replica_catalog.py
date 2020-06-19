@@ -188,6 +188,12 @@ class ReplicaCatalog(Writable):
         :raises ValueError: [description]
         """
 
+        # handle Path obj if given for pfn
+        if isinstance(pfn, Path):
+            if pfn.is_dir():
+                raise ValueError("Invalid pfn: {}, the given path must not be a directory".format(pfn))
+            
+            pfn = str(pfn.resolve())
 
         # File might contain metadata that should be included
         if isinstance(lfn, File):

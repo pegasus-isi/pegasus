@@ -144,6 +144,24 @@ class TestReplicaCatalog:
             "pfns": [{"site": "local", "pfn": "/f.a"}],
         }
 
+    def test_add_replica_pfn_with_path_obj(self):
+        rc = ReplicaCatalog()
+        rc.add_replica("local", "test_replica_catalog", Path("test_replica_catalog.py"))
+
+        # ensure that the path was resolved
+        assert "packages/pegasus-api/test/api/test_replica_catalog.py" in rc.entries[("test_replica_catalog", False)].pfns.pop().pfn
+
+    def test_add_replica_pfn_with_invalid_path_obj(self, tmpdir):
+        test_dir = tmpdir.mkdir("test")
+        
+        rc = ReplicaCatalog()
+        with pytest.raises(ValueError) as e:
+            rc.add_replica("local", "f.a", Path(str(test_dir)))
+
+        assert "Invalid pfn: {}, the given path".format(test_dir) in str(e)
+
+
+    # TODO: why does this test break the following tests???
     '''
     def test_add_replica_file_as_lfn(self):
         rc = ReplicaCatalog()
