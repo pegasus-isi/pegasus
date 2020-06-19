@@ -2,24 +2,22 @@ import json
 import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from collections import OrderedDict
-
 
 import pytest
 from jsonschema import validate
 
 import yaml
+from conftest import _tojson
 
 from Pegasus.api.errors import DuplicateError
 from Pegasus.api.replica_catalog import (
-    PEGASUS_VERSION,
     _PFN,
+    PEGASUS_VERSION,
     File,
     ReplicaCatalog,
     _ReplicaCatalogEntry,
 )
-from Pegasus.api.writable import _CustomEncoder
-from conftest import _tojson
+
 
 class TestFile:
     @pytest.mark.parametrize("lfn,size", [("a", None), ("例", 2048)])
@@ -149,20 +147,22 @@ class TestReplicaCatalog:
         rc.add_replica("local", "test_replica_catalog", Path(__file__))
 
         # ensure that the path was resolved
-        assert "packages/pegasus-api/test/api/test_replica_catalog.py" in rc.entries[("test_replica_catalog", False)].pfns.pop().pfn
+        assert (
+            "packages/pegasus-api/test/api/test_replica_catalog.py"
+            in rc.entries[("test_replica_catalog", False)].pfns.pop().pfn
+        )
 
     def test_add_replica_pfn_with_invalid_path_obj(self, tmpdir):
         test_dir = tmpdir.mkdir("test")
-        
+
         rc = ReplicaCatalog()
         with pytest.raises(ValueError) as e:
             rc.add_replica("local", "f.a", Path(str(test_dir)))
 
         assert "Invalid pfn: {}, the given path".format(test_dir) in str(e)
 
-
     # TODO: why does this test break the following tests???
-    '''
+    """
     def test_add_replica_file_as_lfn(self):
         rc = ReplicaCatalog()
         f = File("f.a", size=1024).add_metadata(creator="ryan")
@@ -173,7 +173,7 @@ class TestReplicaCatalog:
             "pfns": [{"site": "local", "pfn": "/f.a"}],
             "metadata": {"size": 1024, "creator": "ryan"},
         }
-    '''
+    """
 
     def test_add_multiple_replicas(self):
         rc = ReplicaCatalog()
@@ -237,7 +237,7 @@ class TestReplicaCatalog:
         assert _tojson(rc.entries[("*.txt", True)]) == {
             "lfn": "*.txt",
             "pfns": [{"site": "local", "pfn": "/path"}],
-            "regex": True
+            "regex": True,
         }
 
     def test_add_duplicate_regex_replica(self):
@@ -246,7 +246,7 @@ class TestReplicaCatalog:
 
         with pytest.raises(DuplicateError) as e:
             rc.add_regex_replica("local", "*.txt", "/path")
-        
+
         assert "Pattern: *.txt already exists" in str(e)
 
     def test_add_regex_replica_with_metadata(self):
@@ -257,31 +257,33 @@ class TestReplicaCatalog:
             "lfn": "*.txt",
             "pfns": [{"site": "local", "pfn": "/path"}],
             "metadata": {"creator": "ryan"},
-            "regex": True
+            "regex": True,
         }
 
     def test_tojson(self):
         rc = ReplicaCatalog()
-        rc.add_replica("local", "f.a", "/f.a", checksum={"sha256": "123"}, metadata={"size": 1024})
+        rc.add_replica(
+            "local", "f.a", "/f.a", checksum={"sha256": "123"}, metadata={"size": 1024}
+        )
         rc.add_regex_replica("local", "*.txt", "/path", metadata={"creator": "ryan"})
 
         assert _tojson(rc) == {
-                'pegasus': '5.0', 
-                'replicas': [
-                    {
-                        'lfn': 'f.a', 
-                        'pfns': [{'site': 'local', 'pfn': '/f.a'}], 
-                        'checksum': {'sha256': '123'}, 
-                        'metadata': {'size': 1024}
-                    }, 
-                    {
-                        'lfn': '*.txt', 
-                        'pfns': [{'site': 'local', 'pfn': '/path'}], 
-                        'metadata': {'creator': 'ryan'}, 
-                        'regex': True
-                    }, 
-                ]
-            }
+            "pegasus": "5.0",
+            "replicas": [
+                {
+                    "lfn": "f.a",
+                    "pfns": [{"site": "local", "pfn": "/f.a"}],
+                    "checksum": {"sha256": "123"},
+                    "metadata": {"size": 1024},
+                },
+                {
+                    "lfn": "*.txt",
+                    "pfns": [{"site": "local", "pfn": "/path"}],
+                    "metadata": {"creator": "ryan"},
+                    "regex": True,
+                },
+            ],
+        }
 
     @pytest.mark.parametrize(
         "_format, loader", [("json", json.load), ("yml", yaml.safe_load)]
@@ -289,32 +291,43 @@ class TestReplicaCatalog:
     def test_write(self, _format, loader):
         rc = ReplicaCatalog()
         f_a = File("f.a", size=1024).add_metadata(creator="ryan")
-        rc.add_replica("local", f_a, "/f.a", checksum={"sha256": "123"}, metadata={"extra": "metadata"})
+        rc.add_replica(
+            "local",
+            f_a,
+            "/f.a",
+            checksum={"sha256": "123"},
+            metadata={"extra": "metadata"},
+        )
         rc.add_replica("condorpool", f_a, "/f.a")
         rc.add_replica("local", "f.b", "/f.b")
         rc.add_regex_replica("local", "*.txt", "/path", metadata={"creator": "ryan"})
 
         expected = {
-            'pegasus': '5.0', 
-            'replicas': [
+            "pegasus": "5.0",
+            "replicas": [
                 {
-                    'lfn': 'f.a', 
-                    'pfns': [{'site': 'local', 'pfn': '/f.a'}, {'site': 'condorpool', 'pfn': '/f.a'}], 
-                    'checksum': {'sha256': '123'}, 
-                    'metadata': {'extra': 'metadata', 'size': 1024, 'creator': 'ryan'}
-                }, 
+                    "lfn": "f.a",
+                    "pfns": [
+                        {"site": "local", "pfn": "/f.a"},
+                        {"site": "condorpool", "pfn": "/f.a"},
+                    ],
+                    "checksum": {"sha256": "123"},
+                    "metadata": {"extra": "metadata", "size": 1024, "creator": "ryan"},
+                },
                 {
-                    'lfn': 'f.b', 
-                    'pfns': [{'site': 'local', 'pfn': '/f.b'}], 
-                    'metadata': {'size': 1024, 'creator': 'ryan'}
-                }, 
+                    "lfn": "f.b",
+                    "pfns": [{"site": "local", "pfn": "/f.b"}],
+                    "metadata": {"size": 1024, "creator": "ryan"},
+                },
                 {
-                    'lfn': '*.txt', 
-                    'pfns': [{'site': 'local', 'pfn': '/path'}], 
-                    'metadata': {'creator': 'ryan'}, 'regex': True}
-            ]
+                    "lfn": "*.txt",
+                    "pfns": [{"site": "local", "pfn": "/path"}],
+                    "metadata": {"creator": "ryan"},
+                    "regex": True,
+                },
+            ],
         }
-        expected["replicas"][0]["pfns"] = sorted( 
+        expected["replicas"][0]["pfns"] = sorted(
             expected["replicas"][0]["pfns"], key=lambda pfn: pfn["site"]
         )
 
@@ -323,7 +336,7 @@ class TestReplicaCatalog:
             f.seek(0)
             result = loader(f)
 
-        result["replicas"][0]["pfns"] = sorted( 
+        result["replicas"][0]["pfns"] = sorted(
             result["replicas"][0]["pfns"], key=lambda pfn: pfn["site"]
         )
 
@@ -357,4 +370,3 @@ class TestReplicaCatalog:
         """
         p = re.compile(r"pegasus: '5.0'[\w\W]+replicas:[\w\W]+")
         assert p.match(result) is not None
-

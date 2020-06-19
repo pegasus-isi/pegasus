@@ -1,6 +1,6 @@
-from pathlib import Path
 from collections import OrderedDict
-from typing import Union, List, Dict, Optional, Set
+from pathlib import Path
+from typing import Dict, Optional, Set, Union
 
 from ._utils import _chained
 from .errors import DuplicateError
@@ -40,7 +40,7 @@ class File(MetadataMixin):
     :py:class:`~Pegasus.api.workflow.Job` inputs and outputs.
     """
 
-    def __init__(self, lfn: str, size: Optional[int]=None):
+    def __init__(self, lfn: str, size: Optional[int] = None):
         """
         :param lfn: a unique logical filename
         :type lfn: str
@@ -141,7 +141,8 @@ class ReplicaCatalog(Writable):
         pfn: str,
         metadata: Dict[str, Union[int, str, float]] = {},
     ):
-        """Add an entry to this replica catalog using a regular expression pattern.
+        """
+        Add an entry to this replica catalog using a regular expression pattern.
            Note that regular expressions should follow Java regular expression syntax
            as the underlying code that handles this catalog is Java based.
 
@@ -232,8 +233,12 @@ class ReplicaCatalog(Writable):
         # handle Path obj if given for pfn
         if isinstance(pfn, Path):
             if pfn.is_dir():
-                raise ValueError("Invalid pfn: {}, the given path must not be a directory".format(str(pfn)))
-            
+                raise ValueError(
+                    "Invalid pfn: {}, the given path must not be a directory".format(
+                        str(pfn)
+                    )
+                )
+
             pfn = str(pfn.resolve())
 
         # File might contain metadata that should be included
@@ -271,7 +276,7 @@ class ReplicaCatalog(Writable):
     def __json__(self):
         return OrderedDict(
             [
-                ("pegasus", PEGASUS_VERSION), 
-                ("replicas", [v for _, v in self.entries.items()])
+                ("pegasus", PEGASUS_VERSION),
+                ("replicas", [v for _, v in self.entries.items()]),
             ]
         )

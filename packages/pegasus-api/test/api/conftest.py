@@ -2,11 +2,11 @@ import json
 import os
 import re
 
-from Pegasus.api.writable import _CustomEncoder
-
 import pytest
 
 import yaml
+
+from Pegasus.api.writable import _CustomEncoder
 
 
 def _tojson(obj):
