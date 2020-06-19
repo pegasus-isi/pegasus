@@ -340,7 +340,7 @@ def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
                 sys.exit(1)
 
     log.info(
-        "Building replica catalog complete. {} entries added".format(len(rc.replicas))
+        "Building replica catalog complete. {} entries added".format(len(rc.entries))
     )
 
     return rc

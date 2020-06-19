@@ -10,7 +10,7 @@ import pytest
 
 from Pegasus import yaml
 from Pegasus.api.errors import DuplicateError
-from Pegasus.api.replica_catalog import _ReplicaCatalogEntry
+from Pegasus.api.replica_catalog import _ReplicaCatalogEntry, _PFN
 from Pegasus.api.writable import _CustomEncoder
 
 # Using import_module because of dashes in pegasus-cwl-converter.py
@@ -547,10 +547,10 @@ def test_build_pegasus_rc():
     }
 
     rc = build_pegasus_rc(wf_inputs, wf)
-    assert rc.replicas == {
-        _ReplicaCatalogEntry("local", "input1", "/path/to/input1", regex=False),
-        _ReplicaCatalogEntry("local", "input2", "/path/to/input2", regex=False),
-    }
+    assert rc.entries[("input1", False)].lfn == "input1"
+    assert rc.entries[("input1", False)].pfns == {_PFN("local", "/path/to/input1")}
+    assert rc.entries[("input2", False)].lfn == "input2"
+    assert rc.entries[("input2", False)].pfns == {_PFN("local", "/path/to/input2")}
 
 
 def test_build_pegasus_rc_missing_input(caplog):
@@ -1104,7 +1104,12 @@ def test_main(mocker):
         "name": "cwl-converted-pegasus-workflow",
         "pegasus": "5.0",
         "replicaCatalog": {
-            "replicas": [{"lfn": "if", "pfn": "/path/to/file.txt", "site": "local",}]
+            "replicas": [
+                {
+                    "lfn": "if", 
+                    "pfns": [{"pfn": "/path/to/file.txt", "site": "local"}]
+                }
+            ]
         },
         "transformationCatalog": {
             "transformations": [
