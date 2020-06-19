@@ -560,7 +560,7 @@ class TestSubWorkflow:
 def expected_json():
     expected = {
         "pegasus": PEGASUS_VERSION,
-        "name": "wf",
+        "name": "wf㒀",
         "jobs": [
             {
                 "type": "job",
@@ -648,7 +648,7 @@ def expected_json():
 
 @pytest.fixture(scope="function")
 def wf():
-    wf = Workflow("wf")
+    wf = Workflow("wf㒀")
 
     j1 = (
         Job("t1", _id="a")
@@ -678,6 +678,13 @@ def wf():
 
 
 class TestWorkflow:
+    @pytest.mark.parametrize("name", [("/bad/name1"), ("ba dname2")])
+    def test_invalid_workflow_name(self, name):
+        with pytest.raises(ValueError) as e:
+            Workflow(name=name)
+
+        assert "Invalid workflow name: {}".format(name) in str(e)
+
     @pytest.mark.parametrize(
         "job",
         [

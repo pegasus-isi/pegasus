@@ -637,7 +637,16 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type name: str
         :param infer_dependencies: whether or not to automatically compute job dependencies based on input and output files used by each job, defaults to True
         :type infer_dependencies: bool, optional
+        :raises ValueError: workflow name may not contain any / or spaces
         """
+
+        if any(c in name for c in "/ "):
+            raise ValueError(
+                "Invalid workflow name: {}, workflow name may not contain any / or spaces".format(
+                    name
+                )
+            )
+
         self.name = name
         self.infer_dependencies = infer_dependencies
 
