@@ -1,4 +1,6 @@
+from pathlib import Path
 from collections import OrderedDict
+from typing import Union, List, Dict, Optional, Set
 
 from ._utils import _chained
 from .errors import DuplicateError
@@ -10,13 +12,35 @@ PEGASUS_VERSION = "5.0"
 __all__ = ["File", "ReplicaCatalog"]
 
 
+class _PFN:
+    """A physical file name comprising site and path"""
+
+    def __init__(self, site, pfn):
+        self.site = site
+        self.pfn = pfn
+
+    def __eq__(self, other):
+        if isinstance(other, _PFN):
+            return self.site == other.site and self.pfn == other.pfn
+        return False
+
+    def __hash__(self):
+        return hash((self.site, self.pfn))
+
+    def __repr__(self):
+        return "<_PFN site: {}, pfn: {}>".format(self.site, self.pfn)
+
+    def __json__(self):
+        return {"site": self.site, "pfn": self.pfn}
+
+
 class File(MetadataMixin):
     """
     A workflow File. This class is used to represent
     :py:class:`~Pegasus.api.workflow.Job` inputs and outputs.
     """
 
-    def __init__(self, lfn, size=None):
+    def __init__(self, lfn: str, size: Optional[int]=None):
         """
         :param lfn: a unique logical filename
         :type lfn: str
@@ -31,6 +55,8 @@ class File(MetadataMixin):
         self.metadata = dict()
         self.lfn = lfn
         self.size = size
+        if size:
+            self.metadata["size"] = size
 
     def __str__(self):
         return self.lfn
@@ -47,83 +73,35 @@ class File(MetadataMixin):
         return _filter_out_nones(
             {
                 "lfn": self.lfn,
-                "metadata": dict(self.metadata) if len(self.metadata) > 0 else None,
+                "metadata": self.metadata if len(self.metadata) > 0 else None,
                 "size": self.size,
             }
         )
 
 
 class _ReplicaCatalogEntry:
-    """Internal class used to represent a Replica Catalog entry"""
-
     def __init__(
-        self, site, lfn, pfn, regex=False, checksum_type=None, checksum_value=None
+        self,
+        lfn: str,
+        pfns: Set[_PFN],
+        checksum: Dict[str, str] = dict(),
+        metadata: Dict[str, Union[int, str, float]] = dict(),
+        regex: bool = False,
     ):
-        self.site = site
         self.lfn = lfn
-        self.pfn = pfn
+        self.pfns = pfns
+        self.checksum = checksum
+        self.metadata = metadata
         self.regex = regex
-        self.checksum_type = None
-        self.checksum_value = None
-
-        if checksum_type and checksum_value:
-            if self.regex:
-                raise ValueError("Checksum values cannot be used with a regex entry")
-            else:
-                self.checksum_type = checksum_type
-                self.checksum_value = checksum_value
-        elif bool(checksum_type) ^ bool(checksum_value):
-            raise ValueError(
-                "Checksum usage in replica catalog requires that both checksum_type and checksum_value be set"
-            )
-
-    def __str__(self):
-        return "ReplicaEntry(site={}, lfn={}, pfn={}, regex={}, checksum_type={}, checksum_value={})".format(
-            self.site,
-            self.lfn,
-            self.pfn,
-            self.regex,
-            self.checksum_type,
-            self.checksum_value,
-        )
-
-    def __hash__(self):
-        return hash(
-            (
-                self.site,
-                self.lfn,
-                self.pfn,
-                self.regex,
-                self.checksum_type,
-                self.checksum_value,
-            )
-        )
-
-    def __eq__(self, other):
-        if isinstance(other, _ReplicaCatalogEntry):
-            return (
-                self.site == other.site
-                and self.lfn == other.lfn
-                and self.pfn == other.pfn
-                and self.regex == other.regex
-                and self.checksum_type == other.checksum_type
-                and self.checksum_value == other.checksum_value
-            )
-        else:
-            raise ValueError(
-                "_ReplicaCatalogEntry cannot be compared with {}".format(type(other))
-            )
 
     def __json__(self):
         return _filter_out_nones(
             {
-                "site": self.site,
                 "lfn": self.lfn,
-                "pfn": self.pfn,
+                "pfns": [pfn for pfn in self.pfns],
+                "checksum": self.checksum if len(self.checksum) > 0 else None,
+                "metadata": self.metadata if len(self.metadata) > 0 else None,
                 "regex": self.regex if self.regex else None,
-                "checksum": {"type": self.checksum_type, "value": self.checksum_value}
-                if self.checksum_type and self.checksum_value
-                else None,
             }
         )
 
@@ -145,75 +123,108 @@ class ReplicaCatalog(Writable):
 
     _DEFAULT_FILENAME = "replicas.yml"
 
+    _SUPPORTED_CHECKSUMS = {"sha256"}
+
     def __init__(self):
-        self.replicas = set()
+        # Using key = (<lfn or pattern>, <is_regex>) to preserve insertion
+        # order of entries while distinguishing between regex and
+        # non regex entries
+        self.entries = OrderedDict()
+
+    @_chained
+    def add_regex_replica(
+        self,
+        site: str,
+        pattern: str,
+        pfn: str,
+        metadata: Dict[str, Union[int, str, float]] = {},
+    ):
+        """[summary]
+
+        :param site: [description]
+        :type site: str
+        :param pattern: [description]
+        :type pattern: str
+        :param pfn: [description]
+        :type pfn: str
+        :param metadata: [description]
+        :type metadata: Dict[str, Union[int, str, float]]
+        :raises DuplicateError: [description]
+        """
+
+        # restricting pattern to single pfn (may be relaxed in future release)
+        if (pattern, True) in self.entries:
+            raise DuplicateError(
+                "Pattern: {} already exists in this replica catalog".format(pattern)
+            )
+
+        self.entries[(pattern, True)] = _ReplicaCatalogEntry(
+            lfn=pattern, pfns={_PFN(site, pfn)}, metadata=metadata, regex=True
+        )
 
     @_chained
     def add_replica(
-        self, site, lfn, pfn, regex=False, checksum_type=None, checksum_value=None
+        self,
+        site: str,
+        lfn: Union[str, File],
+        pfn: Union[str, Path],
+        checksum: Dict[str, str] = dict(),
+        metadata: Dict[str, Union[int, str, float]] = dict(),
     ):
-        """Add an entry to the replica catalog. If regex=True, checksum_type and
-        checksum_value cannot be used. If a checksum of this replica is to be used,
-        both checksum_type and checksum_value must be specified.
+        """[summary]
 
-        .. code-block:: python
-
-            # Example 1
-            rc.add_replica("local", "f.a", "file:///Volumes/data/input/f.a")
-
-            # Example 2
-            # refers to 'f<any char>a' such as faa, f.a, f0a, etc.
-            rc.add_replica("local", "f.a", "file:///Volumes/data/input/f.a", regex="true")
-
-            # Example 3
-            rc.add_replica("local",
-                           "f.a",
-                           "file:///lfs1/input-data/f.a",
-                           checksum_type="sha256",
-                           checksum_value="ca8ed5988cb4ca0b67c45fd80fd17423aba2a066ca8a63a4e1c6adab067a3e92")
-
-        :param site: site at which this file resides
+        :param site: [description]
         :type site: str
-        :param lfn: logical filename or :py:class:`~Pegasus.api.replica_catalog.File`
-        :type lfn: str or File
-        :param pfn: physical file name
+        :param lfn: [description]
+        :type lfn: Union[str, File]
+        :param pfn: [description]
         :type pfn: str
-        :param regex: whether or not the lfn is a regex pattern, defaults to False
-        :type regex: bool, optional
-        :param checksum_type: the checksum type, currently only type of sha256 is supported
-        :type checksum_type: str, optional
-        :param checksum_value: the checksum for the file
-        :type checksum_value: str, optional
-        :raises DuplicateError: an entry with the same parameters already exists in the catalog
-        :raises TypeError: lfn must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
-        :return: self
+        :param checksum: [description], defaults to {}
+        :type checksum: Dict[str, str], optional
+        :param metadata: [description], defaults to {}
+        :type metadata: Dict[str, Union[int, str, float]], optional
+        :raises ValueError: [description]
+        :raises DuplicateError: [description]
+        :raises ValueError: [description]
         """
-        if not isinstance(lfn, File) and not isinstance(lfn, str):
-            raise TypeError(
-                "invalid lfn: {lfn}; lfn must be of type File or str".format(lfn=lfn)
-            )
 
+
+        # File might contain metadata that should be included
         if isinstance(lfn, File):
+            if lfn.metadata:
+                metadata.update(lfn.metadata)
+
             lfn = lfn.lfn
 
-        replica = _ReplicaCatalogEntry(
-            site,
-            lfn,
-            pfn,
-            regex=regex,
-            checksum_type=checksum_type,
-            checksum_value=checksum_value,
-        )
-        if replica in self.replicas:
-            raise DuplicateError(
-                "entry: {replica} already exists in this ReplicaCatalog".format(
-                    replica=replica
-                )
-            )
+        # ensure supported checksum type given
+        if len(checksum) > 0:
+            for checksum_type in checksum:
+                if checksum_type.lower() not in ReplicaCatalog._SUPPORTED_CHECKSUMS:
+                    raise ValueError(
+                        "Invalid checksum: {}, supported checksum types are: {}".format(
+                            checksum_type, ReplicaCatalog._SUPPORTED_CHECKSUMS
+                        )
+                    )
+
+        # if an entry with the given lfn already exists, update it
+        # else create and add a new one
+        if (lfn, False) in self.entries:
+            self.entries[(lfn, False)].pfns.add(_PFN(site, pfn))
+            self.entries[(lfn, False)].checksum.update(checksum)
+            self.entries[(lfn, False)].metadata.update(metadata)
         else:
-            self.replicas.add(replica)
+            self.entries[(lfn, False)] = _ReplicaCatalogEntry(
+                lfn,
+                {_PFN(site, pfn)},
+                checksum=checksum,
+                metadata=metadata,
+                regex=False,
+            )
 
     def __json__(self):
         return OrderedDict(
-            [("pegasus", PEGASUS_VERSION), ("replicas", [r for r in self.replicas])]
+            [
+                ("pegasus", PEGASUS_VERSION), 
+                ("replicas", [v for _, v in self.entries.items()])
+            ]
         )
