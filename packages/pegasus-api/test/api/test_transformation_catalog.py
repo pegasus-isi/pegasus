@@ -495,8 +495,16 @@ class TestContainer:
 
         assert "invalid container_type: container_type" in str(e)
 
+    def test_invalid_container_checksum(self):
+        with pytest.raises(ValueError) as e:
+            Container("test", Container.DOCKER, "image", checksum={"md5": "123"})
+
+        assert "invalid checksum: md5" in str(e)
+
     def test_tojson_no_profiles(self, convert_yaml_schemas_to_json, load_schema):
-        c = Container("test", Container.DOCKER, "image", ["mount"])
+        c = Container(
+            "test", Container.DOCKER, "image", ["mount"], checksum={"sha256": "abc123"}
+        )
 
         result = c.__json__()
         expected = {
@@ -504,6 +512,7 @@ class TestContainer:
             "type": Container.DOCKER.value,
             "image": "image",
             "mounts": ["mount"],
+            "checksum": {"sha256": "abc123"},
         }
 
         container_schema = load_schema("tc-5.0.json")["$defs"]["container"]
@@ -512,7 +521,9 @@ class TestContainer:
         assert result == expected
 
     def test_tojson_with_profiles(self, convert_yaml_schemas_to_json, load_schema):
-        c = Container("test", Container.DOCKER, "image", ["mount"])
+        c = Container(
+            "test", Container.DOCKER, "image", ["mount"], checksum={"sha256": "abc123"}
+        )
         c.add_env(JAVA_HOME="/java/home")
 
         result = c.__json__()
@@ -522,6 +533,7 @@ class TestContainer:
             "image": "image",
             "mounts": ["mount"],
             "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
+            "checksum": {"sha256": "abc123"},
         }
 
         container_schema = load_schema("tc-5.0.json")["$defs"]["container"]

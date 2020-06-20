@@ -1,5 +1,6 @@
 from collections import OrderedDict, defaultdict
 from enum import Enum
+from typing import Dict, List, Optional
 
 from .errors import DuplicateError
 from .mixins import HookMixin, MetadataMixin, ProfileMixin
@@ -143,7 +144,17 @@ class Container(ProfileMixin):
     SINGULARITY = _ContainerType.SINGULARITY
     SHIFTER = _ContainerType.SHIFTER
 
-    def __init__(self, name, container_type, image, mounts=None, image_site=None):
+    _SUPPORTED_CHECKSUMS = {"sha256"}
+
+    def __init__(
+        self,
+        name: str,
+        container_type: _ContainerType,
+        image: str,
+        mounts: Optional[List[str]] = None,
+        image_site: Optional[str] = None,
+        checksum: Dict[str, str] = {},
+    ):
         """
         :param name: name of this container
         :type name: str
@@ -152,9 +163,11 @@ class Container(ProfileMixin):
         :param image: image, such as 'docker:///rynge/montage:latest'
         :type image: str
         :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro', ...]
-        :type mounts: list
+        :type mounts: Optional[List[str]], optional
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
-        :type image_site: str, optional
+        :type image_site: Optional[str], optional
+        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to {}
+        :type checksum: Dict[str, str], optional
         :raises ValueError: container_type must be one of :py:class:`~Pegasus.api.transformation_catalog._ContainerType`
         """
         self.name = name
@@ -172,6 +185,17 @@ class Container(ProfileMixin):
         self.mounts = mounts
         self.image_site = image_site
 
+        # ensure supported checksum type given
+        if len(checksum) > 0:
+            for checksum_type in checksum:
+                if checksum_type.lower() not in Container._SUPPORTED_CHECKSUMS:
+                    raise ValueError(
+                        "invalid checksum: {}, supported checksum types are: {}".format(
+                            checksum_type, Container._SUPPORTED_CHECKSUMS
+                        )
+                    )
+        self.checksum = checksum
+
         self.profiles = defaultdict(dict)
 
     def __json__(self):
@@ -182,6 +206,7 @@ class Container(ProfileMixin):
                 "image": self.image,
                 "mounts": self.mounts,
                 "image.site": self.image_site,
+                "checksum": self.checksum if len(self.checksum) > 0 else None,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
             }
         )
