@@ -12,6 +12,7 @@ git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3
+sed -i 's/wf.add_replica_catalog(rc)/rc.write("data\/rc.yml")/g' montage-workflow.py
 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.2 \
                       --band 2mass:j:green \
@@ -37,6 +38,7 @@ pegasus-rc-client --conf ../pegasus.properties --delete tmp.list
 rm -f tmp.list
 
 echo "Inserting new data on the database..."
+pegasus-rc-converter -I YAML -O File -i data/rc.yml -o data/rc.txt -vvv
 pegasus-rc-client -vvv --conf ../pegasus.properties --insert data/rc.txt
 
 echo "Planning and submitting the workflow..."
@@ -49,4 +51,3 @@ pegasus-plan \
     --dax data/montage-workflow.yml \
     --cluster horizontal \
     --submit | tee $TOP_DIR/plan.out
-

@@ -7,11 +7,12 @@ TOP_DIR=`pwd`
 export PATH=/ccg/software/montage/current/bin:$PATH
 export LD_LIBRARY_PATH=/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH
 
-rm -rf montage-workflow-v2
-git clone https://github.com/pegasus-isi/montage-workflow-v2.git
+rm -rf montage-workflow-v3
+git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
-cd montage-workflow-v2
+cd montage-workflow-v3
+sed -i 's/wf.add_replica_catalog(rc)/rc.write("data\/rc.yml")/g' montage-workflow.py
 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.2 \
                       --band 2mass:j:green \
@@ -40,17 +41,16 @@ echo "Creating jdbcrc $sqlitedb"
 pegasus-db-admin create ${sqlitedburl}
 
 echo "Inserting input entries in the database..."
+pegasus-rc-converter -I YAML -O File -i data/rc.yml -o data/rc.txt -vvv
 pegasus-rc-client -vvv --conf ../pegasusrc --insert data/rc.txt
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf ../pegasusrc \
-    --sites condor_pool \
+    --sites condorpool \
     --dir work \
     --output-sites local \
     --cleanup leaf \
-    --dax data/montage.dax \
+    --dax data/montage-workflow.yml \
     --cluster horizontal \
     --submit | tee $TOP_DIR/plan.out
-
-
