@@ -111,6 +111,7 @@ def _to_tc(d: dict) -> TransformationCatalog:
                     cont["image"],
                     mounts=cont.get("mounts"),
                     image_site=cont.get("image.site"),
+                    checksum=cont.get("checksum"),
                 )
 
                 # add profiles

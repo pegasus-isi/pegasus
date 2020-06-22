@@ -47,6 +47,7 @@ def tc1():
                 "docker:///ryan/centos-pegasus:latest",
                 mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
                 image_site="local",
+                checksum={"sha256": "abc123"},
             ).add_env(JAVA_HOME="/usr/bin/java")
         )
     )
@@ -68,6 +69,7 @@ def tc2():
                 "docker:///ryan/centos-pegasus:latest",
                 mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
                 image_site="local",
+                checksum={"sha256": "abc123"},
             )
         )
     )

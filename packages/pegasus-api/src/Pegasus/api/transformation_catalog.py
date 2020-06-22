@@ -153,7 +153,7 @@ class Container(ProfileMixin):
         image: str,
         mounts: Optional[List[str]] = None,
         image_site: Optional[str] = None,
-        checksum: Dict[str, str] = {},
+        checksum: Optional[Dict[str, str]] = None,
     ):
         """
         :param name: name of this container
@@ -166,8 +166,8 @@ class Container(ProfileMixin):
         :type mounts: Optional[List[str]], optional
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
         :type image_site: Optional[str], optional
-        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to {}
-        :type checksum: Dict[str, str], optional
+        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to None
+        :type checksum: Optional[Dict[str, str]], optional
         :raises ValueError: container_type must be one of :py:class:`~Pegasus.api.transformation_catalog._ContainerType`
         """
         self.name = name
@@ -186,7 +186,7 @@ class Container(ProfileMixin):
         self.image_site = image_site
 
         # ensure supported checksum type given
-        if len(checksum) > 0:
+        if checksum and len(checksum) > 0:
             for checksum_type in checksum:
                 if checksum_type.lower() not in Container._SUPPORTED_CHECKSUMS:
                     raise ValueError(
@@ -206,7 +206,7 @@ class Container(ProfileMixin):
                 "image": self.image,
                 "mounts": self.mounts,
                 "image.site": self.image_site,
-                "checksum": self.checksum if len(self.checksum) > 0 else None,
+                "checksum": self.checksum,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
             }
         )
