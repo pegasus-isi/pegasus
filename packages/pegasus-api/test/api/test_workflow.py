@@ -15,11 +15,7 @@ from Pegasus.api.errors import DuplicateError, NotFoundError, PegasusError
 from Pegasus.api.mixins import EventType, Namespace
 from Pegasus.api.replica_catalog import File, ReplicaCatalog
 from Pegasus.api.site_catalog import SiteCatalog
-from Pegasus.api.transformation_catalog import (
-    Transformation,
-    TransformationCatalog,
-    TransformationSite,
-)
+from Pegasus.api.transformation_catalog import Transformation, TransformationCatalog
 from Pegasus.api.workflow import (
     PEGASUS_VERSION,
     AbstractJob,
