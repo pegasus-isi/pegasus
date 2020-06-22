@@ -19,7 +19,7 @@ from typing import TextIO
 
 from Pegasus import yaml
 from Pegasus.api.errors import PegasusError
-from Pegasus.api.replica_catalog import ReplicaCatalog, _PFN
+from Pegasus.api.replica_catalog import _PFN, ReplicaCatalog
 
 __all__ = (
     "load",
@@ -53,7 +53,9 @@ def _to_rc(d: dict) -> ReplicaCatalog:
                 if regex:
                     rc.add_regex_replica(pfn.site, lfn, pfn.pfn, metadata=metadata)
                 else:
-                    rc.add_replica(pfn.site, lfn, pfn.pfn, metadata=metadata, checksum=checksum)
+                    rc.add_replica(
+                        pfn.site, lfn, pfn.pfn, metadata=metadata, checksum=checksum
+                    )
 
     except KeyError:
         raise PegasusError("error parsing {}".format(d))

@@ -10,7 +10,7 @@ import pytest
 
 from Pegasus import yaml
 from Pegasus.api.errors import DuplicateError
-from Pegasus.api.replica_catalog import _ReplicaCatalogEntry, _PFN
+from Pegasus.api.replica_catalog import _PFN
 from Pegasus.api.writable import _CustomEncoder
 
 # Using import_module because of dashes in pegasus-cwl-converter.py
@@ -1105,10 +1105,7 @@ def test_main(mocker):
         "pegasus": "5.0",
         "replicaCatalog": {
             "replicas": [
-                {
-                    "lfn": "if", 
-                    "pfns": [{"pfn": "/path/to/file.txt", "site": "local"}]
-                }
+                {"lfn": "if", "pfns": [{"pfn": "/path/to/file.txt", "site": "local"}]}
             ]
         },
         "transformationCatalog": {

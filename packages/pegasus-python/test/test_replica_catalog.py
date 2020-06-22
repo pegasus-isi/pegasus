@@ -5,7 +5,7 @@ import pytest
 
 import Pegasus
 from Pegasus import yaml
-from Pegasus.api.replica_catalog import _PFN, ReplicaCatalog, _ReplicaCatalogEntry
+from Pegasus.api.replica_catalog import _PFN, ReplicaCatalog
 from Pegasus.replica_catalog import _to_rc, dump, dumps, load, loads
 
 
@@ -16,25 +16,34 @@ def rc_as_dict():
         "replicas": [
             {
                 "lfn": "a",
-                "pfns": [{"site": "local", "pfn": "/a"}, {"site": "condorpool", "pfn": "/a"}],
+                "pfns": [
+                    {"site": "local", "pfn": "/a"},
+                    {"site": "condorpool", "pfn": "/a"},
+                ],
                 "checksum": {"sha256": "abc123"},
-                "metadata": {"key": "value"}
+                "metadata": {"key": "value"},
             },
             {
                 "lfn": "b*",
                 "pfns": [{"site": "local", "pfn": "/b"}],
                 "metadata": {"key": "value"},
-                "regex": True
-            }
-        ]
+                "regex": True,
+            },
+        ],
     }
+
 
 @pytest.fixture(scope="function")
 def rc():
-    return ReplicaCatalog()\
-        .add_replica("local", "a", "/a", checksum={"sha256": "abc123"}, metadata={"key": "value"})\
-        .add_replica("condorpool", "a", "/a")\
+    return (
+        ReplicaCatalog()
+        .add_replica(
+            "local", "a", "/a", checksum={"sha256": "abc123"}, metadata={"key": "value"}
+        )
+        .add_replica("condorpool", "a", "/a")
         .add_regex_replica("local", "b*", "/b", metadata={"key": "value"})
+    )
+
 
 def test_to_rc(rc, rc_as_dict):
     result = _to_rc(rc_as_dict)
@@ -57,7 +66,10 @@ def test_load(mocker, rc_as_dict):
 
         assert len(rc.entries) == 2
         assert rc.entries[("a", False)].lfn == "a"
-        assert rc.entries[("a", False)].pfns == {_PFN("local", "/a"), _PFN("condorpool", "/a")}
+        assert rc.entries[("a", False)].pfns == {
+            _PFN("local", "/a"),
+            _PFN("condorpool", "/a"),
+        }
         assert rc.entries[("a", False)].metadata == {"key": "value"}
         assert rc.entries[("a", False)].checksum == {"sha256": "abc123"}
 
@@ -72,13 +84,17 @@ def test_loads(mocker, rc_as_dict):
 
     assert len(rc.entries) == 2
     assert rc.entries[("a", False)].lfn == "a"
-    assert rc.entries[("a", False)].pfns == {_PFN("local", "/a"), _PFN("condorpool", "/a")}
+    assert rc.entries[("a", False)].pfns == {
+        _PFN("local", "/a"),
+        _PFN("condorpool", "/a"),
+    }
     assert rc.entries[("a", False)].metadata == {"key": "value"}
     assert rc.entries[("a", False)].checksum == {"sha256": "abc123"}
 
     assert rc.entries[("b*", True)].lfn == "b*"
     assert rc.entries[("b*", True)].pfns == {_PFN("local", "/b")}
     assert rc.entries[("b*", True)].metadata == {"key": "value"}
+
 
 def test_dump(mocker):
     mocker.patch("Pegasus.api.writable.Writable.write")
@@ -90,10 +106,13 @@ def test_dump(mocker):
 
 def test_dumps(rc):
     result = _to_rc(yaml.load(dumps(rc)))
-    
+
     assert len(result.entries) == 2
     assert result.entries[("a", False)].lfn == "a"
-    assert result.entries[("a", False)].pfns == {_PFN("local", "/a"), _PFN("condorpool", "/a")}
+    assert result.entries[("a", False)].pfns == {
+        _PFN("local", "/a"),
+        _PFN("condorpool", "/a"),
+    }
     assert result.entries[("a", False)].metadata == {"key": "value"}
     assert result.entries[("a", False)].checksum == {"sha256": "abc123"}
 
