@@ -14,7 +14,6 @@
 package edu.isi.pegasus.planner.catalog.transformation;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.ProfileParser;
@@ -35,6 +34,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.IOException;
 import java.util.Collection;
@@ -684,9 +684,30 @@ public class TransformationCatalogEntry implements CatalogEntry {
      *
      * @param namespace String The mNamespace of the profile
      * @return List List of Profile objects. returns null if none are found.
+     * @deprecated use getProfiles(Profiles.NAMESPACES)
      */
     public List getProfiles(String namespace) {
         return (this.mProfiles == null) ? null : mProfiles.getProfiles(namespace);
+    }
+
+    /**
+     * Returns the profiles for a particular namespace.
+     *
+     * @param namespace namespace of the profile
+     * @return List List of Profile objects. returns null if none are found.
+     */
+    public List getProfiles(Profiles.NAMESPACES namespace) {
+        return (this.mProfiles == null) ? null : mProfiles.getProfiles(namespace);
+    }
+
+    /**
+     * Returns the profiles for a particular namespace.
+     *
+     * @param namespace namespace of the profile
+     * @return namespace object
+     */
+    public Namespace getProfilesNamepsace(Profiles.NAMESPACES namespace) {
+        return (this.mProfiles == null) ? null : mProfiles.get(namespace);
     }
 
     /**
@@ -739,12 +760,6 @@ public class TransformationCatalogEntry implements CatalogEntry {
      */
     public boolean equals(TransformationCatalogEntry entry) {
         return this.toTCString().equalsIgnoreCase(entry.toTCString());
-    }
-
-    public void addProfiles(JsonNode get) {
-        throw new UnsupportedOperationException(
-                "Not supported yet."); // To change body of generated methods, choose Tools |
-        // Templates.
     }
 
     /**

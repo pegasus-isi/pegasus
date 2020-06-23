@@ -26,6 +26,8 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.Notifications;
+import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -112,6 +114,11 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
      *     JAVA_HOME: "/opt/java/1.6"
      *   pegasus:
      *     clusters.num: "1"
+     * checksum:
+     *      sha256: abc123
+     *   metadata:
+     *     owner: vahi
+     *     size: 1024
      * requires:
      *   - anotherTr
      * sites:
@@ -144,6 +151,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
         JsonNode node = oc.readTree(parser);
         Transformation tx = new Transformation();
         TransformationCatalogEntry base = new TransformationCatalogEntry();
+        Metadata checksum = null;
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String key = e.getKey();
@@ -165,6 +173,18 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
 
                 case VERSION:
                     base.setLogicalVersion(node.get(key).asText());
+                    break;
+
+                case METADATA:
+                    base.addProfiles(this.createMetadata(node.get(key)));
+                    break;
+
+                case CHECKSUM:
+                    checksum =
+                            this.createChecksum(
+                                    node,
+                                    TransformationCatalogKeywords.TRANSFORMATIONS
+                                            .getReservedName());
                     break;
 
                 case PROFILES:
@@ -210,15 +230,27 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     }
                     break;
 
-                case METADATA:
-                    base.addProfiles(this.createMetadata(node.get(key)));
-                    break;
-
                 default:
                     this.complainForUnsupportedKey(
                             TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(),
                             key,
                             node);
+            }
+        }
+
+        if (checksum != null) {
+            // PM-1617 merge metadata profiles to include checksum
+            Metadata m = (Metadata) base.getProfilesNamepsace(Profiles.NAMESPACES.metadata);
+            if (m == null) {
+                // no metadata in the base, add checksum information into the base
+                for (Iterator<String> it = checksum.getProfileKeyIterator(); it.hasNext(); ) {
+                    String key = it.next();
+                    base.addProfile(
+                            new Profile(checksum.namespaceName(), key, (String) checksum.get(key)));
+                }
+            } else {
+                // merge with existing metadata
+                m.merge(checksum);
             }
         }
         tx.setBaseTCEntry(base);
