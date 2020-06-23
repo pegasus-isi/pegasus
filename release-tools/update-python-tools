@@ -25,6 +25,7 @@ done
 cd $1
 for TOOL in \
     pegasus-analyzer \
+    pegasus-config \
     pegasus-cwl-converter \
     pegasus-dagman \
     pegasus-db-admin \
