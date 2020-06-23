@@ -334,7 +334,7 @@ public class ContainerTest {
                         + "  sha256: \"dsadsadsa093232\"\n";
 
         String actual = mapper.writeValueAsString(c);
-        System.err.println(actual);
+        // System.err.println(actual);
         assertEquals(expected, actual);
     }
 }
