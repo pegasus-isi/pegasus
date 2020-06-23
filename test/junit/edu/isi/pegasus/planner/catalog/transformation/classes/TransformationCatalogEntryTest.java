@@ -51,7 +51,7 @@ public class TransformationCatalogEntryTest {
     public void tearDown() {}
 
     @Test
-    public void testTransformationCatalogEntrySerialization() throws IOException {
+    public void serializeTransformationCatalogEntry() throws IOException {
         ObjectMapper mapper =
                 new ObjectMapper(
                         new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
@@ -93,7 +93,7 @@ public class TransformationCatalogEntryTest {
     }
 
     @Test
-    public void testBaseEntryWithProfilesAndHooksSerialization() throws IOException {
+    public void serializeBaseEntryWithProfilesAndHooks() throws IOException {
         ObjectMapper mapper =
                 new ObjectMapper(
                         new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
@@ -125,7 +125,7 @@ public class TransformationCatalogEntryTest {
     }
 
     @Test
-    public void testEntryWithContainerReferenceSerialization() throws IOException {
+    public void serializeEntryWithContainerReference() throws IOException {
         ObjectMapper mapper =
                 new ObjectMapper(
                         new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
