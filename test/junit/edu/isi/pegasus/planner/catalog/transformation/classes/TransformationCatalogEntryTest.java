@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.IOException;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -119,6 +120,41 @@ public class TransformationCatalogEntryTest {
                         + "  env:\n"
                         + "    JAVA_HOME: \"/opt/java/1.6\"\n"
                         + "";
+        String actual = mapper.writeValueAsString(entry);
+        // System.err.println(actual);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void serializeBaseEntryWithMetadataAndChecksum() throws IOException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        TransformationCatalogEntry entry = new TransformationCatalogEntry("example", "keg", "1.0");
+        entry.addProfile(new Profile(Profiles.NAMESPACES.metadata.toString(), "user", "vahi"));
+        entry.addProfile(
+                new Profile(
+                        Profiles.NAMESPACES.metadata.toString(),
+                        Metadata.CHECKSUM_TYPE_KEY,
+                        "sha256"));
+        entry.addProfile(
+                new Profile(
+                        Profiles.NAMESPACES.metadata.toString(),
+                        Metadata.CHECKSUM_VALUE_KEY,
+                        "dsadsadsa093232"));
+
+        String expected =
+                "---\n"
+                        + "namespace: \"example\"\n"
+                        + "name: \"keg\"\n"
+                        + "version: \"1.0\"\n"
+                        + "profiles:\n"
+                        + "  checksum:\n"
+                        + "    sha256: \"dsadsadsa093232\"\n"
+                        + "  metadata:\n"
+                        + "    user: \"vahi\"\n";
         String actual = mapper.writeValueAsString(entry);
         // System.err.println(actual);
         assertEquals(expected, actual);
