@@ -52,7 +52,10 @@ def _to_tc(d: dict) -> TransformationCatalog:
         # add transformations
         for tr in d["transformations"]:
             tr_to_add = Transformation(
-                tr["name"], tr.get("namespace"), tr.get("version")
+                tr["name"],
+                tr.get("namespace"),
+                tr.get("version"),
+                checksum=tr.get("checksum"),
             )
 
             # add transformation sites

@@ -22,7 +22,9 @@ def tc1():
     return (
         TransformationCatalog()
         .add_transformations(
-            Transformation("t1", namespace="test", version="1.0")
+            Transformation(
+                "t1", namespace="test", version="1.0", checksum={"sha256": "abc123"}
+            )
             .add_sites(
                 TransformationSite(
                     "local",
