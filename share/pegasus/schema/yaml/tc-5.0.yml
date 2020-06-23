@@ -23,6 +23,13 @@ $defs:
           type: string
           description: "Namespace::Name:Version (Namespace:: and :Version may be omitted)"
           examples: ["example::keg:1.0"]
+      checksum:
+        type: object
+        description: "To add new checksum types update pattern '^(sha256|<new type>|..)$'"
+        patternProperties:
+          "^(sha256)$":
+            type: string
+        additionalProperties: false
       sites:
         type: array
         items:
