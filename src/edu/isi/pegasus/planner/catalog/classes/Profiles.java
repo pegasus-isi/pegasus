@@ -301,6 +301,25 @@ public class Profiles {
     }
 
     /**
+     * Removes the namespace object corresponding to a namespace
+     *
+     * @param n the namespace
+     * @return Namespace
+     */
+    public Namespace remove(NAMESPACES n) {
+        return (Namespace) mProfileMap.remove(n);
+    }
+
+    /**
+     * Sets the namespace object corresponding to a namespace
+     *
+     * @param n the namespace
+     */
+    public void set(Namespace n) {
+        this.mProfileMap.put(NAMESPACES.valueOf(n.namespaceName().toLowerCase()), n);
+    }
+
+    /**
      * Returns a boolean indicating if the object is empty.
      *
      * <p>The object is empty if all the underlying profile maps are empty.
@@ -310,7 +329,8 @@ public class Profiles {
     public boolean isEmpty() {
         boolean result = true;
         for (NAMESPACES n : NAMESPACES.values()) {
-            if (!this.get(n).isEmpty()) {
+            Namespace nm = this.get(n);
+            if (nm != null && !this.get(n).isEmpty()) {
                 result = false;
                 break;
             }
@@ -560,7 +580,7 @@ class ProfilesSerializer extends PegasusJsonSerializer<Profiles> {
         // traverse through all the enum keys
         for (Profiles.NAMESPACES n : Profiles.NAMESPACES.values()) {
             Namespace nm = profiles.get(n);
-            if (nm.isEmpty()) {
+            if (nm == null || nm.isEmpty()) {
                 continue;
             }
             if (nm instanceof Metadata) {
