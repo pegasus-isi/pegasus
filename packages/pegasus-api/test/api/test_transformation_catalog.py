@@ -261,6 +261,12 @@ class TestTransformation:
 
         assert "invalid {bad_field}: ".format(bad_field=bad_field) in str(e)
 
+    def test_invalid_checksum(self):
+        with pytest.raises(ValueError) as e:
+            Transformation("tr", checksum={"md5": "abc123"})
+
+        assert "invalid checksum: md5" in str(e)
+
     def test_add_single_tranformation_site_constructor(self):
         t1 = Transformation("t1")
         assert len(t1.sites) == 0
@@ -278,6 +284,20 @@ class TestTransformation:
         t4 = Transformation("t4", site="local", pfn="/t4", is_stageable=True)
         assert len(t4.sites) == 1
         assert t4.sites["local"].transformation_type == "stageable"
+
+    @pytest.mark.parametrize(
+        "container", [(Container("cont", Container.DOCKER, "image")), ("cont")]
+    )
+    def test_add_single_transformation_site_constructor_with_valid_container(
+        self, container
+    ):
+        assert Transformation("t", site="local", pfn="/t1", container=container)
+
+    def test_add_single_transformation_site_constructor_with_invalid_container(self):
+        with pytest.raises(TypeError) as e:
+            Transformation("t", site="local", pfn="/t1", container=1)
+
+        assert "invalid container: 1" in str(e)
 
     @pytest.mark.parametrize(
         "transformation",
@@ -421,7 +441,7 @@ class TestTransformation:
     def test_tojson_without_profiles_hooks_metadata(
         self, convert_yaml_schemas_to_json, load_schema
     ):
-        t = Transformation("test", namespace="pegasus")
+        t = Transformation("test", namespace="pegasus", checksum={"sha256": "abc123"})
         t.add_sites(TransformationSite("local", "/pfn", True))
         t.add_requirement("required")
 
@@ -429,12 +449,12 @@ class TestTransformation:
         expected = {
             "name": "test",
             "namespace": "pegasus",
+            "checksum": {"sha256": "abc123"},
             "requires": ["required"],
             "sites": [{"name": "local", "pfn": "/pfn", "type": "stageable"}],
         }
 
         transformation_schema = load_schema("tc-5.0.json")["$defs"]["transformation"]
-
         validate(instance=result, schema=transformation_schema)
 
         assert result == expected
