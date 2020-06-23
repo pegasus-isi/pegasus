@@ -372,12 +372,12 @@ def all_workflows_db(
 
     data = (
         db.query(
-            DashboardWorkflow.db_url,
-            DashboardWorkflowstate.state,
-            func.max(DashboardWorkflowstate.timestamp),
+            MasterWorkflow.db_url,
+            MasterWorkflowstate.state,
+            func.max(MasterWorkflowstate.timestamp),
         )
-        .join(DashboardWorkflowstate)
-        .group_by(DashboardWorkflow.wf_id)
+        .join(MasterWorkflowstate)
+        .group_by(MasterWorkflow.wf_id)
         .all()
     )
 

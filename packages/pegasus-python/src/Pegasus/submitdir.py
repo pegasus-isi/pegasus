@@ -10,9 +10,9 @@ from os.path import expanduser
 from Pegasus.command import CompoundCommand, LoggingCommand
 from Pegasus.db import connection
 from Pegasus.db.schema import (
-    DashboardWorkflow,
-    DashboardWorkflowstate,
     EnsembleWorkflow,
+    MasterWorkflow,
+    MasterWorkflowstate,
     Workflow,
     Workflowstate,
 )
@@ -30,18 +30,18 @@ class MasterDatabase:
         self.session = session
 
     def get_master_workflow(self, wf_uuid, submit_dir=None):
-        q = self.session.query(DashboardWorkflow)
-        q = q.filter(DashboardWorkflow.wf_uuid == wf_uuid)
+        q = self.session.query(MasterWorkflow)
+        q = q.filter(MasterWorkflow.wf_uuid == wf_uuid)
 
         if submit_dir:
-            q = q.filter(DashboardWorkflow.submit_dir == submit_dir)
+            q = q.filter(MasterWorkflow.submit_dir == submit_dir)
 
         wf = q.first()
         return wf
 
     def get_master_workflow_for_submitdir(self, submitdir):
-        q = self.session.query(DashboardWorkflow)
-        q = q.filter(DashboardWorkflow.submit_dir == submitdir)
+        q = self.session.query(MasterWorkflow)
+        q = q.filter(MasterWorkflow.submit_dir == submitdir)
         return q.all()
 
     def get_ensemble_workflow(self, wf_uuid):
@@ -60,8 +60,8 @@ class MasterDatabase:
         q.delete()
 
         # Delete the workflow
-        q = self.session.query(DashboardWorkflow)
-        q = q.filter(DashboardWorkflow.wf_id == w.wf_id)
+        q = self.session.query(MasterWorkflow)
+        q = q.filter(MasterWorkflow.wf_id == w.wf_id)
         q.delete()
 
 
@@ -448,7 +448,7 @@ class SubmitDir:
         wf.db_url = db_url
 
         # Insert workflow record into master db
-        mwf = DashboardWorkflow()
+        mwf = MasterWorkflow()
         mwf.wf_uuid = wf.wf_uuid
         mwf.dax_label = wf.dax_label
         mwf.dax_version = wf.dax_version
@@ -471,7 +471,7 @@ class SubmitDir:
 
         # Insert states into master db
         for s in states:
-            ms = DashboardWorkflowstate()
+            ms = MasterWorkflowstate()
             ms.wf_id = mwf.wf_id
             ms.state = s.state
             ms.timestamp = s.timestamp

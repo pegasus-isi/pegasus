@@ -103,7 +103,7 @@ def test_partial_database():
 
     db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
     Workflow.__table__.create(db.get_bind(), checkfirst=True)
-    DashboardWorkflowstate.__table__.create(db.get_bind(), checkfirst=True)
+    MasterWorkflowstate.__table__.create(db.get_bind(), checkfirst=True)
     Ensemble.__table__.create(db.get_bind(), checkfirst=True)
     EnsembleWorkflow.__table__.create(db.get_bind(), checkfirst=True)
     with pytest.raises(DBAdminError):

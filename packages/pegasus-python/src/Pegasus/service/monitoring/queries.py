@@ -27,13 +27,13 @@ from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.schema import (
     RCLFN,
     RCPFN,
-    DashboardWorkflow,
-    DashboardWorkflowstate,
     Host,
     Invocation,
     Job,
     JobInstance,
     Jobstate,
+    MasterWorkflow,
+    MasterWorkflowstate,
     RCMeta,
     Task,
     TaskMeta,
@@ -223,13 +223,13 @@ class MasterWorkflowQueries(WorkflowQueries):
         :param order: Sorting criteria
         :param use_cache: If available, use cached results
 
-        :return: Collection of tuples (DashboardWorkflow, DashboardWorkflowstate)
+        :return: Collection of tuples (MasterWorkflow, MasterWorkflowstate)
         """
 
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(DashboardWorkflow)
+        q = self.session.query(MasterWorkflow)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -243,16 +243,16 @@ class MasterWorkflowQueries(WorkflowQueries):
         qws = self._get_max_master_workflow_state()
         qws = qws.subquery("master_workflowstate")
 
-        alias = aliased(DashboardWorkflowstate, qws)
+        alias = aliased(MasterWorkflowstate, qws)
 
-        q = q.outerjoin(qws, DashboardWorkflow.wf_id == qws.c.wf_id)
+        q = q.outerjoin(qws, MasterWorkflow.wf_id == qws.c.wf_id)
         q = q.add_entity(alias)
 
         #
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = self._evaluate_query(q, query, r=DashboardWorkflow, ws=alias)
+            q = self._evaluate_query(q, query, r=MasterWorkflow, ws=alias)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -263,7 +263,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            q = self._add_ordering(q, order, r=DashboardWorkflow)
+            q = self._add_ordering(q, order, r=MasterWorkflow)
 
         #
         # Construct SQLAlchemy Query `q` to paginate.
@@ -289,16 +289,16 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         :return: Root Workflow object
         """
-        q = self.session.query(DashboardWorkflow)
+        q = self.session.query(MasterWorkflow)
 
         if m_wf_id is None:
             raise ValueError("m_wf_id cannot be None")
 
         m_wf_id = str(m_wf_id)
         if m_wf_id.isdigit():
-            q = q.filter(DashboardWorkflow.wf_id == m_wf_id)
+            q = q.filter(MasterWorkflow.wf_id == m_wf_id)
         else:
-            q = q.filter(DashboardWorkflow.wf_uuid == m_wf_id)
+            q = q.filter(MasterWorkflow.wf_uuid == m_wf_id)
 
         #
         # Finish Construction of Base SQLAlchemy Query `q`
@@ -306,8 +306,8 @@ class MasterWorkflowQueries(WorkflowQueries):
         qws = self._get_max_master_workflow_state(m_wf_id=m_wf_id)
         qws = qws.subquery("master_workflowstate")
 
-        q = q.outerjoin(qws, DashboardWorkflow.wf_id == qws.c.wf_id)
-        q = q.add_entity(aliased(DashboardWorkflowstate, qws))
+        q = q.outerjoin(qws, MasterWorkflow.wf_id == qws.c.wf_id)
+        q = q.add_entity(aliased(MasterWorkflowstate, qws))
 
         try:
             record_tuple = self._get_one(q, use_cache)
@@ -319,7 +319,7 @@ class MasterWorkflowQueries(WorkflowQueries):
             log.exception("Not Found: Root Workflow for given m_wf_id (%s)" % m_wf_id)
             raise e
 
-    def _get_max_master_workflow_state(self, m_wf_id=None, mws=DashboardWorkflowstate):
+    def _get_max_master_workflow_state(self, m_wf_id=None, mws=MasterWorkflowstate):
         qmax = self._get_recent_master_workflow_state(m_wf_id, mws)
         qmax = qmax.subquery("max_timestamp")
 
@@ -330,9 +330,7 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         return q
 
-    def _get_recent_master_workflow_state(
-        self, m_wf_id=None, mws=DashboardWorkflowstate
-    ):
+    def _get_recent_master_workflow_state(self, m_wf_id=None, mws=MasterWorkflowstate):
         q = self.session.query(mws.wf_id)
         q = q.add_columns(func.max(mws.timestamp).label("max_time"))
 

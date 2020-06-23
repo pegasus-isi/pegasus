@@ -101,9 +101,7 @@ def delete_dashboard_workflow(dburi, wf_uuid):
 
     session = connection.connect(dburi, create=True)
     try:
-        query = session.query(DashboardWorkflow).filter(
-            DashboardWorkflow.wf_uuid == wf_uuid
-        )
+        query = session.query(MasterWorkflow).filter(MasterWorkflow.wf_uuid == wf_uuid)
         try:
             wf = query.one()
         except orm.exc.NoResultFound as e:
