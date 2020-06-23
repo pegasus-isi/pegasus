@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 
 import argparse
 import os
@@ -65,13 +64,13 @@ pegasus_schema_dir = "%(schema_dir)s"
     )
 
 
-def _sh_hash(**kw):
+def _sh_dump(**kw):
     """."""
     print(
         """PEGASUS_BIN_DIR="%(bin_dir)s";
-export PEGASUS_BIN_DIR"
+export PEGASUS_BIN_DIR
 PEGASUS_CONF_DIR="%(conf_dir)s"
-export PEGASUS_CONF_DIR"
+export PEGASUS_CONF_DIR
 PEGASUS_JAVA_DIR="%(java_dir)s"
 export PEGASUS_JAVA_DIR
 PEGASUS_PERL_DIR="%(perl_dir)s"
@@ -106,7 +105,7 @@ def _main(
     perl_dump=False,
     perl_hash=False,
     python_hash=False,
-    sh_hash=False,
+    sh_dump=False,
     bin=False,
     conf=False,
     java=False,
@@ -199,8 +198,8 @@ def _main(
             share_dir=share_dir,
             schema_dir=schema_dir,
         )
-    elif sh_hash:
-        _sh_hash(
+    elif sh_dump:
+        _sh_dump(
             bin_dir=bin_dir,
             conf_dir=conf_dir,
             java_dir=java_dir,
@@ -209,7 +208,7 @@ def _main(
             python_externals_dir=python_externals_dir,
             share_dir=share_dir,
             schema_dir=schema_dir,
-            classpath=classpath,
+            classpath=_classpath,
         )
     elif bin:
         print(bin_dir, end=eol)
@@ -263,7 +262,7 @@ def main():
         help="Dumps all settings in python format.",
     )
     parser.add_argument(
-        "--sh-hash", action="store_true", help="Dumps all settings in shell format.",
+        "--sh-dump", action="store_true", help="Dumps all settings in shell format.",
     )
 
     parser.add_argument(
