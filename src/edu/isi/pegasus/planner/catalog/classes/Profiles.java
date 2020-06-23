@@ -563,14 +563,18 @@ class ProfilesSerializer extends PegasusJsonSerializer<Profiles> {
             if (nm.isEmpty()) {
                 continue;
             }
-            gen.writeFieldName(nm.namespaceName());
-            gen.writeStartObject();
-            for (Iterator it = nm.getProfileKeyIterator(); it.hasNext(); ) {
-                String key = (String) it.next();
-                String value = (String) nm.get(key);
-                gen.writeStringField(key, value);
+            if (nm instanceof Metadata) {
+                gen.writeObject(nm);
+            } else {
+                gen.writeFieldName(nm.namespaceName());
+                gen.writeStartObject();
+                for (Iterator it = nm.getProfileKeyIterator(); it.hasNext(); ) {
+                    String key = (String) it.next();
+                    String value = (String) nm.get(key);
+                    gen.writeStringField(key, value);
+                }
+                gen.writeEndObject();
             }
-            gen.writeEndObject();
         }
         gen.writeEndObject();
     }
