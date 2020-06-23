@@ -150,11 +150,10 @@ public class TransformationCatalogEntryTest {
                         + "namespace: \"example\"\n"
                         + "name: \"keg\"\n"
                         + "version: \"1.0\"\n"
-                        + "profiles:\n"
-                        + "  checksum:\n"
-                        + "    sha256: \"dsadsadsa093232\"\n"
-                        + "  metadata:\n"
-                        + "    user: \"vahi\"\n";
+                        + "checksum:\n"
+                        + "  sha256: \"dsadsadsa093232\"\n"
+                        + "metadata:\n"
+                        + "  user: \"vahi\"\n";
         String actual = mapper.writeValueAsString(entry);
         // System.err.println(actual);
         assertEquals(expected, actual);

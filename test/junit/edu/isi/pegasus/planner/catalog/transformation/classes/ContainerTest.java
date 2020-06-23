@@ -179,7 +179,38 @@ public class ContainerTest {
     }
 
     @Test
-    public void testContainerDeserialization() throws IOException {
+    public void deserializeContainer() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "name: centos-pegasus\n"
+                        + "type: docker\n"
+                        + "image: docker:///rynge/montage:latest\n"
+                        + "mounts: \n"
+                        + "  - /Volumes/Work/lfs1:/shared-data/:ro\n"
+                        + "  - /Volumes/Work/lfs12:/shared-data1/:ro\n"
+                        + "profiles:\n"
+                        + "  env:\n"
+                        + "    JAVA_HOME: /opt/java/1.6";
+
+        Container c = mapper.readValue(test, Container.class);
+        assertNotNull(c);
+        assertEquals(Container.TYPE.docker, c.getType());
+        assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
+
+        assertEquals(2, c.getMountPoints().size());
+        assertThat(
+                c.getMountPoints(), hasItem(new MountPoint("/Volumes/Work/lfs1:/shared-data/:ro")));
+        assertThat(
+                c.getMountPoints(), hasItem(new MountPoint("/Volumes/Work/lfs1:/shared-data/:ro")));
+
+        List<Profile> profiles = c.getProfiles("env");
+        assertThat(profiles, hasItem(new Profile("env", "JAVA_HOME", "/opt/java/1.6")));
+    }
+
+    @Test
+    public void deserializeContainerWithChecksum() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 

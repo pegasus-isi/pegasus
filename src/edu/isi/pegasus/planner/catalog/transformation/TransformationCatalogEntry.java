@@ -34,6 +34,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.IOException;
@@ -806,9 +807,9 @@ public class TransformationCatalogEntry implements CatalogEntry {
                 // write out profiles if specified
                 // we normally do them in the sites array
                 // for serialization profiles are associated at site level
-                if (entry.getAllProfiles() != null) {
-                    gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
-                    gen.writeObject(entry.getAllProfiles());
+                Profiles profiles = entry.getAllProfiles();
+                if (profiles != null) {
+                    this.serializeProfiles(gen, profiles);
                 }
             } else {
                 // we only have one site associated
@@ -848,9 +849,9 @@ public class TransformationCatalogEntry implements CatalogEntry {
                         sys.getOSVersion());
 
                 // for serialization profiles are associated at site level
-                if (entry.getAllProfiles() != null) {
-                    gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
-                    gen.writeObject(entry.getAllProfiles());
+                Profiles profiles = entry.getAllProfiles();
+                if (profiles != null) {
+                    this.serializeProfiles(gen, profiles);
                 }
 
                 // write out container reference if set
@@ -867,6 +868,27 @@ public class TransformationCatalogEntry implements CatalogEntry {
             }
 
             gen.writeEndObject();
+        }
+
+        /**
+         * Special handling for profiles serialization to ensure that metadata and checksum
+         * information is serialized at the same level as profiles and not nested inside .
+         *
+         * @param gen
+         * @param profiles
+         * @throws IOException
+         */
+        private void serializeProfiles(JsonGenerator gen, Profiles profiles) throws IOException {
+            // PM-1617 metadata and checksum are at the profiles level , not nested in there
+            // remove the metadata and add back after serializing profiles
+            Metadata m = (Metadata) profiles.remove(Profiles.NAMESPACES.metadata);
+
+            if (!profiles.isEmpty()) {
+                gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
+                gen.writeObject(profiles);
+            }
+            gen.writeObject(m);
+            profiles.set(m);
         }
     }
 }
