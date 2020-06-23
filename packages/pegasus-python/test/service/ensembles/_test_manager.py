@@ -245,12 +245,12 @@ class WorkflowTest(UserTestCase):
         self.assertRaises(em.EMException, p.running)
         self.assertRaises(em.EMException, p.running_successful)
 
-        dw = dash.DashboardWorkflow()
+        dw = dash.MasterWorkflow()
         dw.wf_uuid = wf_uuid
         db.session.add(dw)
         db.session.flush()
 
-        ws = dash.DashboardWorkflowstate()
+        ws = dash.MasterWorkflowstate()
         ws.wf_id = dw.wf_id
         ws.state = "WORKFLOW_STARTED"
         ws.restart_count = 0

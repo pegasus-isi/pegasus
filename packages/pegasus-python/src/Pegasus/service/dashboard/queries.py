@@ -73,7 +73,7 @@ class MasterDatabase:
         Given a work-flow UUID, query the master database to get the connection URL for the work-flow's STAMPEDE database.
         """
 
-        w = orm.aliased(DashboardWorkflow, name="w")
+        w = orm.aliased(MasterWorkflow, name="w")
 
         q = self.session.query(w.db_url)
         q = q.filter(w.wf_id == wf_id)
@@ -84,16 +84,16 @@ class MasterDatabase:
         """
         Given a work-flow UUID, query the master database to get the connection URL for the work-flow's STAMPEDE database.
         """
-        q = self.session.query(DashboardWorkflow)
+        q = self.session.query(MasterWorkflow)
 
         if root_wf_id is None:
             raise ValueError("root_wf_id cannot be None")
 
         m_wf_id = str(root_wf_id)
         if m_wf_id.isdigit():
-            q = q.filter(DashboardWorkflow.wf_id == root_wf_id)
+            q = q.filter(MasterWorkflow.wf_id == root_wf_id)
         else:
-            q = q.filter(DashboardWorkflow.wf_uuid == root_wf_id)
+            q = q.filter(MasterWorkflow.wf_uuid == root_wf_id)
 
         q = q.one()
 
@@ -113,15 +113,15 @@ class MasterDatabase:
         AND ws.timestamp = t.time;
         """
 
-        w = orm.aliased(DashboardWorkflow, name="w")
-        ws = orm.aliased(DashboardWorkflowstate, name="ws")
+        w = orm.aliased(MasterWorkflow, name="w")
+        ws = orm.aliased(MasterWorkflowstate, name="ws")
 
         # Get last state change for each work-flow.
         qmax = self.session.query(
-            DashboardWorkflowstate.wf_id,
-            func.max(DashboardWorkflowstate.timestamp).label("max_time"),
+            MasterWorkflowstate.wf_id,
+            func.max(MasterWorkflowstate.timestamp).label("max_time"),
         )
-        qmax = qmax.group_by(DashboardWorkflowstate.wf_id)
+        qmax = qmax.group_by(MasterWorkflowstate.wf_id)
 
         qmax = qmax.subquery("max_timestamp")
 
@@ -241,15 +241,15 @@ class MasterDatabase:
 
     def get_workflow_counts(self):
 
-        w = orm.aliased(DashboardWorkflow, name="w")
-        ws = orm.aliased(DashboardWorkflowstate, name="ws")
+        w = orm.aliased(MasterWorkflow, name="w")
+        ws = orm.aliased(MasterWorkflowstate, name="ws")
 
         # Get last state change for each work-flow.
         qmax = self.session.query(
-            DashboardWorkflowstate.wf_id,
-            func.max(DashboardWorkflowstate.timestamp).label("max_time"),
+            MasterWorkflowstate.wf_id,
+            func.max(MasterWorkflowstate.timestamp).label("max_time"),
         )
-        qmax = qmax.group_by(DashboardWorkflowstate.wf_id)
+        qmax = qmax.group_by(MasterWorkflowstate.wf_id)
 
         qmax = qmax.subquery("max_timestamp")
 

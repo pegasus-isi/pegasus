@@ -254,7 +254,7 @@ class DashboardLoader(BaseLoader):
 
         Handles a workflow insert event.
         """
-        wf = self.linedataToObject(linedata, DashboardWorkflow())
+        wf = self.linedataToObject(linedata, MasterWorkflow())
         self.log.debug("workflow: %s", wf)
 
         wf.timestamp = wf.ts
@@ -285,7 +285,7 @@ class DashboardLoader(BaseLoader):
 
         Handles a workflowstate insert event.
         """
-        wfs = self.linedataToObject(linedata, DashboardWorkflowstate())
+        wfs = self.linedataToObject(linedata, MasterWorkflowstate())
         self.log.debug("workflowstate: %s", wfs)
 
         state = {
@@ -317,8 +317,8 @@ class DashboardLoader(BaseLoader):
         Cuts down on DB queries during insert processing.
         """
         if wf_uuid not in self.wf_id_cache:
-            query = self.session.query(DashboardWorkflow).filter(
-                DashboardWorkflow.wf_uuid == wf_uuid
+            query = self.session.query(MasterWorkflow).filter(
+                MasterWorkflow.wf_uuid == wf_uuid
             )
             try:
                 self.wf_id_cache[wf_uuid] = query.one().wf_id
@@ -342,7 +342,7 @@ class DashboardLoader(BaseLoader):
         """
         if wf_uuid not in self.root_wf_id_cache:
             query = self.session.query(Workflow).filter(
-                DashboardWorkflow.wf_uuid == wf_uuid
+                MasterWorkflow.wf_uuid == wf_uuid
             )
             try:
                 self.root_wf_id_cache[wf_uuid] = query.one().root_wf_id

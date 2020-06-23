@@ -579,125 +579,6 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: UTCUZ
-              name: Ubuntu 16.04 Unit Tests
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Unit Tests
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_16}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer test-integrity
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: UTJUZ
-              name: Ubuntu 16.04 Java Unit Tests
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Java Unit Tests
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_16}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-java
-                - !junitParser
-                  description: Parse Test Report
-                  testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
-                  pickUpTestResultsCreatedOutsideOfBuild: false
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: UTPUZ
-              name: Ubuntu 16.04 Python Unit Tests
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Python Unit Tests
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_16}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --env "LANG=C.UTF-8" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-python
-                - !junitParser
-                  description: Parse Test Report
-                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
-                  pickUpTestResultsCreatedOutsideOfBuild: false
-              artifactDefinitions:
-                - name: Coverage Report - Pegasus Common
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-common/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus API
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-api/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus DAX
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus Worker
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-worker/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus WMS
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-python/htmlcov/
-                  isShared: false
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUB
               name: Ubuntu 18.04 Unit Tests
               tasks:
@@ -1281,49 +1162,6 @@ project:
                     regex: 10.*
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXUX
-              name: Build Ubuntu 16.04 LTS
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_16}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_ubuntu_16
-                  copyPattern: "pegasus-binary-*-x86_64_ubuntu_16.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-deb-x86_64_ubuntu_16
-                  copyPattern: "*.deb"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_ubuntu_16
-                  copyPattern: "pegasus-worker-*-x86_64_ubuntu_16.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUB
               name: Build Ubuntu 18.04 LTS
               tasks:
@@ -1459,8 +1297,6 @@ project:
                       cp $DOWNLOADS/pegasus_*deb10_amd64.deb $DOWNLOADS/debian/dists/buster/main/binary-amd64/
 
                       # ubuntu
-                      mkdir -p $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*ubuntu16_amd64.deb $DOWNLOADS/ubuntu/dists/xenial/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/focal/main/binary-amd64
@@ -1505,12 +1341,10 @@ project:
                 - name: pegasus-binary-x86_64_macos
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_rhel_8
-                - name: pegasus-binary-x86_64_ubuntu_16
                 - name: pegasus-binary-x86_64_ubuntu_18
                 - name: pegasus-binary-x86_64_ubuntu_20
                 - name: pegasus-deb-x86_64_deb_9
                 - name: pegasus-deb-x86_64_deb_10
-                - name: pegasus-deb-x86_64_ubuntu_16
                 - name: pegasus-deb-x86_64_ubuntu_18
                 - name: pegasus-deb-x86_64_ubuntu_20
                 - name: pegasus-doc
@@ -1529,7 +1363,6 @@ project:
                 - name: pegasus-worker-x86_64_macos
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_rhel_8
-                - name: pegasus-worker-x86_64_ubuntu_16
                 - name: pegasus-worker-x86_64_ubuntu_18
                 - name: pegasus-worker-x86_64_ubuntu_20
               requirements:
@@ -1591,8 +1424,6 @@ project:
           value: stretch
         - key: TAG_DEBIAN_10
           value: buster
-        - key: TAG_UBUNTU_16
-          value: xenial
         - key: TAG_UBUNTU_18
           value: bionic
         - key: TAG_UBUNTU_20

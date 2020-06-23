@@ -44,7 +44,7 @@ class Version(BaseVersion):
                 ("UNIQUE_TASK_EDGE", TaskEdge),
                 ("invocation_id_KEY", Invocation),
                 ("integrity_id_KEY", IntegrityMetrics),
-                ("UNIQUE_MASTER_WORKFLOWSTATE", DashboardWorkflowstate),
+                ("UNIQUE_MASTER_WORKFLOWSTATE", MasterWorkflowstate),
                 ("rc_meta_unique", RCMeta),
                 ("wf_uuid_UNIQUE", Workflow),
                 ("UNIQUE_HOST", Host),
@@ -54,7 +54,7 @@ class Version(BaseVersion):
                 ("UNIQUE_TASK", Task),
                 ("UNIQUE_INVOCATION", Invocation),
                 ("UNIQUE_INTEGRITY", IntegrityMetrics),
-                ("UNIQUE_MASTER_WF_UUID", DashboardWorkflow),
+                ("UNIQUE_MASTER_WF_UUID", MasterWorkflow),
                 ("UNIQUE_ENSEMBLE_WORKFLOW", EnsembleWorkflow),
                 ("ix_rc_lfn", RCLFN),
                 ("UNIQUE_PFN", RCPFN),
@@ -112,8 +112,8 @@ class Version(BaseVersion):
                 Invocation,
                 IntegrityMetrics,
                 # MASTER
-                DashboardWorkflow,
-                DashboardWorkflowstate,
+                MasterWorkflow,
+                MasterWorkflowstate,
                 Ensemble,
                 EnsembleWorkflow,
                 # JDBCRC
@@ -249,11 +249,7 @@ class Version(BaseVersion):
                     IntegrityMetrics.file_type.name,
                 ],
             ),
-            (
-                DashboardWorkflow,
-                "UNIQUE_MASTER_WF_UUID",
-                [DashboardWorkflow.wf_uuid.name],
-            ),
+            (MasterWorkflow, "UNIQUE_MASTER_WF_UUID", [MasterWorkflow.wf_uuid.name],),
             (
                 EnsembleWorkflow,
                 "UNIQUE_ENSEMBLE_WORKFLOW",

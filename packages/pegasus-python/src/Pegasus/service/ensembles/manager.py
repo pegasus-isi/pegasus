@@ -15,7 +15,7 @@ from Pegasus.db.ensembles import (
     EnsembleStates,
     EnsembleWorkflowStates,
 )
-from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
+from Pegasus.db.schema import MasterWorkflow, MasterWorkflowstate
 from Pegasus.service.ensembles import emapp
 
 log = logging.getLogger(__name__)
@@ -282,7 +282,7 @@ class WorkflowProcessor:
 
         try:
             w = (
-                self.dao.session.query(DashboardWorkflow)
+                self.dao.session.query(MasterWorkflow)
                 .filter_by(wf_uuid=str(wf_uuid))
                 .one()
             )
@@ -314,9 +314,9 @@ class WorkflowProcessor:
         # Get the last event for the workflow where the event timestamp is
         # greater than the last updated ts for the ensemble workflow
         ws = (
-            self.dao.session.query(DashboardWorkflowstate)
+            self.dao.session.query(MasterWorkflowstate)
             .filter_by(wf_id=w.wf_id)
-            .filter(DashboardWorkflowstate.timestamp >= updated)
+            .filter(MasterWorkflowstate.timestamp >= updated)
             .order_by("timestamp desc")
             .first()
         )

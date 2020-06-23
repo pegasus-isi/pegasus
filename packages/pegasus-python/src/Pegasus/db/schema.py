@@ -63,8 +63,8 @@ __all__ = (
     "Invocation",
     "WorkflowFiles",
     "IntegrityMetrics",
-    "DashboardWorkflow",
-    "DashboardWorkflowstate",
+    "MasterWorkflow",
+    "MasterWorkflowstate",
     "Ensemble",
     "EnsembleWorkflow",
     "RCLFN",
@@ -167,8 +167,8 @@ def get_missing_tables(db):
         Invocation,
         IntegrityMetrics,
         # MASTER
-        DashboardWorkflow,
-        DashboardWorkflowstate,
+        MasterWorkflow,
+        MasterWorkflowstate,
         Ensemble,
         EnsembleWorkflow,
         # JDBCRC
@@ -956,7 +956,7 @@ class WorkflowFiles(Base):
 # ---------------------------------------------
 
 
-class DashboardWorkflow(Base):
+class MasterWorkflow(Base):
     """."""
 
     __tablename__ = "master_workflow"
@@ -980,20 +980,20 @@ class DashboardWorkflow(Base):
 
     # Relationships
     states = relation(
-        lambda: DashboardWorkflowstate,
+        lambda: MasterWorkflowstate,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
 
-DashboardWorkflow.__table_args__ = (
-    UniqueConstraint(DashboardWorkflow.wf_uuid, name="UNIQUE_MASTER_WF_UUID"),
+MasterWorkflow.__table_args__ = (
+    UniqueConstraint(MasterWorkflow.wf_uuid, name="UNIQUE_MASTER_WF_UUID"),
     table_keywords,
 )
 
 
-class DashboardWorkflowstate(Base):
+class MasterWorkflowstate(Base):
     """."""
 
     __tablename__ = "master_workflowstate"
@@ -1005,7 +1005,7 @@ class DashboardWorkflowstate(Base):
     wf_id = Column(
         "wf_id",
         KeyInteger,
-        ForeignKey(DashboardWorkflow.wf_id, ondelete="CASCADE"),
+        ForeignKey(MasterWorkflow.wf_id, ondelete="CASCADE"),
         primary_key=True,
     )
     state = Column(
