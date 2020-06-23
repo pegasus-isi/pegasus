@@ -52,7 +52,10 @@ def _to_tc(d: dict) -> TransformationCatalog:
         # add transformations
         for tr in d["transformations"]:
             tr_to_add = Transformation(
-                tr["name"], tr.get("namespace"), tr.get("version")
+                tr["name"],
+                tr.get("namespace"),
+                tr.get("version"),
+                checksum=tr.get("checksum"),
             )
 
             # add transformation sites
@@ -111,6 +114,7 @@ def _to_tc(d: dict) -> TransformationCatalog:
                     cont["image"],
                     mounts=cont.get("mounts"),
                     image_site=cont.get("image.site"),
+                    checksum=cont.get("checksum"),
                 )
 
                 # add profiles

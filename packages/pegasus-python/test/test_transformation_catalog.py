@@ -22,7 +22,9 @@ def tc1():
     return (
         TransformationCatalog()
         .add_transformations(
-            Transformation("t1", namespace="test", version="1.0")
+            Transformation(
+                "t1", namespace="test", version="1.0", checksum={"sha256": "abc123"}
+            )
             .add_sites(
                 TransformationSite(
                     "local",
@@ -47,6 +49,7 @@ def tc1():
                 "docker:///ryan/centos-pegasus:latest",
                 mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
                 image_site="local",
+                checksum={"sha256": "abc123"},
             ).add_env(JAVA_HOME="/usr/bin/java")
         )
     )
@@ -68,6 +71,7 @@ def tc2():
                 "docker:///ryan/centos-pegasus:latest",
                 mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
                 image_site="local",
+                checksum={"sha256": "abc123"},
             )
         )
     )
