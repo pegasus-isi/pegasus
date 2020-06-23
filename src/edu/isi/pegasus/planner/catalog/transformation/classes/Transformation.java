@@ -182,7 +182,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                 case CHECKSUM:
                     checksum =
                             this.createChecksum(
-                                    node,
+                                    node.get(key),
                                     TransformationCatalogKeywords.TRANSFORMATIONS
                                             .getReservedName());
                     break;
