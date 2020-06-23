@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
@@ -126,6 +127,63 @@ public class TransformationTest {
         expected.addProfile(new Profile("env", "JAVA_HOME", "/opt/java/1.6"));
         expected.addProfile(new Profile("pegasus", "clusters.num", "1"));
         expected.addProfile(new Profile("metadata", "user", "karan"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testBaseTransformationWithChecksum() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "namespace: \"example\"\n"
+                        + "name: \"keg\"\n"
+                        + "version: \"1.0\"\n"
+                        + "checksum:\n"
+                        + "  sha256: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"\n"
+                        + "metadata:\n"
+                        + "  user: \"karan\"";
+
+        Transformation tx = mapper.readValue(test, Transformation.class);
+        assertNotNull(tx);
+        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
+        TransformationCatalogEntry expected =
+                new TransformationCatalogEntry("example", "keg", "1.0");
+        expected.addProfile(new Profile("metadata", Metadata.CHECKSUM_TYPE_KEY, "sha256"));
+        expected.addProfile(
+                new Profile(
+                        "metadata",
+                        Metadata.CHECKSUM_VALUE_KEY,
+                        "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9"));
+        expected.addProfile(new Profile("metadata", "user", "karan"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testBaseTransformationWithChecksumandMetadata() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "namespace: \"example\"\n"
+                        + "name: \"keg\"\n"
+                        + "version: \"1.0\"\n"
+                        + "checksum:\n"
+                        + "  sha256: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"";
+
+        Transformation tx = mapper.readValue(test, Transformation.class);
+        assertNotNull(tx);
+        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
+        TransformationCatalogEntry expected =
+                new TransformationCatalogEntry("example", "keg", "1.0");
+        expected.addProfile(new Profile("metadata", Metadata.CHECKSUM_TYPE_KEY, "sha256"));
+        expected.addProfile(
+                new Profile(
+                        "metadata",
+                        Metadata.CHECKSUM_VALUE_KEY,
+                        "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9"));
         assertEquals(expected, actual);
     }
 
