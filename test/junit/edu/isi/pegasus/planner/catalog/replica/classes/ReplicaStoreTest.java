@@ -25,6 +25,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
@@ -130,12 +131,46 @@ public class ReplicaStoreTest {
         ReplicaCatalogEntry rce = rl.getPFN(0);
         ReplicaCatalogEntry expected = new ReplicaCatalogEntry("file:///Volumes/data/input/f.a");
         expected.addAttribute("site", "local");
-        // PM-1534 checksum and other attributes are at ReplicaLocation level
-        // expected.addAttribute("checksum.type", "sha256");
-        // expected.addAttribute("checksum.value", "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9");
         assertEquals(expected, rce);
-        assertEquals("sha256", rl.getMetadata("checksum.type"));
-        assertEquals("a08d9d7769cffb96a910a4b6c2be7bfd85d461c9", rl.getMetadata("checksum.value"));
+        assertEquals("sha256", rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY));
+        assertEquals(
+                "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9",
+                rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY));
+    }
+
+    @Test
+    public void testSingleReplicaWithChecksumAndMetadata() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "pegasus: \"5.0\"\n"
+                        + "replicas:\n"
+                        + "  # matches \"f.a\"\n"
+                        + "  - lfn: \"f.a\"\n"
+                        + "    pfns:\n"
+                        + "      - pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "        site: \"local\"\n"
+                        + "    checksum:\n"
+                        + "      sha256: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"\n"
+                        + "    metadata:\n"
+                        + "      user: \"karan\"";
+
+        ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
+        assertNotNull(store);
+        assertEquals(1, store.getLFNCount());
+        ReplicaLocation rl = store.get("f.a");
+        assertNotNull(rl);
+        assertEquals("f.a", rl.getLFN());
+        ReplicaCatalogEntry rce = rl.getPFN(0);
+        ReplicaCatalogEntry expected = new ReplicaCatalogEntry("file:///Volumes/data/input/f.a");
+        expected.addAttribute("site", "local");
+        assertEquals(expected, rce);
+        assertEquals("sha256", rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY));
+        assertEquals(
+                "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9",
+                rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY));
+        assertEquals("karan", rl.getMetadata("user"));
     }
 
     @Test(expected = ReplicaCatalogException.class)

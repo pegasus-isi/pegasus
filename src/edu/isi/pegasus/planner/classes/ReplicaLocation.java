@@ -607,32 +607,9 @@ public class ReplicaLocation extends Data implements Cloneable {
          * @param node
          */
         private void addChecksum(ReplicaLocation rl, JsonNode node) {
-
-            if (node instanceof ObjectNode) {
-                for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
-                    Map.Entry<String, JsonNode> e = it.next();
-                    String key = e.getKey();
-                    ReplicaCatalogKeywords reservedKey = ReplicaCatalogKeywords.getReservedKey(key);
-                    if (reservedKey == null) {
-                        this.complainForIllegalKey(
-                                ReplicaCatalogKeywords.REPLICAS.getReservedName(), key, node);
-                    }
-
-                    String keyValue = node.get(key).asText();
-                    switch (reservedKey) {
-                        case SHA256:
-                            rl.addMetadata(Metadata.CHECKSUM_TYPE_KEY, "sha256");
-                            rl.addMetadata(Metadata.CHECKSUM_VALUE_KEY, keyValue);
-                            break;
-
-                        default:
-                            this.complainForUnsupportedKey(
-                                    ReplicaCatalogKeywords.CHECKSUM.getReservedName(), key, node);
-                    }
-                }
-            } else {
-                throw getException("Checksum needs to be object node. Found for replica" + node);
-            }
+            Metadata checksum =
+                    this.createChecksum(node, ReplicaCatalogKeywords.REPLICAS.getReservedName());
+            rl.getAllMetadata().merge(checksum);
         }
 
         /**
