@@ -11,7 +11,6 @@ Can be used to find installed Pegasus tools and libraries.
                      [--perl-dump] [--perl-hash] [--python-dump] [--sh-dump]
                      [--bin] [--conf] [--java] [--perl] [--python]
                      [--python-externals] [--r] [--schema] [--classpath]
-                     [--local-site] [--full-local]
 
 .. __description:
 
@@ -76,18 +75,6 @@ Options
    Do not produce a end-of-line after output. This is useful when being
    called from non-shell backticks in scripts. However, order is
    important for this option: If you intend to use it, specify it first.
-
-**--local-site** [d]
-   Create a site catalog entry for site "local". This is only an XML
-   snippet without root element nor XML headers. The optional argument
-   "d" points to the mount point to use. If not specified, defaults to
-   the user’s $HOME directory.
-
-**--full-local** [d]
-   Create a complete site catalog with only site "local". The an XML
-   snippet without root element nor XML headers. The optional argument
-   "d" points to the mount point to use. If not specified, defaults to
-   the user’s $HOME directory.
 
 .. __example:
 
