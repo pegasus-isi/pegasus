@@ -793,6 +793,8 @@ class Invocation(Base):
     executable = Column("executable", Text, nullable=False)
     argv = Column("argv", Text)
     abs_task_id = Column("abs_task_id", String(255))
+    maxrss = Column("maxrss", Integer)
+    avg_cpu = Column("avg_cpu", Numeric(precision=16, scale=6))
 
 
 Invocation.__table_args__ = (
