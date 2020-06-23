@@ -25,9 +25,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogKeywords;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.ScannerException;
 import java.io.File;
@@ -768,6 +768,7 @@ public class Container implements Cloneable {
             ObjectCodec oc = parser.getCodec();
             JsonNode node = oc.readTree(parser);
             Container container = new Container();
+            Metadata checksum = null;
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
@@ -817,6 +818,18 @@ public class Container implements Cloneable {
                         }
                         break;
 
+                    case METADATA:
+                        container.addProfiles(this.createMetadata(node.get(key)));
+                        break;
+
+                    case CHECKSUM:
+                        checksum =
+                                this.createChecksum(
+                                        node.get(key),
+                                        TransformationCatalogKeywords.TRANSFORMATIONS
+                                                .getReservedName());
+                        break;
+
                     case PROFILES:
                         JsonNode profilesNode = node.get(key);
                         if (profilesNode != null) {
@@ -831,6 +844,18 @@ public class Container implements Cloneable {
                                 TransformationCatalogKeywords.CONTAINERS.getReservedName(),
                                 key,
                                 node);
+                }
+            }
+            if (checksum != null) {
+                // PM-1420 merge metadata profiles to include checksum
+                Metadata m =
+                        (Metadata) container.getAllProfiles().get(Profiles.NAMESPACES.metadata);
+                if (m == null) {
+                    // no metadata in the base, add checksum information into the base
+                    container.getAllProfiles().set(m);
+                } else {
+                    // merge with existing metadata
+                    m.merge(checksum);
                 }
             }
 
@@ -908,12 +933,33 @@ public class Container implements Cloneable {
                 gen.writeEndArray();
             }
 
-            if (container.getAllProfiles() != null) {
-                gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
-                gen.writeObject(container.getAllProfiles());
+            Profiles profiles = container.getAllProfiles();
+            if (profiles != null) {
+                this.serializeProfiles(gen, profiles);
             }
 
             gen.writeEndObject();
+        }
+
+        /**
+         * Special handling for profiles serialization to ensure that metadata and checksum
+         * information is serialized at the same level as profiles and not nested inside .
+         *
+         * @param gen
+         * @param profiles
+         * @throws IOException
+         */
+        private void serializeProfiles(JsonGenerator gen, Profiles profiles) throws IOException {
+            // PM-1617 metadata and checksum are at the profiles level , not nested in there
+            // remove the metadata and add back after serializing profiles
+            Metadata m = (Metadata) profiles.remove(Profiles.NAMESPACES.metadata);
+
+            if (!profiles.isEmpty()) {
+                gen.writeFieldName(TransformationCatalogKeywords.PROFILES.getReservedName());
+                gen.writeObject(profiles);
+            }
+            gen.writeObject(m);
+            profiles.set(m);
         }
     }
 }

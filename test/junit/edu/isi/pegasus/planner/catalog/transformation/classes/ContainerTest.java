@@ -16,6 +16,7 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container.MountPoint;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
@@ -193,7 +194,6 @@ public class ContainerTest {
                         + "profiles:\n"
                         + "  env:\n"
                         + "    JAVA_HOME: /opt/java/1.6";
-
         Container c = mapper.readValue(test, Container.class);
         assertNotNull(c);
         assertEquals(Container.TYPE.docker, c.getType());
@@ -218,9 +218,36 @@ public class ContainerTest {
                 "name: centos-pegasus\n"
                         + "type: docker\n"
                         + "image: docker:///rynge/montage:latest\n"
-                        + "mounts: \n"
-                        + "  - /Volumes/Work/lfs1:/shared-data/:ro\n"
-                        + "  - /Volumes/Work/lfs12:/shared-data1/:ro\n"
+                        + "checksum:\n"
+                        + "  sha256: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"\n";
+
+        Container c = mapper.readValue(test, Container.class);
+        assertNotNull(c);
+        assertEquals(Container.TYPE.docker, c.getType());
+        assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
+        List<Profile> profiles = c.getProfiles("metadata");
+        assertThat(
+                profiles, hasItem(new Profile("metadata", Metadata.CHECKSUM_TYPE_KEY, "sha256")));
+        assertThat(
+                profiles,
+                hasItem(
+                        new Profile(
+                                "metadata",
+                                Metadata.CHECKSUM_VALUE_KEY,
+                                "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9")));
+    }
+
+    @Test
+    public void deserializeContainerWithChecksumAndProfiles() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "name: centos-pegasus\n"
+                        + "type: docker\n"
+                        + "image: docker:///rynge/montage:latest\n"
+                        + "checksum:\n"
+                        + "  sha256: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"\n"
                         + "profiles:\n"
                         + "  env:\n"
                         + "    JAVA_HOME: /opt/java/1.6";
@@ -229,19 +256,23 @@ public class ContainerTest {
         assertNotNull(c);
         assertEquals(Container.TYPE.docker, c.getType());
         assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
-
-        assertEquals(2, c.getMountPoints().size());
+        List<Profile> profiles = c.getProfiles("metadata");
         assertThat(
-                c.getMountPoints(), hasItem(new MountPoint("/Volumes/Work/lfs1:/shared-data/:ro")));
+                profiles, hasItem(new Profile("metadata", Metadata.CHECKSUM_TYPE_KEY, "sha256")));
         assertThat(
-                c.getMountPoints(), hasItem(new MountPoint("/Volumes/Work/lfs1:/shared-data/:ro")));
+                profiles,
+                hasItem(
+                        new Profile(
+                                "metadata",
+                                Metadata.CHECKSUM_VALUE_KEY,
+                                "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9")));
 
-        List<Profile> profiles = c.getProfiles("env");
-        assertThat(profiles, hasItem(new Profile("env", "JAVA_HOME", "/opt/java/1.6")));
+        List<Profile> p = c.getProfiles("env");
+        assertThat(p, hasItem(new Profile("env", "JAVA_HOME", "/opt/java/1.6")));
     }
 
     @Test
-    public void testContainerSerialization() throws IOException {
+    public void serializeContainer() throws IOException {
         ObjectMapper mapper =
                 new ObjectMapper(
                         new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
@@ -269,6 +300,41 @@ public class ContainerTest {
                         + "    JAVA_HOME: \"/opt/java/1.6\"\n";
 
         String actual = mapper.writeValueAsString(c);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void serializeContainerChecksum() throws IOException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        Container c = new Container();
+        c.setName("centos-pegasus");
+        c.setImageSite("dockerhub");
+        c.setImageURL("docker:///rynge/montage:latest");
+        c.setType(Container.TYPE.docker);
+        c.addProfile(
+                new Profile(
+                        Profiles.NAMESPACES.metadata.toString(),
+                        Metadata.CHECKSUM_TYPE_KEY,
+                        "sha256"));
+        c.addProfile(
+                new Profile(
+                        Profiles.NAMESPACES.metadata.toString(),
+                        Metadata.CHECKSUM_VALUE_KEY,
+                        "dsadsadsa093232"));
+        String expected =
+                "---\n"
+                        + "name: \"centos-pegasus\"\n"
+                        + "type: \"docker\"\n"
+                        + "image: \"docker:///rynge/montage:latest\"\n"
+                        + "image.site: \"dockerhub\"\n"
+                        + "checksum:\n"
+                        + "  sha256: \"dsadsadsa093232\"\n";
+
+        String actual = mapper.writeValueAsString(c);
+        System.err.println(actual);
         assertEquals(expected, actual);
     }
 }
