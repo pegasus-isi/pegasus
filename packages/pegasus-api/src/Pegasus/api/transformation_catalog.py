@@ -1,6 +1,6 @@
 from collections import OrderedDict, defaultdict
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from .errors import DuplicateError
 from .mixins import HookMixin, MetadataMixin, ProfileMixin
@@ -18,6 +18,96 @@ __all__ = [
 ]
 
 
+class _ContainerType(Enum):
+    """Container types recognized by Pegasus"""
+
+    DOCKER = "docker"
+    SINGULARITY = "singularity"
+    SHIFTER = "shifter"
+
+
+class Container(ProfileMixin):
+    """Describes a container that can be added to the :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`
+
+    .. code-block:: python
+
+        # Example
+        c = Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
+
+    """
+
+    DOCKER = _ContainerType.DOCKER
+    SINGULARITY = _ContainerType.SINGULARITY
+    SHIFTER = _ContainerType.SHIFTER
+
+    _SUPPORTED_CHECKSUMS = {"sha256"}
+
+    def __init__(
+        self,
+        name: str,
+        container_type: _ContainerType,
+        image: str,
+        mounts: Optional[List[str]] = None,
+        image_site: Optional[str] = None,
+        checksum: Optional[Dict[str, str]] = None,
+    ):
+        """
+        :param name: name of this container
+        :type name: str
+        :param container_type: a container type defined in :py:class:`~Pegasus.api.transformation_catalog.Container`
+        :type container_type: _ContainerType
+        :param image: image, such as 'docker:///rynge/montage:latest'
+        :type image: str
+        :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro', ...]
+        :type mounts: Optional[List[str]], optional
+        :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
+        :type image_site: Optional[str], optional
+        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to None
+        :type checksum: Optional[Dict[str, str]], optional
+        :raises ValueError: container_type must be one of :py:class:`~Pegasus.api.transformation_catalog._ContainerType`
+        """
+        self.name = name
+
+        if not isinstance(container_type, _ContainerType):
+            raise TypeError(
+                "invalid container_type: {container_type}; container_type must be one of {enum_str}".format(
+                    container_type=container_type,
+                    enum_str=_get_class_enum_member_str(Container, _ContainerType),
+                )
+            )
+
+        self.container_type = container_type.value
+        self.image = image
+        self.mounts = mounts
+        self.image_site = image_site
+
+        # ensure supported checksum type given
+        if checksum and len(checksum) > 0:
+            for checksum_type in checksum:
+                if checksum_type.lower() not in Container._SUPPORTED_CHECKSUMS:
+                    raise ValueError(
+                        "invalid checksum: {}, supported checksum types are: {}".format(
+                            checksum_type, Container._SUPPORTED_CHECKSUMS
+                        )
+                    )
+        self.checksum = checksum
+
+        self.profiles = defaultdict(dict)
+
+    def __json__(self):
+        return _filter_out_nones(
+            {
+                "name": self.name,
+                "type": self.container_type,
+                "image": self.image,
+                "mounts": self.mounts,
+                "image.site": self.image_site,
+                "checksum": self.checksum,
+                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
+            }
+        )
+
+
 class TransformationSite(ProfileMixin, MetadataMixin):
     """Site specific information about a :py:class:`~Pegasus.api.transformation_catalog.Transformation`.
     A :py:class:`~Pegasus.api.transformation_catalog.Transformation` must contain at least one
@@ -26,14 +116,14 @@ class TransformationSite(ProfileMixin, MetadataMixin):
 
     def __init__(
         self,
-        name,
-        pfn,
-        is_stageable=False,
-        arch=None,
-        os_type=None,
-        os_release=None,
-        os_version=None,
-        container=None,
+        name: str,
+        pfn: str,
+        is_stageable: bool = False,
+        arch: Optional[Arch] = None,
+        os_type: Optional[OS] = None,
+        os_release: Optional[str] = None,
+        os_version: Optional[str] = None,
+        container: Optional[Union[Container, str]] = None,
     ):
         """
         :param name: name of the site at which this :py:class:`~Pegasus.api.transformation_catalog.Transformation` resides
@@ -43,15 +133,15 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
         :type type: bool, optional
         :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
-        :type arch: Arch, optional
+        :type arch: Optional[Arch], optional
         :param os_type: name of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS`), defaults to None
-        :type os_type: OS, optional
+        :type os_type: Optional[OS], optional
         :param os_release: release of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
-        :type os_release: str, optional
+        :type os_release: Optional[str], optional
         :param os_version: version of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
-        :type os_version: str, optional
-        :param container: specify the name of the container to use, optional
-        :type container: str
+        :type os_version: Optional[str], optional
+        :param container: specify the name of the container or Container object to use, optional
+        :type container: Optional[Union[Container, str]], optional
         :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
         """
@@ -122,114 +212,27 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         )
 
 
-class _ContainerType(Enum):
-    """Container types recognized by Pegasus"""
-
-    DOCKER = "docker"
-    SINGULARITY = "singularity"
-    SHIFTER = "shifter"
-
-
-class Container(ProfileMixin):
-    """Describes a container that can be added to the :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`
-
-    .. code-block:: python
-
-        # Example
-        c = Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
-
+class Transformation(ProfileMixin, HookMixin, MetadataMixin):
+    """A transformation, which can be a standalone executable, or one that
+    requires other executables. 
     """
-
-    DOCKER = _ContainerType.DOCKER
-    SINGULARITY = _ContainerType.SINGULARITY
-    SHIFTER = _ContainerType.SHIFTER
 
     _SUPPORTED_CHECKSUMS = {"sha256"}
 
     def __init__(
         self,
         name: str,
-        container_type: _ContainerType,
-        image: str,
-        mounts: Optional[List[str]] = None,
-        image_site: Optional[str] = None,
-        checksum: Dict[str, str] = {},
-    ):
-        """
-        :param name: name of this container
-        :type name: str
-        :param container_type: a container type defined in :py:class:`~Pegasus.api.transformation_catalog.Container`
-        :type container_type: _ContainerType
-        :param image: image, such as 'docker:///rynge/montage:latest'
-        :type image: str
-        :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro', ...]
-        :type mounts: Optional[List[str]], optional
-        :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
-        :type image_site: Optional[str], optional
-        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to {}
-        :type checksum: Dict[str, str], optional
-        :raises ValueError: container_type must be one of :py:class:`~Pegasus.api.transformation_catalog._ContainerType`
-        """
-        self.name = name
-
-        if not isinstance(container_type, _ContainerType):
-            raise TypeError(
-                "invalid container_type: {container_type}; container_type must be one of {enum_str}".format(
-                    container_type=container_type,
-                    enum_str=_get_class_enum_member_str(Container, _ContainerType),
-                )
-            )
-
-        self.container_type = container_type.value
-        self.image = image
-        self.mounts = mounts
-        self.image_site = image_site
-
-        # ensure supported checksum type given
-        if len(checksum) > 0:
-            for checksum_type in checksum:
-                if checksum_type.lower() not in Container._SUPPORTED_CHECKSUMS:
-                    raise ValueError(
-                        "invalid checksum: {}, supported checksum types are: {}".format(
-                            checksum_type, Container._SUPPORTED_CHECKSUMS
-                        )
-                    )
-        self.checksum = checksum
-
-        self.profiles = defaultdict(dict)
-
-    def __json__(self):
-        return _filter_out_nones(
-            {
-                "name": self.name,
-                "type": self.container_type,
-                "image": self.image,
-                "mounts": self.mounts,
-                "image.site": self.image_site,
-                "checksum": self.checksum if len(self.checksum) > 0 else None,
-                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-            }
-        )
-
-
-class Transformation(ProfileMixin, HookMixin, MetadataMixin):
-    """A transformation, which can be a standalone executable, or one that
-    requires other executables. 
-    """
-
-    def __init__(
-        self,
-        name,
-        namespace=None,
-        version=None,
-        site=None,
-        pfn=None,
-        is_stageable=False,
-        arch=None,
-        os_type=None,
-        os_release=None,
-        os_version=None,
-        container=None,
+        namespace: Optional[str] = None,
+        version: Optional[str] = None,
+        site: Optional[str] = None,
+        pfn: Optional[str] = None,
+        is_stageable: bool = False,
+        arch: Optional[Arch] = None,
+        os_type: Optional[OS] = None,
+        os_release: Optional[str] = None,
+        os_version: Optional[str] = None,
+        container: Optional[Union[Container, str]] = None,
+        checksum: Optional[Dict[str, str]] = None,
     ):
         """
         When a transformation resides on a single site, the
@@ -238,7 +241,8 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         the args: is_stageable, arch, os_type, os_release, os_version, and container, are
         applied to the site, else they are ignored. When a transformation resides
         multiple sites, the syntax in Example 2 can be used where multiple
-        TransformationSite objects can be added.
+        TransformationSite objects can be added. Note that when specifying a checksum
+        such as {"sha256": <value>}, this only applies to stageable executables. 
 
         .. code-block:: python
 
@@ -268,25 +272,27 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :param name: the logical name of the transformation
         :type name: str
         :param namespace: the namespace that this transformation belongs to, defaults to None
-        :type namespace: str, optional
+        :type namespace: Optional[str], optional
         :param version: the version of this transformation (e.g. "1.1"), defaults to None
-        :type version: str, optional
+        :type version: Optional[str], optional
         :param site: a site specified in the site catalog to on which this transformation resides, defaults to None
-        :type site: str, optional
+        :type site: Optional[str], optional
         :param pfn: the physical filename of this transformation (e.g. "/usr/bin/tar"), defaults to None
-        :type pfn: str, optional
+        :type pfn: Optional[str], optional
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
         :type type: bool, optional
         :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
-        :type arch: Arch, optional
+        :type arch: Optional[Arch], optional
         :param os_type: name of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS`), defaults to None
-        :type os_type: OS, optional
+        :type os_type: Optional[OS], optional
         :param os_release: release of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
-        :type os_release: str, optional
+        :type os_release: Optional[str], optional
         :param os_version: version of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
-        :type os_version: str, optional
+        :type os_version: Optional[str], optional
         :param container: a container object or name of the container to be used for this transformation, optional
-        :type container: Container or str
+        :type container: Optional[Union[Container, str]], optional
+        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to None
+        :type checksum: Optional[Dict[str, str]], optional
         :raises TypeError: Container must be of type Container or str
         :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
@@ -330,6 +336,17 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                     container=container,
                 )
             )
+
+        # ensure supported checksum type given
+        if checksum and len(checksum) > 0:
+            for checksum_type in checksum:
+                if checksum_type.lower() not in Transformation._SUPPORTED_CHECKSUMS:
+                    raise ValueError(
+                        "invalid checksum: {}, supported checksum types are: {}".format(
+                            checksum_type, Transformation._SUPPORTED_CHECKSUMS
+                        )
+                    )
+        self.checksum = checksum
 
     def _get_key(self):
         return "{}::{}::{}".format(self.namespace, self.name, self.version)
@@ -441,6 +458,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                 if len(self.hooks) > 0
                 else None,
                 "metadata": self.metadata if len(self.metadata) > 0 else None,
+                "checksum": self.checksum,
             }
         )
 
