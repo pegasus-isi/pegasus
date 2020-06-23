@@ -15,8 +15,8 @@ rc = (ReplicaCatalog()
        .add_replica('local',
                     infile, 
                     'file://' + str(TOP_DIR / infile.lfn),
-                    checksum_type='sha256',
-                    checksum_value='66a42b4be204c824a7533d2c677ff7cc5c44526300ecd6b450602e06128063f9'))
+                    checksum = {'sha256':'66a42b4be204c824a7533d2c677ff7cc5c44526300ecd6b450602e06128063f9'}
+                ))
 
 tc = (TransformationCatalog()
        .add_transformations(Transformation('ls', site='condorpool', pfn='/bin/ls', is_stageable=False)))
