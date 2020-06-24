@@ -93,7 +93,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-kickstart test-pmc test-transfer
+                      ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
