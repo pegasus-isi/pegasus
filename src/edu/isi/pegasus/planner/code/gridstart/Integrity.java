@@ -76,7 +76,7 @@ public class Integrity {
     public String addIntegrityCheckInvocation(StringBuilder sb, Collection<PegasusFile> files) {
         StringBuilder flist = new StringBuilder();
         for (PegasusFile file : files) {
-            if (file.isDataFile()) {
+            if (file.isDataFile() || file.isExecutable()) {
                 // PM-1375 first check if integrity checking is turned off
                 // for the file explicitly
                 boolean generate = file.doIntegrityChecking();
@@ -198,7 +198,7 @@ public class Integrity {
         // subset files that have any metadata associated with them
         List<PegasusFile> metaFiles = new LinkedList();
         for (PegasusFile file : files) {
-            if (file.isDataFile()) {
+            if (file.isDataFile() || file.isExecutable()) {
                 Metadata m = file.getAllMetadata();
                 if (!m.isEmpty()) {
                     metaFiles.add(file);
@@ -219,7 +219,12 @@ public class Integrity {
             StringBuilder sb = new StringBuilder();
             for (PegasusFile pf : metaFiles) {
                 sb.append("\n").append("\t{");
-                sb.append("\n").append("\t\t").append("\"_type\": \"file\"").append(",");
+                sb.append("\n")
+                        .append("\t\t")
+                        .append("\"_type\": \"")
+                        .append(pf.getTypeAsString())
+                        .append("\"")
+                        .append(",");
                 sb.append("\n")
                         .append("\t\t")
                         .append("\"_id\": \"")

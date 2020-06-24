@@ -712,6 +712,21 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
+     * Returns a boolean indicating whether there is a checksum associated with the executable or
+     * not.
+     *
+     * @return
+     */
+    public boolean hasCheckSum() {
+        boolean has = false;
+        Metadata m = (Metadata) this.getProfilesNamepsace(Profiles.NAMESPACES.metadata);
+        if (m != null) {
+            has = m.containsKey(Metadata.CHECKSUM_VALUE_KEY);
+        }
+        return has;
+    }
+
+    /**
      * Joins the 3 components into a fully qualified logical mName of the format NS::NAME:VER
      *
      * @param mNamespace String

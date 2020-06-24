@@ -486,6 +486,9 @@ public class InterPoolEngine extends Engine implements Refiner {
             fTx = new FileTransfer(job.getStagedExecutableBaseName(), job.jobName);
             fTx.setType(FileTransfer.EXECUTABLE_FILE);
 
+            // PM-1617 grab any checksums if available
+            fTx.assimilateChecksum(entry);
+
             // the physical transformation points to
             // guc or the user specified transfer mechanism
             // accessible url
@@ -603,6 +606,9 @@ public class InterPoolEngine extends Engine implements Refiner {
 
                         FileTransfer fTx = new FileTransfer(basename, job.jobName);
                         fTx.setType(FileTransfer.EXECUTABLE_FILE);
+
+                        // PM-1617 grab any checksums if available
+                        fTx.assimilateChecksum(tcEntry);
 
                         // the physical transformation points to
                         // guc or the user specified transfer mechanism
