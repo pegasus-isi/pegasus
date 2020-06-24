@@ -327,7 +327,11 @@ public class JDBCRC implements ReplicaCatalog {
             mLogger.log(
                     "While connecting to JDBCRC Replica Catalog",
                     e,
-                    LogManager.DEBUG_MESSAGE_LEVEL);
+                    LogManager.ERROR_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Also checkout the properties file to make sure right connection properties are specified "
+                            + propertiesFile,
+                    LogManager.ERROR_MESSAGE_LEVEL);
             return result;
         }
 
