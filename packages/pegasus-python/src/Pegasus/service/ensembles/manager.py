@@ -5,6 +5,7 @@ import subprocess
 import threading
 import time
 
+from sqlalchemy.sql import text
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus import braindump, user
@@ -311,7 +312,7 @@ class WorkflowProcessor:
             self.dao.session.query(MasterWorkflowstate)
             .filter_by(wf_id=w.wf_id)
             .filter(MasterWorkflowstate.timestamp >= updated)
-            .order_by("timestamp desc")
+            .order_by(text("timestamp desc"))
             .first()
         )
 
