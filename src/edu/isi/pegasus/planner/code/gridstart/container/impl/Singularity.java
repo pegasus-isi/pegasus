@@ -163,7 +163,8 @@ public class Singularity extends Abstract {
                 "Writing out script to launch user task in container");
         sb.append("\n");
         sb.append("cat <<EOF > ").append(scriptName).append("\n");
-        sb.append("#!/bin/bash").append("\n");
+        // basic shell as some containers only has dash and not bash
+        sb.append("#!/bin/sh").append("\n");
         appendStderrFragment(
                 sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Now in pegasus lite container script");
         sb.append("set -e").append("\n");
@@ -274,21 +275,21 @@ public class Singularity extends Abstract {
         sb.append("pegasus_lite_version_minor=$pegasus_lite_version_minor").append("\n");
         sb.append("pegasus_lite_version_patch=$pegasus_lite_version_patch").append("\n");
 
-        // explicitly set the strict check to false, as we want to pick up pegasus version
-        // in the container if specified
-        sb.append("pegasus_lite_enforce_strict_wp_check=false").append("\n");
-
+        sb.append("pegasus_lite_enforce_strict_wp_check=$pegasus_lite_enforce_strict_wp_check")
+                .append("\n");
         sb.append(
                         "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download")
                 .append("\n");
+        sb.append("pegasus_lite_inside_container=true").append("\n");
         sb.append("pegasus_lite_work_dir=")
                 .append(Singularity.CONTAINER_WORKING_DIRECTORY)
+                .append("\n")
                 .append("\n");
-        sb.append("cd /srv").append("  1>&2").append("\n");
-        sb.append("echo \\$PWD").append("  1>&2").append("\n");
+
+        sb.append("cd /srv").append("\n");
 
         sb.append(". pegasus-lite-common.sh").append("\n");
-        sb.append("pegasus_lite_init").append("\n").append("\n");
+        sb.append("pegasus_lite_init").append("\n");
 
         sb.append("\n");
         appendStderrFragment(

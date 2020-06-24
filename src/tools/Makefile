@@ -1,5 +1,12 @@
-TARGET	= pegasus-cluster pegasus-keg pegasus-kickstart
-CONDOR_VERSION	= $(shell condor_version | awk '{ print $2; exit }')
+GLIBC = $(shell gcc -dumpmachine | grep gnu | wc -l)
+
+TARGET	= pegasus-cluster pegasus-kickstart
+
+# only include pegasus-keg on glibc systems
+ifeq (1,${GLIBC})
+    TARGET += pegasus-keg
+endif
+
 MARCH   = $(shell uname -m | tr '[A-Z]' '[a-z]')
 
 ifndef ${prefix}
