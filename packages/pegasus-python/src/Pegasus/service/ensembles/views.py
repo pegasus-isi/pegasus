@@ -190,7 +190,7 @@ def analyze(workflow):
     if os.path.isfile(logfile):
         yield "Workflow log:\n"
         for l in open(w.get_logfile(), "rb"):
-            yield "LOG: %s" % l
+            yield "LOG: %s" % l.decode()
     else:
         yield "No workflow log available\n"
 
@@ -203,7 +203,10 @@ def analyze(workflow):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
+        
         out, err = p.communicate()
+        out = out.decode()
+        
         for l in out.split("\n"):
             yield "ANALYZER: %s\n" % l
         rc = p.wait()
