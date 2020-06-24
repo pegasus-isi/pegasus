@@ -99,11 +99,11 @@ project:
                 - name: pegasus-source
               requirements:
                 - capabilityKey: distro
-                  matchType: !matches
-                    matchValue: 'alpine'
+                  matchType: !equals
+                    matchValue: alpine
                 - capabilityKey: release
-                  matchType: !matches
-                    matchValue: '3'
+                  matchType: !equals
+                    matchValue: 3
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: A3JUT
@@ -130,8 +130,8 @@ project:
                 - name: pegasus-source
               requirements:
                 - capabilityKey: distro
-                  matchType: !matches
-                    matchValue: 'alpine'
+                  matchType: !equals
+                    matchValue: alpine
                 - capabilityKey: release
                   matchType: !equals
                     matchValue: 3
@@ -182,7 +182,7 @@ project:
               requirements:
                 - capabilityKey: distro
                   matchType: !equals
-                    matchValue: 'alpine'
+                    matchValue: alpine
                 - capabilityKey: release
                   matchType: !equals
                     matchValue: 3
