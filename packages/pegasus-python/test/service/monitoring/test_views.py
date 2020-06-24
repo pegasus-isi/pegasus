@@ -1,6 +1,7 @@
 import os
 
 import pytest
+import getpass
 from flask import g
 
 
@@ -10,7 +11,7 @@ class NoAuthFlaskTestCase:
         app.config["AUTHENTICATION"] = "NoAuthentication"
         app.config["PROCESS_SWITCHING"] = False
 
-        self.user = os.getenv("USER")
+        self.user = getpass.getuser()
 
     @staticmethod
     def pre_callable():
