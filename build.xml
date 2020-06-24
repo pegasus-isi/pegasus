@@ -122,7 +122,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <mkdir dir="${dist.bin}"/>
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
-          <include name="pegasus-config"/>
           <include name="pegasus-python-wrapper"/>
           <include name="pegasus-db-admin"/>
       </fileset>
@@ -449,6 +448,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
       <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
     </exec>
+
+    <!-- Update pegasus-config -->
+    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PEGASUS_VERSION@" value="${pegasus.version}" />
+    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@LIBDIR@" value="${dist.lib.subdir}" />
+    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PYTHON_LIBDIR@" value="${dist.python-lib.subdir}" />
 
     <chmod perm="0755" type="file">
       <fileset dir="${dist.python-lib}">
