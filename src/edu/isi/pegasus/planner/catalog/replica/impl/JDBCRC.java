@@ -279,6 +279,9 @@ public class JDBCRC implements ReplicaCatalog {
             // PM-778 no conf option specified
             // write out the properties to a file and invoke pegasus-db-admin
             // create a temporary file in directory
+            // PM-1535 we can no longer pass location of properties in the submit directory
+            // as properties file at this point does not have any contents written out, for
+            // pegasus-db-admin invoked via JDBCRC backend to use
             temp = writeOutProperties(props);
             propertiesFile = temp.getAbsolutePath();
             removePropertiesFile = true;
