@@ -618,6 +618,46 @@ public class PegasusFile extends Data {
     }
 
     /**
+     * Returns type of file being tranferree as string
+     *
+     * @exception IllegalArgumentException if the transfer mode is outside its legal range.
+     * @see #DATA_FILE
+     * @see #EXECUTABLE_FILE
+     */
+    public String getTypeAsString() throws IllegalArgumentException {
+        String type = null;
+        switch (this.getType()) {
+            case PegasusFile.DATA_FILE:
+                type = PegasusFile.DATA_TYPE;
+                break;
+
+            case PegasusFile.EXECUTABLE_FILE:
+                type = PegasusFile.EXECUTABLE_TYPE;
+                break;
+
+            case PegasusFile.CHECKPOINT_FILE:
+                type = PegasusFile.CHECKPOINT_TYPE;
+                break;
+
+            case PegasusFile.DOCKER_CONTAINER_FILE:
+                type = PegasusFile.DOCKER_TYPE;
+                break;
+
+            case PegasusFile.SINGULARITY_CONTAINER_FILE:
+                type = PegasusFile.SINGULARITY_TYPE;
+                break;
+
+            case PegasusFile.SHIFTER_CONTAINER_FILE:
+                type = PegasusFile.SHIFTER_TYPE;
+                break;
+
+            default:
+                type = PegasusFile.OTHER_TYPE;
+        }
+        return type;
+    }
+
+    /**
      * Returns the tristate transfer mode that is associated with the file.
      *
      * @return the int value denoting the tristate.
