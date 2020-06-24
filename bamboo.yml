@@ -102,8 +102,8 @@ project:
                   matchType: !matches
                     matchValue: 'alpine'
                 - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 3
+                  matchType: !matches
+                    matchValue: '3'
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: A3JUT
@@ -133,7 +133,7 @@ project:
                   matchType: !matches
                     matchValue: 'alpine'
                 - capabilityKey: release
-                  matchType: equals
+                  matchType: !equals
                     matchValue: 3
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
