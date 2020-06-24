@@ -1051,6 +1051,88 @@ project:
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: BA3
+              name: Build Alpine 3
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      ant dist-worker dist-release
+              artifactDefinitions:
+                - name: pegasus-binary-x86_64_alpine_3
+                  copyPattern: "pegasus-binary-*-x86_64_alpine_3.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-x86_64_alpine_3
+                  copyPattern: "pegasus-worker-*-x86_64_alpine_3.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: alpine
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 3
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXR8
+              name: Build RHEL 8
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_CENTOS_8}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} \
+                      dist-rpm dist-worker dist-release
+              artifactDefinitions:
+                - name: pegasus-binary-x86_64_rhel_8
+                  copyPattern: "pegasus-binary-*-x86_64_rhel_8.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-rpm-x86_64_rhel_8
+                  copyPattern: "*x86_64.rpm"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-x86_64_rhel_8
+                  copyPattern: "pegasus-worker-*-x86_64_rhel_8.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-srcrpm
+                  copyPattern: "*.src.rpm"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR7
               name: Build RHEL 7
               tasks:
@@ -1443,6 +1525,7 @@ project:
                       ssh pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
                       scp -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
+                - name: pegasus-binary-x86_64_alpine_3
                 - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_macos
@@ -1465,6 +1548,7 @@ project:
                 - name: pegasus-source-versioned-swamp-java
                 - name: pegasus-source-versioned-swamp-python
                 - name: pegasus-srcrpm
+                - name: pegasus-worker-x86_64_alpine_3
                 - name: pegasus-worker-x86_64_deb_9
                 - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_macos

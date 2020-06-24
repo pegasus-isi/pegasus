@@ -1,9 +1,9 @@
-GLIBC = $(shell gcc -dumpmachine | grep gnu | wc -l)
+MUSLLIBC = $(shell gcc -dumpmachine | grep musl | wc -l)
 
 TARGET	= pegasus-cluster pegasus-kickstart
 
 # only include pegasus-keg on glibc systems
-ifeq (1,${GLIBC})
+ifeq (0,${MUSLLIBC})
     TARGET += pegasus-keg
 endif
 

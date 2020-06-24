@@ -531,7 +531,7 @@ function test_integrity_yaml_inc {
 
 function test_w_with_rel_exec {
     mkdir -p subdir
-    cp /bin/date subdir/my_unique_exe
+    cp exe.sh subdir/my_unique_exe
     kickstart -w $PWD/subdir ./my_unique_exe
     ec=$?
     rm -rf subdir
