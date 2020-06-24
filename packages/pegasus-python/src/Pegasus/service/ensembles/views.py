@@ -203,10 +203,10 @@ def analyze(workflow):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
-        
+
         out, err = p.communicate()
         out = out.decode()
-        
+
         for l in out.split("\n"):
             yield "ANALYZER: %s\n" % l
         rc = p.wait()

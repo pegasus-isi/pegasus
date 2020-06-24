@@ -5,8 +5,8 @@ import subprocess
 import threading
 import time
 
-from sqlalchemy.sql import text
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import text
 
 from Pegasus import braindump, user
 from Pegasus.db import connection
@@ -244,14 +244,13 @@ class WorkflowProcessor:
         if not os.path.isfile(braindump_file_path):
             raise EMError("braindump.yml not found")
 
-        with open(braindump_file_path, "r") as f:
+        with open(braindump_file_path) as f:
             bd = braindump.load(f)
 
         if bd.wf_uuid is None:
             raise EMError("wf_uuid not found in braindump.yml")
 
         return bd.wf_uuid
-
 
     def run(self):
         "Run the workflow using pegasus-run"
