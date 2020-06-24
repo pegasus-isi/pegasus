@@ -1,7 +1,7 @@
+import getpass
 import os
 
 import pytest
-import getpass
 from flask import g
 
 
