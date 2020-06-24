@@ -92,8 +92,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      ls -l
-                      pwd
+                      cd pegasus-source
                       ant test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
@@ -119,8 +118,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      ls -l
-                      pwd
+                      cd pegasus-source
                       ant test-java
                 - !junitParser
                   description: Parse Test Report
