@@ -99,10 +99,10 @@ project:
                 - name: pegasus-source
               requirements:
                 - capabilityKey: distro
-                  matchType: equals
+                  matchType: !equals
                     matchValue: alpine
                 - capabilityKey: release
-                  matchType: equals
+                  matchType: !equals
                     matchValue: 3
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
@@ -130,10 +130,10 @@ project:
                 - name: pegasus-source
               requirements:
                 - capabilityKey: distro
-                  matchType: equals
+                  matchType: !equals
                     matchValue: alpine
                 - capabilityKey: release
-                  matchType: equals
+                  matchType: !equals
                     matchValue: 3
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
@@ -181,10 +181,10 @@ project:
                 - name: pegasus-source
               requirements:
                 - capabilityKey: distro
-                  matchType: equals
+                  matchType: !equals
                     matchValue: alpine
                 - capabilityKey: release
-                  matchType: equals
+                  matchType: !equals
                     matchValue: 3
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
