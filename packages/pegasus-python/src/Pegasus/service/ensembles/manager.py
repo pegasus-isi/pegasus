@@ -6,8 +6,9 @@ import threading
 import time
 
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import text
 
-from Pegasus import user
+from Pegasus import braindump, user
 from Pegasus.db import connection
 from Pegasus.db.ensembles import (
     EMError,
@@ -238,25 +239,18 @@ class WorkflowProcessor:
         "Get the workflow UUID from the braindump file"
         submitdir = self.find_submitdir()
 
-        braindump = os.path.join(submitdir, "braindump.txt")
+        braindump_file_path = os.path.join(submitdir, "braindump.yml")
 
-        if not os.path.isfile(braindump):
-            raise EMError("braindump.txt not found")
+        if not os.path.isfile(braindump_file_path):
+            raise EMError("braindump.yml not found")
 
-        wf_uuid = None
+        with open(braindump_file_path) as f:
+            bd = braindump.load(f)
 
-        f = open(braindump)
-        try:
-            for l in f:
-                if l.startswith("wf_uuid"):
-                    wf_uuid = l.split()[1]
-        finally:
-            f.close()
+        if bd.wf_uuid is None:
+            raise EMError("wf_uuid not found in braindump.yml")
 
-        if wf_uuid is None:
-            raise EMError("wf_uuid not found in braindump.txt")
-
-        return wf_uuid
+        return bd.wf_uuid
 
     def run(self):
         "Run the workflow using pegasus-run"
@@ -317,7 +311,7 @@ class WorkflowProcessor:
             self.dao.session.query(MasterWorkflowstate)
             .filter_by(wf_id=w.wf_id)
             .filter(MasterWorkflowstate.timestamp >= updated)
-            .order_by("timestamp desc")
+            .order_by(text("timestamp desc"))
             .first()
         )
 

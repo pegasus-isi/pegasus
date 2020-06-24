@@ -79,6 +79,115 @@ project:
         - name: Unit Tests
           description: Run Unit Tests on Code and Binaries
           jobs:
+            - key: A3UT
+              name: Alpine 3 Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      ls -l
+                      pwd
+                      ant test-kickstart test-pmc test-transfer
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: distro
+                  matchType: equals
+                    matchValue: alpine
+                - capabilityKey: release
+                  matchType: equals
+                    matchValue: 3
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: A3JUT
+              name: Alpine 3 Java Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Java Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      ls -l
+                      pwd
+                      ant test-java
+                - !junitParser
+                  description: Parse Test Report
+                  testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: distro
+                  matchType: equals
+                    matchValue: alpine
+                - capabilityKey: release
+                  matchType: equals
+                    matchValue: 3
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: A3PUT
+              name: Alpine 3 Python Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Python Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      ant test-python
+                - !junitParser
+                  description: Parse Test Report
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: Coverage Report - Pegasus Common
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-common/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus API
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-api/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus DAX
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus Worker
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-worker/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus WMS
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-python/htmlcov/
+                  isShared: false
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: distro
+                  matchType: equals
+                    matchValue: alpine
+                - capabilityKey: release
+                  matchType: equals
+                    matchValue: 3
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: D9CUT
               name: Debian 9 Unit Tests
               tasks:
