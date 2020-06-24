@@ -84,7 +84,11 @@ public class ReplicaFactory {
             throws ClassNotFoundException, IOException, NoSuchMethodException,
                     InstantiationException, IllegalAccessException, InvocationTargetException {
 
-        return loadInstance(bag, bag.getPegasusProperties().getPropertiesInSubmitDirectory());
+        // return loadInstance(bag, bag.getPegasusProperties().getPropertiesInSubmitDirectory());
+        // PM-1535 we can no longer pass location of properties in the submit directory
+        // as properties file at this point does not have any contents written out, for
+        // pegasus-db-admin invoked via JDBCRC backend to use
+        return loadInstance(bag, null);
     }
 
     /**
