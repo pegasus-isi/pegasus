@@ -538,6 +538,20 @@ public class InterPoolEngine extends Engine implements Refiner {
         FileTransfer fTx = new FileTransfer(c.getLFN(), job.jobName);
         fTx.setType(c.getType());
 
+        // PM-1620 check if any checksum is associated with container
+        if (c.hasCheckSum()) {
+            if (c.getType() == Container.TYPE.docker || c.getType() == Container.TYPE.shifter) {
+                // log a warning
+                mLogger.log(
+                        "Specification of checksums in transformation catalog are not currently supported for container "
+                                + c,
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            } else {
+                // PM-1620 grab any checksums if available
+                fTx.assimilateChecksum(entry);
+            }
+        }
+
         String site = c.getImageSite();
         if (site == null) {
             site = "CONTAINER_SITE";

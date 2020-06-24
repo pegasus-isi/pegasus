@@ -432,6 +432,22 @@ public class Container implements Cloneable {
     }
 
     /**
+     * Returns a boolean indicating whether there is a checksum associated with the executable or
+     * not.
+     *
+     * @return
+     */
+    public boolean hasCheckSum() {
+        boolean has = false;
+        Profiles p = this.getAllProfiles();
+        Metadata m = (Metadata) p.get(Profiles.NAMESPACES.metadata);
+        if (m != null) {
+            has = m.containsKey(Metadata.CHECKSUM_VALUE_KEY);
+        }
+        return has;
+    }
+
+    /**
      * Returns the clone of the object.
      *
      * @return the clone

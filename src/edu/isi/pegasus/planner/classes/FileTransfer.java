@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.classes;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import java.util.ArrayList;
@@ -548,6 +549,19 @@ public class FileTransfer extends PegasusFile {
         if (entry.hasCheckSum()) {
             // PM-1617 add all metadata from the entry into FileTransfer
             Metadata m = (Metadata) entry.getAllProfiles().get(Profiles.NAMESPACES.metadata);
+            this.getAllMetadata().merge(m);
+        }
+    }
+
+    /**
+     * Assimilates all metadata including checksum related data from Container
+     *
+     * @param container
+     */
+    public void assimilateChecksum(Container container) {
+        if (container.hasCheckSum()) {
+            // PM-1617 add all metadata from the entry into FileTransfer
+            Metadata m = (Metadata) container.getAllProfiles().get(Profiles.NAMESPACES.metadata);
             this.getAllMetadata().merge(m);
         }
     }
