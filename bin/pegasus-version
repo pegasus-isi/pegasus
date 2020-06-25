@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Show the version number. May be used to show even more (e.g. build)
 # $Id$

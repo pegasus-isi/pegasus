@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Wrapper for CLI Python tools - main purpose is to select a good
 # Python version to use, then execute the real tool 
