@@ -198,7 +198,7 @@ public class Integrity {
         // subset files that have any metadata associated with them
         List<PegasusFile> metaFiles = new LinkedList();
         for (PegasusFile file : files) {
-            if (file.isDataFile() || file.isExecutable()) {
+            if (file.isDataFile() || file.isExecutable() || file.isContainerFile()) {
                 Metadata m = file.getAllMetadata();
                 if (!m.isEmpty()) {
                     metaFiles.add(file);
