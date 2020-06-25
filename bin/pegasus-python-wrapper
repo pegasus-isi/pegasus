@@ -18,7 +18,7 @@ for NAME in \
     pegasus-s3 \
     pegasus-integrity \
 ; do
-    if [ "X$NAME" == "X$BASE_NAME" ]; then
+    if [ "X$NAME" = "X$BASE_NAME" ]; then
         ALLOW_PY2=1
     fi
 done
@@ -28,12 +28,12 @@ export PATH
 
 # first look in the PATH
 PEXE_LIST="$(which python3 2>/dev/null)"
-if [ $ALLOW_PY2 == 1 ]; then
+if [ $ALLOW_PY2 = 1 ]; then
     PEXE_LIST="$PEXE_LIST $(which python 2>/dev/null)"
 fi
 # has to be last to find user defined environments
 PEXE_LIST="$PEXE_LIST /usr/bin/python3"
-if [ $ALLOW_PY2 == 1 ]; then
+if [ $ALLOW_PY2 = 1 ]; then
     PEXE_LIST="$PEXE_LIST /usr/bin/python"
 fi
 
@@ -55,7 +55,7 @@ if ! (echo "$PEXE" | egrep "^(/bin/|/usr/bin/)") >/dev/null 2>&1; then
 fi
 
 # some quick validations - only for Python 3
-if [ $ALLOW_PY2 == 0 ]; then
+if [ $ALLOW_PY2 = 0 ]; then
     $PEXE $PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/startup-validation.py || exit 1
 fi
 
