@@ -548,7 +548,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                         LogManager.WARNING_MESSAGE_LEVEL);
             } else {
                 // PM-1620 grab any checksums if available
-                fTx.assimilateChecksum(entry);
+                fTx.assimilateChecksum(c);
             }
         }
 
