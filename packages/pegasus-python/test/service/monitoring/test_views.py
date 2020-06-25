@@ -1,3 +1,4 @@
+import getpass
 import os
 
 import pytest
@@ -10,7 +11,7 @@ class NoAuthFlaskTestCase:
         app.config["AUTHENTICATION"] = "NoAuthentication"
         app.config["PROCESS_SWITCHING"] = False
 
-        self.user = os.getenv("USER")
+        self.user = getpass.getuser()
 
     @staticmethod
     def pre_callable():

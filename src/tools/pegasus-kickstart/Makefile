@@ -6,6 +6,7 @@ LD = $(CC)
 LDLIBS = -lm
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 ARCH = $(shell uname -m)
+MUSLLIBC = $(shell gcc -dumpmachine | grep musl | wc -l)
 TARGET = pegasus-kickstart
 
 ifndef ${prefix}
@@ -37,6 +38,7 @@ ifeq (DARWIN,${SYSTEM})
 endif
 
 ifeq (LINUX,${SYSTEM})
+ifeq (0,${MUSLLIBC})
 ifeq (x86_64,${ARCH})
     TARGET += libinterpose.so
     PAPI_SO=$(shell /sbin/ldconfig -p | grep libpapi.so)
@@ -47,6 +49,7 @@ ifeq (x86_64,${ARCH})
             LI_LDFLAGS += -lpapi
         endif
     endif
+endif
 endif
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
@@ -76,9 +79,11 @@ version.h:
 install: $(TARGET)
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
 ifeq (LINUX,${SYSTEM})
+ifeq (0,${MUSLLIBC})
 ifeq (x86_64,${ARCH})
 	mkdir -p $(libdir)
 	$(INSTALL) -m 0755 libinterpose.so $(libdir)
+endif
 endif
 endif
 

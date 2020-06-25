@@ -77,6 +77,9 @@ function pegasus_lite_worker_package()
 
 function pegasus_lite_internal_wp_shipped()
 {
+    # remember where we started from
+    pegasus_lite_start_dir=`pwd`
+
     # was the job shipped with a Pegasus worker package?
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
         pegasus_lite_log "The job contained a Pegasus worker package"
@@ -97,7 +100,8 @@ function pegasus_lite_internal_wp_shipped()
 
         tar xzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
         unset PEGASUS_HOME
-        export PATH=${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH
+        PATH=${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH
+        export PATH
         return 0
     fi
     return 1
@@ -198,7 +202,8 @@ function pegasus_lite_internal_wp_download()
     rm -f pegasus-worker.tar.gz
 
     unset PEGASUS_HOME
-    export PATH="${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH"
+    PATH="${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH"
+    export PATH
 }
 
 
@@ -259,8 +264,10 @@ function pegasus_lite_setup_work_dir()
         if touch $d/.dirtest.$$ >/dev/null 2>&1; then
             rm -f $d/.dirtest.$$ >/dev/null 2>&1
             d=`mktemp -d $d/pegasus.XXXXXXXXX`
-            export pegasus_lite_work_dir=$d
-            export pegasus_lite_work_dir_created=1
+            pegasus_lite_work_dir=$d
+            export pegasus_lite_work_dir
+            pegasus_lite_work_dir_created=1
+            export pegasus_lite_work_dir_created
             pegasus_lite_log "  Workdir is $d - $free_human available"
 
             # PM-968 if provided, copy lof files from the HTCondor iwd to the PegasusLite work dir
@@ -405,26 +412,28 @@ function pegasus_lite_init()
     # setup pegasus lite log
     pegasus_lite_setup_log
 
-    # announce version - we do this so pegasus-exitcode and other tools
-    # can tell the job was a PegasusLite job
-    pegasus_lite_log "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
-
-    # PM-1134 - provide some details on where we are running
-    # PM-1144 - do not use HOSTNAME from env, as it might have come form getenv=true
-    out="Executing on"
-    if hostname -f >/dev/null 2>&1; then
-        out="$out host "`hostname -f`
+    if [ "X$pegasus_lite_inside_container" != "Xtrue" ]; then
+        # announce version - we do this so pegasus-exitcode and other tools
+        # can tell the job was a PegasusLite job
+        pegasus_lite_log "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
+    
+        # PM-1134 - provide some details on where we are running
+        # PM-1144 - do not use HOSTNAME from env, as it might have come form getenv=true
+        out="Executing on"
+        if hostname -f >/dev/null 2>&1; then
+            out="$out host "`hostname -f`
+        fi
+        if [ "x$OSG_SITE_NAME" != "x" ]; then
+            out="$out OSG_SITE_NAME=${OSG_SITE_NAME}"
+        fi
+        if [ "x$GLIDEIN_Site" != "x" ]; then
+            out="$out GLIDEIN_Site=${GLIDEIN_Site}"
+        fi
+        if [ "x$GLIDEIN_ResourceName" != "x" ]; then
+            out="$out GLIDEIN_ResourceName=${GLIDEIN_ResourceName}"
+        fi
+        pegasus_lite_log "$out"
     fi
-    if [ "x$OSG_SITE_NAME" != "x" ]; then
-        out="$out OSG_SITE_NAME=${OSG_SITE_NAME}"
-    fi
-    if [ "x$GLIDEIN_Site" != "x" ]; then
-        out="$out GLIDEIN_Site=${GLIDEIN_Site}"
-    fi
-    if [ "x$GLIDEIN_ResourceName" != "x" ]; then
-        out="$out GLIDEIN_ResourceName=${GLIDEIN_ResourceName}"
-    fi
-    pegasus_lite_log "$out"
 
     # for staged credentials, expand the paths and set strict permissions
     for base in PEGASUS_CREDENTIALS X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY IRODS_ENVIRONMENT_FILE GOOGLE_PKCS12 ; do
@@ -453,7 +462,6 @@ function pegasus_lite_init()
 
     export PEGASUS_MULTIPART_DIR=`pwd`/.pegasus.mulitpart.d
     mkdir -p $PEGASUS_MULTIPART_DIR
-
 }
 
 

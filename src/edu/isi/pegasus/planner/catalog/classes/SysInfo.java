@@ -35,6 +35,7 @@ public class SysInfo implements Cloneable {
 
     /** Enumerates the new OS Release supported in Pegasus. */
     public enum OS_RELEASE {
+        alpine,
         rhel,
         deb,
         ubuntu,
@@ -69,6 +70,7 @@ public class SysInfo implements Cloneable {
     public static OS computeOS(OS_RELEASE release) {
         OS os = OS.linux;
         switch (release) {
+            case alpine:
             case rhel:
             case deb:
             case ubuntu:

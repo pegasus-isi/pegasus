@@ -155,11 +155,12 @@ if [ $STATUS -ne 0 ]; then
     tar czf $TARFILE $RUN_DIR 2>&1
     chmod 0644 $TARFILE
     echo "Created tarball $TARFILE"
+else
+    # clean up pegasus install and tarballs to save disk space
+    cd $TOP_DIR
+    rm -rf pegasus tests.tar
 fi
 
-# clean up pegasus install and tarballs to save disk space
-cd $TOP_DIR
-rm -rf pegasus tests.tar
 
 if [ $STATUS != 0 ]; then
    echo "ERROR: Test failed" 1>&2

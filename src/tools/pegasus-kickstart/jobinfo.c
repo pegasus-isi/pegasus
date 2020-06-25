@@ -315,8 +315,8 @@ int printYAMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job)
         /* result = 128 + WTERMSIG(status); */
         fprintf(out, "%*ssignalled_signal: %u\n", indent+4, "",
                      WTERMSIG(status));
-        fprintf(out, "%*ssingalled_name: %s\n", indent+4, "",
-                     sys_siglist[WTERMSIG(status)]);
+        fprintf(out, "%*ssingalled_name: \"%s\"\n", indent+4, "",
+                     strsignal(WTERMSIG(status)));
 #ifdef WCOREDUMP
         fprintf(out, "%*scorefile: %s\n", indent+4, "",
                      WCOREDUMP(status) ? "true" : "false");
@@ -324,8 +324,8 @@ int printYAMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job)
     } else if (WIFSTOPPED(status)) {
         fprintf(out, "%*ssuspended_signal: %u\n", indent+4, "",
                      WSTOPSIG(status));
-        fprintf(out, "%*ssuspended_name: %s\n", indent+4, "",
-                sys_siglist[WSTOPSIG(status)]);
+        fprintf(out, "%*ssuspended_name: \"%s\"\n", indent+4, "",
+                strsignal(WSTOPSIG(status)));
     } /* FIXME: else? */
 
     /* <executable> */
