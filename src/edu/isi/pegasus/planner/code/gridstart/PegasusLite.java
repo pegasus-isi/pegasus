@@ -252,6 +252,9 @@ public class PegasusLite implements GridStart {
     /** Whether to do any integrity checking or not. */
     protected boolean mDoIntegrityChecking;
 
+    /** integrity handler for containers * */
+    protected Integrity mContainerIntegrityHandler;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -311,6 +314,7 @@ public class PegasusLite implements GridStart {
         mContainerWrapperFactory.initialize(bag, dag);
 
         mDoIntegrityChecking = mProps.doIntegrityChecking();
+        mContainerIntegrityHandler = new Integrity();
     }
 
     /**
@@ -916,6 +920,31 @@ public class PegasusLite implements GridStart {
                 }
                 */
                 // end of PM-1608 not sure why this is not handled in wrapper
+            }
+            if (this.mDoIntegrityChecking) {
+                Collection<PegasusFile> containerFilesToCheck = new LinkedList();
+                for (PegasusFile file : job.getInputFiles()) {
+                    if (file.isContainerFile()) {
+                        containerFilesToCheck.add(file);
+                    }
+                }
+                if (!containerFilesToCheck.isEmpty()) {
+                    // PM-1620 enable integrity checking on containers
+                    appendStderrFragment(
+                            sb, "Checking file integrity for transferred container files");
+                    sb.append("# do file integrity checks").append('\n');
+                    StringBuilder invocation = new StringBuilder();
+                    String filesToVerify =
+                            mContainerIntegrityHandler.addIntegrityCheckInvocation(
+                                    invocation, containerFilesToCheck);
+                    sb.append(invocation);
+                    if (filesToVerify.length() > 0) {
+                        sb.append(" 1>&2").append(" << 'eof'").append('\n');
+                        sb.append(filesToVerify);
+                        sb.append('\n');
+                        sb.append("eof").append('\n');
+                    }
+                }
             }
 
             writer.print(sb.toString());
