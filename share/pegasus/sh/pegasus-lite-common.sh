@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ##
 #  Copyright 2007-2011 University Of Southern California
@@ -28,7 +28,7 @@
 pegasus_lite_default_system="x86_64_rhel_7"
 
 
-function pegasus_lite_setup_log()
+pegasus_lite_setup_log()
 {
     # PM-1132 set up the log explicitly to a file     
     if [ "X${pegasus_lite_log_file}" != "X" ]; then
@@ -58,14 +58,14 @@ function pegasus_lite_setup_log()
 
 }
 
-function pegasus_lite_log()
+pegasus_lite_log()
 {
     TS=`/bin/date +'%F %H:%M:%S'`
     echo "$TS: $1"  1>&2
 }
 
 
-function pegasus_lite_worker_package()
+pegasus_lite_worker_package()
 {
     # many ways of providing worker package
     if pegasus_lite_internal_wp_shipped || pegasus_lite_internal_wp_in_env || pegasus_lite_internal_wp_download; then
@@ -75,10 +75,11 @@ function pegasus_lite_worker_package()
 }
 
 
-function pegasus_lite_internal_wp_shipped()
+pegasus_lite_internal_wp_shipped()
 {
     # remember where we started from
     pegasus_lite_start_dir=`pwd`
+    system=$(pegasus_lite_get_system)
 
     # was the job shipped with a Pegasus worker package?
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
@@ -86,7 +87,6 @@ function pegasus_lite_internal_wp_shipped()
     
         if [ "X$pegasus_lite_enforce_strict_wp_check" = "Xtrue" ]; then
             # make sure the provided worker package provided is for the this platform
-            system=$(pegasus_lite_get_system)
             if [ $? = 0 ]; then
                 wp_name=`(cd $pegasus_lite_start_dir && ls pegasus-worker-*.tar.gz | head -n 1) 2>/dev/null`
                 if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
@@ -99,8 +99,9 @@ function pegasus_lite_internal_wp_shipped()
         fi
 
         tar xzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
+        mv pegasus-${pegasus_lite_full_version} pegasus-${pegasus_lite_full_version}-${system}
         unset PEGASUS_HOME
-        PATH=${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH
+        PATH=${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}-${system}/bin:$PATH
         export PATH
         return 0
     fi
@@ -108,7 +109,7 @@ function pegasus_lite_internal_wp_shipped()
 }
 
 
-function pegasus_lite_internal_wp_in_env()
+pegasus_lite_internal_wp_in_env()
 {
     old_path=$PATH
 
@@ -146,7 +147,7 @@ function pegasus_lite_internal_wp_in_env()
 }
 
 
-function pegasus_lite_internal_wp_download() 
+pegasus_lite_internal_wp_download() 
 {
     # fall back - download a worker package from download.pegasus.isi.edu
 
@@ -158,7 +159,7 @@ function pegasus_lite_internal_wp_download()
     system=$(pegasus_lite_get_system)
     if [ $? != 0 ]; then
         # not sure what system we are on - try the default package
-        system="x86_64_rhel_6"
+        system="x86_64_rhel_7"
     fi
 
     # Before we download from the Pegasus server, see if we can find a version
@@ -199,15 +200,16 @@ function pegasus_lite_internal_wp_download()
         fi
     fi
 
+    mv pegasus-${pegasus_lite_full_version} pegasus-${pegasus_lite_full_version}-${system}
     rm -f pegasus-worker.tar.gz
 
     unset PEGASUS_HOME
-    PATH="${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH"
+    PATH="${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}-${system}/bin:$PATH"
     export PATH
 }
 
 
-function pegasus_lite_setup_work_dir()
+pegasus_lite_setup_work_dir()
 {
     # remember where we started from
     pegasus_lite_start_dir=`pwd`
@@ -294,7 +296,7 @@ function pegasus_lite_setup_work_dir()
     return 1
 }
 
-function container_env()
+container_env()
 {
     # This function will grab environment variables and update them for use inside the container.
     # Updated variables will be echoed to stdout, so the result can be redirected into the 
@@ -326,7 +328,7 @@ function container_env()
     echo "export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.mulitpart.d"
 }
 
-function container_init()
+container_init()
 {
     # setup common variables
     cont_userid=`id -u`
@@ -336,7 +338,7 @@ function container_init()
     cont_name="${PEGASUS_DAG_JOB_ID}-${PEGASUS_WF_UUID}"
 }
 
-function docker_init()
+docker_init()
 {
     set -e
 
@@ -376,7 +378,7 @@ function docker_init()
     set +e
 }
 
-function singularity_init()
+singularity_init()
 {
     set -e
 
@@ -390,7 +392,7 @@ function singularity_init()
     # for singularity we don't need to load anything like in docker.    
 }
 
-function shifter_init()
+shifter_init()
 {
     set -e
 
@@ -405,7 +407,7 @@ function shifter_init()
 }
 
 
-function pegasus_lite_init()
+pegasus_lite_init()
 {
     pegasus_lite_full_version=${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}
 
@@ -465,7 +467,7 @@ function pegasus_lite_init()
 }
 
 
-function pegasus_lite_signal_int()
+pegasus_lite_signal_int()
 {
     # remember the fact until we call the EXIT function
     caught_signal_name="INT"
@@ -473,7 +475,7 @@ function pegasus_lite_signal_int()
 }
 
 
-function pegasus_lite_signal_term()
+pegasus_lite_signal_term()
 {
     # remember the fact until we call the EXIT function
     caught_signal_name="TERM"
@@ -481,7 +483,7 @@ function pegasus_lite_signal_term()
 }
 
 
-function pegasus_lite_unexpected_exit()
+pegasus_lite_unexpected_exit()
 {
     # note that there are two exit() functions, one for final
     # exit and one for unexepected. The final one is only called
@@ -523,7 +525,7 @@ function pegasus_lite_unexpected_exit()
 }
 
 
-function pegasus_lite_final_exit()
+pegasus_lite_final_exit()
 {
     # note that there are two exit() functions, one for final
     # exit and one for unexepected. The final one is only called
@@ -557,7 +559,7 @@ function pegasus_lite_final_exit()
 }
 
 
-function pegasus_include_multipart()
+pegasus_include_multipart()
 {
     if [ "x$PEGASUS_MULTIPART_DIR" != "x" -a -d $PEGASUS_MULTIPART_DIR ]; then
         for entry in `ls $PEGASUS_MULTIPART_DIR/ | sort`; do
@@ -569,7 +571,7 @@ function pegasus_include_multipart()
 }
 
 
-function pegasus_lite_get_system()
+pegasus_lite_get_system()
 {
     # PM-781
     # This function is a replacement of the old release-tools/getsystem
@@ -683,7 +685,7 @@ function pegasus_lite_get_system()
 }
 
 
-function pegasus_lite_section_start()
+pegasus_lite_section_start()
 {
     # stage_in, task_execute, stage_out
     section=$1
@@ -694,7 +696,7 @@ function pegasus_lite_section_start()
 }
 
 
-function pegasus_lite_section_end()
+pegasus_lite_section_end()
 {
     # stage_in, task_execute, stage_out
     section=$1
@@ -712,7 +714,7 @@ function pegasus_lite_section_end()
 }
 
 
-function pegasus_lite_chirp()
+pegasus_lite_chirp()
 {
     key=$1
     value=$2

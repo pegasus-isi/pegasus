@@ -178,11 +178,13 @@ public class Singularity extends Abstract {
 
         // set the job environment variables explicitly in the -cont.sh file
         sb.append("# setting environment variables for job").append('\n');
+        sb.append("HOME=/srv").append('\n');
+        sb.append("export HOME").append('\n');
         ENV containerENVProfiles = (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env);
         for (Iterator it = containerENVProfiles.getProfileKeyIterator(); it.hasNext(); ) {
             String key = (String) it.next();
             String value = (String) containerENVProfiles.get(key);
-            sb.append("export").append(" ").append(key).append("=");
+            sb.append(key).append("=");
 
             // check for env variables that are constructed based on condor job classds
             // such asCONDOR_JOBID=$(cluster).$(process). these are set by condor
@@ -196,6 +198,7 @@ public class Singularity extends Abstract {
                 sb.append("\"").append(value).append("\"");
             }
             sb.append('\n');
+            sb.append("export").append(" ").append(key).append('\n');
         }
 
         // update and include runtime environment variables such as credentials
@@ -288,7 +291,7 @@ public class Singularity extends Abstract {
 
         sb.append("cd /srv").append("\n");
 
-        sb.append(". pegasus-lite-common.sh").append("\n");
+        sb.append(". ./pegasus-lite-common.sh").append("\n");
         sb.append("pegasus_lite_init").append("\n");
 
         sb.append("\n");

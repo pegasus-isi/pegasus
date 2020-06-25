@@ -4785,6 +4785,9 @@ def env_setup():
         path_entries.append("/usr/bin")
     if not ("/bin" in path_entries):
         path_entries.append("/bin")
+    # need /usr/sbin for mksquashfs
+    if not ("/usr/sbin" in path_entries):
+        path_entries.append("/usr/sbin")
 
     # fink on macos x
     if os.path.exists("/sw/bin") and not ("/sw/bin" in path_entries):
