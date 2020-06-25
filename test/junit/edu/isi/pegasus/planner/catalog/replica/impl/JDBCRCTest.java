@@ -57,10 +57,12 @@ public class JDBCRCTest {
             mLogger =
                     mTestSetup.loadLogger(
                             mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
+            mLogger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
             mLogger.logEventStart("test.pegasus.url", "setup", "0");
 
             Runtime r = Runtime.getRuntime();
             String[] envp = {"PYTHONPATH=" + System.getProperty("externals.python.path")};
+            mLogger.log("Executing command " + command, LogManager.INFO_MESSAGE_LEVEL);
             Process p = r.exec(command, envp);
 
             // spawn off the gobblers with the already initialized default callback
