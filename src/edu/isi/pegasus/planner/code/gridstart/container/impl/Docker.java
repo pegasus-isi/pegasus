@@ -302,7 +302,7 @@ public class Docker extends Abstract {
         sb.append("pegasus_lite_work_dir=").append(Docker.CONTAINER_WORKING_DIRECTORY).append("\n");
 
         sb.append("\n");
-        sb.append(". pegasus-lite-common.sh").append("\n");
+        sb.append(". ./pegasus-lite-common.sh").append("\n");
         sb.append("pegasus_lite_init").append("\n").append("\n");
 
         sb.append("\n");

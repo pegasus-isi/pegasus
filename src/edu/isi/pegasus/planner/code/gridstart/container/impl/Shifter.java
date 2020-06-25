@@ -278,7 +278,7 @@ public class Shifter extends Abstract {
                 .append("\n");
         sb.append("echo \\$PWD").append("  1>&2").append("\n");
 
-        sb.append(". pegasus-lite-common.sh").append("\n");
+        sb.append(". ./pegasus-lite-common.sh").append("\n");
         sb.append("pegasus_lite_init").append("\n").append("\n");
 
         sb.append("\n");
