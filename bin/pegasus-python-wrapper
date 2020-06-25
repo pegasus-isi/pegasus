@@ -60,8 +60,10 @@ if [ $ALLOW_PY2 == 0 ]; then
 fi
 
 # set up a PYTHONPATH so the tools do not have to worry about that
-export PYTHONPATH=$PEGASUS_HOME/@PYTHON_LIBDIR@:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python${PYTHONPATH:+:}${PYTHONPATH}
-export PEGASUS_PYTHONPATH_SET=1
+PYTHONPATH=$PEGASUS_HOME/@PYTHON_LIBDIR@:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python${PYTHONPATH:+:}${PYTHONPATH}
+export PYTHONPATH
+PEGASUS_PYTHONPATH_SET=1
+export PEGASUS_PYTHONPATH_SET
 
 # Build a full path to our real Python tool (we used to depend on pegasus-config
 # here, but as that has a dependency on perl, we are shortcutting it)
