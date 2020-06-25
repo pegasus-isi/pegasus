@@ -1,0 +1,1 @@
+a test to highlight integrity checking in condorio mode with each job running in a singularity container that is also checksummed

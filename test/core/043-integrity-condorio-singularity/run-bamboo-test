@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e 
+
+echo "Running blackdiamond.py"
+export PYTHONPATH=`pegasus-config --python`
+python3 blackdiamond.py
