@@ -130,18 +130,6 @@ public class Integrity {
         boolean empty = job.getInputFiles().isEmpty();
         boolean isCompute = job.getJobType() == Job.COMPUTE_JOB;
 
-        // staged executables appear in job input files, we need to do stricter
-        // check for that job to determine if meta file should be generated or not
-        if (job.userExecutablesStagedForJob()) {
-            for (PegasusFile pf : job.getInputFiles()) {
-                if (pf.isExecutable()) {
-                    empty = true;
-                } else {
-                    empty = false;
-                    break;
-                }
-            }
-        }
         if (empty && isCompute) {
             // PM-1252 only for compute jobs we have this short circuit
             mLogger.log(
