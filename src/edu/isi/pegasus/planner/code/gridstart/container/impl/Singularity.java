@@ -303,7 +303,7 @@ public class Singularity extends Abstract {
 
         sb.append("pegasus_lite_worker_package").append("\n");
 
-        sb.append("echo \"PATH in container is set to is set to \\$PATH\"")
+        sb.append("printf \"PATH in container is set to is set to \\$PATH\\n\"")
                 .append("  1>&2")
                 .append("\n");
         sb.append("\n");

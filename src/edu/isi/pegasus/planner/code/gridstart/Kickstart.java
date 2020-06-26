@@ -1155,12 +1155,12 @@ public class Kickstart implements GridStart {
 
         // first we need to get the sls file to worker node
         /*
-        preJob.append( "/bin/echo -e \" " ).
+        preJob.append( "printf \" " ).
                append( headNodeURLPrefix ).append( File.separator ).
                append( headNodeDirectory ).append( File.separator ).
                append( slsFile ).append( " \\n " ).
                append( "file://" ).append( workerNodeDirectory ).append( File.separator ).
-               append( slsFile ).append( "\"" ).
+               append( slsFile ).append( "\\n\"" ).
                append( " | " ).append( transfer ).append( " base mnt " );
 
         preJob.append( " && " );

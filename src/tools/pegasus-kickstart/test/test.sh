@@ -539,7 +539,7 @@ function test_w_with_rel_exec {
 }
 
 function test_locale {
-    kickstart echo -e "Default \E[33mYellow\E[0m Normal" 
+    kickstart printf "Default \E[33mYellow\E[0m Normal\n" 
     ec=$?
     return $ec
 }

@@ -115,7 +115,7 @@ public abstract class Abstract implements ContainerShellWrapper {
         }
 
         int pad = (Abstract.MESSAGE_STRING_LENGTH - len) / 2;
-        sb.append("echo -e \"\\n");
+        sb.append("printf \"\\n");
         for (int i = 0; i <= pad; i++) {
             sb.append(Abstract.SEPARATOR_CHAR);
         }
@@ -123,7 +123,7 @@ public abstract class Abstract implements ContainerShellWrapper {
         for (int i = 0; i <= pad; i++) {
             sb.append(Abstract.SEPARATOR_CHAR);
         }
-        sb.append("\"  1>&2").append("\n");
+        sb.append("\\n\"  1>&2").append("\n");
     }
 
     public Abstract() {}

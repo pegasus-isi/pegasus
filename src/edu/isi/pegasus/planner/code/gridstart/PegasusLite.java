@@ -1353,7 +1353,7 @@ public class PegasusLite implements GridStart {
         }
 
         int pad = (PegasusLite.MESSAGE_STRING_LENGTH - len) / 2;
-        sb.append("echo -e \"\\n");
+        sb.append("printf \"\\n");
         for (int i = 0; i <= pad; i++) {
             sb.append(PegasusLite.SEPARATOR_CHAR);
         }
@@ -1361,7 +1361,7 @@ public class PegasusLite implements GridStart {
         for (int i = 0; i <= pad; i++) {
             sb.append(PegasusLite.SEPARATOR_CHAR);
         }
-        sb.append("\"  1>&2").append("\n");
+        sb.append("\\n\"  1>&2").append("\n");
 
         return;
     }
