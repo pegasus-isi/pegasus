@@ -46,7 +46,7 @@ public class PegasusDBAdmin {
     public static final String WORKFLOW_DATABASE_DEPRECATED_PROPERTY_KEY =
             "pegasus.monitord.output";
 
-    private static enum DB_ADMIN_COMMANDS {
+    private static enum DB_ADMIN_COMMAND {
         create,
         downgrade,
         update,
@@ -54,6 +54,10 @@ public class PegasusDBAdmin {
         version
     };
 
+    private static enum DB_ADMIN_BACKEND {
+        master,
+        jdbcrc
+    };
     /** */
     public static void updateProperties(PegasusBag bag, ADag workflow) {
         PegasusProperties properties = bag.getPegasusProperties();
@@ -135,7 +139,8 @@ public class PegasusDBAdmin {
         StringBuilder arguments = new StringBuilder();
         arguments.append("-t master ").append("-c ").append(propertiesFile);
 
-        return this.checkDatabase(DB_ADMIN_COMMANDS.update.name(), arguments.toString());
+        return this.checkDatabase(
+                DB_ADMIN_COMMAND.update.name(), arguments.toString(), DB_ADMIN_BACKEND.master);
     }
 
     /**
@@ -161,7 +166,8 @@ public class PegasusDBAdmin {
                 remapOutputRCProperties(props, ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX));
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
 
-        return this.checkDatabase(DB_ADMIN_COMMANDS.create.name(), arguments.toString());
+        return this.checkDatabase(
+                DB_ADMIN_COMMAND.create.name(), arguments.toString(), DB_ADMIN_BACKEND.jdbcrc);
     }
 
     /**
@@ -182,10 +188,20 @@ public class PegasusDBAdmin {
         arguments.append("-t jdbcrc ").append("-c ").append(propertiesFile);
         // debug turned on
         // arguments.append(" --debug ");
-        return this.checkDatabase(DB_ADMIN_COMMANDS.check.name(), arguments.toString());
+        return this.checkDatabase(
+                DB_ADMIN_COMMAND.check.name(), arguments.toString(), DB_ADMIN_BACKEND.jdbcrc);
     }
 
-    public boolean checkDatabase(String dbCommand, String checkDBArguments) {
+    /**
+     * checks the database backend
+     *
+     * @param dbCommand
+     * @param checkDBArguments
+     * @param backendType the backend type that is being setup.
+     * @return
+     */
+    public boolean checkDatabase(
+            String dbCommand, String checkDBArguments, DB_ADMIN_BACKEND backendType) {
         String basename = "pegasus-db-admin";
         File pegasusDBAdmin = FindExecutable.findExec(basename);
         if (pegasusDBAdmin == null) {
@@ -227,11 +243,23 @@ public class PegasusDBAdmin {
             mLogger.log(basename + " exited with status " + status, LogManager.DEBUG_MESSAGE_LEVEL);
 
             if (status != 0) {
-                throw new RuntimeException(
-                        "Pegasus was unable to update the the worflow database file found at"
-                                + " ~/.pegasus/workflow.db . If this file is corrupted, a solution for"
-                                + " problem is to remove the file with the command: rm -f ~/.pegasus/workflow.db "
-                                + " - but note that doing so will remove old workflows from the Pegasus Dashboard.");
+                StringBuilder message = new StringBuilder();
+                message.append(command).append(" failed with status ").append(status).append(" .");
+                if (backendType == DB_ADMIN_BACKEND.master) {
+                    message.append(
+                                    " Pegasus was unable to update the the worflow database file found at")
+                            .append(
+                                    " ~/.pegasus/workflow.db . If this file is corrupted, a solution for")
+                            .append(
+                                    " problem is to remove the file with the command: rm -f ~/.pegasus/workflow.db ")
+                            .append(
+                                    " - but note that doing so will remove old workflows from the Pegasus Dashboard.");
+                } else if (backendType == DB_ADMIN_BACKEND.jdbcrc) {
+                    message.append(
+                                    "Pegasus was unable to update the the JDBCRC Backend using the command ")
+                            .append(command);
+                }
+                throw new RuntimeException(message.toString());
             }
         } catch (IOException ioe) {
             mLogger.log(
