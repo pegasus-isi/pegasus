@@ -27,6 +27,8 @@
 # a default used if no other worker packages can be found
 pegasus_lite_default_system="x86_64_rhel_7"
 
+# remember where we started from
+pegasus_lite_start_dir=`pwd`
 
 pegasus_lite_setup_log()
 {
@@ -77,8 +79,6 @@ pegasus_lite_worker_package()
 
 pegasus_lite_internal_wp_shipped()
 {
-    # remember where we started from
-    pegasus_lite_start_dir=`pwd`
     system=$(pegasus_lite_get_system)
 
     # was the job shipped with a Pegasus worker package?
@@ -211,9 +211,6 @@ pegasus_lite_internal_wp_download()
 
 pegasus_lite_setup_work_dir()
 {
-    # remember where we started from
-    pegasus_lite_start_dir=`pwd`
-
     #check if there are any lof files to transfer
     set +e
     ls $pegasus_lite_start_dir/*lof > /dev/null 2>&1
