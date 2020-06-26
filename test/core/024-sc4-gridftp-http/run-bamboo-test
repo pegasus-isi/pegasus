@@ -26,9 +26,10 @@ fi
 
 echo "Running Rosetta.py"
 export PYTHONPATH=`pegasus-config --python`
-python3 Rosetta.py | tee plan.out
+python3 Rosetta.py 2>&1 | tee plan.out
 
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`
+echo "Looks like the workflow directory is: $WORK_DIR"
 cd $WORK_DIR
 
 echo
