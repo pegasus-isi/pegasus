@@ -12,6 +12,7 @@ from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_s
 PEGASUS_VERSION = "5.0"
 
 __all__ = [
+    "Container",
     "Transformation",
     "TransformationSite",
     "TransformationCatalog",
@@ -56,7 +57,7 @@ class Container(ProfileMixin):
         :type name: str
         :param container_type: a container type defined in :py:class:`~Pegasus.api.transformation_catalog.Container`
         :type container_type: _ContainerType
-        :param image: image, such as 'docker:///rynge/montage:latest'
+        :param image: image, such as :code:`docker:///rynge/montage:latest`
         :type image: str
         :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro', ...]
         :type mounts: Optional[List[str]], optional

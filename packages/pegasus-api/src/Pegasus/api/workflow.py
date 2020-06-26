@@ -16,7 +16,7 @@ from Pegasus.client._client import from_env
 
 PEGASUS_VERSION = "5.0"
 
-__all__ = ["Job", "SubWorkflow", "Workflow"]
+__all__ = ["AbstractJob", "Job", "SubWorkflow", "Workflow"]
 
 
 class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
