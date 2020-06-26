@@ -1013,8 +1013,7 @@ this example. The details are catpured in the examples directory
 The Python DAX Generator API
 ----------------------------
 
-Refer to the `auto-generated python documentation <python/>`__
-explaining this API.
+Refer to :ref:`python-api` for documentation and usage.
 
 .. code-block:: python
 

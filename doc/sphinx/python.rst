@@ -1,12 +1,9 @@
-.. _python:
+.. _python-api:
 
 Python
 ======
 
 .. toctree::
-    :caption: Python
-    :name: Python
-    :numbered:
     :maxdepth: 2
 
-    python/Pegasus.rst
+    python/Pegasus.api.rst
