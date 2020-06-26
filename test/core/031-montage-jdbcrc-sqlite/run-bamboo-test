@@ -6,6 +6,7 @@ TOP_DIR=`pwd`
 
 export PATH=/ccg/software/montage/current/bin:$PATH
 export LD_LIBRARY_PATH=/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=`pegasus-config --python`
 
 rm -rf montage-workflow-v3
 git clone https://github.com/pegasus-isi/montage-workflow-v3.git
