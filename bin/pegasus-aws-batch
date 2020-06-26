@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # command line client for pegasus aws batch
 #
@@ -20,5 +20,5 @@ nice ${JAVA} \
        "-Dpegasus.home.bindir=$PEGASUS_BIN_DIR" \
        "-Dpegasus.home.sharedstatedir=$PEGASUS_SHARE_DIR" \
        "-Dpegasus.home.schemadir=$PEGASUS_SCHEMA_DIR" \
-       $addon edu.isi.pegasus.aws.batch.client.PegasusAWSBatch "$@"
+       $addon edu.isi.pegasus.aws.batch.client.PegasusAWSBatch $args
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Converts transformation catalog from one format to another
 #
@@ -14,4 +14,4 @@ ${JAVA} \
        "-Dpegasus.home.bindir=$PEGASUS_BIN_DIR" \
        "-Dpegasus.home.sharedstatedir=$PEGASUS_SHARE_DIR" \
        "-Dpegasus.home.schemadir=$PEGASUS_SCHEMA_DIR" \
-       $addon edu.isi.pegasus.planner.client.TCConverter "$@"
+       $addon edu.isi.pegasus.planner.client.TCConverter $args

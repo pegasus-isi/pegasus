@@ -9,4 +9,4 @@ eval `$PEGASUS_CONFIG --sh-dump`
 . $PEGASUS_SHARE_DIR/common.sh
 
 # run java program
-${JAVA} -Dpegasus.home=$PEGASUS_HOME $addon edu.isi.pegasus.planner.client.VersionNumber "$@"
+${JAVA} -Dpegasus.home=$PEGASUS_HOME $addon edu.isi.pegasus.planner.client.VersionNumber $args

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Halts a workflow gracefully by putting .halt files in place
 #

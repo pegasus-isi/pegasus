@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # manipulate any replica catalog implementation through a generic
 # interface from the shell.
@@ -19,5 +19,5 @@ nice ${JAVA} \
        "-Dpegasus.home.bindir=$PEGASUS_BIN_DIR" \
        "-Dpegasus.home.sharedstatedir=$PEGASUS_SHARE_DIR" \
        "-Dpegasus.home.schemadir=$PEGASUS_SCHEMA_DIR" \
-       $addon edu.isi.pegasus.planner.client.RCClient "$@"
+       $addon edu.isi.pegasus.planner.client.RCClient $args
 
