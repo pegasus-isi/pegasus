@@ -96,7 +96,7 @@ fi
 lines=`wc -l plan.out | sed 's/[ ]*\([0-9]*\) plan.out/\1/'`
 echo "Number of lines in planner output $lines"
 
-if [ "$lines" -gt "24" ]; then
+if [ "$lines" -gt "28" ]; then
     echo "ERROR: planner output is too verbose $lines. Check plan.out file for extra log messages"
     exit 1
 fi
