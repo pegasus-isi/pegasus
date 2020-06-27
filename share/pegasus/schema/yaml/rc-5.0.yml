@@ -1,5 +1,4 @@
 $schema: "http://json-schema.org/draft-07/schema#"
-$id: "file:///Users/ryantanaka/ISI/pegasus/share/pegasus/schema/yaml/rc-5.0.yml"
 $defs:
   # --- a file object ----------------------------------------------------------
   file:
