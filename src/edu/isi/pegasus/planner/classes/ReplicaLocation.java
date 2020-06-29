@@ -171,6 +171,13 @@ public class ReplicaLocation extends Data implements Cloneable {
         // same pfn
         for (Iterator i = this.pfnIterator(); i.hasNext() && !seen; ) {
             ReplicaCatalogEntry rce = (ReplicaCatalogEntry) i.next();
+            if (pfn == null || rce.getPFN() == null) {
+                throw new NullPointerException(
+                        "Null PFN encountered while adding "
+                                + tuple
+                                + " to ReplicaLocation "
+                                + this);
+            }
             seen = pfn.equals(rce.getPFN()) && site.equals(rce.getResourceHandle());
             if (seen) {
                 try {
