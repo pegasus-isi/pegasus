@@ -1017,90 +1017,98 @@ Refer to :ref:`python-api` for documentation and usage.
 
 .. code-block:: python
 
-   #!/usr/bin/env python
+   import logging
 
-   from Pegasus.DAX3 import *
+   from pathlib import Path
 
-   # Create a DAX
-   diamond = ADAG("diamond")
+   from Pegasus.api import *
 
-   # Add some metadata
-   diamond.metadata("name", "diamond")
-   diamond.metadata("createdby", "Gideon Juve")
+   logging.basicConfig(level=logging.DEBUG)
 
-   # Add input file to the DAX-level replica catalog
-   a = File("f.a")
-   a.addPFN(PFN("gsiftp://site.com/inputs/f.a","site"))
-   a.metadata("size", "1024")
-   diamond.addFile(a)
+   # --- Replicas -----------------------------------------------------------------
+   with open("f.a", "w") as f:
+      f.write("This is sample input to KEG")
 
-   # Add executables to the DAX-level replica catalog
-   e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
-   e_preprocess.metadata("size", "2048")
-   e_preprocess.addPFN(PFN("gsiftp://site.com/bin/preprocess","site"))
-   diamond.addExecutable(e_preprocess)
+   fa = File("f.a").add_metadata(creator="ryan")
+   rc = ReplicaCatalog().add_replica("local", fa, Path(".") / "f.a")
 
-   e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
-   e_findrange.addPFN(PFN("gsiftp://site.com/bin/findrange","site"))
-   diamond.addExecutable(e_findrange)
+   # --- Transformations ----------------------------------------------------------
+   preprocess = Transformation(
+                  "preprocess",
+                  site="condorpool",
+                  pfn="/usr/bin/pegasus-keg",
+                  is_stageable=False,
+                  arch=Arch.X86_64,
+                  os_type=OS.LINUX
+               )
 
-   e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
-   e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze","site"))
-   diamond.addExecutable(e_analyze)
+   findrange = Transformation(
+                  "findrange",
+                  site="condorpool",
+                  pfn="/usr/bin/pegasus-keg",
+                  is_stageable=False,
+                  arch=Arch.X86_64,
+                  os_type=OS.LINUX
+               )
 
-   # Add a preprocess job
-   preprocess = Job(e_preprocess)
-   preprocess.metadata("time", "60")
-   b1 = File("f.b1")
-   b2 = File("f.b2")
-   preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-   preprocess.uses(a, link=Link.INPUT)
-   preprocess.uses(b1, link=Link.OUTPUT, transfer=True)
-   preprocess.uses(b2, link=Link.OUTPUT, transfer=True)
-   diamond.addJob(preprocess)
+   analyze = Transformation(
+                  "analyze",
+                  site="condorpool",
+                  pfn="/usr/bin/pegasus-keg",
+                  is_stageable=False,
+                  arch=Arch.X86_64,
+                  os_type=OS.LINUX
+               )
 
-   # Add left Findrange job
-   frl = Job(e_findrange)
-   frl.metadata("time", "60")
-   c1 = File("f.c1")
-   frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-   frl.uses(b1, link=Link.INPUT)
-   frl.uses(c1, link=Link.OUTPUT, transfer=True)
-   diamond.addJob(frl)
+   tc = TransformationCatalog().add_transformations(preprocess, findrange, analyze)
 
-   # Add right Findrange job
-   frr = Job(e_findrange)
-   frr.metadata("time", "60")
-   c2 = File("f.c2")
-   frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-   frr.uses(b2, link=Link.INPUT)
-   frr.uses(c2, link=Link.OUTPUT, transfer=True)
-   diamond.addJob(frr)
+   # --- Workflow -----------------------------------------------------------------
+   '''
+                        [f.b1] - (findrange) - [f.c1] 
+                        /                             \
+   [f.a] - (preprocess)                               (analyze) - [f.d]
+                        \                             /
+                        [f.b2] - (findrange) - [f.c2]
 
-   # Add Analyze job
-   analyze = Job(e_analyze)
-   analyze.metadata("time", "60")
-   d = File("f.d")
-   analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-   analyze.uses(c1, link=Link.INPUT)
-   analyze.uses(c2, link=Link.INPUT)
-   analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
-   diamond.addJob(analyze)
+   '''
+   wf = Workflow("blackdiamond")
 
-   # Add dependencies
-   diamond.depends(parent=preprocess, child=frl)
-   diamond.depends(parent=preprocess, child=frr)
-   diamond.depends(parent=frl, child=analyze)
-   diamond.depends(parent=frr, child=analyze)
+   fb1 = File("f.b1")
+   fb2 = File("f.b2")
+   job_preprocess = Job(preprocess)\
+                        .add_args("-a", "preprocess", "-T", "3", "-i", fa, "-o", fb1, fb2)\
+                        .add_inputs(fa)\
+                        .add_outputs(fb1, fb2)
 
-   # Write the DAX to stdout
-   import sys
-   diamond.writeXML(sys.stdout)
+   fc1 = File("f.c1")
+   job_findrange_1 = Job(findrange)\
+                        .add_args("-a", "findrange", "-T", "3", "-i", fb1, "-o", fc1)\
+                        .add_inputs(fb1)\
+                        .add_outputs(fc1)
 
-   # Write the DAX to a file
-   f = open("diamond.dax","w")
-   diamond.writeXML(f)
-   f.close()
+   fc2 = File("f.c2")
+   job_findrange_2 = Job(findrange)\
+                        .add_args("-a", "findrange", "-T", "3", "-i", fb2, "-o", fc2)\
+                        .add_inputs(fb2)\
+                        .add_outputs(fc2)
+
+   fd = File("f.d")
+   job_analyze = Job(analyze)\
+                  .add_args("-a", "analyze", "-T", "3", "-i", fc1, fc2, "-o", fd)\
+                  .add_inputs(fc1, fc2)\
+                  .add_outputs(fd)
+
+   wf.add_jobs(job_preprocess, job_findrange_1, job_findrange_2, job_analyze)
+   wf.add_replica_catalog(rc)
+   wf.add_transformation_catalog(tc)
+
+   try:
+      wf.plan(submit=True)\
+            .wait()\
+            .analyze()\
+            .statistics()
+   except PegasusClientError as e:
+      print(e.output)
 
 
 .. _api-r:

@@ -2,7 +2,7 @@ import json
 from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import wraps
-from typing import Dict, List
+from typing import Dict, List, Optional, TextIO, Union
 
 from ._utils import _chained, _get_enum_str
 from .errors import DuplicateError, NotFoundError, PegasusError
@@ -22,12 +22,12 @@ __all__ = ["AbstractJob", "Job", "SubWorkflow", "Workflow"]
 class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     """An abstract representation of a workflow job"""
 
-    def __init__(self, _id=None, node_label=None):
+    def __init__(self, _id: Optional[str] = None, node_label: Optional[str] = None):
         """
         :param _id: a unique id, if None is given then one will be assigned when this job is added to a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
-        :type _id: str, optional
+        :type _id: Optional[str]
         :param node_label: a short descriptive label that can be assined to this job, defaults to None
-        :type node_label: str, optional
+        :type node_label: Optional[str]
         """
         self._id = _id
         self.node_label = node_label
@@ -43,12 +43,14 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.metadata = dict()
 
     @_chained
-    def add_inputs(self, *input_files):
-        """Add one or more :py:class:`~Pegasus.api.replica_catalog.File`s as input to this job
+    def add_inputs(self, *input_files: File):
+        """
+        add_inputs(self, *input_files: File)
+        Add one or more :py:class:`~Pegasus.api.replica_catalog.File` objects as input to this job
 
-        :param input_files: the :py:class:`~Pegasus.api.replica_catalog.File`s to be added as inputs to this job
+        :param input_files: the :py:class:`~Pegasus.api.replica_catalog.File` objects to be added as inputs to this job
         :raises DuplicateError: all input files must be unique
-        :raises ValueError: job inputs must be of type :py:class:`~Pegasus.api.replica_catalog.File`
+        :raises TypeError: job inputs must be of type :py:class:`~Pegasus.api.replica_catalog.File`
         :return: self
         """
         for file in input_files:
@@ -70,7 +72,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
             self.uses.add(_input)
 
     def get_inputs(self):
-        """Get this job's input files
+        """Get this job's input :py:class:`~Pegasus.api.replica_catalog.File` s
 
         :return: all input files associated with this job
         :rtype: set
@@ -78,17 +80,21 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return {use.file for use in self.uses if use._type == "input"}
 
     @_chained
-    def add_outputs(self, *output_files, stage_out=True, register_replica=True):
-        """Add one or more :py:class:`~Pegasus.api.replica_catalog.File`s as outputs to this job. stage_out and register_replica
+    def add_outputs(
+        self, *output_files: File, stage_out: bool = True, register_replica: bool = True
+    ):
+        """
+        add_outputs(self, *output_files: File, stage_out: bool = True, register_replica: bool = True)
+        Add one or more :py:class:`~Pegasus.api.replica_catalog.File` objects as outputs to this job. :code:`stage_out` and :code:`register_replica`
         will be applied to all files given.
 
-        :param output_files: the :py:class:`~Pegasus.api.replica_catalog.File` s to be added as outputs to this job
+        :param output_files: the :py:class:`~Pegasus.api.replica_catalog.File` objects to be added as outputs to this job
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to True
         :type register_replica: bool, optional
         :raises DuplicateError: all output files must be unique
-        :raises ValueError: a job output must be of type File
+        :raises TypeError: a job output must be of type File
         :return: self
         """
         for file in output_files:
@@ -115,7 +121,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
             self.uses.add(output)
 
     def get_outputs(self):
-        """Get this job's output files
+        """Get this job's output :py:class:`~Pegasus.api.replica_catalog.File` objects
 
         :return: all output files associated with this job
         :rtype: set
@@ -123,8 +129,15 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return {use.file for use in self.uses if use._type == "output"}
 
     @_chained
-    def add_checkpoint(self, checkpoint_file, stage_out=True, register_replica=True):
-        """Add an output file of this job as a checkpoint file
+    def add_checkpoint(
+        self,
+        checkpoint_file: File,
+        stage_out: bool = True,
+        register_replica: bool = True,
+    ):
+        """
+        add_checkpoint(self, checkpoint_file: File, stage_out: bool = True, register_replica: bool = True)
+        Add an output :py:class:`~Pegasus.api.replica_catalog.File` of this job as a checkpoint file
 
         :param checkpoint_file: the :py:class:`~Pegasus.api.replica_catalog.File` to be added as a checkpoint file to this job
         :type checkpoint_file: File
@@ -133,7 +146,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to True
         :type register_replica: bool, optional
         :raises DuplicateError: all output files must be unique
-        :raises ValueError: a job output must be of type File
+        :raises TypeError: a job output must be of type File
         :return: self
         """
 
@@ -161,22 +174,29 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.uses.add(checkpoint)
 
     @_chained
-    def add_args(self, *args):
-        """Add arguments to this job. Each argument will be separated by a space.
+    def add_args(self, *args: Union[File, int, float, str]):
+        """
+        add_args(self, *args: Union[File, int, float, str])
+        Add arguments to this job. Each argument will be separated by a space.
         Each argument must be either a File, scalar, or str.
 
+        :param args: arguments to pass to this job (each arg in arg will be separated by a space)
+        :type args: Union[File, int, float, str]
         :return: self
-        :rtype: AbstractJob
         """
         self.args.extend(args)
 
     @_chained
-    def set_stdin(self, file):
-        """Set stdin to a :py:class:`~Pegasus.api.replica_catalog.File`
+    def set_stdin(self, file: Union[str, File]):
+        """
+        set_stdin(self, file: Union[str, File])
+        Set stdin to a :py:class:`~Pegasus.api.replica_catalog.File` . If file
+        is given as a str, a :py:class:`~Pegasus.api.replica_catalog.File` object
+        is created for you internally with the given value as its lfn.
 
         :param file: a file that will be read into stdin
-        :type file: File or str
-        :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
+        :type file: Union[str, File]
+        :raises TypeError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :raises DuplicateError: stdin is already set or the given file has already been added as an input to this job
         :return: self
         """
@@ -205,16 +225,25 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self.stdin
 
     @_chained
-    def set_stdout(self, file, stage_out=True, register_replica=True):
-        """Set stdout to a :py:class:`~Pegasus.api.replica_catalog.File`
+    def set_stdout(
+        self,
+        file: Union[str, File],
+        stage_out: bool = True,
+        register_replica: bool = True,
+    ):
+        """
+        set_stdout(self, file: Union[str, File], stage_out: bool = True, register_replica: bool  = True)
+        Set stdout to a :py:class:`~Pegasus.api.replica_catalog.File` . If file is given as a str,
+        a :py:class:`~Pegasus.api.replica_catalog.File` object is created for you internally
+        with the given value as its lfn.
 
         :param file: a file that stdout will be written to
-        :type file: File or str
+        :type file: Union[str, File]
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to True
         :type register_replica: bool, optional
-        :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
+        :raises TypeError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :raises DuplicateError: stdout is already set or the given file has already been added as an output to this job
         :return: self
         """
@@ -243,16 +272,25 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         return self.stdout
 
     @_chained
-    def set_stderr(self, file, stage_out=True, register_replica=True):
-        """Set stderr to a :py:class:`~Pegasus.api.replica_catalog.File`
+    def set_stderr(
+        self,
+        file: Union[str, File],
+        stage_out: bool = True,
+        register_replica: bool = True,
+    ):
+        """
+        set_stderr(self, file: Union[str, File], stage_out: bool = True, register_replica: bool = True)
+        Set stderr to a :py:class:`~Pegasus.api.replica_catalog.File` . If file is given as a str,
+        a :py:class:`~Pegasus.api.replica_catalog.File` object is created for you internally 
+        with the given value as its lfn. 
 
         :param file: a file that stderr will be written to
-        :type file: File or str
+        :type file: Union[str, File]
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to True
         :type register_replica: bool, optional
-        :raises ValueError: file must be of type File or str
+        :raises TypeError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :raises DuplicateError: stderr is already set or the given file has already been added as an output to this job
         :return: self
         """
@@ -305,43 +343,48 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
 
 class Job(AbstractJob):
-    """A typical workflow Job that executes a :py:class:`~Pegasus.api.transformation_catalog.Transformation`.
+    """
+    A typical workflow Job that executes a :py:class:`~Pegasus.api.transformation_catalog.Transformation`.
+    See :py:class:`~Pegasus.api.workflow.AbstractJob` for full list of available functions.
 
     .. code-block:: python
 
         # Example
-        preprocess = (Transformation("preprocess")
-                        .add_metadata("size", 2048)
-                        .add_site("test-cluster", "/usr/bin/keg", False))
-
         if1 = File("if1")
         if2 = File("if2")
 
         of1 = File("of1")
         of2 = File("of2")
 
-        job = (Job(preprocess)
-                .add_args("-i", if1, if2, "-o", of1, of2)
-                .add_inputs(if1, if2)
-                .add_outputs(of1, of2, stage_out=True, register_replica=False))
+        # Assuming a transformation named "analyze.py" has been added to your
+        # transformation catalog:
+        job = Job("analyze.py")\\
+                .add_args("-i", if1, if2, "-o", of1, of2)\\
+                .add_inputs(if1, if2)\\
+                .add_outputs(of1, of2, stage_out=True, register_replica=False)
 
     """
 
     def __init__(
-        self, transformation, _id=None, node_label=None, namespace=None, version=None,
+        self,
+        transformation: Union[str, Transformation],
+        _id: Optional[str] = None,
+        node_label: Optional[str] = None,
+        namespace: Optional[str] = None,
+        version: Optional[str] = None,
     ):
         """
         :param transformation: :py:class:`~Pegasus.api.transformation_catalog.Transformation` object or name of the transformation that this job uses
-        :type transformation: Transformation or str
+        :type transformation: Union[str, Transformation]
         :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
-        :type _id: str, optional
+        :type _id: Optional[str]
         :param node_label: a brief job description, defaults to None
-        :type node_label: str, optional
+        :type node_label: Optional[str]
         :param namespace: namespace to which the :py:class:`~Pegasus.api.transformation_catalog.Transformation` belongs, defaults to None
-        :type namespace: str, optional
+        :type namespace: Optional[str]
         :param version: version of the given :py:class:`~Pegasus.api.transformation_catalog.Transformation`, defaults to None
-        :type version: str, optional
-        :raises ValueError: transformation must be one of :py:class:`~Pegasus.api.transformation_catalog.Transformation` or str
+        :type version: Optional[str]
+        :raises TypeError: transformation must be one of type :py:class:`~Pegasus.api.transformation_catalog.Transformation` or str
         """
         if isinstance(transformation, Transformation):
             self.transformation = transformation.name
@@ -374,19 +417,28 @@ class Job(AbstractJob):
 
 
 class SubWorkflow(AbstractJob):
-    """Job that represents a subworkflow that will be executed as a job."""
+    """
+    Job that represents a subworkflow.
+    See :py:class:`~Pegasus.api.workflow.AbstractJob` for full list of available functions.
+    """
 
-    def __init__(self, file, is_planned, _id=None, node_label=None):
+    def __init__(
+        self,
+        file: Union[str, File],
+        is_planned: bool,
+        _id: Optional[str] = None,
+        node_label: Optional[str] = None,
+    ):
         """
-        :param file: :py:class:`~Pegasus.api.replica_catalog.File` object or name of the dax file that will be used for this job
-        :type file: File or str
+        :param file: :py:class:`~Pegasus.api.replica_catalog.File` object or name of the workflow file that will be used for this job
+        :type file: Union[str, File]
         :param is_planned: whether or not this subworkflow has already been planned by the Pegasus planner
         :type is_planned: bool
         :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
-        :type _id: str, optional
+        :type _id: Optional[str]
         :param node_label: a brief job description, defaults to None
-        :type node_label: str, optional
-        :raises ValueError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
+        :type node_label: Optional[str]
+        :raises TypeError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         """
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
@@ -515,123 +567,105 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     .. code-block:: python
 
         # Example
+        import logging
+
         from pathlib import Path
-        from datetime import date
 
         from Pegasus.api import *
 
-        PEGASUS_LOCATION = "file:///usr/bin/pegasus-keg"
-
-        RUN_ID = "001-black-diamond-vanilla-condor-5.0-api-" + date.today().strftime("%s")
-
-        TOP_DIR = Path(Path.cwd())
-        WORK_DIR = TOP_DIR / "work"
-        Path.mkdir(WORK_DIR)
-
-        # --- Sites --------------------------------------------------------------------
-        LOCAL = "local"
-        CONDOR_POOL = "condor-pool"
-
-        shared_scratch_dir = str(WORK_DIR / RUN_ID)
-        local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
-
-        sc = (SiteCatalog()
-                .add_site(
-                    Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
-                        .add_directory(
-                            Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
-                                .add_file_server(FileServer("file://" + shared_scratch_dir, Operation.ALL))
-                        ).add_directory(
-                            Directory(Directory.LOCAL_STORAGE, local_storage_dir)
-                                .add_file_server(FileServer("file://" + local_storage_dir, Operation.ALL))
-                        )
-                ).add_site(
-                    Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
-                        .add_pegasus_profile(style="condor")
-                        .add_condor_profile(universe="vanilla")
-                ))
+        logging.basicConfig(level=logging.DEBUG)
 
         # --- Replicas -----------------------------------------------------------------
-        # create initial input file
         with open("f.a", "w") as f:
             f.write("This is sample input to KEG")
 
-        fa = File("f.a")
-        rc = (ReplicaCatalog()
-            .add_replica(LOCAL, fa, "file://" + str(TOP_DIR / fa.lfn)))
+        fa = File("f.a").add_metadata(creator="ryan")
+        rc = ReplicaCatalog().add_replica("local", fa, Path(".") / "f.a")
 
         # --- Transformations ----------------------------------------------------------
-        preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
-                        .add_site(
-                            TransformationSite(
-                                CONDOR_POOL,
-                                PEGASUS_LOCATION,
-                                is_stageable=False,
-                                arch=Arch.X86_64,
-                                os_type=OS.LINUX)
-                        ))
+        preprocess = Transformation(
+                        "preprocess",
+                        site="condorpool",
+                        pfn="/usr/bin/pegasus-keg",
+                        is_stageable=False,
+                        arch=Arch.X86_64,
+                        os_type=OS.LINUX
+                    )
 
-        findrage = (Transformation("findrange", namespace="pegasus", version="4.0")
-                        .add_site(
-                            TransformationSite(
-                                CONDOR_POOL,
-                                PEGASUS_LOCATION,
-                                is_stageable=False,
-                                arch=Arch.X86_64,
-                                os_type=OS.LINUX)
-                        ))
+        findrange = Transformation(
+                        "findrange",
+                        site="condorpool",
+                        pfn="/usr/bin/pegasus-keg",
+                        is_stageable=False,
+                        arch=Arch.X86_64,
+                        os_type=OS.LINUX
+                    )
 
-        analyze = (Transformation("analyze", namespace="pegasus", version="4.0")
-                        .add_site(
-                            TransformationSite(
-                                CONDOR_POOL,
-                                PEGASUS_LOCATION,
-                                is_stageable=False,
-                                arch=Arch.X86_64,
-                                os_type=OS.LINUX)
-                        ))
+        analyze = Transformation(
+                        "analyze",
+                        site="condorpool",
+                        pfn="/usr/bin/pegasus-keg",
+                        is_stageable=False,
+                        arch=Arch.X86_64,
+                        os_type=OS.LINUX
+                    )
 
-        tc = (TransformationCatalog()
-                .add_transformations(preprocess, findrage, analyze))
+        tc = TransformationCatalog().add_transformations(preprocess, findrange, analyze)
 
         # --- Workflow -----------------------------------------------------------------
+        '''
+                            [f.b1] - (findrange) - [f.c1] 
+                            /                             \\
+        [f.a] - (preprocess)                               (analyze) - [f.d]
+                            \\                             /
+                            [f.b2] - (findrange) - [f.c2]
+
+        '''
+        wf = Workflow("blackdiamond")
+
         fb1 = File("f.b1")
         fb2 = File("f.b2")
+        job_preprocess = Job(preprocess)\\
+                            .add_args("-a", "preprocess", "-T", "3", "-i", fa, "-o", fb1, fb2)\\
+                            .add_inputs(fa)\\
+                            .add_outputs(fb1, fb2)
+
         fc1 = File("f.c1")
+        job_findrange_1 = Job(findrange)\\
+                            .add_args("-a", "findrange", "-T", "3", "-i", fb1, "-o", fc1)\\
+                            .add_inputs(fb1)\\
+                            .add_outputs(fc1)
+
         fc2 = File("f.c2")
+        job_findrange_2 = Job(findrange)\\
+                            .add_args("-a", "findrange", "-T", "3", "-i", fb2, "-o", fc2)\\
+                            .add_inputs(fb2)\\
+                            .add_outputs(fc2)
+
         fd = File("f.d")
+        job_analyze = Job(analyze)\\
+                        .add_args("-a", "analyze", "-T", "3", "-i", fc1, fc2, "-o", fd)\\
+                        .add_inputs(fc1, fc2)\\
+                        .add_outputs(fd)
 
-        (Workflow("blackdiamond")
-            .add_jobs(
-                Job(preprocess)
-                    .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
-                    .add_inputs(fa)
-                    .add_outputs(fb1, fb2),
+        wf.add_jobs(job_preprocess, job_findrange_1, job_findrange_2, job_analyze)
+        wf.add_replica_catalog(rc)
+        wf.add_transformation_catalog(tc)
 
-                Job(findrage)
-                    .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
-                    .add_inputs(fb1)
-                    .add_outputs(fc1),
+        try:
+            wf.plan(submit=True)\\
+                .wait()\\
+                .analyze()\\
+                .statistics()
+        except PegasusClientError as e:
+            print(e.output)
 
-                Job(findrage)
-                    .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
-                    .add_inputs(fb2)
-                    .add_outputs(fc2),
-
-                Job(analyze)
-                    .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
-                    .add_inputs(fc1, fc2)
-                    .add_outputs(fd)
-            ).add_site_catalog(sc)
-            .add_replica_catalog(rc)
-            .add_transformation_catalog(tc)
-            .write())
 
     """
 
     _DEFAULT_FILENAME = "workflow.yml"
 
-    def __init__(self, name, infer_dependencies=True):
+    def __init__(self, name: str, infer_dependencies: bool = True):
         """
         :param name: name of the :py:class:`~Pegasus.api.workflow.Workflow`
         :type name: str
@@ -674,46 +708,57 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_client
     def plan(
         self,
-        conf: str = None,
-        sites: List[str] = None,
+        conf: Optional[str] = None,
+        sites: Optional[List[str]] = None,
         output_sites: List[str] = ["local"],
-        staging_sites: Dict[str, str] = None,
-        input_dirs: List[str] = None,
-        output_dir: str = None,
-        dir: str = None,
-        relative_dir: str = None,
+        staging_sites: Optional[Dict[str, str]] = None,
+        input_dirs: Optional[List[str]] = None,
+        output_dir: Optional[str] = None,
+        dir: Optional[str] = None,
+        relative_dir: Optional[str] = None,
         cleanup: str = "none",
         verbose: int = 0,
         force: bool = False,
         submit: bool = False,
         **kwargs
     ):
-        """Plan the workflow.
+        """
+        plan(self, conf: Optional[str] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, cleanup: str = "none", verbose: int = 0, force: bool = False, submit: bool = False, **kwargs)
+        Plan the workflow.
+
+        .. code-block:: python
+
+            try:
+                wf.plan(verbose=3, submit=True)
+            except PegasusClientError as e:
+                print(e.output)
 
         :param conf:  the path to the properties file to use for planning, defaults to None
-        :type conf: str, optional
+        :type conf: Optional[str]
         :param sites: list of execution sites on which to map the workflow, defaults to None
-        :type sites: List[str], optional
-        :param output_sites: the output sites where the data products during workflow execution are transferred to, defaults to ["local"]
-        :type output_sites: List[str], optional
-        :param staging_sites: key, value pairs of execution site to staging site mappings, defaults to None
-        :type staging_sites: Dict[str,str], optional
+        :type sites: Optional[List[str]]
+        :param output_sites: the output sites where the data products during workflow execution are transferred to, defaults to :code:`["local"]`
+        :type output_sites: List[str]
+        :param staging_sites: key, value pairs of execution site to staging site mappings such as :code:`{"condorpool": "staging-site"}`, defaults to None
+        :type staging_sites: Optional[Dict[str,str]]
         :param input_dirs: comma separated list of optional input directories where the input files reside on submit host, defaults to None
-        :type input_dirs: List[str], optional
+        :type input_dirs: Optional[List[str]]
         :param output_dir: an optional output directory where the output files should be transferred to on submit host, defaults to None
-        :type output_dir: str, optional
+        :type output_dir: Optional[str]
         :param dir: the directory where to generate the executable workflow, defaults to None
-        :type dir: str, optional
+        :type dir: Optional[str]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
-        :type relative_dir: str, optional
+        :type relative_dir: Optional[str]
         :param cleanup: the cleanup strategy to use. Can be none|inplace|leaf|constraint, defaults to inplace
         :type cleanup: str, optional
-        :param verbose: verbosity, defaults to False
+        :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
         :param force: skip reduction of the workflow, resulting in build style dag, defaults to False
         :type force: bool, optional
         :param submit: submit the executable workflow generated, defaults to False
         :type submit: bool, optional
+        :raises PegasusClientError: pegasus-plan encountered an error
+        :return: self
         """
         # if the workflow has not yet been written to a file and plan is
         # called, write the file to default
@@ -741,10 +786,14 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_client
     def run(self, verbose: int = 0):
-        """Run the planned workflow.
+        """
+        run(self, verbose: int = 0)
+        Run the planned workflow.
 
-        :param verbose: verbosity, defaults to False
+        :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
+        :raises PegasusClientError: pegasus-run encountered an error
+        :return: self
         """
         self._client.run(self._submit_dir, verbose=verbose)
 
@@ -752,12 +801,16 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_submit_dir
     @_needs_client
     def status(self, long: bool = False, verbose: int = 0):
-        """Monitor the workflow by quering Condor and directories.
+        """
+        status(self, long: bool = False, verbose: int = 0)
+        Monitor the workflow by quering Condor and directories.
 
         :param long: Show all DAG states, including sub-DAGs, default only totals. defaults to False
         :type long: bool, optional
         :param verbose:  verbosity, defaults to False
         :type verbose: int, optional
+        :raises PegasusClientError: pegasus-status encountered an error
+        :return: self
         """
 
         self._client.status(self._submit_dir, long=long, verbose=verbose)
@@ -766,11 +819,15 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_submit_dir
     @_needs_client
     def wait(self, delay: int = 2):
-        """Displays progress bar to stdout and blocks until the workflow either
+        """
+        wait(self, delay: int = 2)
+        Displays progress bar to stdout and blocks until the workflow either
         completes or fails.
 
         :param delay: refresh rate in seconds of the progress bar, defaults to 2
         :type delay: int, optional
+        :raises PegasusClientError: pegasus-status encountered an error
+        :return: self
         """
 
         self._client.wait(self._submit_dir, delay=delay)
@@ -779,10 +836,14 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_submit_dir
     @_needs_client
     def remove(self, verbose: int = 0):
-        """Removes this workflow that has been planned and submitted.
+        """
+        remove(self, verbose: int = 0)
+        Removes this workflow that has been planned and submitted.
 
-        :param verbose:  verbosity, defaults to False
+        :param verbose:  verbosity, defaults to 0
         :type verbose: int, optional
+        :raises PegasusClientError: pegasus-remove encountered an error
+        :return: self
         """
         self._client.remove(self._submit_dir, verbose=verbose)
 
@@ -790,10 +851,14 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_submit_dir
     @_needs_client
     def analyze(self, verbose: int = 0):
-        """Debug a workflow.
+        """
+        analyze(self, verbose: int = 0)
+        Debug a workflow.
 
-        :param verbose:  verbosity, defaults to False
+        :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
+        :raises PegasusClientError: pegasus-analyzer encountered an error
+        :return: self 
         """
         self._client.analyzer(self._submit_dir, verbose=verbose)
 
@@ -803,16 +868,22 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_submit_dir
     @_needs_client
     def statistics(self, verbose: int = 0):
-        """Generate statistics about the workflow run.
+        """
+        statistics(self, verbose: int = 0)
+        Generate statistics about the workflow run.
 
-        :param verbose:  verbosity, defaults to False
+        :param verbose:  verbosity, defaults to 0
         :type verbose: int, optional
+        :raises PegasusClientError: pegasus-statistics encountered an error
+        :return: self
         """
         self._client.statistics(self._submit_dir, verbose=verbose)
 
     @_chained
-    def add_jobs(self, *jobs):
-        """Add one or more jobs at a time to the Workflow
+    def add_jobs(self, *jobs: Union[Job, SubWorkflow]):
+        """
+        add_jobs(self, *jobs: Union[Job, SubWorkflow])
+        Add one or more jobs at a time to the Workflow
 
         :raises DuplicateError: a job with the same id already exists in this workflow
         :return: self
@@ -828,7 +899,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
             self.jobs[job._id] = job
 
-    def get_job(self, _id):
+    def get_job(self, _id: str):
         """Retrieve the job with the given id
 
         :param _id: id of the job to be retrieved from the Workflow
@@ -858,15 +929,18 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         return next_id
 
     @_chained
-    def add_site_catalog(self, sc):
-        """Add a site catalog to this workflow. The contents fo the site catalog
+    def add_site_catalog(self, sc: SiteCatalog):
+        """
+        add_site_catalog(self, sc: SiteCatalog)
+        Add a :py:class:`~Pegasus.api.site_catalog.SiteCatalog` to this workflow. The contents fo the site catalog
         will be inlined into the same file as this workflow when it is written
         out.
 
-        :param sc: the SiteCatalog to be added
+        :param sc: the :py:class:`~Pegasus.api.site_catalog.SiteCatalog` to be added
         :type sc: SiteCatalog
-        :raises TypeError: sc must be of type SiteCatalog
-        :raises DuplicateError: a SiteCatalog has already been added
+        :raises TypeError: sc must be of type :py:class:`~Pegasus.api.site_catalog.SiteCatalog`
+        :raises DuplicateError: a :py:class:`~Pegasus.api.site_catalog.SiteCatalog` has already been added
+        :return: self
         """
         if not isinstance(sc, SiteCatalog):
             raise TypeError(
@@ -881,15 +955,18 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.site_catalog = sc
 
     @_chained
-    def add_replica_catalog(self, rc):
-        """Add a replica catalog to this workflow. The contents fo the replica catalog
-        will be inlined into the same file as this workflow when it is written
-        out.
+    def add_replica_catalog(self, rc: ReplicaCatalog):
+        """
+        add_replica_catalog(self, rc: ReplicaCatalog)
+        Add a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` to this workflow. 
+        The contents fo the replica catalog will be inlined into the same file as 
+        this workflow when it is written.
 
-        :param rc: the ReplicaCatalog to be added
+        :param rc: the :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` to be added
         :type rc: ReplicaCatalog
-        :raises TypeError: rc must be of type ReplicaCatalog
-        :raises DuplicateError: a ReplicaCatalog has already been added
+        :raises TypeError: rc must be of type :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`
+        :raises DuplicateError: a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` has already been added
+        :return: self
         """
         if not isinstance(rc, ReplicaCatalog):
             raise TypeError(
@@ -904,15 +981,18 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.replica_catalog = rc
 
     @_chained
-    def add_transformation_catalog(self, tc):
-        """Add a transformation catalog to this workflow. The contents fo the transformation
-        catalog will be inlined into the same file as this workflow when it is written
-        out.
+    def add_transformation_catalog(self, tc: TransformationCatalog):
+        """
+        add_transformation_catalog(self, tc: TransformationCatalog)
+        Add a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` 
+        to this workflow. The contents fo the transformation catalog will be inlined 
+        into the same file as this workflow when it is written.
 
-        :param tc: the TransformationCatalog to be added
+        :param tc: the :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` to be added
         :type tc: TransformationCatalog
-        :raises TypeError: tc must be of type TransformationCatalog
-        :raises DuplicateError: a TransformationCatalog has already been added
+        :raises TypeError: tc must be of type :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`
+        :raises DuplicateError: a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` has already been added
+        :return: self
         """
         if not isinstance(tc, TransformationCatalog):
             raise TypeError(
@@ -929,8 +1009,16 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.transformation_catalog = tc
 
     @_chained
-    def add_dependency(self, job, *, parents=[], children=[]):
-        """Add parent, child dependencies for a given job. 
+    def add_dependency(
+        self,
+        job: Union[Job, SubWorkflow],
+        *,
+        parents: List[Union[Job, SubWorkflow]] = [],
+        children: List[Union[Job, SubWorkflow]] = []
+    ):
+        """
+        add_dependency(self, job: Union[Job, SubWorkflow], *, parents: List[Union[Job, SubWorkflow]] = [], children: List[Union[Job, SubWorkflow]] = [])
+        Add parent, child dependencies for a given job. 
         
         .. code-block::python
 
@@ -956,6 +1044,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type children: list, optional
         :raises ValueError: the given job(s) do not have ids assigned to them
         :raises DuplicateError: a dependency between two jobs already has been added
+        :return: self
         """
         # ensure that job, parents, and children are all valid and have ids
         if job._id is None:
@@ -1081,13 +1170,18 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                             pass
 
     @_chained
-    def write(self, file=None, _format="yml"):
-        """Write this workflow to a file. If no file is given,
+    def write(self, file: Optional[Union[str, TextIO]] = None, _format: str = "yml"):
+        """
+        write(self, file: Optional[Union[str, TextIO]] = None, _format: str = "yml")
+        Write this workflow to a file. If no file is given,
         it will written to workflow.yml
 
         :param file: path or file object (opened in "w" mode) to write to, defaults to None
-        :type file: str or file, optional
-        :raises PegasusError: Site Catalog and Transformation Catalog must be written as a separate file for hierarchical workflows.
+        :type file: Optional[Union[str, TextIO]]
+        :param _format: serialized format of the workflow object (this should be left as its default)
+        :type _format: str, optional
+        :raises PegasusError: :py:class:`~Pegasus.api.site_catalog.SiteCatalog` and :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` must be written as a separate file for hierarchical workflows.
+        :return: self
         """
 
         # if subworkflow jobs exist,  tc and sc cannot be inlined
