@@ -1180,7 +1180,7 @@ class TestWorkflow:
 
         Pegasus.client._client.Client.plan.assert_called_once_with(
             path,
-            cleanup="none",
+            cleanup="inplace",
             conf=None,
             dir=None,
             force=False,
@@ -1207,7 +1207,7 @@ class TestWorkflow:
 
         Pegasus.client._client.Client.plan.assert_called_once_with(
             DEFAULT_WF_PATH,
-            cleanup="none",
+            cleanup="inplace",
             conf=None,
             dir=None,
             force=False,
