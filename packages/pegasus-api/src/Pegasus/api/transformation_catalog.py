@@ -28,12 +28,28 @@ class _ContainerType(Enum):
 
 
 class Container(ProfileMixin):
-    """Describes a container that can be added to the :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`
+    """
+    Describes a container that can be added to the :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` .
+    Note that the :code:`checksum` parameter refers to the checksum of the tar file of the image and not the specific 
+    version of an image (digest/content-addressable identifer in the case of Docker).
 
     .. code-block:: python
 
-        # Example
-        c = Container("centos-pegasus", Container.DOCKER, "docker:///ryan/centos-pegasus:latest", ["/Volumes/Work/lfs1:/shared-data/:ro"])
+        # Example 1: Docker
+        centos_pegasus = Container(
+                            "centos-pegasus",
+                            Container.DOCKER,
+                            "docker:///ryan/centos-pegasus:latest",
+                            mounts=["/Volumes/Work/lfs1:/shared-data/:ro"]
+                        )
+        
+        # Example 2: Singularity
+        fb_nlp = Container(
+                    "fb-nlp",
+                    Container.SINGULARITY,
+                    image="library://papajim/default/fb-nlp",
+                    mounts=["/data:/mnt:ro"]
+                )
 
     """
 
@@ -59,13 +75,13 @@ class Container(ProfileMixin):
         :type container_type: _ContainerType
         :param image: image, such as :code:`docker:///rynge/montage:latest`
         :type image: str
-        :param mounts: list of mount strings such as ['/Volumes/Work/lfs1:/shared-data/:ro', ...]
-        :type mounts: Optional[List[str]], optional
+        :param mounts: list of mount strings such as :code:`['/Volumes/Work/lfs1:/shared-data/:ro', ...]`
+        :type mounts: Optional[List[str]]
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
-        :type image_site: Optional[str], optional
-        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to None
-        :type checksum: Optional[Dict[str, str]], optional
-        :raises ValueError: container_type must be one of :py:class:`~Pegasus.api.transformation_catalog._ContainerType`
+        :type image_site: Optional[str]
+        :param checksum: Dict containing checksums for the tar file of this image. Currently only sha256 is supported. This should be entered as :code:`{"sha256": <value>}`, defaults to None
+        :type checksum: Optional[Dict[str, str]]
+        :raises ValueError: container_type must be one of :py:class:`~Pegasus.api.transformation_catalog._ContainerType` (:code:`Container.DOCKER` | :code:`Container.SINGULARITY` | :code:`Container.SHIFTER`)
         """
         self.name = name
 
@@ -112,7 +128,7 @@ class Container(ProfileMixin):
 class TransformationSite(ProfileMixin, MetadataMixin):
     """Site specific information about a :py:class:`~Pegasus.api.transformation_catalog.Transformation`.
     A :py:class:`~Pegasus.api.transformation_catalog.Transformation` must contain at least one
-    TransformationSite.
+    transformation site.
     """
 
     def __init__(
@@ -243,7 +259,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         applied to the site, else they are ignored. When a transformation resides
         multiple sites, the syntax in Example 2 can be used where multiple
         TransformationSite objects can be added. Note that when specifying a checksum
-        such as {"sha256": <value>}, this only applies to stageable executables. 
+        such as :code:`{"sha256": <value>}` , this only applies stageable executables. 
 
         .. code-block:: python
 
@@ -252,52 +268,57 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                     "preprocess",
                     namespace="pegasus",
                     version="4.0",
-                    site=CONDOR_POOL,
-                    pfn=PEGASUS_LOCATION,
+                    site="condorpool",
+                    pfn="/usr/bin/pegasus-keg",
+                    is_stageable=False,
+                    arch=Arch.X86_64,
+                    os_type=OS.LINUX,
+                    container=centos_pegasus
                 )
 
             # Example 2: transformation that resides on multiple sites
-            preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
+            preprocess = Transformation("preprocess", namespace="pegasus", version="4.0")\\
                             .add_sites(
                                 TransformationSite(
-                                    CONDOR_POOL,
-                                    PEGASUS_LOCATION,
+                                    "condorpool",
+                                    "/usr/bin/pegasus-keg",
                                     is_stageable=False,
                                     arch=Arch.X86_64,
-                                    os_type=OS.LINUX),
-
+                                    os_type=OS.LINUX,
+                                    container="centos-pegasus"
+                                ),
                                 ...
-                            ))
+                            )
 
 
         :param name: the logical name of the transformation
         :type name: str
         :param namespace: the namespace that this transformation belongs to, defaults to None
-        :type namespace: Optional[str], optional
-        :param version: the version of this transformation (e.g. "1.1"), defaults to None
-        :type version: Optional[str], optional
-        :param site: a site specified in the site catalog to on which this transformation resides, defaults to None
-        :type site: Optional[str], optional
-        :param pfn: the physical filename of this transformation (e.g. "/usr/bin/tar"), defaults to None
-        :type pfn: Optional[str], optional
+        :type namespace: Optional[str]
+        :param version: the version of this transformation (e.g. :code:`"1.1"`), defaults to None
+        :type version: Optional[str]
+        :param site: a :py:class:`~Pegasus.api.site_catalog.Site` specified in the :py:class:`~Pegasus.api.site_catalog.SiteCatalog` on which this transformation resides, defaults to None
+        :type site: Optional[str]
+        :param pfn: the physical filename of this transformation (e.g. :code:`"/usr/bin/tar"`), defaults to None
+        :type pfn: Optional[str]
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
         :type type: bool, optional
-        :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
-        :type arch: Optional[Arch], optional
-        :param os_type: name of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS`), defaults to None
-        :type os_type: Optional[OS], optional
-        :param os_release: release of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
-        :type os_release: Optional[str], optional
-        :param os_version: version of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
-        :type os_version: Optional[str], optional
-        :param container: a container object or name of the container to be used for this transformation, optional
-        :type container: Optional[Union[Container, str]], optional
-        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to None
-        :type checksum: Optional[Dict[str, str]], optional
-        :raises TypeError: Container must be of type Container or str
+        :param arch: architecture that this transformation was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch` , e.g :code:`Arch.X86_64`), defaults to None
+        :type arch: Optional[Arch]
+        :param os_type: name of os that this transformation was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS` , e.g. :code:`OS.LINUX`), defaults to None
+        :type os_type: Optional[OS]
+        :param os_release: release of os that this transformation was compiled for, defaults to None
+        :type os_release: Optional[str]
+        :param os_version: version of os that this transformation was compiled for, defaults to None
+        :type os_version: Optional[str]
+        :param container: a :py:class:`~Pegasus.api.transformation_catalog.Container` or name of the container to be used for this transformation, defaults to None
+        :type container: Optional[Union[Container, str]]
+        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as :code:`{"sha256": <value>}`, defaults to None
+        :type checksum: Optional[Dict[str, str]]
+        :raises TypeError: container must be of type :py:class:`~Pegasus.api.transformation_catalog.Container` or str
         :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
-        :raises ValueError: fields: namespace, name, and field must not contain any ":"s
+        :raises ValueError: fields: namespace, name, and field must not contain any :code:`:` (colons)
         """
 
         for field, value in {
@@ -307,7 +328,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         }.items():
             if ":" in str(value):
                 raise ValueError(
-                    "invalid {field}: {value}; {field} must not contain ':' characters".format(
+                    "invalid {field}: {value}; {field} must not contain ':' (colon) characters".format(
                         field=field, value=value
                     )
                 )
@@ -353,13 +374,15 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         return "{}::{}::{}".format(self.namespace, self.name, self.version)
 
     @_chained
-    def add_sites(self, *transformation_sites):
-        """Add one or more :py:class:`~Pegasus.api.transformation_catalog.TransformationSite` to this
-        transformation
+    def add_sites(self, *transformation_sites: TransformationSite):
+        """
+        add_sites(self, *transformation_sites: TransformationSite)
+        Add one or more :py:class:`~Pegasus.api.transformation_catalog.TransformationSite` s to this
+        transformation.
 
-        :param transformation_sites: the transformation site(s) to be added
+        :param transformation_sites: the :py:class:`~Pegasus.api.transformation_catalog.TransformationSite` (s) to be added
         :raises TypeError: argument(s) must be of type :py:class:`~Pegasus.api.transformation_catalog.TransformationSite`
-        :raises DuplicateError: a transformation site with the same name as the one you are attempting to add already exists
+        :raises DuplicateError: a :py:class:`~Pegasus.api.transformation_catalog.TransformationSite` with the same name as the one you are attempting to add already exists
         :return: self
         """
         for ts in transformation_sites:
@@ -380,18 +403,25 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
             self.sites[ts.name] = ts
 
     @_chained
-    def add_requirement(self, required_transformation, namespace=None, version=None):
-        """Add a requirement to this Transformation. Specify the other
+    def add_requirement(
+        self,
+        required_transformation: Union[str, "Transformation"],
+        namespace: str = None,
+        version: str = None,
+    ):
+        """
+        add_requirement(self, required_transformation: Union[str, Transformation], namespace: str = None, version: str = None)
+        Add a requirement to this transformation. Specify the other
         transformation, identified by name, namespace, and version, that this
         transformation depends upon. If a :py:class:`~Pegasus.api.transformation_catalog.Transformation`
-        is passed in for *required_transformation*, then namespace and version
+        is passed in for :code:`required_transformation`, then namespace and version
         are ignored.
 
-        :param required_transformation: transformation that this transformation requires
+        :param required_transformation: :py:class:`~Pegasus.api.transformation_catalog.Transformation` that this transformation requires
         :type required_transformation: str or Transformation
         :raises DuplicateError: this requirement already exists
-        :raises ValueError: required_transformation must be of type :py:class:`~Pegasus.api.transformation_catalog.Transformation` or str
-        :raises ValueError: namespace, required transformation name, and version cannot contain any ":" characters
+        :raises ValueError: :code:`required_transformation` must be of type :py:class:`~Pegasus.api.transformation_catalog.Transformation` or str
+        :raises ValueError: namespace, required transformation name, and version cannot contain any :code:`:` (colon) characters
         :return: self
         """
         key = ""
@@ -480,45 +510,53 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
 
 class TransformationCatalog(Writable):
-    """Maintains a list a :py:class:`~Pegasus.api.transformation_catalog.Transformations`, site specific
-    transformation information, and a list of containers
+    """Maintains a list a :py:class:`~Pegasus.api.transformation_catalog.Transformation` s and 
+    :py:class:~`Pegasus.api.transformation_catalog.Container` s
 
     .. code-block:: python
 
         # Example
-        preprocess = (Transformation("preprocess", namespace="pegasus", version="4.0")
-                .add_sites(
-                    TransformationSite(
-                        CONDOR_POOL,
-                        PEGASUS_LOCATION,
+        centos_pegasus = Container(
+                "centos-pegasus",
+                Container.DOCKER,
+                "docker:///ryan/centos-pegasus:latest",
+                mounts=["/Volumes/Work/lfs1:/shared-data/:ro"]
+            )
+
+        preprocess = Transformation(
+                        "preprocess",
+                        site="condorpool",
+                        pfn="/usr/bin/pegasus-keg",
                         is_stageable=False,
                         arch=Arch.X86_64,
-                        os_type=OS.LINUX)
-                ))
+                        os_type=OS.LINUX,
+                        container=centos_pegasus
+                    )
 
-        findrage = (Transformation("findrange", namespace="pegasus", version="4.0")
-                        .add_sites(
-                            TransformationSite(
-                                CONDOR_POOL,
-                                PEGASUS_LOCATION,
-                                is_stageable=False,
-                                arch=Arch.X86_64,
-                                os_type=OS.LINUX)
-                        ))
+        findrange = Transformation(
+                        "findrange",
+                        site="condorpool",
+                        pfn="/usr/bin/pegasus-keg",
+                        is_stageable=False,
+                        arch=Arch.X86_64,
+                        os_type=OS.LINUX,
+                        container=centos_pegasus
+                    )
 
-        analyze = (Transformation("analyze", namespace="pegasus", version="4.0")
-                        .add_sites(
-                            TransformationSite(
-                                CONDOR_POOL,
-                                PEGASUS_LOCATION,
-                                is_stageable=False,
-                                arch=Arch.X86_64,
-                                os_type=OS.LINUX)
-                        ))
+        analyze = Transformation(
+                        "analyze",
+                        site="condorpool",
+                        pfn="/usr/bin/pegasus-keg",
+                        is_stageable=False,
+                        arch=Arch.X86_64,
+                        os_type=OS.LINUX,
+                        container=centos_pegasus
+                    )
 
-        (TransformationCatalog()
-            .add_transformations(preprocess, findrage, analyze)
-            .write())
+        tc = TransformationCatalog()\\
+            .add_containers(centos_pegasus)\\
+            .add_transformations(preprocess, findrange, analyze)\\
+            .write()
 
     """
 
@@ -529,12 +567,30 @@ class TransformationCatalog(Writable):
         self.containers = dict()
 
     @_chained
-    def add_transformations(self, *transformations):
-        """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Transformation` to this catalog
+    def add_transformations(self, *transformations: Transformation):
+        """
+        add_transformations(self, *transformations: Transformation)
+        Add one or more :py:class:`~Pegasus.api.transformation_catalog.Transformation` s to this catalog
 
-        :param transformations: the :py:class:`~Pegasus.api.transformation_catalog.Transformation` to be added
+        .. code-block:: python
+
+            # Example
+            tc.add_transformations(
+                Transformation(
+                        "analyze",
+                        site="condorpool",
+                        pfn="/usr/bin/pegasus-keg",
+                        is_stageable=False,
+                        arch=Arch.X86_64,
+                        os_type=OS.LINUX,
+                        container=centos_pegasus
+                    )
+            )
+
+
+        :param transformations: the :py:class:`~Pegasus.api.transformation_catalog.Transformation` (s) to be added
         :raises TypeError: argument(s) must be of type :py:class:`~Pegasus.api.transformation_catalog.Transformation`
-        :raises DuplicateError: Transformation already exists in this catalog
+        :raises DuplicateError: the given :py:class:`~Pegasus.api.transformation_catalog.Transformation` already exists in this catalog
         :return: self
         """
         for tr in transformations:
@@ -555,8 +611,10 @@ class TransformationCatalog(Writable):
             self.transformations[tr._get_key()] = tr
 
     @_chained
-    def add_containers(self, *containers):
-        """Add one or more :py:class:`~Pegasus.api.transformation_catalog.Container` to this catalog
+    def add_containers(self, *containers: Container):
+        """
+        add_containers(self, *containers: Container)
+        Add one or more :py:class:`~Pegasus.api.transformation_catalog.Container` s to this catalog
 
         .. code-block:: python
 
@@ -566,11 +624,11 @@ class TransformationCatalog(Writable):
                     "centos-pegasus",
                     Container.DOCKER,
                     "docker:///ryan/centos-pegasus:latest",
-                    ["/Volumes/Work/lfs1:/shared-data/:ro"]
+                    mounts=["/Volumes/Work/lfs1:/shared-data/:ro"]
                 )
             )
 
-        :param container: the :py:class:`~Pegasus.api.transformation_catalog.Container` to be added
+        :param containers: the :py:class:`~Pegasus.api.transformation_catalog.Container` to be added
         :raises TypeError: argument(s) must be of type :py:class:`~Pegasus.api.transformation_catalog.Container`
         :raises DuplicateError: a container with the same name already exists in this catalog
         :return: self
