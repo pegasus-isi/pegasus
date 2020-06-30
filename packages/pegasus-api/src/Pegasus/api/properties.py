@@ -1,5 +1,6 @@
 from configparser import DEFAULTSECT, ConfigParser
 from io import StringIO
+from typing import Optional, TextIO, Union
 
 __all__ = "Properties"
 
@@ -206,11 +207,11 @@ class Properties:
     _cfg_header_len = len("[{}]\n".format(DEFAULTSECT))
 
     @staticmethod
-    def ls(prop=None):
+    def ls(prop: Optional[str] = None):
         """List property keys. Refer to
         `Configuration docs <https://pegasus.isi.edu/documentation/configuration.php>`_
-        for additional information. If prop is given, all properties beginning with
-        prop will be printed else all properties will be printed.
+        for additional information. If :code:`prop` is given, all properties beginning with
+        prop will be printed, else all properties will be printed. 
 
         .. code-block:: python
 
@@ -222,7 +223,7 @@ class Properties:
             pegasus.pmc_task_arguments
 
         :param prop: properties beginning with "prop" will be listed in alphabetical order, defaults to None
-        :type prop: str, optional
+        :type prop: Optional[str]
         """
         if prop:
             to_print = list()
@@ -250,9 +251,9 @@ class Properties:
     def __delitem__(self, k):
         self._conf.remove_option(DEFAULTSECT, k)
 
-    def write(self, file=None):
-        """Write these properties to a file. If file is not given, these
-        properties are written to 'pegasus.properties'
+    def write(self, file: Optional[Union[str, TextIO]] = None):
+        """Write these properties to a file. If :code:`file` is not given, these
+        properties are written to :code:`./pegasus.properties`
 
         .. code-block:: python
 
@@ -264,7 +265,7 @@ class Properties:
                 props.write(f)
 
         :param file: file path or file object where properties will be written to, defaults to None
-        :type file: str or file like object
+        :type file: Optional[Union[str, TextIO]]
         :raises TypeError: file must be of type str or file like object
         """
         with StringIO() as sio:
