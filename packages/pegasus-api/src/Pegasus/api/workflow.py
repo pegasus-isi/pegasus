@@ -716,14 +716,14 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         output_dir: Optional[str] = None,
         dir: Optional[str] = None,
         relative_dir: Optional[str] = None,
-        cleanup: str = "none",
+        cleanup: str = "inplace",
         verbose: int = 0,
         force: bool = False,
         submit: bool = False,
         **kwargs
     ):
         """
-        plan(self, conf: Optional[str] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, cleanup: str = "none", verbose: int = 0, force: bool = False, submit: bool = False, **kwargs)
+        plan(self, conf: Optional[str] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, cleanup: str = "inplace", verbose: int = 0, force: bool = False, submit: bool = False, **kwargs)
         Plan the workflow.
 
         .. code-block:: python
@@ -749,7 +749,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type dir: Optional[str]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
         :type relative_dir: Optional[str]
-        :param cleanup: the cleanup strategy to use. Can be none|inplace|leaf|constraint, defaults to inplace
+        :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
         :type cleanup: str, optional
         :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
