@@ -3,9 +3,10 @@ __author__ = "Monte Goode"
 import logging
 import time
 
+from sqlalchemy import orm
+
 from Pegasus.db import connection
 from Pegasus.db.schema import *
-from sqlalchemy import orm
 
 log = logging.getLogger(__name__)
 
