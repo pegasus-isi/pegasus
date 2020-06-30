@@ -5,6 +5,7 @@ import time
 
 from Pegasus.db import connection
 from Pegasus.db.schema import *
+from sqlalchemy import orm
 
 log = logging.getLogger(__name__)
 
