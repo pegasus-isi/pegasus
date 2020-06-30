@@ -36,8 +36,14 @@ class _PFN:
 
 class File(MetadataMixin):
     """
-    A workflow File. This class is used to represent
-    :py:class:`~Pegasus.api.workflow.Job` inputs and outputs.
+    A workflow File. This class is used to represent the inputs and outputs of a
+    :py:class:`~Pegasus.api.workflow.Job`.
+
+    .. code-block:: python
+
+        # Example
+        input_file = File("data.txt").add_metadata(creator="ryan")
+
     """
 
     def __init__(self, lfn: str, size: Optional[int] = None):
@@ -117,10 +123,10 @@ class ReplicaCatalog(Writable):
             if1 = File("if")
             if2 = File("if2")
 
-            (ReplicaCatalog()
-                .add_replica("local", if1, "/nfs/u2/ryan/data.csv")
-                .add_replica("local", "if2", "/nfs/u2/ryan/data2.csv")
-                .write())
+            rc = ReplicaCatalog()\\
+                .add_replica("local", if1, "/nfs/u2/ryan/data.csv")\\
+                .add_replica("local", "if2", "/nfs/u2/ryan/data2.csv")\\
+                .write()
     """
 
     _DEFAULT_FILENAME = "replicas.yml"
@@ -142,9 +148,10 @@ class ReplicaCatalog(Writable):
         metadata: Dict[str, Union[int, str, float]] = {},
     ):
         r"""
+        add_regex_replica(self, site: str, pattern: str, pfn: str, metadata: Dict[str, Union[int, str, float]] = {})
         Add an entry to this replica catalog using a regular expression pattern.
-           Note that regular expressions should follow Java regular expression syntax
-           as the underlying code that handles this catalog is Java based.
+        Note that regular expressions should follow Java regular expression syntax
+        as the underlying code that handles this catalog is Java based.
 
             .. code-block:: python
 
@@ -170,7 +177,7 @@ class ReplicaCatalog(Writable):
         :type pattern: str
         :param pfn: path to the file
         :type pfn: str
-        :param metadata: any metadate to be associated with the matched files, for example: {"creator": "pegasus"}
+        :param metadata: any metadata to be associated with the matched files, for example: :code:`{"creator": "pegasus"}`
         :type metadata: Dict[str, Union[int, str, float]]
         :raises DuplicateError: Duplicate patterns with different PFNs are currently not supported
         """
@@ -194,9 +201,11 @@ class ReplicaCatalog(Writable):
         checksum: Dict[str, str] = dict(),
         metadata: Dict[str, Union[int, str, float]] = dict(),
     ):
-        """Add an entry to this replica catalog. 
+        """
+        add_replica(self, site: str, lfn: Union[str, File], pfn: Union[str, Path], checksum: Dict[str, str] = dict(), metadata: Dict[str, Union[int, str, float]] = dict())
+        Add an entry to this replica catalog. 
 
-            ..code-block:: python
+            .. code-block:: python
 
                 # Example 1
                 f = File("in.txt").add_metadata(creator="pegasus")
@@ -220,13 +229,13 @@ class ReplicaCatalog(Writable):
         :type site: str
         :param lfn: logical file name
         :type lfn: Union[str, File]
-        :param pfn: physical file name such as Path("f.txt"), /home/ryan/file.txt, or http://pegasus.isi.edu/file.txt 
+        :param pfn: physical file name such as :code:`Path("f.txt")`, :code:`/home/ryan/file.txt`, or :code:`http://pegasus.isi.edu/file.txt`
         :type pfn: str
-        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as {"sha256": <value>}, defaults to {}
+        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as :code:`{"sha256": <value>}`, defaults to :code:`{}`
         :type checksum: Dict[str, str], optional
-        :param metadata: metadata key value pairs associated with this lfn such as {"created": "Thu Jun 18 22:18:36 PDT 2020", "owner": "pegasus"}, defaults to {}
+        :param metadata: metadata key value pairs associated with this lfn such as :code:`{"created": "Thu Jun 18 22:18:36 PDT 2020", "owner": "pegasus"}`, defaults to :code:`{}`
         :type metadata: Dict[str, Union[int, str, float]], optional
-        :raises ValueError: if pfn is given as a Path object and points to a directory, an error will be thrown
+        :raises ValueError: if pfn is given as a :code:`pathlib.Path` object and points to a directory, an error will be thrown
         :raises ValueError: an unsupported checksum type was given 
         """
 
