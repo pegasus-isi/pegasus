@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 
-from sqlalchemy import Index, inspect
+from sqlalchemy import inspect
 
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
@@ -72,6 +72,12 @@ class Version(BaseVersion):
                     ("job_type_desc_COL", None),
                     ("task_wf_id_COL", None),
                     ("invoc_wf_id_COL", None),
+                ]
+            )
+            self._create_indexes(
+                [
+                    [Workflowstate, Workflowstate.timestamp],
+                    [Jobstate, Jobstate.jobstate_submit_seq],
                 ]
             )
 
@@ -169,9 +175,14 @@ class Version(BaseVersion):
         """"."""
         for index in index_list:
             try:
-                Index(
-                    "{}_{}_COL".format(index[0].__tablename__, index[1].name), index[1]
-                ).create(bind=self.db.get_bind())
+                self.db.execute(
+                    "CREATE INDEX {}_{}_COL ON {}({})".format(
+                        index[0].__tablename__,
+                        index[1].name,
+                        index[0].__tablename__,
+                        index[1].name,
+                    )
+                )
             except (OperationalError, ProgrammingError):
                 pass
             except Exception as e:
