@@ -19,7 +19,7 @@ class Version(BaseVersion):
             self.db.execute("ALTER TABLE invocation ADD COLUMN maxrss INTEGER")
             self.db.execute("ALTER TABLE invocation ADD COLUMN avg_cpu NUMERIC(16, 6)")
         except Exception as e:
-            if "duplicate column name" not in str(
+            if "uplicate column name" not in str(
                 e
             ) and "no such table: invocation" not in str(e):
                 self.db.rollback()
