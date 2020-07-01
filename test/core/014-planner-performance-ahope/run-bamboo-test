@@ -40,7 +40,7 @@ START_TS=`/bin/date +'%s'`
     --sites local \
     -o local \
     --dir ./dags \
-    --nocleanup \
+    --cleanup none \
     --force \
     | tee plan.out
 
