@@ -16,9 +16,8 @@ def connect():
     log.debug("Connecting to database")
     g.master_db_url = g.user.get_master_db_url()
     g.session = connection.connect(
-            g.master_db_url,
-            connect_args={"check_same_thread": False}
-        )
+        g.master_db_url, connect_args={"check_same_thread": False}
+    )
 
 
 def disconnect():
