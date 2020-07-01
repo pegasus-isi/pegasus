@@ -1,5 +1,6 @@
 from enum import Enum
 from functools import partialmethod, wraps
+from typing import Dict, Optional, Union
 
 from ._utils import _chained, _get_enum_str
 
@@ -9,8 +10,10 @@ class MetadataMixin:
     """Derived class can have metadata assigned to it as key value pairs."""
 
     @_chained
-    def add_metadata(self, *args, **kwargs):
-        """Add metadata key value pairs to this object
+    def add_metadata(self, *args: Dict[str, Union[str, int, float]], **kwargs):
+        """
+        add_metadata(self, *args: Dict[str, Union[str, int, float]], **kwargs)
+        Add metadata key value pairs to this object
 
         .. code-block:: python
 
@@ -21,7 +24,7 @@ class MetadataMixin:
             job.add_metadata(key1="value1, key2="value2")
 
         :param args: dictionary of key value pair to add as metadata
-        :type args: dict, optional
+        :type args: Dict[str, Union[str, int, float]]
         :raises TypeError: each arg in args must be a dict
         :return: self
         """
@@ -56,9 +59,10 @@ class HookMixin:
     """
 
     @_chained
-    def add_shell_hook(self, event_type, cmd):
-        # TODO: consider making event_type either an event type or an actual ShellHook
-        """Add a shell hook. The given command will be executed by the shell
+    def add_shell_hook(self, event_type: EventType, cmd: str):
+        """
+        add_shell_hook(self, event_type: EventType, cmd: str)
+        Add a shell hook. The given command will be executed by the shell
         when the specified :py:class:`~Pegasus.api.mixins.EventType` takes
         place.
 
@@ -74,6 +78,7 @@ class HookMixin:
         :raises ValueError: event_type must be one of :py:class:`~Pegasus.api.mixins.EventType`
         :return: self
         """
+        # TODO: consider making event_type either an event type or an actual ShellHook
         if not isinstance(event_type, EventType):
             raise ValueError("event_type must be one of EventType")
 
@@ -211,10 +216,18 @@ def to_mb(value):
 
 class ProfileMixin:
     @_chained
-    def add_profiles(self, ns, key=None, value=None, **kw):
-        """Add a profile.
+    def add_profiles(
+        self,
+        ns: Namespace,
+        key: Optional[str] = None,
+        value: Optional[str] = None,
+        **kw
+    ):
+        """
+        add_profiles(self, ns: Namespace, key: Optional[str] = None, value: Optional[str] = None, **kw)
+        Add a profile.
 
-        If key and value are given, then **kw are ignored and {Namespace::key : value}
+        If key and value are given, then **kw are ignored and :code:`{Namespace::key : value}`
         is added. Else **kw is added. When the value of "key" is not a valid python
         variable name, the usage in Example #1 should be used, else follow the usage
         shown in Example #2.
@@ -227,8 +240,8 @@ class ProfileMixin:
             # Example 2
             job.add_profiles(Namespace.ENV, JAVA_HOME="/usr/bin/java", USER="ryan")
 
-        For add_globus_profile(), add_condor_profile(), add_dagman_profile(),
-        add_selector_profile(), and add_pegasus_profile(), if a profile key that
+        For :code:`add_globus_profile()`, :code:`add_condor_profile()`, :code:`add_dagman_profile()`,
+        :code:`add_selector_profile()`, and :code:`add_pegasus_profile()`, if a profile key that
         you are trying to use is not listed as a key word argument, use this
         function to add the profile.
 
