@@ -1,5 +1,7 @@
 from collections import OrderedDict, defaultdict
 from enum import Enum
+from pathlib import Path
+from typing import Optional, Union
 
 from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_str
 from Pegasus.api.errors import DuplicateError
@@ -105,11 +107,11 @@ class FileServer(ProfileMixin):
     """Describes the fileserver to access data from outside
     """
 
-    def __init__(self, url, operation_type):
+    def __init__(self, url: str, operation_type: Operation):
         """
-        :param url: url including protocol such as 'scp://obelix.isi.edu/data'
+        :param url: url including protocol such as :code:`scp://obelix.isi.edu/data`
         :type url: str
-        :param operation_type: operation type defined in :py:class:`~Pegasus.api.site_catalog.OperationType`
+        :param operation_type: operation type defined in :py:class:`~Pegasus.api.site_catalog.OperationType` (e.g. :code:`Operation.ALL`)
         :type operation_type: OperationType
         :raises ValueError: operation_type must be one defined in :py:class:`~Pegasus.api.site_catalog.OperationType`
         """
@@ -158,13 +160,14 @@ class Directory:
     # the site catalog schema lists freeSize and totalSize as an attribute
     # however this appears to not be used; removing it as a parameter
     # def __init__(self, directory_type, path, free_size=None, total_size=None):
-    def __init__(self, directory_type, path):
+    def __init__(self, directory_type: _DirectoryType, path: Union[str, Path]):
         """
-        :param directory_type: directory type defined in :py:class:`~Pegasus.api.site_catalog.DirectoryType`
-        :type directory_type: DirectoryType
-        :param path: directory path
-        :type path: str
+        :param directory_type: directory type defined in :py:class:`~Pegasus.api.site_catalog.DirectoryType` (e.g. :code:`Directory.SHARED_SCRATCH` or :code:`Directory.LOCAL_STORAGE`)
+        :type directory_type: _DirectoryType
+        :param path: directory path 
+        :type path: Union[str, Path]
         :raises ValueError: directory_type must be one of :py:class:`~Pegasus.api.site_catalog.DirectoryType`
+        :raises ValueError: path must be given as an absolute path
         """
         if not isinstance(directory_type, _DirectoryType):
             raise TypeError(
@@ -176,15 +179,26 @@ class Directory:
 
         self.directory_type = directory_type.value
 
-        self.path = path
+        # ensure given path is absolute
+        if isinstance(path, str):
+            path = Path(path)
+
+        if not path.is_absolute():
+            raise ValueError(
+                "invalid path: {}, path must be given as an absolute path".format(path)
+            )
+
+        self.path = str(path)
         # self.free_size = free_size
         # self.total_size = total_size
 
         self.file_servers = list()
 
     @_chained
-    def add_file_servers(self, *file_servers):
-        """Add one or more access methods to this directory
+    def add_file_servers(self, *file_servers: FileServer):
+        """
+        add_file_servers(self, *file_servers: FileServer)
+        Add one or more access methods to this directory
 
         :param file_server: a :py:class:`~Pegasus.api.site_catalog.FileServer`
         :raises ValueError: file_server must be of type :py:class:`~Pegasus.api.site_catalog.FileServer`
@@ -280,9 +294,9 @@ class Grid:
         :type idle_nodes: [type], optional
         :param total_nodes: [description], defaults to None
         :type total_nodes: [type], optional
-        :raises ValueError:
-        :raises ValueError:
-        :raises ValueError:
+        :raises ValueError: grid_type must be one defined in :py:class:`~Pegasus.api.site_catalog.Grid` (e.g. :code:`Grid.PBS`)
+        :raises ValueError: scheduler_type must be one defined in :py:class:`~Pegasus.api.site_catalog.Scheduler` (e.g. :code:`Scheduler.PBS`)
+        :raises ValueError: job_type must be one defined in :py:class`~Pegasus.api.site_catalog.SupportedJobs` (e.g. :code:`SupportedJobs.COMPUTE`)
         """
         if not isinstance(grid_type, _GridType):
             raise TypeError(
@@ -346,7 +360,7 @@ class Grid:
 
 
 class Site(ProfileMixin):
-    """A compute resource (which is often a cluster) that we indent to run
+    """A compute resource (which is often a cluster) that we intend to run
     the workflow upon. A site is a homogeneous part of a cluster that has at
     least a single GRAM gatekeeper with a jobmanager-fork and jobmanager-<scheduler>
     interface and at least one gridftp server along with a shared file system.
@@ -356,32 +370,37 @@ class Site(ProfileMixin):
     .. code-block:: python
 
         # Example
-        (Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
+        site = Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")\\
             .add_directories(
                 Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
                     .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
 
                 Directory(Directory.LOCAL_STORAGE, local_storage_dir)
                     .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
-            ))
+            )
     """
 
     def __init__(
-        self, name, arch=None, os_type=None, os_release=None, os_version=None,
+        self,
+        name: str,
+        arch: Optional[Arch] = None,
+        os_type: Optional[OS] = None,
+        os_release: Optional[str] = None,
+        os_version: Optional[str] = None,
     ):
         """
         :param name: name of the site
         :type name: str
-        :param arch: the site's architecture, defaults to None
-        :type arch: Arch, optional
-        :param os_type: the site's operating system, defaults to None
-        :type os_type: OS, optional
+        :param arch: the site's architecture (e.g. :code:`Arch.X86_64`), defaults to None
+        :type arch: Optional[Arch]
+        :param os_type: the site's operating system (e.g. :code:`OS.LINUX`), defaults to None
+        :type os_type: Optional[OS], optional
         :param os_release: the release of the site's operating system, defaults to None
-        :type os_release: str, optional
+        :type os_release: Optional[str]
         :param os_version: the version of the site's operating system, defaults to None
-        :type os_version: str, optional
+        :type os_version: Optional[str]
         :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
-        :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OSType`
+        :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
         """
         self.name = name
         self.directories = list()
@@ -417,8 +436,10 @@ class Site(ProfileMixin):
         self.profiles = defaultdict(dict)
 
     @_chained
-    def add_directories(self, *directories):
-        """Add one or more :py:class:`~Pegasus.api.site_catalog.Directory` to this :py:class:`~Pegasus.api.site_catalog.Site`
+    def add_directories(self, *directories: Directory):
+        """
+        add_directories(self, *directories: Directory)
+        Add one or more :py:class:`~Pegasus.api.site_catalog.Directory` to this :py:class:`~Pegasus.api.site_catalog.Site`
 
         :param directory: the :py:class:`~Pegasus.api.site_catalog.Directory` to be added
         :raises TypeError: directory must be of type :py:class:`~Pegasus.api.site_catalog.Directory`
@@ -435,8 +456,10 @@ class Site(ProfileMixin):
             self.directories.append(d)
 
     @_chained
-    def add_grids(self, *grids):
-        """Add one or more :py:class:`~Pegasus.api.site_catalog.Grid` to this :py:class:`~Pegasus.api.site_catalog.Site`
+    def add_grids(self, *grids: Grid):
+        """
+        add_grids(self, *grids: Grid)
+        Add one or more :py:class:`~Pegasus.api.site_catalog.Grid` to this :py:class:`~Pegasus.api.site_catalog.Site`
 
         :param grid: the :py:class:`~Pegasus.api.site_catalog.Grid` to be added
         :raises TypeError: grid must be of type :py:class:`~Pegasus.api.site_catalog.Grid`
@@ -471,23 +494,30 @@ class SiteCatalog(Writable):
 
     .. code-block:: python
 
-        # Example
-        (SiteCatalog()
-            .add_sites(
-                Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
-                    .add_directories(
-                        Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
-                            .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
+        sc = SiteCatalog()
 
-                        Directory(Directory.LOCAL_STORAGE, local_storage_dir)
-                            .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
-                    ),
+        WORK_DIR = Path(".").resolve()
 
-                Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
-                    .add_pegasus_profile(style="condor")
-                    .add_condor_profile(universe="vanilla")
+        shared_scratch_dir = WORK_DIR / RUN_ID
+        local_storage_dir = WORK_DIR / "outputs" / RUN_ID
 
-            ).write())
+        local = Site("local")\\
+                        .add_directories(
+                            Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
+                                .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
+                            
+                            Directory(Directory.LOCAL_STORAGE, local_storage_dir)
+                                .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
+                        )
+
+        condorpool = Site("condorpool")\\
+                        .add_pegasus_profile(style="condor")\\
+                        .add_pegasus_profile(auxillary_local="true")\\
+                        .add_condor_profile(universe="vanilla")
+
+        sc.add_sites(local, condorpool)
+
+        sc.write()
 
     """
 
@@ -497,8 +527,10 @@ class SiteCatalog(Writable):
         self.sites = dict()
 
     @_chained
-    def add_sites(self, *sites):
-        """Add one or more sites to this catalog
+    def add_sites(self, *sites: Site):
+        """
+        add_sites(self, *sites: Site)
+        Add one or more sites to this catalog
 
         :param site: the site to be added
         :raises TypeError: site must be of type :py:class:`~Pegasus.api.site_catalog.Site`

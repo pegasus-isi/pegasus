@@ -1,6 +1,7 @@
 import json
 from collections import OrderedDict
 from pathlib import Path
+from typing import Optional, TextIO, Union
 
 from Pegasus import yaml
 
@@ -77,7 +78,7 @@ class Writable:
         else:
             json.dump(self, file, cls=_CustomEncoder, indent=4, ensure_ascii=False)
 
-    def write(self, file=None, _format="yml"):
+    def write(self, file: Optional[Union[str, TextIO]] = None, _format: str = "yml"):
         """Serialize this class as either yaml or json and write to the given
         file. If file==None, this class will be written to a default file. The
         following classes have these defaults:
@@ -95,7 +96,7 @@ class Writable:
             =====================  ===================
 
         :param file: path or file object (opened in "w" mode) to write to, defaults to None
-        :type file: str or file, optional
+        :type file: Optional[Union[str, TextIO]]
         :param _format: can be either "yml", "yaml" or "json", defaults to "yml"
         :type _format: str, optional
         :raises ValueError: _format must be one of "yml", "yaml" or "json"
