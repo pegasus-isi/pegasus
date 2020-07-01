@@ -564,7 +564,9 @@ class Job:
                         # PM-1488 only set the hostname to kickstart reported one only if
                         # it is not determined already (PegasusLite case) by parsing the job err file
                         self._host_id = ks_hostname
-                    elif self._host_id != my_record["hostname"]:
+                    elif self._host_id != ks_hostname:
+                        # also set the record to refer to job id
+                        my_record["hostname"] = self._host_id
                         logger.trace(
                             "For job %s preferring %s over kickstart reported hostname %s"
                             % (self._exec_job_id, self._host_id, ks_hostname)
