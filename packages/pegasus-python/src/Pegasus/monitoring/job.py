@@ -559,7 +559,16 @@ class Job:
                 if "cwd" in my_record:
                     self._remote_working_dir = my_record["cwd"]
                 if "hostname" in my_record:
-                    self._host_id = my_record["hostname"]
+                    ks_hostname = my_record["hostname"]
+                    if self._host_id is None:
+                        # PM-1488 only set the hostname to kickstart reported one only if
+                        # it is not determined already (PegasusLite case) by parsing the job err file
+                        self._host_id = ks_hostname
+                    elif self._host_id != my_record["hostname"]:
+                        logger.trace(
+                            "For job %s preferring %s over kickstart reported hostname %s"
+                            % (self._exec_job_id, self._host_id, ks_hostname)
+                        )
 
                 # We are done with this part
                 my_invocation_found = True
