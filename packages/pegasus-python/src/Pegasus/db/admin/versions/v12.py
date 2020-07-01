@@ -74,16 +74,6 @@ class Version(BaseVersion):
                     ("invoc_wf_id_COL", None),
                 ]
             )
-            # self._create_indexes(
-            #     [
-            #         [Workflowstate, Workflowstate.timestamp],
-            #         [Jobstate, Jobstate.jobstate_submit_seq],
-            #     ]
-            # )
-
-        # updating foreign keys
-        # log.debug("Updating foreign keys")
-        # self._update_foreign_keys()
 
         # updating unique constraints
         log.debug("Updating unique constraints")
@@ -188,35 +178,6 @@ class Version(BaseVersion):
                 self.db.rollback()
                 raise DBAdminError(e)
         self.db.commit()
-
-    # def _update_foreign_keys(self):
-    #     """"."""
-    #     if self.db.get_bind().driver == "pysqlite":
-    #         for tbl in [JobEdge, TaskEdge]:
-    #             self._update_sqlite_table(tbl)
-    #     else:
-    #         fk_list = [
-    #             (JobEdge, JobEdge.parent_exec_job_id, Job, Job.exec_job_id),
-    #             (JobEdge, JobEdge.child_exec_job_id, Job, Job.exec_job_id),
-    #             (TaskEdge, TaskEdge.parent_abs_task_id, Task, Task.abs_task_id),
-    #             (TaskEdge, TaskEdge.child_abs_task_id, Task, Task.abs_task_id),
-    #         ]
-    #         for fk in fk_list:
-    #             try:
-    #                 self.db.execute(
-    #                     "ALTER TABLE {} ADD FOREIGN KEY ({}) REFERENCES {} ({}) ON DELETE CASCADE;".format(
-    #                         fk[0].__tablename__,
-    #                         fk[1].name,
-    #                         fk[2].__tablename__,
-    #                         fk[3].name,
-    #                     )
-    #                 )
-    #             except (OperationalError, ProgrammingError):
-    #                 pass
-    #             except Exception as e:
-    #                 self.db.rollback()
-    #                 raise DBAdminError(e)
-    #     self.db.commit()
 
     def _update_unique_constraints(self):
         """."""

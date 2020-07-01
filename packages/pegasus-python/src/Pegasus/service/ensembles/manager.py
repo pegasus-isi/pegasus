@@ -538,9 +538,8 @@ class EnsembleManager(threading.Thread):
         while True:
             u = user.get_user_by_uid(os.getuid())
             session = connection.connect(
-                    u.get_master_db_url(),
-                    connect_args={"check_same_thread": False}
-                )
+                u.get_master_db_url(), connect_args={"check_same_thread": False}
+            )
             try:
                 dao = Ensembles(session)
                 self.loop_once(dao)
