@@ -209,7 +209,7 @@ class ReplicaCatalog(Writable):
 
                 # Example 1
                 f = File("in.txt").add_metadata(creator="pegasus")
-                rc.add_replica("local", f, Path(".") / "in.txt")
+                rc.add_replica("local", f, Path(".").resolve() / "in.txt")
 
                 # Example 2: Adding metadata and a checksum
                 rc.add_replica(
@@ -222,33 +222,33 @@ class ReplicaCatalog(Writable):
 
                 # Example 3: Adding multiple pfns for the same lfn (metadata and checksum will be
                 # updated for that lfn if given.
-                rc.add_replica("local", "in.txt", Path(".") / "in.txt")
+                rc.add_replica("local", "in.txt", Path(".").resolve() / "in.txt")
                 rc.add_replica("condorpool", "in.txt", "/path/to/file/in.txt")
 
         :param site: the site at which this replica (file) resides
         :type site: str
         :param lfn: logical file name
         :type lfn: Union[str, File]
-        :param pfn: physical file name such as :code:`Path("f.txt")`, :code:`/home/ryan/file.txt`, or :code:`http://pegasus.isi.edu/file.txt`
+        :param pfn: physical file name such as :code:`Path("f.txt").resolve()`, :code:`/home/ryan/file.txt`, or :code:`http://pegasus.isi.edu/file.txt`
         :type pfn: str
         :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as :code:`{"sha256": <value>}`, defaults to :code:`{}`
         :type checksum: Dict[str, str], optional
         :param metadata: metadata key value pairs associated with this lfn such as :code:`{"created": "Thu Jun 18 22:18:36 PDT 2020", "owner": "pegasus"}`, defaults to :code:`{}`
         :type metadata: Dict[str, Union[int, str, float]], optional
-        :raises ValueError: if pfn is given as a :code:`pathlib.Path` object and points to a directory, an error will be thrown
+        :raises ValueError: if pfn is given as a :code:`pathlib.Path`, it must be an absolute path 
         :raises ValueError: an unsupported checksum type was given 
         """
 
         # handle Path obj if given for pfn
         if isinstance(pfn, Path):
-            if pfn.is_dir():
+            if not pfn.is_absolute():
                 raise ValueError(
-                    "Invalid pfn: {}, the given path must not be a directory".format(
+                    "Invalid pfn: {}, the given path must be an absolute path".format(
                         str(pfn)
                     )
                 )
 
-            pfn = str(pfn.resolve())
+            pfn = str(pfn)
 
         # File might contain metadata that should be included
         if isinstance(lfn, File):
