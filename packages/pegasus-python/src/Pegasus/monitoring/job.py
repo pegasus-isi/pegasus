@@ -558,22 +558,26 @@ class Job:
                     self._remote_user = my_record["user"]
                 if "cwd" in my_record:
                     self._remote_working_dir = my_record["cwd"]
-                if "hostname" in my_record:
-                    ks_hostname = my_record["hostname"]
-                    if self._host_id is None:
-                        # PM-1488 only set the hostname to kickstart reported one only if
-                        # it is not determined already (PegasusLite case) by parsing the job err file
-                        self._host_id = ks_hostname
-                    elif self._host_id != ks_hostname:
-                        # also set the record to refer to job id
-                        my_record["hostname"] = self._host_id
-                        logger.trace(
-                            "For job %s preferring %s over kickstart reported hostname %s"
-                            % (self._exec_job_id, self._host_id, ks_hostname)
-                        )
-
                 # We are done with this part
                 my_invocation_found = True
+
+            # PM-1488 for containers case we have to remap hostname for all invocation
+            # records in a clustered job, not just the first one. otherwise the sqlite db
+            # will have dangling host records in the host table that has docker container generated
+            # names but no jobs associated with them.
+            if "hostname" in my_record:
+                ks_hostname = my_record["hostname"]
+                if self._host_id is None:
+                    # PM-1488 only set the hostname to kickstart reported one only if
+                    # it is not determined already (PegasusLite case) by parsing the job err file
+                    self._host_id = ks_hostname
+                elif self._host_id != ks_hostname:
+                    # also set the record to refer to job id
+                    my_record["hostname"] = self._host_id
+                    logger.trace(
+                        "For job %s preferring %s over kickstart reported hostname %s"
+                        % (self._exec_job_id, self._host_id, ks_hostname)
+                    )
 
             # PM-1109 encode signal information if it exists
             signal_message = " "
