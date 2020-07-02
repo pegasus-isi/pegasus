@@ -992,7 +992,16 @@ public class PegasusFile extends Data {
                         break;
 
                     case TYPE:
-                        pf.setLinkage(LINKAGE.valueOf(node.get(key).asText()));
+                        String linkage = node.get(key).asText();
+                        if (linkage != null && linkage.equals(PegasusFile.CHECKPOINT_TYPE)) {
+                            // introduced in dax 3.5
+                            // cleaner for DAX API to have checkpoint files marked
+                            // via linkage. Planner still treats it as a type
+                            pf.setType(linkage);
+                            pf.setLinkage(LINKAGE.inout);
+                        } else {
+                            pf.setLinkage(LINKAGE.valueOf(linkage));
+                        }
                         break;
 
                     case STAGE_OUT:
