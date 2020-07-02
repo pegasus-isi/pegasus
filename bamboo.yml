@@ -4000,10 +4000,10 @@ project:
               requirements:
                 - capabilityKey: condor
                   matchType: !exists exists
-                artifactDependencies:
-                  - name: tests
-                miscellaneous:
-                  cleanWorkingDirectoryAfterEachBuild: false
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T044B
               name: 044-docker-nonsharedfs-shared
               description: Docker in nonsharedfs with a shared filesystem
