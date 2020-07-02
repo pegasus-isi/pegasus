@@ -1934,8 +1934,14 @@ class Workflow:
                     kwargs["remote_cpu_time"] = float(
                         invocation_record["utime"]
                     ) + float(invocation_record["stime"])
+                    # PM-1612 compute avg_cpu as (stime + utime)/duration
+                    kwargs["avg_cpu"] = kwargs["remote_cpu_time"] / kwargs["dur"]
                 except ValueError:
                     pass
+
+            if "maxrss" in invocation_record:
+                kwargs["maxrss"] = invocation_record["maxrss"]
+
             if my_start is not None and "duration" in invocation_record:
                 # Calculate timestamp for when this task finished
                 try:
