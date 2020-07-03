@@ -235,7 +235,8 @@ class Parser:
                 "transformation",
                 "derivation",
             ],
-            "mainjob": ["duration", "start", "utime", "stime", "maxrss"],
+            "mainjob": ["duration", "start"],
+            "usage": ["utime", "stime", "maxrss"],
             "ram": ["total"],
             "uname": ["system", "release", "machine"],
             "file": ["name"],
@@ -1025,26 +1026,15 @@ class XMLParser(Parser):
                     )
                 self._keys["outputs"][lfn] = statinfo
         elif name == "usage" and name in self._ks_elements:
-            if self._parsing_job_element:
+            if self._parsing_main_job:
                 # Special case for handling utime and stime, which need to be added
                 for my_element in self._ks_elements[name]:
-                    if my_element in attrs:
-                        if my_element in self._keys:
-                            try:
-                                self._keys[my_element] = self._keys[my_element] + float(
-                                    attrs[my_element]
-                                )
-                            except ValueError:
-                                logger.warning(
-                                    "cannot convert element %s to float!" % (my_element)
-                                )
-                        else:
-                            try:
-                                self._keys[my_element] = float(attrs[my_element])
-                            except ValueError:
-                                logger.warning(
-                                    "cannot convert element %s to float!" % (my_element)
-                                )
+                    try:
+                        self._keys[my_element] = float(attrs[my_element])
+                    except ValueError:
+                        logger.warning(
+                            "cannot convert element %s to float!" % (my_element)
+                        )
         else:
             # For all other elements, check if we want them
             if name in self._ks_elements:
