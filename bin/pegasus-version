@@ -6,7 +6,7 @@
 
 PEGASUS_CONFIG="`dirname $0`/pegasus-config"
 eval `$PEGASUS_CONFIG --sh-dump`
-. $PEGASUS_SHARE_DIR/common.sh
+. $PEGASUS_SHARE_DIR/sh/java.sh
 
 # run java program
 ${JAVA} -Dpegasus.home=$PEGASUS_HOME $addon edu.isi.pegasus.planner.client.VersionNumber $args
