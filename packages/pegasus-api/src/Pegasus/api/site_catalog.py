@@ -74,7 +74,7 @@ class _DirectoryType(Enum):
 
 class _GridType(Enum):
     """Different grid types that can be supported by Pegasus. Mirror the Condor
-    grid types. http://research.cs.wisc.edu/htcondor/manual/v7.9/5_3Grid_Universe.html
+    grid types. https://htcondor.readthedocs.io/en/latest/grid-computing/grid-universe.html
     """
 
     GT2 = "gt2"
