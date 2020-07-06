@@ -419,9 +419,21 @@ pegasus_lite_init()
         # PM-1134 - provide some details on where we are running
         # PM-1144 - do not use HOSTNAME from env, as it might have come form getenv=true
         out="Executing on"
-        if hostname -f >/dev/null 2>&1; then
-            out="$out host "`hostname -f`
+        my_hostname=`hostname -f 2>&1`
+        if [ "x$my_hostname" != "x" ]; then
+            out="$out host $my_hostname"
+
+            # also IP if we can figure it out
+            my_ip=`(host $my_hostname | grep "has address" | sed 's/.* has address //') 2>/dev/null`
+            if [ "x$my_ip" = "x" ]; then
+                # can also try hostname -I
+                my_ip=`(hostname -I | sed 's/ .*//') 2>/dev/null`
+            fi
+            if [ "x$my_ip" != "x" ]; then
+                out="$out IP=$my_ip"
+            fi
         fi
+
         if [ "x$OSG_SITE_NAME" != "x" ]; then
             out="$out OSG_SITE_NAME=${OSG_SITE_NAME}"
         fi
