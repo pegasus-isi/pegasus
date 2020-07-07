@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -100,6 +101,13 @@ public class Singularity extends Abstract {
         // PM-1298 mount any host directories if specified
         for (Container.MountPoint mp : c.getMountPoints()) {
             sb.append("--bind ").append(mp).append(" ");
+        }
+
+        // PM-1626 incorporate any user specified extra arguments
+        String extraArgs = job.vdsNS.getStringValue(Pegasus.CONTAINER_ARGUMENTS_KEY);
+        if (extraArgs != null) {
+            sb.append(extraArgs);
+            sb.append(" ");
         }
 
         // we are running directly against image file. no loading

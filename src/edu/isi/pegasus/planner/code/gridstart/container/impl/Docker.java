@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -115,6 +116,13 @@ public class Docker extends Abstract {
 
         // PM-1524 set entry point for the container to /bin/sh
         sb.append("--entrypoint /bin/sh").append(" ");
+
+        // PM-1626 incorporate any user specified extra arguments
+        String extraArgs = job.vdsNS.getStringValue(Pegasus.CONTAINER_ARGUMENTS_KEY);
+        if (extraArgs != null) {
+            sb.append(extraArgs);
+            sb.append(" ");
+        }
 
         sb.append("--name $cont_name ");
         sb.append(" $cont_image ");

@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -103,6 +104,13 @@ public class Shifter extends Abstract {
         sb.append("$PWD:").append(CONTAINER_WORKING_DIRECTORY).append(" ");
 
         sb.append("--workdir=").append(CONTAINER_WORKING_DIRECTORY).append(" ");
+
+        // PM-1626 incorporate any user specified extra arguments
+        String extraArgs = job.vdsNS.getStringValue(Pegasus.CONTAINER_ARGUMENTS_KEY);
+        if (extraArgs != null) {
+            sb.append(extraArgs);
+            sb.append(" ");
+        }
 
         // the script that sets up pegasus worker package and execute
         // user application
