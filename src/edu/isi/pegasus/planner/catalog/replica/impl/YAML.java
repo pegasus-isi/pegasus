@@ -280,7 +280,7 @@ public class YAML implements ReplicaCatalog {
         } catch (JacksonYAMLParseException e) {
             throw new ReplicaCatalogException("Error on line " + e.getLocation().getLineNr(), e);
         } catch (Exception e) {
-            throw new ReplicaCatalogException("Error in loading the yaml file " + reader, e);
+            throw new ReplicaCatalogException("Error in loading the yaml file " + f, e);
         }
         if (root != null) {
             YAMLSchemaValidationResult result =

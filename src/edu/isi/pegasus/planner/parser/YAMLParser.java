@@ -76,7 +76,7 @@ public abstract class YAMLParser {
         } catch (JacksonYAMLParseException e) {
             throw new ScannerException(e.getLocation().getLineNr(), parseError(e));
         } catch (Exception e) {
-            throw new ScannerException("Error in loading the yaml file " + reader, e);
+            throw new ScannerException("Error in loading the yaml file " + f, e);
         }
         if (root != null) {
             YAMLSchemaValidationResult result =
