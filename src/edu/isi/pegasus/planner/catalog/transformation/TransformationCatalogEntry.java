@@ -386,20 +386,26 @@ public class TransformationCatalogEntry implements CatalogEntry {
             // container object has all the env profiles
             // reset from the Transformation Catalog Entry object
             txENVProfiles.reset();
-            
+
             // PM-1626 merge lany pegasus profiles from container into the
             // transformation catalog entry object with the TC having a higher precedence
-            Pegasus containerPegasusProfiles = (Pegasus)cont.getAllProfiles().get(Profiles.NAMESPACES.pegasus);
-            Pegasus txPegasusProfiles = (Pegasus) this.getProfilesNamepsace(Profiles.NAMESPACES.pegasus);
-            if (containerPegasusProfiles != null ){
-                for( Iterator<String> it = containerPegasusProfiles.getProfileKeyIterator(); it.hasNext(); ){
+            Pegasus containerPegasusProfiles =
+                    (Pegasus) cont.getAllProfiles().get(Profiles.NAMESPACES.pegasus);
+            Pegasus txPegasusProfiles =
+                    (Pegasus) this.getProfilesNamepsace(Profiles.NAMESPACES.pegasus);
+            if (containerPegasusProfiles != null) {
+                for (Iterator<String> it = containerPegasusProfiles.getProfileKeyIterator();
+                        it.hasNext(); ) {
                     String key = it.next();
-                    if (txPegasusProfiles == null || !txPegasusProfiles.containsKey(key)){
+                    if (txPegasusProfiles == null || !txPegasusProfiles.containsKey(key)) {
                         // only add container profiles into tc entry if key does not
                         // exist beforehand
-                        this.addProfile( new Profile("pegasus", key, containerPegasusProfiles.getStringValue(key)));
+                        this.addProfile(
+                                new Profile(
+                                        "pegasus",
+                                        key,
+                                        containerPegasusProfiles.getStringValue(key)));
                     }
-                    
                 }
             }
         }

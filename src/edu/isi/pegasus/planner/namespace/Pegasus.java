@@ -381,10 +381,8 @@ public class Pegasus extends Namespace {
      * eventual qsub file.
      */
     public static final String GLITE_ARGUMENTS_KEY = "glite.arguments";
-    
-    /**
-     * Users specified arguments the container invocation.
-     */
+
+    /** Users specified arguments the container invocation. */
     public static final String CONTAINER_ARGUMENTS_KEY = "container.arguments";
 
     /** Profile key to determine condor quoting for a job. */
