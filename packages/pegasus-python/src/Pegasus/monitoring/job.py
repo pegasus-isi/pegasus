@@ -60,7 +60,7 @@ re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
 re_parse_job_class = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
 re_parse_pegasuslite_hostname = re.compile(
-    r"^.*Executing on host\s*(\S+)$", re.MULTILINE
+    r"^.*Executing on host\s*(\S+)(?:\s*IP=(\S+))*$", re.MULTILINE
 )
 
 
@@ -151,6 +151,7 @@ class Job:
         self._sched_id = None
         self._site_name = None
         self._host_id = None
+        self._host_ip = None
         self._remote_user = None
         self._remote_working_dir = None
         self._cluster_start_time = None
@@ -573,11 +574,13 @@ class Job:
                     self._host_id = ks_hostname
                 elif self._host_id != ks_hostname:
                     # also set the record to refer to job id
-                    my_record["hostname"] = self._host_id
                     logger.trace(
-                        "For job %s preferring %s over kickstart reported hostname %s"
-                        % (self._exec_job_id, self._host_id, ks_hostname)
+                        "For job %s preferring %s %s  over kickstart reported hostname %s %s"
+                        % (self._exec_job_id, self._host_id, self._host_ip, ks_hostname, my_record["hostaddr"])
                     )
+                    my_record["hostname"] = self._host_id
+                    my_record["hostaddr"] = self._host_ip
+
 
             # PM-1109 encode signal information if it exists
             signal_message = " "
@@ -746,6 +749,7 @@ class Job:
             if hostname_match:
                 # a match yes it is a PegasusLite job . gleam the hostname
                 self._host_id = hostname_match.group(1)
+                self._host_ip = hostname_match.group(2)
 
         except OSError:
             self._stderr_text = None
