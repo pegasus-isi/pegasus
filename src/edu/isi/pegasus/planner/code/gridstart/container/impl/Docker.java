@@ -237,7 +237,7 @@ public class Docker extends Abstract {
                     .append(" ")
                     .append("PATH")
                     .append("=")
-                    .append("$")
+                    .append("\\$")
                     .append(ROOT_PATH_VARIABLE_KEY);
             sb.append('\n');
         }
