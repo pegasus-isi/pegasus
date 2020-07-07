@@ -46,6 +46,9 @@ public class Docker extends Abstract {
     /** time in seconds that we wait for before launching docker run command. */
     private static final String SLEEP_TIME_FOR_DOCKER_BOOTUP = "30";
 
+    /** the variable that stores the path for the root user * */
+    private static final String ROOT_PATH_VARIABLE_KEY = "root_path";
+
     /**
      * Initiailizes the Container shell wrapper
      *
@@ -122,6 +125,9 @@ public class Docker extends Abstract {
         sb.append("-c ")
                 .append("\"")
                 .append("set -e ;")
+                .append("export ")
+                .append(ROOT_PATH_VARIABLE_KEY)
+                .append("=\\$PATH ;") // PM-1630 preserve the path for root user
                 .append("if ! grep -q -E  \"^$cont_group:\" /etc/group ; then ")
                 .append("groupadd --gid $cont_groupid $cont_group ;")
                 .append("fi; ")
@@ -201,13 +207,16 @@ public class Docker extends Abstract {
         // set the job environment variables explicitly in the -cont.sh file
         sb.append("# setting environment variables for job").append('\n');
         ENV containerENVProfiles = (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env);
+        boolean pathVariableSet = false;
         for (Iterator it = containerENVProfiles.getProfileKeyIterator(); it.hasNext(); ) {
             String key = (String) it.next();
             String value = (String) containerENVProfiles.get(key);
+            pathVariableSet = key.equals("PATH");
+
             sb.append("export").append(" ").append(key).append("=");
 
             // check for env variables that are constructed based on condor job classds
-            // such asCONDOR_JOBID=$(cluster).$(process). these are set by condor
+            // such as CONDOR_JOBID=$(cluster).$(process). these are set by condor
             // and can only picked up from the shell when a job runs on a node
             // so we only set the key
             boolean fromShell = value.contains("$(");
@@ -217,6 +226,19 @@ public class Docker extends Abstract {
             } else {
                 sb.append("\"").append(value).append("\"");
             }
+            sb.append('\n');
+        }
+
+        if (!pathVariableSet) {
+            // PM-1630 special handling for path varialble. if a user has not
+            // associated a PATH variable with the job, we set the PATH to
+            // root_path that stores the PATH set for the root user
+            sb.append("export")
+                    .append(" ")
+                    .append("PATH")
+                    .append("=")
+                    .append("$")
+                    .append(ROOT_PATH_VARIABLE_KEY);
             sb.append('\n');
         }
 
