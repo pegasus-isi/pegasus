@@ -94,13 +94,21 @@ void yamldump(FILE *in, FILE *out, const int indent) {
      * returns: nada
      */
     wint_t c;
-    while ((c = fgetwc(in)) != WEOF)
+    int first_line = 1;
+    while ((c = fgetwc(in)) != WEOF) {
+        /* first line can not have leading spaces */
+        if (first_line && c == 0x20) {
+            continue;
+        }
+
         if (c == 0xA) {
             fprintf(out, "\n%*s", indent, "");
         }
         else if (yamlprintable(c)) {
             fprintf(out, "%lc", c);
+            first_line = 0;
         }
+    }
 }
 
 static int isExtended = 1;     /* timestamp format concise or extended */

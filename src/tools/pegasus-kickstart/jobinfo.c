@@ -337,7 +337,7 @@ int printYAMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job)
         /* content are the CLI args */
         int i;
         for (i=1; i<job->argc; ++i) {
-            fprintf(out, "%*s- %s\n", indent+4, "", job->argv[i]);
+            fprintf(out, "%*s- \"%s\"\n", indent+4, "", job->argv[i]);
         }
     }
 

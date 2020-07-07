@@ -190,6 +190,13 @@ function test_quoting {
     return $rc
 }
 
+function test_truncate {
+    # tests idents when trucating
+    kickstart cat truncate.data
+    rc=$?
+    return $rc
+}
+
 function test_all_stdio {
     kickstart -B all echo hello world gideon
     rc=$?
@@ -576,6 +583,7 @@ run_test test_quiet
 run_test test_quiet_fail
 run_test test_missing_args
 run_test test_quoting
+run_test test_truncate
 run_test test_all_stdio
 run_test test_bad_stdio
 run_test test_timeout_ok
