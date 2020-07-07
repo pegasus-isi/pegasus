@@ -2,10 +2,10 @@
 from __future__ import print_function
 
 import os
-from ConfigParser import ConfigParser
 from optparse import OptionParser
 
 import globus_sdk
+from ConfigParser import ConfigParser
 
 client_id = "d7382f5a-4ea3-4b69-b094-99c392fc820d"
 config_file = os.path.expanduser("~/.pegasus/globus.conf")

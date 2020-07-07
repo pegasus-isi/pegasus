@@ -3,7 +3,6 @@ Common code for NetLogger parsers
 """
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __rcsid__ = "$Id: base.py 28287 2011-08-18 03:42:53Z dang $"
-
 import calendar
 import re
 import time
@@ -18,10 +17,21 @@ from Pegasus.netlogger.util import hash_event
 
 #
 try:
-    from pyparsing import Word, alphanums, CharsNotIn, ZeroOrMore
-    from pyparsing import Group, Literal
-    from pyparsing import StringEnd, White, QuotedString, ParseException
-    from pyparsing import Each, OneOrMore, oneOf
+    from pyparsing import (
+        CharsNotIn,
+        Each,
+        Group,
+        Literal,
+        OneOrMore,
+        ParseException,
+        QuotedString,
+        StringEnd,
+        White,
+        Word,
+        ZeroOrMore,
+        alphanums,
+        oneOf,
+    )
 
     HAVE_PYPARSING = True
 except ImportError:

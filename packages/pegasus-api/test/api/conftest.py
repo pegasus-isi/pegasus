@@ -3,7 +3,6 @@ import os
 import re
 
 import pytest
-
 import yaml
 
 from Pegasus.api.writable import _CustomEncoder

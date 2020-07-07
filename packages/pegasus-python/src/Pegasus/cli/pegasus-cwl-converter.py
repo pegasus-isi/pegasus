@@ -4,7 +4,7 @@ import logging
 import sys
 from pathlib import Path, PurePath
 
-import cwl_utils.parser_v1_1 as cwl
+from cwl_utils import parser_v1_1 as cwl
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 

@@ -2,11 +2,10 @@ import logging
 import time
 from pathlib import Path
 
+import docker
 import pytest
 from click.testing import CliRunner
 from flask import _request_ctx_stack
-
-import docker
 
 log = logging.getLogger(__name__)
 

@@ -3,7 +3,6 @@ Abstract :mod:`yaml` with Pegasus specific defaults.
 
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
-
 import io
 from collections import OrderedDict
 from functools import partial
@@ -14,9 +13,11 @@ import yaml as _yaml
 import yaml.constructor
 
 try:
-    from yaml import CSafeLoader as _Loader, CSafeDumper as _Dumper
+    from yaml import CSafeDumper as _Dumper
+    from yaml import CSafeLoader as _Loader
 except ImportError:
-    from yaml import SafeLoader as _Loader, SafeDumper as _Dumper
+    from yaml import SafeDumper as _Dumper
+    from yaml import SafeLoader as _Loader
 
 __all__ = (
     "load",

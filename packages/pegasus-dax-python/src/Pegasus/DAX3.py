@@ -145,7 +145,6 @@ __all__ = [
     "parseString",
     "parse",
 ]
-
 import codecs
 import datetime
 import os
@@ -2049,13 +2048,13 @@ def parseString(string):
 
 def parse(infile):
     try:
-        import xml.etree.cElementTree as etree
+        from xml.etree import cElementTree as etree
     except Exception:
         try:
-            import xml.etree.ElementTree as etree
+            from xml.etree import ElementTree as etree
         except Exception:
             try:
-                import elementtree.ElementTree as etree
+                from elementtree import ElementTree as etree
             except Exception:
                 raise Exception("Please install elementtree")
 

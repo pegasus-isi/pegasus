@@ -6,9 +6,8 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import pytest
-from jsonschema import validate
-
 import yaml
+from jsonschema import validate
 
 import Pegasus
 from Pegasus.api.errors import DuplicateError, NotFoundError, PegasusError

@@ -55,7 +55,7 @@ except Exception:
 
 try:
     # Python 3.0 and later
-    import urllib.parse as urllib
+    from urllib import parse as urllib
 except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
@@ -92,8 +92,9 @@ except Exception:
 
 # panorama real time monitoring
 if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
-    import urllib2
     import base64
+
+    import urllib2
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 

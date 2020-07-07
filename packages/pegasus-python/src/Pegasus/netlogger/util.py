@@ -3,7 +3,6 @@ Utility functions for NetLogger modules and command-line programs
 """
 __rcsid__ = "$Id: util.py 27069 2011-02-08 20:09:10Z dang $"
 __author__ = "Dan Gunter (dkgunter (at) lbl.gov)"
-
 import glob
 import os
 import queue
@@ -807,7 +806,10 @@ try:
 
 except ImportError:
     # From: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761
-    import time, random, md5
+    import random
+    import time
+
+    import md5
 
     def uuid1():
         t = int(time.time() * 1000)

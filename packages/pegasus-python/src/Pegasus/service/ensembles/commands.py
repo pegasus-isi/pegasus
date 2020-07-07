@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 import time
-import urllib.parse as urlparse
+from urllib import parse as urlparse
 
 import requests
 

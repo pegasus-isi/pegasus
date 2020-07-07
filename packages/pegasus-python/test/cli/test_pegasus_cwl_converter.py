@@ -5,8 +5,8 @@ from collections import namedtuple
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-import cwl_utils.parser_v1_1 as cwl
 import pytest
+from cwl_utils import parser_v1_1 as cwl
 
 from Pegasus import yaml
 from Pegasus.api.errors import DuplicateError

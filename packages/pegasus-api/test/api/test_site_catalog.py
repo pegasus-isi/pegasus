@@ -4,9 +4,8 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import pytest
-from jsonschema import validate
-
 import yaml
+from jsonschema import validate
 
 from Pegasus.api.errors import DuplicateError
 from Pegasus.api.site_catalog import (

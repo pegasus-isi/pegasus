@@ -38,8 +38,8 @@ from Pegasus.tools import worker_utils as utils
 
 # for some reason, sometimes grp is missing, but we can do without it
 try:
-    import pwd
     import grp
+    import pwd
 except Exception:
     pass
 
