@@ -39,6 +39,7 @@ import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -376,7 +377,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
         // PM-1214 all  ENV profiles have to be merged
         // with the tranformation profile overriding the container
         // but carried forward with the container object.
-        ENV containerENVProfiles = (ENV) cont.getProfilesObject().get(Profiles.NAMESPACES.env);
+        ENV containerENVProfiles = (ENV) cont.getAllProfiles().get(Profiles.NAMESPACES.env);
 
         // merge only if there any profiles associated with the entry
         if (this.mProfiles != null) {
@@ -385,6 +386,22 @@ public class TransformationCatalogEntry implements CatalogEntry {
             // container object has all the env profiles
             // reset from the Transformation Catalog Entry object
             txENVProfiles.reset();
+            
+            // PM-1626 merge lany pegasus profiles from container into the
+            // transformation catalog entry object with the TC having a higher precedence
+            Pegasus containerPegasusProfiles = (Pegasus)cont.getAllProfiles().get(Profiles.NAMESPACES.pegasus);
+            Pegasus txPegasusProfiles = (Pegasus) this.getProfilesNamepsace(Profiles.NAMESPACES.pegasus);
+            if (containerPegasusProfiles != null ){
+                for( Iterator<String> it = containerPegasusProfiles.getProfileKeyIterator(); it.hasNext(); ){
+                    String key = it.next();
+                    if (txPegasusProfiles == null || !txPegasusProfiles.containsKey(key)){
+                        // only add container profiles into tc entry if key does not
+                        // exist beforehand
+                        this.addProfile( new Profile("pegasus", key, containerPegasusProfiles.getStringValue(key)));
+                    }
+                    
+                }
+            }
         }
     }
 

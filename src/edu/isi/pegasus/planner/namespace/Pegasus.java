@@ -381,6 +381,11 @@ public class Pegasus extends Namespace {
      * eventual qsub file.
      */
     public static final String GLITE_ARGUMENTS_KEY = "glite.arguments";
+    
+    /**
+     * Users specified arguments the container invocation.
+     */
+    public static final String CONTAINER_ARGUMENTS_KEY = "container.arguments";
 
     /** Profile key to determine condor quoting for a job. */
     public static final String CONDOR_QUOTE_ARGUMENTS_KEY = "condor.arguments.quote";
@@ -533,7 +538,8 @@ public class Pegasus extends Namespace {
                         || (key.compareTo(CORES_KEY) == 0)
                         || (key.compareTo(Pegasus.CHECKPOINT_TIME_KEY) == 0)
                         || (key.compareTo(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0)
-                        || (key.compareTo(Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY) == 0)) {
+                        || (key.compareTo(Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY) == 0)
+                        || (key.compareTo(Pegasus.CONTAINER_ARGUMENTS_KEY) == 0)) {
                     res = VALID_KEY;
                 } else if (key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0
                         || (key.compareTo(COLLAPSER_KEY) == 0)) {
