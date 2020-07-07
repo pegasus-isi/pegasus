@@ -573,13 +573,18 @@ class Job:
                     # it is not determined already (PegasusLite case) by parsing the job err file
                     self._host_id = ks_hostname
                 elif self._host_id != ks_hostname:
-                    # also set the record to refer to job id
-                    logger.trace(
-                        "For job %s preferring %s %s  over kickstart reported hostname %s %s"
-                        % (self._exec_job_id, self._host_id, self._host_ip, ks_hostname, my_record["hostaddr"])
-                    )
+                    ks_hostaddr = my_record["hostaddr"]
+                    if self._host_ip is not None:
+                        # for 4.9 backward compatibilty where PegasusLite does not record IP
+                        # we keep the kickstart reported ip address to allow for database
+                        # population as host table requires an ip to be not null
+                        my_record["hostaddr"] = self._host_ip
+
                     my_record["hostname"] = self._host_id
-                    my_record["hostaddr"] = self._host_ip
+                    logger.trace(
+                        "For job %s preferring %s %s over kickstart reported hostname %s %s"
+                        % (self._exec_job_id, my_record["hostname"], my_record["hostaddr"], ks_hostname, ks_hostaddr)
+                    )
 
 
             # PM-1109 encode signal information if it exists
