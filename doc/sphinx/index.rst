@@ -16,6 +16,7 @@ Welcome to Pegasus WMS's documentation!
 
 .. toctree::
     :caption: User Guide
+    :numbered:
     :maxdepth: 2
 
     installation.rst
@@ -24,13 +25,11 @@ Welcome to Pegasus WMS's documentation!
     monitoring-debugging-stats.rst
     execution-environments.rst
     containers.rst
-    example-workflows.rst
     data-management.rst
-    optimization.rst
     pegasus-service.rst
     reference-configuration.rst
-    submit-directory.rst
     jupyter.rst
+    optimization.rst
 
 .. toctree::
     :caption: References
@@ -38,11 +37,16 @@ Welcome to Pegasus WMS's documentation!
 
     api-reference.rst
     cli.rst
-    packages.rst
     funding-citing-usage-stats.rst
     glossary.rst
     tutorial-vm.rst
     migration.rst
+
+.. toctree::
+    :caption: Pegasus Development
+    :maxdepth: 2
+    
+    packages.rst
 
 
 Indices and tables

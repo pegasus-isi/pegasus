@@ -1,8 +1,8 @@
-.. _packages:
+.. _codedocs:
 
-========
-Packages
-========
+==================
+Code Documentation
+==================
 
 .. toctree::
     :caption: Packages
