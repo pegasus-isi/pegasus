@@ -1714,12 +1714,12 @@ public class AbstractJob {
                 gen.writeStringField("name", job.mName);
              
                 // namespace
-                if (job.mNamespace != null && !job.mNamespace.trim().isBlank()) {
+                if (job.mNamespace != null && !job.mNamespace.trim().isEmpty()) {
                    gen.writeStringField("namespace", job.mNamespace);
                 }
 
                 // version
-                if (job.mVersion != null && !job.mVersion.trim().isBlank()) {
+                if (job.mVersion != null && !job.mVersion.trim().isEmpty()) {
                     gen.writeStringField("version", job.mVersion);
                 }
             } else if (job.isDAG()) {
