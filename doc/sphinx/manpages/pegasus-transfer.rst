@@ -2,8 +2,6 @@
 pegasus-transfer
 ================
 
-1
-pegasus-transfer
 Handles data transfers for Pegasus workflows.
    ::
 
@@ -14,8 +12,6 @@ Handles data transfers for Pegasus workflows.
                          [--threads threads]
                          [--symlink]
                          [--debug]
-
-.. __description:
 
 Description
 ===========
@@ -29,8 +25,6 @@ Failed transfers are retried.
 
 Note that pegasus-transfer is a tool mostly used internally in Pegasus
 workflows, but the tool can be used stand alone as well.
-
-.. __options:
 
 Options
 =======
@@ -59,8 +53,6 @@ Options
 **-d**; \ **--debug**
    Enables debugging ouput.
 
-.. __example:
-
 Example
 =======
 
@@ -76,7 +68,35 @@ Example
    ]
    CTRL+D
 
-.. __credential_handling:
+
+Protocols Supported
+===================
+
+pegasus-transfer currently supports the following data transfer protocols:
+
+Amazon S3
+cp/symlinking
+Docker Pull
+Globus Online
+Google Storage
+GridFTP
+HPSS
+HTTP/HTTPS
+iRODS
+SCP
+Singularity Library
+SRM
+StashCache
+WebDAV
+
+With the exception of Globus Online and HPSS, pegasus-transfer can handle
+transfers between seemingly incompatible protocols by inserting a file://
+intermediary. For example, if you ask pegasus-transfer for a transfer
+between Docker and S3, it will be converted to two transfers, such that:
+
+docker:// -> file://
+file:// -> s3://
+
 
 Credential Handling
 ===================
@@ -103,7 +123,6 @@ the latter case, the environment variables are derived from the site
 labels. In the example above, the environment variables would be named
 X509_USER_PROXY_isi and X509_USER_PROXY_tacc_stampede
 
-.. __threading:
 
 Threading
 =========
@@ -111,7 +130,15 @@ Threading
 In order to speed up data transfers, pegasus-transfer will start a set
 of transfers in parallel using threads.
 
-.. __preference_of_gfal_over_guc:
+
+Retries
+=======
+
+Failed transfers are retried, with an exponential backoff between the
+tries. If there are a lot of transfers failing in on attempt,
+pegasus-transfer might choose to short-circuit and fail early instead
+of trying all transfers multiple times.
+
 
 Preference of GFAL over GUC
 ===========================
@@ -129,7 +156,6 @@ sites you want the preference to be enforced. Please note that we expect
 globus-url-copy support to be completely removed in future releases of
 Pegasus due to the end of life of Globus Toolkit in 2018.
 
-.. __author:
 
 Author
 ======
