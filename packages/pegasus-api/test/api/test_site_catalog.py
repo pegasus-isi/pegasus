@@ -118,18 +118,18 @@ class TestGrid:
             (
                 "badgridtype",
                 "contact",
-                Scheduler.PBS,
+                Scheduler.SLURM,
                 SupportedJobs.AUXILLARY,
                 "grid_type",
             ),
             (
-                Grid.PBS,
+                Grid.BATCH,
                 "contact",
                 "badschedulertype",
                 SupportedJobs.AUXILLARY,
                 "scheduler_type",
             ),
-            (Grid.PBS, "contact", Scheduler.PBS, "badjobtype", "job_type"),
+            (Grid.BATCH, "contact", Scheduler.SLURM, "badjobtype", "job_type"),
         ],
     )
     def test_invalid_grid(
@@ -150,14 +150,6 @@ class TestGrid:
             "smarty.isi.edu/jobmanager-pbs",
             Scheduler.PBS,
             SupportedJobs.AUXILLARY,
-            free_mem="123",
-            total_mem="1230",
-            max_count="10",
-            max_cpu_time="100",
-            running_jobs=10,
-            jobs_in_queue=10,
-            idle_nodes=1,
-            total_nodes=10,
         )
 
         result = json.loads(json.dumps(grid, cls=_CustomEncoder))
@@ -167,14 +159,6 @@ class TestGrid:
             "contact": "smarty.isi.edu/jobmanager-pbs",
             "scheduler": "pbs",
             "jobtype": "auxillary",
-            "freeMem": "123",
-            "totalMem": "1230",
-            "maxCount": "10",
-            "maxCPUTime": "100",
-            "runningJobs": 10,
-            "jobsInQueue": 10,
-            "idleNodes": 1,
-            "totalNodes": 10,
         }
 
         grid_schema = load_schema("sc-5.0.json")["$defs"]["grid"]

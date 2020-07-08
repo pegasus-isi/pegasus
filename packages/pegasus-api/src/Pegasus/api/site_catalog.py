@@ -79,15 +79,10 @@ class _GridType(Enum):
     grid types. https://htcondor.readthedocs.io/en/latest/grid-computing/grid-universe.html
     """
 
-    GT2 = "gt2"
-    GT4 = "gt4"
     GT5 = "gt5"
     CONDOR = "condor"
     CREAM = "cream"
     BATCH = "batch"
-    PBS = "pbs"
-    LSF = "lsf"
-    SGE = "sge"
     NORDUGRID = "nordugrid"
     UNICORE = "unicore"
     EC2 = "ec2"
@@ -102,6 +97,7 @@ class Scheduler(Enum):
     LSF = "lsf"
     CONDOR = "condor"
     SGE = "sge"
+    SLURM = "slurm"
     UNKNOWN = "unknown"
 
 
@@ -241,15 +237,10 @@ class SupportedJobs(Enum):
 class Grid:
     """Each site supports various (usually two) job managers"""
 
-    GT2 = _GridType.GT2
-    GT4 = _GridType.GT4
     GT5 = _GridType.GT5
     CONDOR = _GridType.CONDOR
     CREAM = _GridType.CREAM
     BATCH = _GridType.BATCH
-    PBS = _GridType.PBS
-    LSF = _GridType.LSF
-    SGE = _GridType.SGE
     NORDUGRID = _GridType.NORDUGRID
     UNICORE = _GridType.UNICORE
     EC2 = _GridType.EC2
@@ -257,45 +248,21 @@ class Grid:
 
     def __init__(
         self,
-        grid_type,
-        contact,
-        scheduler_type,
-        job_type=None,
-        free_mem=None,
-        total_mem=None,
-        max_count=None,
-        max_cpu_time=None,
-        running_jobs=None,
-        jobs_in_queue=None,
-        idle_nodes=None,
-        total_nodes=None,
+        grid_type: _GridType,
+        contact: str,
+        scheduler_type: Scheduler,
+        job_type: Optional[SupportedJobs] = None,
     ):
-        # TODO: get descriptions for params
         """
-        :param grid_type: [description]
-        :type grid_type: [type]
-        :param contact: [description]
-        :type contact: [type]
-        :param scheduler_type: [description]
-        :type scheduler_type: [type]
-        :param job_type: [description], defaults to None
-        :type job_type: [type], optional
-        :param free_mem: [description], defaults to None
-        :type free_mem: [type], optional
-        :param total_mem: [description], defaults to None
-        :type total_mem: [type], optional
-        :param max_count: [description], defaults to None
-        :type max_count: [type], optional
-        :param max_cpu_time: [description], defaults to None
-        :type max_cpu_time: [type], optional
-        :param running_jobs: [description], defaults to None
-        :type running_jobs: [type], optional
-        :param jobs_in_queue: [description], defaults to None
-        :type jobs_in_queue: [type], optional
-        :param idle_nodes: [description], defaults to None
-        :type idle_nodes: [type], optional
-        :param total_nodes: [description], defaults to None
-        :type total_nodes: [type], optional
+
+        :param grid_type: a grid type defined in :py:class:`~Pegasus.api.site_catalog.Grid` (e.g. :code:`Grid.SLURM`)
+        :type grid_type: _GridType
+        :param contact: endpoint such as :code:`"workflow.isi.edu"`
+        :type contact: str
+        :param scheduler_type: a scheduler type defined in :py:class:`~Pegasus.api.site_catalog.Scheduler` (e.g. :code:`Scheduler.SLURM`)
+        :type scheduler_type: Scheduler
+        :param job_type: a job type defined in :py:class:`~Pegasus.api.site_catalog.SupportedJobs` (e.g. :code:`SupportedJobs.COMPUTE`), defaults to None
+        :type job_type: Optional[SupportedJobs], optional
         :raises ValueError: grid_type must be one defined in :py:class:`~Pegasus.api.site_catalog.Grid` (e.g. :code:`Grid.PBS`)
         :raises ValueError: scheduler_type must be one defined in :py:class:`~Pegasus.api.site_catalog.Scheduler` (e.g. :code:`Scheduler.PBS`)
         :raises ValueError: job_type must be one defined in :py:class`~Pegasus.api.site_catalog.SupportedJobs` (e.g. :code:`SupportedJobs.COMPUTE`)
@@ -333,15 +300,6 @@ class Grid:
         else:
             self.job_type = None
 
-        self.free_mem = free_mem
-        self.total_mem = total_mem
-        self.max_count = max_count
-        self.max_cpu_time = max_cpu_time
-        self.running_jobs = running_jobs
-        self.jobs_in_queue = jobs_in_queue
-        self.idle_nodes = idle_nodes
-        self.total_nodes = total_nodes
-
     def __json__(self):
         return _filter_out_nones(
             {
@@ -349,14 +307,6 @@ class Grid:
                 "contact": self.contact,
                 "scheduler": self.scheduler_type,
                 "jobtype": self.job_type,
-                "freeMem": self.free_mem,
-                "totalMem": self.total_mem,
-                "maxCount": self.max_count,
-                "maxCPUTime": self.max_cpu_time,
-                "runningJobs": self.running_jobs,
-                "jobsInQueue": self.jobs_in_queue,
-                "idleNodes": self.idle_nodes,
-                "totalNodes": self.total_nodes,
             }
         )
 
