@@ -179,25 +179,26 @@ public class Invoke {
         Invoke i = (Invoke) obj;
         return this.toString().equals(i.toString());
     }
-    
+
     /**
      * Custom serializer for YAML representation of an Invoke (Hook in 5.0)
-     * 
+     *
      * @author Ryan Tanaka
      */
     public static class JsonSerializer extends PegasusJsonSerializer<Invoke> {
-        
+
         public JsonSerializer() {}
-        
+
         /**
          * Serializes an Invoke into YAML representation.
-         * 
+         *
          * @param iv
          * @param gen
          * @param sp
-         * @throws IOException 
+         * @throws IOException
          */
-        public void serialize(Invoke iv, JsonGenerator gen, SerializerProvider sp) throws IOException {
+        public void serialize(Invoke iv, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
             gen.writeStartObject();
             gen.writeStringField("_on", iv.getWhen());
             gen.writeStringField("cmd", iv.getWhat());

@@ -458,43 +458,44 @@ public class File extends CatalogType {
             }
         }
     }
-    
+
     /**
      * Custom serializer for YAML representation of a File
-     * 
+     *
      * @author Ryan Tanaka
      */
     public static class JsonSerializer extends PegasusJsonSerializer<File> {
-        
+
         public JsonSerializer() {}
-        
+
         /**
          * Serialize a File into YAML representation
-         * 
+         *
          * @param f
          * @param gen
          * @param sp
-         * @throws IOException 
+         * @throws IOException
          * @throws UnsupportedOperationException
          */
-        public void serialize(File f, JsonGenerator gen, SerializerProvider sp) throws IOException, UnsupportedOperationException {   
+        public void serialize(File f, JsonGenerator gen, SerializerProvider sp)
+                throws IOException, UnsupportedOperationException {
             gen.writeStartObject();
-           
+
             // lfn
             gen.writeStringField("lfn", f.mName);
-           
+
             // metadata
             if (!f.mMetadata.isEmpty()) {
                 gen.writeArrayFieldStart("metadata");
-                for (MetaData m: f.mMetadata) {
+                for (MetaData m : f.mMetadata) {
                     gen.writeObject(m);
                 }
                 gen.writeEndArray();
             }
-            
+
             // type
             gen.writeStringField("type", f.mLink.toString().toLowerCase());
-            
+
             // stageOut
             File.TRANSFER transfer = f.mTransfer;
             boolean stageOut;
@@ -504,36 +505,37 @@ public class File extends CatalogType {
                 stageOut = false;
             } else {
                 // not supported in the YAML schema
-                throw new UnsupportedOperationException("File.TRANSFER.OPTIONAL not yet supported for YAML based workflows.");
+                throw new UnsupportedOperationException(
+                        "File.TRANSFER.OPTIONAL not yet supported for YAML based workflows.");
             }
             gen.writeBooleanField("stageOut", stageOut);
-            
+
             // registerReplica
             gen.writeBooleanField("registerReplica", f.mRegister);
-            
+
             // optional
             gen.writeBooleanField("optional", f.mOptional);
-            
+
             // size
             if (!f.mSize.trim().isEmpty()) {
                 gen.writeStringField("size", f.mSize);
             }
-            
+
             // namespace
             if (f.mNamespace != null && !f.mNamespace.trim().isEmpty()) {
                 gen.writeStringField("namespace", f.mNamespace);
             }
-            
+
             // version
             if (f.mVersion != null && !f.mVersion.trim().isEmpty()) {
                 gen.writeStringField("version", f.mVersion);
             }
-            
+
             // executable
             if (f.mExecutable) {
                 gen.writeBooleanField("executable", f.mExecutable);
             }
-            
+
             gen.writeEndObject();
         }
     }

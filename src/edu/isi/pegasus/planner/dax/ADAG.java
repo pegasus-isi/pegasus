@@ -35,8 +35,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -1015,25 +1015,25 @@ public class ADAG {
 
     /**
      * Generates the YAML representation of a workflow.
-     * 
+     *
      * @return YAML representation of this ADAG as a String
      */
-    public String toYaml() {        
-        ObjectMapper mapper = new ObjectMapper(
-                new YAMLFactory().enable(YAMLGenerator.Feature.INDENT_ARRAYS));
+    public String toYaml() {
+        ObjectMapper mapper =
+                new ObjectMapper(new YAMLFactory().enable(YAMLGenerator.Feature.INDENT_ARRAYS));
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-        
+
         String result = "";
-        
+
         try {
             result = mapper.writeValueAsString(this);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        
+
         return result;
     }
-    
+
     /**
      * Generates a DAX representation.
      *
@@ -1104,46 +1104,47 @@ public class ADAG {
         // end adag
         writer.endElement();
     }
-    
+
     /**
      * Custom serializer for YAML representation of ADAG
-     * 
+     *
      * @author Ryan Tanaka
      */
     static class JsonSerializer extends PegasusJsonSerializer<ADAG> {
         public JsonSerializer() {}
-        
+
         /**
          * Serializes ADAG into YAML representation
-         * 
+         *
          * @param adag
          * @param gen
          * @param sp
-         * @throws IOException 
+         * @throws IOException
          */
-        public void serialize(ADAG adag, JsonGenerator gen, SerializerProvider sp) throws IOException {
+        public void serialize(ADAG adag, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
             gen.writeStartObject();
             // pegasus
             gen.writeStringField("pegasus", "5.0");
-            
+
             // name
             gen.writeStringField("name", adag.mName);
-               
+
             // hooks
             if (!adag.mInvokes.isEmpty()) {
                 gen.writeObjectFieldStart("hooks");
                 gen.writeArrayFieldStart("shell");
-                for (Invoke iv: adag.mInvokes) {
+                for (Invoke iv : adag.mInvokes) {
                     gen.writeObject(iv);
                 }
                 gen.writeEndArray();
                 gen.writeEndObject();
             }
-            
+
             // metadata
             if (!adag.mMetaDataAttributes.isEmpty()) {
                 gen.writeArrayFieldStart("metadata");
-                for (MetaData m: adag.mMetaDataAttributes) {
+                for (MetaData m : adag.mMetaDataAttributes) {
                     gen.writeObject(m);
                 }
                 gen.writeEndArray();
@@ -1151,12 +1152,12 @@ public class ADAG {
 
             // jobs
             gen.writeArrayFieldStart("jobs");
-            for (AbstractJob j: adag.mJobs.values()) {
+            for (AbstractJob j : adag.mJobs.values()) {
                 gen.writeObject(j);
             }
             gen.writeEndArray();
 
-            // dependencies 
+            // dependencies
             if (!adag.mDependencies.isEmpty()) {
                 // mDependencies is given as map of child ids with
                 // sets of edges. In the YAML schema, this is flipped
@@ -1165,8 +1166,8 @@ public class ADAG {
                 // is being left as is and we are re-mapping things here.
                 Map<String, List<String>> deps = new HashMap<>();
 
-                for (Map.Entry<String, Set<Edge>> child: adag.mDependencies.entrySet()) {
-                    for (Edge e: child.getValue()) {
+                for (Map.Entry<String, Set<Edge>> child : adag.mDependencies.entrySet()) {
+                    for (Edge e : child.getValue()) {
                         if (deps.containsKey(e.getParent())) {
                             deps.get(e.getParent()).add(e.getChild());
                         } else {
@@ -1178,24 +1179,24 @@ public class ADAG {
                 }
 
                 gen.writeArrayFieldStart("jobDependencies");
-                
-                for (Map.Entry<String, List<String>> parent: deps.entrySet()) {
+
+                for (Map.Entry<String, List<String>> parent : deps.entrySet()) {
                     gen.writeStartObject();
-                    
+
                     gen.writeStringField("id", parent.getKey());
-                    
+
                     gen.writeArrayFieldStart("children");
-                    for (String child: parent.getValue()) {
+                    for (String child : parent.getValue()) {
                         gen.writeString(child);
                     }
                     gen.writeEndArray();
-                    
+
                     gen.writeEndObject();
                 }
 
-                gen.writeEndArray();  
+                gen.writeEndArray();
             }
-            
+
             gen.writeEndObject();
         }
     }
