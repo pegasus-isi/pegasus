@@ -188,4 +188,84 @@ public class TransformationCatalogEntryTest {
         // System.err.println(actual);
         assertEquals(expected, actual);
     }
+
+    @Test
+    public void envProfileFromContainerWithNoExistingProfile() {
+        TransformationCatalogEntry e = new TransformationCatalogEntry();
+        Container c = new Container();
+        String key = "PEGASUS_HOME";
+        String containerValue = "/usr/bin/";
+        c.addProfile(new Profile("env", key, containerValue));
+        e.incorporateContainerProfiles(c);
+        // nothing should be in the tc
+        assertNull(e.getAllProfiles());
+        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.env).containsKey(key));
+        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.env).get(key).equals(containerValue));
+    }
+
+    @Test
+    public void envProfileFromContainerWithTCExistingProfile() {
+        String key = "PEGASUS_HOME";
+        String containerValue = "/usr/bin/";
+        String tcValue = "/shared/pegasus-5.0";
+
+        TransformationCatalogEntry e = new TransformationCatalogEntry();
+        e.addProfile(new Profile("env", key, tcValue));
+        Container c = new Container();
+        c.addProfile(new Profile("env", key, containerValue));
+        e.incorporateContainerProfiles(c);
+        assertNotNull(e.getAllProfiles());
+        assertTrue(e.getAllProfiles().get(Profiles.NAMESPACES.env).isEmpty());
+        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.env).containsKey(key));
+        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.env).get(key).equals(tcValue));
+    }
+
+    @Test
+    public void containerArgsFromContainerWithNoExistingProfile() {
+        String key = "container.arguments";
+        String containerValue = "--shm-size 256";
+        TransformationCatalogEntry e = new TransformationCatalogEntry();
+        Container c = new Container();
+        c.addProfile(new Profile("pegasus", key, containerValue));
+        e.incorporateContainerProfiles(c);
+
+        assertNotNull(e.getAllProfiles());
+        assertTrue(e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key));
+        assertTrue(
+                e.getAllProfiles()
+                        .get(Profiles.NAMESPACES.pegasus)
+                        .get(key)
+                        .equals(containerValue));
+
+        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key));
+        assertTrue(
+                c.getAllProfiles()
+                        .get(Profiles.NAMESPACES.pegasus)
+                        .get(key)
+                        .equals(containerValue));
+    }
+
+    @Test
+    public void containerArgsFromContainerWithExistingProfile() {
+        String key = "container.arguments";
+        String containerValue = "--shm-size 256";
+        String tcValue = "--shm-size 64";
+        TransformationCatalogEntry e = new TransformationCatalogEntry();
+        e.addProfile(new Profile("pegasus", key, tcValue));
+        Container c = new Container();
+
+        c.addProfile(new Profile("pegasus", key, containerValue));
+        e.incorporateContainerProfiles(c);
+
+        assertNotNull(e.getAllProfiles());
+        assertTrue(e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key));
+        assertTrue(e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).get(key).equals(tcValue));
+
+        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key));
+        assertTrue(
+                c.getAllProfiles()
+                        .get(Profiles.NAMESPACES.pegasus)
+                        .get(key)
+                        .equals(containerValue));
+    }
 }

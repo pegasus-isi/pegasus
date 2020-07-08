@@ -295,6 +295,10 @@ public class PegasusTest {
         testKey(Pegasus.PROJECT_KEY, "pegasus", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        testKey(Pegasus.CONTAINER_ARGUMENTS_KEY, "pegasus", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+
         // deprecated keys
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
         testKey(Pegasus.COLLAPSER_KEY, "dummy", Namespace.DEPRECATED_KEY);
