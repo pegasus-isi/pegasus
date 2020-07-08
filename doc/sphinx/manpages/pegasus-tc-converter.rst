@@ -13,7 +13,7 @@ format.
                            [-N dbusername] [-P dbpassword] [-U dburl] [-H dbhost]
                            -i infile[,infile,…] -o outfile
 
-.. __description:
+
 
 Description
 ===========
@@ -58,7 +58,7 @@ Currently, the following formats of transformation catalog exist:
 **Database**
    Only MySQL is supported for the time being.
 
-.. __options:
+
 
 Options
 =======
@@ -89,7 +89,7 @@ in the format specified by the **--oformat** option.
 **-o** *outfile*; \ **--output** *outfile*
    The output file to which the output needs to be written out to.
 
-.. __other_options:
+
 
 Other Options
 -------------
@@ -123,7 +123,7 @@ Other Options
 **-h**; \ **--help**
    Displays all the options to the **pegasus-tc-converter** command.
 
-.. __example:
+
 
 Example
 =======
@@ -146,7 +146,7 @@ Database (username, password, host, url specified in properties file) to text fo
 
    pegasus-tc-converter -I Database -o tc.txt -O Text -vvvvv
 
-.. __authors:
+
 
 Authors
 =======

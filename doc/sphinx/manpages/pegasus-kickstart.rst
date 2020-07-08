@@ -12,7 +12,7 @@ remote job wrapper
                         [-o fn] [-e fn] [-X] [-l fn sz] [-F] (-I fn | app [appflags])
       pegasus-kickstart -V
 
-.. __description:
+
 
 Description
 ===========
@@ -46,7 +46,7 @@ and main) with variable substitutions from Unix environment variables.
 See section `VARIABLE REWRITING <#VARIABLE_REWRITING>`__ below for
 details on this feature.
 
-.. __options:
+
 
 Options
 =======
@@ -318,7 +318,7 @@ Options
 *appflags*
    Application may or may not have additional flags.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -328,7 +328,7 @@ addition, the error code 127 signals that the call to exec failed, and
 126 that reconnecting the stdio failed. A job failing with the same exit
 codes is indistinguishable from **pegasus-kickstart** failures.
 
-.. __see_also:
+
 
 See Also
 ========
@@ -464,7 +464,7 @@ It is highly recommended to experiment on the Unix command line with the
 *echo* and *env* applications to obtain a feeling for the different
 quoting mechanisms needed to achieve variable substitution.
 
-.. __example:
+
 
 Example
 =======
@@ -508,7 +508,7 @@ NFS) are atomically written.
 
 The current format of the performance data is as follows:
 
-.. __timeouts:
+
 
 Timeouts
 ========
@@ -530,7 +530,7 @@ stages were signalled. If KICKSTART_SETUP is specified, and it runs
 longer than the timeout, then it will be signalled, and the other stages
 will be skipped.
 
-.. __output_format:
+
 
 Output Format
 =============
@@ -541,7 +541,7 @@ up-to-date description of elements and their attributes. Check with
 https://pegasus.isi.edu/documentation for invocation schemas with a
 higher version number.
 
-.. __restrictions:
+
 
 Restrictions
 ============
@@ -584,7 +584,7 @@ application decides to truncate its output file, as in the above example
 by opening */dev/fd/1* inside *keg*, the resulting file will still be
 truncated. This is correct behavior, but sometimes not obvious.
 
-.. __files:
+
 
 Files
 =====
@@ -607,7 +607,7 @@ workflow database. Kickstart uses the environment variable
 **KICKSTART_METADATA** to tell the job to which file it should write its
 metadata.
 
-.. __environment_variables:
+
 
 Environment Variables
 =====================
@@ -682,7 +682,7 @@ job. The value of the variable is the path to the metadata file to which
 the job should write its metadata. See the `METADATA <#METADATA>`__
 section for more information.
 
-.. __history:
+
 
 History
 =======
@@ -693,7 +693,7 @@ name to avoid clashes in a larger OS installation setting. However,
 there is no pertinent need to change the internal name, too, as no name
 clashes are expected.
 
-.. __authors:
+
 
 Authors
 =======

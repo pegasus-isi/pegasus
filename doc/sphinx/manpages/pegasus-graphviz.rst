@@ -8,7 +8,7 @@ Convert a DAX or DAG into a graphviz dot file
 
       pegasus-graphviz [options] FILE
 
-.. __description:
+
 
 Description
 ===========
@@ -16,7 +16,7 @@ Description
 pegasus-graphviz is a tool that generates a graphviz DOT file based on a
 Pegasus DAX file or DAGMan DAG file.
 
-.. __options:
+
 
 Options
 =======
@@ -49,7 +49,7 @@ Options
    Include files. This option is only valid for DAX files. [default:
    false]
 
-.. __author:
+
 
 Author
 ======

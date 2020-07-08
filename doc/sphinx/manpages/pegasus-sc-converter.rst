@@ -11,7 +11,7 @@ A client to convert site catalog from one format to another format.
                            [-I fmt] [-O fmt]
                            -i infile[,infile,…] -o outfile
 
-.. __description:
+
 
 Description
 ===========
@@ -88,7 +88,7 @@ Currently, the following formats of site catalog exist.
    This format conforms to the XML schema found at
    http://pegasus.isi.edu/schema/sc-3.0.xsd.
 
-.. __options:
+
 
 Options
 =======
@@ -100,7 +100,7 @@ Options
 **-o** *outfile*; \ **--output** *outfile*
    The output file to which the output needs to be written out to.
 
-.. __other_options:
+
 
 Other Options
 -------------
@@ -123,7 +123,7 @@ Other Options
 **-h**; \ **--help**
    Displays all the options to the **pegasus-plan** command.
 
-.. __example:
+
 
 Example
 =======
@@ -132,7 +132,7 @@ Example
 
    pegasus-sc-converter -i sites.xml -o sites.xml.new -O XML3 -vvvvv
 
-.. __authors:
+
 
 Authors
 =======

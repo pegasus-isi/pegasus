@@ -8,7 +8,7 @@ Manage Pegasus databases.
 
       pegasus-db-admin COMMAND [options] [DATABASE_URL]
 
-.. __description:
+
 
 Description
 ===========
@@ -31,7 +31,7 @@ listed below. To see the available options for each command, please use
 the **-h** option after the command. For example: **pegasus-db-admin
 update -h**
 
-.. __commands:
+
 
 Commands
 ========
@@ -69,7 +69,7 @@ Commands
 **version [-V] [-e] DATABASE_URL**
    Prints the current version of the database.
 
-.. __global_options:
+
 
 Global Options
 ==============
@@ -95,7 +95,7 @@ Global Options
 **-d**; \ **--debug**
    Enables debugging.
 
-.. __update_and_downgrade_options:
+
 
 Update and Downgrade Options
 ============================
@@ -106,7 +106,7 @@ Update and Downgrade Options
 **-V PEGASUS_VERSION**; \ **--version=PEGASUS_VERSION**
    Pegasus version that the database will be updated/downgraded to.
 
-.. __check_and_version_options:
+
 
 Check and Version Options
 =========================
@@ -117,7 +117,7 @@ Check and Version Options
 **-e**; \ **--version-value**
    Show actual version values (an integer number).
 
-.. __database_upgrades_from_pegasus_4_5_x_to_pegasus_current_version:
+
 
 Database Upgrades From Pegasus 4.5.X to Pegasus current version
 ===============================================================
@@ -153,7 +153,7 @@ succeeded/failed databases.
 
 Note that, if no URL is provided, the tool will create/use a SQLite
 
-.. __examples:
+
 
 Examples
 ========
@@ -192,7 +192,7 @@ Examples
    $ pegasus-db-admin update -s /path/to/submitdir -t MASTER
    $ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
 
-.. __troubleshooting:
+
 
 Troubleshooting
 ===============
@@ -215,7 +215,7 @@ example, you should adjust them as you may like):
 
 After making these changes to my.cnf you must restart MySQL.
 
-.. __authors:
+
 
 Authors
 =======

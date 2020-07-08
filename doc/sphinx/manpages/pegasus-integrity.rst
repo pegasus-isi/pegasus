@@ -15,7 +15,7 @@ Generates and verifies data integrity with checksums
                         [--print-timings]
                         [--debug]
 
-.. __description:
+
 
 Description
 ===========
@@ -27,7 +27,7 @@ metadata in the current working directory (usually from PegasusLite).
 Note that pegasus-integrity is a tool mostly used internally in Pegasus
 workflows, but the tool can be used stand alone as well.
 
-.. __options:
+
 
 Options
 =======
@@ -62,7 +62,7 @@ Options
    Enables debugging output.
 
 
-.. __author:
+
 
 Author
 ======

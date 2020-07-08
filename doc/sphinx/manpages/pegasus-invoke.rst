@@ -9,7 +9,7 @@ invokes a command from a file
 
       pegasus-invoke ( app | @fn ) [ arg | *@fn [..]]
 
-.. __description:
+
 
 Description
 ===========
@@ -25,7 +25,7 @@ argument files without worry about shell, Condor or Globus escape
 necessities. All argument file contents are passed as is, one line per
 argument entry.
 
-.. __arguments:
+
 
 Arguments
 =========
@@ -55,7 +55,7 @@ Arguments
    argument is a filename, and what argument is a mere string resembling
    a filename).
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -64,14 +64,14 @@ The **pegasus-invoke** tool returns 127, if it was unable to find the
 application. It returns 126, if there was a problem parsing the file.
 All other exit status, including 126 and 127, come from the application.
 
-.. __see_also:
+
 
 See Also
 ========
 
 **pegasus-kickstart(1)**
 
-.. __example:
+
 
 Example
 =======
@@ -100,7 +100,7 @@ meaning as inclusion symbol.
    $ pegasus-invoke @test.2
    This is test 3 @test.3
 
-.. __restrictions:
+
 
 Restrictions
 ============
@@ -110,7 +110,7 @@ parse, starting with an at (@) sign as before, the maximum recursion
 limit is 32 levels of inclusions. It is not possible (yet) to use
 *stdin* as source of inclusion.
 
-.. __history:
+
 
 History
 =======
@@ -121,7 +121,7 @@ clashes in a larger OS installation setting. However, there is no
 pertinent need to change the internal name, too, as no name clashes are
 expected.
 
-.. __authors:
+
 
 Authors
 =======

@@ -9,7 +9,7 @@ stops a workflow gracefully, current jobs will finish
 
       pegasus-halt [rundir]
 
-.. __description:
+
 
 Description
 ===========
@@ -22,7 +22,7 @@ can be restarted with the pegasus-run command.
 Another way to remove a workflow is with the pegasus-remove command. The
 difference is that pegasus-remove will stop running jobs.
 
-.. __options:
+
 
 Options
 =======
@@ -30,7 +30,7 @@ Options
 **rundir**
    The run directory of the workflow you want to stop
 
-.. __authors:
+
 
 Authors
 =======

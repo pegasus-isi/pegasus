@@ -9,7 +9,7 @@ Query metadata collected for Pegasus workflows
 
       pegasus-metadata COMMAND [options] <SUBMIT_DIR>
 
-.. __description:
+
 
 Description
 ===========
@@ -17,7 +17,7 @@ Description
 **pegasus-metadata** is a tool to query metadata collected for a
 workflow. The tools can query workflow, task, and file metadata.
 
-.. __commands:
+
 
 Commands
 ========
@@ -31,7 +31,7 @@ Commands
 **file**
    Query metadata for files
 
-.. __global_options:
+
 
 Global Options
 ==============
@@ -42,7 +42,7 @@ Global Options
 **-h**; \ **--help**
    Prints a usage summary with all the available command-line options.
 
-.. __workflow_options:
+
 
 Workflow Options
 ================
@@ -51,7 +51,7 @@ Workflow Options
    Query workflow metadata for the entire workflow; including
    sub-workflows
 
-.. __task_options:
+
 
 Task Options
 ============
@@ -59,7 +59,7 @@ Task Options
 **-i** *ABS_TASK_ID*; \ **--task-id** *ABS_TASK_ID*
    Specifies the absolute task id whose metadata should be queried.
 
-.. __file_options:
+
 
 File Options
 ============
@@ -75,7 +75,7 @@ File Options
    workflow which contains the task, and the root workflow which
    contains the task.
 
-.. __examples:
+
 
 Examples
 ========
@@ -100,7 +100,7 @@ Examples
    # Trace entire metadata for a given file
    $ pegasus-metadata file --file-name f.a --trace /path/to/submit-dir
 
-.. __authors:
+
 
 Authors
 =======

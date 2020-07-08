@@ -11,7 +11,7 @@ Perform file and directory operations on remote GridFTP servers
       pegasus-gridftp mkdir [options] [URL…]
       pegasus-gridftp rm [options] [URL…]
 
-.. __description:
+
 
 Description
 ===========
@@ -21,12 +21,12 @@ remote operations on files and directories via the GridFTP protocol.
 This tool was created to enable more efficient remote directory creation
 and file cleanup tasks in Pegasus.
 
-.. __options:
+
 
 Options
 =======
 
-.. __global_options:
+
 
 Global Options
 --------------
@@ -38,7 +38,7 @@ Global Options
 **-i** *FILE*
    Read a list of URLs to operate on from FILE.
 
-.. __rm_options:
+
 
 rm Options
 ----------
@@ -49,7 +49,7 @@ rm Options
 **-r**
    Recursively delete files and directories.
 
-.. __ls_options:
+
 
 ls Options
 ----------
@@ -61,7 +61,7 @@ ls Options
    Create a long-format listing with file size, creation date, type,
    permissions, etc.
 
-.. __mkdir_options:
+
 
 mkdir Options
 -------------
@@ -72,7 +72,7 @@ mkdir Options
 **-f**
    Ignore error if directory already exists
 
-.. __subcommands:
+
 
 Subcommands
 ===========
@@ -92,14 +92,14 @@ operations.
    The **rm** subcommand deletes one or more files and directories from
    the remote server.
 
-.. __url_format:
+
 
 URL Format
 ==========
 
 All URLs supplied to **pegasus-gridftp** should begin with "gsiftp://".
 
-.. __configuration:
+
 
 Configuration
 =============
@@ -108,7 +108,7 @@ Configuration
 GridFTP servers. Refer to the CoG JGlobus documentation for information
 about configuring the API, such as how to specify the user’s proxy, etc.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -116,7 +116,7 @@ Return Value
 **pegasus-gridftp** returns a zero exist status if the operation is
 successful. A non-zero exit status is returned in case of failure.
 
-.. __author:
+
 
 Author
 ======

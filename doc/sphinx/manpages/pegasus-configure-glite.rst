@@ -9,7 +9,7 @@ install Pegasus-specific glite configuration
 
       pegasus-configure-glite [GLITE_LOCATION]
 
-.. __description:
+
 
 Description
 ===========
@@ -23,7 +23,7 @@ configuration used by Pegasus to submit jobs via Glite. It installs:
 2. Scripts for Moab and modifications to batch_gahp.config to enable
    Moab job submission.
 
-.. __options:
+
 
 Options
 =======
@@ -33,7 +33,7 @@ Options
    **condor_config_val** will be called to get the value of
    **GLITE_LOCATION** from the Condor configuration files.
 
-.. __authors:
+
 
 Authors
 =======

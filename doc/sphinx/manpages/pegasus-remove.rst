@@ -10,7 +10,7 @@ pegasus-plan and pegasus-run
 
       pegasus-remove [-d dagid] [-v] [rundir]
 
-.. __description:
+
 
 Description
 ===========
@@ -24,7 +24,7 @@ Another way to remove a workflow is with the pegasus-halt command. The
 difference is that pegasus-halt will allow current jobs to finish
 gracefully before stopping the workflow.
 
-.. __options:
+
 
 Options
 =======
@@ -48,7 +48,7 @@ removed.
    planned workflow DAG and submit files. This is optional if
    pegasus-remove command is invoked from within the run directory.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -57,7 +57,7 @@ If the workflow is removed successfully pegasus-remove returns with an
 exit code of 0. However, in case of error, a non-zero exit code
 indicates problems. An error message clearly marks the cause.
 
-.. __files:
+
 
 Files
 =====
@@ -68,7 +68,7 @@ The following files are opened:
    This file is located in the rundir. pegasus-remove uses this file to
    find out paths to several other files.
 
-.. __environment_variables:
+
 
 Environment Variables
 =====================
@@ -76,14 +76,14 @@ Environment Variables
 **PATH**
    The path variable is used to locate binary for **condor_rm**.
 
-.. __see_also:
+
 
 See Also
 ========
 
 pegasus-plan(1), pegasus-run(1)
 
-.. __authors:
+
 
 Authors
 =======

@@ -21,7 +21,7 @@ tracks a workflow progress, mining information
                        [--dest|-d PATH or URL] [--encoding|-e bp | bson]
                        DAGMan output file
 
-.. __description:
+
 
 Description
 ===========
@@ -34,7 +34,7 @@ database or write a NetLogger events file with that information.
 **pegasus-monitord** can also perform notifications when tracking a
 workflow’s progress in real-time.
 
-.. __options:
+
 
 Options
 =======
@@ -188,7 +188,7 @@ Options
    in **pegasus-monitord** and must have the *.dag.dagman.out*
    extension.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -198,7 +198,7 @@ exit code of 0. However, in case of error, a non-zero exit code
 indicates problems. In that case, the *logfile* should contain
 additional information about the error condition.
 
-.. __environment_variables:
+
 
 Environment Variables
 =====================
@@ -208,7 +208,7 @@ be set. It locates its required Python modules based on its own
 location, and therefore should not be moved outside of Pegasus' bin
 directory.
 
-.. __examples:
+
 
 Examples
 ========
@@ -294,14 +294,14 @@ the appropriate create database command before running
 **pegasus-monitord** as **SQLAlchemy** will take care of creating the
 tables and indexes if they do not already exist.
 
-.. __see_also:
+
 
 See Also
 ========
 
 pegasus-run(1)
 
-.. __authors:
+
 
 Authors
 =======

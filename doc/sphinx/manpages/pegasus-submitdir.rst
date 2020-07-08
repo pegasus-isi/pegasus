@@ -9,7 +9,7 @@ Manage a workflow submit directory.
 
       pegasus-submitdir COMMAND [options] SUBMITDIR
 
-.. __description:
+
 
 Description
 ===========
@@ -37,7 +37,7 @@ drives the dashboard.
 The **detach** command removes a submit dir from the master database
 that drives the dashboard.
 
-.. __commands:
+
 
 Commands
 ========
@@ -83,7 +83,7 @@ Commands
    db. This command will delete any entries in the master_workflow and
    master_workflowstate tables.
 
-.. __global_options:
+
 
 Global Options
 ==============
@@ -91,7 +91,7 @@ Global Options
 **-h**; \ **--help**
    Prints a usage summary with all the available command-line options.
 
-.. __authors:
+
 
 Authors
 =======

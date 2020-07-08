@@ -20,7 +20,7 @@ A tool to generate statistics about the workflow run.
                          [-u|--isuuid]
                          [[submitdir ..] | [workflow_uuid ..]]
 
-.. __description:
+
 
 Description
 ===========
@@ -32,7 +32,7 @@ It generates invocation statistics information grouped by transformation
 name. It also generates job instance and invocation statistics
 information grouped by time and host.
 
-.. __options:
+
 
 Options
 =======
@@ -116,7 +116,7 @@ Options
    When workflows are specified as UUIDs the --conf options needs to be
    set for the tool to determine the STAMPEDE database URL.
 
-.. __example:
+
 
 Example
 =======
@@ -148,7 +148,7 @@ Runs pegasus-statistics over all workflows in the STAMPEDE database:
 
    $ pegasus-statistics  --conf pegasusrc --multiple-wf
 
-.. __authors:
+
 
 Authors
 =======

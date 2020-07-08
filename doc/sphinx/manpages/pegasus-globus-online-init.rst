@@ -10,7 +10,7 @@ Initializes OAuth tokens for Globus Online authentication.
       pegasus-globus-online-init  [-h]
                                     [--permanent]
 
-.. __description:
+
 
 Description
 ===========
@@ -28,7 +28,7 @@ Note this tool should be used before starting a workflow that relies on
 Globus Online transfers, unless the user has initialized the tokens with
 another way or has acquired refreshable tokens previously.
 
-.. __options:
+
 
 Options
 =======
@@ -40,7 +40,7 @@ Options
    Requests a refresh token that can be used indefinetely. Access can be
    revoked from globus web interface (manage consents)
 
-.. __author:
+
 
 Author
 ======

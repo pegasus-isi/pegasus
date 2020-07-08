@@ -9,7 +9,7 @@ create a new workflow configuration
 
       pegasus-init WORKFLOW_DIR
 
-.. __description:
+
 
 Description
 ===========
@@ -20,7 +20,7 @@ questions, **pegasus-init** generates a workflow configuration including
 a DAX generator, site catalog, properties file, and other artifacts that
 can be edited to meet the user’s needs.
 
-.. __options:
+
 
 Options
 =======
@@ -29,7 +29,7 @@ Options
    The directory where you want to create the new workflow
    configuration.
 
-.. __authors:
+
 
 Authors
 =======

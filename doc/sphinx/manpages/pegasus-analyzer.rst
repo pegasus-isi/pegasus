@@ -16,7 +16,7 @@ pegasus-analyzer - debugs a workflow.
                        [--top-dir dir_name] [--recurse|-r]
                        [workflow_directory]
 
-.. __description:
+
 
 Description
 ===========
@@ -30,7 +30,7 @@ information from several log files, isolating jobs that did not complete
 successfully, and printing their *stdout* and *stderr* so that users can
 get detailed information about their workflow runs.
 
-.. __options:
+
 
 Options
 =======
@@ -157,7 +157,7 @@ Options
    automatically issues the command invocation and in addition displays
    the failed jobs in the sub workflow.
 
-.. __environment_variables:
+
 
 Environment Variables
 =====================
@@ -167,7 +167,7 @@ be set. It locates its required Python modules based on its own
 location, and therefore should not be moved outside of Pegasus' bin
 directory.
 
-.. __example:
+
 
 Example
 =======
@@ -290,14 +290,14 @@ sub-workflow. For example:
 tells the user the *subdax_black_ID000009* sub-workflow failed, and that
 it can be debugged by using the indicated **pegasus-analyzer** command.
 
-.. __see_also:
+
 
 See Also
 ========
 
 pegasus-status(1), pegasus-monitord(1), pegasus-statistics(1).
 
-.. __authors:
+
 
 Authors
 =======

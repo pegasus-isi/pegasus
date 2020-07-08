@@ -12,7 +12,7 @@ Can be used to find installed Pegasus tools and libraries.
                      [--bin] [--conf] [--java] [--perl] [--python]
                      [--python-externals] [--r] [--schema] [--classpath]
 
-.. __description:
+
 
 Description
 ===========
@@ -21,7 +21,7 @@ Description
 components. The tool is used internally in Pegasus and by users who need
 to find paths for DAX generator libraries and schemas.
 
-.. __options:
+
 
 Options
 =======
@@ -76,7 +76,7 @@ Options
    called from non-shell backticks in scripts. However, order is
    important for this option: If you intend to use it, specify it first.
 
-.. __example:
+
 
 Example
 =======
@@ -121,7 +121,7 @@ variables into a single global ``%pegasus`` variable for convenience:
        die("Unable to eval pegasus-config output: $@") if $@;
    }
 
-.. __author:
+
 
 Author
 ======

@@ -11,7 +11,7 @@ the Transformation Catalog (TC).
       pegasus-tc-client [-Dproperty=value…] [-h] [-v] [-V]
                         OPERATION TRIGGERS [OPTIONS]
 
-.. __description:
+
 
 Description
 ===========
@@ -48,7 +48,7 @@ One of these operations have to be specified to run the client.
 See the `TRIGGERS <#TRIGGERS>`__ and `VALID
 COMBINATIONS <#VALID_COMBINATIONS>`__ section for more details.
 
-.. __operations:
+
 
 Operations
 ==========
@@ -99,7 +99,7 @@ and usage.
 **-S**
    Triggers an operation on a System information.
 
-.. __options:
+
 
 Options
 =======
@@ -154,7 +154,7 @@ The following options are applicable for all the operations.
 **-h, --help**
    Generates help
 
-.. __other_options:
+
 
 Other Options
 =============
@@ -173,7 +173,7 @@ Valid Combinations
 The following are valid combinations of **OPERATIONS, TRIGGERS,
 OPTIONS** for the **pegasus-tc-client**.
 
-.. __add:
+
 
 ADD
 ---
@@ -207,7 +207,7 @@ ADD
       #
       isi NS::NAME:VER  /bin/date  INSTALLED  ARCH::OS:OSVERS:GLIBC  NS::KEY=VALUE,KEY=VALUE;NS2::KEY=VALUE,KEY=VALUE
 
-.. __delete:
+
 
 DELETE
 ------
@@ -261,7 +261,7 @@ DELETE
    Deletes all or specific profiles associated with a logical
    transformation.
 
-.. __query:
+
 
 QUERY
 -----
@@ -303,7 +303,7 @@ QUERY
    Queries for profiles associated with a particular physical
    transformation
 
-.. __properties:
+
 
 Properties
 ==========
@@ -324,7 +324,7 @@ For more details please check the
    The file path where the text based TC is located. By default the path
    **$PEGASUS_HOME/var/tc.data** is used.
 
-.. __files:
+
 
 Files
 =====
@@ -341,7 +341,7 @@ Files
 **pegasus.jar**
    contains all compiled Java bytecode to run the Pegasus planner.
 
-.. __environment_variables:
+
 
 Environment Variables
 =====================
@@ -358,7 +358,7 @@ Environment Variables
    to you environment, in the *$PEGASUS_HOME* directory run the script
    *source setup-user-env.csh* or *source setup-user-env.sh*.
 
-.. __authors:
+
 
 Authors
 =======

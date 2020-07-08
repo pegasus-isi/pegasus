@@ -11,7 +11,7 @@ shell client for replica implementations
                         [-c fn] [-p k=v]
                         [[-f fn]|[-i|-d fn]|[cmd [args]]
 
-.. __description:
+
 
 Description
 ===========
@@ -21,7 +21,7 @@ It determines from various property setting which class implements the
 replica manager interface, and loads that driver at run-time. Some
 commands depend on the implementation.
 
-.. __options:
+
 
 Options
 =======
@@ -82,7 +82,7 @@ Any option will be displayed with its long options synonym(s).
 **-V**; \ **--version**
    displays the version of Pegasus you are using.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -90,7 +90,7 @@ Return Value
 Regular and planned program terminations will result in an exit code of
 0. Abnormal termination will result in a non-zero exit code.
 
-.. __files:
+
 
 Files
 =====
@@ -104,7 +104,7 @@ Files
 **pegasus.jar**
    contains all compiled Java bytecode to run the replica manager.
 
-.. __environment_variables:
+
 
 Environment Variables
 =====================
@@ -121,7 +121,7 @@ Environment Variables
    environment. Please make sure that your *CLASSPATH* includes pointer
    to the replica implementation required jar files.
 
-.. __properties:
+
 
 Properties
 ==========
@@ -163,7 +163,7 @@ key may have different meanings for different backends.
    operations. The value determines the number of lines that are read in
    at a time, and worked upon at together.
 
-.. __commands:
+
 
 Commands
 ========
@@ -217,7 +217,7 @@ Note that you must escape special characters from the shell.
    With one argument, just the matching behavior is listed. With two
    arguments, the matching behavior is set to the value.
 
-.. __database_schema:
+
 
 Database Schema
 ===============
@@ -225,7 +225,7 @@ Database Schema
 The tables are set up as part of the PEGASUS database setup. The files
 concerned with the database have a suffix *-rc.sql*.
 
-.. __authors:
+
 
 Authors
 =======

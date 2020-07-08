@@ -23,7 +23,7 @@ runs Pegasus to generate the executable workflow
                    [--relative-submit-dir dir]
                    -d daxfile
 
-.. __description:
+
 
 Description
 ===========
@@ -71,7 +71,7 @@ discover:
 The data and executable locations can now be specified in DAX’es
 conforming to DAX schema version 3.2 or higher.
 
-.. __options:
+
 
 Options
 =======
@@ -422,7 +422,7 @@ Any option will be displayed with its long options synonym(s).
    Displays the current version number of the Pegasus Workflow
    Management System.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -437,7 +437,7 @@ module. In case of any other error occurring during the running of the
 command, the exitcode will be 1. In most cases, the error message logged
 should give a clear indication as to where things went wrong.
 
-.. __controlling_pegasus_plan_memory_consumption:
+
 
 Controlling pegasus-plan Memory Consumption
 ===========================================
@@ -449,7 +449,7 @@ JAVA_HEAPMIN and JAVA_HEAPMAX environment variables before invoking
 pegasus-plan. The values are in megabytes. As a rule of thumb,
 JAVA_HEAPMIN can be set to half of the value of JAVA_HEAPMAX.
 
-.. __pegasus_properties:
+
 
 Pegasus Properties
 ==================
@@ -524,7 +524,7 @@ description and list of properties refer to
    in Pegasus generating a shell script that can be executed on the
    submit host.
 
-.. __files:
+
 
 Files
 =====
@@ -549,7 +549,7 @@ Files
    contains all compiled Java bytecode to run the Pegasus Workflow
    Planner.
 
-.. __see_also:
+
 
 See Also
 ========
@@ -557,7 +557,7 @@ See Also
 pegasus-run(1), pegasus-status(1), pegasus-remove(1),
 pegasus-rc-client(1), pegasus-analyzer(1)
 
-.. __authors:
+
 
 Authors
 =======

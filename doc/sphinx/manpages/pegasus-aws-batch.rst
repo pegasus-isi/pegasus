@@ -23,7 +23,7 @@ a client to run tasks on Amazon AWS Batch.
                           [-f file1[,file2 …]]
                           job submit file
 
-.. __description:
+
 
 Description
 ===========
@@ -37,7 +37,7 @@ data to S3 that your jobs running in AWS Batch require. The tool will
 automatically fetch the stdout of your jobs from the CloudWatch Logs and
 place it on the local filesystem.
 
-.. __options:
+
 
 Options
 =======
@@ -146,7 +146,7 @@ Each user should specify a configuration file that **pegasus-aws-batch**
 will use to authentication tokens. It is the same as standard Amazon EC2
 credentials file and default Amazon search path semantics apply.
 
-.. __sample_file:
+
 
 Sample File
 -----------
@@ -155,7 +155,7 @@ $ cat ~/.aws/credentials
 
 aws_access_key_id = XXXXXXXXXXXX aws_secret_access_key = XXXXXXXXXXX
 
-.. __configuration_properties:
+
 
 Configuration Properties
 ------------------------
@@ -182,14 +182,14 @@ basename) Can alse be specified by -q option.
 **pegasus.aws.batch.s3_bucket** (the S3 URL) Can alse be specified by
 --s3 option.
 
-.. __example_json_files:
+
 
 Example JSON Files
 ------------------
 
 Example JSON files are listed below
 
-.. __job_definition_file:
+
 
 Job Definition File
 ===================
@@ -226,7 +226,7 @@ A sample job definition file. Update to reflect your settings.
      "type": "container"
    }
 
-.. __compute_environment_file:
+
 
 Compute Environment File
 ========================
@@ -263,7 +263,7 @@ A sample job definition file. Update to reflect your settings.
      "serviceRole": "AWSBatchServiceRole"
    }
 
-.. __job_queue_file:
+
 
 Job Queue File
 ==============
@@ -283,7 +283,7 @@ A sample job definition file. Update to reflect your settings.
      ]
    }
 
-.. __job_submit_file:
+
 
 Job Submit File
 ===============
@@ -332,7 +332,7 @@ executed on AWS Batch
      } ]
    }
 
-.. __file_transfers:
+
 
 File Transfers
 ==============
@@ -350,7 +350,7 @@ variable named **TRANSFER_INPUT_FILES** for each job that the tool will
 transfer at the time of job submission. The value for the environment
 variable is a comma separated list of files.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -360,7 +360,7 @@ successful. A non-zero exit status is returned in case of failure. If
 you run any jobs using the tool, then tool will return with a non zero
 exitcode in case one or more of your tasks fail.
 
-.. __author:
+
 
 Author
 ======

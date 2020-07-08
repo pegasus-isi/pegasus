@@ -11,7 +11,7 @@ MPI version of KEG
                   [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz] [-m memory]
                   [-r root_memory_allocation] [-C] [-e env [..]] [-p parm [..]]
 
-.. __description:
+
 
 Description
 ===========
@@ -26,7 +26,7 @@ but it is intended to be executed as an MPI task. **pegasus-mpi-keg**
 accepts the same parameters as **pegasus-keg**, so please refer to the
 **pegasus-keg** manual page for more details.
 
-.. __arguments:
+
 
 Arguments
 =========
@@ -39,14 +39,14 @@ The same as **pegasus-keg**. But there are some MPI-specific arguments.
    each MPI processe allocates the amount of memory set by the **-m**
    option.
 
-.. __return_value:
+
 
 Return Value
 ============
 
 The same as **pegasus-keg**.
 
-.. __example:
+
 
 Example
 =======
@@ -75,14 +75,14 @@ connected to *stdout* :
    Input Filenames: xx
    Other Arguments: a b c
 
-.. __restrictions:
+
 
 Restrictions
 ============
 
 The same as **pegasus-keg**.
 
-.. __authors:
+
 
 Authors
 =======

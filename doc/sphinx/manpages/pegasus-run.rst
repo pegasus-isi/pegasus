@@ -10,7 +10,7 @@ executes a workflow that has been planned using \*pegasus-plan*.
       pegasus-run [-Dproperty=value…][-c propsfile][-d level]
                   [-v][--grid*][rundir]
 
-.. __description:
+
 
 Description
 ===========
@@ -21,7 +21,7 @@ the planned directory with no options and arguments or just the full
 path to the run directory. **pegasus-run** also can be used to resubmit
 a failed workflow by running the same command again.
 
-.. __options:
+
 
 Options
 =======
@@ -64,7 +64,7 @@ directory needs to be specified.
    planned workflow DAG and submit files. This is optional if the
    **pegasus-run** command is invoked from within the run directory.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -73,7 +73,7 @@ If the workflow is submitted for execution **pegasus-run** returns with
 an exit code of 0. However, in case of error, a non-zero return value
 indicates problems. An error message clearly marks the cause.
 
-.. __files:
+
 
 Files
 =====
@@ -120,7 +120,7 @@ pegasus-run reads its properties from several locations.
    The merge logic is CONF PROPERTIES \|\| DEFAULT RUNDIR PROPERTIES
    \|\| PEGASUSRC overriden by Command line properties
 
-.. __environment_variables:
+
 
 Environment Variables
 =====================
@@ -130,14 +130,14 @@ Environment Variables
    condor-dagman, condor-submit,pegasus-submit-dag, pegasus-dagman and
    pegasus-monitord
 
-.. __see_also:
+
 
 See Also
 ========
 
 pegasus-plan(1)
 
-.. __authors:
+
 
 Authors
 =======

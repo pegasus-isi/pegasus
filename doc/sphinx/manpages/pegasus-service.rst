@@ -9,7 +9,7 @@ Runs the Pegasus Service server
 
       pegasus-service [options]
 
-.. __options:
+
 
 Options
 =======
@@ -27,7 +27,7 @@ Options
 **-h**; \ **--help**
    Print help message
 
-.. __configuration:
+
 
 Configuration
 =============
@@ -35,7 +35,7 @@ Configuration
 The authentication/authorization settings can be specified in the
 configuration file.
 
-.. __authors:
+
 
 Authors
 =======

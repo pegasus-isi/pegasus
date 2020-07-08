@@ -13,7 +13,7 @@ Interfaces with Globus Online for managed transfers.
                               [--file inputfile]
                               [--debug]
 
-.. __description:
+
 
 Description
 ===========
@@ -30,7 +30,7 @@ initialized with **pegasus-globus-online-init** tool.
 Note that pegasus-globus-online is a tool mostly used internally in
 Pegasus workflows, in particular by pegasus-transfer.
 
-.. __options:
+
 
 Options
 =======
@@ -50,7 +50,7 @@ Options
 **--debug**
    Enables debugging output.
 
-.. __author:
+
 
 Author
 ======

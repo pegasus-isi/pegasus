@@ -9,7 +9,7 @@ Used post-job to check the stdout/stderr for errors
 
       pegasus-exitcode [-h][-r rv][-n][-s msg][-f msg] job.out
 
-.. __description:
+
 
 Description
 ===========
@@ -85,7 +85,7 @@ that "job.out.000" already exists and renames the file "job.out.001". It
 will continue to rename the file by incrementing the sequence number
 every time the job is executed.
 
-.. __options:
+
 
 Options
 =======
@@ -124,7 +124,7 @@ Options
    Name of the common log file in which stdout/stderr will be
    redirected.
 
-.. __authors:
+
 
 Authors
 =======

@@ -9,7 +9,7 @@ run a list of applications
 
       pegasus-cluster [-d] [-e | -f] [-S ec] [-s fn] [-R fn] [-n nr] [inputfile]
 
-.. __description:
+
 
 Description
 ===========
@@ -35,7 +35,7 @@ interest when repeated.
 removed from the arguments. Please note that **pegasus-kickstart** will
 also remove one level of quoting.
 
-.. __arguments:
+
 
 Arguments
 =========
@@ -108,7 +108,7 @@ Arguments
    **pegasus-cluster** uses *stdin* to read the list of applications to
    execute.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -137,7 +137,7 @@ failure. The field **failed** reports any exit code that was not zero or
 a signal of death termination. It does *not* include non-zero exit codes
 that were marked as success using the **-S** option.
 
-.. __task_summary:
+
 
 Task Summary
 ============
@@ -191,7 +191,7 @@ following constituents, where strings are quoted:
    record, any **pegasus-kickstart** will be parsed out so that you see
    the true application.
 
-.. __pegasus_cluster_summary:
+
 
 pegasus-cluster Summary
 =======================
@@ -238,14 +238,14 @@ following constituents:
 **start**
    is the start time of **pegasus-cluster** as ISO 8601 time stamp.
 
-.. __see_also:
+
 
 See Also
 ========
 
 **pegasus-kickstart(1)**
 
-.. __caveats:
+
 
 Caveats
 =======
@@ -256,7 +256,7 @@ would break the shell compatibility. Due to the global nature, use
 success codes sparingly as last resort emergency handler. In better
 plannable environments, you should use an application wrapper instead.
 
-.. __example:
+
 
 Example
 =======
@@ -279,7 +279,7 @@ use of **pegasus-kickstart** to track applications.
    # split-corpus
    /path/to/pegasus-kickstart -H -R HPC -n split-corpus /path/to/split-seq-new.pl 23 /path/to/f-tok.NE split-ne-corpus/corpus.
 
-.. __environment_variables:
+
 
 Environment Variables
 =====================
@@ -314,7 +314,7 @@ A number of environment variables permits to influence the behavior of
    job will have no effect on the overall success or failure state.
    Success or failure will not be counted towards the summary.
 
-.. __history:
+
 
 History
 =======
@@ -325,7 +325,7 @@ clashes in a larger OS installation setting. However, there is no
 pertinent need to change the internal name, too, as no name clashes are
 expected.
 
-.. __authors:
+
 
 Authors
 =======

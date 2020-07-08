@@ -9,7 +9,7 @@ Submit and monitor ensembles of workflows
 
       pegasus-em COMMAND [options] [ARGUMENT…]
 
-.. __commands:
+
 
 Commands
 ========
@@ -55,7 +55,7 @@ Commands
 **priority** *ENSEMBLE.WORKFLOW* -p *PRIORITY*
    Alter the priority of a workflow.
 
-.. __common_options:
+
 
 Common Options
 ==============
@@ -66,7 +66,7 @@ Common Options
 **-d**; \ **--debug**
    Enable debugging
 
-.. __create_and_config_options:
+
 
 Create and Config Options
 =========================
@@ -77,7 +77,7 @@ Create and Config Options
 **-P** *N*; \ **--max-planning** *N*
    Maximum number of workflows being planned simultaneously.
 
-.. __workflows_options:
+
 
 Workflows Options
 =================
@@ -85,7 +85,7 @@ Workflows Options
 **-l**; \ **--long**
    Use long listing format.
 
-.. __authors:
+
 
 Authors
 =======

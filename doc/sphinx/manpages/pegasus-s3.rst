@@ -18,7 +18,7 @@ Upload, download, delete objects in Amazon S3
       pegasus-s3 rmup [options] URL [UPLOAD]
       pegasus-s3 cp [options] SRC… DEST
 
-.. __description:
+
 
 Description
 ===========
@@ -27,12 +27,12 @@ Description
 any other storage services that conform to the Amazon S3 API, such as
 Eucalyptus Walrus.
 
-.. __options:
+
 
 Options
 =======
 
-.. __global_options:
+
 
 Global Options
 --------------
@@ -49,7 +49,7 @@ Global Options
 **-C** *FILE*; \ **--conf**\ =\ *FILE*
    Path to configuration file
 
-.. __ls_options:
+
 
 ls Options
 ----------
@@ -57,7 +57,7 @@ ls Options
 **-l**; \ **--long**
    Use long listing format that includes size, etc.
 
-.. __rm_options:
+
 
 rm Options
 ----------
@@ -68,7 +68,7 @@ rm Options
 **-F** *FILE*; \ **--file**\ =\ *FILE*
    File containing a list of URLs to delete
 
-.. __put_options:
+
 
 put Options
 -----------
@@ -95,7 +95,7 @@ put Options
 **-b**; \ **--create-bucket**
    Create the destination bucket if it does not already exist
 
-.. __get_options:
+
 
 get Options
 -----------
@@ -125,7 +125,7 @@ get Options
    **--chunksize** parameter is not 0. Otherwise parallel downloads are
    disabled.
 
-.. __rmup_options:
+
 
 rmup Options
 ------------
@@ -133,7 +133,7 @@ rmup Options
 **-a**; \ **--all**
    Cancel all uploads for the specified bucket
 
-.. __cp_options:
+
 
 cp Options
 ----------
@@ -148,7 +148,7 @@ cp Options
 **-f**; \ **--force**
    If DEST exists, then overwrite it.
 
-.. __subcommands:
+
 
 Subcommands
 ===========
@@ -296,7 +296,7 @@ operations.
    The **cp** subcommand copies keys on the server. Keys cannot be
    copied between accounts.
 
-.. __url_format:
+
 
 URL Format
 ==========
@@ -359,7 +359,7 @@ Configuration
 Each user should specify a configuration file that **pegasus-s3** will
 use to look up connection parameters and authentication tokens.
 
-.. __search_path:
+
 
 Search Path
 -----------
@@ -379,7 +379,7 @@ If it does not find the configuration file in one of these locations it
 will fail with an error. The $HOME/.s3cfg location is only supported for
 backward-compatibility. $HOME/.pegasus/s3cfg should be used instead.
 
-.. __configuration_file_format:
+
 
 Configuration File Format
 -------------------------
@@ -420,7 +420,7 @@ liberal permissions, then **pegasus-s3** will fail with an error
 message. The purpose of this is to prevent the authentication tokens
 stored in the configuration file from being accessed by other users.
 
-.. __configuration_variables:
+
 
 Configuration Variables
 -----------------------
@@ -446,7 +446,7 @@ Configuration Variables
 **secret_key** (identity)
    The secret key for the identity
 
-.. __example_configuration:
+
 
 Example Configuration
 ---------------------
@@ -484,7 +484,7 @@ downloads, so both uploads and downloads can be done in parallel.
    access_key = asdkfaweasdfbaeiwhkjfbaqwhei
    secret_key = asdhfuinakwjelfuhalsdflahsdl
 
-.. __example:
+
 
 Example
 =======
@@ -555,7 +555,7 @@ Remove all partial uploads for bucket *bar*:
 
    $ pegasus-s3 rmup --all s3://user@amazon/bar
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -563,7 +563,7 @@ Return Value
 **pegasus-s3** returns a zero exist status if the operation is
 successful. A non-zero exit status is returned in case of failure.
 
-.. __author:
+
 
 Author
 ======

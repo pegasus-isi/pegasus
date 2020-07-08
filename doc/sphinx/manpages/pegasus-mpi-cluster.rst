@@ -9,7 +9,7 @@ Enables running DAGs (Directed Acyclic Graphs) on clusters using MPI.
 
       pegasus-mpi-cluster [options] workflow.dag
 
-.. __description:
+
 
 Description
 ===========
@@ -63,7 +63,7 @@ AND PEGASUS <#PMC_AND_PEGASUS>`__.
 executed in parallel on a large number of compute nodes. It is designed
 to be simple, lightweight and robust.
 
-.. __options:
+
 
 Options
 =======
@@ -377,7 +377,7 @@ specifying the **-r** argument.
 PMC and Pegasus
 ===============
 
-.. __using_pmc_for_pegasus_task_clustering:
+
 
 Using PMC for Pegasus Task Clustering
 -------------------------------------
@@ -466,7 +466,7 @@ Pegasus, but we recommend using label-based clustering so that entire
 sub-graphs of a Pegasus DAX can be clustered into a single PMC job,
 instead of only a single level of the workflow.
 
-.. __pegasus_profiles_for_pmc:
+
 
 Pegasus Profiles for PMC
 ------------------------
@@ -508,7 +508,7 @@ looks like this:
 
    TASK mytask_ID00000001 -m 1024 -c 4 -p 10 /path/to/mytask -a 1 -b 2 -c 3
 
-.. __using_pmc_for_the_entire_pegasus_dax:
+
 
 Using PMC for the Entire Pegasus DAX
 ------------------------------------
@@ -626,7 +626,7 @@ multi-core tasks to be executed on a heterogenous pool.
 If there are no hosts available that have enough memory and CPUs to
 execute one of the tasks in a workflow, then the workflow is aborted.
 
-.. __memory:
+
 
 Memory
 ------
@@ -640,7 +640,7 @@ to **pegasus-mpi-cluster**. The amount of memory required for each task
 is specified in the DAG using the **-m**/**--request-memory** argument
 (see `DAG Files <#DAG_FILES>`__).
 
-.. __cpus:
+
 
 CPUs
 ----
@@ -686,7 +686,7 @@ safely.
 There are two different ways to use I/O forwarding in PMC: pipes and
 files. Pipes are more efficient, but files are easier to use.
 
-.. __i_o_forwarding_using_pipes:
+
 
 I/O forwarding using pipes
 --------------------------
@@ -751,7 +751,7 @@ arguments with the file descriptor number you want. Your code can open
 that path normally, write to it, and then close it as if it were a
 regular file.
 
-.. __i_o_forwarding_using_files:
+
 
 I/O forwarding using files
 --------------------------
@@ -782,7 +782,7 @@ system such as Cray XT machines. Alternatively, the task can use
 efficiently on a local disk if the file system cache is able to absorb
 all of the reads and writes.
 
-.. __i_o_forwarding_caveats:
+
 
 I/O forwarding caveats
 ----------------------
@@ -869,12 +869,12 @@ Finally, in file forwarding the output file is removed when the task
 exits. You cannot rely on the file to be there when the next task runs
 even if you write it to a shared file system.
 
-.. __misc:
+
 
 Misc
 ====
 
-.. __resource_utilization:
+
 
 Resource Utilization
 --------------------
@@ -891,12 +891,12 @@ use fewer cores, and longer wall time, on future runs, while high
 resource utilization values suggest that the user could use more cores
 for future runs and get a shorter wall time.
 
-.. __known_issues:
+
 
 Known Issues
 ============
 
-.. __cray_compiler_wrappers:
+
 
 Cray Compiler Wrappers
 ----------------------
@@ -912,7 +912,7 @@ libraries that are linked into the code when it is compiled with a Cray
 wrapper. To summarize: on Cray machines, compile PMC with the CC
 wrapper, but compile code that runs under PMC without any wrappers.
 
-.. __fork_and_exec:
+
 
 fork() and exec()
 -----------------
@@ -947,7 +947,7 @@ always sleep if **--max-wall-time** is specified because there is no way
 to interrupt or otherwise timeout a blocking call in MPI (e.g. SIGALRM
 does not cause MPI_Recv to return EINTR).
 
-.. __task_environment:
+
 
 Task Environment
 ================
@@ -976,7 +976,7 @@ some CPUs to the task, then it will export:
 **PMC_AFFINITY**
    A comma-separated list of CPUs to which the task is/should be bound.
 
-.. __environment_variables:
+
 
 Environment Variables
 =====================
@@ -998,7 +998,7 @@ is used.
 **PMC_MAX_WALL_TIME**
    Alias for the **--max-wall-time** option.
 
-.. __author:
+
 
 Author
 ======

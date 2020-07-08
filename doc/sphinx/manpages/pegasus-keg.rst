@@ -11,7 +11,7 @@ kanonical executable for grids
                   [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz [..]] [-m memory]
                   [-C] [-e env [..]] [-p parm [..]] [-u data_unit]
 
-.. __description:
+
 
 Description
 ===========
@@ -42,7 +42,7 @@ on previous activities exceeds the amount specified here the program
 exits with code status 3 - if **-l** - write info to the specified log
 file.
 
-.. __arguments:
+
 
 Arguments
 =========
@@ -146,7 +146,7 @@ usage and exit with success.
    can be used to emulated application’s memory requirements. The
    default is not to allocate anything.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -158,7 +158,7 @@ specified time CPU load period with **-T** or the time spent on IO and
 CPU load exceeds the specified wall time with **-T** the return code
 will be 3.
 
-.. __example:
+
 
 Example
 =======
@@ -189,7 +189,7 @@ connected to *stdout* :
    Input Filenames: xx
    Other Arguments: a b c
 
-.. __restrictions:
+
 
 Restrictions
 ============
@@ -212,7 +212,7 @@ There is a limit of *4 \* page size* to the output buffer of things that
 .B pegasus-keg can report in its self-info dump. There is no such
 restriction on the input to output file copy.
 
-.. __authors:
+
 
 Authors
 =======

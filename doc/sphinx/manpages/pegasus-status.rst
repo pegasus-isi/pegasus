@@ -18,7 +18,7 @@ Pegasus workflow- and run-time status
                      { [-l|--long] | [-r|--rows] }
                      [rundir]
 
-.. __description:
+
 
 Description
 ===========
@@ -34,7 +34,7 @@ Many options will modify the behavior of this program, not withstanding
 a proper UTF-8 capable terminal, watch mode, the presence of jobs in the
 queue, progress in the workflow directory, etc.
 
-.. __options:
+
 
 Options
 =======
@@ -187,7 +187,7 @@ Options
    the current directory is not a valid *rundir*, no DAG statistics will
    be shown.
 
-.. __return_value:
+
 
 Return Value
 ============
@@ -196,7 +196,7 @@ Return Value
 the termination signal in watch mode. Abnormal behavior will result in a
 non-zero exit code.
 
-.. __example:
+
 
 Example
 =======
@@ -220,7 +220,7 @@ Example
    directory, and redraw the terminal every five minutes with updated
    statistics.
 
-.. __restrictions:
+
 
 Restrictions
 ============
@@ -231,14 +231,14 @@ and watch them separately. If that is not an option, or deemed too
 expensive, you can ask *pegasus-support at isi dot edu* to extend the
 program.
 
-.. __see_also:
+
 
 See Also
 ========
 
 condor_q(1), pegasus-statistics(1)
 
-.. __authors:
+
 
 Authors
 =======
