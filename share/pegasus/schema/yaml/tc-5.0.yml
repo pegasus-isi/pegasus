@@ -101,6 +101,8 @@ $defs:
           "^(sha256)$":
             type: string
         additionalProperties: false
+      metadata:
+        $ref: "common.yml#/$defs/metadata"
       profiles:
         $ref: "common.yml#/$defs/profiles"
     required:
