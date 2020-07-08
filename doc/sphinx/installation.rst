@@ -24,19 +24,12 @@ Pegasus has a few dependencies:
       # java -version
       java version "1.8.0"
 
--  **Python 2.6 or higher**. Check with:
+-  **Python 3.6 or higher**. Check with:
 
    ::
 
-      # python -v
-      Python 2.6.2
-
-   **Non-standard Python installation:** Pegasus will use the system
-   Python by default. If you want to override this behavior, please set
-   the **PEGASUS_PYTHON** environment variable during the build. This
-   environment variable is only for build time configuration. Once
-   built, Pegasus will continue to use the build time specified Python
-   install.
+      # python3 -v
+      Python 3.6.8
 
 -  **HTCondor (formerly Condor) 8.6 or higher**. See
    http://www.cs.wisc.edu/htcondor/ for more information. You should be
@@ -47,16 +40,8 @@ Pegasus has a few dependencies:
 Optional Software
 =================
 
--  **Globus 5.0 or higher**. Globus is only needed if you want to run
-   against grid sites or use GridFTP for data transfers. See
-   http://www.globus.org/ for more information.
-
 -  **psycopg2**. Python module for PostgreSQL access. Only needed if you
    want to store the runtime database in PostgreSQL (default is SQLite)
-
--  **python3-pika**. Python module for sending workflow events to
-   RabbitMQ. This is optional, and has to be enabled in the Pegasus
-   workflow configuration.
 
 .. _env:
 
@@ -73,19 +58,11 @@ Example for bourne shells:
 ::
 
 
-       $ export PATH=/some/install/pegasus-4.8/bin:$PATH
+       $ export PATH=/some/install/pegasus-5.0.0/bin:$PATH
 
 ..
 
-   **Note**
-
-   Pegasus 4.x is different from previous versions of Pegasus in that it
-   does not require PEGASUS_HOME to be set or sourcing of any
-   environment setup scripts.
-
-If you want to use the :ref:`dax-generator-api`, you might also need to set
-your PYTHONPATH, PERL5LIB, or CLASSPATH. The right setting can be found
-by using pegasus-config:
+If you want to use the API to generate workflows (:ref:`api-reference`), you might also need to set your PYTHONPATH, PERL5LIB, or CLASSPATH. The right setting can be found by using pegasus-config:
 
 ::
 
@@ -95,17 +72,13 @@ by using pegasus-config:
 
 .. _rhel:
 
-RHEL / CentOS / Scientific Linux
-================================
+RHEL / CentOS / SL
+==================
+
+Binary packages provided for: RHEL 7 x86_64 and RHEL 8 x86_64 (including OSes
+derived from RHEL: CentOS, SL)
 
 .. tabs::
-
-   .. code-tab:: bash CentOS 6
-
-      curl --output /etc/yum.repos.d/pegasus.repo \
-            https://download.pegasus.isi.edu/wms/download/rhel/6/pegasus.repo
-
-      yum install pegasus
 
    .. code-tab:: bash CentOS 7
 
@@ -121,100 +94,51 @@ RHEL / CentOS / Scientific Linux
 
       yum install pegasus
 
-Binary packages provided for: RHEL 6 x86_64, RHEL 7 x86_64 (and OSes
-derived from RHEL: CentOS, SL)
-
-Add the Pegasus repository to yum downloading the Pegasus repos file and
-adding it to\ **``/etc/yum.repos.d/``**. For RHEL 7 based systemes:
-
-::
-
-   # wget -O /etc/yum.repos.d/pegasus.repo https://download.pegasus.isi.edu/pegasus/rhel/7/pegasus.repo
-
-For RHEL 6 based systems:
-
-::
-
-   # wget -O /etc/yum.repos.d/pegasus.repo https://download.pegasus.isi.edu/pegasus/rhel/6/pegasus.repo
-
-Search for, and install Pegasus:
-
-::
-
-   # yum search pegasus
-   pegasus.x86_64 : Workflow management system for Condor, grids, and clouds
-   # yum install pegasus
-   Running Transaction
-   Installing     : pegasus
-
-   Installed:
-   pegasus
-
-   Complete!
 
 Ubuntu
 ======
 
-Binary packages provided for: 17.04 (Zesty Zapus) x86_64, 16.04 (Xenial
-Xerus) x86_64
+.. tabs::
 
-**For 17.04 (Zesty Zapus) based systems:**
+   .. code-tab:: bash 18.04 LTS (Bionic Beaver)
 
-To be able to install and upgrade from the Pegasus apt repository, you
-will have to trust the repository key. You only need to add the
-repository key once:
+      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
 
-::
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu bionic main' >/etc/apt/sources.list.d/pegasus.list
 
-   # wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      apt-get update
 
-Create repository file, update and install Pegasus:
+      apt-get install pegasus
 
-::
+   .. code-tab:: bash 20.04 LTS (Focal Fossa)
 
-   # echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu zesty main' >/etc/apt/sources.list.d/pegasus.list
-   # apt-get update
-   # apt-get install pegasus
+      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
 
-**For 16.04 (Xenial Xerus) based systems:**
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu fossa main' >/etc/apt/sources.list.d/pegasus.list
 
-To be able to install and upgrade from the Pegasus apt repository, you
-will have to trust the repository key. You only need to add the
-repository key once:
+      apt-get update
 
-::
+      apt-get install pegasus
 
-   # wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-
-Create repository file, update and install Pegasus:
-
-::
-
-   # echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu xenial main' >/etc/apt/sources.list.d/pegasus.list
-   # apt-get update
-   # apt-get install pegasus
 
 Debian
 ======
 
-Binary packages provided for: 9 (Stretch) x86_64, 10 (Buster) x86_64
+.. tabs::
 
-To be able to install and upgrade from the Pegasus apt repository, you
-will have to trust the repository key. You only need to add the
-repository key once:
+   .. code-tab:: bash Debian 9 (Stretch)
 
-::
+      wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/debian stretch main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
+      apt-get install pegasus
 
-   # wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+   .. code-tab:: bash Debian 10 (Buster)
 
-Create repository file, update and install Pegasus (currently available
-releases are stretch (9) and buster (10) - replace the *strecth* part):
-
-::
-
-   # echo 'deb https://download.pegasus.isi.edu/pegasus/debian stretch main' >/etc/apt/sources.list.d/pegasus.list
-   # apt-get update
-   # apt-get install pegasus
+      wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/debian buster main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
+      apt-get install pegasus
 
 .. _macosx:
 
