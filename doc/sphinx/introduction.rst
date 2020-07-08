@@ -143,19 +143,3 @@ see the `Gallery of Workflows <http://pegasus.isi.edu/workflow_gallery/>`__.
 We are always looking for new applications willing to leverage our
 workflow technologies. If you are interested please contact us at
 pegasus at isi dot edu.
-
-.. _about-document:
-
-About this Document
-===================
-
-This document is designed to acquaint new users with the capabilities of
-the Pegasus Workflow Management System (WMS) and to demonstrate how WMS
-can efficiently provide a variety of ways to execute complex workflows
-on distributed resources. Readers are encouraged to take the tutorial to
-acquaint themselves with the components of the Pegasus System. Readers
-may also want to navigate through the chapters to acquaint themselves
-with the components on a deeper level to understand how to integrate
-Pegasus with your own data resources to resolve your individual
-computational challenges.
-
