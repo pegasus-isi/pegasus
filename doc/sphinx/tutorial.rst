@@ -65,7 +65,6 @@ using SSH as shown below.
    $ ssh tutorial@pegasus-tutorial.isi.edu
    tutorial@pegasus-tutorial.isi.edu's password: pegasus123
 
-..
 
 .. note::
 
@@ -77,11 +76,8 @@ using SSH as shown below.
 We have provided several virtual machines that contain all of the
 software required for this tutorial. Virtual machine images are provided
 for :ref:`vm-virtualbox` and :ref:`vm-amazon`.
-Information about deploying the tutorial VM on these platforms is in
-`the appendix <#tutorial_vm>`__. If you want to use the tutorial VM,
-please go to the appendix for the platform you are using and follow the
-instructions for starting the VM found there before continuing with this
-tutorial.
+
+**OR**
 
 If you have already installed Pegasus and Condor on your own machine,
 then you don't need to use the VM for the tutorial. You can use the
