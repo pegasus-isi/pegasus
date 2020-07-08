@@ -22,13 +22,13 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author gmehta
@@ -1694,28 +1694,29 @@ public class AbstractJob {
             writer.endElement();
         }
     }
-    
+
     /**
      * Custom serializer for YAML representation of AbstractJob
-     * 
+     *
      * @author Ryan Tanaka
      */
     public static class JsonSerializer extends PegasusJsonSerializer<AbstractJob> {
-        
+
         public JsonSerializer() {}
-        
-        public void serialize(AbstractJob job, JsonGenerator gen, SerializerProvider sp) throws IOException {
+
+        public void serialize(AbstractJob job, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
             gen.writeStartObject();
-            
+
             // am I a job, DAG, or DAX
             if (job.isJob()) {
                 gen.writeStringField("type", "job");
-                
+
                 gen.writeStringField("name", job.mName);
-             
+
                 // namespace
                 if (job.mNamespace != null && !job.mNamespace.trim().isEmpty()) {
-                   gen.writeStringField("namespace", job.mNamespace);
+                    gen.writeStringField("namespace", job.mNamespace);
                 }
 
                 // version
@@ -1729,35 +1730,35 @@ public class AbstractJob {
                 gen.writeStringField("type", "pegasusWorkflow");
                 gen.writeStringField("file", job.mName);
             }
-            
+
             // id
             gen.writeStringField("id", job.mId);
-           
+
             // nodeLabel
             if (job.mNodeLabel != null && !job.mNodeLabel.isEmpty()) {
                 gen.writeStringField("nodeLabel", job.mNodeLabel);
             }
-           
-            // profiles 
+
+            // profiles
             if (!job.mProfiles.isEmpty()) {
                 // group profiles by namespace
                 Map<String, List<Profile>> profiles = new HashMap<>();
-                for (Profile.NAMESPACE nspc: Profile.NAMESPACE.values()) {
+                for (Profile.NAMESPACE nspc : Profile.NAMESPACE.values()) {
                     profiles.put(nspc.toString().toLowerCase(), new ArrayList<>());
                 }
 
-                for (Profile p: job.mProfiles) {
+                for (Profile p : job.mProfiles) {
                     profiles.get(p.getNameSpace().toLowerCase()).add(p);
                 }
-                
+
                 gen.writeObjectFieldStart("profiles");
-                for (Map.Entry<String, List<Profile>> e: profiles.entrySet()) {
+                for (Map.Entry<String, List<Profile>> e : profiles.entrySet()) {
                     if (!e.getValue().isEmpty()) {
                         gen.writeObjectFieldStart(e.getKey());
-                        for (Profile p: e.getValue()) {
+                        for (Profile p : e.getValue()) {
                             gen.writeStringField(p.getKey(), p.getValue());
                         }
-                        gen.writeEndObject();  
+                        gen.writeEndObject();
                     }
                 }
                 gen.writeEndObject();
@@ -1766,82 +1767,80 @@ public class AbstractJob {
             // metadata
             if (!job.mMetaDataAttributes.isEmpty()) {
                 gen.writeArrayFieldStart("metadata");
-                for (MetaData m: job.mMetaDataAttributes) {
+                for (MetaData m : job.mMetaDataAttributes) {
                     gen.writeObject(m);
                 }
                 gen.writeEndArray();
             }
-            
+
             // hooks
             if (!job.mInvokes.isEmpty()) {
                 gen.writeObjectFieldStart("hooks");
                 gen.writeArrayFieldStart("shell");
-                for (Invoke iv: job.mInvokes) {
+                for (Invoke iv : job.mInvokes) {
                     gen.writeObject(iv);
                 }
                 gen.writeEndArray();
                 gen.writeEndObject();
             }
-            
+
             // add extra uses for stdin|stdout|stderr if not specified
             // by the user in the uses section
             Set<File> addOnUses = new LinkedHashSet<File>();
-            
+
             // stdin
             if (job.mStdin != null) {
                 if (!job.mUses.contains(job.mStdin)) {
                     File f = new File(job.mStdin, File.LINK.INPUT);
                     addOnUses.add(f);
                 }
-                
+
                 gen.writeStringField("stdin", job.mStdin.mName);
             }
-            
+
             // stdout
             if (job.mStdout != null) {
                 if (!job.mUses.contains(job.mStdout)) {
                     File f = new File(job.mStdout, File.LINK.OUTPUT);
                     addOnUses.add(f);
                 }
-                
+
                 gen.writeStringField("stdout", job.mStdout.mName);
             }
-            
+
             // stderr
             if (job.mStderr != null) {
                 if (!job.mUses.contains(job.mStderr)) {
                     File f = new File(job.mStderr, File.LINK.OUTPUT);
                     addOnUses.add(f);
                 }
-                
+
                 gen.writeStringField("stderr", job.mStderr.mName);
             }
-            
+
             // arguments
             if (!job.mArguments.isEmpty()) {
                 gen.writeArrayFieldStart("arguments");
-                for (Object o: job.mArguments) {
+                for (Object o : job.mArguments) {
                     if (o.getClass() == String.class) {
-                        gen.writeString((String)o);
+                        gen.writeString((String) o);
                     }
-                    
+
                     if (o.getClass() == File.class) {
-                        gen.writeString(((File)o).mName);
+                        gen.writeString(((File) o).mName);
                     }
                 }
                 gen.writeEndArray();
             }
-            
+
             // uses
             gen.writeArrayFieldStart("uses");
-            for (File f: job.mUses) {
+            for (File f : job.mUses) {
                 gen.writeObject(f);
             }
             gen.writeEndArray();
-            
+
             gen.writeEndObject();
-           
-           
         }
     }
 }

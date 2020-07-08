@@ -8,7 +8,7 @@ executes a workflow that has been planned using \*pegasus-plan*.
    ::
 
       pegasus-run [-Dproperty=value…][-c propsfile][-d level]
-                  [-v][--grid*][rundir]
+                  [-v][--grid][rundir]
 
 
 
@@ -56,8 +56,8 @@ directory needs to be specified.
 **-v**; \ **--verbose**
    Raises debug level. Each invocation increase the level by 1.
 
-**--grid**
-   Enable grid checks to see if your submit machine is GRID enabled.
+**--grid** \ **--nogrid**
+   Enable or disable grid checks to see if your submit machine is GRID enabled.
 
 *rundir*
    Is the full qualified path to the base directory containing the
@@ -127,7 +127,7 @@ Environment Variables
 
 **PATH**
    The path variable is used to locate binaries for condor-submit-dag,
-   condor-dagman, condor-submit,pegasus-submit-dag, pegasus-dagman and
+   condor-dagman, condor-submit, pegasus-submit-dag, pegasus-dagman and
    pegasus-monitord
 
 
@@ -145,5 +145,7 @@ Authors
 Gaurang Mehta ``<gmehta at isi dot edu>``
 
 Jens-S. Vöckler ``<voeckler at isi dot edu>``
+
+Rajiv Mayani ``<mayani at isi dot edu>``
 
 Pegasus Team http://pegasus.isi.edu

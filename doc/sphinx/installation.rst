@@ -24,12 +24,12 @@ Pegasus has a few dependencies:
       # java -version
       java version "1.8.0"
 
--  **Python 3.6 or higher**. Check with:
+-  **Python 3.5 or higher**. Check with:
 
    ::
 
       # python3 -v
-      Python 3.6.8
+      Python 3.6.9
 
 -  **HTCondor (formerly Condor) 8.6 or higher**. See
    http://www.cs.wisc.edu/htcondor/ for more information. You should be
@@ -39,6 +39,9 @@ Pegasus has a few dependencies:
 
 Optional Software
 =================
+
+-  **mysqlclient**. Python module for MySQL access. Only needed if you
+   want to store the runtime database in MySQL (default is SQLite)
 
 -  **psycopg2**. Python module for PostgreSQL access. Only needed if you
    want to store the runtime database in PostgreSQL (default is SQLite)
@@ -57,8 +60,7 @@ Example for bourne shells:
 
 ::
 
-
-       $ export PATH=/some/install/pegasus-5.0.0/bin:$PATH
+   $ export PATH=/some/install/pegasus-5.0.0/bin:$PATH
 
 ..
 
@@ -182,8 +184,8 @@ And you can uninstall Pegasus and HTCondor using ``brew rm`` like this:
    **Note**
 
    It is also possible to install the latest development versions of
-   Pegasus using the ``--devel`` and ``--HEAD`` arguments to
-   ``brew install``, like this: ``$ brew install --devel pegasus``
+   Pegasus using the ``--HEAD`` arguments to
+   ``brew install``, like this: ``$ brew install --HEAD pegasus``
 
 .. _tarballs:
 
@@ -200,10 +202,30 @@ keep the HTCondor installation separate from the Pegasus installation.
 
    ::
 
-      # tar zxf pegasus-*.tar.gz
+      $ tar zxf pegasus-*.tar.gz
 
 -  include the Pegasus bin directory in your PATH
 
    ::
 
-      # export PATH=/path/to/pegasus-install/bin:$PATH
+      $ export PATH=/path/to/pegasus-install/bin:$PATH
+
+.. _pypi-packages::
+
+Pegasus Python Packages for PyPi
+================================
+
+- To install the new Pegasus API.
+
+   ::
+
+      $ pip install pegasus-wms.api
+
+
+- To install old Python DAX API. **The old DAX API is deprecated and will be
+removed in Pegasus 5.1.0.**
+
+   ::
+
+      $ pip install pegasus-wms.dax
+

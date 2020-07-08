@@ -15,12 +15,12 @@ pegasus-plan and pegasus-run
 Description
 ===========
 
-The pegasus-remove command remove a submitted/running workflow that has
+The pegasus-remove command removes a running workflow that had
 been planned and submitted using **pegasus-plan** and **pegasus-run**.
 The command can be invoked either in the planned directory with no
 options and arguments or just the full path to the run directory.
 
-Another way to remove a workflow is with the pegasus-halt command. The
+Another way to remove a workflow is with the **pegasus-halt** command. The
 difference is that pegasus-halt will allow current jobs to finish
 gracefully before stopping the workflow.
 
@@ -91,5 +91,7 @@ Authors
 Gaurang Mehta <gmehta at isi dot edu>
 
 Jens-S. Vöckler <voeckler at isi dot edu>
+
+Rajiv Mayani <mayani at isi dot edu>
 
 Pegasus Team http://pegasus.isi.edu

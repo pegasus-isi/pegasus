@@ -2,23 +2,19 @@
 pegasus-tc-converter
 ====================
 
-1
-pegasus-tc-converter
-A client to convert transformation catalog from one format to another
-format.
+A client to parse the transformation catalogs in given input format (Text or YAML) and generates transformation catalog into given output format (Text or YAML).
+
    ::
 
-      pegasus-tc-converter [-Dproperty=value…] [-v] [-q] [-V] [-h]
-                           [-I fmt] [-O fmt]
-                           [-N dbusername] [-P dbpassword] [-U dburl] [-H dbhost]
-                           -i infile[,infile,…] -o outfile
-
+      pegasus-tc-converter [-Dprop [..]]  [--iformat <input format>] [--oformat <output format>]
+                           [--input <list of input files>] [--output <output file to write>]
+                           [--conf <path to property file>] [--verbose] [--quiet] [--Version] [--help]
 
 
 Description
 ===========
 
-The tc-convert program is used to convert the transformation catalog
+The tc-converter program is used to convert the transformation catalog
 from one format to another.
 
 Currently, the following formats of transformation catalog exist:
@@ -36,34 +32,31 @@ Currently, the following formats of transformation catalog exist:
               pfn "/path/to/keg"
               arch  "x86"
               os    "linux"
-              osrelease "fc"
-              osversion "4"
               type "installed"
           }
       }
 
-**File**
-   This is a tuple based format which contains 6 columns.
+**YAML**
+   This is YAML-based format. A sample entry in this format looks as follows:
 
    ::
 
-      RESOURCE  LFN  PFN  TYPE  SYSINFO  PROFILES
-
-   A sample entry in this format looks as follows
-
-   ::
-
-      isi  example::keg:1.0  /path/to/keg  INSTALLED  INTEL32::LINUX:fc_4:  env::JAVA_HOME="/bin/java.1.6"
-
-**Database**
-   Only MySQL is supported for the time being.
-
-
+      pegasus: "5.0"
+      transformations:
+       -
+        name: "keg"
+        sites:
+         -
+          name: "condorpool"
+          type: "installed"
+          pfn: "/path/to/keg"
+          arch: "x86_64"
+          os.type: "linux"
 
 Options
 =======
 
-**-D**\ *property=value*
+**-D**\ *prop=value*
    The **-D** option allows an experienced user to override certain
    properties which influence the program execution, among them the
    default location of the user’s properties file and the
@@ -76,11 +69,10 @@ Options
 
 **-I** *fmt*; \ **--iformat** *fmt*
    The input format of the input files. Valid values for the input
-   format are: **File**, **Text**, and **Database**.
+   format are: **Text** or **YAML**.
 
 **-O** *fmt* **--oformat** *fmt* The output format of the output file.
-Valid values for the output format are: **File**, **Text**, and
-**Database**.
+Valid values for the output format are: **Text** or **YAML**
 
 **-i** *infile*\ [,*infile*,…] **--input** *infile*\ [,*infile*,…] The
 comma separated list of input files that need to be converted to a file
@@ -93,19 +85,6 @@ in the format specified by the **--oformat** option.
 
 Other Options
 -------------
-
-**-N** *dbusername*; \ **--db-user-name** *dbusername*
-   The database user name.
-
-**-P** *dbpassword*; \ **--db-user-pwd** *dbpassword*
-   The database user password.
-
-**-U** *dburl*; \ **--db-url** *dburl*
-   The database url.
-
-**-H** *dbhost*; \ **--db-host** *dbhost*
-   The database host.
-
 **-v**; \ **--verbose**
    Increases the verbosity of messages about what is going on. By
    default, all FATAL ERROR, ERROR , CONSOLE and WARNINGS messages are
@@ -128,25 +107,18 @@ Other Options
 Example
 =======
 
-Text to file format conversion
+Text to YAML format conversion
 
 ::
 
-   pegasus-tc-converter -i tc.data -I File -o tc.txt  -O Text -v
+   pegasus-tc-converter -i tc.text -I Text -o tc.yml -v
 
-File to Database(new) format conversion
 
-::
-
-   pegasus-tc-converter -i tc.data -I File -N mysql_user -P mysql_pwd -U jdbc:mysql://localhost:3306/tc -H localhost -O Database -v
-
-Database (username, password, host, url specified in properties file) to text format conversion
+YAML to Text format conversion
 
 ::
 
-   pegasus-tc-converter -I Database -o tc.txt -O Text -vvvvv
-
-
+   pegasus-tc-converter  -i tc.yml -I YAML -O Text -o tc.text -v
 
 Authors
 =======
@@ -154,3 +126,4 @@ Authors
 Prasanth Thomas
 
 Pegasus Team http://pegasus.isi.edu
+

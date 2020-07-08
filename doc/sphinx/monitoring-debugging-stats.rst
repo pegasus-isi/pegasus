@@ -61,7 +61,7 @@ legends if you are new to it, or need to present it.
          0       0       0       6       0       3       0  33.3
    Summary: 3 DAGs total (Running:3)
 
-Without the ``-l`` option, the only a summary of the workflow statistics
+Without the ``-l`` option, only a summary of the workflow statistics
 is shown under the current queue status. However, with the ``-l``
 option, it will show each sub-workflow separately:
 
@@ -100,12 +100,12 @@ after it has finished.
    **Warning**
 
    For large workflows with many jobs, please note that
-   ``pegasus-status`` will take time to compile state from all workflow
+   ``pegasus-status`` will take time to compile tthe state from all workflow
    files. This typically affects the initial run, and sub-sequent runs
    are faster due to the file system's buffer cache. However, on a
    low-RAM machine, thrashing is a possibility.
 
-The following output show a failed workflow after no more jobs from it
+The following output shows a failed workflow after no more jobs from it
 exist. Please note how no active jobs are shown, and the failure status
 of the total workflow.
 
@@ -127,8 +127,8 @@ the workflow directory and summarizing useful information to the user.
 It should be used after the workflow has already finished execution.
 pegasus-analyzer quickly goes through the jobstate.log file, and
 isolates jobs that did not complete successfully. It then parses their
-submit, and kickstart output files, printing to the user detailed
-information for helping the user debug what happened to his/her
+submit, and kickstart output files, printing detailed
+information for helping the user debug what happened to their
 workflow.
 
 The simplest way to invoke pegasus-analyzer is to simply give it a
@@ -188,7 +188,7 @@ workflow run directory, like in the example below:
 In the case above, pegasus-analyzer's output contains a brief summary
 section, showing how many jobs have succeeded and how many have failed.
 If there are any held jobs, pegasus-analyzer will report the name of the
-job that was held, and the reason why , as determined from the
+job that was held, and the reason why, as determined from the
 dagman.out file for the workflow. The last_job_instance_id is the
 database id for the job in the job instance table of the monitoring
 database. After that, pegasus-analyzer will print information about each
@@ -198,7 +198,7 @@ display any stdout and stderr from the job, as recorded in its kickstart
 record. Please consult pegasus-analyzer's man page for more examples and
 a detailed description of its various command-line options.
 
-   **Note**
+.. note::
 
    Starting with 4.0 release, by default pegasus analyzer queries the
    database to debug the workflow. If you want it to use files in the
@@ -228,7 +228,7 @@ does not continue a partially running job unless the executable supports
 checkpointing.
 
 To resubmit an aborted or failed workflow with the same submit files and
-rescue Dag just rerun the pegasus-run command
+rescue DAG just rerun the pegasus-run command
 
 ::
 
@@ -245,7 +245,7 @@ scheme can be found `here <#stampede_schema_overview>`__.
 
 The statistics and plotting tools use the following terminology for
 defining tasks, jobs etc. Pegasus takes in a DAX which is composed of
-tasks. Pegasus plans it into a Condor DAG / Executable workflow that
+tasks. Pegasus plans it into a HTCondor DAG / Executable workflow that
 consists of Jobs. In case of Clustering, multiple tasks in the DAX can
 be captured into a single job in the Executable workflow. When DAGMan
 executes a job, a job instance is populated . Job instances capture
@@ -261,7 +261,7 @@ pegasus-statistics
 ------------------
 
 Pegasus statistics can compute statistics over one or more than one
-workflow run.
+workflow runs.
 
 Command to generate statistics over a single run is as shown below.
 
@@ -350,7 +350,7 @@ all the statistics information for the workflow run. Please consult the
 pegasus-statistics man page to find a detailed description of various
 command line options.
 
-   **Note**
+.. note::
 
    In case of hierarchal workflows, the metrics that are displayed on
    stdout take into account all the jobs/tasks/sub workflows that make
@@ -426,9 +426,7 @@ single database is as shown below.
    Workflow cumulative job badput wall time                 : 0
    Cumulative job badput wall time as seen from submit side : 0
 
-..
-
-   **Note**
+.. note::
 
    When computing statistics over multiple workflows, please note,
 
@@ -736,125 +734,6 @@ checks.
    \                                    compute output    5     0.758
    ==================================== ======= ========= ===== ==============
 
-pegasus-plots
--------------
-
-Pegasus-plots generates graphs and charts to visualize workflow
-execution. To generate graphs and charts run the command as shown below.
-
-::
-
-   $ pegasus-plots  -p all  /scratch/grid-setup/run0001/
-
-
-   ...
-
-   ******************************************** SUMMARY ********************************************
-
-   Graphs and charts generated by pegasus-plots can be viewed by opening the generated html file in the web browser  :
-   /scratch/grid-setup/run0001/plots/index.html
-
-   **************************************************************************************************
-
-By default the output gets generated to plots folder inside the submit
-directory. The output that is generated by pegasus-plots is based on the
-value set for command line option 'p'(plotting_level).In the sample run
-the command line option 'p' is set to 'all' to generate all the charts
-and graphs for the workflow run. Please consult the pegasus-plots man
-page to find a detailed description of various command line options.
-pegasus-plots generates an index.html file which provides links to all
-the generated charts and plots. A sample index.html page is shown below.
-
-.. figure:: images/pegasus_plots_index.png
-   :alt: pegasus-plot index page
-   :width: 100.0%
-
-   pegasus-plot index page
-
-pegasus-plots generates the following plots and charts.
-
-**Dax Graph**
-
-Graph representation of the DAX file. A sample page is shown below.
-
-.. figure:: images/dax_page.png
-   :alt: DAX Graph
-   :width: 100.0%
-
-   DAX Graph
-
-**Dag Graph**
-
-Graph representation of the DAG file. A sample page is shown below.
-
-.. figure:: images/dag_page.png
-   :alt: DAG Graph
-   :width: 100.0%
-
-   DAG Graph
-
-**Gantt workflow execution chart**
-
-Gantt chart of the workflow execution run. A sample page is shown below.
-
-.. figure:: images/gantt_chart_page.png
-   :alt: Gantt Chart
-   :width: 100.0%
-
-   Gantt Chart
-
-The toolbar at the top provides zoom in/out , pan left/right/top/bottom
-and show/hide job name functionality.The toolbar at the bottom can be
-used to show/hide job states. Failed job instances are shown in red
-border in the chart. Clicking on a sub workflow job instance will take
-you to the corresponding sub workflow chart.
-
-**Host over time chart**
-
-Host over time chart of the workflow execution run. A sample page is
-shown below.
-
-.. figure:: images/host_chart_page.png
-   :alt: Host over time chart
-   :width: 100.0%
-
-   Host over time chart
-
-The toolbar at the top provides zoom in/out , pan left/right/top/bottom
-and show/hide host name functionality.The toolbar at the bottom can be
-used to show/hide job states. Failed job instances are shown in red
-border in the chart. Clicking on a sub workflow job instance will take
-you to the corresponding sub workflow chart.
-
-**Time chart**
-
-Time chart shows job instance/invocation count and runtime of the
-workflow run over time. A sample page is shown below.
-
-.. figure:: images/time_chart_page.png
-   :alt: Time chart
-   :width: 100.0%
-
-   Time chart
-
-The toolbar at the top provides zoom in/out and pan
-left/right/top/bottom functionality. The toolbar at the bottom can be
-used to switch between job instances/ invocations and day/hour
-filtering.
-
-**Breakdown chart**
-
-Breakdown chart shows invocation count and runtime of the workflow run
-grouped by transformation name. A sample page is shown below.
-
-.. figure:: images/breakdown_chart_page.png
-   :alt: Breakdown chart
-   :width: 100.0%
-
-   Breakdown chart
-
-The toolbar at the bottom can be used to switch between invocation count
-and runtime filtering. Legends can be clicked to get more details.
 
 Dashboard
 =========
@@ -873,7 +752,7 @@ is developed in Python and uses the Flask framework to implement the web
 interface.The users can then connect to this server using a browser to
 monitor/debug workflows.
 
-   **Note**
+.. note::
 
    the workflow dashboard can only monitor workflows which have been
    executed using Pegasus 4.2.0 and above.
@@ -931,7 +810,7 @@ In addition, the details page displays a tab listing all sub-workflows
 and their statuses. Additional tabs exist which list information for all
 running, failed, successful, and failing jobs.
 
-   **Note**
+.. note::
 
    Failing jobs are currently running jobs (visible in Running tab),
    which have failed in previous attempts to execute them.
@@ -1419,7 +1298,7 @@ In the first example, **pegasus-monitord** will send the data to the
 **pegasus-monitord** will store the data in the /tmp/diamond-0.db SQLite
 database.
 
-   **Note**
+.. note::
 
    For absolute paths four slashes are required when specifying an
    alternative database path in SQLite.
@@ -3232,7 +3111,7 @@ The\ `workflow events <#stampede_wf_events>`__ generated by
 *pegasus-monitord*\ can also be used to publish to an AMQP message
 server such as RabbitMQ in addition to the stampede workflow database.
 
-   **Note**
+.. note::
 
    A thing to keep in mind. The workflow events are documented as
    conforming to the netlogger requirements. When events are pushed to
@@ -3268,7 +3147,7 @@ of events that need to be sent using the property
 
 ..
 
-   **Note**
+.. note::
 
    To get all events you can just specify \* as the value to the
    property.
@@ -3366,10 +3245,10 @@ Grafana dashboard like:
 A Pre-Configured Data Collection Pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In this `repository <https://github.com/pegasus-isi/dibbs-data-collection-setup>`_, 
-we provide a containerized data-collection/visualization pipeline similar to 
-what we use in production. The figure below illustrates the processes involved 
-in the pipeline and how they are connected to one another. For more information 
+In this `repository <https://github.com/pegasus-isi/dibbs-data-collection-setup>`_,
+we provide a containerized data-collection/visualization pipeline similar to
+what we use in production. The figure below illustrates the processes involved
+in the pipeline and how they are connected to one another. For more information
 regarding setup and usage, please visit the link referenced above.
 
 .. figure:: images/data-collection-pipeline.svg
