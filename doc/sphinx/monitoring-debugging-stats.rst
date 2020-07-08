@@ -1409,9 +1409,6 @@ script or Post Script is associated with a job instance, then
 invocations are populated in the database for the corresponding job
 instance.
 
-The current schema version is **4.0** that is stored in the schema_info
-table.
-
 .. figure:: images/stampede_schema_overview-small.png
    :alt: Workflow Database Schema
    :name: stampede_schema_overview_figure
@@ -1420,107 +1417,40 @@ table.
 
 .. _schema-upgrade-tool:
 
-Stampede Schema Upgrade Tool
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Starting Pegasus 4.x the monitoring and statistics database schema has
-changed. If you want to use the pegasus-statistics, pegasus-analyzer and
-pegasus-plots against a 3.x database you will need to upgrade the schema
-first using the schema upgrade tool
-/usr/share/pegasus/sql/schema_tool.py or
-/path/to/pegasus-4.x/share/pegasus/sql/schema_tool.py
-
-Upgrading the schema is required for people using the MySQL database for
-storing their monitoring information if it was setup with 3.x monitoring
-tools.
-
-If your setup uses the default SQLite database then the new databases
-run with Pegasus 4.x are automatically created with the correct schema.
-In this case you only need to upgrade the SQLite database from older
-runs if you wish to query them with the newer clients.
-
-To upgrade the database
-
-::
-
-   For SQLite Database
-
-   cd /to/the/workflow/directory/with/3.x.monitord.db
-
-   Check the db version
-
-   /usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db
-   2012-02-29T01:29:43.330476Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init |
-   2012-02-29T01:29:43.330708Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start |
-   2012-02-29T01:29:43.348995Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
-                                      | Current version set to: 3.1.
-   2012-02-29T01:29:43.349133Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
-                                      | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool.
-
-
-   Convert the Database to be version 4.x compliant
-
-   /usr/share/pegasus/sql/schema_tool.py -u connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db
-   2012-02-29T01:35:35.046317Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init |
-   2012-02-29T01:35:35.046554Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start |
-   2012-02-29T01:35:35.064762Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
-                                     | Current version set to: 3.1.
-   2012-02-29T01:35:35.064902Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
-                                     | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool.
-   2012-02-29T01:35:35.065001Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.upgrade_to_4_0
-                                     | Upgrading to schema version 4.0.
-
-   Verify if the database has been converted to Version 4.x
-
-   /usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db
-   2012-02-29T01:39:17.218902Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init |
-   2012-02-29T01:39:17.219141Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start |
-   2012-02-29T01:39:17.237492Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Current version set to: 4.0.
-   2012-02-29T01:39:17.237624Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Schema up to date.
-
-   For upgrading a MySQL database the steps remain the same. The only thing that changes is the connection String to the database
-   E.g.
-
-   /usr/share/pegasus/sql/schema_tool.py -u connString=mysql://username:password@server:port/dbname
-
-After the database has been upgraded you can use either 3.x or 4.x
-clients to query the database with **pegasus-statistics**, as well as
-**pegasus-plots**\ and **pegasus-analyzer.**
-
 Storing of Exitcode in the database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Kickstart records capture raw status in addition to the exitcode . The
-exitcode is derived from the raw status. Starting with Pegasus 4.0
-release, all exitcode columns ( i.e invocation and job instance table
-columns ) are stored with the raw status by pegasus-monitord. If an
-exitcode is encountered while parsing the dagman log files , the value
+Kickstart records capture raw status in addition to the exitcode. The
+exitcode is derived from the raw status. Since Pegasus 4.0,
+all exitcode columns (i.e., invocation and job instance table
+columns) are stored with the raw status by ``pegasus-monitord``. If an
+exitcode is encountered while parsing the dagman log files, the value
 is converted to the corresponding raw status before it is stored. All
-user tools, pegasus-analyzer and pegasus-statistics then convert the raw
-status to exitcode when retrieving from the database.
+user tools, ``pegasus-analyzer`` and ``pegasus-statistics`` then convert
+the raw status to ``exitcode`` when retrieving from the database.
 
 Multiplier Factor
 ~~~~~~~~~~~~~~~~~
 
-Starting with the 4.0 release, there is a multiplier factor associated
-with the jobs in the job_instance table. It defaults to one, unless the
-user associates a Pegasus profile key named **cores** with the job in
-the DAX. The factor can be used for getting more accurate statistics for
-jobs that run on multiple processors/cores or mpi jobs.
+Since Pegasus 4.0, there is a multiplier factor associated with the
+jobs in the ``job_instance`` table. It defaults to one, unless the
+user associates a Pegasus profile key named ``cores`` with the job in
+the abstract workflow. The factor can be used for getting more accurate
+statistics for jobs that run on multiple processors/cores or mpi jobs.
 
 The multiplier factor is used for computing the following metrics by
-pegasus statistics.
+pegasus statistics:
 
 -  In the summary, the workflow cumulative job wall time
 
 -  In the summary, the cumulative job wall time as seen from the submit
-   side
+   side.
 
 -  In the jobs file, the multiplier factor is listed along-with the
    multiplied kickstart time.
 
 -  In the breakdown file, where statistics are listed per transformation
-   the mean, min , max and average values take into account the
+   the mean, min, max, and average values take into account the
    multiplier factor.
 
 .. _stampede-wf-events:
