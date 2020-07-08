@@ -45,7 +45,7 @@ import java.util.Set;
 public class SiteCatalogYAMLParser extends YAMLParser {
 
     /** The "not-so-official" location URL of the Site Catalog Schema. */
-    public static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/sc-5.0.yml";
+    public static final String SCHEMA_URI = "https://pegasus.isi.edu/schema/sc-5.0.yml";
 
     /** The final result constructed. */
     private SiteStore mResult;

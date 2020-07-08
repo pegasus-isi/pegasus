@@ -35,7 +35,7 @@ public class TCQuery extends Client {
 
     private static final int TABSPACE = 4;
 
-    private static final String XML_NAMESPACE = "http://pegasus.isi.edu/schema";
+    private static final String XML_NAMESPACE = "https://pegasus.isi.edu/schema";
     private static final String XML_VERSION = "2.0";
 
     public TCQuery(TransformationCatalog tc, LogManager mLogger, Map argsmap) {

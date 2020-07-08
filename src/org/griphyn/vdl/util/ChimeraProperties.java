@@ -34,9 +34,9 @@ public class ChimeraProperties {
     /** Default values for schema locations. */
     public static final String VDL_SCHEMA_LOCATION = "http://www.griphyn.org/chimera/vdl-1.24.xsd";
 
-    public static final String DAX_SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-4.0.xsd";
+    public static final String DAX_SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/dax-4.0.xsd";
 
-    public static final String IVR_SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/iv-2.1.xsd";
+    public static final String IVR_SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/iv-2.1.xsd";
 
     public static final String DB_ALL_PREFIX = "pegasus.catalog.*.db";
 

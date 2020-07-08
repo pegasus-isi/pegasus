@@ -136,7 +136,7 @@ public class YAML implements ReplicaCatalog {
     public static final String DEFAULT_REPLICA_CATALOG_VERSION = "5.0";
 
     /** The "not-so-official" location PFN of the Replica Catalog Schema. */
-    public static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/rc-5.0.yml";
+    public static final String SCHEMA_URI = "https://pegasus.isi.edu/schema/rc-5.0.yml";
 
     /** File object of the schema.. */
     private final File SCHEMA_FILE;

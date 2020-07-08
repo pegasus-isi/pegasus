@@ -131,7 +131,7 @@ public class FileDetectorTest {
             writer = new BufferedWriter(new FileWriter(mTestFile));
             writer.write(
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                            + "<sitecatalog xmlns=\"http://pegasus.isi.edu/schema/sitecatalog\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd\" version=\"4.0\">\n"
+                            + "<sitecatalog xmlns=\"https://pegasus.isi.edu/schema/sitecatalog\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://pegasus.isi.edu/schema/sitecatalog https://pegasus.isi.edu/schema/sc-4.0.xsd\" version=\"4.0\">\n"
                             + "\n"
                             + "    <site  handle=\"local\" arch=\"ppc64le\" os=\"LINUX\">\n"
                             + "        <directory type=\"shared-scratch\" path=\"/Volumes/Work/lfs1/work/pegasus-features/PM-1159/work\">\n"

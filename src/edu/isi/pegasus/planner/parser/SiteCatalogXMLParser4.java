@@ -70,7 +70,7 @@ import org.xml.sax.SAXException;
  * This class uses the Xerces SAX2 parser to validate and parse an XML document conforming to the
  * Site Catalog schema v4.0
  *
- * <p>http://pegasus.isi.edu/schema/sc-3.0.xsd
+ * <p>https://pegasus.isi.edu/schema/sc-3.0.xsd
  *
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$
@@ -78,10 +78,10 @@ import org.xml.sax.SAXException;
 public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCatalogXMLParser {
 
     /** The "not-so-official" location URL of the Site Catalog Schema. */
-    public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/sc-4.2.xsd";
+    public static final String SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/sc-4.2.xsd";
 
     /** uri namespace */
-    public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/sitecatalog";
+    public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/sitecatalog";
 
     /** The final result constructed. */
     private SiteStore mResult;

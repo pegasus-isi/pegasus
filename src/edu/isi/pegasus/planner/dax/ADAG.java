@@ -47,8 +47,8 @@ import java.util.Set;
  * <pre>
  * <b>This class provides the Java API to create DAX files.</b>
  *
- * The DAX XML SCHEMA is available at <a href="http://pegasus.isi.edu/schema/dax-3.6.xsd">http://pegasus.isi.edu/schema/dax-3.6.xsd</a>
- * and documentation available at <a href="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html">http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html</a>
+ * The DAX XML SCHEMA is available at <a href="https://pegasus.isi.edu/schema/dax-3.6.xsd">https://pegasus.isi.edu/schema/dax-3.6.xsd</a>
+ * and documentation available at <a href="https://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html">https://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html</a>
  *
  * The DAX consists of 6 parts the first 4 are optional and the last is optional.
  * </pre> <ol> <li><b>file:</b>Used as "In DAX" Replica Catalog
@@ -172,11 +172,11 @@ import java.util.Set;
 public class ADAG {
 
     /** The "official" namespace URI of the site catalog schema. */
-    public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX";
+    public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/DAX";
     /** XSI SCHEMA NAMESPACE */
     public static final String SCHEMA_NAMESPACE_XSI = "http://www.w3.org/2001/XMLSchema-instance";
     /** The "not-so-official" location URL of the DAX schema definition. */
-    public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.6.xsd";
+    public static final String SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/dax-3.6.xsd";
     /** The version to report. */
     public static final String SCHEMA_VERSION = "3.6";
 
