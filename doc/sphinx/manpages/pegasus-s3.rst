@@ -373,4 +373,4 @@ Author
 | Gideon Juve ``<gideon@isi.edu>``
 | Ryan Tanaka ``<tanaka@isi.edu>``
 
-Pegasus Team http://pegasus.isi.edu
+Pegasus Team https://pegasus.isi.edu
