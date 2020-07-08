@@ -925,9 +925,9 @@ public class CPlanner extends Executable {
         if (nonOptionArgumentIndex < args.length) {
             // this works as planner does not take any positional arguments
             StringBuilder error = new StringBuilder();
-            error.append("Unparsed component ")
+            error.append("Unparsed component \"")
                     .append(args[nonOptionArgumentIndex])
-                    .append(" of the command line argument string: ")
+                    .append("\" of the command line argument string: ")
                     .append(" ")
                     .append(options.getOriginalArgString());
             throw new RuntimeException(error.toString());
