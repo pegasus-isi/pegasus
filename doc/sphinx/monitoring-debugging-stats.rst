@@ -1223,11 +1223,11 @@ a full workflow using notifications.
 Monitoring Database
 ===================
 
-Pegasus launches a monitoring daemon called pegasus-monitord per
-workflow ( a single daemon is launched if a user submits a hierarchal
-workflow ) . pegasus-monitord parses the workflow and job logs in the
-submit directory and populates to a database. This chapter gives an
-overview of the pegasus-monitord and describes the schema of the runtime
+Pegasus launches a monitoring daemon called ``pegasus-monitord`` per
+workflow (a single daemon is launched if a user submits a hierarchical
+workflow). ``pegasus-monitord`` parses the workflow and job logs in the
+submit directory and populates to a database. This section gives an
+overview of the ``pegasus-monitord`` and describes the schema of the runtime
 database.
 
 .. _monitoring-pegasus-monitord:
@@ -1235,35 +1235,35 @@ database.
 pegasus-monitord
 ----------------
 
-**Pegasus-monitord** is used to follow workflows, parsing the output of
-DAGMan's dagman.out file. In addition to generating the jobstate.log
+``pegasus-monitord`` is used to follow workflows, parsing the output of
+DAGMan's ``dagman.out`` file. In addition to generating the ``jobstate.log``
 file, which contains the various states that a job goes through during
-the workflow execution, **pegasus-monitord** can also be used to mine
+the workflow execution, ``pegasus-monitord`` can also be used to mine
 information from jobs' submit and output files, and either populate a
 database, or write a file with NetLogger events containing this
-information. **Pegasus-monitord** can also send notifications to users
+information. ``pegasus-monitord`` can also send notifications to users
 in real-time as it parses the workflow execution logs.
 
-**Pegasus-monitord** is automatically invoked by **pegasus-run**, and
-tracks workflows in real-time. By default, it produces the jobstate.log
+``pegasus-monitord`` is automatically invoked by ``pegasus-run``, and
+tracks workflows in real-time. By default, it produces the ``jobstate.log``
 file, and a SQLite database, which contains all the information listed
 in the `Stampede schema <#stampede_schema_overview>`__. When a workflow
-fails, and is re-submitted with a rescue DAG, **pegasus-monitord** will
+fails, and is re-submitted with a rescue DAG, ``pegasus-monitord`` will
 automatically pick up from where it left previously and continue to
-write the jobstate.log file and populate the database.
+write the ``jobstate.log`` file and populate the database.
 
-If, after the workflow has already finished, users need to re-create the
-jobstate.log file, or re-populate the database from scratch,
-**pegasus-monitord**'s **--replay** option should be used when running
-it manually.
+If, once the workflow has completed, users need to re-create the
+``jobstate.log`` file, or re-populate the database from scratch,
+``pegasus-monitord``'s ``--replay`` (or ``-r``) option should be used
+when running it manually.
 
 Populating to different backend databases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In addition to SQLite, **pegasus-monitord** supports other types of
+In addition to SQLite, ``pegasus-monitord`` supports other types of
 databases, such as MySQL and Postgres. Users will need to install the
-low-level database drivers, and can use the **--dest** command-line
-option, or the **pegasus.monitord.output** property to select where the
+low-level database drivers, and can use the ``--dest`` command-line
+option, or the ``pegasus.monitord.output`` property to select where the
 logs should go.
 
 As an example, the command:
@@ -1272,13 +1272,13 @@ As an example, the command:
 
    $ pegasus-monitord -r diamond-0.dag.dagman.out
 
-will launch **pegasus-monitord** in replay mode. In this case, if a
-jobstate.log file already exists, it will be rotated and a new file will
+will launch ``pegasus-monitord`` in replay mode. In this case, if a
+``jobstate.log`` file already exists, it will be rotated and a new file will
 be created. It will also create/use a SQLite database in the workflow's
-run directory, with the name of diamond-0.stampede.db. If the database
+run directory, with the name of ``diamond-0.stampede.db``. If the database
 already exists, it will make sure to remove any references to the
 current workflow before it populates the database. In this case,
-**pegasus-monitord** will process the workflow information from start to
+``pegasus-monitord`` will process the workflow information from start to
 finish, including any restarts that may have happened.
 
 Users can specify an alternative database for the events, as illustrated
@@ -1292,19 +1292,19 @@ by the following examples:
 
    $ pegasus-monitord -r -d sqlite:////tmp/diamond-0.db diamond-0.dag.dagman.out
 
-In the first example, **pegasus-monitord** will send the data to the
-**database_name** database located at server **hostname**, using the
-**username** and **userpass** provided. In the second example,
-**pegasus-monitord** will store the data in the /tmp/diamond-0.db SQLite
-database.
+In the first example, ``pegasus-monitord`` will send the data to the
+``database_name`` database located at server ``hostname``, using the
+``username`` and ``userpass`` provided. In the second example,
+``pegasus-monitord`` will store the data in the ``/tmp/diamond-0.db``
+SQLite database.
 
 .. note::
 
-   For absolute paths four slashes are required when specifying an
+   For absolute paths, four slashes are required when specifying an
    alternative database path in SQLite.
 
 Users should also be aware that in all cases, with the exception of
-SQLite, the database should exist before **pegasus-monitord** is run (as
+SQLite, the database should exist before ``pegasus-monitord`` is run (as
 it creates all needed tables but does not create the database itself).
 
 Finally, the following example:
@@ -1313,14 +1313,14 @@ Finally, the following example:
 
    $ pegasus-monitord -r --dest diamond-0.bp diamond-0.dag.dagman.out
 
-sends events to the diamond-0.bp file. (please note that in replay mode,
+sends events to the ``diamond-0.bp`` file. (please note that in replay mode,
 any data on the file will be overwritten).
 
 One important detail is that while processing a workflow,
-**pegasus-monitord** will automatically detect if/when sub-workflows are
+``pegasus-monitord`` will automatically detect if/when sub-workflows are
 initiated, and will automatically track those sub-workflows as well. In
-this case, although **pegasus-monitord** will create a separate
-jobstate.log file in each workflow directory, the database at the
+this case, although ``pegasus-monitord`` will create a separate
+``jobstate.log`` file in each workflow directory, the database at the
 top-level workflow will contain the information from not only the main
 workflow, but also from all sub-workflows.
 
@@ -1329,83 +1329,82 @@ workflow, but also from all sub-workflows.
 Monitoring related files in the workflow directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Pegasus-monitord** generates a number of files in each workflow
+``pegasus-monitord`` generates a number of files in each workflow
 directory:
 
--  **jobstate.log**: contains a summary of workflow and job execution.
+-  ``jobstate.log``: contains a summary of workflow and job execution.
 
--  **monitord.log**: contains any log messages generated by
-   **pegasus-monitord**. It is not overwritten when it restarts. This
+-  ``monitord.log``: contains any log messages generated by
+   ``pegasus-monitord``. It is not overwritten when it restarts. This
    file is not generated in replay mode, as all log messages from
-   **pegasus-monitord** are output to the console. Also, when
+   ``pegasus-monitord`` are output to the console. Also, when
    sub-workflows are involved, only the top-level workflow will have
-   this log file. Starting with release 4.0 and 3.1.1, monitord.log file
-   is rotated if it exists already.
+   this log file.
 
--  **monitord.started**: contains a timestamp indicating when
-   **pegasus-monitord** was started. This file get overwritten every
-   time **pegasus-monitord** starts.
+-  ``monitord.started``: contains a timestamp indicating when
+   ``pegasus-monitord`` was started. This file get overwritten every
+   time ``pegasus-monitord`` starts.
 
--  **monitord.done**: contains a timestamp indicating when
-   **pegasus-monitord** finished. This file is overwritten every time
-   **pegasus-monitord** starts.
+-  ``monitord.done``: contains a timestamp indicating when
+   ``pegasus-monitord`` finished. This file is overwritten every time
+   ``pegasus-monitord`` starts.
 
--  **monitord.info**: contains **pegasus-monitord** state information,
+-  ``monitord.info``: contains ``pegasus-monitord`` state information,
    which allows it to resume processing if a workflow does not finish
-   properly and a rescue dag is submitted. This file is erased when
-   **pegasus-monitord** is executed in replay mode.
+   properly and a rescue DAG is submitted. This file is erased when
+   ``pegasus-monitord`` is executed in replay mode.
 
--  **monitord.recover**: contains **pegasus-monitord** state information
+-  ``monitord.recover``: contains ``pegasus-monitord`` state information
    that allows it to detect that a previous instance of
-   **pegasus-monitord** failed (or was killed) midway through parsing a
+   ``pegasus-monitord`` failed (or was killed) midway through parsing a
    workflow's execution logs. This file is only present while
-   **pegasus-monitord** is running, as it is deleted when it ends and
+   ``pegasus-monitord`` is running, as it is deleted when it ends and
    the **monitord.info** file is generated.
 
--  **monitord.subwf.db**: contains information that aids
-   **pegasus-monitord** to track when sub-workflows fail and are
-   re-planned/re-tried. It is overwritten when **pegasus-monitord** is
+-  ``monitord.subwf.db``: contains information that aids
+   ``pegasus-monitord`` to track when sub-workflows fail and are
+   re-planned/re-tried. It is overwritten when ``pegasus-monitord`` is
    started in replay mode.
 
--  **monitord-notifications.log**: contains the log file for
+-  ``monitord-notifications.log``: contains the log file for
    notification-related messages. Normally, this file only includes logs
    for failed notifications, but can be populated with all notification
-   information when **pegasus-monitord** is run in verbose mode via the
-   **-v** command-line option.
+   information when ``pegasus-monitord`` is run in verbose mode via the
+   ``-v`` command-line option.
 
 Multiple End points
 ~~~~~~~~~~~~~~~~~~~
 
-pegasus-monitord can be used to publish `events <#stampede_wf_events>`__
+```pegasus-monitord`` can be used to publish `events <#stampede_wf_events>`__
 to different backends at the same time. The configuration of this is
 managed through properties matching
-**pegasus.catalog.workflow.<variable-name>.url** .
+``pegasus.catalog.workflow.<variable-name>.url``.
 
 For example, to enable populating to an AMQP end point and a file format
-in addition to default sqlite you can configure as follows
+in addition to default SQLite you can configure as follows:
 
 ::
 
    pegasus.catalog.workflow.amqp.url amqp://vahi:XXXXX@amqp.isi.edu:5672/panorama/monitoring
    pegasus.catalog.workflow.file.url file:///lfs1/work/monitord/amqp/nl.bp
 
-If you want to only override the default sqlite population , then you
-can specify pegasus.catalog.workflow.url property .
+If you want to only override the default SQLite population, then you
+can specify the ``pegasus.catalog.workflow.url`` property.
 
 .. _stampede-schema-overview:
 
 Overview of the Workflow Database Schema.
 -----------------------------------------
 
-Pegasus takes in a DAX which is composed of tasks. Pegasus plans it into
-a Condor DAG / Executable workflow that consists of Jobs. In case of
-Clustering, multiple tasks in the DAX can be captured into a single job
-in the Executable workflow. When DAGMan executes a job, a job instance
-is populated . Job instances capture information as seen by DAGMan. In
-case DAGMan retires a job on detecting a failure , a new job instance is
-populated. When DAGMan finds a job instance has finished , an invocation
-is associated with job instance. In case of clustered job, multiple
-invocations will be associated with a single job instance. If a Pre
+Pegasus takes in an abstract workflow, which is composed of tasks.
+Pegasus plans it into a Condor DAG / Executable workflow that consists
+of Jobs. In case of Clustering, multiple tasks in the DAX can be captured
+into a single job in the Executable workflow. When DAGMan executes a job,
+a job instance is populated. Job instances capture information as seen by
+DAGMan. In case DAGMan retries a job when detecting a failure, a new job
+instance is populated. When DAGMan finds a job instance has finished, an
+invocation is associated with the job instance. In case of a clustered job,
+multiple invocations will be associated with a single job instance. If a Pre
 script or Post Script is associated with a job instance, then
 invocations are populated in the database for the corresponding job
 instance.
