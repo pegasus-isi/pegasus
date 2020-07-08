@@ -795,8 +795,9 @@ public class CPlanner extends Executable {
 
                 case 'd': // dax
                     options.setDAX(g.getOptarg());
-                    mLogger.log( "--dax option is deprecated. The abstract workflow is passed via the last positional argument on the commandline.",
-                                 LogManager.WARNING_MESSAGE_LEVEL );
+                    mLogger.log(
+                            "--dax option is deprecated. The abstract workflow is passed via the last positional argument on the commandline.",
+                            LogManager.WARNING_MESSAGE_LEVEL);
                     break;
 
                 case 'D': // -Dpegasus.blah=
@@ -925,10 +926,20 @@ public class CPlanner extends Executable {
                     .append(" ")
                     .append(options.getOriginalArgString());
             throw new RuntimeException(error.toString());
-        }
-        else if (nonOptionArgumentIndex == args.length - 1) {
+        } else if (nonOptionArgumentIndex == args.length - 1) {
             // PM-1650 the last positional argument is the workflow file to be used as input
-            options.setDAX(args[nonOptionArgumentIndex]);
+            // sanity check
+            String dax = args[nonOptionArgumentIndex];
+            if (options.getDAX() != null) {
+                StringBuilder error = new StringBuilder();
+                error.append("You have specified both --dax \"")
+                        .append(options.getDAX())
+                        .append("\" and as the last positional argument \"")
+                        .append(dax)
+                        .append("\"");
+                throw new RuntimeException(error.toString());
+            }
+            options.setDAX(dax);
         }
 
         return options;
