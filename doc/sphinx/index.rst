@@ -30,6 +30,7 @@ Welcome to Pegasus WMS's documentation!
     reference-configuration.rst
     jupyter.rst
     optimization.rst
+    glossary.rst
 
 .. toctree::
     :caption: References
@@ -38,7 +39,6 @@ Welcome to Pegasus WMS's documentation!
     api-reference.rst
     cli.rst
     funding-citing-usage-stats.rst
-    glossary.rst
     tutorial-vm.rst
     migration.rst
 
@@ -47,6 +47,7 @@ Welcome to Pegasus WMS's documentation!
     :maxdepth: 2
     
     packages.rst
+    schemas.rst
 
 
 Indices and tables
