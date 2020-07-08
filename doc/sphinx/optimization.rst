@@ -1104,3 +1104,163 @@ for remaining tries:
 
            <profile namespace="condor" key="request_memory"> ifthenelse(isundefined(DAGNodeRetry) || DAGNodeRetry == 0, 1024, 4096) </profile>
 
+
+.. _portable-code:
+
+Best Practices For Developing Portable Code
+===========================================
+
+This document lists out issues for the algorithm developers to keep in
+mind while developing the respective codes. Keeping these in mind will
+alleviate a lot of problems while trying to run the codes in a distributed computing environment.
+
+Codes cannot specify the directory in which they should be run
+--------------------------------------------------------------
+
+Codes are installed in some standard location on the Grid Sites or
+staged on demand. However, they are not invoked from directories where
+they are installed. The codes should be able to be invoked from any
+directory, as long as one can access the directory where the codes are
+installed.
+
+This is especially relevant, while writing scripts around the algorithm
+codes. At that point specifying the relative paths do not work. This is
+because the relative path is constructed from the directory where the
+script is being invoked. A suggested workaround is to pick up the base
+directory where the software is installed from the environment or by
+using the ``dirname`` cmd or api. The workflow system can set
+appropriate environment variables while launching jobs on the Grid.
+
+No hard-coded paths
+-------------------
+
+The algorithms should not hard-code any directory paths in the code. All
+directories paths should be picked up explicitly either from the
+environment (specifying environment variables) or from command line
+options passed to the algorithm code.
+
+Propogating back the right exitcode
+-----------------------------------
+
+A job in the workflow is only released for execution if its parents have
+executed successfully. Hence, it is very important that the algorithm
+codes exit with the correct error code in case of success and failure.
+The algorithms should exit with a status of 0 in case of success, and a
+non zero status in case of error. Failure to do so will result in
+erroneous workflow execution where jobs might be released for execution
+even though their parents had exited with an error.
+
+The algorithm codes should catch all errors and exit with a non zero
+exitcode. The successful execution of the algorithm code can only be
+determined by an exitcode of 0. The algorithm code should not rely upon
+something being written to the stdout to designate success for e.g. if
+the algorithm code writes out to the stdout SUCCESS and exits with a non
+zero status the job would be marked as failed.
+
+In \*nix, a quick way to see if a code is exiting with the correct code
+is to execute the code and then execute echo $?.
+
+::
+
+   $ component-x input-file.lisp
+   ... some output ...
+   $ echo $?
+   0
+
+If the code is not exiting correctly, it is necessary to wrap the code
+in a script that tests some final condition (such as the presence or
+format of a result file) and uses exit to return correctly.
+
+Static vs. Dynamically Linked Libraries
+---------------------------------------
+
+Since there is no way to know the profile of the machine that will be
+executing the code, it is important that dynamically linked libraries
+are avoided or that reliance on them is kept to a minimum. For example,
+a component that requires libc 2.5 may or may not run on a machine that
+uses libc 2.3. On \*nix, you can use the ``ldd`` command to see what
+libraries a binary depends on.
+
+If for some reason you install an algorithm specific library in a non
+standard location make sure to set the LD_LIBRARY_PATH for the algorithm
+in the transformation catalog for each site.
+
+
+.. _cpu-affinity-condor:
+
+Slot Partitioning and CPU Affinity in Condor
+============================================
+
+By default, Condor will evenly divide the resources in a machine (such
+as RAM, swap space and disk space) among all the CPUs, and advertise
+each CPU as its own slot with an even share of the system resources. If
+you want to have your custom configuration, you can use the following
+setting to define the maximum number of different slot types:
+
+::
+
+   MAX_SLOT_TYPES = 2
+
+
+For each slot type, you can divide system resources unevenly among your
+CPUs. The **N** in the name of the macro listed below must be an integer
+from 1 to **MAX_SLOT_TYPES** (defined above).
+
+::
+
+   SLOT_TYPE_1 = cpus=2, ram=50%, swap=1/4, disk=1/4
+   SLOT_TYPE_N = cpus=1, ram=20%, swap=1/4, disk=1/8
+
+
+Slots can also be partitioned to accommodate actual needs by accepted
+jobs. A partitionable slot is always unclaimed and dynamically splitted
+when jobs are started. Slot partitioning can be enable as follows:
+
+::
+
+   SLOT_TYPE_1_PARTITIONABLE = True
+   SLOT_TYPE_N_PARTITIONABLE = True
+
+
+Condor can also bind cores to each slot through CPU affinity:
+
+::
+
+   ENFORCE_CPU_AFFINITY = True
+   SLOT1_CPU_AFFINITY=0,2
+   SLOT2_CPU_AFFINITY=1,3
+
+
+Note that CPU numbers may vary from machines. Thus you need to verify
+what is the association for your machine. One way to accomplish this is
+by using the **lscpu** command line tool. For instance, the output
+provided from this tool may look like:
+
+::
+
+   NUMA node0 CPU(s):     0,2,4,6,8,10
+   NUMA node1 CPU(s):     1,3,5,7,9,11
+
+
+The following example assumes a machine with 2 sockets and 6 cores per
+socket, where even cores belong to socket 1 and odd cores to socket 2:
+
+::
+
+   NUM_SLOTS_TYPE_1 = 1
+   NUM_SLOTS_TYPE_2 = 1
+   SLOT_TYPE_1_PARTITIONABLE = True
+   SLOT_TYPE_2_PARTITIONABLE = True
+
+   SLOT_TYPE_1 = cpus=6
+   SLOT_TYPE_2 = cpus=6
+
+   ENFORCE_CPU_AFFINITY = True
+
+   SLOT1_CPU_AFFINITY=0,2,4,6,8,10
+   SLOT2_CPU_AFFINITY=1,3,5,7,9,11
+
+
+Please read the section on "Configuring The Startd for SMP Machines" in
+the Condor Administrator's Manual for full details.
+

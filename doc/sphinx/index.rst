@@ -7,8 +7,7 @@ Welcome to Pegasus WMS's documentation!
 =======================================
 
 .. toctree::
-    :caption: Pegasus Documentation
-    :name: Pegasus Documentation
+    :caption: User Guide
     :numbered:
     :maxdepth: 2
 
@@ -29,11 +28,11 @@ Welcome to Pegasus WMS's documentation!
     jupyter.rst
     api-reference.rst
     cli.rst
-    useful-tips.rst
     packages.rst
     funding-citing-usage-stats.rst
     glossary.rst
     tutorial-vm.rst
+    migration.rst
 
 
 Indices and tables
