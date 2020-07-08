@@ -46,7 +46,7 @@ Welcome to Pegasus WMS's documentation!
     :caption: Pegasus Development
     :maxdepth: 2
     
-    packages.rst
+    code-documentation.rst
     schemas.rst
 
 
