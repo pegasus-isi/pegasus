@@ -67,6 +67,7 @@ class Container(ProfileMixin):
         mounts: Optional[List[str]] = None,
         image_site: Optional[str] = None,
         checksum: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, Union[int, str, float]]] = None
     ):
         """
         :param name: name of this container
@@ -81,6 +82,8 @@ class Container(ProfileMixin):
         :type image_site: Optional[str]
         :param checksum: Dict containing checksums for the tar file of this image. Currently only sha256 is supported. This should be entered as :code:`{"sha256": <value>}`, defaults to None
         :type checksum: Optional[Dict[str, str]]
+        :param metadata: Dict containing metadata key, value pairs associated with this container, defaults to None
+        :type metadata: Optional[Dict[str, Union[int, str, float]]]
         :raises ValueError: container_type must be one of :py:class:`~Pegasus.api.transformation_catalog._ContainerType` (:code:`Container.DOCKER` | :code:`Container.SINGULARITY` | :code:`Container.SHIFTER`)
         """
         self.name = name
@@ -109,6 +112,11 @@ class Container(ProfileMixin):
                     )
         self.checksum = checksum
 
+        # TODO: remove once this is supported
+        if metadata:
+            raise NotImplementedError("Metadata support for Containers is not yet supported")
+        self.metadata = metadata
+
         self.profiles = defaultdict(dict)
 
     def __json__(self):
@@ -120,6 +128,7 @@ class Container(ProfileMixin):
                 "mounts": self.mounts,
                 "image.site": self.image_site,
                 "checksum": self.checksum,
+                "metadata": self.metadata,
                 "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
             }
         )
