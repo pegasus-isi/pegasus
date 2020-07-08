@@ -13,9 +13,14 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.XMLWriter;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+import java.io.IOException;
 import java.util.LinkedHashSet;
 
 /**
@@ -24,6 +29,7 @@ import java.util.LinkedHashSet;
  * @author gmehta
  * @version $Revision$
  */
+@JsonSerialize(using = File.JsonSerializer.class)
 public class File extends CatalogType {
 
     /** The linkages that a file can be of */
@@ -450,6 +456,85 @@ public class File extends CatalogType {
 
                 writer.endElement(indent);
             }
+        }
+    }
+    
+    /**
+     * Custom serializer for YAML representation of a File
+     * 
+     * @author Ryan Tanaka
+     */
+    public static class JsonSerializer extends PegasusJsonSerializer<File> {
+        
+        public JsonSerializer() {}
+        
+        /**
+         * Serialize a File into YAML representation
+         * 
+         * @param f
+         * @param gen
+         * @param sp
+         * @throws IOException 
+         * @throws UnsupportedOperationException
+         */
+        public void serialize(File f, JsonGenerator gen, SerializerProvider sp) throws IOException, UnsupportedOperationException {   
+            gen.writeStartObject();
+           
+            // lfn
+            gen.writeStringField("lfn", f.mName);
+           
+            // metadata
+            if (!f.mMetadata.isEmpty()) {
+                gen.writeArrayFieldStart("metadata");
+                for (MetaData m: f.mMetadata) {
+                    gen.writeObject(m);
+                }
+                gen.writeEndArray();
+            }
+            
+            // type
+            gen.writeStringField("type", f.mLink.toString().toLowerCase());
+            
+            // stageOut
+            File.TRANSFER transfer = f.mTransfer;
+            boolean stageOut;
+            if (transfer == File.TRANSFER.TRUE) {
+                stageOut = true;
+            } else if (transfer == File.TRANSFER.FALSE) {
+                stageOut = false;
+            } else {
+                // not supported in the YAML schema
+                throw new UnsupportedOperationException("File.TRANSFER.OPTIONAL not yet supported for YAML based workflows.");
+            }
+            gen.writeBooleanField("stageOut", stageOut);
+            
+            // registerReplica
+            gen.writeBooleanField("registerReplica", f.mRegister);
+            
+            // optional
+            gen.writeBooleanField("optional", f.mOptional);
+            
+            // size
+            if (!f.mSize.isBlank()) {
+                gen.writeStringField("size", f.mSize);
+            }
+            
+            // namespace
+            if (f.mNamespace != null && !f.mNamespace.isBlank()) {
+                gen.writeStringField("namespace", f.mNamespace);
+            }
+            
+            // version
+            if (f.mVersion != null && !f.mVersion.isBlank()) {
+                gen.writeStringField("version", f.mVersion);
+            }
+            
+            // executable
+            if (f.mExecutable) {
+                gen.writeBooleanField("executable", f.mExecutable);
+            }
+            
+            gen.writeEndObject();
         }
     }
 }
