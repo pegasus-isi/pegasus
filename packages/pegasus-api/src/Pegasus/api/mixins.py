@@ -187,7 +187,15 @@ def _profiles(ns, **map_p):
     return wrap
 
 
-def to_mb(value):
+def to_mb(value: str) -> int:
+    """Convert the given value to MB
+
+    :param value: str formatted as str formatted as :code:`'<int> [MB | GB | TB | PB | EB]'`
+    :type value: str
+    :raises ValueError: invalid format
+    :return: value in MB
+    :rtype: int
+    """
     try:
         tokens = str(value).strip().split()
 
@@ -223,12 +231,12 @@ class ProfileMixin:
         value: Optional[str] = None,
         **kw
     ):
-        """
+        r"""
         add_profiles(self, ns: Namespace, key: Optional[str] = None, value: Optional[str] = None, **kw)
         Add a profile.
 
-        If key and value are given, then **kw are ignored and :code:`{Namespace::key : value}`
-        is added. Else **kw is added. When the value of "key" is not a valid python
+        If key and value are given, then :code:`**kw` are ignored and :code:`{Namespace::key : value}`
+        is added. Else :code:`**kw` is added. When the value of "key" is not a valid python
         variable name, the usage in Example #1 should be used, else follow the usage
         shown in Example #2.
 

@@ -13,6 +13,8 @@ PEGASUS_VERSION = "5.0"
 __all__ = [
     "Arch",
     "OS",
+    "Grid",
+    "SupportedJobs",
     "Operation",
     "Scheduler",
     "FileServer",
