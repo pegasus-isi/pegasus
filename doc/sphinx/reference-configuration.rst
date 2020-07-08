@@ -530,8 +530,7 @@ to the post-script.
 The table below shows the keys in the dagman profile domain that are
 understood by Pegasus and can be associated at a per job basis.
 
-.. table:: Useful dagman Commands that can be associated at a per job
-basis
+.. table:: Useful dagman Commands that can be associated at a per job basis
 
    ====================================================================================================================================================================================== ==========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
    **Property Key**                                                                                                                                                                       **Description**
@@ -569,8 +568,7 @@ understood by Pegasus and can be used to apply to the whole workflow.
 These are used to control DAGMan's behavior at the workflow level, and
 are recommended to be specified in the properties file.
 
-.. table:: Useful dagman Commands that can be specified in the
-properties file.
+.. table:: Useful dagman Commands that can be specified in the properties file.
 
    ===================================================================================================================================================== ================================================================================================================================================================================================================================================================================
    **Property Key**                                                                                                                                      **Description**
@@ -680,8 +678,7 @@ environment specific keys take precedence over the Pegasus profile keys.
 For example, Globus profile key maxruntime will be preferred over
 Pegasus profile key runtime when running jobs via HTCondorG.
 
-.. table:: Table mapping translation of Pegasus Task Requirements to
-corresponding execution environment keys.
+.. table:: Table mapping translation of Pegasus Task Requirements to corresponding execution environment keys.
 
    ============================================= ============================ ================================ ===============================================
    Pegasus Task Resource Requirement Profile Key Corresponding Globus RSL Key Corresponding Condor Classad Key KEY in +remote_cerequirements classad for GLITE

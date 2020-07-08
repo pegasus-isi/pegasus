@@ -331,8 +331,7 @@ public class SCClient extends Executable {
     /** Returns the short help. */
     public void printShortVersion() {
         String text =
-                "\n $Id$ "
-                        + "\n "
+                "\n "
                         + getGVDSVersion()
                         + "\n Usage: pegasus-sc-converter [-Dprop  [..]]  -i <list of input files> -o <output file to write> "
                         + "\n        [-O <output format>] [-c <path to property file>] [-v] [-q] [-V] [-h]\n";
@@ -342,8 +341,7 @@ public class SCClient extends Executable {
 
     public void printLongVersion() {
         String text =
-                "\n $Id$ "
-                        + "\n "
+                "\n "
                         + getGVDSVersion()
                         + "\n pegasus-sc-converter - Parses the site catalogs in old format (XML and generates site catalog in "
                         + "\n new format (YAML)"

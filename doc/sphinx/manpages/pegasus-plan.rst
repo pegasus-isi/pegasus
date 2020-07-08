@@ -2,8 +2,6 @@
 pegasus-plan
 ============
 
-1
-pegasus-plan
 runs Pegasus to generate the executable workflow
    ::
 
@@ -15,7 +13,8 @@ runs Pegasus to generate the executable workflow
                    [--dir dir]
                    [--force] [--force-replan]
                    [--inherited-rc-files file1[,file2…]] [-j prefix]
-                   [-n][-I input-dir1[,input-dir2…]][-O output-dir] [-o site]
+                   [-n][-I input-dir1[,input-dir2…]][-O output-dir]
+                   [-o site1[,site2…]]
                    [-s site1[,site2…]]
                    [--staging-site s1=ss1[,s2=ss2[..]]
                    [--randomdir[=dirname]]
@@ -28,9 +27,9 @@ runs Pegasus to generate the executable workflow
 Description
 ===========
 
-The **pegasus-plan** command takes in as input the DAX and generates an
-executable workflow usually in form of **condor** submit files, which
-can be submitted to an *execution* site for execution.
+The **pegasus-plan** command takes in as input the abstract workflow and
+generates an executable workflow usually in form of **HTCondor** submit files,
+which can be submitted to an *execution* site for execution.
 
 As part of generating an executable workflow, the planner needs to
 discover:
@@ -47,7 +46,10 @@ discover:
    unless specified otherwise. This is done by deleting the jobs whose
    output files have been found in some location in the Replica Catalog.
    At present no cost metrics are used. However preference is given to a
-   location corresponding to the execution site
+   location corresponding to the execution site.
+
+   The default location from where the replica catalog file is picked up
+   is
 
    The planner can also add nodes to transfer all the materialized files
    to an output site. The location on the output site is determined by

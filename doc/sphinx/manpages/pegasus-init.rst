@@ -2,9 +2,8 @@
 pegasus-init
 ============
 
-1
-pegasus-init
 create a new workflow configuration
+
    ::
 
       pegasus-init WORKFLOW_DIR

@@ -35,7 +35,7 @@ public class PDAXWriter {
      */
     public static final String XML_VERSION = "2.0";
 
-    public static final String XML_NAMESPACE = "http://pegasus.isi.edu/schema";
+    public static final String XML_NAMESPACE = "https://pegasus.isi.edu/schema";
 
     /** The write handle to the xml file being written. */
     private PrintWriter mWriteHandle;

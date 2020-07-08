@@ -1,9 +1,9 @@
 ================
 pegasus-graphviz
 ================
-1
-pegasus-graphviz
+
 Convert a DAX or DAG into a graphviz dot file
+
    ::
 
       pegasus-graphviz [options] FILE

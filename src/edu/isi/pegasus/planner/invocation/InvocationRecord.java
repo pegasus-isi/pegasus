@@ -32,10 +32,10 @@ import java.util.*;
 public class InvocationRecord extends Invocation // implements Cloneable
 {
     /** The "official" namespace URI of the invocation record schema. */
-    public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/invocation";
+    public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/invocation";
 
     /** The "not-so-official" location URL of the invocation record definition. */
-    public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/iv-2.1.xsd";
+    public static final String SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/iv-2.1.xsd";
 
     /** protocol version information. */
     private String m_version;

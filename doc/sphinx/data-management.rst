@@ -602,7 +602,7 @@ and aggressiveness. We obviously want data transfers to be as quick as
 possibly, but we also do not want our transfers to overwhelm data
 services and systems.
 
-Starting 4.8.0 release, the default configuration of Pegasus now adds
+Pegasus adds
 transfer jobs and cleanup jobs based on the number of jobs at a
 particular level of the workflow. For example, for every 10 compute jobs
 on a level of a workflow, one data transfer job( stage-in and stage-out)
@@ -1315,11 +1315,6 @@ environment profile with the site.
 
 ..
 
-.. tip::
-
-   Specifying credentials as Pegasus profiles was introduced in 4.4.0
-   release.
-
 In case of data transfer jobs, it is possible to associate different
 credentials for a single file transfer ( one for the source server and
 the other for the destination server) . For example, when leveraging
@@ -1328,6 +1323,41 @@ credentials such as XSEDE Stampede site and NCSA Bluewaters. In that
 case, Pegasus picks up the associated credentials from the site catalog
 entries for the source and the destination sites associated with the
 transfer.
+
+.. _credentialsconf-cred:
+
+~/.pegasus/credentials.conf
+---------------------------
+
+WebDAV, S3, and iRODS
+
+::
+
+   [amazon]
+   endpoint = https://s3.amazonaws.com/
+   max_object_size = 5120
+   multipart_uploads = True
+   ranged_downloads = True
+
+   [pegasus@amazon]
+   access_key = 90c4143642cb097c88fe2ec66ce4ad4e
+   secret_key = a0e3840e5baee6abb08be68e81674dca
+
+   [magellan]
+   # NERSC Magellan is a Eucalyptus site. It doesn't support multipart uploads,
+   # or ranged downloads (the defaults), and the maximum object size is 5GB
+   # (also the default)
+   endpoint = https://128.55.69.235:8773/services/Walrus
+
+   [juve@magellan]
+   access_key = quwefahsdpfwlkewqjsdoijldsdf
+   secret_key = asdfa9wejalsdjfljasldjfasdfa
+
+   [voeckler@magellan]
+   # Each site can have multiple associated identities
+   access_key = asdkfaweasdfbaeiwhkjfbaqwhei
+   secret_key = asdhfuinakwjelfuhalsdflahsdl
+
 
 .. _x509-cred:
 
@@ -1342,21 +1372,6 @@ environment variable. Site catalog example:
 ::
 
    <profile namespace="pegasus" key="X509_USER_PROXY" >/some/location/x509up</profile>
-
-.. _s3-cred:
-
-Amazon AWS S3
--------------
-
-If a workflow is using s3 URLs, Pegasus has to be told where to find the
-.s3cfg file. This format of the file is described in the `pegaus-s3
-command line client's man page <#cli-pegasus-s3>`__. For the file to be
-picked up by the workflow, set the ``S3CFG`` profile to the location of
-the file. Site catalog example:
-
-::
-
-   <profile namespace="pegasus" pegasus="S3CFG" >/home/user/.s3cfg</profile>
 
 .. _gs-cred:
 

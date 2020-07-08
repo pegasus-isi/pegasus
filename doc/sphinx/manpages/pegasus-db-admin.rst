@@ -1,9 +1,9 @@
 ================
 pegasus-db-admin
 ================
-1
-pegasus-db-admin
+
 Manage Pegasus databases.
+
    ::
 
       pegasus-db-admin COMMAND [options] [DATABASE_URL]

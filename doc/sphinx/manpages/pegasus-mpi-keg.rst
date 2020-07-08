@@ -2,9 +2,8 @@
 pegasus-mpi-keg
 ===============
 
-1
-pegasus-mpi-keg
 MPI version of KEG
+
    ::
 
       pegasus-mpi-keg [-a appname] [-t interval |-T interval] [-l logname]

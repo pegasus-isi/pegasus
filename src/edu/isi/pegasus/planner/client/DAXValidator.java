@@ -36,7 +36,7 @@ public class DAXValidator extends DefaultHandler {
     protected static final String vendorParserClass = "org.apache.xerces.parsers.SAXParser";
 
     /** URI namespace for DAX schema. */
-    public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX";
+    public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/DAX";
 
     /** what is the name of the schema file in the filename hint? */
     private String m_schemafile = "dax-3.3.xsd";

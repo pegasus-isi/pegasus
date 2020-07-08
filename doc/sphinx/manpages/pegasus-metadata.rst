@@ -2,9 +2,8 @@
 pegasus-metadata
 ================
 
-1
-pegasus-metadata
 Query metadata collected for Pegasus workflows
+
    ::
 
       pegasus-metadata COMMAND [options] <SUBMIT_DIR>
