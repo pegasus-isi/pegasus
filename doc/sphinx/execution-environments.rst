@@ -336,43 +336,42 @@ profiles:
 2. **condor** profile **grid_resource** with value set to **batch
    slurm**, **batch pbs**, **batch sge** or **batch moab**.
 
-An example site catalog entry for a local glite PBS site looks like
+An example site catalog entry for a local glite SLURM site looks like
 this:
 
 ::
 
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-                version="4.0">
-
-       <site  handle="local" arch="x86" os="LINUX">
-           <directory type="shared-scratch" path="/lfs/shared-scratch/glite-sharedfs-example/work">
-               <file-server operation="all" url="file:///lfs/local-scratch/glite-sharedfs-example/work"/>
-           </directory>
-           <directory type="local-storage" path="/shared-scratch//glite-sharedfs-example/outputs">
-               <file-server operation="all" url="file:///lfs/local-scratch/glite-sharedfs-example/outputs"/>
-           </directory>
-       </site>
-
-       <site  handle="local-slurm" arch="x86" os="LINUX">
-
-           <!-- the following is a shared directory shared amongst all the nodes in the cluster -->
-           <directory type="shared-scratch" path="/lfs/glite-sharedfs-example/local-slurm/shared-scratch">
-               <file-server operation="all" url="file:///lfs/glite-sharedfs-example/local-slurm/shared-scratch"/>
-           </directory>
-
-           <profile namespace="env" key="PEGASUS_HOME">/lfs/software/pegasus</profile>
-
-           <profile namespace="pegasus" key="style" >glite</profile>
-
-           <profile namespace="condor" key="grid_resource">batch slurm</profile>
-           <profile namespace="pegasus" key="queue">normal</profile>
-           <profile namespace="pegasus" key="runtime">30000</profile>
-       </site>
-
-   </sitecatalog>
-
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /lfs/shared-scratch/glite-sharedfs-example/work
+      fileServers:
+      - url: file:///lfs/shared-scratch/glite-sharedfs-example/work
+        operation: all
+    - type: localStorage
+      path: /lfs/local-storage/glite-sharedfs-example/outputs
+      fileServers:
+      - url: file:///lfs/local-storage/glite-sharedfs-example/outputs
+        operation: all
+  - name: local-slurm
+    directories:
+    # The following is a shared directory amongst all the nodes in the cluster
+    - type: sharedScratch
+      path: /lfs/local-slurm/glite-sharedfs-example/shared-scratch
+      fileServers:
+      - url: file:///lfs/local-slurm/glite-sharedfs-example/shared-scratch
+        operation: all
+    profiles:
+      pegasus:
+        style: glite
+        queue: normal
+        runtime: '3000'
+      condor:
+        grid_resource: batch slurm
+      env:
+        PEGASUS_HOME: /lfs/software/pegasus
 
 ..
 
