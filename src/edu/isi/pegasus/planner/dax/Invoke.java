@@ -13,7 +13,12 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.XMLWriter;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+import java.io.IOException;
 
 /**
  * The Notification invoke object for the Dax API
@@ -21,6 +26,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
  * @author gmehta
  * @version $Revision$
  */
+@JsonSerialize(using = Invoke.JsonSerializer.class)
 public class Invoke {
 
     /** WHEN To INVOKE */
@@ -172,5 +178,30 @@ public class Invoke {
 
         Invoke i = (Invoke) obj;
         return this.toString().equals(i.toString());
+    }
+    
+    /**
+     * Custom serializer for YAML representation of an Invoke (Hook in 5.0)
+     * 
+     * @author Ryan Tanaka
+     */
+    public static class JsonSerializer extends PegasusJsonSerializer<Invoke> {
+        
+        public JsonSerializer() {}
+        
+        /**
+         * Serializes an Invoke into YAML representation.
+         * 
+         * @param iv
+         * @param gen
+         * @param sp
+         * @throws IOException 
+         */
+        public void serialize(Invoke iv, JsonGenerator gen, SerializerProvider sp) throws IOException {
+            gen.writeStartObject();
+            gen.writeStringField("_on", iv.getWhen());
+            gen.writeStringField("cmd", iv.getWhat());
+            gen.writeEndObject();
+        }
     }
 }
