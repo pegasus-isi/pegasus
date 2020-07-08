@@ -105,6 +105,10 @@ Glossary
       The logical handle to the storage resource described in the Site Catalog,
       where input data required by a workflow resides.
 
+   Kickstart
+      A lightweight C executable that Pegasus uses to launch user executables to
+      gather m
+
    Logical File Name
       The unique logical identifier for a data file or an executable. Each LFN
       is associated with a set of PFN’s that are the physical instantiations
@@ -116,6 +120,14 @@ Glossary
       which component was used to generate the dataset), execution
       information (e.g., time of creation of the dataset), and properties
       of the dataset (e.g., density of a node type).
+
+   Open Science Grid (OSG)
+      The Open Science Grid consists of computing and storage elements at over
+      100 individual sites spanning the United States. Researchers can submit
+      batch jobs from their home institution - or OSG-provided submit points -
+      in order to access their local resources and expand elastically out to
+      the OSG, leverage the distributed nature of our consortium. More information
+      can be found at `OSG Website <https://opensciencegrid.org>`_
 
    Output Replica Catalog
       This is the catalog where the register jobs in the executable workflow
@@ -183,3 +195,9 @@ Glossary
    Transformation Catalog
       A catalog that maps transformation names onto the physical pathnames
       of the transformation at a given compute site.
+
+   XSEDE
+     The Extreme Science and Engineering Discovery Environment (XSEDE) is a
+     collection of supercomputing clusters and academic clouds largely available
+     in the United States for use by researchers in various fields. More information
+      can be found at `XSEDE Website <https://www.xsede.org/>`_
