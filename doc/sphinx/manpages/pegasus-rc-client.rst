@@ -2,9 +2,8 @@
 pegasus-rc-client
 =================
 
-1
-pegasus-rc-client
 shell client for replica implementations
+
    ::
 
       pegasus-rc-client [-Dproperty=value[…]] [-V]

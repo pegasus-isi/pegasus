@@ -2,13 +2,11 @@
 pegasus-em
 ==========
 
-1
-pegasus-em
 Submit and monitor ensembles of workflows
+
    ::
 
       pegasus-em COMMAND [options] [ARGUMENT…]
-
 
 
 Commands

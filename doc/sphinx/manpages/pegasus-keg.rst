@@ -2,9 +2,8 @@
 pegasus-keg
 ===========
 
-1
-pegasus-keg
 kanonical executable for grids
+
    ::
 
       pegasus-keg [-a appname] [-t interval |-T interval] [-l logname]

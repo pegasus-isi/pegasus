@@ -2,9 +2,8 @@
 pegasus-monitord
 ================
 
-1
-pegasus-monitord
 tracks a workflow progress, mining information
+
    ::
 
       pegasus-monitord [--help|-help] [--verbose|-v]

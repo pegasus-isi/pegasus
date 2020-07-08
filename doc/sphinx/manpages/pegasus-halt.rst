@@ -2,9 +2,8 @@
 pegasus-halt
 ============
 
-1
-pegasus-halt
 stops a workflow gracefully, current jobs will finish
+
    ::
 
       pegasus-halt [rundir]
