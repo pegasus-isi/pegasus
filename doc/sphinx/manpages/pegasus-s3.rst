@@ -2,20 +2,15 @@
 pegasus-s3
 ==========
 
-1
-pegasus-s3
-Upload, download, delete objects in Amazon S3
+Upload, download, delete objects in Amazon S3.
    ::
 
       pegasus-s3 help
-      pegasus-s3 ls [options] URL
-      pegasus-s3 mkdir [options] URL…
-      pegasus-s3 rmdir [options] URL…
-      pegasus-s3 rm [options] [URL…]
-      pegasus-s3 put [options] FILE URL
+      pegasus-s3 ls [options] URL                
+      pegasus-s3 mkdir URL
+      pegasus-s3 rm [options] URL
+      pegasus-s3 put [options] FILE URL 
       pegasus-s3 get [options] URL [FILE]
-      pegasus-s3 lsup [options] URL
-      pegasus-s3 rmup [options] URL [UPLOAD]
       pegasus-s3 cp [options] SRC… DEST
 
 
@@ -25,8 +20,11 @@ Description
 
 **pegasus-s3** is a client for the Amazon S3 object storage service and
 any other storage services that conform to the Amazon S3 API, such as
-Eucalyptus Walrus.
+Eucalyptus Walrus. Note that this tool is mainly used internally by 
+:ref:`cli-pegasus-transfer` and it is recommended to use Amazon's
+`AWS Command Line Interface`_.
 
+.. _AWS Command Line Interface: https://aws.amazon.com/cli/
 
 
 Options
@@ -50,100 +48,38 @@ Global Options
    Path to configuration file
 
 
-
 ls Options
 ----------
 
 **-l**; \ **--long**
    Use long listing format that includes size, etc.
 
-
+**-H**; \ **--human-sized**
+   Use human readable sizes
 
 rm Options
 ----------
 
 **-f**; \ **--force**
-   If the URL does not exist, then ignore the error.
+   Ignore nonexistent keys
 
-**-F** *FILE*; \ **--file**\ =\ *FILE*
-   File containing a list of URLs to delete
-
-
+**-F**; \ **--file**
+   File containing a list of URLs to delete 
 
 put Options
 -----------
 
-**-r**; \ **--recursive**
-   Upload all files in the directory named FILE to keys with prefix URL.
-
-**-c** *X*; \ **--chunksize**\ =\ *X*
-   Set the chunk size for multipart uploads to X MB. A value of 0
-   disables multipart uploads. The default is 10MB, the min is 5MB and
-   the max is 1024MB. This parameter only applies for sites that support
-   multipart uploads (see multipart_uploads configuration parameter in
-   the `S3_CONFIGURATION <#S3_CONFIGURATION>`__ section). The maximum
-   number of chunks is 10,000, so if you are uploading a large file,
-   then the chunk size is automatically increased to enable the upload.
-   Choose smaller values to reduce the impact of transient failures.
-
-**-p** *N*; \ **--parallel**\ =\ *N*
-   Use N threads to upload *FILE* in parallel. The default value is 4,
-   which enables parallel uploads with 4 threads. This parameter is only
-   valid if the site supports mulipart uploads and the **--chunksize**
-   parameter is not 0. Otherwise parallel uploads are disabled.
-
 **-b**; \ **--create-bucket**
    Create the destination bucket if it does not already exist
 
-
-
-get Options
------------
-
-**-r**; \ **--recursive**
-   Download all keys that match URL exactly or begin with URL+"/". For
-   example, *pegasus-s3 get -r s3://u@h/bucket/key* will match both
-   *key* and *key/foo* but not *keyfoo*. Since S3 allows names to exist
-   as both keys (the bare *key*) and folders (the *key* in *key/foo*),
-   but file systems do not, you will get an error when using
-   **-r**/**--recursive** on a bucket that contains such duplicate
-   names. An entire bucket can be downloaded at once by specifying only
-   the bucket name in URL.
-
-**-c** *X*; \ **--chunksize**\ =\ *X*
-   Set the chunk size for parallel downloads to X megabytes. A value of
-   0 will avoid chunked reads. This option only applies for sites that
-   support ranged downloads (see ranged_downloads configuration
-   parameter). The default chunk size is 10MB, the min is 1MB and the
-   max is 1024MB. Choose smaller values to reduce the impact of
-   transient failures.
-
-**-p** *N*; \ **--parallel**\ =\ *N*
-   Use N threads to upload FILE in parallel. The default value is 4,
-   which enables parallel downloads with 4 threads. This parameter is
-   only valid if the site supports ranged downloads and the
-   **--chunksize** parameter is not 0. Otherwise parallel downloads are
-   disabled.
-
-
-
-rmup Options
-------------
-
-**-a**; \ **--all**
-   Cancel all uploads for the specified bucket
-
-
+**-f**; \ **--force**
+   Overwrite key if it already exists
 
 cp Options
 ----------
 
 **-c**; \ **--create-dest**
    Create the destination bucket if it does not exist.
-
-**-r**; \ **--recursive**
-   If SRC is a bucket, copy all of the keys in that bucket to DEST. In
-   that case DEST must be a bucket.
 
 **-f**; \ **--force**
    If DEST exists, then overwrite it.
@@ -170,10 +106,6 @@ operations.
 **mkdir**
    The **mkdir** subcommand creates one or more buckets.
 
-**rmdir**
-   The **rmdir** subcommand deletes one or more buckets from the storage
-   service. In order to delete a bucket, the bucket must be empty.
-
 **rm**
    The **rm** subcommand deletes one or more keys from the storage
    service.
@@ -183,119 +115,21 @@ operations.
    storage service under the bucket and key specified by URL. If the URL
    contains a bucket, but not a key, then the file name is used as the
    key. If URL ends with a "/", then the file name is appended to the
-   URL to create the key name (e.g. *pegasus-s3 put foo
-   s3://u@h/bucket/key* will create a key called "key", while
-   *pegasus-s3 put foo s3://u@h/bucket/key/* will create a key called
-   "key/foo". The same is true of directories when used with the
-   **-r**/**--recursive** option.
-
-   The **put** subcommand can do both chunked and parallel uploads if
-   the service supports multipart uploads (see **multipart_uploads** in
-   the `S3_CONFIGURATION <#S3_CONFIGURATION>`__ section). Currently only
-   Amazon S3 supports multipart uploads.
-
-   This subcommand will check the size of the file to make sure it can
-   be stored before attempting to store it.
-
-   Chunked uploads are useful to reduce the probability of an upload
-   failing. If an upload is chunked, then **pegasus-s3** issues separate
-   PUT requests for each chunk of the file. Specifying smaller chunks
-   (using **--chunksize**) will reduce the chances of an upload failing
-   due to a transient error. Chunksizes can range from 5 MB to 1GB
-   (chunk sizes smaller than 5 MB produced incomplete uploads on Amazon
-   S3). The maximum number of chunks for any single file is 10,000, so
-   if a large file is being uploaded with a small chunksize, then the
-   chunksize will be increased to fit within the 10,000 chunk limit. By
-   default, the file will be split into 10 MB chunks if the storage
-   service supports multipart uploads. Chunked uploads can be disabled
-   by specifying a chunksize of 0. If the upload is chunked, then each
-   chunk is retried independently under transient failures. If any chunk
-   fails permanently, then the upload is aborted.
-
-   Parallel uploads can increase performance for services that support
-   multipart uploads. In a parallel upload the file is split into N
-   chunks and each chunk is uploaded concurrently by one of M threads in
-   first-come, first-served fashion. If the chunksize is set to 0, then
-   parallel uploads are disabled. If M > N, then the actual number of
-   threads used will be reduced to N. The number of threads can be
-   specified using the --parallel argument. If --parallel is 1, then
-   only a single thread is used. The default value is 4. There is no
-   maximum number of threads, but it is likely that the link will be
-   saturated by 4 to 8 threads.
-
-   Under certain circumstances, when a multipart upload fails it could
-   leave behind data on the server. When a failure occurs the **put**
-   subcommand will attempt to abort the upload. If the upload cannot be
-   aborted, then a partial upload may remain on the server. To check for
-   partial uploads run the **lsup** subcommand. If you see an upload
-   that failed in the output of **lsup**, then run the **rmup**
-   subcommand to remove it.
+   URL to create the key name (e.g. ``pegasus-s3 put foo
+   s3://u@h/bucket/key`` will create a key called "key", while
+   ``pegasus-s3 put foo s3://u@h/bucket/key/`` will create a key called
+   ``key/foo``. 
 
 **get**
    The **get** subcommand retrieves an object from the storage service
    identified by URL and stores it in the file specified by FILE. If
    FILE is not specified, then the part of the key after the last "/" is
-   used as the file/directory name, and the results are placed in the
-   current working directory. If FILE ends with a "/", then the last
-   component of the key name is appended to FILE to create the output
-   path (e.g. *pegasus-s3 get s3://u@h/bucket/key /tmp/* will create a
-   file called */tmp/key* while *pegasus-s3 get s3://u@h/bucket/key
-   /tmp/foo* will put the contents of *key* in a file called
-   */tmp/foo*). The same is true of folders/directories with the
-   **-r**/**--recursive** option.
-
-   The **get** subcommand can do both chunked and parallel downloads if
-   the service supports ranged downloads (see **ranged_downloads** in
-   the `S3_CONFIGURATION <#S3_CONFIGURATION>`__ section). Currently only
-   Amazon S3 has good support for ranged downloads. Eucalyptus Walrus
-   supports ranged downloads, but version 1.6 is inconsistent with the
-   Amazon interface and has a bug that causes ranged downloads to hang
-   in some cases. It is recommended that ranged downloads not be used
-   with Walrus 1.6.
-
-   Chunked downloads can be used to reduce the probability of a download
-   failing. When a download is chunked, **pegasus-s3** issues separate
-   GET requests for each chunk of the file. Specifying smaller chunks
-   (using **--chunksize**) will reduce the chances that a download will
-   fail to do a transient error. Chunk sizes can range from 1 MB to 1
-   GB. By default, a download will be split into 10 MB chunks if the
-   site supports ranged downloads. Chunked downloads can be disabled by
-   specifying a **--chunksize** of 0. If a download is chunked, then
-   each chunk is retried independently under transient failures. If any
-   chunk fails permanently, then the download is aborted.
-
-   Parallel downloads can increase performance for services that support
-   ranged downloads. In a parallel download, the file to be retrieved is
-   split into N chunks and each chunk is downloaded concurrently by one
-   of M threads in a first-come, first-served fashion. If the chunksize
-   is 0, then parallel downloads are disabled. If M > N, then the actual
-   number of threads used will be reduced to N. The number of threads
-   can be specified using the --parallel argument. If --parallel is 1,
-   then only a single thread is used. The default value is 4. There is
-   no maximum number of threads, but it is likely that the link will be
-   saturated by 4 to 8 threads.
-
-**lsup**
-   The **lsup** subcommand lists active multipart uploads. The URL
-   specified should point to a bucket. This command is only valid if the
-   site supports multipart uploads. The output of this command is a list
-   of keys and upload IDs.
-
-   This subcommand is used with **rmup** to help recover from failures
-   of multipart uploads.
-
-**rmup**
-   The **rmup** subcommand cancels and active upload. The URL specified
-   should point to a bucket, and UPLOAD is the long, complicated upload
-   ID shown by the **lsup** subcommand.
-
-   This subcommand is used with **lsup** to recover from failures of
-   multipart uploads.
+   used as the file name, and the result is placed in the
+   current working directory. 
 
 **cp**
    The **cp** subcommand copies keys on the server. Keys cannot be
    copied between accounts.
-
 
 
 URL Format
@@ -320,7 +154,7 @@ be optional depending on the context.
 The *USER@SITE* portion is referred to as the “identity”, and the *SITE*
 portion is referred to as the “site”. Both the identity and the site are
 looked up in the configuration file (see
-`S3_CONFIGURATION <#S3_CONFIGURATION>`__) to determine the parameters to
+:ref:`S3_CONFIGURATION`) to determine the parameters to
 use when establishing a connection to the service. The site portion is
 used to find the host and port, whether to use SSL, and other things.
 The identity portion is used to determine which authentication tokens to
@@ -376,8 +210,8 @@ the user’s configuration file:
 4. $HOME/.s3cfg
 
 If it does not find the configuration file in one of these locations it
-will fail with an error. The $HOME/.s3cfg location is only supported for
-backward-compatibility. $HOME/.pegasus/s3cfg should be used instead.
+will fail with an error. The ``$HOME/.s3cfg`` location is only supported for
+backward-compatibility. ``$HOME/.pegasus/s3cfg`` should be used instead.
 
 
 
@@ -426,8 +260,7 @@ Configuration Variables
 -----------------------
 
 **endpoint** (site)
-   The URL of the web service endpoint. If the URL begins with *https*,
-   then SSL will be used.
+   The URL of the web service endpoint.
 
 **max_object_size** (site)
    The maximum size of an object in GB (default: 5GB)
@@ -513,12 +346,6 @@ Create a bucket called *mybucket* for identity *user@amazon*:
 
    $ pegasus-s3 mkdir s3://user@amazon/mybucket
 
-Delete a bucket called *mybucket*:
-
-::
-
-   $ pegasus-s3 rmdir s3://user@amazon/mybucket
-
 Upload a file *foo* to bucket *bar*:
 
 ::
@@ -530,31 +357,6 @@ Download an object *foo* in bucket *bar*:
 ::
 
    $ pegasus-s3 get s3://user@amazon/bar/foo foo
-
-Upload a file in parallel with 4 threads and 100MB chunks:
-
-::
-
-   $ pegasus-s3 put --parallel 4 --chunksize 100 foo s3://user@amazon/bar/foo
-
-Download an object in parallel with 4 threads and 100MB chunks:
-
-::
-
-   $ pegasus-s3 get --parallel 4 --chunksize 100 s3://user@amazon/bar/foo foo
-
-List all partial uploads for bucket *bar*:
-
-::
-
-   $ pegasus-s3 lsup s3://user@amazon/bar
-
-Remove all partial uploads for bucket *bar*:
-
-::
-
-   $ pegasus-s3 rmup --all s3://user@amazon/bar
-
 
 
 Return Value
@@ -568,6 +370,7 @@ successful. A non-zero exit status is returned in case of failure.
 Author
 ======
 
-Gideon Juve ``<gideon@isi.edu>``
+| Gideon Juve ``<gideon@isi.edu>``
+| Ryan Tanaka ``<tanaka@isi.edu>``
 
 Pegasus Team http://pegasus.isi.edu
