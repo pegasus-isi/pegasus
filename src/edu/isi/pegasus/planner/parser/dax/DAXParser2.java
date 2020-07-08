@@ -64,10 +64,10 @@ import org.xml.sax.SAXException;
 public class DAXParser2 extends XMLParser implements DAXParser {
 
     /** The "not-so-official" location URL of the DAX schema definition. */
-    public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.0.xsd";
+    public static final String SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/dax-3.0.xsd";
 
     /** URI namespace */
-    public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX";
+    public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/DAX";
 
     /**
      * The constant designating the version when the double negative transfer and registration flags

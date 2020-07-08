@@ -75,10 +75,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public static final String DEFAULT_SCHEMA_LOCATION =
             "http://pegasus.isi.edu/schema/dax-3.6.xsd";
     /** The "not-so-official" location URL of the DAX XMLParser Schema. */
-    public static final String SCHEMA_LOCATION_DIRECTORY = "http://pegasus.isi.edu/schema/";
+    public static final String SCHEMA_LOCATION_DIRECTORY = "https://pegasus.isi.edu/schema/";
 
     /** uri namespace */
-    public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX";
+    public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/DAX";
 
     /** Constant denoting an undefined site */
     public static final String UNDEFINED_SITE = "undefined";

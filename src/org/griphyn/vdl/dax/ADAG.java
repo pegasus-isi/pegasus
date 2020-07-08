@@ -44,10 +44,10 @@ import org.griphyn.vdl.classes.LFN;
  */
 public class ADAG extends DAX implements Cloneable {
     /** The "official" namespace URI of the DAX schema. */
-    public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX";
+    public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/DAX";
 
     /** The "not-so-official" location URL of the DAX schema definition. */
-    public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-2.1.xsd";
+    public static final String SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/dax-2.1.xsd";
 
     /** The version to report. */
     public static final String SCHEMA_VERSION = "2.1";

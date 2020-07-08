@@ -43,8 +43,8 @@ import java.util.Set;
  * <p>The schemas can be found online at
  *
  * <pre>
- *  http://pegasus.isi.edu/schema/sc-4.1.xsd
- *  http://pegasus.isi.edu/schema/sc-3.0.xsd
+ *  https://pegasus.isi.edu/schema/sc-4.1.xsd
+ *  https://pegasus.isi.edu/schema/sc-3.0.xsd
  * </pre>
  *
  * @author Karan Vahi

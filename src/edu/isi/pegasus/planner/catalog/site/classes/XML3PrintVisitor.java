@@ -35,10 +35,10 @@ import java.util.List;
 public class XML3PrintVisitor extends AbstractXMLPrintVisitor {
 
     /** The "official" namespace URI of the site catalog schema. */
-    public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/sitecatalog";
+    public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/sitecatalog";
 
     /** The "not-so-official" location URL of the DAX schema definition. */
-    public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/sc-3.0.xsd";
+    public static final String SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/sc-3.0.xsd";
 
     /** The version to report. */
     public static final String SCHEMA_VERSION = "3.0";

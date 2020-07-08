@@ -91,7 +91,7 @@ import java.io.Reader;
 public class TransformationCatalogYAMLParser extends YAMLParser {
 
     /** Schema file name; */
-    private static final String SCHEMA_URI = "http://pegasus.isi.edu/schema/tc-5.0.yml";
+    private static final String SCHEMA_URI = "https://pegasus.isi.edu/schema/tc-5.0.yml";
 
     /** Schema File Object; */
     private static File SCHEMA_FILENAME = null;
