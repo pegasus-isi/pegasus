@@ -505,8 +505,7 @@ execution of the smaller constituent jobs either
    executed. This can be enabled by associating the following pegasus
    profiles with the jobs in the DAX
 
-   .. table:: Pegasus Profiles that can be associated with jobs in the
-   DAX for PMC
+   .. table:: Pegasus Profiles that can be associated with jobs in the DAX for PMC
 
       ================== =====================================================================================================================================================================================================================================================================================================
       **Key**            **Description**

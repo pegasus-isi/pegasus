@@ -8,6 +8,7 @@ and we are working towards providing more comprehensive support of the CWL
 specification.
 
 ::
+
     pegasus-cwl-converter [-h] [-d]
                           cwl_workflow_file_path
                           workflow_inputs_file_path
@@ -38,11 +39,10 @@ Positional Arguments
     must be formatted as:
 
     ::
+
         <executable name0>:
             site: <str>
             is_stageable: <bool>
-        .
-        .
         .
         <executable nameN>:
             site: <str>
@@ -73,6 +73,7 @@ main workflow CWL file, job CWL files, input specifications, input files,
 and scripts or executables used by the jobs:
 
 ::
+
         my_cwl_workflow
         ├── tar.cwl            <-- CWL Job class that invokes /usr/bin/tar
         ├── compile_1.cwl      <-- CWL Job class that invokes /usr/bin/gcc
@@ -104,6 +105,7 @@ Assuming that your Pegasus **site catalog** has two sites ``local`` and
 ``condorpool``, the transformation spec file would look something like:
 
 ::
+
     tar:
         site: condorpool
         is_stageable: False
@@ -119,6 +121,7 @@ has been created (let's call this ``tr_specs.yml``), ``pegasus-cwl-converter`` c
 into Pegasus's native format by calling:
 
 ::
+
         pegasus-cwl-converter workflow.cwl input.yml tr_specs.yml  pegasus_workflow.yml
 
 Authors

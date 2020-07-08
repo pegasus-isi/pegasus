@@ -2,9 +2,8 @@
 pegasus-exitcode
 ================
 
-1
-pegasus-exitcode
 Used post-job to check the stdout/stderr for errors
+
    ::
 
       pegasus-exitcode [-h][-r rv][-n][-s msg][-f msg] job.out

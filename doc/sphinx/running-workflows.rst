@@ -258,9 +258,7 @@ Pegasus can
       The following pairs are currently generated for the site selector
       temporary file that is generated in the NonJavaCallout.
 
-      .. table:: Key Value Pairs that are currently generated for the
-      site selector temporary file that is generated in the
-      NonJavaCallout.
+      .. table:: Key Value Pairs that are currently generated for the site selector temporary file that is generated in the NonJavaCallout.
 
          ============== ==============================================================================================================================================================================================================================
          **Key**        **Value**
@@ -726,8 +724,7 @@ are executed in a non shared filesystem setup, are executed using
 lightweight job wrapper called PegasusLite.
 
 .. figure:: images/data-configuration-pegasuslite.png
-   :alt: Workflow Running in NonShared Filesystem Setup with PegasusLite
-   launching compute jobs
+   :alt: Workflow Running in NonShared Filesystem Setup with PegasusLite launching compute jobs
    :width: 100.0%
 
    Workflow Running in NonShared Filesystem Setup with PegasusLite
@@ -798,13 +795,14 @@ Before users can run pegasus plan the following needs to be done:
 
    .. table:: Basic Properties that need to be set
 
-      ===========================================================
+      ========================================================== =
       pegasus.catalog.replica
-      pegasus.catalog.replica.file \| pegasus.catalog.replica.url
+      pegasus.catalog.replica.file / pegasus.catalog.replica.url
       pegasus.catalog.transformation
       pegasus.catalog.transformation.file
       pegasus.catalog.site.file
-      ===========================================================
+      ========================================================== =
+
 
 To execute pegasus-plan user usually requires to specify the following
 options:

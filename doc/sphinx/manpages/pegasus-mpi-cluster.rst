@@ -2,9 +2,8 @@
 pegasus-mpi-cluster
 ===================
 
-1
-pegasus-mpi-cluster
 Enables running DAGs (Directed Acyclic Graphs) on clusters using MPI.
+
    ::
 
       pegasus-mpi-cluster [options] workflow.dag

@@ -20,11 +20,9 @@ Command Line Tools
     manpages/pegasus-globus-online-init.rst
     manpages/pegasus-globus-online.rst
     manpages/pegasus-graphviz.rst
-    manpages/pegasus-gridftp.rst
     manpages/pegasus-halt.rst
     manpages/pegasus-init.rst
     manpages/pegasus-integrity.rst
-    manpages/pegasus-invoke.rst
     manpages/pegasus-keg.rst
     manpages/pegasus-kickstart.rst
     manpages/pegasus-metadata.rst

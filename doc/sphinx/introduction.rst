@@ -4,11 +4,6 @@
 Introduction
 ============
 
-.. _overview:
-
-Overview and Features
-=====================
-
 `Pegasus WMS <http://pegasus.isi.edu>`__ is a configurable system for
 mapping and executing abstract application workflows over a wide range
 of execution environments including a laptop, a campus cluster, a Grid,
@@ -130,16 +125,3 @@ effectiveness.
       Cloud computing uses a network as a means to connect a Pegasus end
       user to distributed resources that are based in the cloud.
 
-.. _workflow-gallery:
-
-Workflow Gallery
-================
-
-Pegasus is curently being used in a broad range of applications. To
-review example workflows, see the :doc:`example-workflows` chapter.
-To see additional details about the workflows of the applications
-see the `Gallery of Workflows <http://pegasus.isi.edu/workflow_gallery/>`__.
-
-We are always looking for new applications willing to leverage our
-workflow technologies. If you are interested please contact us at
-pegasus at isi dot edu.

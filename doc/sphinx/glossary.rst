@@ -202,4 +202,5 @@ Glossary
      The Extreme Science and Engineering Discovery Environment (XSEDE) is a
      collection of supercomputing clusters and academic clouds largely available
      in the United States for use by researchers in various fields. More information
-      can be found at `XSEDE Website <https://www.xsede.org/>`_
+     can be found at `XSEDE Website <https://www.xsede.org/>`_
+
