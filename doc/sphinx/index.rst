@@ -7,12 +7,17 @@ Welcome to Pegasus WMS's documentation!
 =======================================
 
 .. toctree::
-    :caption: User Guide
-    :numbered:
+    :caption: Getting Started
     :maxdepth: 2
 
     introduction.rst
+    quickstart.rst
     tutorial.rst
+
+.. toctree::
+    :caption: User Guide
+    :maxdepth: 2
+
     installation.rst
     creating-workflows.rst
     running-workflows.rst
@@ -26,6 +31,11 @@ Welcome to Pegasus WMS's documentation!
     reference-configuration.rst
     submit-directory.rst
     jupyter.rst
+
+.. toctree::
+    :caption: References
+    :maxdepth: 2
+
     api-reference.rst
     cli.rst
     packages.rst

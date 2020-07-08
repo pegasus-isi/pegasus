@@ -2,10 +2,8 @@
 pegasus-configure-glite
 =======================
 
-1
-pegasus-configure-glite
 install Pegasus-specific glite configuration
-   ::
+::
 
       pegasus-configure-glite [GLITE_LOCATION]
 

@@ -210,7 +210,7 @@ keep the HTCondor installation separate from the Pegasus installation.
 
       $ export PATH=/path/to/pegasus-install/bin:$PATH
 
-.. _pypi-packages::
+.. _pypi-packages:
 
 Pegasus Python Packages for PyPi
 ================================
@@ -223,7 +223,7 @@ Pegasus Python Packages for PyPi
 
 
 - To install old Python DAX API. **The old DAX API is deprecated and will be
-removed in Pegasus 5.1.0.**
+  removed in Pegasus 5.1.0.**
 
    ::
 

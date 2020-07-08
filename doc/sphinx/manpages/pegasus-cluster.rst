@@ -2,10 +2,8 @@
 pegasus-cluster
 ===============
 
-1
-pegasus-cluster
 run a list of applications
-   ::
+::
 
       pegasus-cluster [-d] [-e | -f] [-S ec] [-s fn] [-R fn] [-n nr] [inputfile]
 

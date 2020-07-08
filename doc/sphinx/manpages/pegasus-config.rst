@@ -2,10 +2,8 @@
 pegasus-config
 ==============
 
-1
-pegasus-config
 Can be used to find installed Pegasus tools and libraries.
-   ::
+::
 
       pegasus-config [-h] [--help] [-V] [--version] [--noeoln]
                      [--perl-dump] [--perl-hash] [--python-dump] [--sh-dump]
@@ -109,7 +107,7 @@ To set the same path inside Perl:
    die("Unable to eval pegasus-config output: $@") if $@;
 
 will set variables a number of lexically local-scoped **my** variables
-with prefix "pegasus_" and expand Perl’s search path for this script.
+with prefix "pegasus\_" and expand Perl’s search path for this script.
 
 Alternatively, you can fail early and collect all Pegasus-related
 variables into a single global ``%pegasus`` variable for convenience:
