@@ -50,9 +50,7 @@ to indicate the omitted output.
 
 **If you are having trouble with this tutorial, or anything else related
 to Pegasus, you can contact the Pegasus Users mailing list
-at**\ pegasus-users@isi.edu\ **to get help. You can also contact us on
-our**\ `support chatroom <https://pegasus.isi.edu/support>`__\ **on
-HipChat.**
+at **\ pegasus-users@isi.edu\ ** to get help.
 
 .. _tutorial-started:
 
@@ -69,7 +67,7 @@ using SSH as shown below.
 
 ..
 
-   **Note**
+.. note::
 
    The workflow dashboard is not run in the hosted service. To try out
    the workflow dashboard use the virtual machines provided below.
