@@ -10,7 +10,8 @@ A tool to generate statistics about the workflow run.
       pegasus-statistics [-h|--help]
                          [-o|--output dir]
                          [-c|--conf propfile]
-                         [-p|--statistics-level level]
+                         [-f|--file filetype]
+                         [-s|--statistics-level level]
                          [-t|--time-filter filter]
                          [-i|--ignore-db-inconsistency]
                          [-v|--verbose]
@@ -46,6 +47,9 @@ Options
 **-c** *propfile*; \ **--conf** *propfile*
    The properties file to use. This option overrides all other property
    files.
+
+**-f** *type*; \ **--file** *type*
+   Specifies the output file type. Valid values are: **text**, **csv**.
 
 **-s** *level*; \ **--statistics-level** *level*
    Specifies the statistics information to generate. Valid levels are:
@@ -134,8 +138,8 @@ workflow UUID:
 
    $ pegasus-statistics  --conf pegasusrc --isuuid 316f2986-7754-44ec-8b38-fcd0cb602ce0
 
-Runs pegasus-statistics over a workflow run identified by a multiple
-workflow UUID:
+Runs pegasus-statistics over a workflow run identified by multiple
+workflow UUIDs:
 
 ::
 
@@ -153,6 +157,8 @@ Runs pegasus-statistics over all workflows in the STAMPEDE database:
 Authors
 =======
 
-Prasanth Thomas Rajiv Mayani
+Prasanth Thomas
+
+Rajiv Mayani ``<mayani at isi dot edu>``
 
 Pegasus Team http://pegasus.isi.edu
