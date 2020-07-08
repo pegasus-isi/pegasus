@@ -1263,7 +1263,7 @@ public class TransferEngine extends Engine {
 
         // add the dax to the argument
         StringBuilder arguments = new StringBuilder();
-        arguments.append(job.getArguments()).append(" --dax ").append(dax);
+        arguments.append(job.getArguments()).append(" ").append(dax);
         job.setArguments(arguments.toString());
 
         mLogger.log(

@@ -364,14 +364,6 @@ public class CPlanner extends Executable {
         String dax = mPOptions.getDAX();
         String baseDir = mPOptions.getBaseSubmitDirectory();
         dax = (dax == null) ? CPlanner.DEFAULT_WORKFLOW_DAX_FILE : dax;
-        if (dax == null) {
-            mLogger.log(
-                    "\nNeed to specify  a dax file ( using --dax ) to plan a workflow or have file named in the current working directory"
-                            + CPlanner.DEFAULT_WORKFLOW_DAX_FILE,
-                    LogManager.CONSOLE_MESSAGE_LEVEL);
-            this.printShortVersion();
-            return result;
-        }
 
         // output-map is only supported for hierarchal workflows and an internal option
         if (options.getOutputMap() != null && !options.partOfDeferredRun()) {

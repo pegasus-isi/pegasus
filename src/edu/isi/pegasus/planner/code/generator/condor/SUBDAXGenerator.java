@@ -1385,8 +1385,9 @@ public class SUBDAXGenerator {
         // put in all the other options.
         arguments.append(options.toOptions());
 
-        // add the --dax option explicitly in the end
-        arguments.append(" --dax ").append(options.getDAX());
+        // pass the dax explicitly in the end as last positional
+        // argument
+        arguments.append(" ").append(options.getDAX());
 
         // job.setPreScript(script.toString(), arguments.toString());
         result[0] = script.toString();
