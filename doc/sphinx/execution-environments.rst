@@ -445,15 +445,15 @@ before ``$bls_opt_tmp_req_file >> $bls_tmp_file 2> /dev/null`` line.
 
 .. _titan:
 
-ORNL Titan Using Glite
+ORNL Summit Using Glite
 ----------------------
 
-`Titan <https://www.olcf.ornl.gov/olcf-resources/compute-systems/titan/>`__
+`Summit <https://www.olcf.ornl.gov/olcf-resources/compute-systems/summit/>`__
 is part of Oak Ridge Leadership Computing Facilities (OLCF) and offers
-hybrid computing resources (CPUs and GPUs) to scientists since 2012.
+hybrid computing resources (CPUs and GPUs) to scientists since 2018.
 
-In order to submit to Titan, a *Titan login node* or a system that has
-access to the *Lustre* filesystem and the *batch scheduler* (eg. `OLCF's
+In order to submit to Summit, a *Summit login node* or a system that has
+access to the *Alpine* filesystem and the *batch scheduler* (eg. `OLCF's
 Kubernetes
 Deployment <https://www.olcf.ornl.gov/wp-content/uploads/2017/11/2018UM-Day3-Kincl.pdf>`__),
 must be used as the submit node. Submission style must be `Pegasus
@@ -462,44 +462,45 @@ example site calatog entry looks like this:
 
 ::
 
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-               xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.1.xsd"
-               version="4.1">
-
-       <site handle="local" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/lustre/atlas/scratch/user/workflow-dir/scratch"/>
-               <file-server operation="all" url="file:///lustre/atlas/scratch/user/workflow-dir/scratch"/>
-           </directory>
-           <directory type="shared-storage" path="/lustre/atlas/scratch/user/workflow-dir/output/">
-               <file-server operation="all" url="file:///lustre/atlas/scratch/user/workflow-dir/output"/>
-           </directory>
-       </site>
-
-       <site handle="titan" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/lustre/atlas/scratch/user/titan/scratch">
-               <file-server operation="all" url="file:///lustre/atlas/scratch/user/titan/scratch"/>
-           </directory>
-
-           <profile namespace="pegasus" key="style">glite</profile>
-           <profile namespace="condor" key="grid_resource">batch pbs</profile>
-
-           <profile namespace="pegasus" key="queue">titan</profile>
-           <profile namespace="pegasus" key="auxillary.local">true</profile>
-
-           <profile namespace="env" key="PEGASUS_HOME">/lustre/atlas/world-shared/csc320/SOFTWARE/install/pegasus/default</profile>
-           <profile namespace="pegasus" key="runtime">1800</profile>
-           <profile namespace="pegasus" key="nodes">1</profile>
-           <profile namespace="pegasus" key="project">CSC320</profile>
-       </site>
-   </sitecatalog>
-
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /gpfs/alpine/csc355/scratch/csc355_auser/scratch
+      fileServers:
+      - url: file:///gpfs/alpine/csc355/scratch/csc355_auser/scratch
+        operation: all
+    - type: localStorage
+      path: /gpfs/alpine/csc355/scratch/csc355_auser/outputs
+      fileServers:
+      - url: file:///gpfs/alpine/csc355/scratch/csc355_auser/outputs
+        operation: all
+  - name: summit
+    directories:
+    - type: sharedScratch
+      path: /gpfs/alpine/csc355/scratch/csc355_auser/summit/scratch
+      fileServers:
+      - url: file:///gpfs/alpine/csc355/scratch/csc355_auser/summit/scratch
+        operation: all
+    profiles:
+      pegasus:
+        style: glite
+        queue: batch
+        project: CSC355
+        nodes: '1'
+        runtime: '1800'
+        auxillary.local: true
+      condor:
+        grid_resource: batch lsf
+      env:
+        PEGASUS_HOME: /gpfs/alpine/csc355/world-shared/binaries/summit/pegasus/stable
 
 1. *pegasus* profile style with value set to *glite*
 
-2. *condor* profile *grid_resource* with value set to *batch pbs*
+2. *condor* profile *grid_resource* with value set to *batch lsf*
 
-3. *pegasus* profile *queue* is mandatory and should be set to *titan*
+3. *pegasus* profile *queue* is mandatory and should be set to *summit*
 
 4. *pegasus* profile *runtime* is mandatory and should be set in sites
    or transformation catalog
@@ -514,7 +515,7 @@ example site calatog entry looks like this:
 
 .. note::
 
-   *pegasus* profile *cores* is incompatible with Titan's PBS
+   *pegasus* profile *cores* is incompatible with Summit's LSF
    submissions.
 
 
