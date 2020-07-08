@@ -15,16 +15,11 @@ Glossary
       (Transformation Catalog) and the sites (Site Catalog).
 
    Concrete Workflow
-      See Executable Workflow
+      Deprecated term. See Executable Workflow
 
    Compute Site
       The logical handle of the computational resource in the Site Catalog
       on which the executable workflow is executed by Pegasus.
-
-   HTCondor-G
-      A task broker that manages jobs to run at various distributed sites,
-      using Globus GRAM to launch jobs on the remote
-      sites.http://cs.wisc.edu/condor
 
    Clustering
       The process of clustering short running jobs together into a larger
@@ -34,15 +29,12 @@ Glossary
       into a larger job, the scheduling overhead for 10 jobs will be x
       instead of 10x.
 
-   DAGMan
-      The workflow execution engine used by Pegasus.
-
    Directed Acyclic Graph (DAG)
       A graph in which all the arcs (connections) are unidirectional, and
       which has no loops (cycles).
 
    DAX
-      See Abstract Workflow.
+      Deprecated term. See Abstract Workflow.
 
    Deferred Planning
       Planning mode to set up Pegasus. In this mode, instead of mapping the
@@ -98,8 +90,18 @@ Glossary
       A hierarchical workflow is an abstract workflow, where some jobs in the
       workflow instead of referring to compute jobs, point to another workflow
       that needs to be executed. Hierarchical workflows are one way for users
-      to compose vert large workflows, that end up containing hundereds of
+      to compose vert large workflows, that end up containing hundreds of
       thousands of tasks across all the sub workflows.
+
+   HTCondor DAGMan
+      The workflow execution engine used by Pegasus to manage the execution
+      of the executable workflow.
+
+   HTCondor-G
+      A task broker that manages jobs to run at various distributed sites,
+      using Globus GRAM to launch jobs on the remote
+      sites. More information can be found at
+      `HTCondor Website <https://research.cs.wisc.edu/htcondor>`_
 
    Input Site
       The logical handle to the storage resource described in the Site Catalog,
