@@ -13,7 +13,13 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.XMLWriter;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+import edu.isi.pegasus.planner.namespace.Metadata;
+import java.io.IOException;
 
 /**
  * Metadata object for the DAX API
@@ -21,6 +27,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
  * @author gmehta
  * @version $Revision$
  */
+@JsonSerialize(using = MetaData.JsonSerializer.class)
 public class MetaData {
 
     /** Metadata Key */
@@ -117,5 +124,29 @@ public class MetaData {
     public void toXML(XMLWriter writer, int indent) {
         writer.startElement("metadata", indent);
         writer.writeAttribute("key", mKey).writeData(mValue).endElement();
+    }
+    
+    /**
+     * Custom serializer for YAML representation of a MetaData k,v pair
+     * 
+     * @author Ryan Tanaka
+     */
+    public static class JsonSerializer extends PegasusJsonSerializer<MetaData> {
+        
+        public JsonSerializer() {}
+        
+        /**
+         * Serializes a MetaData object in to YAML representation
+         * 
+         * @param md
+         * @param gen
+         * @param sp
+         * @throws IOException 
+         */
+        public void serialize(MetaData md, JsonGenerator gen, SerializerProvider sp) throws IOException {
+            gen.writeStartObject();
+            gen.writeStringField(md.getKey(), md.getValue());
+            gen.writeEndObject();
+        }
     }
 }
