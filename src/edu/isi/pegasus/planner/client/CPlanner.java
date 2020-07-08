@@ -803,6 +803,8 @@ public class CPlanner extends Executable {
 
                 case 'd': // dax
                     options.setDAX(g.getOptarg());
+                    mLogger.log( "--dax option is deprecated. The abstract workflow is passed via the last positional argument on the commandline.",
+                                 LogManager.WARNING_MESSAGE_LEVEL );
                     break;
 
                 case 'D': // -Dpegasus.blah=
