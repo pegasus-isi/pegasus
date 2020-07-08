@@ -515,17 +515,17 @@ public class File extends CatalogType {
             gen.writeBooleanField("optional", f.mOptional);
             
             // size
-            if (!f.mSize.isBlank()) {
+            if (!f.mSize.trim().isEmpty()) {
                 gen.writeStringField("size", f.mSize);
             }
             
             // namespace
-            if (f.mNamespace != null && !f.mNamespace.isBlank()) {
+            if (f.mNamespace != null && !f.mNamespace.trim().isEmpty()) {
                 gen.writeStringField("namespace", f.mNamespace);
             }
             
             // version
-            if (f.mVersion != null && !f.mVersion.isBlank()) {
+            if (f.mVersion != null && !f.mVersion.trim().isEmpty()) {
                 gen.writeStringField("version", f.mVersion);
             }
             
