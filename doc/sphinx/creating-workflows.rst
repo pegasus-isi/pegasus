@@ -190,15 +190,24 @@ key/value attributes to be associated with a PFN.
 
 Pegasus supports the following implementations of the Replica Catalog.
 
-1. **File**\ (Default)
+1. **YAML** (Default)
 
-2. **Regex**
+2. **File**
 
-3. **Directory**
+3. **Regex**
 
-4. **Database via JDBC**
+4. **Directory**
 
-5. **MRC**
+5. **Database via JDBC**
+
+6. **MRC**
+
+.. _rc-YAML:
+
+YAML
+----
+
+Coming Soon
 
 .. _rc-FILE:
 
@@ -525,11 +534,15 @@ a condor pool or glidein pool with a shared file system.
 The Site Catalog can be described as an XML . Pegasus currently supports
 two schemas for the Site Catalog:
 
-1. **XML4**\ (Default) Corresponds to the schema described
+1. **YAML**\ (Default) Corresponds to the schema described
    `here <schemas/sc-4.0/sc-4.0.html>`__.
 
-2. **XML3**\ (Deprecated) Corresponds to the schema described
-   `here <schemas/sc-3.0/sc-3.0.html>`__
+2. **XML4**\ (Default) Corresponds to the schema described
+   `here <schemas/sc-4.0/sc-4.0.html>`__.
+
+.. _sc-YAML:
+
+Coming Soon
 
 .. _sc-XML4:
 
@@ -631,115 +644,6 @@ To use this site catalog the follow properties need to be set:
 
 1. **pegasus.catalog.site.file=<path to the site catalog file>**
 
-.. _sc-XML3:
-
-XML3
-----
-
-   **Warning**
-
-   This format is now deprecated in favor of the XML4 format. If you are
-   still using the File format you should convert it to XML4 format
-   using the client pegasus-sc-converter
-
-This is the default format for Pegasus 3.0. This format allows defining
-filesystem of shared as well as local type on the head node of the
-remote cluster as well as on the backend nodes
-
-.. figure:: images/sc-3.0_p2.png
-   :alt: Schema Image of the Site Catalog XML 3
-
-   Schema Image of the Site Catalog XML 3
-
-Below is an example of the XML3 site catalog
-
-::
-
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-   http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-     <site  handle="isi" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
-         <grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/>
-         <grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
-             <head-fs>
-                  <scratch>
-                     <shared>
-                        <file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu"
-                                     mount-point="/nfs/scratch01" />
-                        <internal-mount-point mount-point="/nfs/scratch01"/>
-                     </shared>
-                  </scratch>
-                  <storage>
-                     <shared>
-                        <file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu"
-                                     mount-point="/exports/storage01"/>
-                        <internal-mount-point mount-point="/exports/storage01"/>
-                     </shared>
-                  </storage>
-             </head-fs>
-         <replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/>
-         <profile namespace="env" key="PEGASUS_HOME" >/nfs/vdt/pegasus</profile>
-         <profile namespace="env" key="GLOBUS_LOCATION" >/vdt/globus</profile>
-     </site>
-   </sitecatalog>
-
-Described below are some of the entries in the site catalog.
-
-1. **site** - A site identifier.
-
-2. **replica-catalog** - URL for a local replica catalog (LRC) to
-   register your files in. Only used for RLS implementation of the RC.
-   This is optional and support for RLS has been dropped in Pegasus
-   4.5.0.
-
-3. **File Systems** - Info about filesystems mounted on the remote
-   clusters head node or worker nodes. It has several configurations
-
-   -  **head-fs/scratch** - This describe the scratch file systems
-      (temporary for execution) available on the head node
-
-   -  **head-fs/storage** - This describes the storage file systems
-      (long term) available on the head node
-
-   -  **worker-fs/scratch** - This describe the scratch file systems
-      (temporary for execution) available on the worker node
-
-   -  **worker-fs/storage** - This describes the storage file systems
-      (long term) available on the worker node
-
-   Each scratch and storage entry can contain two sub entries,
-
-   -  SHARED for shared file systems like NFS, LUSTRE etc.
-
-   -  LOCAL for local file systems (local to the node/machine)
-
-   Each of the filesystems are defined by used a file-server element.
-   Protocol defines the protocol uses to access the files, URL defines
-   the url prefix to obtain the files from and mount-point is the mount
-   point exposed by the file server.
-
-   Along with this an internal-mount-point needs to defined to access
-   the files directly from the machine without any file servers.
-
-4. **arch,os,osrelease,osversion, glibc** - The
-   arch/os/osrelease/osversion/glibc of the site. OSRELEASE, OSVERSION
-   and GLIBC are optional
-
-   ARCH can have one of the following values X86, X86_64, SPARCV7,
-   SPARCV9, AIX, PPC.
-
-   OS can have one of the following values LINUX,SUNOS,MACOSX. The
-   default value for sysinfo if none specified is X86::LINUX
-
-5. **Profiles** - One or many profiles can be attached to a pool.
-
-   One example is the environments to be set on a remote pool.
-
-To use this site catalog the follow properties need to be set:
-
-1. **pegasus.catalog.site.file=<path to the site catalog file>**
-
 Site Catalog Converter pegasus-sc-converter
 -------------------------------------------
 
@@ -776,9 +680,15 @@ is invoked etc.
 
 Pegasus currently supports a Text formatted Transformation Catalog
 
-1. **Text:**\ A multi line text based Transformation Catalog (DEFAULT)
+1. **YAML:**\ A multi line text based Transformation Catalog (DEFAULT)
+
+2. **Text:**\ A multi line text based Transformation Catalog
 
 In this guide we will look at the format of the Multiline Text based TC.
+
+.. _tc-YAML:
+
+YAML
 
 .. _tc-Text:
 
@@ -963,78 +873,6 @@ transformations can refer to the same container.
 
    Containerized Applications can only be specified in the
    transformation catalog, not via the DAX API.
-
-.. _pegasus-tc-client:
-
-TC Client pegasus-tc-client
----------------------------
-
-We need to map our declared transformations (preprocess, findrange, and
-analyze) from the example DAX above to a simple "mock application" name
-"keg" ("canonical example for the grid") which reads input files
-designated by arguments, writes them back onto output files, and
-produces on STDOUT a summary of where and when it was run. Keg ships
-with Pegasus in the bin directory. Run keg on the command line to see
-how it works.
-
-::
-
-   $ keg -o /dev/fd/1
-
-   Timestamp Today: 20040624T054607-05:00 (1088073967.418;0.022)
-   Applicationname: keg @ 10.10.0.11 (VPN)
-   Current Workdir: /home/unique-name
-   Systemenvironm.: i686-Linux 2.4.18-3
-   Processor Info.: 1 x Pentium III (Coppermine) @ 797.425
-   Output Filename: /dev/fd/1
-
-Now we need to map all 3 transformations onto the "keg" executable. We
-place these mappings in our File transformation catalog for site clus1.
-
-.. note::
-
-   In earlier version of Pegasus users had to define entries for Pegasus
-   executables such as transfer, replica client, dirmanager, etc on each
-   site as well as site "local". This is no longer required. Pegasus
-   versions 2.0 and later automatically pick up the paths for these
-   binaries from the environment profile PEGASUS_HOME set in the site
-   catalog for each site.
-
-   A single entry needs to be on one line. The above example is just
-   formatted for convenience.
-
-Alternatively you can also use the pegasus-tc-client to add entries to
-any implementation of the transformation catalog. The following example
-shows the addiition the last entry in the File based transformation
-catalog.
-
-::
-
-   $ pegasus-tc-client -Dpegasus.catalog.transformation=Text \
-   -Dpegasus.catalog.transformation.file=$HOME/tc -a -r clus1 -l black::analyze:1.0 \
-   -p gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg  -t STAGEABLE -s INTEL32::LINUX \
-   -e ENV::KEY3="VALUE3"
-
-   2007.07.11 16:12:03.712 PDT: [INFO] Added tc entry sucessfully
-
-To verify if the entry was correctly added to the transformation catalog
-you can use the pegasus-tc-client to query.
-
-::
-
-   $ pegasus-tc-client -Dpegasus.catalog.transformation=File \
-   -Dpegasus.catalog.transformation.file=$HOME/tc -q -P -l black::analyze:1.0
-
-   #RESID     LTX          PFN                  TYPE              SYSINFO
-
-   clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
-                   STAGEABLE    INTEL32::LINUX
-
-..
-
-.. note::
-
-   pegasus-tc-client is no longer actively developed and is deprecated.
 
 TC Converter Client pegasus-tc-converter
 ----------------------------------------
