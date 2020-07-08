@@ -11,6 +11,7 @@ from .site_catalog import (
     Scheduler,
     Site,
     SiteCatalog,
+    SupportedJobs,
 )
 from .transformation_catalog import (
     Container,
