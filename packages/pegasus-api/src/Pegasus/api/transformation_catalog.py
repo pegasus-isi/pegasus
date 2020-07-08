@@ -67,7 +67,7 @@ class Container(ProfileMixin):
         mounts: Optional[List[str]] = None,
         image_site: Optional[str] = None,
         checksum: Optional[Dict[str, str]] = None,
-        metadata: Optional[Dict[str, Union[int, str, float]]] = None
+        metadata: Optional[Dict[str, Union[int, str, float]]] = None,
     ):
         """
         :param name: name of this container
@@ -114,7 +114,9 @@ class Container(ProfileMixin):
 
         # TODO: remove once this is supported
         if metadata:
-            raise NotImplementedError("Metadata support for Containers is not yet supported")
+            raise NotImplementedError(
+                "Metadata support for Containers is not yet supported"
+            )
         self.metadata = metadata
 
         self.profiles = defaultdict(dict)

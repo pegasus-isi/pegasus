@@ -74,7 +74,7 @@ class File(MetadataMixin):
         if isinstance(other, File):
             return self.lfn == other.lfn
         return False
-    
+
     def __repr__(self):
         return "<{} {}>".format(self.__class__.__name__, self.lfn)
 
