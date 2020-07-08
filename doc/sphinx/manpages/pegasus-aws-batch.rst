@@ -2,9 +2,8 @@
 pegasus-aws-batch
 =================
 
-pegasus-aws-batch
-a client to run tasks on Amazon AWS Batch.
-   ::
+pegasus-aws-batch - a client to run tasks on Amazon AWS Batch.
+::
 
       pegasus-aws-batch [-h]
                           [-C propsfile]
@@ -341,15 +340,14 @@ The tool allows you to upload files to the associated S3 bucket from the
 local filesystem in two ways. a. Common Files Required For All Jobs
 
 + You can the command line option **--files** to give a comma separated
-list of files to transfer.
+  list of files to transfer.
 
 + b. TRANSFER_INPUT_FILES Environment Variable
 
 + You can also associate in the job submit a file, an enviornment
-variable named **TRANSFER_INPUT_FILES** for each job that the tool will
-transfer at the time of job submission. The value for the environment
-variable is a comma separated list of files.
-
+  variable named **TRANSFER_INPUT_FILES** for each job that the tool will
+  transfer at the time of job submission. The value for the environment
+  variable is a comma separated list of files.
 
 
 Return Value

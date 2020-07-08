@@ -37,8 +37,7 @@ that a single scientist can complete complex computations that once
 required many different people. New users are encouraged to explore the
 :doc:`tutorial` to become familiar with how to operate
 Pegasus for their own workflows. Users create and run a sample project
-to demonstrate Pegasus capabilities. Users can also browse the
-:doc:`useful-tips` chapter to aid them in designing their workflows.
+to demonstrate Pegasus capabilities.
 
 Pegasus has a number of features that contribute to its useability and
 effectiveness.

@@ -5,7 +5,9 @@ pegasus-cwl-converter
 pegasus-cwl-converter - converts a Common Workflow Language (CWL) workflow into
 a Pegasus workflow. Note that this utility is currently a **work in progress**
 and we are working towards providing more comprehensive support of the CWL 
-specification. ::
+specification.
+
+::
     pegasus-cwl-converter [-h] [-d]
                           cwl_workflow_file_path
                           workflow_inputs_file_path
@@ -33,7 +35,9 @@ Positional Arguments
 
 **transformation_spec_file_path**
     YAML file specifying Pegasus specific transformation parameters. This file
-    must be formatted as: ::
+    must be formatted as:
+
+    ::
         <executable name0>:
             site: <str>
             is_stageable: <bool>
@@ -66,7 +70,9 @@ Example
 =======
 Say that you have the following directory, ``my_cwl_workflow``, that contains a 
 main workflow CWL file, job CWL files, input specifications, input files, 
-and scripts or executables used by the jobs: ::
+and scripts or executables used by the jobs:
+
+::
         my_cwl_workflow
         ├── tar.cwl            <-- CWL Job class that invokes /usr/bin/tar
         ├── compile_1.cwl      <-- CWL Job class that invokes /usr/bin/gcc
@@ -95,7 +101,9 @@ have the following ``baseCommand`` fields:
 +--------------------+-----------------------------------------------+
 
 Assuming that your Pegasus **site catalog** has two sites ``local`` and 
-``condorpool``, the transformation spec file would look something like: ::
+``condorpool``, the transformation spec file would look something like:
+
+::
     tar:
         site: condorpool
         is_stageable: False
@@ -108,7 +116,9 @@ Assuming that your Pegasus **site catalog** has two sites ``local`` and
 
 Note that, ``gcc`` is only referenced once. Now that the transformation spec file
 has been created (let's call this ``tr_specs.yml``), ``pegasus-cwl-converter`` can be used to convert ``workflow.cwl`` 
-into Pegasus's native format by calling: ::
+into Pegasus's native format by calling:
+
+::
         pegasus-cwl-converter workflow.cwl input.yml tr_specs.yml  pegasus_workflow.yml
 
 Authors

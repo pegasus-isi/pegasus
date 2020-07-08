@@ -2,16 +2,14 @@
 pegasus-globus-online
 =====================
 
-1
-pegasus-globus-online
 Interfaces with Globus Online for managed transfers.
-   ::
+::
 
       pegasus-globus-online [--mkdir]
-                              [--transfer]
-                              [--remove]
-                              [--file inputfile]
-                              [--debug]
+                            [--transfer]
+                            [--remove]
+                            [--file inputfile]
+                            [--debug]
 
 
 

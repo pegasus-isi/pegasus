@@ -26,22 +26,20 @@ very simple in this case:
 
 ::
 
-   <?xml version="1.0" encoding="UTF-8"?>
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-                version="4.0">
-
-       <site  handle="local" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/tmp/wf/work">
-               <file-server operation="all" url="file:///tmp/wf/work"/>
-           </directory>
-           <directory type="local-storage" path="/tmp/wf/storage">
-               <file-server operation="all" url="file:///tmp/wf/storage"/>
-           </directory>
-       </site>
-
-   </sitecatalog>
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /tmp/wf/work
+      fileServers:
+      - url: file:///tmp/wf/work
+        operation: all
+    - type: localStorage
+      path: /tmp/wf/storage
+      fileServers:
+      - url: file:///tmp/wf/storage
+        operation: all
 
 The simplest execution environment does not involve HTCondor. Pegasus is
 capable of planning small workflows for local execution using a shell
@@ -72,7 +70,7 @@ DAGMan to the execution machines in the pool. This matching process can
 be guided by including HTCondor specific attributes in the submit files
 of the tasks. If the user wants to execute the workflow on the execution
 machines (worker nodes) in a HTCondor pool, there should be a resource
-defined in the site catalog which represents these execution machines.
+defined in the sites catalog which represents these execution machines.
 The universe attribute of the resource should be vanilla. There can be
 multiple resources associated with a single HTCondor pool, where each
 resource identifies a subset of machine (worker nodes) in the pool.
@@ -89,27 +87,27 @@ is provided by HTCondor:
 
 ::
 
-   <?xml version="1.0" encoding="UTF-8"?>
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-                version="4.0">
-
-       <site  handle="local" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/tmp/wf/work">
-               <file-server operation="all" url="file:///tmp/wf/work"/>
-           </directory>
-           <directory type="local-storage" path="/tmp/wf/storage">
-               <file-server operation="all" url="file:///tmp/wf/storage"/>
-           </directory>
-       </site>
-
-       <site  handle="condorpool" arch="x86_64" os="LINUX">
-           <profile namespace="pegasus" key="style" >condor</profile>
-           <profile namespace="condor" key="universe" >vanilla</profile>
-       </site>
-
-   </sitecatalog>
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /tmp/wf/work
+      fileServers:
+      - url: file:///tmp/wf/work
+        operation: all
+    - type: localStorage
+      path: /tmp/wf/storage
+      fileServers:
+      - url: file:///tmp/wf/storage
+        operation: all
+  - name: condorpool
+    directories: []
+    profiles:
+      pegasus:
+        style: condor
+      condor:
+        universe: vanilla
 
 There is a set of HTCondor profiles which are used commonly when running
 Pegasus workflows. You may have to set some or all of these depending on
@@ -117,21 +115,25 @@ the setup of the HTCondor pool:
 
 ::
 
-     <!-- Change the style to HTCondor for jobs to be executed in the HTCondor Pool.
-          By default, Pegasus creates jobs suitable for grid execution. -->
-     <profile namespace="pegasus" key="style">condor</profile>
-
-     <!-- Change the universe to vanilla to make the jobs go to remote compute
-          nodes. The default is local which will only run jobs on the submit host -->
-     <profile namespace="condor" key="universe" >vanilla</profhile>
-
-     <!-- The requirements expression allows you to limit where your jobs go -->
-     <profile namespace="condor" key="requirements">(Target.FileSystemDomain != &quot;yggdrasil.isi.edu&quot;)</profile>
-
-     <!-- The following two profiles forces HTCondor to always transfer files. This
-          has to be used if the pool does not have a shared filesystem -->
-     <profile namespace="condor" key="should_transfer_files">True</profile>
-     <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
+  - name: condorpool
+    directories: []
+    profiles:
+      pegasus:
+        # Change the style to HTCondor for jobs to be executed in the HTCondor Pool.
+        # By default, Pegasus creates jobs suitable for grid execution.
+        style: condor
+      condor:
+        # Change the universe to vanilla to make the jobs go to remote compute node.
+        # The default is local which will only run jobs on the submit host.
+        universe: vanilla
+        
+        # The requirements expression allows you to limit where your jobs go
+        requirements: (Target.FileSystemDomain != &quot;yggdrasil.isi.edu&quot;)
+        
+        # The following two profiles forces HTCondor to always transfer files.
+        # This has to be used if the pool does not have a shared filesystem.
+        should_transfer_files: 'True'
+        when_to_transfer_files: ON_EXIT
 
 Glideins
 --------

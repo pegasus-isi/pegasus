@@ -33,6 +33,7 @@ Command Line Tools
     manpages/pegasus-mpi-keg.rst
     manpages/pegasus-plan.rst
     manpages/pegasus-rc-client.rst
+    manpages/pegasus-rc-converter.rst
     manpages/pegasus-remove.rst
     manpages/pegasus-run.rst
     manpages/pegasus-s3.rst

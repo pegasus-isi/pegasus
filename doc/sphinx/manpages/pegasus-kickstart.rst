@@ -2,10 +2,8 @@
 pegasus-kickstart
 =================
 
-1
-pegasus-kickstart
-remote job wrapper
-   ::
+Pegasus remote job wrapper
+::
 
       pegasus-kickstart [-n tr] [-N dv] [-H] [-R site] [-W | -w dir]
                         [-L lbl -T iso] [-s p | @fn] [-S p | @fn] [-i fn]
@@ -28,7 +26,7 @@ invocation tracking as well as detecting Globus GRAM job failures.
 
 **pegasus-kickstart** allows the optional execution of jobs before and
 after the main application job that run in chained execution with the
-main application job. See section `SUBJOBS <#SUBJOBS>`__ for details
+main application job. See section `SUBJOBS` for details
 about this feature.
 
 It also allows stdin, stdout, and stderr to be redirected from/to
@@ -43,7 +41,7 @@ executable is the safe and recommended option.
 
 **pegasus-kickstart** rewrites the command line of any job (pre, post
 and main) with variable substitutions from Unix environment variables.
-See section `VARIABLE REWRITING <#VARIABLE_REWRITING>`__ below for
+See section `VARIABLE REWRITING` below for
 details on this feature.
 
 
@@ -612,8 +610,8 @@ metadata.
 Environment Variables
 =====================
 
-Note: Pegasus 4.6 deprecated the "GRIDSTART_" prefix for environment
-variables and replaced it with "KICKSTART_". The "GRIDSTART_" versions
+Note: Pegasus 4.6 deprecated the "GRIDSTART" prefix for environment
+variables and replaced it with "KICKSTART". The "GRIDSTART" versions
 of the old variables should still work.
 
 **KICKSTART_TMP**

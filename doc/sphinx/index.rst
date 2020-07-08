@@ -7,32 +7,46 @@ Welcome to Pegasus WMS's documentation!
 =======================================
 
 .. toctree::
+    :caption: Getting Started
+    :maxdepth: 2
+
+    introduction.rst
+    quickstart.rst
+    tutorial.rst
+
+.. toctree::
     :caption: User Guide
     :numbered:
     :maxdepth: 2
 
-    introduction.rst
-    tutorial.rst
     installation.rst
     creating-workflows.rst
     running-workflows.rst
     monitoring-debugging-stats.rst
     execution-environments.rst
     containers.rst
-    example-workflows.rst
     data-management.rst
-    optimization.rst
     pegasus-service.rst
     reference-configuration.rst
-    submit-directory.rst
     jupyter.rst
+    optimization.rst
+
+.. toctree::
+    :caption: References
+    :maxdepth: 2
+
     api-reference.rst
     cli.rst
-    packages.rst
     funding-citing-usage-stats.rst
     glossary.rst
     tutorial-vm.rst
     migration.rst
+
+.. toctree::
+    :caption: Pegasus Development
+    :maxdepth: 2
+    
+    packages.rst
 
 
 Indices and tables

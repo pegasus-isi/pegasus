@@ -2,13 +2,11 @@
 pegasus-globus-online-init
 ==========================
 
-1
-pegasus-globus-online-init
 Initializes OAuth tokens for Globus Online authentication.
-   ::
+::
 
       pegasus-globus-online-init  [-h]
-                                    [--permanent]
+                                  [--permanent]
 
 
 
