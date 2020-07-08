@@ -1392,7 +1392,6 @@ public class PlannerOptions extends Data implements Cloneable {
         sb.
                 /*append( this.toJVMOptions() ).append( " " ).*/
                 append(this.toOptions())
-                .append("--dax")
                 .append(" ")
                 .append(this.getDAX());
 
