@@ -42,7 +42,6 @@ Command Line Tools
     manpages/pegasus-statistics.rst
     manpages/pegasus-status.rst
     manpages/pegasus-submitdir.rst
-    manpages/pegasus-tc-client.rst
     manpages/pegasus-tc-converter.rst
     manpages/pegasus-transfer.rst
     manpages/pegasus-version.rst
