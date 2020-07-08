@@ -126,10 +126,10 @@ the setup of the HTCondor pool:
         # Change the universe to vanilla to make the jobs go to remote compute node.
         # The default is local which will only run jobs on the submit host.
         universe: vanilla
-        
+
         # The requirements expression allows you to limit where your jobs go
         requirements: (Target.FileSystemDomain != &quot;yggdrasil.isi.edu&quot;)
-        
+
         # The following two profiles forces HTCondor to always transfer files.
         # This has to be used if the pool does not have a shared filesystem.
         should_transfer_files: 'True'
@@ -151,7 +151,7 @@ machine. The glideins can be submitted to any type of resource: a GRAM
 enabled cluster, a campus cluster, a cloud environment such as Amazon
 AWS, or even another HTCondor cluster.
 
-   **Tip**
+.. tip::
 
    As glideins are usually coming from different compute resource,
    and/or the glideins are running in an administrative domain different
@@ -273,7 +273,7 @@ The main requirement is that HTCondor and Pegasus need to be installed
 on one of the cluster login nodes so that it can interact with
 the local batch scheduler using the standard command line tools.
 
-   **Note**
+.. note::
 
    Glite is the old name for BLAH (or BLAHP). BLAH binaries are
    distributed with HTCondor as the "batch_gahp". For historical
@@ -423,7 +423,7 @@ classad directives. Therefore, all the jobs that have the ``glite``
 style applied don't have a remote directory specified in the submit
 script. Instead, Pegasus uses Kickstart to change to the working
 directory when the job is launched on the remote system. For MPI jobs,
-which do not use kickstart as a launcher, we recommend using a 
+which do not use kickstart as a launcher, we recommend using a
 wrapper scripts which `cd $PEGASUS_SCRATCH_DIR` before kicking
 of the actual code.
 
@@ -508,7 +508,7 @@ example site calatog entry looks like this:
 
 ..
 
-   **Note**
+.. note::
 
    *pegasus* profile *cores* is incompatible with Titan's PBS
    submissions.
@@ -529,7 +529,7 @@ translation layer in HTCondor.
 
 The requirements for Bosco is that you have your own submit host.
 To install Bosco, we recommend that you choose the *Bosco Multiuser*
-option as it will enable Bosco for all users the host. However, 
+option as it will enable Bosco for all users the host. However,
 Pegasus will work fine with a single user installation as well.
 
 We also recommended to have the submit node configured either as a Bosco
@@ -880,7 +880,7 @@ site catalog
 The pegasus distribution comes with creamce examples in the examples
 directory. They can be used as a starting point to configure your setup.
 
-   **Tip**
+.. tip::
 
    Usually , the CREAMCE frontends accept VOMS generated user proxies
    using the command voms-proxy-init . Steps on generating a VOMS proxy
@@ -889,7 +889,7 @@ directory. They can be used as a starting point to configure your setup.
    .
 
 .. _sdsc-comet:
-   
+
 SDSC Comet with BOSCO glideins
 ------------------------------
 
@@ -1279,14 +1279,14 @@ following roles need to be created
    Example <https://aws.amazon.com/blogs/compute/creating-a-simple-fetch-and-run-aws-batch-job/>`__
    to create a IAM role named batchJobRole.
 
-      **Note**
+   .. note::
 
       batchJobRole should have full write access to S3 i.e have the
       policy **AmazonS3FullAccess** attached to it.
 
 ..
 
-   **Note**
+.. note::
 
    It is important that you name the roles as listed above. Else, you
    will need to update the same job definition, compute environment, and

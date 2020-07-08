@@ -233,7 +233,7 @@ have *profile* children-elements, which refer to attributes of the
 physical file. The file-level profiles refer to attributes of the
 logical file.
 
-   **Note**
+.. note::
 
    The ``stat`` profile namespace is ony an example, and details about
    stat are not yet implemented. The proper namespaces ``pegasus``,
@@ -350,7 +350,7 @@ is that PFNs are just identical replicas or instances of a given LFN. If
 you need a different 32/64 bit-ed-ness or OS release, the underlying PFN
 would be different, and thus the LFN for it should be different, too.
 
-   **Note**
+.. note::
 
    We are still discussing some details and implications of this
    decision.

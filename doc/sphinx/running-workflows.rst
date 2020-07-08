@@ -167,7 +167,7 @@ up.
 
 ..
 
-   **Tip**
+.. tip::
 
    The Data Reuse Algorithm can be disabled by passing the **--force**
    option to pegasus-plan.
@@ -280,7 +280,7 @@ Pegasus can
 
 ..
 
-   **Tip**
+.. tip::
 
    The site selector to use for site selection can be specified by
    setting the property **pegasus.selector.site**
@@ -303,7 +303,7 @@ reduce the remote execution overheads associated with a job. Clustering
 is described in detail in the `optimization <#job_clustering>`__
 chapter.
 
-   **Tip**
+.. tip::
 
    The job clustering is turned on by passing the **--cluster** option
    to pegasus-plan.
@@ -369,7 +369,7 @@ the worker node filesystem. This feature will be refined further for
 Pegasus 3.1. To use it with Pegasus 3.0 send email to **pegasus-support
 at isi.edu**.
 
-   **Tip**
+.. tip::
 
    The replica selector to use for replica selection can be specified by
    setting the property **pegasus.selector.replica**
@@ -399,7 +399,7 @@ workflow that remove data from the directory on the shared filesystem
 when it is no longer required by the workflow. This is useful in
 reducing the peak storage requirements of the workflow.
 
-   **Tip**
+.. tip::
 
    The addition of the cleanup nodes to the workflow can be disabled by
    passing the **--nocleanup** option to pegasus-plan.
@@ -412,7 +412,7 @@ reducing the peak storage requirements of the workflow.
 
 ..
 
-   **Tip**
+.. tip::
 
    Users can specify the maximum number of cleanup jobs added per level
    by specifying the property **pegasus.file.cleanup.clusters.num** in
@@ -440,7 +440,7 @@ following code generators
    generator, all the jobs should be mapped to site local i.e specify
    **--sites local** to pegasus-plan.
 
-      **Tip**
+   .. tip::
 
       To use the Shell code Generator set the property
       **pegasus.code.generator** Shell
@@ -455,7 +455,7 @@ following code generators
    workflow. Note that the generated PBS file needs to be manually
    updated before it can be submitted.
 
-      **Tip**
+   .. tip::
 
       To use the Shell code Generator set the property
       **pegasus.code.generator** PMC
@@ -583,7 +583,7 @@ The data flow is as follows in this case
 
 ..
 
-   **Tip**
+.. tip::
 
    Set **pegasus.data.configuration** to **sharedfs** to run in this
    configuration.
@@ -647,7 +647,7 @@ where you don't want to setup a shared filesystem between the worker
 nodes. Running in that mode is explained in detail
 `here. <#amazon_aws>`__
 
-   **Tip**
+.. tip::
 
    Set p\ **egasus.data.configuration** to **nonsharedfs** to run in
    this configuration. The staging site can be specified using the
@@ -712,7 +712,7 @@ where you don't want to setup a shared filesystem between the worker
 nodes. Running in that mode is explained in detail
 `here. <#amazon_aws>`__
 
-   **Tip**
+.. tip::
 
    Set p\ **egasus.data.configuration** to **condorio** to run in this
    configuration. In this mode, the staging site is automatically set to
@@ -1222,7 +1222,7 @@ pegasus-run. **pegasus-monitord** parses the dagman.out file and writes
 out the jobstate.log file, the format of which is more amenable to
 parsing.
 
-   **Note**
+.. note::
 
    The jobstate.log file is not created if a user uses condor_submit_dag
    to submit a workflow to Condor DAGMan.

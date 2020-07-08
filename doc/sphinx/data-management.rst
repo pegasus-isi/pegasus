@@ -56,7 +56,7 @@ Supported Replica Selectors
 The various Replica Selectors supported in Pegasus Workflow Mapper are
 explained below.
 
-   **Note**
+.. note::
 
    Starting 4.6.0 release the Default and Regex Replica Selectors return
    an ordered list with priorities set. pegasus-transfer at runtime will
@@ -367,7 +367,7 @@ The data flow is as follows in this case
 
 ..
 
-   **Tip**
+.. tip::
 
    Set **pegasus.data.configuration** to **sharedfs** to run in this
    configuration.
@@ -428,7 +428,7 @@ where you don't want to setup a shared filesystem between the worker
 nodes. Running in that mode is explained in detail
 `here. <#amazon_aws>`__
 
-   **Tip**
+.. tip::
 
    Set p **egasus.data.configuration** to **nonsharedfs** to run in this
    configuration. The staging site can be specified using the
@@ -447,7 +447,7 @@ throttled ( as in case of stage in jobs). If large number of compute
 jobs start at the same time in a workflow, the input server will see a
 connection from each job.
 
-   **Tip**
+.. tip::
 
    Set **pegasus.transfer.bypass.input.staging** to **true**\ to enable
    the bypass of staging of input files via the staging server.
@@ -510,7 +510,7 @@ where you don't want to setup a shared filesystem between the worker
 nodes. Running in that mode is explained in detail
 `here. <#amazon_aws>`__
 
-   **Tip**
+.. tip::
 
    Set **pegasus.data.configuration** to **condorio** to run in this
    configuration. In this mode, the staging site is automatically set to
@@ -529,7 +529,7 @@ locally accessible input locations ( file URL's with "*site*" attribute
 set to local) specified in the replica catalog. Starting 4.3 release,
 users can enable this.
 
-   **Tip**
+.. tip::
 
    Set **pegasus.transfer.bypass.input.staging** to **true**\ to bypass
    the creation of separate stage in jobs.
@@ -646,7 +646,7 @@ following must be true
 
 ..
 
-   **Tip**
+.. tip::
 
    To confirm if a particular input file is symlinked instead of being
    copied, look for the destination URL for that file in
@@ -722,7 +722,7 @@ controlled by specifying certain pegasus profiles
 
 ..
 
-   **Tip**
+.. tip::
 
    Which transfer refiner to use is controlled by property
    pegasus.transfer.refiner
@@ -1315,7 +1315,7 @@ environment profile with the site.
 
 ..
 
-   **Tip**
+.. tip::
 
    Specifying credentials as Pegasus profiles was introduced in 4.4.0
    release.
@@ -1536,7 +1536,7 @@ default .
 
 ..
 
-   **Note**
+.. note::
 
    The staging mappers are only triggered if pegasus.data.configuration
    is set to nonsharedfs
@@ -1659,7 +1659,7 @@ strategy implemented
 
 ..
 
-   **Note**
+.. note::
 
    For large workflows with lots of files, the inplace strategy may take
    a long time as the algorithm works at a per file level to figure out
@@ -2016,7 +2016,7 @@ workflow database.
 
 ..
 
-   **Note**
+.. note::
 
    The automatic collection of the metadata attributes for output files
    is only triggered if the output file is marked to be registered in

@@ -319,7 +319,7 @@ Runtime clustering supports two modes of operation.
 
 ..
 
-   **Note**
+.. note::
 
    Users should either specify clusters.maxruntime or clusters.num. If
    both of them are specified, then clusters.num profile will be ignored
@@ -543,7 +543,7 @@ execution of the smaller constituent jobs either
    path on the basis of the environment profile PEGASUS_HOME specified
    in the site catalog for the remote site.
 
-      **Tip**
+   .. tip::
 
       Users are encouraged to use label based clustering in conjunction
       with PMC
@@ -609,7 +609,7 @@ or seqexec) can be specified
    In the above example, all the clustered jobs that consist of
    transformation B on siteX will be executed via mpiexec.
 
-      **Note**
+   .. note::
 
       **The clustering of jobs on a site only happens only if**
 
@@ -714,7 +714,7 @@ either in the
 
 2. Replica Catalog Section in the `DAX <#dax_replica_catalog>`__ .
 
-      **Note**
+   .. note::
 
       Currently, only file url's on the local site ( submit host ) can
       be specified as DAX file locations.
@@ -786,7 +786,7 @@ binary is determined according to the following rules -
 
 ..
 
-   **Tip**
+.. tip::
 
    It is recommended that users specify dagman.maxpre in their
    properties file to control the maximum number of pegasus plan
@@ -819,7 +819,7 @@ either in the
 
 2. Replica Catalog Section in the DAX.
 
-      **Note**
+   .. note::
 
       Currently, only file url's on the local site ( submit host ) can
       be specified as DAG file locations.
@@ -1078,7 +1078,7 @@ following property in your properties file.
 
 ..
 
-   **Note**
+.. note::
 
    It is not recommended to set limit for compute jobs unless you know
    what you are doing.

@@ -200,7 +200,7 @@ be using the split workflow, which can be created like this:
 
 ..
 
-   **Tip**
+.. tip::
 
    The ``pegasus-init`` tool can be used to generate workflow skeletons
    from templates by asking the user questions. It is easier to use
@@ -249,7 +249,7 @@ with handle other than "local") defined in the sites.xml file. In our
 example, the workflow will run on a site named "condorpool" in the
 sites.xml file.
 
-   **Note**
+.. note::
 
    If there are multiple compute sites specified in your sites.xml, and
    you want to choose a specific site, use the --sites option to
@@ -293,7 +293,7 @@ To plan the split workflow invoke the pegasus-plan command using the
 
 ..
 
-   **Note**
+.. note::
 
    The line in the output that starts with ``pegasus-status``, contains
    the command you can use to monitor the status of the workflow. The
@@ -962,7 +962,7 @@ Look at the file by typing:
 
 ..
 
-   **Tip**
+.. tip::
 
    We will be using the ``more`` command to inspect several files in
    this tutorial. ``more`` is a pager application, meaning that it
@@ -1077,7 +1077,7 @@ examples is in ``sites.xml``:
 
 ..
 
-   **Note**
+.. note::
 
    By default (unless specified in properties), Pegasus picks ups the
    site catalog from a XML file named sites.xml in the current working
@@ -1183,7 +1183,7 @@ For this tutorial, the transformation catalog is in the file ``tc.txt``:
 
 ..
 
-   **Note**
+.. note::
 
    By default (unless specified in properties), Pegasus picks up the
    transformation catalog from a text file named tc.txt in the current
@@ -1231,7 +1231,7 @@ The Replica Catalog for the diamond workflow is in the ``rc.txt`` file:
 
 ..
 
-   **Note**
+.. note::
 
    By default (unless specified in properties), Pegasus picks ups the
    transformation catalog from a text file named tc.txt in the current

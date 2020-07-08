@@ -57,12 +57,12 @@ you want to use. To specify the container, that needs to be setup you
 instead specify the following Condor profiles
 
 .. table:: Condor Profiles For Specifying Singularity Container for Jobs
-   
+
    ================= =
-   Key               
+   Key
    ================= =
-   requirements      
-   +SingularityImage  
+   requirements
+   +SingularityImage
    ================= =
 
 For example you can specify the following in the site catalog for OSG
@@ -123,7 +123,7 @@ jobs. PegasusLite job when starting on a remote worker node.
 
 ..
 
-   **Note**
+.. note::
 
    Starting Pegasus 4.9.1 the container data transfer model has been
    changed. Instead of data transfers for the job occurring outside the
@@ -148,7 +148,7 @@ From the "Essential Packages", **python** and either **curl** or
 enviroment for GridFTP transfers. And "Install CA Certs" copies the grid
 certificates in the container.
 
-   **Note**
+.. note::
 
    Globus Toolkit introduced some breaking changes in August 2018 to its
    authentication module, and some sites haven't upgraded their

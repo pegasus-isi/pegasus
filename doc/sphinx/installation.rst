@@ -181,7 +181,7 @@ And you can uninstall Pegasus and HTCondor using ``brew rm`` like this:
 
 ..
 
-   **Note**
+.. note::
 
    It is also possible to install the latest development versions of
    Pegasus using the ``--HEAD`` arguments to

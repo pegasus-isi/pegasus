@@ -18,7 +18,7 @@ schema and its elements can be found in
 A DAX can be created by all users with the DAX generating API in Java,
 Perl, or Python format
 
-   **Note**
+.. note::
 
    We highly recommend using the DAX API. The Perl DAX API is deprecated
    starting 4.9.0 Release and will be removed in the 5.0 Release.
@@ -307,7 +307,7 @@ Checksum
 In this mode, checksums for raw input files to your workflow can be specified.
 Pegasus will check against these checksums to ensure data integrity. An example
 of this is shown below. More information in integrity checking can be found in the
-section of this guide on `Integrity Checking <#integrity-checking>`__. 
+section of this guide on `Integrity Checking <#integrity-checking>`__.
 
 ::
 
@@ -358,7 +358,7 @@ behavior of this implementation.
 
 ..
 
-   **Tip**
+.. tip::
 
    pegasus-plan has -**-input-dir** option that can be used to specify
    an input directory on the command line. This allows you to specify a
@@ -373,7 +373,7 @@ In this mode, Pegasus queries a SQL based replica catalog that is
 accessed via JDBC. To create the schema for JDBCRC use the
 `pegasus-db-admin <#cli-pegasus-db-admin>`__ command line tool.
 
-   **Note**
+.. note::
 
    A site attribute was added to the SQL schema as a unique key for 4.4.
    To update an existing database schema, use pegasus-db-admin tool.
@@ -959,7 +959,7 @@ transformations can refer to the same container.
 
 ..
 
-   **Note**
+.. note::
 
    Containerized Applications can only be specified in the
    transformation catalog, not via the DAX API.
@@ -991,7 +991,7 @@ how it works.
 Now we need to map all 3 transformations onto the "keg" executable. We
 place these mappings in our File transformation catalog for site clus1.
 
-   **Note**
+.. note::
 
    In earlier version of Pegasus users had to define entries for Pegasus
    executables such as transfer, replica client, dirmanager, etc on each
@@ -1032,7 +1032,7 @@ you can use the pegasus-tc-client to query.
 
 ..
 
-   **Note**
+.. note::
 
    pegasus-tc-client is no longer actively developed and is deprecated.
 
@@ -1132,7 +1132,7 @@ Some examples of variable expansion are illustrated below:
 
    ..
 
-      **Note**
+   .. note::
 
       Variable expansion is only supported for File based Replica
       Catalog, not Regex or other file based formats.

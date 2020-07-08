@@ -169,7 +169,7 @@ fields listed above.
 
 ..
 
-   **Note**
+.. note::
 
    pegasus-plan leaves a copy of the metrics sent in the workflow submit
    directory in the file ending with ".metrics" extension. As a user you
