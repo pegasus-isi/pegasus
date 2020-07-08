@@ -1070,18 +1070,17 @@ public class CPlanner extends Executable {
     /** Prints out a short description of what the command does. */
     public void printShortVersion() {
         String text =
-                "\n $Id$ "
-                        + "\n "
-                        + getGVDSVersion()
-                        + "\n Usage : pegasus-plan [-Dprop  [..]] -d <dax file> "
-                        + " [-s site[,site[..]]] [--staging-site s1=ss1[,s2=ss2[..]][-b prefix] [-c f1[,f2[..]]] [--conf <path to property file>] "
-                        + "\n [-f] [--force-replan]  [-b basename] [-C t1[,t2[..]]  [--dir  <base dir  for o/p files>] [-j <job-prefix>] "
-                        + "\n [--relative-dir <relative directory to base directory> ] [--relative-submit-dir <relative submit directory to base directory>]"
-                        + "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] "
-                        + "\n [-I <input dir>] [-O <output dir>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] "
-                        +
-                        // "[--rescue <number of rescues before replanning>]"
-                        "\n [-S] [-n] [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
+                getGVDSVersion()
+                        + "\n"
+                        + "Usage : pegasus-plan [-Dprop=value…]] [-b prefix]\n"
+                        + "                     [-v] [-q] [-V] [-h]\n"
+                        + "                     [--conf propsfile] [-c cachefile[,cachefile…]] [--cleanup cleanup strategy ]\n"
+                        + "                     [-C style[,style…]] [--dir dir] [--force] [--force-replan]\n"
+                        + "                     [--inherited-rc-files file1[,file2…]] [-j prefix] [-n][-I input-dir1[,input-dir2…]]\n"
+                        + "                     [-O output-dir] [-o site1[,site2…]] [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]]\n"
+                        + "                     [--randomdir[=dirname]] [--relative-dir dir] [--relative-submit-dir dir]\n"
+                        + "                     [-X[non standard jvm option]]\n"
+                        + "                     abstract-workflow]";
 
         System.out.println(text);
     }
@@ -1095,18 +1094,22 @@ public class CPlanner extends Executable {
         StringBuffer text = new StringBuffer();
         text.append("\n $Id$ ")
                 .append("\n " + getGVDSVersion())
-                .append("\n pegasus-plan - The main class which is used to run  Pegasus. ")
                 .append(
-                        "\n Usage: pegasus-plan [-Dprop  [..]] --dax <file> [--sites <execution sites>] ")
+                        "\n pegasus-plan - The main command line client which is used to run Pegasus")
+                .append("\nUsage : pegasus-plan [-Dprop=value…]] [-b prefix]")
+                .append("\n                     [-v] [-q] [-V] [-h]")
                 .append(
-                        "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]")
+                        "\n                     [--conf propsfile] [-c cachefile[,cachefile…]] [--cleanup cleanup strategy ]")
                 .append(
-                        "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] ")
+                        "\n                     [-C style[,style…]] [--dir dir] [--force] [--force-replan]")
                 .append(
-                        "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ]")
+                        "\n                     [--inherited-rc-files file1[,file2…]] [-j prefix] [-n][-I input-dir1[,input-dir2…]]")
                 .append(
-                        "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output-sites <output sites>] [--randomdir=[dir name]]   [--verbose] [--version][--help] ")
-                .append("\n")
+                        "\n                     [-O output-dir] [-o site1[,site2…]] [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]]")
+                .append(
+                        "\n                     [--randomdir[=dirname]] [--relative-dir dir] [--relative-submit-dir dir]")
+                .append("\n                     [-X[non standard jvm option]]")
+                .append("\n                     abstract-workflow]")
                 .append("\n Options ")
                 .append("\n -d  fn ")
                 .append(
