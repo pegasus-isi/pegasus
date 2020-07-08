@@ -1,4 +1,5 @@
-us-sc-converter
+====================
+pegasus-sc-converter
 ====================
 
 A client to parse the site catalogs in old format (XML and generates site catalog in new format (YAML).
