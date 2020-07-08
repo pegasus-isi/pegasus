@@ -370,8 +370,7 @@ public class TCConverter extends Executable {
     /** Prints the short help. */
     public void printShortVersion() {
         String text =
-                "\n $Id$ "
-                        + "\n "
+                "\n "
                         + getGVDSVersion()
                         + "\n Usage: pegasus-tc-converter [-Dprop  [..]]  -I <input format> -O <output format> "
                         + "\n        [-i <list of input files>] [-o <output file to write>] "
@@ -386,10 +385,9 @@ public class TCConverter extends Executable {
 
     public void printLongVersion() {
         StringBuffer text = new StringBuffer();
-        text.append("\n $Id$ ");
         text.append("\n " + getGVDSVersion());
-        text.append(
-                "\n pegasus-tc-converter - Parses the transformation catalogs in given input format ( Text ,File ,Database ) and generates transformation catalog into given output format ( Text ,File ,Database )");
+		text.append(
+                "\n pegasus-tc-converter - Parses the transformation catalogs in given input format ( Text , YAML ) and generates transformation catalog into given output format ( Text ,YAML )");
         text.append("\n ");
         text.append(
                 "\n Usage: pegasus-tc-converter [-Dprop  [..]]  [--iformat <input format>] [--oformat <output format>]");
@@ -405,18 +403,18 @@ public class TCConverter extends Executable {
                 "\n -I |--iformat        the input format for the files . Can be [Text, YAML] ");
         text.append("\n -O |--oformat        the output format of the file. Can be [Text, YAML] ");
         text.append(
-                "\n -i |--input          comma separated list of input files to convert.This option is mandatory when input format is Text or file ");
+                "\n -i |--input          comma separated list of input files to convert.");
         text.append(
-                "\n -o |--output         the output file to which the output needs to be written to. This option is mandatory when output format is Text or file ");
+                "\n -o |--output         the output file to which the output needs to be written to.");
         text.append("\n");
         text.append("\n");
         text.append("\n Other Options ");
         text.append("\n");
         text.append("\n -c |--conf           path to  property file");
         text.append(
-                "\n -e |--expand     sets variable expansion on. Any variables in input files "
-                        + "\n                  will be expanded and their values will be written out to "
-                        + "\n                  output transformation catalog. ");
+                "\n -e |--expand         sets variable expansion on. Any variables in input files "
+                        + "\n                      will be expanded and their values will be written out to "
+                        + "\n                      output transformation catalog. ");
         text.append(
                 "\n -v |--verbose        increases the verbosity of messages about what is going on");
         text.append(
@@ -427,7 +425,7 @@ public class TCConverter extends Executable {
         text.append("\n");
         text.append("\n Example Usage ");
         text.append("\n Text to file format conversion :- ");
-        text.append("  pegasus-tc-converter  -i tc.text -I File -o tc.yml -v");
+        text.append("  pegasus-tc-converter  -i tc.text -I Text -o tc.yml -v");
 
         System.out.println(text.toString());
     }
