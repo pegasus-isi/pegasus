@@ -922,7 +922,7 @@ public class CPlanner extends Executable {
         // try and detect if there are any unparsed components of the
         // argument string such as inadvertent white space in values
         int nonOptionArgumentIndex = g.getOptind();
-        if (nonOptionArgumentIndex < args.length) {
+        if (nonOptionArgumentIndex < args.length - 1) {
             // this works as planner does not take any positional arguments
             StringBuilder error = new StringBuilder();
             error.append("Unparsed component \"")
@@ -931,6 +931,10 @@ public class CPlanner extends Executable {
                     .append(" ")
                     .append(options.getOriginalArgString());
             throw new RuntimeException(error.toString());
+        }
+        else if (nonOptionArgumentIndex == args.length - 1) {
+            // PM-1650 the last positional argument is the workflow file to be used as input
+            options.setDAX(args[nonOptionArgumentIndex]);
         }
 
         return options;
