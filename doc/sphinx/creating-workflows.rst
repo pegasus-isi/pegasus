@@ -76,7 +76,7 @@ There are two main ways of generating DAX's
 One example for a DAX representing the example workflow can look like
 the following:
 
-::
+.. code-block:: xml
 
    <?xml version="1.0" encoding="UTF-8"?>
    <!-- generated on: 2016-01-21T10:36:39-08:00 -->
@@ -365,8 +365,6 @@ behavior of this implementation.
    prefix for the PFN's constructed. If not specified, the URL defaults
    to file://
 
-..
-
 .. tip::
 
    pegasus-plan has -**-input-dir** option that can be used to specify
@@ -560,7 +558,7 @@ remote cluster as well as on the backend nodes
 
 Below is an example of the XML4 site catalog
 
-::
+.. code-block:: xml
 
    <?xml version="1.0" encoding="UTF-8"?>
    <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
@@ -943,19 +941,19 @@ Some examples of variable expansion are illustrated below:
    For example, below is a templated entry for a local site where $PWD
    is the working directory from where pegasus-plan is invoked.
 
-   ::
+   .. code-block:: xml
 
       <site  handle="local" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
-              <directory  path="${PWD}/LOCAL/shared-scratch" type="shared-scratch" free-size="" total-size="">
-                      <file-server  operation="all" url="file:///${PWD}/LOCAL/shared-scratch">
-                      </file-server>
-              </directory>
-              <directory  path="${PWD}/LOCAL/shared-storage" type="shared-storage" free-size="" total-size="">
-                      <file-server  operation="all" url="file:///${PWD}/LOCAL/shared-storage">
-                      </file-server>
-              </directory>
-              <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
-              <profile namespace="pegasus" key="clusters.num" >1</profile>
+         <directory  path="${PWD}/LOCAL/shared-scratch" type="shared-scratch" free-size="" total-size="">
+            <file-server  operation="all" url="file:///${PWD}/LOCAL/shared-scratch">
+            </file-server>
+         </directory>
+         <directory  path="${PWD}/LOCAL/shared-storage" type="shared-storage" free-size="" total-size="">
+            <file-server  operation="all" url="file:///${PWD}/LOCAL/shared-storage">
+            </file-server>
+         </directory>
+         <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
+         <profile namespace="pegasus" key="clusters.num" >1</profile>
       </site>
 
 -  **Replica Catalog**
