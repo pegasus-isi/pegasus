@@ -130,10 +130,11 @@ the setup of the HTCondor pool:
         # The requirements expression allows you to limit where your jobs go
         requirements: (Target.FileSystemDomain != &quot;yggdrasil.isi.edu&quot;)
 
-        # The following two profiles forces HTCondor to always transfer files.
+        # The following two profiles force HTCondor to always transfer files.
         # This has to be used if the pool does not have a shared filesystem.
+        # By default Pegasus enables these
         should_transfer_files: 'YES'
-        when_to_transfer_files: ON_EXIT
+        when_to_transfer_output: ON_EXIT
 
 Glideins
 --------
@@ -228,7 +229,7 @@ listed below
         # If not specified, it defaults to remote schedd specified in grid gateway.
         condor_collector: condorc-collector.isi.edu
         should_transfer_files: 'YES'
-        when_to_transfer_files: ON_EXIT
+        when_to_transfer_output: ON_EXIT
         universe: vanilla
       env:
         PEGASUS_HOME: /usr
