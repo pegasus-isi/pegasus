@@ -26,6 +26,8 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.dax.examples.Diamond;
@@ -1201,6 +1203,19 @@ public class ADAG {
                     store.add(f.toReplicaLocation());
                 }
                 gen.writeFieldName("replicaCatalog");
+                gen.writeObject(store);
+            }
+
+            // transformation catalog if specified
+            if (!adag.mExecutables.isEmpty()) {
+                // create a ReplicaStore object that can serialize all the files
+                TransformationStore store = new TransformationStore();
+                for (Executable ex : adag.getExecutables()) {
+                    for (TransformationCatalogEntry entry : ex.toTransformationCatalogEntries()) {
+                        store.addEntry(entry);
+                    }
+                }
+                gen.writeFieldName("transformationCatalog");
                 gen.writeObject(store);
             }
 
