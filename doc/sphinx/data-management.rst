@@ -1329,34 +1329,52 @@ transfer.
 ~/.pegasus/credentials.conf
 ---------------------------
 
-WebDAV, S3, and iRODS
+Pegasus has a generic credentials file located under
+``~/.pegasus/credentials.conf``. This file is currently used for
+WebDAV and S3 transfers, but more protocols will probably be moved
+to this model in the future. To get started, create
+``~/.pegasus/credentials.conf`` and ensure the file is only 
+readable by the current user:
+
+.. code-block:: bash
+
+    $ chmod 600 ~/.pegasus/credentials.conf
+
+The format of the file is following the
+`Python INI format <https://docs.python.org/3/library/configparser.html#supported-ini-file-structure>`__
+where the section headers refer to a storage system. For basic
+protocols, the section name is the hostname, and for clouds, it
+is just an arbitrary name with an endpoint entry. Example:
 
 ::
 
-   [amazon]
-   endpoint = https://s3.amazonaws.com/
-   max_object_size = 5120
-   multipart_uploads = True
-   ranged_downloads = True
+    # For simple username/password protocols, such as WebDAV,
+    # just specify the hostname and credentials. In this
+    # example, the credentials would be used for URLs
+    # matching the section, such as  
+    # webdav://data.cyverse.org/some/file.txt
 
-   [pegasus@amazon]
-   access_key = 90c4143642cb097c88fe2ec66ce4ad4e
-   secret_key = a0e3840e5baee6abb08be68e81674dca
+    [data.cyverse.org]
 
-   [magellan]
-   # NERSC Magellan is a Eucalyptus site. It doesn't support multipart uploads,
-   # or ranged downloads (the defaults), and the maximum object size is 5GB
-   # (also the default)
-   endpoint = https://128.55.69.235:8773/services/Walrus
+    username = joe
+    password = secretsauce1
 
-   [juve@magellan]
-   access_key = quwefahsdpfwlkewqjsdoijldsdf
-   secret_key = asdfa9wejalsdjfljasldjfasdfa
+    # For S3 access, you can create an entry for the cloud
+    # specific options, and then one or more user specific
+    # entries with a key @ matching the cloud one (for
+    # example, [amazon] and [joe@amazon] below)
 
-   [voeckler@magellan]
-   # Each site can have multiple associated identities
-   access_key = asdkfaweasdfbaeiwhkjfbaqwhei
-   secret_key = asdhfuinakwjelfuhalsdflahsdl
+    [amazon]
+    endpoint = https://s3.amazonaws.com/
+
+    [joe@amazon]
+    access_key = 90c4143642cb097c88fe2ec66ce4ad4e
+    secret_key = abababababababababababababababab
+
+
+The ``~/.pegasus/credentials.conf`` file will be picked up
+automatically by the planner and sent with the job in case
+the credentials are needed.
 
 
 .. _x509-cred:

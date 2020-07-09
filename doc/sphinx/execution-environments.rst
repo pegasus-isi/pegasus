@@ -81,7 +81,7 @@ Configuration <#data_staging_configuration>`__ for the options. The
 easiest is to use **condorio** as that mode does not require any extra
 setup - HTCondor will do the transfers using the existing HTCondor
 daemons. For an example of this mode see the example workflow in
-``share/pegasus/examples/condor-blackdiamond-condorio/`` . In HTCondorio
+``share/pegasus/examples/condor-blackdiamond-condorio/`` . In HTCondorIO
 mode, the site catalog for the execution site is very simple as storage
 is provided by HTCondor:
 
@@ -132,7 +132,7 @@ the setup of the HTCondor pool:
 
         # The following two profiles forces HTCondor to always transfer files.
         # This has to be used if the pool does not have a shared filesystem.
-        should_transfer_files: 'True'
+        should_transfer_files: 'YES'
         when_to_transfer_files: ON_EXIT
 
 Glideins
@@ -179,11 +179,11 @@ CondorC
 
 Using HTCondorC users can submit workflows to remote HTCondor pools.
 HTCondorC is a HTCondor specific solution for remote submission that
-does not involve the setting up a GRAM on the headnode. To enable
+does not involve setting up a GRAM on the headnode. To enable
 HTCondorC submission to a site, user needs to associate pegasus profile
-key named style with value as HTCondorc. In case, the remote HTCondor
+key named style with value as condorc. In case, the remote HTCondor
 pool does not have a shared filesytem between the nodes making up the
-pool, users should use pegasus in the HTCondorio data configuration. In
+pool, users should use pegasus in the HTCondorIO data configuration. In
 this mode, all the data is staged to the remote node in the HTCondor
 pool using HTCondor File transfers and is executed using PegasusLite.
 
@@ -192,41 +192,46 @@ listed below
 
 ::
 
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-                version="4.0">
-
-       <site  handle="local" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/tmp/wf/work">
-               <file-server operation="all" url="file:///tmp/wf/work"/>
-           </directory>
-           <directory type="local-storage" path="/tmp/wf/storage">
-               <file-server operation="all" url="file:///tmp/wf/storage"/>
-           </directory>
-       </site>
-
-       <site  handle="condorcpool" arch="x86_86" os="LINUX">
-            <!-- the grid gateway entries are used to designate
-                 the remote schedd for the HTCondorC pool -->
-            <grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="compute" />
-            <grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="auxillary" />
-
-           <!-- enable submission using HTCondorc -->
-           <profile namespace="pegasus" key="style">condorc</profile>
-
-           <!-- specify which HTCondor collector to use.
-                If not specified defaults to remote schedd specified in grid gateway -->
-           <profile namespace="condor" key="condor_collector">condorc-collector.isi.edu</profile>
-
-           <profile namespace="condor" key="should_transfer_files">Yes</profile>
-           <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
-           <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
-           <profile namespace="condor" key="universe">vanilla</profile>
-
-       </site>
-
-   </sitecatalog>
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /tmp/wf/work
+      fileServers:
+      - url: file:///tmp/wf/work
+        operation: all
+    - type: localStorage
+      path: /tmp/wf/storage
+      fileServers:
+      - url: file:///tmp/wf/storage
+        operation: all
+  - name: condorcpool
+    directories: []
+    # The grid gateway entries are used to designate
+    # the remote schedd for the HTCondorC pool
+    grids:
+    - type: condor
+      contact: ccg-condorctest.isi.edu
+      scheduler: condor
+      jobtype: compute
+    - type: condor
+      contact: ccg-condorctest.isi.edu
+      scheduler: condor
+      jobtype: auxillary
+    profiles:
+      pegasus:
+        # Enable submission using HTCondorc
+        style: condorc
+      condor:
+        # Specify which HTCondor collector to use.
+        # If not specified, it defaults to remote schedd specified in grid gateway.
+        condor_collector: condorc-collector.isi.edu
+        should_transfer_files: 'YES'
+        when_to_transfer_files: ON_EXIT
+        universe: vanilla
+      env:
+        PEGASUS_HOME: /usr
 
 To enable PegasusLite in HTCondorIO mode, users should set the following
 in their properties
@@ -331,43 +336,42 @@ profiles:
 2. **condor** profile **grid_resource** with value set to **batch
    slurm**, **batch pbs**, **batch sge** or **batch moab**.
 
-An example site catalog entry for a local glite PBS site looks like
+An example site catalog entry for a local glite SLURM site looks like
 this:
 
 ::
 
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-                version="4.0">
-
-       <site  handle="local" arch="x86" os="LINUX">
-           <directory type="shared-scratch" path="/lfs/shared-scratch/glite-sharedfs-example/work">
-               <file-server operation="all" url="file:///lfs/local-scratch/glite-sharedfs-example/work"/>
-           </directory>
-           <directory type="local-storage" path="/shared-scratch//glite-sharedfs-example/outputs">
-               <file-server operation="all" url="file:///lfs/local-scratch/glite-sharedfs-example/outputs"/>
-           </directory>
-       </site>
-
-       <site  handle="local-slurm" arch="x86" os="LINUX">
-
-           <!-- the following is a shared directory shared amongst all the nodes in the cluster -->
-           <directory type="shared-scratch" path="/lfs/glite-sharedfs-example/local-slurm/shared-scratch">
-               <file-server operation="all" url="file:///lfs/glite-sharedfs-example/local-slurm/shared-scratch"/>
-           </directory>
-
-           <profile namespace="env" key="PEGASUS_HOME">/lfs/software/pegasus</profile>
-
-           <profile namespace="pegasus" key="style" >glite</profile>
-
-           <profile namespace="condor" key="grid_resource">batch slurm</profile>
-           <profile namespace="pegasus" key="queue">normal</profile>
-           <profile namespace="pegasus" key="runtime">30000</profile>
-       </site>
-
-   </sitecatalog>
-
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /lfs/shared-scratch/glite-sharedfs-example/work
+      fileServers:
+      - url: file:///lfs/shared-scratch/glite-sharedfs-example/work
+        operation: all
+    - type: localStorage
+      path: /lfs/local-storage/glite-sharedfs-example/outputs
+      fileServers:
+      - url: file:///lfs/local-storage/glite-sharedfs-example/outputs
+        operation: all
+  - name: local-slurm
+    directories:
+    # The following is a shared directory amongst all the nodes in the cluster
+    - type: sharedScratch
+      path: /lfs/local-slurm/glite-sharedfs-example/shared-scratch
+      fileServers:
+      - url: file:///lfs/local-slurm/glite-sharedfs-example/shared-scratch
+        operation: all
+    profiles:
+      pegasus:
+        style: glite
+        queue: normal
+        runtime: '3000'
+      condor:
+        grid_resource: batch slurm
+      env:
+        PEGASUS_HOME: /lfs/software/pegasus
 
 ..
 
@@ -441,15 +445,15 @@ before ``$bls_opt_tmp_req_file >> $bls_tmp_file 2> /dev/null`` line.
 
 .. _titan:
 
-ORNL Titan Using Glite
+ORNL Summit Using Glite
 ----------------------
 
-`Titan <https://www.olcf.ornl.gov/olcf-resources/compute-systems/titan/>`__
+`Summit <https://www.olcf.ornl.gov/olcf-resources/compute-systems/summit/>`__
 is part of Oak Ridge Leadership Computing Facilities (OLCF) and offers
-hybrid computing resources (CPUs and GPUs) to scientists since 2012.
+hybrid computing resources (CPUs and GPUs) to scientists since 2018.
 
-In order to submit to Titan, a *Titan login node* or a system that has
-access to the *Lustre* filesystem and the *batch scheduler* (eg. `OLCF's
+In order to submit to Summit, a *Summit login node* or a system that has
+access to the *Alpine* filesystem and the *batch scheduler* (eg. `OLCF's
 Kubernetes
 Deployment <https://www.olcf.ornl.gov/wp-content/uploads/2017/11/2018UM-Day3-Kincl.pdf>`__),
 must be used as the submit node. Submission style must be `Pegasus
@@ -458,44 +462,45 @@ example site calatog entry looks like this:
 
 ::
 
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-               xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.1.xsd"
-               version="4.1">
-
-       <site handle="local" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/lustre/atlas/scratch/user/workflow-dir/scratch"/>
-               <file-server operation="all" url="file:///lustre/atlas/scratch/user/workflow-dir/scratch"/>
-           </directory>
-           <directory type="shared-storage" path="/lustre/atlas/scratch/user/workflow-dir/output/">
-               <file-server operation="all" url="file:///lustre/atlas/scratch/user/workflow-dir/output"/>
-           </directory>
-       </site>
-
-       <site handle="titan" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/lustre/atlas/scratch/user/titan/scratch">
-               <file-server operation="all" url="file:///lustre/atlas/scratch/user/titan/scratch"/>
-           </directory>
-
-           <profile namespace="pegasus" key="style">glite</profile>
-           <profile namespace="condor" key="grid_resource">batch pbs</profile>
-
-           <profile namespace="pegasus" key="queue">titan</profile>
-           <profile namespace="pegasus" key="auxillary.local">true</profile>
-
-           <profile namespace="env" key="PEGASUS_HOME">/lustre/atlas/world-shared/csc320/SOFTWARE/install/pegasus/default</profile>
-           <profile namespace="pegasus" key="runtime">1800</profile>
-           <profile namespace="pegasus" key="nodes">1</profile>
-           <profile namespace="pegasus" key="project">CSC320</profile>
-       </site>
-   </sitecatalog>
-
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /gpfs/alpine/csc355/scratch/csc355_auser/scratch
+      fileServers:
+      - url: file:///gpfs/alpine/csc355/scratch/csc355_auser/scratch
+        operation: all
+    - type: localStorage
+      path: /gpfs/alpine/csc355/scratch/csc355_auser/outputs
+      fileServers:
+      - url: file:///gpfs/alpine/csc355/scratch/csc355_auser/outputs
+        operation: all
+  - name: summit
+    directories:
+    - type: sharedScratch
+      path: /gpfs/alpine/csc355/scratch/csc355_auser/summit/scratch
+      fileServers:
+      - url: file:///gpfs/alpine/csc355/scratch/csc355_auser/summit/scratch
+        operation: all
+    profiles:
+      pegasus:
+        style: glite
+        queue: batch
+        project: CSC355
+        nodes: '1'
+        runtime: '1800'
+        auxillary.local: true
+      condor:
+        grid_resource: batch lsf
+      env:
+        PEGASUS_HOME: /gpfs/alpine/csc355/world-shared/binaries/summit/pegasus/stable
 
 1. *pegasus* profile style with value set to *glite*
 
-2. *condor* profile *grid_resource* with value set to *batch pbs*
+2. *condor* profile *grid_resource* with value set to *batch lsf*
 
-3. *pegasus* profile *queue* is mandatory and should be set to *titan*
+3. *pegasus* profile *queue* is mandatory and should be set to *batch*
 
 4. *pegasus* profile *runtime* is mandatory and should be set in sites
    or transformation catalog
@@ -510,7 +515,7 @@ example site calatog entry looks like this:
 
 .. note::
 
-   *pegasus* profile *cores* is incompatible with Titan's PBS
+   *pegasus* profile *cores* is incompatible with Summit's LSF
    submissions.
 
 
