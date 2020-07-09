@@ -187,6 +187,9 @@ public class ADAG {
         xml
     };
 
+    /** The default format to use for writing out the Abstract Workflow. */
+    public static FORMAT DEFAULT_FORMAT = FORMAT.xml;
+
     /** The type of DAX API generated */
     private static final String DAX_API_TYPE = "java";
 
@@ -196,6 +199,7 @@ public class ADAG {
     private int mIndex;
     /** The Count of the number of dax objects : N */
     private int mCount;
+
     /**
      * The List of Job,DAX and DAG objects
      *
@@ -990,7 +994,7 @@ public class ADAG {
      * @param daxfile The file to write the DAX to
      */
     public void writeToFile(String daxfile) {
-        this.writeToFile(daxfile, FORMAT.yaml);
+        this.writeToFile(daxfile, DEFAULT_FORMAT);
     }
 
     /**
@@ -1003,7 +1007,9 @@ public class ADAG {
         try {
             this.writeToFile(new FileWriter(daxfile), format);
         } catch (IOException ioe) {
-            System.err.println(ioe.getMessage());
+            throw new RuntimeException(
+                    "Error encountered while writting out the abstract workflow to file " + daxfile,
+                    ioe);
         }
     }
 
@@ -1019,27 +1025,29 @@ public class ADAG {
                 mWriter = new XMLWriter(writer);
                 toXML(mWriter);
                 mWriter.close();
-            } else {
+            } else if (format == FORMAT.yaml) {
                 // default starting 5.0 is yaml format
                 ObjectMapper mapper =
                         new ObjectMapper(
                                 new YAMLFactory().enable(YAMLGenerator.Feature.INDENT_ARRAYS));
                 mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-
-                try {
-                    mapper.writeValue(writer, this);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
+                mapper.writeValue(writer, this);
+            } else {
+                throw new RuntimeException("Unsupported format " + format);
             }
         } catch (IOException ioe) {
-            System.err.println(ioe.getMessage());
+            throw new RuntimeException(
+                    "Error encountered while writting out the abstract workflow to writer "
+                            + writer
+                            + " in format "
+                            + format,
+                    ioe);
         }
     }
 
     /** Convenience function to write out the generated DAX to stdout in YAML format */
     public void writeToSTDOUT() {
-        this.writeToFile(new BufferedWriter(new OutputStreamWriter(System.out)), FORMAT.yaml);
+        this.writeToFile(new BufferedWriter(new OutputStreamWriter(System.out)), DEFAULT_FORMAT);
     }
 
     /**
