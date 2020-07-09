@@ -166,6 +166,7 @@ import java.util.Set;
  *
  * @author Gaurang Mehta gmehta at isi dot edu
  * @author Karan Vahi
+ * @author Ryan Tanaka
  * @version $Revision$
  */
 @JsonSerialize(using = ADAG.JsonSerializer.class)
@@ -179,6 +180,12 @@ public class ADAG {
     public static final String SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/dax-3.6.xsd";
     /** The version to report. */
     public static final String SCHEMA_VERSION = "3.6";
+
+    /** Enum to indicate how the generated dax file should be formatted */
+    public static enum FORMAT {
+        yaml,
+        xml
+    };
 
     /** The type of DAX API generated */
     private static final String DAX_API_TYPE = "java";
@@ -978,25 +985,70 @@ public class ADAG {
     }
 
     /**
-     * Generate a DAX File out of this object;
+     * Generate a DAX File out of this object in YAML format.
      *
      * @param daxfile The file to write the DAX to
      */
     public void writeToFile(String daxfile) {
+        this.writeToFile(daxfile, FORMAT.yaml);
+    }
+
+    /**
+     * Generate a DAX File out of this object;
+     *
+     * @param daxfile The file to write the DAX to
+     * @param format how should the file be formatted
+     */
+    public void writeToFile(String daxfile, FORMAT format) {
         try {
-            mWriter = new XMLWriter(new FileWriter(daxfile));
-            toXML(mWriter);
-            mWriter.close();
+            this.writeToFile(new FileWriter(daxfile), format);
         } catch (IOException ioe) {
             System.err.println(ioe.getMessage());
         }
     }
 
-    /** Generate a DAX representation on STDOUT. */
+    /**
+     * Generate a DAX File out of this object;
+     *
+     * @param writer the writer to the dax file
+     * @param format how should the file be formatted
+     */
+    public void writeToFile(Writer writer, FORMAT format) {
+        try {
+            if (format == FORMAT.xml) {
+                mWriter = new XMLWriter(writer);
+                toXML(mWriter);
+                mWriter.close();
+            } else {
+                // default starting 5.0 is yaml format
+                ObjectMapper mapper =
+                        new ObjectMapper(
+                                new YAMLFactory().enable(YAMLGenerator.Feature.INDENT_ARRAYS));
+                mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+                try {
+                    mapper.writeValue(writer, this);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException ioe) {
+            System.err.println(ioe.getMessage());
+        }
+    }
+
+    /** Convenience function to write out the generated DAX to stdout in YAML format */
     public void writeToSTDOUT() {
-        mWriter = new XMLWriter(new BufferedWriter(new OutputStreamWriter(System.out)));
-        toXML(mWriter);
-        mWriter.close();
+        this.writeToFile(new BufferedWriter(new OutputStreamWriter(System.out)), FORMAT.yaml);
+    }
+
+    /**
+     * Convenience function to write out the generated DAX to stdout
+     *
+     * @param format how should the file be formatted
+     */
+    public void writeToSTDOUT(FORMAT format) {
+        this.writeToFile(new BufferedWriter(new OutputStreamWriter(System.out)), format);
     }
 
     /**
@@ -1004,6 +1056,7 @@ public class ADAG {
      *
      * @param writer A Writer object
      * @param close Whether writer should be closed on return.
+     * @deprecated
      */
     public void writeToWriter(Writer writer, boolean close) {
         mWriter = new XMLWriter(writer);
@@ -1210,8 +1263,10 @@ public class ADAG {
         String dax = "diamond.dax";
         if (args.length > 0) {
             dax = args[0];
+            Diamond().writeToFile(dax);
+        } else {
+            Diamond().writeToSTDOUT();
         }
-        Diamond().writeToFile(dax);
     }
 
     private static ADAG Diamond() {
