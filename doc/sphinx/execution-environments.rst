@@ -1135,36 +1135,42 @@ can then use gs:// URLs in your workflow. Example:
 
 ::
 
-   <?xml version="1.0" encoding="UTF-8"?>
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-                    http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-
-       <site  handle="local" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/tmp">
-               <file-server operation="all" url="file:///tmp"/>
-           </directory>
-           <profile namespace="env" key="PATH">/opt/gsutil:/usr/bin:/bin</profile>
-       </site>
-       <!-- compute site -->
-       <site  handle="condorpool" arch="x86_86" os="LINUX">
-           <profile namespace="pegasus" key="style" >condor</profile>
-           <profile namespace="condor" key="universe" >vanilla</profile>
-       </site>
-
-       <!-- storage sites have to be in the site catalog, just liek a compute site -->
-       <site  handle="google_storage" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/my-bucket/scratch">
-               <file-server operation="all" url="gs://my-bucket/scratch"/>
-           </directory>
-           <directory type="local-storage" path="/my-bucket/outputs">
-               <file-server operation="all" url="gs://my-bucket/outputs"/>
-           </directory>
-           <profile namespace="pegasus" key="BOTO_CONFIG">/home/myuser/.boto</profile>
-       </site>
-
-   </sitecatalog>
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /tmp
+      fileServers:
+      - url: file:///tmp
+        operation: all
+    profiles:
+      env:
+        PATH: /opt/gsutil:/usr/bin:/bin
+  # Compute site
+  - name: condorpool
+    directories: []
+    profiles:
+      pegasus:
+        style: condor
+      condor:
+        universe: vanilla
+  # Storage sites have to be in the site catalog, just like a compute site
+  - name: google_storage
+    directories:
+    - type: sharedScratch
+      path: /my-bucket/scratch
+      fileServers:
+      - url: gs://my-bucket/scratch
+        operation: all
+    - type: localStorage
+      path: /my-bucket/outputs
+      fileServers:
+      - url: gs://my-bucket/outputs
+        operation: all
+    profiles:
+      pegasus:
+        BOTO_CONFIG: /home/myuser/.boto
 
 .. _aws-batch:
 
