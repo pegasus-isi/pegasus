@@ -90,7 +90,7 @@ pegasus-plan \
     --sites condorpool \
     --dir work \
     --cluster horizontal \
-    --dax blackdiamond.dax  | tee plan.out
+    blackdiamond.dax  | tee plan.out
 
 
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`

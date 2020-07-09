@@ -67,7 +67,7 @@ START_TS=`/bin/date +'%s'`
     --dir submit \
     --output-sites local \
     --cleanup leaf \
-    --dax dax.xml \
+    dax.xml \
     | tee plan.out
 
 

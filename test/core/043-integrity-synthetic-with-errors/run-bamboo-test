@@ -41,10 +41,10 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --dir workflow \
-    --dax dax.xml \
     --sites condor_pool \
     --staging-site staging_site \
     --output-sites local \
-    --submit
+    --submit \
+    dax.xml 
 
 

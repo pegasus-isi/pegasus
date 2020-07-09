@@ -72,9 +72,9 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --dir work \
-    --dax dax.xml \
     --sites local \
     --cleanup leaf \
     --cluster label \
-    --submit -v
+    --submit -v \
+    dax.xml 
 

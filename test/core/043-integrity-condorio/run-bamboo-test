@@ -33,7 +33,7 @@ pegasus-plan \
     --sites condorpool \
     --output-sites local \
     --dir dags \
-    --dax blackdiamond.dax \
     --force \
     -v \
-    --submit
+    --submit \
+    blackdiamond.dax 

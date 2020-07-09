@@ -44,8 +44,8 @@ pegasus-plan \
     --staging-site obelix \
     --output-sites local \
     --dir dags \
-    --dax blackdiamond.dax \
     --cluster horizontal \
     --force \
     -v \
-    --submit
+    --submit \
+    blackdiamond.dax 

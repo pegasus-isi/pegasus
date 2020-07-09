@@ -53,11 +53,10 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --dir work \
-    --dax super-blackdiamond.dax \
     --sites condor_pool \
     --staging-site local \
     --output-sites local \
-    --submit | tee $TOP_DIR/plan.out
+    --submit super-blackdiamond.dax  | tee $TOP_DIR/plan.out
 
 
 WORK_DIR=`cat plan.out | grep pegasus-remove | sed -E 's/.*pegasus-remove[ ]+(.*)[ ]+/\1/'`

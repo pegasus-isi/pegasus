@@ -24,10 +24,10 @@ cp ../pegasus.properties .
 
 pegasus-plan \
         --dir work \
-        --dax data/montage-workflow.yml \
         --output-sites local \
         --cluster horizontal \
         --submit \
+	data/montage-workflow.yml \
         | tee $TOP_DIR/plan.out
 
 

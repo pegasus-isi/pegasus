@@ -10,8 +10,8 @@ export PYTHONPATH=`pegasus-config --python`
 
 # plan and submit the  workflow
 pegasus-plan \
-    --dax workflow.yml \
     --force \
+    workflow.yml \
     2>&1 | tee plan.log
 
 RUN_DIR=`cat plan.log | grep "pegasus-run  " | sed 's/.*  //'`

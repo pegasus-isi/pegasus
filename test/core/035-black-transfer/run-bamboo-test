@@ -60,7 +60,7 @@ pegasus-plan \
     --output-sites local \
     --dir work \
     --cleanup leaf \
-    --dax blackdiamond.dax \
+    blackdiamond.dax \
      | tee $TOPDIR/plan.out
 
 

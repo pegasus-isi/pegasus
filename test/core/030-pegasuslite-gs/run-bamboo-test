@@ -66,10 +66,10 @@ echo "Planning the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --dir work \
-    --dax blackdiamond.dax \
     --sites condor_pool \
     --staging-site staging_site \
     --output-sites local \
+    blackdiamond.dax \
     | tee $TOP_DIR/plan.out
 
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`

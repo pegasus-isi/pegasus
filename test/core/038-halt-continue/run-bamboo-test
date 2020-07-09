@@ -83,8 +83,9 @@ pegasus-plan \
     --dir work \
     --output-sites local \
     --cleanup leaf \
-    --dax top.dax \
-    --submit | tee plan.out
+    --submit \
+    top.dax \
+    | tee plan.out
 
 # we need to wait for a while, halt the workflow, wait for it to stop, than start it again
 RUN_DIR=`grep pegasus-remove plan.out | awk '{print $5}'`

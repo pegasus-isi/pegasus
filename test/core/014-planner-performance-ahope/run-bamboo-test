@@ -36,12 +36,12 @@ START_TS=`/bin/date +'%s'`
 /usr/bin/time pegasus-plan \
     -v \
     --conf pegasusrc \
-    --dax weekly_ahope.dax \
     --sites local \
     -o local \
     --dir ./dags \
     --cleanup none \
     --force \
+    weekly_ahope.dax \
     | tee plan.out
 
 

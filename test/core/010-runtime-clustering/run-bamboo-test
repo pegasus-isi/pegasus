@@ -147,9 +147,9 @@ pegasus-plan \
     --output-sites $output_site \
     --dir work/submit \
     --cleanup leaf \
-    --dax ${DAX} \
     --cluster horizontal \
-    --submit ${planner_args}
+    --submit ${planner_args} \
+    ${DAX} 
 
 set +x
 

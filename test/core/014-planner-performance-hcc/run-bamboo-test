@@ -68,7 +68,7 @@ START_TS=`/bin/date +'%s'`
     --dir submit \
     --output-sites local \
     --cluster label \
-    --dax isptm.dax \
+    isptm.dax \
     | tee plan.out
 
 

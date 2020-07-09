@@ -67,7 +67,7 @@ START_TS=`/bin/date +'%s'`
     --sites condorpool \
     --dir submit \
     --output-sites local \
-    --dax 100k.dax \
+    100k.dax \
     | tee plan.out
 
 
