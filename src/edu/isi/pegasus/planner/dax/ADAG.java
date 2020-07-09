@@ -25,6 +25,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.XMLWriter;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.dax.examples.Diamond;
@@ -231,6 +232,7 @@ public class ADAG {
      * @see File
      */
     private List<File> mFiles;
+
     /**
      * Map of Dependencies between Job,DAX,DAG objects. Map key is a string that holds the child
      * element reference, the value is a List of Parent objects
@@ -1191,6 +1193,17 @@ public class ADAG {
             // name
             gen.writeStringField("name", adag.mName);
 
+            // replica catalog if specified
+            if (!adag.mFiles.isEmpty()) {
+                // create a ReplicaStore object that can serialize all the files
+                ReplicaStore store = new ReplicaStore();
+                for (File f : adag.getFiles()) {
+                    store.add(f.toReplicaLocation());
+                }
+                gen.writeFieldName("replicaCatalog");
+                gen.writeObject(store);
+            }
+
             // hooks
             if (!adag.mInvokes.isEmpty()) {
                 gen.writeObjectFieldStart("hooks");
@@ -1273,7 +1286,7 @@ public class ADAG {
             dax = args[0];
             Diamond().writeToFile(dax);
         } else {
-            Diamond().writeToSTDOUT();
+            Diamond().writeToSTDOUT(FORMAT.yaml);
         }
     }
 
