@@ -477,6 +477,8 @@ example site calatog entry looks like this:
       - url: file:///gpfs/alpine/csc355/scratch/csc355_auser/outputs
         operation: all
   - name: summit
+    arch: ppc64le
+    os.type: linux
     directories:
     - type: sharedScratch
       path: /gpfs/alpine/csc355/scratch/csc355_auser/summit/scratch
@@ -589,37 +591,39 @@ An example site catalog entry for a BOSCO site looks like this:
 
 ::
 
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-                version="4.0">
-
-       <site  handle="bosco" arch="x86_64" os="LINUX">
-
-           <!-- Specify the service information. This should match what Bosco provided when the cluster
-                was set up. -->
-           <grid type="batch" contact="vahi@hpc-pegasus.usc.edu" scheduler="PBS" jobtype="compute"/>
-           <grid type="batch" contact="vahi@hpc-pegasus.usc.edu" scheduler="PBS" jobtype="auxillary"/>
-
-           <!-- Scratch directory on the cluster -->
-           <directory type="shared-scratch" path="/home/rcf-40/vahi/tmp">
-               <file-server operation="all" url="scp://vahi@hpc-pegasus.usc.edu/home/rcf-40/vahi/tmp"/>
-           </directory>
-
-           <!-- SSH is the style to use for Bosco SSH submits -->
-           <profile namespace="pegasus" key="style">ssh</profile>
-
-           <!--  works around bug in the HTCondor GAHP, that does not
-                 set the remote directory -->
-           <profile namespace="pegasus" key="change.dir">true</profile>
-
-           <!-- Job requirements should be specified using Pegasus profiles -->
-           <profile namespace="pegasus" key="queue">default</profile>
-           <profile namespace="pegasus" key="runtime">30</profile>
-
-       </site>
-
-   </sitecatalog>
+  pegasus: '5.0'
+  sites:
+  - name: bosco
+    # Scratch directory on the cluster.
+    directories:
+    - type: sharedScratch
+      path: /home/rcf-40/vahi/tmp
+      fileServers:
+      - url: scp://vahi@hpc-pegasus.usc.edu/home/rcf-40/vahi/tmp
+        operation: all
+    # Specify the service information.
+    # This should match what Bosco provided when the cluster was set up.
+    grids:
+    - type: batch
+      contact: vahi@hpc-pegasus.usc.edu
+      scheduler: pbs
+      jobtype: compute
+    - type: batch
+      contact: vahi@hpc-pegasus.usc.edu
+      scheduler: pbs
+      jobtype: auxillary
+    profiles:
+      pegasus:
+        # SSH is the style to use for Bosco SSH submits.
+        style: ssh
+        
+        # Works around bug in the HTCondor GAHP, that does not
+        # set the remote directory
+        change.dir: true
+        
+        # Job requirements should be specified using Pegasus profiles.
+        queue: default
+        runtime: '300'
 
 ..
 
