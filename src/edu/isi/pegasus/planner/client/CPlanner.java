@@ -1109,73 +1109,77 @@ public class CPlanner extends Executable {
                 .append(
                         "\n                     [--randomdir[=dirname]] [--relative-dir dir] [--relative-submit-dir dir]")
                 .append("\n                     [-X[non standard jvm option]]")
-                .append("\n                     abstract-workflow]")
+                .append("\n                     [abstract-workflow]")
                 .append("\n Options ")
-                .append("\n -d  fn ")
                 .append(
-                        "\n --dax       the path to the dax file containing the abstract workflow, else will look for a file workflow.yml in the curent directory ")
-                .append("\n Other Options  ")
+                        "\n -b |--basename        the basename prefix while constructing the per workflow files like .dag etc.")
+                .append("\n -c |--cache           comma separated list of replica cache files.")
                 .append(
-                        "\n -b |--basename     the basename prefix while constructing the per workflow files like .dag etc.")
-                .append("\n -c |--cache        comma separated list of replica cache files.")
+                        "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority")
+                .append("\n                       than the locations in the DAX file")
                 .append(
-                        "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file")
+                        "\n --cleanup             the cleanup strategy to use. Can be none|inplace|leaf|constraint. Defaults to inplace. ")
                 .append(
-                        "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf|constraint. Defaults to inplace. ")
+                        "\n -C |--cluster         comma separated list of clustering techniques to be applied to the workflow to ")
                 .append(
-                        "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to ")
+                        "\n                       to cluster jobs in to larger jobs, to avoid scheduling overheads.")
                 .append(
-                        "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads.")
+                        "\n --conf                the path to the properties file to use for planning. Defaults to pegasus.properties file")
+                .append("\n                       in the current working directory ")
                 .append(
-                        "\n --conf             the path to the properties file to use for planning. Defaults to pegasus.properties file in the current working directory ")
+                        "\n --dir                 the directory where to generate the executable workflow.")
                 .append(
-                        "\n --dir          the directory where to generate the executable workflow.")
+                        "\n --relative-dir        the relative directory to the base directory where to generate the concrete workflow.")
                 .append(
-                        "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow.")
+                        "\n --relative-submit-dir the relative submit directory where to generate the concrete workflow. Overrides --relative-dir .")
                 .append(
-                        "\n --relative-submit-dir  the relative submit directory where to generate the concrete workflow. Overrids --relative-dir .")
+                        "\n -f |--force           skip reduction of the workflow, resulting in build style dag.")
                 .append(
-                        "\n -f |--force        skip reduction of the workflow, resulting in build style dag.")
+                        "\n --force-replan        force replanning for sub workflows in case of failure. ")
                 .append(
-                        "\n --force-replan     force replanning for sub workflows in case of failure. ")
+                        "\n -F |--forward         any options that need to be passed ahead to pegasus-run in format option[=value] ")
                 .append(
-                        "\n -F |--forward      any options that need to be passed ahead to pegasus-run in format option[=value] ")
+                        "\n                       where value can be optional. e.g -F nogrid will result in --nogrid . The option ")
+                .append("\n                       can be repeated multiple times.")
                 .append(
-                        "\n                    where value can be optional. e.g -F nogrid will result in --nogrid . The option ")
-                .append("\n                    can be repeated multiple times.")
+                        "\n -j |--job-prefix      the prefix to be applied while construction job submit filenames ")
                 .append(
-                        "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames ")
+                        "\n -I |--input-dir       comma separated list of optional input directories where the input files reside on submit host")
                 .append(
-                        "\n -I |--input-dir    comma separated list of optional input directories where the input files reside on submit host")
+                        "\n -O |--output-dir      an optional output directory where the output files should be transferred to on submit host. ")
                 .append(
-                        "\n -O |--output-dir   an optional output directory where the output files should be transferred to on submit host. ")
+                        "\n                       the directory specified is asscociated with the local-storage directory for the output site.")
                 .append(
-                        "\n                      the directory specified is asscociated with the local-storage directory for the output site.")
+                        "\n -o |--output-sites    comma separated list of output sites where the data products during workflow execution are ")
+                .append("\n                       transferred to.")
                 .append(
-                        "\n -o |--output-sites comma separated list of output sites where the data products during workflow execution are transferred to.")
+                        "\n -s |--sites           comma separated list of executions sites on which to map the workflow.")
                 .append(
-                        "\n -s |--sites        comma separated list of executions sites on which to map the workflow.")
+                        "\n --staging-site        comma separated list of key=value pairs , where the key is the execution site and value is the")
+                .append("\n                       staging site for that execution site.")
                 .append(
-                        "\n --staging-site     comma separated list of key=value pairs , where the key is the execution site and value is the staging site for that execution site.")
-                .append(
-                        "\n -r |--randomdir    create random directories on remote execution sites in which jobs are executed")
-                .
+                        "\n -r |--randomdir       create random directories on remote execution sites in which jobs are executed")
                 // "\n --rescue           the number of times rescue dag should be submitted for sub
                 // workflows before triggering re-planning" +
-                append(
-                        "\n                    can optionally specify the basename of the remote directories")
-                .append("\n -S |--submit       submit the executable workflow generated")
                 .append(
-                        "\n --staging-site     comma separated list of key=value pairs, where key is the execution site and value is the staging site")
+                        "\n                       can optionally specify the basename of the remote directories")
+                .append("\n -S |--submit          submit the executable workflow generated")
                 .append(
-                        "\n -v |--verbose      increases the verbosity of messages about what is going on")
+                        "\n --staging-site        comma separated list of key=value pairs, where key is the execution site and value is the")
+                .append("\n                       staging site")
                 .append(
-                        "\n -q |--quiet        decreases the verbosity of messages about what is going on")
+                        "\n -v |--verbose         increases the verbosity of messages about what is going on")
                 .append(
-                        "\n -V |--version      displays the version of the Pegasus Workflow Management System")
+                        "\n -q |--quiet           decreases the verbosity of messages about what is going on")
+                .append(
+                        "\n -V |--version         displays the version of the Pegasus Workflow Management System")
                 .append(
                         "\n -X[non standard java option]  pass to jvm a non standard option . e.g. -Xmx1024m -Xms512m")
-                .append("\n -h |--help         generates this help.")
+                .append("\n -h |--help            generates this help.")
+                .append(
+                        "\n [abstract-workflow]   the YAML input file that describes an abstract workflow. If not specified")
+                .append(
+                        "\n                       the planner defaults to file *workflow.yml* in the current working directory. ")
                 .append("\n The following exitcodes are produced")
                 .append("\n 0 planner was able to generate an executable workflow")
                 .append(
