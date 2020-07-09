@@ -13,16 +13,20 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.classes;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.classes.Data;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,6 +44,7 @@ import java.util.Set;
  * @version $Revision$
  */
 @JsonDeserialize(using = ReplicaStoreDeserializer.class)
+@JsonSerialize(using = ReplicaStore.JsonSerializer.class)
 public class ReplicaStore extends Data implements Cloneable {
 
     /** The replica store. */
@@ -308,6 +313,41 @@ public class ReplicaStore extends Data implements Cloneable {
     protected ReplicaLocation get(String key) {
         Object result = mStore.get(key);
         return (result == null) ? null : (ReplicaLocation) result;
+    }
+
+    /**
+     * Custom serializer for YAML representation of Replica Store
+     *
+     * @author Karan Vahi
+     */
+    static class JsonSerializer extends PegasusJsonSerializer<ReplicaStore> {
+
+        public JsonSerializer() {}
+
+        /**
+         * Serializes contents into YAML representation
+         *
+         * @param store
+         * @param gen
+         * @param sp
+         * @throws IOException
+         */
+        public void serialize(ReplicaStore store, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+
+            gen.writeStartObject();
+            writeStringField(
+                    gen, ReplicaCatalogKeywords.PEGASUS.getReservedName(), store.getVersion());
+
+            gen.writeArrayFieldStart(ReplicaCatalogKeywords.REPLICAS.getReservedName());
+
+            for (Map.Entry<String, ReplicaLocation> rl : store.mStore.entrySet()) {
+                gen.writeObject(rl);
+            }
+
+            gen.writeEndArray();
+            gen.writeEndObject();
+        }
     }
 }
 
