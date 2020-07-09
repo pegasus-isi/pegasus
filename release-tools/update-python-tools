@@ -33,6 +33,7 @@ for TOOL in \
     pegasus-exitcode \
     pegasus-globus-online \
     pegasus-globus-online-init \
+    pegasus-graphviz \
     pegasus-init \
     pegasus-integrity \
     pegasus-metadata \
