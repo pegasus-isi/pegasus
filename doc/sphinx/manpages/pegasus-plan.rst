@@ -440,13 +440,17 @@ Return Value
 ============
 
 If the Pegasus Workflow Planner is able to generate an executable
-workflow successfully, the exitcode will be 0. All runtime errors result
-in an exitcode of 1. This is usually in the case when you have
-misconfigured your catalogs etc. In the case of an error occurring while
-loading a specific module implementation at run time, the exitcode will
-be 2. This is usually due to factory methods failing while loading a
-module. In case of any other error occurring during the running of the
-command, the exitcode will be 1. In most cases, the error message logged
+workflow successfully, the exitcode will be 0.
+
+* All runtime errors result in an exitcode of 1. This is usually in the case
+  when you have misconfigured your catalogs etc.
+* In the case of an error occurring while loading a specific module implementation
+  at run time, the exitcode will be 2. This is usually due to factory methods
+  failing while loading a module.
+* In case of any other error occurring during the running of the
+  command, the exitcode will be 1.
+
+In most cases, the error message logged
 should give a clear indication as to where things went wrong.
 
 
