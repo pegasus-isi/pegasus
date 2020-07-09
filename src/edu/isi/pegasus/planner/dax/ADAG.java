@@ -196,7 +196,7 @@ public class ADAG {
     };
 
     /** The default format to use for writing out the Abstract Workflow. */
-    public static FORMAT DEFAULT_FORMAT = FORMAT.xml;
+    public static FORMAT DEFAULT_FORMAT = FORMAT.yaml;
 
     /** The type of Abstract Workflow API generated */
     private static final String DAX_API_TYPE = "java";
