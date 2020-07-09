@@ -5,8 +5,8 @@ pegasus-plan
 runs Pegasus to generate the executable workflow
    ::
 
-      pegasus-plan [-v] [-q] [-V] [-h]
-                   [-Dprop=value…]] [-b prefix]
+      pegasus-plan [-Dprop=value…]] [-b prefix]
+                   [-v] [-q] [-V] [-h]
                    [--conf propsfile]
                    [-c cachefile[,cachefile…]] [--cleanup cleanup strategy ]
                    [-C style[,style…]]
@@ -20,7 +20,8 @@ runs Pegasus to generate the executable workflow
                    [--randomdir[=dirname]]
                    [--relative-dir dir]
                    [--relative-submit-dir dir]
-                   -d daxfile
+                   [-X[non standard jvm option]]
+                   [abstract-workflow]
 
 
 
@@ -95,10 +96,6 @@ Any option will be displayed with its long options synonym(s).
    multiple times. The **-D** option(s) must be the first option on the
    command line. A CLI property take precedence over the properties file
    property of the same key.
-
-**-d** *file*; \ **--dax** *file*
-   The DAX is the YAML input file that describes an abstract workflow.
-   This is a mandatory option, which has to be used.
 
 **-b** *prefix*; \ **--basename** *prefix*
    The basename prefix to be used while constructing per workflow files
@@ -434,6 +431,9 @@ Any option will be displayed with its long options synonym(s).
    Displays the current version number of the Pegasus Workflow
    Management System.
 
+*abstract-workflow*
+   The YAML input file that describes an abstract workflow. If not specified
+   the planner defaults to file *workflow.yml* in the current working directory.
 
 
 Return Value
