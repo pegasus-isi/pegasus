@@ -50,7 +50,7 @@ def client():
 class TestClient:
     def test_plan(self, mock_subprocess, client):
         client.plan(
-            "dax.yml",
+            abstract_workflow="wf.yml",
             conf="pegasus.conf",
             sites=["site1", "site2"],
             output_sites=["local", "other_site"],
@@ -90,8 +90,7 @@ class TestClient:
                 "-vvv",
                 "--force",
                 "--submit",
-                "--dax",
-                "dax.yml",
+                "wf.yml",
             ],
             stderr=-1,
             stdout=-1,

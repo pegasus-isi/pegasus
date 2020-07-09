@@ -1178,7 +1178,7 @@ class TestWorkflow:
         assert wf._path == path
 
         Pegasus.client._client.Client.plan.assert_called_once_with(
-            path,
+            abstract_workflow=path,
             cleanup="inplace",
             conf=None,
             dir=None,
@@ -1205,7 +1205,7 @@ class TestWorkflow:
         assert wf._path == DEFAULT_WF_PATH
 
         Pegasus.client._client.Client.plan.assert_called_once_with(
-            DEFAULT_WF_PATH,
+            abstract_workflow=DEFAULT_WF_PATH,
             cleanup="inplace",
             conf=None,
             dir=None,

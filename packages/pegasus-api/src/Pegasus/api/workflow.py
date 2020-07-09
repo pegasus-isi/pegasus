@@ -767,7 +767,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             self.write()
 
         self._submit_dir = self._client.plan(
-            self._path,
+            abstract_workflow=self._path,
             conf=conf,
             sites=sites,
             output_sites=output_sites,
