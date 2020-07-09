@@ -848,7 +848,7 @@ catalog
 
 1. **pegasus** profile **style** with value set to **cream**
 
-2. **grid gateway**\ defined for the site with **contact** attribute set
+2. **grid gateway** defined for the site with **contact** attribute set
    to CREAMCE frontend and **scheduler** attribute to remote scheduler.
 
 3. a remote queue can be optionally specified using **globus** profile
@@ -859,32 +859,36 @@ site catalog
 
 ::
 
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-                version="4.0">
-
-       <site  handle="creamce" arch="x86" os="LINUX">
-           <grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="compute" />
-           <grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="auxillary" />
-
-            <!-- Scratch directory on the cluster -->
-           <directory type="shared-scratch" path="/home/virgo034">
-               <file-server operation="all" url="gsiftp://ce01-lcg.cr.cnaf.infn.it/home/virgo034"/>
-           </directory>
-
-           <!-- cream is the style to use for CREAMCE submits -->
-           <profile namespace="pegasus" key="style">cream</profile>
-
-           <!-- the remote queue is picked up from globus profile -->
-           <profile namespace="globus" key="queue">virgo</profile>
-
-           <!-- Staring HTCondor 8.0 additional cream attributes
-                can be passed by setting cream_attributes -->
-           <profile namespace="condor" key="cream_attributes">key1=value1;key2=value2</profile>
-       </site>
-
-    </sitecatalog>
+  pegasus: '5.0'
+  sites:
+  - name: creamce
+    # Scratch directory on the cluster.
+    directories:
+    - type: sharedScratch
+      path: /home/virgo034
+      fileServers:
+      - url: gsiftp://ce01-lcg.cr.cnaf.infn.it/home/virgo034
+        operation: all
+    grids:
+    - type: cream
+      contact: https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2
+      scheduler: lsf
+      jobtype: compute
+    - type: cream
+      contact: https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2
+      scheduler: lsf
+      jobtype: auxillary
+    profiles:
+      pegasus:
+        # cream is the style to use for CREAMCE submits.
+        style: cream
+      globus:
+        # The remote queue is picked up from globus profile.
+        queue: virgo
+      condor:
+        # Staring HTCondor 8.0 additional cream attributes
+        # can be passed by setting cream_attributes.
+        cream_attributes: key1=value1;key2=value2
 
 The pegasus distribution comes with creamce examples in the examples
 directory. They can be used as a starting point to configure your setup.
