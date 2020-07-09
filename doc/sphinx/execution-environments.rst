@@ -1401,38 +1401,34 @@ on AWS Batch
 
 ::
 
-   <?xml version="1.0" encoding="UTF-8"?>
-
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                                                 xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-                                                    http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-
-     <site  handle="local" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
-           <directory  path="/LOCAL/shared-scratch" type="shared-scratch" free-size="" total-size="">
-                   <file-server  operation="all" url="file:///LOCAL/shared-scratch">
-                   </file-server>
-           </directory>
-           <directory  path="/LOCAL/shared-storage" type="shared-storage" free-size="" total-size="">
-                   <file-server  operation="all" url="/LOCAL/shared-storage">
-                   </file-server>
-           </directory>
-           <profile namespace="env" key="PEGASUS_HOME">/usr/bin/..</profile>
-     </site>
-
-       <site handle="aws-batch" arch="x86_64" os="LINUX">
-           <directory  path="pegasus-batch-bamboo"  type="shared-scratch" free-size="" total-size="">
-                   <file-server  operation="all"  url="s3://user@amazon/pegasus-batch-bamboo">
-                   </file-server>
-           </directory>
-
-          <profile namespace="pegasus" key="clusters.num">1</profile>
-
-          <profile namespace="pegasus" key="style">condor</profile>
-
-
-      </site>
-
-   </sitecatalog>
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /LOCAL/shared-scratch
+      fileServers:
+      - url: file:///LOCAL/shared-scratch
+        operation: all
+    - type: localStorage
+      path: /LOCAL/shared-storage
+      fileServers:
+      - url: file:///LOCAL/shared-storage
+        operation: all
+    profiles:
+      env:
+        PEGASUS_HOME: /usr/bin
+  - name: aws-batch
+    directories:
+    - type: sharedScratch
+      path: pegasus-batch-bamboo
+      fileServers:
+      - url: s3://user@amazon/pegasus-batch-bamboo
+        operation: all
+    profiles:
+      pegasus:
+        clusters.num: '1'
+        style: condor
 
 Properties
 ~~~~~~~~~~
