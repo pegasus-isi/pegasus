@@ -341,6 +341,12 @@ class ProfileMixin:
         request_gpus="request_gpus",
         request_memory=("request_memory", to_mb),
         request_disk=("request_disk", to_mb),
+        requirements="requirements",
+        should_transfer_files="should_transfer_files",
+        when_to_transfer_output="when_to_transfer_output",
+        condor_collector="condor_collector",
+        grid_resource="grid_resource",
+        cream_attributes="cream_attributes",
     )
     def add_condor_profile(
         self,
@@ -355,7 +361,13 @@ class ProfileMixin:
         request_cpus: str = None,
         request_gpus: str = None,
         request_memory: str = None,
-        request_disk: str = None
+        request_disk: str = None,
+        requirements: str = None,
+        should_transfer_files: str = None,
+        when_to_transfer_output: str = None,
+        condor_collector: str = None,
+        grid_resource: str = None,
+        cream_attributes: str = None,
     ):
         """Add Condor profile(s).
 
@@ -383,6 +395,18 @@ class ProfileMixin:
         :type request_memory: str, optional
         :param request_disk: Amount of disk a job requires. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
         :type request_disk: str, optional
+        :param requirements: a job requirements expression such as :code:`"(CUDACapability >= 1.2) && $(requirements:True)"`
+        :type requirements: str, optional
+        :param should_transfer_files: Used to define if HTCondor should transfer files to and from the remote machine where the job runs, Given as :code:`"YES"`, :code:`"NO"`, or :code:`"IF_NEEDED"`
+        :type should_transfer_file: str, optional
+        :param when_to_transfer_output: Given as a one of :code:`"ON_EXIT"`, :code:`"ON_EXIT_OR_EVICT"`, or :code:`"ON_SUCCESS"`
+        :type when_to_transfer_output: str, optional
+        :param condor_collector: Specify the condor collector to use (e.g :code:`"ccg-testing999.isi.edu"`)
+        :type condor_collector: str, optional
+        :param grid_resource: Specify a grid resource such as :code:`"batch pbs"`
+        :type grid_resource: str, optional,
+        :param cream_attributes: Additional cream attributes (e.g. :code:`"key1=value1;key2=value2"`)
+        :type cream_attributes: str, optional
         :return: self
         """
         ...

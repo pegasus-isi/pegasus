@@ -248,6 +248,12 @@ class TestProfileMixin:
                 request_gpus="rg",
                 request_memory="100 MB",
                 request_disk="200 MB",
+                requirements="(CUDACapability >= 1.2) && $(requirements:True)",
+                should_transfer_files="YES",
+                when_to_transfer_output="ON_EXIT",
+                condor_collector="ccg-testing999.isi.edu",
+                grid_resource="batch pbs",
+                cream_attributes="key1=value1",
             )
         ) == id(obj)
 
@@ -264,6 +270,12 @@ class TestProfileMixin:
                 "request_gpus": "rg",
                 "request_memory": 100,
                 "request_disk": 200,
+                "requirements": "(CUDACapability >= 1.2) && $(requirements:True)",
+                "should_transfer_files": "YES",
+                "when_to_transfer_output": "ON_EXIT",
+                "condor_collector": "ccg-testing999.isi.edu",
+                "grid_resource": "batch pbs",
+                "cream_attributes": "key1=value1",
             }
         }
 
