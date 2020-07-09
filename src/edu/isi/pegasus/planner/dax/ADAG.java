@@ -36,6 +36,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1009,7 +1010,7 @@ public class ADAG {
      */
     public void writeToFile(String daxfile, FORMAT format) {
         try {
-            this.writeToFile(new FileWriter(daxfile), format);
+            this.writeTo(new FileWriter(daxfile), format);
         } catch (IOException ioe) {
             throw new RuntimeException(
                     "Error encountered while writting out the abstract workflow to file " + daxfile,
@@ -1023,21 +1024,30 @@ public class ADAG {
      * @param writer the writer to the dax file
      * @param format how should the file be formatted
      */
-    public void writeToFile(Writer writer, FORMAT format) {
+    public void writeTo(Writer writer, FORMAT format) {
         try {
-            if (format == FORMAT.xml) {
-                mWriter = new XMLWriter(writer);
-                toXML(mWriter);
-                mWriter.close();
-            } else if (format == FORMAT.yaml) {
-                // default starting 5.0 is yaml format
-                ObjectMapper mapper =
-                        new ObjectMapper(
-                                new YAMLFactory().enable(YAMLGenerator.Feature.INDENT_ARRAYS));
-                mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-                mapper.writeValue(writer, this);
-            } else {
+            if (null == format) {
                 throw new RuntimeException("Unsupported format " + format);
+            } 
+            
+            switch (format) {
+                case xml:
+                    mWriter = new XMLWriter(writer);
+                    toXML(mWriter);
+                    mWriter.close();
+                    break;
+                    
+                case yaml:
+                    // default starting 5.0 is yaml format
+                    ObjectMapper mapper =
+                            new ObjectMapper(
+                                    new YAMLFactory().enable(YAMLGenerator.Feature.INDENT_ARRAYS));
+                    mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+                    mapper.writeValue(writer, this);
+                    break;
+                    
+                default:
+                    throw new RuntimeException("Unsupported format " + format);
             }
         } catch (IOException ioe) {
             throw new RuntimeException(
@@ -1051,7 +1061,7 @@ public class ADAG {
 
     /** Convenience function to write out the generated DAX to stdout in YAML format */
     public void writeToSTDOUT() {
-        this.writeToFile(new BufferedWriter(new OutputStreamWriter(System.out)), DEFAULT_FORMAT);
+        this.writeTo(new BufferedWriter(new OutputStreamWriter(System.out)), DEFAULT_FORMAT);
     }
 
     /**
@@ -1060,7 +1070,7 @@ public class ADAG {
      * @param format how should the file be formatted
      */
     public void writeToSTDOUT(FORMAT format) {
-        this.writeToFile(new BufferedWriter(new OutputStreamWriter(System.out)), format);
+        this.writeTo(new BufferedWriter(new OutputStreamWriter(System.out)), format);
     }
 
     /**
@@ -1083,20 +1093,10 @@ public class ADAG {
      *
      * @return YAML representation of this ADAG as a String
      */
-    public String toYaml() {
-        ObjectMapper mapper =
-                new ObjectMapper(new YAMLFactory().enable(YAMLGenerator.Feature.INDENT_ARRAYS));
-        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
-
-        String result = "";
-
-        try {
-            result = mapper.writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        return result;
+    public String toYAML() {
+        StringWriter writer = new StringWriter();
+        this.writeTo(writer, FORMAT.yaml);
+        return writer.toString();
     }
 
     /**

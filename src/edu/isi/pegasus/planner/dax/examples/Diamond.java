@@ -146,7 +146,7 @@ public class Diamond {
             String site = "TestCluster";
             ADAG dag = diamond.generate(site, pegasusHome);
             dag.writeToSTDOUT();
-            // generate(args[0], args[1]).writeToFile(args[2]);
+            // generate(args[0], args[1]).writeTo(args[2]);
         } catch (Exception e) {
             e.printStackTrace();
         }
