@@ -2,7 +2,7 @@ from configparser import DEFAULTSECT, ConfigParser
 from io import StringIO
 from typing import Optional, TextIO, Union
 
-__all__ = "Properties"
+__all__ = ["Properties"]
 
 
 class Properties:

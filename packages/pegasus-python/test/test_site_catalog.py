@@ -39,14 +39,6 @@ def sc1():
                 "contact",
                 Scheduler.CONDOR,
                 job_type=SupportedJobs.REGISTER,
-                free_mem=1,
-                total_mem=1,
-                max_count=1,
-                max_cpu_time=1,
-                running_jobs=1,
-                jobs_in_queue=1,
-                idle_nodes=1,
-                total_nodes=1,
             )
         )
     )

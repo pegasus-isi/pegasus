@@ -104,14 +104,6 @@ def _to_sc(d: dict) -> SiteCatalog:
                         job_type=getattr(SupportedJobs, gr.get("jobtype").upper())
                         if gr.get("jobtype")
                         else None,
-                        free_mem=gr.get("freeMem"),
-                        total_mem=gr.get("totalMem"),
-                        max_count=gr.get("maxCount"),
-                        max_cpu_time=gr.get("maxCPUTime"),
-                        running_jobs=gr.get("runningJobs"),
-                        jobs_in_queue=gr.get("jobsInQueue"),
-                        idle_nodes=gr.get("idleNodes"),
-                        total_nodes=gr.get("totalNodes"),
                     )
 
                     # add grid to this site

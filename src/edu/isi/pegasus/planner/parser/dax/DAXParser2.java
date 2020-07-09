@@ -923,33 +923,6 @@ public class DAXParser2 extends XMLParser implements DAXParser {
 
     /** Invoked when the end of the job tag is reached. */
     private void handleDAXTagEnd() {
-        /*
-        //Moved to Transfer Engine
-
-        //determine the dax input file and specify
-        //the path in the argument string for now.
-        String dax = mDAXLFN;
-        for( Iterator<PegasusFile> it = mVJobInpFiles.iterator(); it.hasNext(); ){
-            PegasusFile pf = it.next();
-            if( pf.getLFN().equals( mDAXLFN  )){
-
-                //retrieve the source url
-                if ( pf instanceof FileTransfer ){
-                      dax = ((FileTransfer)pf).getSourceURL().getValue();
-                }
-
-                //at the moment dax files are not staged in.
-                //remove from input set of files
-                it.remove();
-            }
-        }
-
-        //add the dax to the argument
-        StringBuffer arguments = new StringBuffer();
-        arguments.append( mCurrentJobSubInfo.getArguments() ).
-                  append( " --dax ").append( dax );
-        mCurrentJobSubInfo.setArguments( arguments.toString() );
-        */
         handleJobTagEnd();
     }
 

@@ -386,7 +386,7 @@ public class TCConverter extends Executable {
     public void printLongVersion() {
         StringBuffer text = new StringBuffer();
         text.append("\n " + getGVDSVersion());
-		text.append(
+        text.append(
                 "\n pegasus-tc-converter - Parses the transformation catalogs in given input format ( Text , YAML ) and generates transformation catalog into given output format ( Text ,YAML )");
         text.append("\n ");
         text.append(
@@ -402,8 +402,7 @@ public class TCConverter extends Executable {
         text.append(
                 "\n -I |--iformat        the input format for the files . Can be [Text, YAML] ");
         text.append("\n -O |--oformat        the output format of the file. Can be [Text, YAML] ");
-        text.append(
-                "\n -i |--input          comma separated list of input files to convert.");
+        text.append("\n -i |--input          comma separated list of input files to convert.");
         text.append(
                 "\n -o |--output         the output file to which the output needs to be written to.");
         text.append("\n");

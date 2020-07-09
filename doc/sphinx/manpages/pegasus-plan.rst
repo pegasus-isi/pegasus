@@ -5,8 +5,8 @@ pegasus-plan
 runs Pegasus to generate the executable workflow
    ::
 
-      pegasus-plan [-v] [-q] [-V] [-h]
-                   [-Dprop=value…]] [-b prefix]
+      pegasus-plan [-Dprop=value…]] [-b prefix]
+                   [-v] [-q] [-V] [-h]
                    [--conf propsfile]
                    [-c cachefile[,cachefile…]] [--cleanup cleanup strategy ]
                    [-C style[,style…]]
@@ -20,7 +20,8 @@ runs Pegasus to generate the executable workflow
                    [--randomdir[=dirname]]
                    [--relative-dir dir]
                    [--relative-submit-dir dir]
-                   -d daxfile
+                   [-X[non standard jvm option]]
+                   [abstract-workflow]
 
 
 
@@ -95,10 +96,6 @@ Any option will be displayed with its long options synonym(s).
    multiple times. The **-D** option(s) must be the first option on the
    command line. A CLI property take precedence over the properties file
    property of the same key.
-
-**-d** *file*; \ **--dax** *file*
-   The DAX is the YAML input file that describes an abstract workflow.
-   This is a mandatory option, which has to be used.
 
 **-b** *prefix*; \ **--basename** *prefix*
    The basename prefix to be used while constructing per workflow files
@@ -434,19 +431,26 @@ Any option will be displayed with its long options synonym(s).
    Displays the current version number of the Pegasus Workflow
    Management System.
 
+*abstract-workflow*
+   The YAML input file that describes an abstract workflow. If not specified
+   the planner defaults to file *workflow.yml* in the current working directory.
 
 
 Return Value
 ============
 
 If the Pegasus Workflow Planner is able to generate an executable
-workflow successfully, the exitcode will be 0. All runtime errors result
-in an exitcode of 1. This is usually in the case when you have
-misconfigured your catalogs etc. In the case of an error occurring while
-loading a specific module implementation at run time, the exitcode will
-be 2. This is usually due to factory methods failing while loading a
-module. In case of any other error occurring during the running of the
-command, the exitcode will be 1. In most cases, the error message logged
+workflow successfully, the exitcode will be 0.
+
+* All runtime errors result in an exitcode of 1. This is usually in the case
+  when you have misconfigured your catalogs etc.
+* In the case of an error occurring while loading a specific module implementation
+  at run time, the exitcode will be 2. This is usually due to factory methods
+  failing while loading a module.
+* In case of any other error occurring during the running of the
+  command, the exitcode will be 1.
+
+In most cases, the error message logged
 should give a clear indication as to where things went wrong.
 
 

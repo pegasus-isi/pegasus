@@ -81,15 +81,10 @@ $defs:
       type:
         type: string
         enum:
-          - gt2
-          - gt4
           - gt5
           - condor
           - cream
           - batch
-          - pbs
-          - lsf
-          - sge
           - nordugrid
           - unicore
           - ec2
@@ -104,6 +99,7 @@ $defs:
           - lsf
           - condor
           - sge
+          - slurm
           - unknown
       jobtype:
         type: string
