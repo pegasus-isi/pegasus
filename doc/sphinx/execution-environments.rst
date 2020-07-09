@@ -500,7 +500,7 @@ example site calatog entry looks like this:
 
 2. *condor* profile *grid_resource* with value set to *batch lsf*
 
-3. *pegasus* profile *queue* is mandatory and should be set to *summit*
+3. *pegasus* profile *queue* is mandatory and should be set to *batch*
 
 4. *pegasus* profile *runtime* is mandatory and should be set in sites
    or transformation catalog
