@@ -14,7 +14,6 @@
 package edu.isi.pegasus.planner.dax;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -30,7 +29,6 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
-import edu.isi.pegasus.planner.dax.examples.Diamond;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -49,14 +47,20 @@ import java.util.Set;
 
 /**
  * <pre>
- * <b>This class provides the Java API to create DAX files.</b>
+ * <b>This class provides the Java API to create Abstract Workflow files.</b>
+ * Starting 5.0 Release, this class by default writes out YAML formatted abstract
+ * workflow file. The information included in the generated abstract workflow is a
+ * subset of the Pegasus Workflow YAML schema that is available at
+ * <http://pegasus.isi.edu/schema/wf-5.0.yml">http://pegasus.isi.edu/schema/wf-5.0.yml</a>
  *
- * The DAX XML SCHEMA is available at <a href="https://pegasus.isi.edu/schema/dax-3.6.xsd">https://pegasus.isi.edu/schema/dax-3.6.xsd</a>
- * and documentation available at <a href="https://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html">https://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html</a>
+ * In particular, it is missing options to create a Site Catalog, and associate
+ * Containers with user executables. If you need this information, we recommend you
+ * use the python Pegasus workflow API.
  *
- * The DAX consists of 6 parts the first 4 are optional and the last is optional.
- * </pre> <ol> <li><b>file:</b>Used as "In DAX" Replica Catalog
- * (Optional)</li><br> <li><b>executable:</b> Used as "In DAX" Transformation
+ *
+ * The Abstract Workflow consists of 6 parts the first 4 are optional and the last is optional.
+ * </pre> <ol> <li><b>file:</b>Used as "In Abstract Workflow" Replica Catalog
+ * (Optional)</li><br> <li><b>executable:</b> Used as "In Abstract Workflow" Transformation
  * Catalog (Optional)</li><br> <li><b>transformation:</b> Used to describe
  * compound executables. i.e. Executable depending on other executables
  * (Optional)</li><br> <li><b>job|dax|dag:</b> Used to describe a single job or
@@ -65,11 +69,11 @@ import java.util.Set;
  * (Optional)</li><br> </ol> <center><img
  * src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6_p1.png"/></center>
  * <pre>
- * To generate an example DIAMOND DAX run the ADAG Class as shown below
+ * To generate an example DIAMOND Abstract Workflow run the ADAG Class as shown below
  * <b>java ADAG filename</b>
  * <b>NOTE: This is an illustrative example only. Please see examples directory for a working example</b>
  *
- * Here is sample java code that illustrates how to use the Java DAX API
+ * Here is sample java code that illustrates how to use the Java Abstract Workflow API
  * <pre>
  *      java.io.File cwdFile = new java.io.File (".");
  * String cwd = cwdFile.getCanonicalPath();
@@ -194,7 +198,7 @@ public class ADAG {
     /** The default format to use for writing out the Abstract Workflow. */
     public static FORMAT DEFAULT_FORMAT = FORMAT.xml;
 
-    /** The type of DAX API generated */
+    /** The type of Abstract Workflow API generated */
     private static final String DAX_API_TYPE = "java";
 
     /** The Name / Label of the DAX */
@@ -1028,15 +1032,15 @@ public class ADAG {
         try {
             if (null == format) {
                 throw new RuntimeException("Unsupported format " + format);
-            } 
-            
+            }
+
             switch (format) {
                 case xml:
                     mWriter = new XMLWriter(writer);
                     toXML(mWriter);
                     mWriter.close();
                     break;
-                    
+
                 case yaml:
                     // default starting 5.0 is yaml format
                     ObjectMapper mapper =
@@ -1045,7 +1049,7 @@ public class ADAG {
                     mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                     mapper.writeValue(writer, this);
                     break;
-                    
+
                 default:
                     throw new RuntimeException("Unsupported format " + format);
             }
