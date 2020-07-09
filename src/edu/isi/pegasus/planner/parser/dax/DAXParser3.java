@@ -23,10 +23,8 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
@@ -34,7 +32,6 @@ import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.DataFlowJob.Link;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
@@ -54,7 +51,6 @@ import edu.isi.pegasus.planner.parser.XMLParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -943,7 +939,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     if (parent instanceof Map) {
                         // executable appears in adag element
                         Executable exec = (Executable) child;
-                        List<TransformationCatalogEntry> tceList = convertExecutableToTCE(exec);
+                        List<TransformationCatalogEntry> tceList =
+                                exec.toTransformationCatalogEntries();
                         for (TransformationCatalogEntry tce : tceList) {
                             this.mCallback.cbExecutable(Abstract.modifyForFileURLS(tce));
                         }
@@ -1187,53 +1184,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
             default:
                 return false;
         }
-    }
-
-    /**
-     * Converts the executable into transformation catalog entries
-     *
-     * @param executable executable object
-     * @return transformation catalog entries
-     */
-    public List<TransformationCatalogEntry> convertExecutableToTCE(Executable executable) {
-        List<TransformationCatalogEntry> tceList = new ArrayList<TransformationCatalogEntry>();
-        TransformationCatalogEntry tce = null;
-        for (PFN pfn : executable.getPhysicalFiles()) {
-            tce =
-                    new TransformationCatalogEntry(
-                            executable.getNamespace(),
-                            executable.getName(),
-                            executable.getVersion());
-            SysInfo sysinfo = new SysInfo();
-            sysinfo.setArchitecture(
-                    SysInfo.Architecture.valueOf(
-                            executable.getArchitecture().toString().toLowerCase()));
-            sysinfo.setOS(SysInfo.OS.valueOf(executable.getOS().toString().toLowerCase()));
-            sysinfo.setOSRelease(executable.getOsRelease());
-            sysinfo.setOSVersion(executable.getOsVersion());
-            sysinfo.setGlibc(executable.getGlibc());
-            tce.setSysInfo(sysinfo);
-            tce.setType(executable.getInstalled() ? TCType.INSTALLED : TCType.STAGEABLE);
-            tce.setResourceId(pfn.getSite());
-            tce.setPhysicalTransformation(pfn.getURL());
-            Notifications notifications = new Notifications();
-            for (Invoke invoke : executable.getInvoke()) {
-                notifications.add(new Invoke(invoke));
-            }
-            tce.addNotifications(notifications);
-            for (edu.isi.pegasus.planner.dax.Profile profile : executable.getProfiles()) {
-                tce.addProfile(
-                        new edu.isi.pegasus.planner.classes.Profile(
-                                profile.getNameSpace(), profile.getKey(), profile.getValue()));
-            }
-            for (MetaData md : executable.getMetaData()) {
-                // convert to metadata profile object for planner to use
-                tce.addProfile(new Profile(Profile.METADATA, md.getKey(), md.getValue()));
-            }
-            tceList.add(tce);
-        }
-
-        return tceList;
     }
 
     /**

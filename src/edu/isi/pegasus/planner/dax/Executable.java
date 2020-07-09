@@ -15,6 +15,11 @@ package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.XMLWriter;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.classes.Notifications;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -490,5 +495,52 @@ public class Executable extends CatalogType {
             }
             writer.endElement(indent);
         }
+    }
+
+    /**
+     * Converts the executable into transformation catalog entries
+     *
+     * @return transformation catalog entries
+     */
+    public List<TransformationCatalogEntry> toTransformationCatalogEntries() {
+        List<TransformationCatalogEntry> tceList = new ArrayList<>();
+        for (PFN pfn : this.getPhysicalFiles()) {
+
+            TransformationCatalogEntry tce =
+                    new TransformationCatalogEntry(
+                            this.getNamespace(), this.getName(), this.getVersion());
+            SysInfo sysinfo = new SysInfo();
+            sysinfo.setArchitecture(
+                    SysInfo.Architecture.valueOf(this.getArchitecture().toString().toLowerCase()));
+            sysinfo.setOS(SysInfo.OS.valueOf(this.getOS().toString().toLowerCase()));
+            sysinfo.setOSRelease(this.getOsRelease());
+            sysinfo.setOSVersion(this.getOsVersion());
+            sysinfo.setGlibc(this.getGlibc());
+            tce.setSysInfo(sysinfo);
+            tce.setType(this.getInstalled() ? TCType.INSTALLED : TCType.STAGEABLE);
+            tce.setResourceId(pfn.getSite());
+            tce.setPhysicalTransformation(pfn.getURL());
+            Notifications notifications = new Notifications();
+            for (Invoke invoke : this.getInvoke()) {
+                notifications.add(new Invoke(invoke));
+            }
+            tce.addNotifications(notifications);
+            for (edu.isi.pegasus.planner.dax.Profile profile : this.getProfiles()) {
+                tce.addProfile(
+                        new edu.isi.pegasus.planner.classes.Profile(
+                                profile.getNameSpace(), profile.getKey(), profile.getValue()));
+            }
+            for (MetaData md : this.getMetaData()) {
+                // convert to metadata profile object for planner to use
+                tce.addProfile(
+                        new edu.isi.pegasus.planner.classes.Profile(
+                                edu.isi.pegasus.planner.classes.Profile.METADATA,
+                                md.getKey(),
+                                md.getValue()));
+            }
+            tceList.add(tce);
+        }
+
+        return tceList;
     }
 }
