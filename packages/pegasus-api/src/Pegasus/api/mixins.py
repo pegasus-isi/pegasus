@@ -451,6 +451,9 @@ class ProfileMixin:
         memory=("memory", to_mb),
         diskspace=("diskspace", to_mb),
         data_configuration="data.configuration",
+        queue="queue",
+        project="project",
+        boto_config="BOTO_CONFIG",
     )
     def add_pegasus_profile(
         self,
@@ -492,7 +495,10 @@ class ProfileMixin:
         ppn: int = None,
         memory: str = None,
         diskspace: str = None,
-        data_configuration=None
+        data_configuration=None,
+        queue: str = None,
+        project: str = None,
+        boto_config: str = None,
     ):
         """Add Pegasus profile(s).
 
@@ -572,6 +578,12 @@ class ProfileMixin:
         :type diskspace: int, optional
         :param data_configuration: Indicates the data configuration setup. Can be one of "sharedfs", "condorio", or "nonsharedfs", defaults to None
         :type data_configuration: str, optional
+        :param queue: This specifies the queue for the job. (e.g. :code:`"normal"`)
+        :type queue: str, optional
+        :param project: Causes the job time to be charged to or associated with a particular project/account. This is not used for SGE.
+        :type project: str, optional
+        :param boto_config: Specified which :code:`.boto` file to use (e.g. :code:`"/home/myuser/.boto"`)
+        :param boto_config: str, optional
         """
         ...
 

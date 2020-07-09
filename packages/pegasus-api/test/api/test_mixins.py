@@ -324,6 +324,9 @@ class TestProfileMixin:
                 memory="2 GB",
                 diskspace="1 GB",
                 data_configuration="condorio",
+                queue="normal",
+                project="-A project_name",
+                boto_config="/home/myuser/.boto",
             )
         ) == id(obj)
 
@@ -365,6 +368,9 @@ class TestProfileMixin:
                 "memory": 2048,
                 "diskspace": 1024,
                 "data.configuration": "condorio",
+                "queue": "normal",
+                "project": "-A project_name",
+                "BOTO_CONFIG": "/home/myuser/.boto",
             }
         }
 
