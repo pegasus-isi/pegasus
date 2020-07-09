@@ -96,8 +96,8 @@ pegasus-plan \
     --sites CCG \
     --output-sites CCG \
     --cleanup leaf \
-    --dax data/montage-workflow.yml \
     --cluster horizontal \
     --submit \
+    data/montage-workflow.yml \
     | tee $TOP_DIR/plan.out
 

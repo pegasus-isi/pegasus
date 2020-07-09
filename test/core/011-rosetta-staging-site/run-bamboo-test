@@ -111,10 +111,9 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --dir work \
-    --dax dax.xml \
     --sites CCG \
     --staging-site CCG_Staging \
     --output-sites local \
-    --submit | tee $TOP_DIR/plan.out
+    --submit dax.xml | tee $TOP_DIR/plan.out
 
 

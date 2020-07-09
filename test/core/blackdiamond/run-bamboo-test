@@ -153,8 +153,8 @@ pegasus-plan \
     --output-sites $output_site \
     --dir work/submit \
     --cleanup $clean_up \
-    --dax ${DAX} \
-    --submit ${planner_args}
+    --submit ${planner_args} \
+    ${DAX} 
 
 set +x
 

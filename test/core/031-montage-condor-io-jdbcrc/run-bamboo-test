@@ -48,6 +48,7 @@ pegasus-plan \
     --dir work \
     --output-sites local \
     --cleanup leaf \
-    --dax data/montage-workflow.yml \
     --cluster horizontal \
-    --submit | tee $TOP_DIR/plan.out
+    --submit \
+    data/montage-workflow.yml \
+    | tee $TOP_DIR/plan.out

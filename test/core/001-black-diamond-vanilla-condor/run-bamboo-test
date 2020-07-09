@@ -63,6 +63,7 @@ pegasus-plan \
     --dir work/dags \
     --output-sites local \
     --cleanup leaf \
-    --dax blackdiamond.dax \
-    --submit | tee plan.out
+    --submit \
+    blackdiamond.dax \
+    | tee plan.out
 

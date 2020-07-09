@@ -92,6 +92,5 @@ pegasus-plan \
     --relative-dir $RUN_ID \
     --sites condorpool \
     --output-sites local \
-    --dax workflow.yml \
     --cluster horizontal \
-    --submit
+    --submit workflow.yml 

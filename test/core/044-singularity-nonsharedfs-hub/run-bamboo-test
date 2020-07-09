@@ -39,11 +39,11 @@ pegasus-plan \
         --conf ../pegasusrc \
         --dir work \
         --relative-dir `date +'%s'` \
-        --dax data/montage.dax \
         --sites condor_pool \
         --staging-site staging \
         --output-sites local \
         --submit \
+	data/montage.dax \
         | tee $TOP_DIR/plan.out
 
 

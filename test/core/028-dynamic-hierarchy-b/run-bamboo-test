@@ -186,7 +186,7 @@ pegasus-plan \
     --sites local,CCG \
     --dir work \
     --output-sites local \
-    --dax outer.dax \
     --submit \
+    outer.dax \
     | tee $TOP_DIR/plan.out
 

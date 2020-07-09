@@ -85,7 +85,7 @@ pegasus-plan \
     --dir work \
     --output-sites local \
     --cluster label \
-    --dax blackdiamond.dax  | tee $TOPDIR/plan.out
+    blackdiamond.dax  | tee $TOPDIR/plan.out
 
 STATUS=$?
 if [ $STATUS != 0 ]; then

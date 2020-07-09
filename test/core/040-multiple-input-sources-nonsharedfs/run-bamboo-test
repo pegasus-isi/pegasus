@@ -61,7 +61,7 @@ pegasus-plan \
     --staging-site staging \
     --output-sites local \
     --dir work \
-    --dax blackdiamond.dax  | tee $TOPDIR/plan.out
+    blackdiamond.dax  | tee $TOPDIR/plan.out
 
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`
 cd $WORK_DIR

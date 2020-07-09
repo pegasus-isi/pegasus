@@ -67,8 +67,7 @@ pegasus-plan \
     --dir work \
     --input-dir $input_dir \
     --output-dir $output_dir \
-    --dax blackdiamond.dax \
-    --submit | tee plan.out
+    --submit blackdiamond.dax | tee plan.out
 
 
 

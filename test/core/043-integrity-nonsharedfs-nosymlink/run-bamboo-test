@@ -47,9 +47,9 @@ pegasus-plan \
     --staging-site condorpool \
     --output-sites local \
     --dir dags \
-    --dax blackdiamond.dax \
     --force \
     -v \
+    blackdiamond.dax \
      | tee $TOPDIR/plan.out
 
 

@@ -41,7 +41,7 @@ pegasus-plan \
     --staging-site cartman-data \
     --output-sites local \
     --dir dags \
-    --dax blackdiamond.dax \
     --force \
     -v \
-    --submit
+    --submit \
+    blackdiamond.dax 

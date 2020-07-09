@@ -50,8 +50,9 @@ pegasus-plan \
     --dir work/dags \
     --output-sites local \
     --cluster horizontal \
-    --dax blackdiamond.dax \
-    --submit | tee $TOPDIR/plan.out
+    --submit \
+    blackdiamond.dax \
+    | tee $TOPDIR/plan.out
 
 
 

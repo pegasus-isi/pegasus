@@ -91,9 +91,8 @@ pegasus-plan \
     --dir work/dags \
     --output-sites local \
     --cluster label,horizontal \
-    --dax blackdiamond.dax \
     -vvvv \
-    --submit | tee plan.out
+    --submit blackdiamond.dax | tee plan.out
 
 
 

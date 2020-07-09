@@ -29,9 +29,9 @@ singularity exec \
 pegasus-plan \
         -Denv.http_proxy=workflow.isi.edu:3128 \
         --dir work \
-        --dax data/montage-workflow.yml \
         --cluster horizontal \
         --submit \
+	data/montage-workflow.yml \
         | tee $TOP_DIR/plan.out
 
 

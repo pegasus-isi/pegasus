@@ -75,6 +75,7 @@ pegasus-plan \
     --sites local \
     --dir work/submit \
     --output-sites local \
-    --dax dax.xml \
     --cleanup leaf \
-    -vvvvv | tee $TOPDIR/plan.out
+    -vvvvv \
+    dax.xml \
+    | tee $TOPDIR/plan.out

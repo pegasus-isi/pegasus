@@ -99,7 +99,8 @@ pegasus-plan \
     --dir work \
     --cleanup leaf \
     --cluster horizontal \
-    --dax blackdiamond.dax \
     -vvvv \
-    --submit | tee plan.out
+    --submit \
+    blackdiamond.dax \
+    | tee plan.out
 
