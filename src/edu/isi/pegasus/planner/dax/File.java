@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.XMLWriter;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -457,6 +458,33 @@ public class File extends CatalogType {
                 writer.endElement(indent);
             }
         }
+    }
+
+    /**
+     * Adapter function to convert File object to Replica Location object so that we can serialize
+     * to YAML using existing interface.
+     *
+     * @return
+     */
+    public ReplicaLocation toReplicaLocation() {
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN(this.getName());
+
+        // in the workflow API we don't allow for regex entries
+        rl.setRegex(false);
+
+        // Used by the file element at the top of the dax
+        if (this.mPFNs.isEmpty() && this.mMetadata.isEmpty()) {
+            // not sure what to do here in the converter
+        } else {
+            for (PFN pfn : this.mPFNs) {
+                rl.addPFN(pfn);
+            }
+        }
+        for (MetaData m : this.getMetaData()) {
+            rl.addMetadata(m.getKey(), m.getValue());
+        }
+        return rl;
     }
 
     /**
