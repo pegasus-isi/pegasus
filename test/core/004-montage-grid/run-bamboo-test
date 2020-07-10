@@ -75,7 +75,7 @@ sites:
       url: "file://$PWD/outputs"
   grids:
    -
-    type: "gt2"
+    type: "gt5"
     contact: "localhost/jobmanager-fork"
     scheduler: "fork"
     jobtype: "auxillary"

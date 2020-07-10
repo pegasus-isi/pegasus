@@ -8,9 +8,6 @@ home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 
 install_requires = [
     # Utils
-    # TODO: Replace attrs with the dataclasses module, when min Python version is >= 3.6
-    "attrs",
-    # 'dataclasses;python_version=="3.6"',
     # DAX/Workflow
     "PyYAML",
     # pegasus-init
