@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -755,6 +756,11 @@ class TestTransformationCatalog:
         )
 
         expected = {
+            "x-pegasus": {
+                "createdOn": "now",
+                "createdBy": os.environ["USER"],
+                "apiLang": "python",
+            },
             "pegasus": "5.0",
             "transformations": [
                 {"name": "t1", "sites": []},
@@ -774,6 +780,9 @@ class TestTransformationCatalog:
         result["transformations"] = sorted(
             expected["transformations"], key=lambda t: t["name"]
         )
+
+        # setting dates to be the same as it won't be safe to compare them
+        expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
 
         assert result == expected
 
@@ -796,7 +805,9 @@ class TestTransformationCatalog:
         - transformations
         - containers
         """
-        p = re.compile(r"pegasus: '5.0'[\w\W]+transformations:[\w\W]+containers[\w\W]+")
+        p = re.compile(
+            r"x-pegasus:[\w\W]+pegasus: '5.0'[\w\W]+transformations:[\w\W]+containers[\w\W]+"
+        )
         assert p.match(result) is not None
 
     @pytest.mark.parametrize(

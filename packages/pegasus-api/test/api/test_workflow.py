@@ -1003,6 +1003,14 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
+        # setting dates to be the same as it won't be safe to compare them
+        expected_json["x-pegasus"] = {
+            "createdOn": "now",
+            "createdBy": os.environ["USER"],
+            "apiLang": "python",
+        }
+        expected_json["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
+
         assert result == expected_json
 
     def test_write_str_filename(self, wf, load_schema, expected_json):
@@ -1026,6 +1034,14 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
+        # setting dates to be the same as it won't be safe to compare them
+        expected_json["x-pegasus"] = {
+            "createdOn": "now",
+            "createdBy": os.environ["USER"],
+            "apiLang": "python",
+        }
+        expected_json["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
+
         assert result == expected_json
 
         os.remove(path)
@@ -1043,6 +1059,14 @@ class TestWorkflow:
             result["jobs"][i]["uses"] = sorted(
                 result["jobs"][i]["uses"], key=lambda u: u["lfn"]
             )
+
+        # setting dates to be the same as it won't be safe to compare them
+        expected_json["x-pegasus"] = {
+            "createdOn": "now",
+            "createdBy": os.environ["USER"],
+            "apiLang": "python",
+        }
+        expected_json["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
 
         assert result == expected_json
 
@@ -1063,6 +1087,11 @@ class TestWorkflow:
             result = yaml.load(f)
 
         expected = {
+            "x-pegasus": {
+                "createdOn": "now",
+                "createdBy": os.environ["USER"],
+                "apiLang": "python",
+            },
             "pegasus": "5.0",
             "name": "test",
             "siteCatalog": {"sites": []},
@@ -1079,6 +1108,9 @@ class TestWorkflow:
             ],
             "jobDependencies": [],
         }
+
+        # setting dates to be the same as it won't be safe to compare them
+        expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
 
         assert expected == result
 
@@ -1164,7 +1196,7 @@ class TestWorkflow:
         - jobDependencies
         """
         p = re.compile(
-            r"pegasus: '5.0'[\w\W]+name:[\w\W]+hooks:[\w\W]+profiles:[\w\W]+metadata:[\w\W]+siteCatalog:[\w\W]+replicaCatalog:[\w\W]+transformationCatalog:[\w\W]+jobs:[\w\W]+jobDependencies:[\w\W]+"
+            r"x-pegasus:[\w\W]+pegasus: '5.0'[\w\W]+name:[\w\W]+hooks:[\w\W]+profiles:[\w\W]+metadata:[\w\W]+siteCatalog:[\w\W]+replicaCatalog:[\w\W]+transformationCatalog:[\w\W]+jobs:[\w\W]+jobDependencies:[\w\W]+"
         )
         assert p.match(result) is not None
 
