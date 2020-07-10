@@ -71,7 +71,7 @@ def load_all(s, *args, **kwargs) -> Iterator:
     else:
         raise TypeError("s must either be a string or an open text file")
 
-    for d in fp.readline():
+    for d in fp.readlines():
         yield loads(d.strip(), *args, **kwargs)
 
 
