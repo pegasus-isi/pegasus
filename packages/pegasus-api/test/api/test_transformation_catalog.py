@@ -1,5 +1,5 @@
+import getpass
 import json
-import os
 import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -758,7 +758,7 @@ class TestTransformationCatalog:
         expected = {
             "x-pegasus": {
                 "createdOn": "now",
-                "createdBy": os.environ["USER"],
+                "createdBy": getpass.getuser(),
                 "apiLang": "python",
             },
             "pegasus": "5.0",

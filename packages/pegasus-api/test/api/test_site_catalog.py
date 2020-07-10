@@ -1,5 +1,5 @@
+import getpass
 import json
-import os
 import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -561,7 +561,7 @@ class TestSiteCatalog:
         # setting dates to be the same as it won't be safe to compare them
         expected_json["x-pegasus"] = {
             "createdOn": "now",
-            "createdBy": os.environ["USER"],
+            "createdBy": getpass.getuser(),
             "apiLang": "python",
         }
         expected_json["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
