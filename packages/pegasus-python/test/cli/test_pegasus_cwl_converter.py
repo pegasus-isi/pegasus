@@ -1079,6 +1079,9 @@ def test_main(mocker):
     with open(converted_wf_file_path) as f:
         result = yaml.load(f)
 
+        # removing file info as this is not needed for test
+        del result["x-pegasus"]
+
     for job in result["jobs"]:
         job["uses"] = sorted(job["uses"], key=lambda u: u["lfn"])
 
