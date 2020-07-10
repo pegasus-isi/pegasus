@@ -306,11 +306,6 @@ class TestReplicaCatalog:
         rc.add_regex_replica("local", "*.txt", "/path", metadata={"creator": "ryan"})
 
         expected = {
-            "x-pegasus": {
-                "createdBy": getpass.getuser(),
-                "createdOn": "now",
-                "apiLang": "python",
-            },
             "pegasus": "5.0",
             "replicas": [
                 {
@@ -348,9 +343,10 @@ class TestReplicaCatalog:
             result["replicas"][0]["pfns"], key=lambda pfn: pfn["site"]
         )
 
-        # setting dates to be the same as it won't be safe to compare them
-        expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
-
+        assert "createdOn" in result["x-pegasus"]
+        assert result["x-pegasus"]["createdBy"] == getpass.getuser()
+        assert result["x-pegasus"]["apiLang"] == "python"
+        del result["x-pegasus"]
         assert result == expected
 
     def test_write_default(self):

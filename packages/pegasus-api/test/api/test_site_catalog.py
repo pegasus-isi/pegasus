@@ -558,14 +558,10 @@ class TestSiteCatalog:
             if "grids" in result["sites"][i]:
                 result["sites"][i]["grids"].sort(key=lambda g: g["jobtype"])
 
-        # setting dates to be the same as it won't be safe to compare them
-        expected_json["x-pegasus"] = {
-            "createdOn": "now",
-            "createdBy": getpass.getuser(),
-            "apiLang": "python",
-        }
-        expected_json["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
-
+        assert "createdOn" in result["x-pegasus"]
+        assert result["x-pegasus"]["createdBy"] == getpass.getuser()
+        assert result["x-pegasus"]["apiLang"] == "python"
+        del result["x-pegasus"]
         assert result == expected_json
 
     def test_write_default(self):
