@@ -336,7 +336,7 @@ public class YAMLTest {
             assertTrue(
                     e.getMessage()
                             .contains(
-                                    "Error 1:{$.sites[5].grids[0].idleNodes: string found, number expected}"));
+                                    "Error 1:{$.sites[5].grids[0].type: does not have a value in the enumeration"));
         }
     }
 

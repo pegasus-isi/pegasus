@@ -84,9 +84,7 @@ sites:
         contact: "smarty.isi.edu/jobmanager-pbs"
         scheduler: "pbs"
         jobtype: "compute"
-        idleNodes: "4"
-        totalNodes: 5
-      - type: "gt2"
+      - type: "gt5"
         contact: "smarty.isi.edu/jobmanager-fork"
         scheduler: "pbs"
         jobtype: "auxillary"
