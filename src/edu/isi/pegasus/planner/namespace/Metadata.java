@@ -41,6 +41,7 @@ public class Metadata extends Namespace {
     public static final String CHECKSUM_VALUE_KEY = "checksum.value";
 
     // some other predefinded keys that we use
+    public static final String WF_API_KEY = "wf.api";
     public static final String DAX_API_KEY = "dax.api";
     public static final String DEFAULT_DAX_API = "xml";
 

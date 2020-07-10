@@ -22,6 +22,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
@@ -189,6 +190,21 @@ public class ADAG {
     /** The version to report. */
     public static final String SCHEMA_VERSION = "3.6";
 
+    public static final String PEGASUS_VENDOR_EXTENSION_KEY = "x-pegasus";
+
+    /**
+     * Returns pegasus vendor extensions that we encode in each workflow
+     *
+     * @return
+     */
+    private Map<String, String> getPegasusVendorExtensions() {
+        Map m = new HashMap();
+        m.put("createdBy", System.getProperty("user.name"));
+        m.put("apiLang", "java");
+        m.put("createdOn", Currently.iso8601(true));
+        return m;
+    }
+
     /** Enum to indicate how the generated dax file should be formatted */
     public static enum FORMAT {
         yaml,
@@ -199,7 +215,7 @@ public class ADAG {
     public static FORMAT DEFAULT_FORMAT = FORMAT.yaml;
 
     /** The type of Abstract Workflow API generated */
-    private static final String DAX_API_TYPE = "java";
+    private static final String WF_API_KEY = "java";
 
     /** The Name / Label of the DAX */
     private String mName;
@@ -286,7 +302,7 @@ public class ADAG {
         mTransformations = new LinkedHashSet<Transformation>();
         mExecutables = new LinkedHashSet<Executable>();
         mMetaDataAttributes = new LinkedHashSet<MetaData>();
-        mMetaDataAttributes.add(new MetaData(Metadata.DAX_API_KEY, DAX_API_TYPE));
+        mMetaDataAttributes.add(new MetaData(Metadata.WF_API_KEY, WF_API_KEY));
         mFiles = new LinkedList<File>();
         mInvokes = new LinkedList<Invoke>();
         mDependencies = new LinkedHashMap<String, Set<Edge>>();
@@ -1196,8 +1212,21 @@ public class ADAG {
             // pegasus
             gen.writeStringField("pegasus", "5.0");
 
+            // write out pegasus vendor extensions
+            gen.writeFieldName(ADAG.PEGASUS_VENDOR_EXTENSION_KEY);
+            gen.writeObject(adag.getPegasusVendorExtensions());
+
             // name
             gen.writeStringField("name", adag.mName);
+
+            // metadata
+            if (!adag.mMetaDataAttributes.isEmpty()) {
+                gen.writeArrayFieldStart("metadata");
+                for (MetaData m : adag.mMetaDataAttributes) {
+                    gen.writeObject(m);
+                }
+                gen.writeEndArray();
+            }
 
             // replica catalog if specified
             if (!adag.mFiles.isEmpty()) {
