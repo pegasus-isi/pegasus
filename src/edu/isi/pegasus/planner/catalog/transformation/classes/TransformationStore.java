@@ -501,8 +501,16 @@ public class TransformationStore {
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
+                if (key.startsWith("x-")) {
+                    // ignore any user defined extensions
+                    // example x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '07-10-20
+                    // 11:09:29'}
+                    continue;
+                }
+
                 TransformationCatalogKeywords reservedKey =
                         TransformationCatalogKeywords.getReservedKey(key);
+
                 if (reservedKey == null) {
                     this.complainForIllegalKey(
                             TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(),
