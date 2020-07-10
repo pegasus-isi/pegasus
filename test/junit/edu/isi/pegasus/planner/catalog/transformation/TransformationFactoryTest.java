@@ -129,7 +129,7 @@ public class TransformationFactoryTest {
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY, YAML_CATALOG_TYPE);
         props.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
-                new File(mTestSetup.getInputDirectory() + "/sample-5.0-data/", "tc.yml")
+                new File(mTestSetup.getInputDirectory() + "/yaml/", "tc.yml")
                         .getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
@@ -145,7 +145,7 @@ public class TransformationFactoryTest {
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
-                new File(mTestSetup.getInputDirectory() + "/sample-5.0-data/", "tc.yml")
+                new File(mTestSetup.getInputDirectory() + "/yaml/", "tc.yml")
                         .getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
