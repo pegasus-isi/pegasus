@@ -367,7 +367,7 @@ class ProfileMixin:
         when_to_transfer_output: str = None,
         condor_collector: str = None,
         grid_resource: str = None,
-        cream_attributes: str = None,
+        cream_attributes: str = None
     ):
         """Add Condor profile(s).
 
@@ -498,7 +498,7 @@ class ProfileMixin:
         data_configuration=None,
         queue: str = None,
         project: str = None,
-        boto_config: str = None,
+        boto_config: str = None
     ):
         """Add Pegasus profile(s).
 
