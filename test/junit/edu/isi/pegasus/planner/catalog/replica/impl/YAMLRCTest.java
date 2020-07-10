@@ -18,6 +18,11 @@ package edu.isi.pegasus.planner.catalog.replica.impl;
 
 import static org.junit.Assert.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -170,7 +175,8 @@ public class YAMLRCTest {
         assertTrue(c.contains(new ReplicaCatalogEntry("b")));
     }
 
-    public void serialization() {
+    @Test
+    public void serialization() throws JsonProcessingException {
         HashMap attr = new HashMap();
         attr.put("regex", "true");
         attr.put("checksum.type", "sha256");
@@ -178,7 +184,33 @@ public class YAMLRCTest {
 
         mYAMLRC.insert("a", new ReplicaCatalogEntry("file://tmp/file", attr));
         mYAMLRC.insert("a", new ReplicaCatalogEntry("file://tmp/file.a", attr));
-        mYAMLRC.insert("b", new ReplicaCatalogEntry("file://tmp/b"));
+
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String expected =
+                "---\n"
+                        + "pegasus: \"5.0\"\n"
+                        + "replicas:\n"
+                        + " -\n"
+                        + "  lfn: \"f.a\"\n"
+                        + "  pfns:\n"
+                        + "   -\n"
+                        + "    pfn: \"file:///Volumes/data/input/f.a\"\n"
+                        + "    site: \"local\"\n"
+                        + " -\n"
+                        + "  lfn: \"a\"\n"
+                        + "  pfns:\n"
+                        + "   -\n"
+                        + "    pfn: \"file://tmp/file\"\n"
+                        + "   -\n"
+                        + "    pfn: \"file://tmp/file.a\"\n"
+                        + "  checksum:\n"
+                        + "    sha256: \"dsaadsadsa\"\n";
+
+        assertEquals(expected, mapper.writeValueAsString(mYAMLRC));
         mYAMLRC.close();
     }
 

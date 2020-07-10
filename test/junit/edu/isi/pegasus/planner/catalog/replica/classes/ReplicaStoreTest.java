@@ -22,9 +22,11 @@ import static org.junit.Assert.*;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
@@ -214,6 +216,48 @@ public class ReplicaStoreTest {
                 "pegasus: \"5.0\"\n" + "replicas:\n" + "  - lfn: \"f.a\"\n" + "    site: \"local\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
+    }
+
+    @Test
+    public void serializeStore() throws IOException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        ReplicaStore store = new ReplicaStore();
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN("f.a");
+        rl.addMetadata("foo", "bar");
+        rl.addPFN(new PFN("file:///scratch/f.a").setSite("local"));
+        store.add(rl);
+
+        rl = new ReplicaLocation();
+        rl.setLFN("f.b");
+        rl.addMetadata("user", "vahi");
+        rl.addPFN(new PFN("file:///scratch/f.b").setSite("local"));
+        store.add(rl);
+
+        String expected =
+                "---\n"
+                        + "replicas:\n"
+                        + " -\n"
+                        + "  lfn: \"f.a\"\n"
+                        + "  pfns:\n"
+                        + "   -\n"
+                        + "    pfn: \"file:///scratch/f.a\"\n"
+                        + "    site: \"local\"\n"
+                        + "  metadata:\n"
+                        + "    foo: \"bar\"\n"
+                        + " -\n"
+                        + "  lfn: \"f.b\"\n"
+                        + "  pfns:\n"
+                        + "   -\n"
+                        + "    pfn: \"file:///scratch/f.b\"\n"
+                        + "    site: \"local\"\n"
+                        + "  metadata:\n"
+                        + "    user: \"vahi\"\n";
+        String actual = mapper.writeValueAsString(store);
+        assertEquals(expected, actual);
     }
 
     private void testBasicReplicaLocation(

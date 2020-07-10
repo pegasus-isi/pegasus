@@ -341,8 +341,8 @@ public class ReplicaStore extends Data implements Cloneable {
 
             gen.writeArrayFieldStart(ReplicaCatalogKeywords.REPLICAS.getReservedName());
 
-            for (Map.Entry<String, ReplicaLocation> rl : store.mStore.entrySet()) {
-                gen.writeObject(rl);
+            for (Map.Entry<String, ReplicaLocation> entry : store.mStore.entrySet()) {
+                gen.writeObject(entry.getValue());
             }
 
             gen.writeEndArray();
