@@ -43,7 +43,7 @@ public class Metadata extends Namespace {
     // some other predefinded keys that we use
     public static final String WF_API_KEY = "wf.api";
     public static final String DAX_API_KEY = "dax.api";
-    public static final String DEFAULT_DAX_API = "xml";
+    public static final String DEFAULT_DAX_API = "yaml";
 
     /**
      * The name of the implementing namespace. It should be one of the valid namespaces always.

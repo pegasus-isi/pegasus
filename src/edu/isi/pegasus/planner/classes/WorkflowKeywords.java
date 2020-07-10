@@ -23,6 +23,7 @@ import java.util.Map;
  */
 public enum WorkflowKeywords {
     PEGASUS("pegasus"),
+    X_PEGASUS("x-pegasus"),
     NAME("name"),
     WORKFLOW("workflow"),
     REPLICA_CATALOG("replicaCatalog"),

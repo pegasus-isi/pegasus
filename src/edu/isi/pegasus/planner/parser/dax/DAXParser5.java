@@ -30,11 +30,13 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStor
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.WorkflowKeywords;
 import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -53,6 +55,9 @@ public class DAXParser5 implements DAXParser {
 
     /** Bag of initialization objects */
     private final PegasusBag mBag;
+
+    /** the key that we pick from vendor extensions and remap to dax.api key */
+    private static final String API_LANG_KEY = "apiLang";
 
     /**
      * The overloaded constructor. The schema version passed is determined in the DAXFactory
@@ -136,15 +141,16 @@ public class DAXParser5 implements DAXParser {
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();
                 String key = e.getKey();
-                if (key.startsWith("x-")) {
-                    // ignore any user defined extensions
-                    // example x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '07-10-20
-                    // 11:09:29'}
-                    continue;
-                }
+
                 WorkflowKeywords reservedKey = WorkflowKeywords.getReservedKey(key);
 
                 if (reservedKey == null) {
+                    if (key.startsWith("x-")) {
+                        // ignore any user defined extensions
+                        // example x-: {apiLang: python, createdBy: bamboo, createdOn: '07-10-20
+                        // 11:09:29'}
+                        continue;
+                    }
                     this.complainForIllegalKey(
                             WorkflowKeywords.WORKFLOW.getReservedName(), key, node);
                 }
@@ -152,6 +158,20 @@ public class DAXParser5 implements DAXParser {
                     case PEGASUS:
                         attrs.put("version", node.get(key).asText());
                         break;
+
+                    case X_PEGASUS:
+                        JsonNode pegasusExtensionsNode = node.get(key);
+                        ObjectMapper mapper = new ObjectMapper();
+                        Map<String, String> m =
+                                mapper.convertValue(pegasusExtensionsNode, Map.class);
+                        if (m.containsKey(API_LANG_KEY)) {
+                            // PM-1654 encode apiLang to dax.api key as metadata so
+                            // that planner metrics can be populated and sent to the
+                            // metrics server
+                            c.cbMetadata(
+                                    new Profile(
+                                            Profile.METADATA, Metadata.DAX_API_KEY, m.get(API_LANG_KEY)));
+                        }
 
                     case NAME:
                         attrs.put("name", node.get(key).asText());
