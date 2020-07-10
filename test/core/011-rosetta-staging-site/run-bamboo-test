@@ -84,7 +84,7 @@ sites:
       url: "gsiftp://bamboo.isi.edu$TOP_DIR/scratch"
   grids:
    -
-    type: "gt2"
+    type: "gt5"
     contact: "localhost/jobmanager-fork"
     scheduler: "fork"
     jobtype: "auxillary"
