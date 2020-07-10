@@ -1,5 +1,7 @@
 import json
+import os
 from collections import OrderedDict
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, TextIO, Union
 
@@ -65,18 +67,34 @@ class Writable:
                 )
             )
 
+        # add file info
+        self_as_dict = OrderedDict(
+            [
+                (
+                    "x-pegasus",
+                    {
+                        "createdBy": os.environ["USER"],
+                        "createdOn": datetime.now().strftime(r"%m-%d-%y %H:%M:%S"),
+                        "apiLang": "python",
+                    },
+                )
+            ]
+        )
+
+        self_as_dict.update(
+            json.loads(
+                json.dumps(self, cls=_CustomEncoder), object_pairs_hook=OrderedDict
+            )
+        )
+
         if _format == "yml" or _format == "yaml":
             # TODO: figure out how to get yaml.dump to recurse down into nested objects
             # yaml.dump(_CustomEncoder().default(self), file, sort_keys=False)
-            yaml.dump(
-                json.loads(
-                    json.dumps(self, cls=_CustomEncoder), object_pairs_hook=OrderedDict
-                ),
-                file,
-                allow_unicode=True,
-            )
+            yaml.dump(self_as_dict, file, allow_unicode=True)
         else:
-            json.dump(self, file, cls=_CustomEncoder, indent=4, ensure_ascii=False)
+            json.dump(
+                self_as_dict, file, cls=_CustomEncoder, indent=4, ensure_ascii=False
+            )
 
     def write(self, file: Optional[Union[str, TextIO]] = None, _format: str = "yml"):
         """Serialize this class as either yaml or json and write to the given

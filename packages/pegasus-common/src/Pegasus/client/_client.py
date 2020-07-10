@@ -64,7 +64,7 @@ class Client:
 
     def plan(
         self,
-        dax: str,
+        abstract_workflow: str = None,
         conf: str = None,
         sites: List[str] = None,
         output_sites: List[str] = ["local"],
@@ -150,7 +150,10 @@ class Client:
         if submit:
             cmd.append("--submit")
 
-        cmd.extend(("--dax", dax))
+        # pegasus-plan will look for "workflow.yml" in cwd by default if
+        # it is not given as last positional argument
+        if abstract_workflow:
+            cmd.append(abstract_workflow)
 
         rv = self._exec(cmd)
 

@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -557,6 +558,14 @@ class TestSiteCatalog:
             if "grids" in result["sites"][i]:
                 result["sites"][i]["grids"].sort(key=lambda g: g["jobtype"])
 
+        # setting dates to be the same as it won't be safe to compare them
+        expected_json["x-pegasus"] = {
+            "createdOn": "now",
+            "createdBy": os.environ["USER"],
+            "apiLang": "python",
+        }
+        expected_json["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
+
         assert result == expected_json
 
     def test_write_default(self):
@@ -585,5 +594,5 @@ class TestSiteCatalog:
         - pegasus
         - sites
         """
-        p = re.compile(r"pegasus: '5.0'[\w\W]+sites:[\w\W]")
+        p = re.compile(r"x-pegasus:[\w\W]+pegasus: '5.0'[\w\W]+sites:[\w\W]")
         assert p.match(result) is not None

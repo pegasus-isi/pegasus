@@ -248,6 +248,12 @@ class TestProfileMixin:
                 request_gpus="rg",
                 request_memory="100 MB",
                 request_disk="200 MB",
+                requirements="(CUDACapability >= 1.2) && $(requirements:True)",
+                should_transfer_files="YES",
+                when_to_transfer_output="ON_EXIT",
+                condor_collector="ccg-testing999.isi.edu",
+                grid_resource="batch pbs",
+                cream_attributes="key1=value1",
             )
         ) == id(obj)
 
@@ -264,6 +270,12 @@ class TestProfileMixin:
                 "request_gpus": "rg",
                 "request_memory": 100,
                 "request_disk": 200,
+                "requirements": "(CUDACapability >= 1.2) && $(requirements:True)",
+                "should_transfer_files": "YES",
+                "when_to_transfer_output": "ON_EXIT",
+                "condor_collector": "ccg-testing999.isi.edu",
+                "grid_resource": "batch pbs",
+                "cream_attributes": "key1=value1",
             }
         }
 
@@ -312,6 +324,9 @@ class TestProfileMixin:
                 memory="2 GB",
                 diskspace="1 GB",
                 data_configuration="condorio",
+                queue="normal",
+                project="-A project_name",
+                boto_config="/home/myuser/.boto",
             )
         ) == id(obj)
 
@@ -353,6 +368,9 @@ class TestProfileMixin:
                 "memory": 2048,
                 "diskspace": 1024,
                 "data.configuration": "condorio",
+                "queue": "normal",
+                "project": "-A project_name",
+                "BOTO_CONFIG": "/home/myuser/.boto",
             }
         }
 

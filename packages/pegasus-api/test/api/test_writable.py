@@ -34,8 +34,13 @@ def writable_obj():
 
 
 @pytest.fixture(scope="function")
-def expected():
+def expected(mocker):
     return {
+        "x-pegasus": {
+            "createdBy": os.environ["USER"],
+            "createdOn": "now",
+            "apiLang": "python",
+        },
         "name": "container⽷",
         "items": [{"name": "item0"}, {"name": "item1"}, {"name": "item2"}],
     }
@@ -44,6 +49,11 @@ def expected():
 class Test_CustomEncoder:
     def test_json(self, writable_obj, expected):
         result = json.loads(json.dumps(writable_obj, cls=_CustomEncoder))
+
+        # delete file info as it is only included when object is written
+        # but not converted to json
+        del expected["x-pegasus"]
+
         assert result == expected
 
 
@@ -51,7 +61,12 @@ class TestWritable:
     def test_write_using_defaults(self, writable_obj, expected, mocker):
         writable_obj.write()
         with open("container.yml") as f:
-            assert expected == yaml.safe_load(f)
+            result = yaml.safe_load(f)
+
+            # setting dates to be the same as it won't be safe to compare them
+            # and this is simpler than trying to mocker.patch datetime
+            expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
+            assert result == expected
 
         os.remove("container.yml")
 
@@ -71,7 +86,12 @@ class TestWritable:
     def test_write_using_str_input(self, writable_obj, expected, file, _format, loader):
         writable_obj.write(file, _format=_format)
         with open(file) as f:
-            assert loader(f) == expected
+            result = loader(f)
+
+            # setting dates to be the same as it won't be safe to compare them
+            # and this is simpler than trying to mocker.patch datetime
+            expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
+            assert result == expected
 
         os.remove(file)
 
@@ -94,7 +114,12 @@ class TestWritable:
         with open(file, "w+") as f:
             writable_obj.write(f, _format=_format)
             f.seek(0)
-            assert loader(f) == expected
+            result = loader(f)
+
+            # setting dates to be the same as it won't be safe to compare them
+            # and this is simpler than trying to mocker.patch datetime
+            expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
+            assert result == expected
 
         os.remove(file)
 
@@ -118,7 +143,12 @@ class TestWritable:
         with file(mode="w+") as f:
             writable_obj.write(f, _format=_format)
             f.seek(0)
-            assert loader(f) == expected
+            result = loader(f)
+
+            # setting dates to be the same as it won't be safe to compare them
+            # and this is simpler than trying to mocker.patch datetime
+            expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
+            assert result == expected
 
 
 def test_filter_out_nones():

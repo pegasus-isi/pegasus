@@ -125,4 +125,10 @@ def test_dump(mocker, tc1):
 
 
 def test_dumps(tc1):
-    assert yaml.load(dumps(tc1)) == json.loads(json.dumps(tc1, cls=_CustomEncoder))
+    expected = json.loads(json.dumps(tc1, cls=_CustomEncoder))
+
+    # file info not needed for test
+    result = yaml.load(dumps(tc1))
+    del result["x-pegasus"]
+
+    assert result == expected
