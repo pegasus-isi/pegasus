@@ -170,7 +170,9 @@ public class DAXParser5 implements DAXParser {
                             // metrics server
                             c.cbMetadata(
                                     new Profile(
-                                            Profile.METADATA, Metadata.DAX_API_KEY, m.get(API_LANG_KEY)));
+                                            Profile.METADATA,
+                                            Metadata.WF_API_KEY,
+                                            m.get(API_LANG_KEY)));
                         }
 
                     case NAME:

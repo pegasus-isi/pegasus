@@ -151,7 +151,7 @@ public class DAX2CDAG implements Callback {
     /**
      * Callback when a metadata element is encountered in the adag element.
      *
-     * @param profile profile element of namespace metadata
+     * @param p profile element of namespace metadata
      */
     public void cbMetadata(Profile p) {
         this.mDag.addMetadata(p.getProfileKey(), p.getProfileValue());

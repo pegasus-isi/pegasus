@@ -70,10 +70,10 @@ public class PlannerMetrics extends Data {
     @SerializedName("version")
     private final String mVersion = new Version().getVersion();
 
-    /** The DAX API used */
+    /** The workflow API used */
     @Expose
-    @SerializedName("dax_api")
-    private String mDAXAPI;
+    @SerializedName("wf_api")
+    private String mWFAPI;
 
     /** The name of the client */
     @Expose
@@ -149,7 +149,7 @@ public class PlannerMetrics extends Data {
         mType = "metrics";
         mPlannerArguments = "";
         mUsesPMC = false;
-        mDAXAPI = Metadata.DEFAULT_DAX_API;
+        mWFAPI = Metadata.DEFAULT_DAX_API;
         // we want metrics to be serialized only if user specified
         // mApplicationMetrics = new Properties();
     }
@@ -266,12 +266,12 @@ public class PlannerMetrics extends Data {
     }
 
     /**
-     * Returns the DAX API used
+     * Returns the Workflow API used
      *
-     * @return the dax api.
+     * @return the workflow api.
      */
-    public String getDAXAPI() {
-        return mDAXAPI;
+    public String getWFAPI() {
+        return mWFAPI;
     }
 
     /**
@@ -279,8 +279,8 @@ public class PlannerMetrics extends Data {
      *
      * @param api the api used
      */
-    public void setDAXAPI(String api) {
-        mDAXAPI = api;
+    public void setWFAPI(String api) {
+        mWFAPI = api;
     }
 
     /**
@@ -631,7 +631,7 @@ public class PlannerMetrics extends Data {
 
         append(sb, "client", this.mClient);
         append(sb, "version", this.mVersion);
-        append(sb, "dax_api", this.mDAXAPI);
+        append(sb, "dax_api", this.mWFAPI);
         append(sb, "user", this.mUser);
         append(sb, "vogroup", this.mVOGroup);
         append(sb, "submitdir.base", this.mBaseSubmitDirectory);
@@ -690,7 +690,7 @@ public class PlannerMetrics extends Data {
         pm.setRelativeSubmitDirectory(this.mRelativeSubmitDirectory);
         pm.setProperties(this.mPropertiesPath);
         pm.setDAX(this.mDAXPath);
-        pm.setDAXAPI(this.mDAXAPI);
+        pm.setWFAPI(this.mWFAPI);
         pm.setDataConfiguration(this.mDataConfiguration);
         pm.setPlannerOptions(this.mPlannerArguments);
         pm.setUsesPMC(this.mUsesPMC);

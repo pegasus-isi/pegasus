@@ -482,14 +482,15 @@ public class ADag extends Data implements Graph {
     }
 
     /**
-     * Returns the DAX API associated as metadata
+     * Returns the Abstract Workflow API associated as metadata
      *
      * @return the value
      */
-    public String getDAXAPI() {
-        String daxAPI = this.getMetadata(Metadata.DAX_API_KEY);
-        daxAPI = (daxAPI == null) ? Metadata.DEFAULT_DAX_API : daxAPI;
-        return daxAPI;
+    public String getWFAPI() {
+        String wfAPI = this.getMetadata(Metadata.WF_API_KEY);
+        wfAPI = (wfAPI == null) ? Metadata.DAX_API_KEY : wfAPI;
+        wfAPI = (wfAPI == null) ? Metadata.DEFAULT_DAX_API : wfAPI;
+        return wfAPI;
     }
 
     /**

@@ -448,7 +448,7 @@ public class CPlanner extends Executable {
         mPMetrics.setRootWorkflowUUID(orgDag.getRootWorkflowUUID());
         mPMetrics.setWorkflowUUID(orgDag.getWorkflowUUID());
         mPMetrics.setWorkflowMetrics(orgDag.getWorkflowMetrics());
-        mPMetrics.setDAXAPI(orgDag.getDAXAPI());
+        mPMetrics.setWFAPI(orgDag.getWFAPI());
 
         // write out a the relevant properties to submit directory
         int state = 0;
