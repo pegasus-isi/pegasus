@@ -1,5 +1,5 @@
+import getpass
 import json
-import os
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
@@ -73,7 +73,7 @@ class Writable:
                 (
                     "x-pegasus",
                     {
-                        "createdBy": os.environ["USER"],
+                        "createdBy": getpass.getuser(),
                         "createdOn": datetime.now().strftime(r"%m-%d-%y %H:%M:%S"),
                         "apiLang": "python",
                     },
