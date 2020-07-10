@@ -193,4 +193,10 @@ def test_dump(mocker, wf1):
 
 
 def test_dumps(wf1):
-    assert yaml.load(dumps(wf1)) == json.loads(json.dumps(wf1, cls=_CustomEncoder))
+    expected = json.loads(json.dumps(wf1, cls=_CustomEncoder))
+
+    result = yaml.load(dumps(wf1))
+    # file info not needed for test
+    del result["x-pegasus"]
+
+    assert result == expected
