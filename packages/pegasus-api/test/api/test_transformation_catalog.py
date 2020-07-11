@@ -756,11 +756,6 @@ class TestTransformationCatalog:
         )
 
         expected = {
-            "x-pegasus": {
-                "createdOn": "now",
-                "createdBy": getpass.getuser(),
-                "apiLang": "python",
-            },
             "pegasus": "5.0",
             "transformations": [
                 {"name": "t1", "sites": []},
@@ -781,9 +776,10 @@ class TestTransformationCatalog:
             expected["transformations"], key=lambda t: t["name"]
         )
 
-        # setting dates to be the same as it won't be safe to compare them
-        expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
-
+        assert "createdOn" in result["x-pegasus"]
+        assert result["x-pegasus"]["createdBy"] == getpass.getuser()
+        assert result["x-pegasus"]["apiLang"] == "python"
+        del result["x-pegasus"]
         assert result == expected
 
     def test_transformation_catalog_ordering_on_yml_write(self):

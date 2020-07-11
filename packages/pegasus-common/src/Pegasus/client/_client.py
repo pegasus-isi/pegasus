@@ -6,9 +6,10 @@ import subprocess
 import time
 from functools import partial
 from os import path
+from pathlib import Path
 from typing import Dict, List
 
-from Pegasus import yaml
+from Pegasus import braindump, yaml
 
 # Set log formatting s.t. only messages are shown. Output from pegasus
 # commands will already contain log level categories so it isn't necessary
@@ -166,11 +167,14 @@ class Client:
         workflow = Workflow(submit_dir, self)
         return workflow
 
-    def run(self, submit_dir: str, verbose: int = 0):
+    def run(self, submit_dir: str, verbose: int = 0, json: bool = False):
         cmd = [self._run]
 
         if verbose:
             cmd.append("-" + "v" * verbose)
+
+        if json:
+            cmd.append("-j")
 
         cmd.append(submit_dir)
 
@@ -378,6 +382,10 @@ class Client:
                 return match.group(2)
 
 
+class WorkflowInstanceException(Exception):
+    pass
+
+
 class Workflow:
     def __init__(self, submit_dir: str, client: Client = None):
         self._log = logging.getLogger("pegasus.client.workflow")
@@ -386,6 +394,8 @@ class Workflow:
 
         self._client = None
         self._submit_dir = submit_dir
+        self.braindump = self._get_braindump()
+
         self.client = client or from_env()
 
         self.run = None
@@ -407,6 +417,19 @@ class Workflow:
         self.remove = partial(self._client.remove, self._submit_dir)
         self.analyze = partial(self._client.analyzer, self._submit_dir)
         self.statistics = partial(self._client.statistics, self._submit_dir)
+
+    def _get_braindump(self):
+        try:
+            with (Path(self._submit_dir) / "braindump.yml").open("r") as f:
+                bd = braindump.load(f)
+        except FileNotFoundError:
+            raise WorkflowInstanceException(
+                "Unable to load braindump file: {}".format(
+                    Path(self._submit_dir) / "braindump.yml"
+                )
+            )
+
+        return bd
 
 
 class Result:

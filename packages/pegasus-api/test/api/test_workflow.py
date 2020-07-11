@@ -1004,14 +1004,10 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
-        # setting dates to be the same as it won't be safe to compare them
-        expected_json["x-pegasus"] = {
-            "createdOn": "now",
-            "createdBy": getpass.getuser(),
-            "apiLang": "python",
-        }
-        expected_json["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
-
+        assert "createdOn" in result["x-pegasus"]
+        assert result["x-pegasus"]["createdBy"] == getpass.getuser()
+        assert result["x-pegasus"]["apiLang"] == "python"
+        del result["x-pegasus"]
         assert result == expected_json
 
     def test_write_str_filename(self, wf, load_schema, expected_json):
@@ -1035,14 +1031,10 @@ class TestWorkflow:
             result["jobs"][1]["uses"], key=lambda u: u["lfn"]
         )
 
-        # setting dates to be the same as it won't be safe to compare them
-        expected_json["x-pegasus"] = {
-            "createdOn": "now",
-            "createdBy": getpass.getuser(),
-            "apiLang": "python",
-        }
-        expected_json["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
-
+        assert "createdOn" in result["x-pegasus"]
+        assert result["x-pegasus"]["createdBy"] == getpass.getuser()
+        assert result["x-pegasus"]["apiLang"] == "python"
+        del result["x-pegasus"]
         assert result == expected_json
 
         os.remove(path)
@@ -1061,14 +1053,10 @@ class TestWorkflow:
                 result["jobs"][i]["uses"], key=lambda u: u["lfn"]
             )
 
-        # setting dates to be the same as it won't be safe to compare them
-        expected_json["x-pegasus"] = {
-            "createdOn": "now",
-            "createdBy": getpass.getuser(),
-            "apiLang": "python",
-        }
-        expected_json["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
-
+        assert "createdOn" in result["x-pegasus"]
+        assert result["x-pegasus"]["createdBy"] == getpass.getuser()
+        assert result["x-pegasus"]["apiLang"] == "python"
+        del result["x-pegasus"]
         assert result == expected_json
 
         os.remove(EXPECTED_FILE)
@@ -1088,11 +1076,6 @@ class TestWorkflow:
             result = yaml.load(f)
 
         expected = {
-            "x-pegasus": {
-                "createdOn": "now",
-                "createdBy": getpass.getuser(),
-                "apiLang": "python",
-            },
             "pegasus": "5.0",
             "name": "test",
             "siteCatalog": {"sites": []},
@@ -1110,9 +1093,10 @@ class TestWorkflow:
             "jobDependencies": [],
         }
 
-        # setting dates to be the same as it won't be safe to compare them
-        expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
-
+        assert "createdOn" in result["x-pegasus"]
+        assert result["x-pegasus"]["createdBy"] == getpass.getuser()
+        assert result["x-pegasus"]["apiLang"] == "python"
+        del result["x-pegasus"]
         assert expected == result
 
         wf_path.unlink()
@@ -1261,7 +1245,9 @@ class TestWorkflow:
 
         wf.run()
 
-        Pegasus.client._client.Client.run.assert_called_once_with(None, verbose=0)
+        Pegasus.client._client.Client.run.assert_called_once_with(
+            None, verbose=0, json=False
+        )
 
     def test_status(self, wf, mocker):
         mocker.patch("Pegasus.client._client.Client.status")

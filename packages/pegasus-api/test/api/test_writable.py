@@ -1,3 +1,4 @@
+import getpass
 import json
 import os
 from tempfile import TemporaryFile
@@ -34,10 +35,10 @@ def writable_obj():
 
 
 @pytest.fixture(scope="function")
-def expected(mocker):
+def expected():
     return {
         "x-pegasus": {
-            "createdBy": os.environ["USER"],
+            "createdBy": getpass.getuser(),
             "createdOn": "now",
             "apiLang": "python",
         },
@@ -63,6 +64,7 @@ class TestWritable:
         with open("container.yml") as f:
             result = yaml.safe_load(f)
 
+            # TODO: check that keys in x-pegasus exist and then del x-pegasus
             # setting dates to be the same as it won't be safe to compare them
             # and this is simpler than trying to mocker.patch datetime
             expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
