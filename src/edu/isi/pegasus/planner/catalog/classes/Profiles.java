@@ -33,7 +33,7 @@ import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.namespace.Selector; 
+import edu.isi.pegasus.planner.namespace.Selector;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;

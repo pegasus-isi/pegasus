@@ -174,6 +174,7 @@ public class DAXParser5 implements DAXParser {
                                             Metadata.WF_API_KEY,
                                             m.get(API_LANG_KEY)));
                         }
+                        break;
 
                     case NAME:
                         attrs.put("name", node.get(key).asText());
