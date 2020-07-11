@@ -41,8 +41,6 @@ public class Profile extends Data {
 
     public static final String ENV = "env";
 
-    public static final String STAT = "stat";
-
     public static final String METADATA = "metadata";
 
     public static final String SELECTOR = "selector";
@@ -89,8 +87,7 @@ public class Profile extends Data {
                 || namespace.equalsIgnoreCase(HINTS)
                 || namespace.equalsIgnoreCase(ENV)
                 || namespace.equalsIgnoreCase(SELECTOR)
-                || namespace.equalsIgnoreCase(METADATA)
-                || namespace.equalsIgnoreCase(STAT));
+                || namespace.equalsIgnoreCase(METADATA));
     }
 
     /**

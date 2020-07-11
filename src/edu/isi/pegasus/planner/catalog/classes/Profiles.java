@@ -33,8 +33,7 @@ import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.namespace.Selector;
-import edu.isi.pegasus.planner.namespace.Stat;
+import edu.isi.pegasus.planner.namespace.Selector; 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -83,7 +82,6 @@ public class Profiles {
         mProfileMap.put(NAMESPACES.hints, new Hints());
         mProfileMap.put(NAMESPACES.pegasus, new Pegasus());
         mProfileMap.put(NAMESPACES.selector, new Selector());
-        mProfileMap.put(NAMESPACES.stat, new Stat());
         mProfileMap.put(NAMESPACES.metadata, new Metadata());
     }
 

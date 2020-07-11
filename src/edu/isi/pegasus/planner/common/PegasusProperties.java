@@ -205,7 +205,6 @@ public class PegasusProperties implements Cloneable {
             mNamepsaceToPropertiesPrefix.put(Profiles.NAMESPACES.hints, "hints");
             mNamepsaceToPropertiesPrefix.put(Profiles.NAMESPACES.pegasus, "pegasus");
             mNamepsaceToPropertiesPrefix.put(Profiles.NAMESPACES.selector, "selector");
-            mNamepsaceToPropertiesPrefix.put(Profiles.NAMESPACES.stat, "stat");
         }
 
         return mNamepsaceToPropertiesPrefix;
