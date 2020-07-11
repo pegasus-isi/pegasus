@@ -74,7 +74,7 @@ class Writable:
                     "x-pegasus",
                     {
                         "createdBy": getpass.getuser(),
-                        "createdOn": datetime.now().strftime(r"%m-%d-%y %H:%M:%S"),
+                        "createdOn": datetime.now().strftime(r"%m-%d-%yT%H:%M:%SZ"),
                         "apiLang": "python",
                     },
                 )
