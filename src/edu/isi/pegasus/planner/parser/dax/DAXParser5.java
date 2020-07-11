@@ -176,6 +176,12 @@ public class DAXParser5 implements DAXParser {
                         }
                         break;
 
+                    case METADATA:
+                        for (Profile p : this.createMetadata(node.get(key))) {
+                            c.cbMetadata(p);
+                        }
+                        break;
+
                     case NAME:
                         attrs.put("name", node.get(key).asText());
                         c.cbDocument(attrs);
