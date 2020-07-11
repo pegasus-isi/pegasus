@@ -1245,7 +1245,9 @@ class TestWorkflow:
 
         wf.run()
 
-        Pegasus.client._client.Client.run.assert_called_once_with(None, verbose=0)
+        Pegasus.client._client.Client.run.assert_called_once_with(
+            None, verbose=0, json=False
+        )
 
     def test_status(self, wf, mocker):
         mocker.patch("Pegasus.client._client.Client.status")

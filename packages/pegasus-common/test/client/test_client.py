@@ -6,6 +6,7 @@ from textwrap import dedent
 
 import pytest
 
+from Pegasus.braindump import Braindump
 from Pegasus.client._client import Client, PegasusClientError, Result, from_env
 
 
@@ -48,8 +49,12 @@ def client():
 
 
 class TestClient:
-    def test_plan(self, mock_subprocess, client):
-        client.plan(
+    def test_plan(self, mocker, mock_subprocess, client):
+        mocker.patch(
+            "Pegasus.client._client.Workflow._get_braindump",
+            return_value=Braindump(user="ryan"),
+        )
+        wf_instance = client.plan(
             abstract_workflow="wf.yml",
             conf="pegasus.conf",
             sites=["site1", "site2"],
@@ -96,6 +101,8 @@ class TestClient:
             stdout=-1,
         )
 
+        assert wf_instance.braindump.user == "ryan"
+
     def test_plan_invalid_sites(self, client):
         with pytest.raises(TypeError) as e:
             client.plan("wf.yml", sites="local")
@@ -121,9 +128,9 @@ class TestClient:
         assert "invalid input_dirs: /input_dir" in str(e)
 
     def test_run(self, mock_subprocess, client):
-        client.run("submit_dir", verbose=3)
+        client.run("submit_dir", verbose=3, json=True)
         subprocess.run.assert_called_once_with(
-            ["/path/bin/pegasus-run", "-vvv", "submit_dir"], stderr=-1, stdout=-1
+            ["/path/bin/pegasus-run", "-vvv", "-j", "submit_dir"], stderr=-1, stdout=-1
         )
 
     def test_status(self, mock_subprocess, client):

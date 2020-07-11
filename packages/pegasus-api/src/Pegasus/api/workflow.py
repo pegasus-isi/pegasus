@@ -12,6 +12,7 @@ from .site_catalog import SiteCatalog
 from .transformation_catalog import Transformation, TransformationCatalog
 from .writable import Writable, _CustomEncoder, _filter_out_nones
 
+# from Pegasus import braindump
 from Pegasus.client._client import from_env
 
 PEGASUS_VERSION = "5.0"
@@ -686,6 +687,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         # client specific members
         self._submit_dir = None
+        self.braindump = None
+
         self._client = None
 
         self._path = None
@@ -766,7 +769,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             # self._path is set by write
             self.write()
 
-        self._submit_dir = self._client.plan(
+        workflow_instance = self._client.plan(
             abstract_workflow=self._path,
             conf=conf,
             sites=sites,
@@ -781,21 +784,26 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             force=force,
             submit=submit,
             **kwargs,
-        )._submit_dir
+        )
+
+        self._submit_dir = workflow_instance._submit_dir
+        self.braindump = workflow_instance.braindump
 
     @_chained
     @_needs_client
-    def run(self, verbose: int = 0):
+    def run(self, verbose: int = 0, json: bool = False):
         """
-        run(self, verbose: int = 0)
+        run(self, verbose: int = 0, json: bool = False)
         Run the planned workflow.
 
         :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
+        :param json: Output in JSON format, defaults to False
+        :type json: bool 
         :raises PegasusClientError: pegasus-run encountered an error
         :return: self
         """
-        self._client.run(self._submit_dir, verbose=verbose)
+        self._client.run(self._submit_dir, verbose=verbose, json=json)
 
     @_chained
     @_needs_submit_dir
