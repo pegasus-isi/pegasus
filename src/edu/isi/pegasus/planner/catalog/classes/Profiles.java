@@ -64,8 +64,7 @@ public class Profiles {
         pegasus,
         hints,
         metadata,
-        selector,
-        stat
+        selector
     };
 
     /** An enum map that associates the enum keys with the corresponding namespace objects. */
