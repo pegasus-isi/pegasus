@@ -523,7 +523,7 @@ class TestContainer:
 
     def test_tojson_no_profiles(self, convert_yaml_schemas_to_json, load_schema):
         c = Container(
-            "test", Container.DOCKER, "image", ["mount"], checksum={"sha256": "abc123"}
+            "test", Container.DOCKER, "image", arguments="--shm-size", mounts=["mount"], checksum={"sha256": "abc123"}
         )
 
         result = c.__json__()
@@ -533,6 +533,9 @@ class TestContainer:
             "image": "image",
             "mounts": ["mount"],
             "checksum": {"sha256": "abc123"},
+            "profiles": {
+                "pegasus": {"container.arguments": "--shm-size"}
+            }
         }
 
         container_schema = load_schema("tc-5.0.json")["$defs"]["container"]
@@ -542,7 +545,7 @@ class TestContainer:
 
     def test_tojson_with_profiles(self, convert_yaml_schemas_to_json, load_schema):
         c = Container(
-            "test", Container.DOCKER, "image", ["mount"], checksum={"sha256": "abc123"}
+            "test", Container.DOCKER, "image", arguments="--shm-size", mounts=["mount"], checksum={"sha256": "abc123"}
         )
         c.add_env(JAVA_HOME="/java/home")
 
@@ -552,7 +555,10 @@ class TestContainer:
             "type": Container.DOCKER.value,
             "image": "image",
             "mounts": ["mount"],
-            "profiles": {Namespace.ENV.value: {"JAVA_HOME": "/java/home"}},
+            "profiles": {
+                            Namespace.ENV.value: {"JAVA_HOME": "/java/home"},
+                            Namespace.PEGASUS.value: {"container.arguments": "--shm-size"}
+                        },
             "checksum": {"sha256": "abc123"},
         }
 
@@ -652,10 +658,10 @@ class TestTransformationCatalog:
                 )
             )
             .add_containers(
-                Container("container1", Container.DOCKER, "image", ["mount1"])
+                Container("container1", Container.DOCKER, "image", arguments="--shm-size 123", mounts=["mount1"])
             )
             .add_containers(
-                Container("container2", Container.DOCKER, "image", ["mount1"])
+                Container("container2", Container.DOCKER, "image", mounts=["mount1"])
             )
         )
 
@@ -677,6 +683,11 @@ class TestTransformationCatalog:
                     "type": "docker",
                     "image": "image",
                     "mounts": ["mount1"],
+                    "profiles": {
+                        "pegasus": {
+                            "container.arguments": "--shm-size 123"
+                        }
+                    }
                 },
                 {
                     "name": "container2",
@@ -849,7 +860,8 @@ class TestTransformationCatalog:
             "centos-pegasus",
             Container.DOCKER,
             "docker:///ryan/centos-pegasus:latest",
-            ["/Volumes/Work/lfs1:/shared-data/:ro"],
+            arguments="--shm-size 123",
+            mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
         ).add_env(JAVA_HOME="/usr/bin/java")
 
         (tc.add_transformations(foo, bar).add_containers(centos_pegasus_container))

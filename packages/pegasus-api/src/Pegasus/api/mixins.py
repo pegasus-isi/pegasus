@@ -454,6 +454,7 @@ class ProfileMixin:
         queue="queue",
         project="project",
         boto_config="BOTO_CONFIG",
+        container_arguments="container.arguments"
     )
     def add_pegasus_profile(
         self,
@@ -498,7 +499,8 @@ class ProfileMixin:
         data_configuration=None,
         queue: str = None,
         project: str = None,
-        boto_config: str = None
+        boto_config: str = None,
+        container_arguments: str = None
     ):
         """Add Pegasus profile(s).
 
@@ -583,7 +585,9 @@ class ProfileMixin:
         :param project: Causes the job time to be charged to or associated with a particular project/account. This is not used for SGE.
         :type project: str, optional
         :param boto_config: Specified which :code:`.boto` file to use (e.g. :code:`"/home/myuser/.boto"`)
-        :param boto_config: str, optional
+        :type boto_config: str, optional
+        :param container_arguments: additional cli arguments that will be added to the :code:`docker container run` or :code:`singularity exec` command
+        :type container_arguments: str, optional
         """
         ...
 

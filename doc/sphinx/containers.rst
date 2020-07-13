@@ -45,17 +45,22 @@ and add it to your :py:class:`~Pegasus.api.transformation_catalog.Transformation
    tools_container = Container(
                      "tools-container",
                      Container.DOCKER,
-                     image="docker:///ryantanaka/preprocess:latest"
+                     image="docker:///ryantanaka/preprocess:latest",
+                     arguments="--shm-size=2g"
                   )
 
    # Add the container to the TransformationCatalog
    tc.add_containers(tools_container)
 
+When this container is run, anything specified in the ``arguments`` parameter is
+added as a cli argument to the resulting ``docker container run`` command that
+Pegasus generates.
+
 Then, when creating :py:class:`~Pegasus.api.transformation_catalog.Transformation`\s, 
 pass the appropriate container to the ``container`` parameter of the constructor. When ``is_stageable``
 is set to ``False``, this means that the transformation is installed at the given
 ``pfn`` **inside of the container**. If ``is_stageable`` is set to ``True``, the executable will be staged into
-the container and then executed there.  Note that in this situation the transformation
+the container and then executed there. Note that in this situation the transformation
 should be hosted somewhere and made accessible via a protocol such as HTTP.
 
 .. code-block:: python
