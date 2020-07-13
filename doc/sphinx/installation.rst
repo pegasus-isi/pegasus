@@ -31,6 +31,9 @@ Pegasus has a few dependencies:
       # python3 -v
       Python 3.6.9
 
+   Python3 packages ``yaml`` and ``attr`` are also required, but those
+   will be installed automatically if you use the RPM/DEB packages.
+
 -  **HTCondor (formerly Condor) 8.6 or higher**. See
    http://www.cs.wisc.edu/htcondor/ for more information. You should be
    able to run ``condor_q`` and ``condor_status``.
@@ -209,6 +212,16 @@ keep the HTCondor installation separate from the Pegasus installation.
    ::
 
       $ export PATH=/path/to/pegasus-install/bin:$PATH
+
+-  If you do not already have the Python3 packages ``yaml`` and ``attr``,
+   you can create a virtual environment with them. For example:
+
+   ::
+
+      $ python3 -m venv ~/pegasus-env
+      $ . ~/pegasus-env/bin/activate
+      $ pip3 install pyyaml attr
+
 
 .. _pypi-packages:
 

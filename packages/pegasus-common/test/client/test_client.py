@@ -1,13 +1,23 @@
 import shutil
 import subprocess
 from collections import namedtuple
+from pathlib import Path
 from subprocess import CompletedProcess
+from tempfile import TemporaryDirectory
 from textwrap import dedent
 
 import pytest
 
+from Pegasus import yaml
 from Pegasus.braindump import Braindump
-from Pegasus.client._client import Client, PegasusClientError, Result, from_env
+from Pegasus.client._client import (
+    Client,
+    PegasusClientError,
+    Result,
+    Workflow,
+    WorkflowInstanceError,
+    from_env,
+)
 
 
 def test_PegasusClientError():
@@ -375,3 +385,24 @@ b: 2
     assert len(d) == 2
     assert d[0]["a"] == 1
     assert d[1]["b"] == 2
+
+
+class TestWorkflow:
+    def test__get_braindump(self):
+        # create a fake temporary submit dir and braindump.yml file
+        with TemporaryDirectory() as td:
+            bd_path = Path(td) / "braindump.yml"
+            with bd_path.open("w+") as bd_file:
+                yaml.dump({"user": "ryan", "submit_dir": "/submit_dir"}, bd_file)
+                bd_file.seek(0)
+                bd = Workflow._get_braindump(bd_path.parent)
+
+                assert bd.user == "ryan"
+                assert bd.submit_dir == Path("/submit_dir")
+
+    def test_try_get_missing_braindump(self):
+        with TemporaryDirectory() as td:
+            with pytest.raises(WorkflowInstanceError) as e:
+                Workflow._get_braindump(td)
+
+            assert "Unable to load braindump file" in str(e)

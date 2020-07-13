@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import pytest
 import yaml
@@ -30,6 +30,7 @@ from Pegasus.api.workflow import (
 )
 from Pegasus.api.writable import _CustomEncoder
 from Pegasus.client._client import Client
+from Pegasus.client._client import Workflow as WorkflowInstance
 
 
 class Test_Use:
@@ -1239,6 +1240,35 @@ class TestWorkflow:
 
         os.remove(DEFAULT_WF_PATH)
 
+    def test_plan_workflow_and_access_braindump_file(self, wf, mocker):
+        # shutil.which used in _client.from_env()
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        # create a fake temporary submit dir and braindump.yml file
+        with TemporaryDirectory() as td, (Path(td) / "braindump.yml").open(
+            "w+"
+        ) as bd_file:
+            yaml.dump({"user": "ryan", "submit_dir": "/submit_dir"}, bd_file)
+            bd_file.seek(0)
+            mocker.patch(
+                "Pegasus.client._client.Client.plan", return_value=WorkflowInstance(td)
+            )
+
+            wf.plan()
+
+            assert wf.braindump.user == "ryan"
+            assert wf.braindump.submit_dir == Path("/submit_dir")
+
+    def test_access_braindump_file_before_workflow_planned(self):
+        with pytest.raises(PegasusError) as e:
+            wf = Workflow("test")
+            wf.braindump
+
+        assert (
+            "requires a submit directory to be set; Workflow.plan() must be called prior"
+            in str(e)
+        )
+
     def test_run(self, wf, mocker):
         mocker.patch("Pegasus.client._client.Client.run")
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
@@ -1331,5 +1361,5 @@ def test__needs_submit_dir(obj):
 
 
 def test__needs_submit_dir_invalid(obj):
-    with pytest.raises(ValueError):
+    with pytest.raises(PegasusError) as e:
         obj.func_that_requires_submit_dir()

@@ -12,7 +12,6 @@ from .site_catalog import SiteCatalog
 from .transformation_catalog import Transformation, TransformationCatalog
 from .writable import Writable, _CustomEncoder, _filter_out_nones
 
-# from Pegasus import braindump
 from Pegasus.client._client import from_env
 
 PEGASUS_VERSION = "5.0"
@@ -550,13 +549,13 @@ def _needs_submit_dir(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not self._submit_dir:
-            raise ValueError(
+            raise PegasusError(
                 "{f} requires a submit directory to be set; Workflow.plan() must be called prior to {f}".format(
                     f=f
                 )
             )
 
-        f(self, *args, **kwargs)
+        return f(self, *args, **kwargs)
 
     return wrapper
 
@@ -687,7 +686,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         # client specific members
         self._submit_dir = None
-        self.braindump = None
+        self._braindump = None
 
         self._client = None
 
@@ -706,6 +705,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.hooks = defaultdict(list)
         self.profiles = defaultdict(dict)
         self.metadata = dict()
+
+    @property
+    @_needs_submit_dir
+    def braindump(self):
+        return self._braindump
 
     @_chained
     @_needs_client
@@ -787,7 +791,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         )
 
         self._submit_dir = workflow_instance._submit_dir
-        self.braindump = workflow_instance.braindump
+        self._braindump = workflow_instance.braindump
 
     @_chained
     @_needs_client

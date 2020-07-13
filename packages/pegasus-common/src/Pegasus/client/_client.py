@@ -382,7 +382,7 @@ class Client:
                 return match.group(2)
 
 
-class WorkflowInstanceException(Exception):
+class WorkflowInstanceError(Exception):
     pass
 
 
@@ -394,7 +394,7 @@ class Workflow:
 
         self._client = None
         self._submit_dir = submit_dir
-        self.braindump = self._get_braindump()
+        self.braindump = self._get_braindump(self._submit_dir)
 
         self.client = client or from_env()
 
@@ -418,15 +418,14 @@ class Workflow:
         self.analyze = partial(self._client.analyzer, self._submit_dir)
         self.statistics = partial(self._client.statistics, self._submit_dir)
 
-    def _get_braindump(self):
+    @staticmethod
+    def _get_braindump(submit_dir: str):
         try:
-            with (Path(self._submit_dir) / "braindump.yml").open("r") as f:
+            with (Path(submit_dir) / "braindump.yml").open("r") as f:
                 bd = braindump.load(f)
         except FileNotFoundError:
-            raise WorkflowInstanceException(
-                "Unable to load braindump file: {}".format(
-                    Path(self._submit_dir) / "braindump.yml"
-                )
+            raise WorkflowInstanceError(
+                "Unable to load braindump file: {}".format(path)
             )
 
         return bd

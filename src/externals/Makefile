@@ -18,7 +18,6 @@ PACKAGES+=pyjwt
 #PACKAGES+=yaml
 PACKAGES+=sqlalchemy
 PACKAGES+=werkzeug
-PACKAGES+=attrs
 PACKAGES+=boto3
 PACKAGES+=botocore
 PACKAGES+=certifi
