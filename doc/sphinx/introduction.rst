@@ -31,7 +31,7 @@ data files. Pegasus automatically chains dependent tasks together, so
 that a single scientist can complete complex computations that once
 required many different people. New users are encouraged to explore the
 :doc:`tutorial` to become familiar with how to operate
-Pegasus for their own workflows. Users create and run a sample project
+Pegasus for their own workflows in which users create and run a sample project
 to demonstrate Pegasus capabilities.
 
 Pegasus has a number of features that contribute to its useability and
@@ -41,7 +41,7 @@ effectiveness.
 
    User created workflows can easily be run in different environments
    without alteration. Pegasus currently runs workflows on top of
-   Condor, Grid infrastrucutures such as Open Science Grid and TeraGrid,
+   Condor, Grid infrastructures such as Open Science Grid and TeraGrid,
    Amazon EC2, Nimbus, and many campus clusters. The same workflow can
    run on a single system or across a heterogeneous set of resources.
 
@@ -63,14 +63,14 @@ effectiveness.
    By default, all jobs in Pegasus are launched via the **kickstart**
    process that captures runtime provenance of the job and helps in
    debugging. The provenance data is collected in a database, and the
-   data can be summarised with tools such as **pegasus-statistics**,
+   data can be summarized with tools such as **pegasus-statistics**,
    **pegasus-plots**, or directly with SQL queries.
 
 -  **Data Management**
 
    Pegasus handles replica selection, data transfers and output
    registrations in data catalogs. These tasks are added to a workflow
-   as auxilliary jobs by the Pegasus planner.
+   as auxiliary jobs by the Pegasus planner.
 
 -  **Reliability**
 
@@ -81,13 +81,13 @@ effectiveness.
 -  **Error Recovery**
 
    When errors occur, Pegasus tries to recover when possible by retrying
-   tasks, by retrying the entire workflow, by providing workflow-level
-   checkpointing, by re-mapping portions of the workflow, by trying
+   tasks, retrying the entire workflow, providing workflow-level
+   checkpointing, re-mapping portions of the workflow, trying
    alternative data sources for staging data, and, when all else fails,
    by providing a rescue workflow containing a description of only the
    work that remains to be done. It cleans up storage as the workflow is
    executed so that data-intensive workflows have enough space to
-   execute on storage-constrained resource. Pegasus keeps track of what
+   execute on a storage-constrained resource. Pegasus keeps track of what
    has been done (provenance) including the locations of data used and
    produced, and which software was used with which parameters.
 
@@ -99,8 +99,8 @@ effectiveness.
 
       Pegasus can run a workflow on a single computer with Internet
       access. Running in a local environment is quicker to deploy as the
-      user does not need to gain access to muliple resources in order to
-      execute a workfow.
+      user does not need to gain access to multiple resources in order to
+      execute a workflow.
 
    -  *Condor Pools and Glideins*
 
@@ -124,4 +124,3 @@ effectiveness.
 
       Cloud computing uses a network as a means to connect a Pegasus end
       user to distributed resources that are based in the cloud.
-
