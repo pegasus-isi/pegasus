@@ -46,10 +46,12 @@ import edu.isi.pegasus.planner.common.PegasusDBAdmin;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
+import edu.isi.pegasus.planner.parser.dax.DAXParser5;
 import edu.isi.pegasus.planner.refiner.MainEngine;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import gnu.getopt.Getopt;
@@ -1820,6 +1822,19 @@ public class CPlanner extends Executable {
 
         // set out the root workflow id
         dag.setRootWorkflowUUID(determineRootWorkflowUUID(dag, options, properties));
+
+        // PM-1654 generate a default wf.api metadata key if not present already
+        // in the parsed workflow
+        String defaultAPI = p instanceof DAXParser5 ? "yaml" : "xml";
+        if (dag.getAllMetadata() == null // no metadata in the workflow
+                ||
+                // metadata exists but does not have either dax.api or wf.api
+                !(dag.getAllMetadata().containsKey(Metadata.DAX_API_KEY)
+                        || dag.getAllMetadata().containsKey(Metadata.WF_API_KEY))) {
+            // we always add wf.api if none is present
+            dag.addMetadata(Metadata.WF_API_KEY, defaultAPI);
+        }
+
         return dag;
     }
 

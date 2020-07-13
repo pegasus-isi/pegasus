@@ -487,7 +487,7 @@ public class ADag extends Data implements Graph {
      * @return the value
      */
     public String getWFAPI() {
-        // PM-1654 starting 5.0 it is wf_api. if that is not present then 
+        // PM-1654 starting 5.0 it is wf_api. if that is not present then
         // fall back to dax_api that was the previous key
         String wfAPI = this.getMetadata(Metadata.WF_API_KEY);
         wfAPI = (wfAPI == null) ? this.getMetadata(Metadata.DAX_API_KEY) : wfAPI;
