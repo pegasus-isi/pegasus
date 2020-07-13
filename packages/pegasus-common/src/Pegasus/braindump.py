@@ -29,7 +29,7 @@ __all__ = (
 )
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, kw_only=True)
 class Braindump:
     """
     Data class representing Braindump file.
