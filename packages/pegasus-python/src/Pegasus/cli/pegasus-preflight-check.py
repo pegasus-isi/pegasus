@@ -21,4 +21,3 @@ try:
 except Exception:
     sys.stderr.write("Pegasus requires the Python3 attr module to be installed\n")
     sys.exit(1)
-
