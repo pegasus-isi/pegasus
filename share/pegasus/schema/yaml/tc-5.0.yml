@@ -55,6 +55,8 @@ $defs:
               enum:
                 - stageable
                 - installed
+            bypass:
+              type: boolean
             container:
               type: string
           required:
@@ -94,6 +96,8 @@ $defs:
         type: array
         items:
           type: string
+      bypass:
+        type: boolean
       checksum:
         type: object
         description: "To add new checksum types update pattern '^(sha256|<new type>|..)$'"
