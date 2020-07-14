@@ -265,7 +265,9 @@ public class TransformationCatalogEntry implements CatalogEntry {
                 .append("\n SysInfo           : ")
                 .append(this.getSysInfo())
                 .append("\n TYPE              : ")
-                .append(((this.type == null) ? "" : type.toString()));
+                .append(((this.type == null) ? "" : type.toString()))
+                .append("\n BYPASS              : ")
+                .append(this.bypassStaging());
 
         if (mProfiles != null) {
             sb.append("\n Profiles : ");
@@ -814,7 +816,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
             return false;
         }
         TransformationCatalogEntry entry = (TransformationCatalogEntry) obj;
-        return this.toTCString().equalsIgnoreCase(entry.toTCString());
+        return this.toString().equalsIgnoreCase(entry.toString());
     }
 
     /**
