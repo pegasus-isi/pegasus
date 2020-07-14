@@ -26,10 +26,11 @@ class TestTransformationSite:
         "name, pfn, transformation_type, kwargs",
         [
             (
-                "local",
+                "condorpool",
                 "/pfn",
-                True,
+                False,
                 {
+                    "bypass_staging": False,
                     "arch": Arch.X86_64,
                     "os_type": None,
                     "os_release": None,
@@ -42,6 +43,7 @@ class TestTransformationSite:
                 "/pfn",
                 True,
                 {
+                    "bypass_staging": False,
                     "arch": Arch.X86_64,
                     "os_type": None,
                     "os_release": None,
@@ -145,6 +147,14 @@ class TestTransformationSite:
 
         assert "invalid" in str(e)
 
+    def test_invalid_use_of_bypass_staging(self):
+        with pytest.raises(ValueError) as e:
+            TransformationSite("local", "/pfn", False, bypass_staging=True)
+
+        assert (
+            "bypass_staging can only be used when is_stageable is set to True" in str(e)
+        )
+
     @pytest.mark.parametrize(
         "transformation_site, expected_json",
         [
@@ -153,10 +163,15 @@ class TestTransformationSite:
                 {"name": "local", "pfn": "/pfn", "type": "stageable"},
             ),
             (
+                TransformationSite("local", "/pfn", True, bypass_staging=True),
+                {"name": "local", "pfn": "/pfn", "type": "stageable", "bypass": True},
+            ),
+            (
                 TransformationSite(
                     "local",
                     "/pfn",
                     False,
+                    bypass_staging=False,
                     arch=Arch.X86_64,
                     os_type=OS.LINUX,
                     os_release="release",
@@ -441,8 +456,16 @@ class TestTransformation:
     def test_tojson_without_profiles_hooks_metadata(
         self, convert_yaml_schemas_to_json, load_schema
     ):
-        t = Transformation("test", namespace="pegasus", checksum={"sha256": "abc123"})
-        t.add_sites(TransformationSite("local", "/pfn", True))
+        t = Transformation(
+            "test",
+            namespace="pegasus",
+            site="local",
+            pfn="/pfn",
+            is_stageable=True,
+            bypass_staging=True,
+            checksum={"sha256": "abc123"},
+        )
+
         t.add_requirement("required")
 
         result = json.loads(json.dumps(t, cls=_CustomEncoder))
@@ -451,7 +474,9 @@ class TestTransformation:
             "namespace": "pegasus",
             "checksum": {"sha256": "abc123"},
             "requires": ["required"],
-            "sites": [{"name": "local", "pfn": "/pfn", "type": "stageable"}],
+            "sites": [
+                {"name": "local", "pfn": "/pfn", "type": "stageable", "bypass": True}
+            ],
         }
 
         transformation_schema = load_schema("tc-5.0.json")["$defs"]["transformation"]
