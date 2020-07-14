@@ -627,7 +627,7 @@ public class PegasusFile extends Data {
      *
      * @return true denoting the file can be cleaned up.
      */
-    public boolean bypassStaging() {
+    public boolean doBypassStaging() {
         return mFlags.get(BYPASS_BIT_FLAG);
     }
 

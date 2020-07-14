@@ -73,7 +73,7 @@ public class PegasusFileTest {
         PegasusFile pf = mapper.readValue(test, PegasusFile.class);
         assertNotNull(pf);
         assertEquals("f.b2", pf.getLFN());
-        assertFalse(pf.bypassStaging());
+        assertFalse(pf.doBypassStaging());
         assertTrue(!pf.getTransientTransferFlag());
         assertEquals("output", pf.getLinkage().toString());
     }
@@ -88,7 +88,7 @@ public class PegasusFileTest {
         PegasusFile pf = mapper.readValue(test, PegasusFile.class);
         assertNotNull(pf);
         assertEquals("f.b2", pf.getLFN());
-        assertTrue(pf.bypassStaging());
+        assertTrue(pf.doBypassStaging());
         assertEquals("input", pf.getLinkage().toString());
     }
 
