@@ -506,8 +506,48 @@ class TestTransformation:
 
 
 class TestContainer:
-    def test_valid_container(self):
-        assert Container("test", Container.DOCKER, "image", ["mount"])
+    @pytest.mark.parametrize(
+        "name, container_type, image, arguments, mounts, image_site, checksum, metadata, bypass_staging",
+        [
+            ("test", Container.DOCKER, "image", None, None, None, None, None, False),
+            ("test", Container.SHIFTER, "image", "args", None, None, None, None, False),
+            (
+                "test",
+                Container.SINGULARITY,
+                "image",
+                "args",
+                ["/here:/there:ro"],
+                "local",
+                {"sha256": "abc"},
+                None,
+                False,
+            ),
+            ("test", Container.DOCKER, "image", None, None, None, None, None, True),
+        ],
+    )
+    def test_valid_container(
+        self,
+        name,
+        container_type,
+        image,
+        arguments,
+        mounts,
+        image_site,
+        checksum,
+        metadata,
+        bypass_staging,
+    ):
+        assert Container(
+            name,
+            container_type,
+            image,
+            arguments=arguments,
+            mounts=mounts,
+            image_site=image_site,
+            checksum=checksum,
+            metadata=metadata,
+            bypass_staging=bypass_staging,
+        )
 
     def test_invalid_container(self):
         with pytest.raises(TypeError) as e:
@@ -529,6 +569,7 @@ class TestContainer:
             arguments="--shm-size",
             mounts=["mount"],
             checksum={"sha256": "abc123"},
+            bypass_staging=False,
         )
 
         result = c.__json__()
@@ -554,6 +595,7 @@ class TestContainer:
             arguments="--shm-size",
             mounts=["mount"],
             checksum={"sha256": "abc123"},
+            bypass_staging=True,
         )
         c.add_env(JAVA_HOME="/java/home")
 
@@ -563,6 +605,7 @@ class TestContainer:
             "type": Container.DOCKER.value,
             "image": "image",
             "mounts": ["mount"],
+            "bypass": True,
             "profiles": {
                 Namespace.ENV.value: {"JAVA_HOME": "/java/home"},
                 Namespace.PEGASUS.value: {"container.arguments": "--shm-size"},
@@ -672,6 +715,7 @@ class TestTransformationCatalog:
                     "image",
                     arguments="--shm-size 123",
                     mounts=["mount1"],
+                    bypass_staging=True,
                 )
             )
             .add_containers(
@@ -697,6 +741,7 @@ class TestTransformationCatalog:
                     "type": "docker",
                     "image": "image",
                     "mounts": ["mount1"],
+                    "bypass": True,
                     "profiles": {"pegasus": {"container.arguments": "--shm-size 123"}},
                 },
                 {

@@ -70,6 +70,7 @@ class Container(ProfileMixin):
         image_site: Optional[str] = None,
         checksum: Optional[Dict[str, str]] = None,
         metadata: Optional[Dict[str, Union[int, str, float]]] = None,
+        bypass_staging: bool = False,
     ):
         """
         :param name: name of this container
@@ -88,6 +89,8 @@ class Container(ProfileMixin):
         :type checksum: Optional[Dict[str, str]]
         :param metadata: Dict containing metadata key, value pairs associated with this container, defaults to None
         :type metadata: Optional[Dict[str, Union[int, str, float]]]
+        :param bypass_staging: whether or not to bypass the stage in job for this container, defaults to False
+        :type bypass_staging: bool, optional
         :raises ValueError: container_type must be one of :py:class:`~Pegasus.api.transformation_catalog._ContainerType` (:code:`Container.DOCKER` | :code:`Container.SINGULARITY` | :code:`Container.SHIFTER`)
         """
         self.name = name
@@ -130,6 +133,10 @@ class Container(ProfileMixin):
         if arguments:
             self.add_pegasus_profile(container_arguments=arguments)
 
+        self.bypass = None
+        if bypass_staging:
+            self.bypass = bypass_staging
+
     def __json__(self):
         return _filter_out_nones(
             {
@@ -137,6 +144,7 @@ class Container(ProfileMixin):
                 "type": self.container_type,
                 "image": self.image,
                 "mounts": self.mounts,
+                "bypass": self.bypass,
                 "image.site": self.image_site,
                 "checksum": self.checksum,
                 "metadata": self.metadata,
