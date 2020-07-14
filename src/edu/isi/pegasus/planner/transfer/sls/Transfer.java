@@ -98,9 +98,6 @@ public class Transfer implements SLS {
     /** Boolean to track whether to stage sls file or not */
     protected boolean mStageSLSFile;
 
-    /** A boolean indicating whether to bypass first level staging for inputs */
-    private boolean mBypassStagingForInputs;
-
     /**
      * A SimpleFile Replica Catalog, that tracks all the files that are being materialized as part
      * of workflow execution.
@@ -136,7 +133,6 @@ public class Transfer implements SLS {
         mStagingMapper = bag.getStagingMapper();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
-        mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
         mPlannerCache = bag.getHandleToPlannerCache();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mIntegrityDial = mProps.getIntegrityDial();
@@ -337,7 +333,7 @@ public class Transfer implements SLS {
             Collection<ReplicaCatalogEntry> sources = new LinkedList();
             boolean symlink = false;
             String computeSite = job.getSiteHandle();
-            if (mBypassStagingForInputs) {
+            if (pf.doBypassStaging()) {
                 // PM-698
                 // we retrieve the URL from the Planner Cache as a get URL
                 // bypassed URL's are stored as GET urls in the cache and

@@ -60,9 +60,6 @@ public class Condor implements SLS {
     /** The handle to the logging manager. */
     protected LogManager mLogger;
 
-    /** A boolean indicating whether to bypass first level staging for inputs */
-    private boolean mBypassStagingForInputs;
-
     /**
      * A SimpleFile Replica Catalog, that tracks all the files that are being materialized as part
      * of workflow execution.
@@ -82,7 +79,6 @@ public class Condor implements SLS {
         mPOptions = bag.getPlannerOptions();
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
-        mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
         mPlannerCache = bag.getHandleToPlannerCache();
     }
 
@@ -274,7 +270,7 @@ public class Condor implements SLS {
             ReplicaCatalogEntry cacheLocation = null;
 
             String pfn = null;
-            if (mBypassStagingForInputs) {
+            if (pf.doBypassStaging()) {
                 // we retrieve the URL from the Planner Cache as a get URL
                 // bypassed URL's are stored as GET urls in the cache and
                 // associated with the compute site

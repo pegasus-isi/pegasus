@@ -1622,6 +1622,10 @@ public class TransferEngine extends Engine {
                 ft.addDestination(stagingSiteHandle, preferredDestPutURL);
             }
 
+            // PM-1386 explicitly now set per file level the bypass flag
+            // whether a file is set for bypass staging or not
+            pf.setForBypassStaging(bypassFirstLevelStagingPossible);
+
             if (!bypassFirstLevelStagingPossible) {
                 // no bypass of input file staging. we need to add
                 // data stage in nodes for the lfn
@@ -2060,7 +2064,7 @@ public class TransferEngine extends Engine {
             ReplicaCatalogEntry entry, PegasusFile file, Job job) {
         boolean bypass = false;
         String computeSite = job.getSiteHandle();
-        // check if user has it configured for bypassing the staging or user has bypass flag set 
+        // check if user has it configured for bypassing the staging or user has bypass flag set
         // and we are in pegasus lite mode
         if ((this.mBypassStagingForInputs || file.doBypassStaging())
                 && mPegasusConfiguration.jobSetupForWorkerNodeExecution(job)) {
