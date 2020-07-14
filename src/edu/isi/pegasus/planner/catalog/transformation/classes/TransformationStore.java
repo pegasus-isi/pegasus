@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import java.io.IOException;
 import java.util.Collection;
@@ -533,7 +532,6 @@ public class TransformationStore {
                                     Transformation tx = parser.readValueAs(Transformation.class);
                                     for (TransformationCatalogEntry entry :
                                             tx.getTransformationCatalogEntries()) {
-                                        Abstract.modifyForFileURLS(entry);
                                         store.addEntry(entry);
                                     }
                                 }

@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Metadata;
@@ -360,6 +361,8 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
             }
         }
         entry.setSysInfo(sysInfo);
+
+        Abstract.modifyForFileURLS(entry);
         return entry;
     }
 }
