@@ -7,7 +7,6 @@ src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 
 install_requires = [
-    "attrs",
     "PyYAML",
 ]
 

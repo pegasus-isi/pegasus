@@ -16,9 +16,8 @@ Basic Usage::
 from pathlib import Path
 from typing import Optional, TextIO
 
-import attr
-
 from Pegasus import yaml
+from Pegasus.vendor import attr
 
 __all__ = (
     "load",
