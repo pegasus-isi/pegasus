@@ -17,8 +17,7 @@ except Exception:
     sys.exit(1)
 
 try:
-    import attr
+    import attr  # noqa
 except Exception:
     sys.stderr.write("Pegasus requires the Python3 attr module to be installed\n")
     sys.exit(1)
-

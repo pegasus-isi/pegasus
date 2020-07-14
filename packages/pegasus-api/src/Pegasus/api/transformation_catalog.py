@@ -40,6 +40,7 @@ class Container(ProfileMixin):
                             "centos-pegasus",
                             Container.DOCKER,
                             "docker:///ryan/centos-pegasus:latest",
+                            arguments="--shm-size",
                             mounts=["/Volumes/Work/lfs1:/shared-data/:ro"]
                         )
         
@@ -64,6 +65,7 @@ class Container(ProfileMixin):
         name: str,
         container_type: _ContainerType,
         image: str,
+        arguments: Optional[str] = None,
         mounts: Optional[List[str]] = None,
         image_site: Optional[str] = None,
         checksum: Optional[Dict[str, str]] = None,
@@ -76,6 +78,8 @@ class Container(ProfileMixin):
         :type container_type: _ContainerType
         :param image: image, such as :code:`docker:///rynge/montage:latest`
         :type image: str
+        :param arguments: additional cli arguments to be added to the :code:`docker container run` or :code:`singularity exec` commands when starting this container
+        :type arguments: Optional[str]
         :param mounts: list of mount strings such as :code:`['/Volumes/Work/lfs1:/shared-data/:ro', ...]`
         :type mounts: Optional[List[str]]
         :param image_site: optional site attribute to tell pegasus which site tar file exists, defaults to None
@@ -120,6 +124,11 @@ class Container(ProfileMixin):
         self.metadata = metadata
 
         self.profiles = defaultdict(dict)
+
+        # add additional arguments if given (this is not part of the schema
+        # and must be added to profiles)
+        if arguments:
+            self.add_pegasus_profile(container_arguments=arguments)
 
     def __json__(self):
         return _filter_out_nones(
