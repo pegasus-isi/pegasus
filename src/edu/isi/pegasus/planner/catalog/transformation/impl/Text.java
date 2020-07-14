@@ -139,7 +139,7 @@ public class Text extends Abstract implements TransformationCatalog {
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mFlushOnClose = false;
-        modifyFileURL = Boolean.parse(mProps.getProperty(MODIFY_FOR_FILE_URLS_KEY), true);
+        modifyFileURL = true;
         mLogger.log(
                 "Transformation Catalog Type used " + this.getDescription(),
                 LogManager.CONFIG_MESSAGE_LEVEL);

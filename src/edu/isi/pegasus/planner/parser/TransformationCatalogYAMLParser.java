@@ -20,7 +20,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
-import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import java.io.File;
@@ -139,9 +138,6 @@ public class TransformationCatalogYAMLParser extends YAMLParser {
                 mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                 store = mapper.readValue(reader, TransformationStore.class);
                 for (TransformationCatalogEntry entry : store.getAllEntries()) {
-                    if (modifyFileURL) {
-                        Abstract.modifyForFileURLS(entry);
-                    }
                     // we have information about one transformation catalog c
                     mLogger.log(
                             "Transformation Catalog Entry parsed is - " + entry,

@@ -49,10 +49,6 @@ public interface TransformationCatalog extends edu.isi.pegasus.planner.catalog.C
     /** Key name of property to set variable expansion */
     public static final String VARIABLE_EXPANSION_KEY = "expand";
 
-    /** Property specify whether to modify file url or not. */
-    public static final String MODIFY_FOR_FILE_URLS_KEY =
-            "pegasus.catalog.transformation.modify.file.urls";
-
     /**
      * Initialize the implementation, and return an instance of the implementation.
      *
