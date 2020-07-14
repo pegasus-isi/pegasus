@@ -39,8 +39,8 @@ class Test_Use:
         [
             (File("a"), _LinkType.INPUT, True, True, True),
             (File("a"), _LinkType.INPUT, True, True, False),
-            (File("a"), _LinkType.CHECKPOINT, False, False, False)
-        ]
+            (File("a"), _LinkType.CHECKPOINT, False, False, False),
+        ],
     )
     def test_valid_use(self, file, link, stage_out, register_replica, bypass_staging):
         assert _Use(file, link, stage_out, register_replica, bypass_staging)
@@ -60,7 +60,7 @@ class Test_Use:
     def test_invalid_use_bypass_set_and_type_neq_input(self):
         with pytest.raises(ValueError) as e:
             _Use(File("a"), _LinkType.OUTPUT, bypass_staging=True)
-        
+
         assert "bypass can only be set to True when link type is INPUT" in str(e)
 
     def test_eq(self):
@@ -87,8 +87,14 @@ class Test_Use:
                 {"lfn": "a", "type": "input",},
             ),
             (
-                _Use(File("a"), _LinkType.INPUT, stage_out=None, register_replica=None, bypass_staging=True),
-                {"lfn": "a", "type": "input", "bypass": True}
+                _Use(
+                    File("a"),
+                    _LinkType.INPUT,
+                    stage_out=None,
+                    register_replica=None,
+                    bypass_staging=True,
+                ),
+                {"lfn": "a", "type": "input", "bypass": True},
             ),
             (
                 _Use(

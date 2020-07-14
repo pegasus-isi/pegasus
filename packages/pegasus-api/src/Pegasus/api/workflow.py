@@ -63,7 +63,13 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                     )
                 )
 
-            _input = _Use(file, _LinkType.INPUT, register_replica=None, stage_out=None, bypass_staging=bypass_staging)
+            _input = _Use(
+                file,
+                _LinkType.INPUT,
+                register_replica=None,
+                stage_out=None,
+                bypass_staging=bypass_staging,
+            )
             if _input in self.uses:
                 raise DuplicateError(
                     "file: {file} has already been added as input to this job".format(
@@ -474,7 +480,14 @@ class _LinkType(Enum):
 class _Use:
     """Internal class used to represent input and output files of a job"""
 
-    def __init__(self, file, link_type, stage_out=True, register_replica=True, bypass_staging=False):
+    def __init__(
+        self,
+        file,
+        link_type,
+        stage_out=True,
+        register_replica=True,
+        bypass_staging=False,
+    ):
         if not isinstance(file, File):
             raise TypeError(
                 "invalid file: {file}; file must be of type File".format(file=file)
@@ -488,12 +501,10 @@ class _Use:
                     link_type=link_type, enum_str=_get_enum_str(_LinkType)
                 )
             )
-        
+
         if link_type != _LinkType.INPUT and bypass_staging:
-            raise ValueError(
-                "bypass can only be set to True when link type is INPUT"
-            )
-        
+            raise ValueError("bypass can only be set to True when link type is INPUT")
+
         self.bypass = None
         if bypass_staging:
             self.bypass = bypass_staging
@@ -520,7 +531,7 @@ class _Use:
                 "type": self._type,
                 "stageOut": self.stage_out,
                 "registerReplica": self.register_replica,
-                "bypass": self.bypass
+                "bypass": self.bypass,
             }
         )
 
