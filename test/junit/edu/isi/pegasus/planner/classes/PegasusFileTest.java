@@ -73,8 +73,23 @@ public class PegasusFileTest {
         PegasusFile pf = mapper.readValue(test, PegasusFile.class);
         assertNotNull(pf);
         assertEquals("f.b2", pf.getLFN());
+        assertFalse(pf.bypassStaging());
         assertTrue(!pf.getTransientTransferFlag());
         assertEquals("output", pf.getLinkage().toString());
+    }
+
+    @Test
+    public void testUsesBypass() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test = "lfn: f.b2\n" + "bypass: true\n" + "type: input\n";
+
+        PegasusFile pf = mapper.readValue(test, PegasusFile.class);
+        assertNotNull(pf);
+        assertEquals("f.b2", pf.getLFN());
+        assertTrue(pf.bypassStaging());
+        assertEquals("input", pf.getLinkage().toString());
     }
 
     @Test

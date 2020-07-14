@@ -49,6 +49,7 @@ public enum WorkflowKeywords {
     STAGE_OUT("stageOut"),
     REGISTER_REPLICA("registerReplica"),
     OPTIONAL("optional"),
+    BYPASS("bypass"),
     SIZE("size"),
     JOB_DEPENDENCIES("jobDependencies"),
     CHILDREN("children");

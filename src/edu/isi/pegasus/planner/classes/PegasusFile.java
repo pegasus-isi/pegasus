@@ -67,8 +67,11 @@ public class PegasusFile extends Data {
     /** If set, means can be considered for integrity checking */
     public static final int INTEGRITY_BIT_FLAG = 3;
 
+    /** If set, means can be considered for bypass staging */
+    public static final int BYPASS_BIT_FLAG = 4;
+
     /** The number of transient flags. This is the length of the BitSet in the flags fields. */
-    public static final int NO_OF_TRANSIENT_FLAGS = 3;
+    public static final int NO_OF_TRANSIENT_FLAGS = 4;
 
     /**
      * The mode where the transfer for this file to the pool is constructed and the transfer job
@@ -605,6 +608,29 @@ public class PegasusFile extends Data {
         return mFlags.get(INTEGRITY_BIT_FLAG);
     }
 
+    /** Sets the bypass flag denoting the file should be bypassed */
+    public void setForBypassStaging() {
+        mFlags.set(BYPASS_BIT_FLAG);
+    }
+
+    /**
+     * Sets the bypass flag denoting the file should be bypassed
+     *
+     * @param value the boolean value to which the flag should be set to.
+     */
+    public void setForBypassStaging(boolean value) {
+        mFlags.set(BYPASS_BIT_FLAG, value);
+    }
+
+    /**
+     * Returns whether file should be attempted for bypassing of input file staging.
+     *
+     * @return true denoting the file can be cleaned up.
+     */
+    public boolean bypassStaging() {
+        return mFlags.get(BYPASS_BIT_FLAG);
+    }
+
     /**
      * Returns the tristate transfer mode that is associated with the file.
      *
@@ -1010,6 +1036,10 @@ public class PegasusFile extends Data {
 
                     case REGISTER_REPLICA:
                         pf.setRegisterFlag(node.get(key).asBoolean());
+                        break;
+
+                    case BYPASS:
+                        pf.setForBypassStaging(node.get(key).asBoolean());
                         break;
 
                     case OPTIONAL:
