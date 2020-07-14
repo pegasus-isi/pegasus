@@ -32,6 +32,8 @@ from Pegasus.api.writable import _CustomEncoder
 from Pegasus.client._client import Client
 from Pegasus.client._client import Workflow as WorkflowInstance
 
+DEFAULT_WF_PATH = "workflow.yml"
+
 
 class Test_Use:
     @pytest.mark.parametrize(
@@ -1244,7 +1246,6 @@ class TestWorkflow:
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
         mocker.patch("Pegasus.client._client.Client.plan")
 
-        DEFAULT_WF_PATH = "workflow.yml"
         wf.plan()
 
         assert wf._path == DEFAULT_WF_PATH
@@ -1285,6 +1286,8 @@ class TestWorkflow:
 
             assert wf.braindump.user == "ryan"
             assert wf.braindump.submit_dir == Path("/submit_dir")
+
+            os.remove(DEFAULT_WF_PATH)
 
     def test_access_braindump_file_before_workflow_planned(self):
         with pytest.raises(PegasusError) as e:
