@@ -494,6 +494,9 @@ public class InterPoolEngine extends Engine implements Refiner {
             // accessible url
             fTx.addSource(entry.getResourceId(), entry.getPhysicalTransformation());
 
+            // PM-1386 set bypass for executable if set
+            fTx.setForBypassStaging(entry.bypassStaging());
+
             // PM-833 for executable staging set the executable only to basename only
             // should work in all data configurations
             job.setRemoteExecutable("." + File.separator + job.getStagedExecutableBaseName());
@@ -551,6 +554,9 @@ public class InterPoolEngine extends Engine implements Refiner {
                 fTx.assimilateChecksum(c);
             }
         }
+
+        // PM-1386 set bypass for executable if set
+        fTx.setForBypassStaging(c.bypassStaging());
 
         String site = c.getImageSite();
         if (site == null) {
@@ -628,6 +634,9 @@ public class InterPoolEngine extends Engine implements Refiner {
                         // guc or the user specified transfer mechanism
                         // accessible url
                         fTx.addSource(tcEntry.getResourceId(), tcEntry.getPhysicalTransformation());
+
+                        // PM-1386 set bypass for executable if set
+                        fTx.setForBypassStaging(tcEntry.bypassStaging());
 
                         dependantExecutables.add(fTx);
 
