@@ -198,7 +198,7 @@ public class ContainerTest {
         assertNotNull(c);
         assertEquals(Container.TYPE.docker, c.getType());
         assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
-
+        assertFalse(c.bypassStaging());
         assertEquals(2, c.getMountPoints().size());
         assertThat(
                 c.getMountPoints(), hasItem(new MountPoint("/Volumes/Work/lfs1:/shared-data/:ro")));
@@ -225,6 +225,7 @@ public class ContainerTest {
         assertNotNull(c);
         assertEquals(Container.TYPE.docker, c.getType());
         assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
+        assertFalse(c.bypassStaging());
         List<Profile> profiles = c.getProfiles("metadata");
         assertThat(
                 profiles, hasItem(new Profile("metadata", Metadata.CHECKSUM_TYPE_KEY, "sha256")));
@@ -235,6 +236,24 @@ public class ContainerTest {
                                 "metadata",
                                 Metadata.CHECKSUM_VALUE_KEY,
                                 "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9")));
+    }
+
+    @Test
+    public void deserializeContainerWithBypass() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "name: centos-pegasus\n"
+                        + "type: docker\n"
+                        + "image: docker:///rynge/montage:latest\n"
+                        + "bypass: true\n";
+
+        Container c = mapper.readValue(test, Container.class);
+        assertNotNull(c);
+        assertEquals(Container.TYPE.docker, c.getType());
+        assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
+        assertTrue(c.bypassStaging());
     }
 
     @Test
@@ -256,6 +275,7 @@ public class ContainerTest {
         assertNotNull(c);
         assertEquals(Container.TYPE.docker, c.getType());
         assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
+        assertFalse(c.bypassStaging());
         List<Profile> profiles = c.getProfiles("metadata");
         assertThat(
                 profiles, hasItem(new Profile("metadata", Metadata.CHECKSUM_TYPE_KEY, "sha256")));
@@ -292,12 +312,37 @@ public class ContainerTest {
                         + "type: \"docker\"\n"
                         + "image: \"docker:///rynge/montage:latest\"\n"
                         + "image.site: \"dockerhub\"\n"
+                        + "bypass: false\n"
                         + "mounts:\n"
                         + " - \"/Volumes/Work/lfs1:/shared-data/:ro\"\n"
                         + " - \"/Volumes/Work/lfs12:/shared-data1/:ro\"\n"
                         + "profiles:\n"
                         + "  env:\n"
                         + "    JAVA_HOME: \"/opt/java/1.6\"\n";
+
+        String actual = mapper.writeValueAsString(c);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void serializeContainerWithBypass() throws IOException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        Container c = new Container();
+        c.setName("centos-pegasus");
+        c.setImageSite("osg");
+        c.setImageURL("library:///rynge/montage:latest");
+        c.setType(Container.TYPE.singularity);
+        c.setForBypassStaging();
+        String expected =
+                "---\n"
+                        + "name: \"centos-pegasus\"\n"
+                        + "type: \"singularity\"\n"
+                        + "image: \"library:///rynge/montage:latest\"\n"
+                        + "image.site: \"osg\"\n"
+                        + "bypass: true\n";
 
         String actual = mapper.writeValueAsString(c);
         assertEquals(expected, actual);
@@ -330,6 +375,7 @@ public class ContainerTest {
                         + "type: \"docker\"\n"
                         + "image: \"docker:///rynge/montage:latest\"\n"
                         + "image.site: \"dockerhub\"\n"
+                        + "bypass: false\n"
                         + "checksum:\n"
                         + "  sha256: \"dsadsadsa093232\"\n";
 
