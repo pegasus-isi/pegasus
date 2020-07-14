@@ -80,6 +80,7 @@ public class TransformationCatalogEntryTest {
                         + "  name: \"isi\"\n"
                         + "  type: \"installed\"\n"
                         + "  pfn: \"/usr/bin/keg\"\n"
+                        + "  bypass: false\n"
                         + "  arch: \"x86\"\n"
                         + "  os.type: \"linux\"\n"
                         + "  os.release: \"rhel\"\n"
@@ -181,6 +182,7 @@ public class TransformationCatalogEntryTest {
                         + "  name: \"isi\"\n"
                         + "  type: \"installed\"\n"
                         + "  pfn: \"/usr/bin/keg\"\n"
+                        + "  bypass: false\n"
                         + "  arch: \"x86_64\"\n"
                         + "  os.type: \"linux\"\n"
                         + "  container: \"centos-pegasus\"\n";

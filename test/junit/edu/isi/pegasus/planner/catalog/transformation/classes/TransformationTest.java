@@ -283,6 +283,36 @@ public class TransformationTest {
     }
 
     @Test
+    public void testStageableTransformationWithBypass() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "name: \"keg\"\n"
+                        + "sites:\n"
+                        + "  - name: \"isi\"\n"
+                        + "    type: \"stageable\"\n"
+                        + "    pfn: \"/path/to/keg\"\n"
+                        + "    bypass: true\n"
+                        + "    arch: \"x86\"\n";
+
+        Transformation tx = mapper.readValue(test, Transformation.class);
+        assertNotNull(tx);
+        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
+        TransformationCatalogEntry expected = new TransformationCatalogEntry(null, "keg", null);
+        expected.setResourceId("isi");
+        expected.setType(TCType.STAGEABLE);
+        expected.setPhysicalTransformation("file:///path/to/keg");
+        expected.setForBypassStaging(true);
+        SysInfo sys = new SysInfo();
+        sys.setArchitecture(SysInfo.Architecture.x86);
+        sys.setOS(SysInfo.OS.linux);
+        expected.setSysInfo(sys);
+        assertEquals(expected.toString(), actual.toString());
+    }
+
+    @Test
     public void testProfileOverloading() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
