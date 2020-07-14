@@ -26,7 +26,8 @@ def sort_parts(wf):
 
 @pytest.fixture(scope="module")
 def wf1():
-    _in = File("in", size=2048).add_metadata(createdBy="ryan")
+    in1 = File("in1", size=2048).add_metadata(createdBy="ryan")
+    in2 = File("in2")
     stdin = File("stdin").add_metadata(size=1024)
     stdout = File("stdout").add_metadata(size=1024)
     stderr = File("stderr").add_metadata(size=1024)
@@ -38,8 +39,9 @@ def wf1():
 
     j1 = (
         Job("tr", _id="1", node_label="test")
-        .add_args("-i", _in, "-o", out, "-n", 1, 1.1)
-        .add_inputs(_in)
+        .add_args("-i", in1, "-o", out, "-n", 1, 1.1)
+        .add_inputs(in1)
+        .add_inputs(in2, bypass_staging=True)
         .add_outputs(out)
         .set_stdin(stdin)
         .set_stdout(stdout)

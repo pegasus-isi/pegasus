@@ -327,7 +327,7 @@ class TestProfileMixin:
                 queue="normal",
                 project="-A project_name",
                 boto_config="/home/myuser/.boto",
-                container_arguments="--shm-size"
+                container_arguments="--shm-size",
             )
         ) == id(obj)
 
@@ -372,7 +372,7 @@ class TestProfileMixin:
                 "queue": "normal",
                 "project": "-A project_name",
                 "BOTO_CONFIG": "/home/myuser/.boto",
-                "container.arguments": "--shm-size"
+                "container.arguments": "--shm-size",
             }
         }
 

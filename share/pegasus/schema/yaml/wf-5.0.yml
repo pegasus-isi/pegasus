@@ -16,7 +16,7 @@ $defs:
       lfn:
         type: string
       metadata:
-        $ref: 'common.yml#/$defs/metadata'
+        $ref: "common.yml#/$defs/metadata"
       type:
         $ref: "#/$defs/linkType"
       stageOut:
@@ -32,6 +32,8 @@ $defs:
       version:
         $ref: "common.yml#/$defs/versionString"
       executable:
+        type: boolean
+      bypass:
         type: boolean
     additionalProperties: false
     required:
@@ -193,4 +195,3 @@ additionalProperties: false
 patternProperties:
   ^x-:
     $ref: "common.yml#/$defs/vendorExtension"
-  

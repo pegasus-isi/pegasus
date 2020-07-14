@@ -454,7 +454,7 @@ class ProfileMixin:
         queue="queue",
         project="project",
         boto_config="BOTO_CONFIG",
-        container_arguments="container.arguments"
+        container_arguments="container.arguments",
     )
     def add_pegasus_profile(
         self,

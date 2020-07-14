@@ -32,10 +32,20 @@ from Pegasus.api.writable import _CustomEncoder
 from Pegasus.client._client import Client
 from Pegasus.client._client import Workflow as WorkflowInstance
 
+DEFAULT_WF_PATH = "workflow.yml"
+
 
 class Test_Use:
-    def test_valid_use(self):
-        assert _Use(File("a"), _LinkType.INPUT)
+    @pytest.mark.parametrize(
+        "file, link, stage_out, register_replica, bypass_staging",
+        [
+            (File("a"), _LinkType.INPUT, True, True, True),
+            (File("a"), _LinkType.INPUT, True, True, False),
+            (File("a"), _LinkType.CHECKPOINT, False, False, False),
+        ],
+    )
+    def test_valid_use(self, file, link, stage_out, register_replica, bypass_staging):
+        assert _Use(file, link, stage_out, register_replica, bypass_staging)
 
     def test_invalid_use_bad_file(self):
         with pytest.raises(TypeError) as e:
@@ -48,6 +58,12 @@ class Test_Use:
             _Use(File("a"), "link")
 
         assert "invalid link_type: link;" in str(e)
+
+    def test_invalid_use_bypass_set_and_type_neq_input(self):
+        with pytest.raises(ValueError) as e:
+            _Use(File("a"), _LinkType.OUTPUT, bypass_staging=True)
+
+        assert "bypass can only be set to True when link type is INPUT" in str(e)
 
     def test_eq(self):
         assert _Use(File("a"), _LinkType.INPUT) == _Use(File("a"), _LinkType.OUTPUT)
@@ -71,6 +87,16 @@ class Test_Use:
             (
                 _Use(File("a"), _LinkType.INPUT, stage_out=None, register_replica=None),
                 {"lfn": "a", "type": "input",},
+            ),
+            (
+                _Use(
+                    File("a"),
+                    _LinkType.INPUT,
+                    stage_out=None,
+                    register_replica=None,
+                    bypass_staging=True,
+                ),
+                {"lfn": "a", "type": "input", "bypass": True},
             ),
             (
                 _Use(
@@ -328,6 +354,7 @@ class TestAbstractJob:
         j.set_stderr("stderr")
         j.add_args("-i", File("f1"))
         j.add_inputs(File("if1"), File("if2"))
+        j.add_inputs(File("if3"), File("if4"), bypass_staging=True)
         j.add_outputs(File("of1"), File("of2"))
         j.add_checkpoint(File("cpf"))
 
@@ -345,6 +372,8 @@ class TestAbstractJob:
                 {"lfn": "stdin", "type": "input"},
                 {"lfn": "if1", "type": "input"},
                 {"lfn": "if2", "type": "input"},
+                {"lfn": "if3", "type": "input", "bypass": True},
+                {"lfn": "if4", "type": "input", "bypass": True},
                 {
                     "lfn": "stdout",
                     "type": "output",
@@ -1217,7 +1246,6 @@ class TestWorkflow:
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
         mocker.patch("Pegasus.client._client.Client.plan")
 
-        DEFAULT_WF_PATH = "workflow.yml"
         wf.plan()
 
         assert wf._path == DEFAULT_WF_PATH
@@ -1258,6 +1286,8 @@ class TestWorkflow:
 
             assert wf.braindump.user == "ryan"
             assert wf.braindump.submit_dir == Path("/submit_dir")
+
+            os.remove(DEFAULT_WF_PATH)
 
     def test_access_braindump_file_before_workflow_planned(self):
         with pytest.raises(PegasusError) as e:

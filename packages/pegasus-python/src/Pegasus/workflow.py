@@ -111,8 +111,9 @@ def _to_wf(d: dict) -> Workflow:
                     _Use(
                         f,
                         getattr(_LinkType, u["type"].upper()),
-                        u.get("stageOut"),
-                        u.get("registerReplica"),
+                        stage_out=u.get("stageOut"),
+                        register_replica=u.get("registerReplica"),
+                        bypass_staging=u.get("bypass"),
                     )
                 )
 
