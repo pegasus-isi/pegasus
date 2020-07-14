@@ -71,7 +71,7 @@ public class PegasusFile extends Data {
     public static final int BYPASS_BIT_FLAG = 4;
 
     /** The number of transient flags. This is the length of the BitSet in the flags fields. */
-    public static final int NO_OF_TRANSIENT_FLAGS = 4;
+    public static final int NO_OF_TRANSIENT_FLAGS = 5;
 
     /**
      * The mode where the transfer for this file to the pool is constructed and the transfer job
@@ -949,7 +949,8 @@ public class PegasusFile extends Data {
                 .append(typeToString())
                 .append("\n Size         :")
                 .append(mSize)
-                .append("\n Transient Flags (transfer,optional,dontRegister,cleanup):")
+                .append(
+                        "\n Transient Flags (transfer,optional,dontRegister,cleanup,integrity,bypass):")
                 .append(" ( ")
                 .append(getTransferFlag())
                 .append(",");
