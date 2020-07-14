@@ -90,6 +90,7 @@ public class Transformation {
         entry.setType(from.getType());
         entry.addProfiles(from.getProfiles());
         entry.setPhysicalTransformation(from.getPhysicalTransformation());
+        entry.setForBypassStaging(from.bypassStaging());
         entry.setContainer(from.getContainer());
         return entry;
     }
@@ -265,6 +266,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
      * name: "isi"
      * type: "installed"
      * pfn: "/path/to/keg"
+     * bypass: true
      * arch: "x86_64"
      * os.type: "linux"
      * os.release: "fc"
