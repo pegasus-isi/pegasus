@@ -300,6 +300,10 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     entry.setResourceId(siteName);
                     break;
 
+                case BYPASS:
+                    entry.setForBypassStaging(node.get(key).asBoolean());
+                    break;
+
                 case SITE_ARCHITECTURE:
                     String architecture = node.get(key).asText();
                     sysInfo.setArchitecture(SysInfo.Architecture.valueOf(architecture));

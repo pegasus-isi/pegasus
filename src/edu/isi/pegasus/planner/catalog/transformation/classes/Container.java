@@ -98,6 +98,9 @@ public class Container implements Cloneable {
     /** a url to an existing docker file to build container image from scratch */
     protected PegasusURL mDefinitionFileURL;
 
+    /** Boolean flag to indicate whether to bypass staging in the executable via the staging site */
+    private boolean mBypassStaging;
+
     /** The profiles associated with the site. */
     protected Profiles mProfiles;
 
@@ -114,6 +117,7 @@ public class Container implements Cloneable {
         mImageSite = null;
         mProfiles = new Profiles();
         mMountPoints = new HashSet<MountPoint>();
+        mBypassStaging = false;
     }
 
     /**
@@ -447,6 +451,29 @@ public class Container implements Cloneable {
         return has;
     }
 
+    /** Sets the bypass flag denoting the file should be bypassed */
+    public void setForBypassStaging() {
+        mBypassStaging = true;
+    }
+
+    /**
+     * Sets the bypass flag denoting the file should be bypassed
+     *
+     * @param value the boolean value to which the flag should be set to.
+     */
+    public void setForBypassStaging(boolean value) {
+        mBypassStaging = value;
+    }
+
+    /**
+     * Returns whether file should be attempted for bypassing of input file staging.
+     *
+     * @return true denoting the file can be cleaned up.
+     */
+    public boolean bypassStaging() {
+        return mBypassStaging;
+    }
+
     /**
      * Returns the clone of the object.
      *
@@ -460,6 +487,7 @@ public class Container implements Cloneable {
             obj.setImageSite(mImageSite);
             obj.setLFN(this.mLFN);
             obj.setName(this.mName);
+            obj.setForBypassStaging(this.mBypassStaging);
 
             PegasusURL url = this.getImageDefinitionURL();
             if (url != null) {
@@ -530,6 +558,7 @@ public class Container implements Cloneable {
                     .append(this.getImageDefinitionURL().getURL())
                     .append("\n");
         }
+        sb.append("\t").append("bypass ").append("\t").append(this.bypassStaging()).append("\n");
         for (Profile p : this.getProfiles()) {
             sb.append("\t")
                     .append("profile   ")
@@ -818,6 +847,10 @@ public class Container implements Cloneable {
                         container.setImageSite(imageSite);
                         break;
 
+                    case BYPASS:
+                        container.setForBypassStaging(node.get(key).asBoolean());
+                        break;
+
                     case CONTAINER_DOCKERFILE:
                         String dockerFile = node.get(key).asText();
                         container.setImageDefinitionURL(dockerFile);
@@ -939,6 +972,10 @@ public class Container implements Cloneable {
                     gen,
                     TransformationCatalogKeywords.CONTAINER_IMAGE_SITE.getReservedName(),
                     container.getImageSite());
+
+            gen.writeBooleanField(
+                    TransformationCatalogKeywords.BYPASS.getReservedName(),
+                    container.bypassStaging());
 
             if (!container.getMountPoints().isEmpty()) {
                 gen.writeArrayFieldStart(

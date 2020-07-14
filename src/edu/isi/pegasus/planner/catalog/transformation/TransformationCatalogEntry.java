@@ -82,6 +82,9 @@ public class TransformationCatalogEntry implements CatalogEntry {
     /** A reference to the container to use to launch the transformation */
     private Container mContainer;
 
+    /** Boolean flag to indicate whether to bypass staging in the executable via the staging site */
+    private boolean mBypassStaging;
+
     /**
      * if a compound transformation then this is the reference to the container that has all the
      * dependent transformations.
@@ -101,6 +104,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
         mNotifications = new Notifications();
         mContainer = null;
         mCompoundTX = null;
+        mBypassStaging = false;
     }
 
     /**
@@ -189,6 +193,29 @@ public class TransformationCatalogEntry implements CatalogEntry {
         this.type = type;
     }
 
+    /** Sets the bypass flag denoting the file should be bypassed */
+    public void setForBypassStaging() {
+        mBypassStaging = true;
+    }
+
+    /**
+     * Sets the bypass flag denoting the file should be bypassed
+     *
+     * @param value the boolean value to which the flag should be set to.
+     */
+    public void setForBypassStaging(boolean value) {
+        mBypassStaging = value;
+    }
+
+    /**
+     * Returns whether file should be attempted for bypassing of input file staging.
+     *
+     * @return true denoting the file can be cleaned up.
+     */
+    public boolean bypassStaging() {
+        return mBypassStaging;
+    }
+
     /**
      * creates a new instance of this object and returns you it. A shallow clone. TO DO : Gaurang
      * correct the clone method.
@@ -206,6 +233,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
                         type,
                         mProfiles,
                         this.getSysInfo());
+        entry.setForBypassStaging(this.bypassStaging());
         entry.addNotifications(this.getNotifications());
         entry.setContainer(this.mContainer == null ? null : (Container) mContainer.clone());
         if (this.mCompoundTX != null) {
@@ -861,10 +889,15 @@ public class TransformationCatalogEntry implements CatalogEntry {
                         gen,
                         TransformationCatalogKeywords.TYPE.getReservedName(),
                         entry.getType().toString().toLowerCase());
+
                 writeStringField(
                         gen,
                         TransformationCatalogKeywords.SITE_PFN.getReservedName(),
                         entry.getPhysicalTransformation());
+
+                gen.writeBooleanField(
+                        TransformationCatalogKeywords.BYPASS.getReservedName(),
+                        entry.bypassStaging());
 
                 SysInfo sys = entry.getSysInfo();
                 writeStringField(
