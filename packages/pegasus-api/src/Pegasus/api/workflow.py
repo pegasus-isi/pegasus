@@ -43,12 +43,14 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.metadata = dict()
 
     @_chained
-    def add_inputs(self, *input_files: File):
+    def add_inputs(self, *input_files: File, bypass_staging: bool = False):
         """
-        add_inputs(self, *input_files: File)
+        add_inputs(self, *input_files: File, bypass: bool = False)
         Add one or more :py:class:`~Pegasus.api.replica_catalog.File` objects as input to this job
 
         :param input_files: the :py:class:`~Pegasus.api.replica_catalog.File` objects to be added as inputs to this job
+        :param bypass_staging: whether or not to bypass the staging site when this file is fetched by the job, defaults to False
+        :type bypass_staging: bool, optional
         :raises DuplicateError: all input files must be unique
         :raises TypeError: job inputs must be of type :py:class:`~Pegasus.api.replica_catalog.File`
         :return: self
@@ -61,7 +63,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                     )
                 )
 
-            _input = _Use(file, _LinkType.INPUT, register_replica=None, stage_out=None)
+            _input = _Use(file, _LinkType.INPUT, register_replica=None, stage_out=None, bypass_staging=bypass_staging)
             if _input in self.uses:
                 raise DuplicateError(
                     "file: {file} has already been added as input to this job".format(
@@ -472,7 +474,7 @@ class _LinkType(Enum):
 class _Use:
     """Internal class used to represent input and output files of a job"""
 
-    def __init__(self, file, link_type, stage_out=True, register_replica=True):
+    def __init__(self, file, link_type, stage_out=True, register_replica=True, bypass_staging=False):
         if not isinstance(file, File):
             raise TypeError(
                 "invalid file: {file}; file must be of type File".format(file=file)
@@ -486,6 +488,15 @@ class _Use:
                     link_type=link_type, enum_str=_get_enum_str(_LinkType)
                 )
             )
+        
+        if link_type != _LinkType.INPUT and bypass_staging:
+            raise ValueError(
+                "bypass can only be set to True when link type is INPUT"
+            )
+        
+        self.bypass = None
+        if bypass_staging:
+            self.bypass = bypass_staging
 
         self._type = link_type.value
 
@@ -509,6 +520,7 @@ class _Use:
                 "type": self._type,
                 "stageOut": self.stage_out,
                 "registerReplica": self.register_replica,
+                "bypass": self.bypass
             }
         )
 
@@ -709,6 +721,28 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @property
     @_needs_submit_dir
     def braindump(self):
+        """Once this workflow has been planned using :py:class:`~Pegasus.api.workflow.Workflow.plan`,
+        the braindump file can be accessed for information such as :code:`user`, :code:`submit_dir`, and
+        :code:`root_wf_uuid`. For a full list of available attributes, see :py:class:`~Pegasus.braindump.Braindump`.
+
+        .. code-block:: python
+
+            try:
+                wf.plan(submit=True)
+                
+                print(wf.braindump.user)
+                print(wf.braindump.submit_hostname)
+                print(wf.braindump.submit_dir)
+                print(wf.braindump.root_wf_uuid)
+                print(wf.braindump.wf_uuid)
+            except PegasusClientError as e:
+                print(e.output)
+
+
+        :getter: returns a :py:class:`~Pegasus.braindump.Braindump` object corresponding to the most recent call of :py:class:`~Pegasus.api.workflow.Workflow.plan`
+        :rtype: Pegasus.braindump.Braindump
+        :raises PegasusError: :py:class:`~Pegasus.api.workflow.Workflow.plan` must be called before accessing the braindump file
+        """
         return self._braindump
 
     @_chained
