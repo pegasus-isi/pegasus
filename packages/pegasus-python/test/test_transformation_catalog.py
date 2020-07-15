@@ -30,6 +30,7 @@ def tc1():
                     "local",
                     "/pfn",
                     True,
+                    bypass_staging=True,
                     arch=Arch.X86_64,
                     os_type=OS.LINUX,
                     os_release="1",
@@ -50,6 +51,7 @@ def tc1():
                 mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
                 image_site="local",
                 checksum={"sha256": "abc123"},
+                bypass_staging=True,
             ).add_env(JAVA_HOME="/usr/bin/java")
         )
     )

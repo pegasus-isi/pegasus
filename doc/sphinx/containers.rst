@@ -46,7 +46,8 @@ and add it to your :py:class:`~Pegasus.api.transformation_catalog.Transformation
                      "tools-container",
                      Container.DOCKER,
                      image="docker:///ryantanaka/preprocess:latest",
-                     arguments="--shm-size=2g"
+                     arguments="--shm-size=2g",
+                     bypass_staging=True
                   )
 
    # Add the container to the TransformationCatalog
@@ -54,7 +55,9 @@ and add it to your :py:class:`~Pegasus.api.transformation_catalog.Transformation
 
 When this container is run, anything specified in the ``arguments`` parameter is
 added as a cli argument to the resulting ``docker container run`` command that
-Pegasus generates.
+Pegasus generates. If ``bypass_staging`` is set to ``True``, the container will
+be pulled directly onto the compute node where the job is run rather than to an
+intermediate staging site first. 
 
 Then, when creating :py:class:`~Pegasus.api.transformation_catalog.Transformation`\s, 
 pass the appropriate container to the ``container`` parameter of the constructor. When ``is_stageable``

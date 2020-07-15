@@ -26,10 +26,11 @@ class TestTransformationSite:
         "name, pfn, transformation_type, kwargs",
         [
             (
-                "local",
+                "condorpool",
                 "/pfn",
-                True,
+                False,
                 {
+                    "bypass_staging": False,
                     "arch": Arch.X86_64,
                     "os_type": None,
                     "os_release": None,
@@ -42,6 +43,7 @@ class TestTransformationSite:
                 "/pfn",
                 True,
                 {
+                    "bypass_staging": False,
                     "arch": Arch.X86_64,
                     "os_type": None,
                     "os_release": None,
@@ -145,6 +147,14 @@ class TestTransformationSite:
 
         assert "invalid" in str(e)
 
+    def test_invalid_use_of_bypass_staging(self):
+        with pytest.raises(ValueError) as e:
+            TransformationSite("local", "/pfn", False, bypass_staging=True)
+
+        assert (
+            "bypass_staging can only be used when is_stageable is set to True" in str(e)
+        )
+
     @pytest.mark.parametrize(
         "transformation_site, expected_json",
         [
@@ -153,10 +163,15 @@ class TestTransformationSite:
                 {"name": "local", "pfn": "/pfn", "type": "stageable"},
             ),
             (
+                TransformationSite("local", "/pfn", True, bypass_staging=True),
+                {"name": "local", "pfn": "/pfn", "type": "stageable", "bypass": True},
+            ),
+            (
                 TransformationSite(
                     "local",
                     "/pfn",
                     False,
+                    bypass_staging=False,
                     arch=Arch.X86_64,
                     os_type=OS.LINUX,
                     os_release="release",
@@ -441,8 +456,16 @@ class TestTransformation:
     def test_tojson_without_profiles_hooks_metadata(
         self, convert_yaml_schemas_to_json, load_schema
     ):
-        t = Transformation("test", namespace="pegasus", checksum={"sha256": "abc123"})
-        t.add_sites(TransformationSite("local", "/pfn", True))
+        t = Transformation(
+            "test",
+            namespace="pegasus",
+            site="local",
+            pfn="/pfn",
+            is_stageable=True,
+            bypass_staging=True,
+            checksum={"sha256": "abc123"},
+        )
+
         t.add_requirement("required")
 
         result = json.loads(json.dumps(t, cls=_CustomEncoder))
@@ -451,7 +474,9 @@ class TestTransformation:
             "namespace": "pegasus",
             "checksum": {"sha256": "abc123"},
             "requires": ["required"],
-            "sites": [{"name": "local", "pfn": "/pfn", "type": "stageable"}],
+            "sites": [
+                {"name": "local", "pfn": "/pfn", "type": "stageable", "bypass": True}
+            ],
         }
 
         transformation_schema = load_schema("tc-5.0.json")["$defs"]["transformation"]
@@ -506,8 +531,48 @@ class TestTransformation:
 
 
 class TestContainer:
-    def test_valid_container(self):
-        assert Container("test", Container.DOCKER, "image", ["mount"])
+    @pytest.mark.parametrize(
+        "name, container_type, image, arguments, mounts, image_site, checksum, metadata, bypass_staging",
+        [
+            ("test", Container.DOCKER, "image", None, None, None, None, None, False),
+            ("test", Container.SHIFTER, "image", "args", None, None, None, None, False),
+            (
+                "test",
+                Container.SINGULARITY,
+                "image",
+                "args",
+                ["/here:/there:ro"],
+                "local",
+                {"sha256": "abc"},
+                None,
+                False,
+            ),
+            ("test", Container.DOCKER, "image", None, None, None, None, None, True),
+        ],
+    )
+    def test_valid_container(
+        self,
+        name,
+        container_type,
+        image,
+        arguments,
+        mounts,
+        image_site,
+        checksum,
+        metadata,
+        bypass_staging,
+    ):
+        assert Container(
+            name,
+            container_type,
+            image,
+            arguments=arguments,
+            mounts=mounts,
+            image_site=image_site,
+            checksum=checksum,
+            metadata=metadata,
+            bypass_staging=bypass_staging,
+        )
 
     def test_invalid_container(self):
         with pytest.raises(TypeError) as e:
@@ -529,6 +594,7 @@ class TestContainer:
             arguments="--shm-size",
             mounts=["mount"],
             checksum={"sha256": "abc123"},
+            bypass_staging=False,
         )
 
         result = c.__json__()
@@ -554,6 +620,7 @@ class TestContainer:
             arguments="--shm-size",
             mounts=["mount"],
             checksum={"sha256": "abc123"},
+            bypass_staging=True,
         )
         c.add_env(JAVA_HOME="/java/home")
 
@@ -563,6 +630,7 @@ class TestContainer:
             "type": Container.DOCKER.value,
             "image": "image",
             "mounts": ["mount"],
+            "bypass": True,
             "profiles": {
                 Namespace.ENV.value: {"JAVA_HOME": "/java/home"},
                 Namespace.PEGASUS.value: {"container.arguments": "--shm-size"},
@@ -672,6 +740,7 @@ class TestTransformationCatalog:
                     "image",
                     arguments="--shm-size 123",
                     mounts=["mount1"],
+                    bypass_staging=True,
                 )
             )
             .add_containers(
@@ -697,6 +766,7 @@ class TestTransformationCatalog:
                     "type": "docker",
                     "image": "image",
                     "mounts": ["mount1"],
+                    "bypass": True,
                     "profiles": {"pegasus": {"container.arguments": "--shm-size 123"}},
                 },
                 {

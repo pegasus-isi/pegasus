@@ -64,6 +64,7 @@ def _to_tc(d: dict) -> TransformationCatalog:
                     s["name"],
                     s["pfn"],
                     True if s["type"] == "stageable" else False,
+                    bypass_staging=s.get("bypass"),
                     arch=getattr(Arch, s.get("arch").upper())
                     if s.get("arch")
                     else None,
@@ -115,6 +116,7 @@ def _to_tc(d: dict) -> TransformationCatalog:
                     mounts=cont.get("mounts"),
                     image_site=cont.get("image.site"),
                     checksum=cont.get("checksum"),
+                    bypass_staging=cont.get("bypass"),
                 )
 
                 # add profiles

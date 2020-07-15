@@ -70,6 +70,7 @@ class Container(ProfileMixin):
         image_site: Optional[str] = None,
         checksum: Optional[Dict[str, str]] = None,
         metadata: Optional[Dict[str, Union[int, str, float]]] = None,
+        bypass_staging: bool = False,
     ):
         """
         :param name: name of this container
@@ -88,6 +89,8 @@ class Container(ProfileMixin):
         :type checksum: Optional[Dict[str, str]]
         :param metadata: Dict containing metadata key, value pairs associated with this container, defaults to None
         :type metadata: Optional[Dict[str, Union[int, str, float]]]
+        :param bypass_staging: whether or not to bypass the stage in job for this container, defaults to False
+        :type bypass_staging: bool, optional
         :raises ValueError: container_type must be one of :py:class:`~Pegasus.api.transformation_catalog._ContainerType` (:code:`Container.DOCKER` | :code:`Container.SINGULARITY` | :code:`Container.SHIFTER`)
         """
         self.name = name
@@ -130,6 +133,10 @@ class Container(ProfileMixin):
         if arguments:
             self.add_pegasus_profile(container_arguments=arguments)
 
+        self.bypass = None
+        if bypass_staging:
+            self.bypass = bypass_staging
+
     def __json__(self):
         return _filter_out_nones(
             {
@@ -137,6 +144,7 @@ class Container(ProfileMixin):
                 "type": self.container_type,
                 "image": self.image,
                 "mounts": self.mounts,
+                "bypass": self.bypass,
                 "image.site": self.image_site,
                 "checksum": self.checksum,
                 "metadata": self.metadata,
@@ -156,6 +164,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         name: str,
         pfn: str,
         is_stageable: bool = False,
+        bypass_staging: bool = False,
         arch: Optional[Arch] = None,
         os_type: Optional[OS] = None,
         os_release: Optional[str] = None,
@@ -169,6 +178,8 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :type pfn: str
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
         :type type: bool, optional
+        :param bypass_staging: whether or not to bypass the stage in job of this executable (Note that this only works for transformations where :code:`is_stageable=False`), defaults to False
+        :type bypass_staging: bool, optional 
         :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
         :type arch: Optional[Arch], optional
         :param os_type: name of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS`), defaults to None
@@ -179,13 +190,23 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :type os_version: Optional[str], optional
         :param container: specify the name of the container or Container object to use, optional
         :type container: Optional[Union[Container, str]], optional
-        :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
-        :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
+        :raises TypeError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
+        :raises TypeError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
+        :raises ValueError: :code:`bypass_staging=True` can only be used when :code:`is_stageable=True`
         """
 
         self.name = name
         self.pfn = pfn
         self.transformation_type = "stageable" if is_stageable else "installed"
+
+        self.bypass = None
+        if bypass_staging:
+            if not is_stageable:
+                raise ValueError(
+                    "bypass_staging can only be used when is_stageable is set to True"
+                )
+
+            self.bypass = bypass_staging
 
         if arch is not None:
             if not isinstance(arch, Arch):
@@ -238,6 +259,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
                 "name": self.name,
                 "pfn": self.pfn,
                 "type": self.transformation_type,
+                "bypass": self.bypass,
                 "arch": self.arch,
                 "os.type": self.os_type,
                 "os.release": self.os_release,
@@ -264,6 +286,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         site: Optional[str] = None,
         pfn: Optional[str] = None,
         is_stageable: bool = False,
+        bypass_staging: bool = False,
         arch: Optional[Arch] = None,
         os_type: Optional[OS] = None,
         os_release: Optional[str] = None,
@@ -275,7 +298,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         When a transformation resides on a single site, the
         syntax in Example 1 can be used where the args: site and pfn are
         provided to the constructor. If site and pfn are specified, then
-        the args: is_stageable, arch, os_type, os_release, os_version, and container, are
+        the args: is_stageable, bypass_staging, arch, os_type, os_release, os_version, and container, are
         applied to the site, else they are ignored. When a transformation resides
         multiple sites, the syntax in Example 2 can be used where multiple
         TransformationSite objects can be added. Note that when specifying a checksum
@@ -291,6 +314,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                     site="condorpool",
                     pfn="/usr/bin/pegasus-keg",
                     is_stageable=False,
+                    bypass_staging=False,
                     arch=Arch.X86_64,
                     os_type=OS.LINUX,
                     container=centos_pegasus
@@ -323,6 +347,8 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :type pfn: Optional[str]
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
         :type type: bool, optional
+        :param bypass_staging: whether or not to bypass the stage in job of this executable (Note that this only works for transformations where :code:`is_stageable=False`), defaults to False
+        :type bypass_staging: bool, optional
         :param arch: architecture that this transformation was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch` , e.g :code:`Arch.X86_64`), defaults to None
         :type arch: Optional[Arch]
         :param os_type: name of os that this transformation was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS` , e.g. :code:`OS.LINUX`), defaults to None
@@ -336,9 +362,10 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as :code:`{"sha256": <value>}`, defaults to None
         :type checksum: Optional[Dict[str, str]]
         :raises TypeError: container must be of type :py:class:`~Pegasus.api.transformation_catalog.Container` or str
-        :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
-        :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
+        :raises TypeError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
+        :raises TypeError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
         :raises ValueError: fields: namespace, name, and field must not contain any :code:`:` (colons)
+        :raises ValueError: :code:`bypass_staging=True` can only be used when :code:`is_stageable=True`
         """
 
         for field, value in {
@@ -371,6 +398,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                     site,
                     pfn,
                     is_stageable,
+                    bypass_staging=bypass_staging,
                     arch=arch,
                     os_type=os_type,
                     os_release=os_release,
@@ -442,6 +470,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :raises DuplicateError: this requirement already exists
         :raises ValueError: :code:`required_transformation` must be of type :py:class:`~Pegasus.api.transformation_catalog.Transformation` or str
         :raises ValueError: namespace, required transformation name, and version cannot contain any :code:`:` (colon) characters
+        :raises TypeError: required_transformation must be one of type str or :py:class:`~Pegasus.api.transformation_catalog.Transformation`
         :return: self
         """
         key = ""
