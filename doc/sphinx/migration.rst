@@ -601,6 +601,49 @@ Unlike DAX3, you do not need to specify ``job.uses(..)`` as seen below.
             diamond.addJob(preprocess)
 
 
+Hierarchical workflows can be created by adding :py:class:`~Pegasus.api.workflow.SubWorkflow`
+jobs. The second argument, ``is_planned``, in ``SubWorkflow`` specifies whether or not it has already
+been planned by the pegasus planner. When ``is_planned=False``, this is the equivalent 
+of using the ``DAX`` object in ``Pegasus.DAX3``. When ``is_planned=True``, this 
+is the equivalent of using the ``DAG`` object in ``Pegasus.DAX3``.
+
+.. tabs::
+
+   .. tab:: Pegasus.api
+
+      .. code-block:: python
+
+         blackdiamond_wf = SubWorkflow("blackdiamond.yml", is_planned=False)\
+                              .add_args("--input-dir", "input", "--output-sites", "local", "-vvv")
+
+         sleep_wf = SubWorkflow("sleep.yml", is_planned=False)\
+                     .add_args("--output-sites", "local", "-vvv")
+
+         wf.add_jobs(blackdiamond_wf, sleep_wf)
+   
+   .. tab:: Pegasus.DAX3
+
+      .. code-block:: python
+
+         # Create a abstract dag
+         adag = ADAG('local-hierarchy')
+
+         daxfile = File('blackdiamond.dax')
+         dax1 = DAX(daxfile)
+         #DAX jobs are called with same arguments passed, while planning the root level dax
+         dax1.addArguments('--output-site local')
+         dax1.addArguments('-vvv')
+         adag.addJob(dax1)
+
+
+         # this dax job uses a pre-existing dax file
+         # that has to be present in the replica catalog
+         daxfile2 = File('sleep.dax')
+         dax2 = DAX(daxfile2)
+         dax2.addArguments('--output-site local')
+         dax2.addArguments( '-vvv')
+         adag.addJob(dax2)
+
 Profile functionality remains the same in Pegasus 5.0 (see :py:class:`~Pegasus.api.mixins.ProfileMixin`). 
 Profiles can be added to the following:
 
