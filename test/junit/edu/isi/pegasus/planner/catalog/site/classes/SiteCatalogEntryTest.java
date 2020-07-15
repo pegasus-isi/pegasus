@@ -104,7 +104,7 @@ public class SiteCatalogEntryTest {
                         + "    url: \"file:///tmp/workflows/scratch\"\n"
                         + "grids:\n"
                         + " -\n"
-                        + "  type: \"gt2\"\n"
+                        + "  type: \"gt5\"\n"
                         + "  contact: \"smarty.isi.edu/jobmanager-pbs\"\n"
                         + "  scheduler: \"pbs\"\n"
                         + "  jobtype: \"compute\"\n"
