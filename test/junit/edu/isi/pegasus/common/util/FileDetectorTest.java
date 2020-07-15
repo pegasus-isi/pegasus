@@ -36,35 +36,41 @@ public class FileDetectorTest {
 
     @Test
     public void simpleYAMLWithHeader() {
-        BufferedWriter writer;
+        BufferedWriter writer = null;
         try {
             mTestFile = File.createTempFile("pegasus", ".txt");
             writer = new BufferedWriter(new FileWriter(mTestFile));
             writer.write("pegasus: 5.0\n");
             writer.close();
+            assertTrue(FileDetector.isTypeYAML(mTestFile));
         } catch (IOException ex) {
+        } finally {
+            mTestFile.delete();
         }
-        assertTrue(FileDetector.isTypeYAML(mTestFile));
     }
 
     @Test
     public void malformedYAMLWithHeader() {
-        BufferedWriter writer;
+        BufferedWriter writer = null;
         try {
             mTestFile = File.createTempFile("pegasus", ".txt");
             writer = new BufferedWriter(new FileWriter(mTestFile));
             writer.write("pegasus: 5.0\n");
             writer.write("     jobs: \n");
             writer.write(" ted: { name: ted, age: 32, email: ted@tedtalks.com }\n");
+
             writer.close();
+            assertTrue(FileDetector.isTypeYAML(mTestFile));
         } catch (IOException ex) {
+        } finally {
+
+            mTestFile.delete();
         }
-        assertTrue(FileDetector.isTypeYAML(mTestFile));
     }
 
     @Test
     public void malformedYAMLWithYMLExtension() {
-        BufferedWriter writer;
+        BufferedWriter writer = null;
         try {
             // test file with yaml extension
             mTestFile = File.createTempFile("pegasus", ".yml");
@@ -73,27 +79,31 @@ public class FileDetectorTest {
             writer.write("     jobs: \n");
             writer.write(" ted: { name: ted, age: 32, email: ted@tedtalks.com }\n");
             writer.close();
+            assertTrue(FileDetector.isTypeYAML(mTestFile));
         } catch (IOException ex) {
+        } finally {
+            mTestFile.delete();
         }
-        assertTrue(FileDetector.isTypeYAML(mTestFile));
     }
 
     @Test
     public void checkForYAMLAgainstTextRC() {
-        BufferedWriter writer;
+        BufferedWriter writer = null;
         try {
             mTestFile = File.createTempFile("pegasus", ".txt");
             writer = new BufferedWriter(new FileWriter(mTestFile));
             writer.write("david.f.a gsiftp://hellboy.isi.edu/tmp/david.test pool=\"local\"n");
             writer.close();
+            assertFalse(FileDetector.isTypeYAML(mTestFile));
         } catch (IOException ex) {
+        } finally {
+            mTestFile.delete();
         }
-        assertFalse(FileDetector.isTypeYAML(mTestFile));
     }
 
     @Test
     public void checkForYAMLAgainstTextTC() {
-        BufferedWriter writer;
+        BufferedWriter writer = null;
         try {
             mTestFile = File.createTempFile("pegasus", ".txt");
             writer = new BufferedWriter(new FileWriter(mTestFile));
@@ -118,14 +128,17 @@ public class FileDetectorTest {
                             + "   }\n"
                             + "}\n");
             writer.close();
+            assertFalse(FileDetector.isTypeYAML(mTestFile));
         } catch (IOException ex) {
+        } finally {
+
+            mTestFile.delete();
         }
-        assertFalse(FileDetector.isTypeYAML(mTestFile));
     }
 
     @Test
     public void checkForYAMLAgainstXMLSC() {
-        BufferedWriter writer;
+        BufferedWriter writer = null;
         try {
             mTestFile = File.createTempFile("pegasus", ".txt");
             writer = new BufferedWriter(new FileWriter(mTestFile));
@@ -146,21 +159,27 @@ public class FileDetectorTest {
                             + "\n"
                             + "</sitecatalog>");
             writer.close();
+            assertFalse(FileDetector.isTypeYAML(mTestFile));
         } catch (IOException ex) {
+        } finally {
+
+            mTestFile.delete();
         }
-        assertFalse(FileDetector.isTypeYAML(mTestFile));
     }
 
     @Test
     public void checkForYAMLAgainstEmptyFile() {
-        BufferedWriter writer;
+        BufferedWriter writer = null;
         try {
             mTestFile = File.createTempFile("pegasus", ".txt");
             writer = new BufferedWriter(new FileWriter(mTestFile));
+            assertFalse(FileDetector.isTypeYAML(mTestFile));
             writer.close();
         } catch (IOException ex) {
+        } finally {
+
+            mTestFile.delete();
         }
-        assertFalse(FileDetector.isTypeYAML(mTestFile));
     }
 
     @After
