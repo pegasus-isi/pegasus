@@ -3946,9 +3946,9 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-            - key: T044A
-              name: 044-docker-nonsharedfs
-              description: nonsharedfs test with docker containers and executable staging
+            - key: T043G
+              name: 043-integrity-condorio-singularity
+              description: Integrity checking on for the whole workflow including associated singularity containers
               tasks:
                 - !script
                   description: Cleanup
@@ -3975,9 +3975,38 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-            - key: T043G
-              name: 043-integrity-condorio-singularity
-              description: Integrity checking on for the whole workflow including associated singularity containers
+            - key: T043H
+              name: 043-integrity-bypass-staging-b
+              description: nonsharedfs with containers and per file bypass on for files, executables and containers
+              tasks:
+                - !script
+                  description: Cleanup
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+                - capabilityKey: condor
+                  matchType: !exists exists
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
+            - key: T044A
+              name: 044-docker-nonsharedfs
+              description: nonsharedfs test with docker containers and executable staging
               tasks:
                 - !script
                   description: Cleanup
