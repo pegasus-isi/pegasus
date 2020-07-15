@@ -43,10 +43,10 @@ sc = SiteCatalog().add_sites(
     Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_directories(
         Directory(Directory.SHARED_SCRATCH, shared_scratch_dir).add_file_servers(
-            FileServer("file://" + shared_scratch_dir, Operation.ALL)
+            FileServer("gsiftp://bamboo.isi.edu/" + shared_scratch_dir, Operation.ALL)
         ),
         Directory(Directory.SHARED_STORAGE, shared_storage_dir).add_file_servers(
-            FileServer("file://" + shared_storage_dir, Operation.ALL)
+            FileServer("gsiftp://bamboo.isi.edu/" + shared_storage_dir, Operation.ALL)
         ),
     )
     .add_pegasus_profile(clusters_num=1),
