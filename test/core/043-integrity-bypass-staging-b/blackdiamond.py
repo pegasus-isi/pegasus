@@ -29,7 +29,7 @@ print("Generating pegasus.conf at: {}".format(TOP_DIR / "pegasus.properties"))
 
 conf = Properties()
 
-conf["pegasus.data.configuration"] = "condorio"
+conf["pegasus.data.configuration"] = "nonsharedfs"
 conf["pegasus.integrity.checking"] = "full"
 
 conf.write()
