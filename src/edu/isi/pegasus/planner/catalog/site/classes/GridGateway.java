@@ -51,15 +51,10 @@ public class GridGateway extends AbstractSiteData {
 
     /** An enumeration of valid types of grid gateway. */
     public static enum TYPE {
-        gt2,
-        gt4,
         gt5,
         condor,
         cream,
         batch,
-        pbs,
-        lsf,
-        sge,
         nordugrid,
         unicore,
         ec2,
@@ -83,7 +78,6 @@ public class GridGateway extends AbstractSiteData {
         condor,
         sge,
         slurm,
-        moab,
         unknown
     };
 
@@ -122,7 +116,7 @@ public class GridGateway extends AbstractSiteData {
 
     /** The default constructor. */
     public GridGateway() {
-        this(TYPE.gt2, "localhost/jobmanager-fork", SCHEDULER_TYPE.fork);
+        this(TYPE.gt5, "localhost/jobmanager-fork", SCHEDULER_TYPE.fork);
     }
 
     /**
