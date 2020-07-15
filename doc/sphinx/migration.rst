@@ -60,42 +60,6 @@ be used to generate a new Site Catalog programatically based on an existing XML 
 
 .. tabs::
 
-    .. tab:: sites.xml
-
-        .. code-block:: xml
-
-            <?xml version="1.0" encoding="UTF-8"?>
-            <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                        xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-                        version="4.0">
-
-                <site  handle="local" arch="x86_64" os="LINUX">
-                    <directory type="shared-scratch" path="/tmp/workflows/scratch">
-                        <file-server operation="all" url="file:///tmp/workflows/scratch"/>
-                    </directory>
-                    <directory type="local-storage" path="/tmp/workflows/outputs">
-                        <file-server operation="all" url="file:///tmp/workflows/outputs"/>
-                    </directory>
-                </site>
-
-                <site  handle="condor_pool" arch="x86_64" os="LINUX">
-                    <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/>
-                    <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
-                    <directory type="shared-scratch" path="/lustre">
-                        <file-server operation="all" url="gsiftp://smarty.isi.edu/lustre"/>
-                    </directory>
-                </site>
-
-                <site  handle="staging_site" arch="x86_64" os="LINUX">
-                    <directory type="shared-scratch" path="/data">
-                        <file-server operation="put" url="scp://obelix.isi.edu/data"/>
-                        <file-server operation="get" url="http://obelix.isi.edu/data"/>
-                    </directory>
-                </site>
-
-            </sitecatalog>  
-
     .. tab:: generate_sc.py
 
         .. code-block:: python
@@ -152,6 +116,43 @@ be used to generate a new Site Catalog programatically based on an existing XML 
             # write the site catalog to the default path "./sites.yml"
             sc.write()  
 
+    .. tab:: sites.xml
+
+        .. code-block:: xml
+
+            <?xml version="1.0" encoding="UTF-8"?>
+            <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                        xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
+                        version="4.0">
+
+                <site  handle="local" arch="x86_64" os="LINUX">
+                    <directory type="shared-scratch" path="/tmp/workflows/scratch">
+                        <file-server operation="all" url="file:///tmp/workflows/scratch"/>
+                    </directory>
+                    <directory type="local-storage" path="/tmp/workflows/outputs">
+                        <file-server operation="all" url="file:///tmp/workflows/outputs"/>
+                    </directory>
+                </site>
+
+                <site  handle="condor_pool" arch="x86_64" os="LINUX">
+                    <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/>
+                    <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
+                    <directory type="shared-scratch" path="/lustre">
+                        <file-server operation="all" url="gsiftp://smarty.isi.edu/lustre"/>
+                    </directory>
+                </site>
+
+                <site  handle="staging_site" arch="x86_64" os="LINUX">
+                    <directory type="shared-scratch" path="/data">
+                        <file-server operation="put" url="scp://obelix.isi.edu/data"/>
+                        <file-server operation="get" url="http://obelix.isi.edu/data"/>
+                    </directory>
+                </site>
+
+            </sitecatalog>  
+
+
 Replica Catalog
 ^^^^^^^^^^^^
 
@@ -167,14 +168,6 @@ Replica Catalog.
 
 .. tabs::
 
-    .. tab:: rc.txt
-        
-        .. code-block:: none
-
-            f.a file:///Volumes/data/inputs/f.a site="local"
-
-            f.b file:///Volumes/data/inputs/f.b site="local" 
-
     .. tab:: generate_rc.py
 
         .. code-block:: python
@@ -187,6 +180,15 @@ Replica Catalog.
                     .write()
 
             # the Replica Catalog will be written to the default path "./replicas.yml"
+
+    .. tab:: rc.txt
+        
+        .. code-block:: none
+
+            f.a file:///Volumes/data/inputs/f.a site="local"
+
+            f.b file:///Volumes/data/inputs/f.b site="local" 
+
 
 Transformation Catalog
 ^^^^^^^^^^^^
@@ -202,31 +204,6 @@ be used to generate a new Transformation Catalog programatically based on an
 existing text based Transformation Catalog.
 
 .. tabs:: 
-
-    .. tab:: tc.txt
-
-        .. code-block:: none
-
-            tr example::keg:1.0 {
-
-                profile env "APP_HOME" "/tmp/myscratch"
-                profile env "JAVA_HOME" "/opt/java/1.6"
-
-                site isi {
-                    pfn "/path/to/keg
-                    arch "x86"
-                    os "linux"
-                    type "INSTALLED"
-                    container "centos-pegasus"
-                }
-            }
-
-            cont centos-pegasus{
-                type "docker"
-                image "docker:///rynge/montage:latest"
-                mount "/Volumes/Work/lfs1:/shared-data/:ro"
-                profile env "JAVA_HOME" "/opt/java/1.6"
-            }
 
     .. tab:: generate_tc.py
 
@@ -263,6 +240,32 @@ existing text based Transformation Catalog.
             # write the transformation catalog to the default file path "./transformations.yml"
             tc.write()
 
+    .. tab:: tc.txt
+
+        .. code-block:: none
+
+            tr example::keg:1.0 {
+
+                profile env "APP_HOME" "/tmp/myscratch"
+                profile env "JAVA_HOME" "/opt/java/1.6"
+
+                site isi {
+                    pfn "/path/to/keg
+                    arch "x86"
+                    os "linux"
+                    type "INSTALLED"
+                    container "centos-pegasus"
+                }
+            }
+
+            cont centos-pegasus{
+                type "docker"
+                image "docker:///rynge/montage:latest"
+                mount "/Volumes/Work/lfs1:/shared-data/:ro"
+                profile env "JAVA_HOME" "/opt/java/1.6"
+            }
+
+
 Workflow (formerly DAX)
 -----------------------
 
@@ -279,93 +282,7 @@ representations of the classic *diamond* workflow.
 
 .. tabs::
 
-    .. tab:: Pegasus.DAX3
-
-        .. code-block:: python
-
-            #!/usr/bin/env python
-
-            from Pegasus.DAX3 import *
-            import sys
-            import os
-
-            if len(sys.argv) != 3:
-                print "Usage: %s PEGASUS_HOME SHARED_SCRATCH" % (sys.argv[0])
-                sys.exit(1)
-
-            # Create a abstract dag
-            diamond = ADAG("diamond")
-
-            # Add input file to the DAX-level replica catalog
-            a = File("f.a")
-            a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
-            diamond.addFile(a)
-
-            a1 = File("f.a1")
-            a1.addPFN(PFN("file://" + sys.argv[2] + "/f.a1", "condorpool"))
-            diamond.addFile(a1)
-                
-            # Add executables to the DAX-level replica catalog
-            # In this case the binary is pegasus-keg, which is shipped with Pegasus, so we use
-            # the remote PEGASUS_HOME to build the path.
-            e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
-            e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
-            diamond.addExecutable(e_preprocess)
-                
-            e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=False)
-            e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
-            diamond.addExecutable(e_findrange)
-                
-            e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=False)
-            e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
-            diamond.addExecutable(e_analyze)
-
-            # Add a preprocess job
-            preprocess = Job(namespace="diamond", name="preprocess", version="4.0")
-            b1 = File("f.b1")
-            b2 = File("f.b2")
-            preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-            preprocess.uses(a, link=Link.INPUT)
-            preprocess.uses(a1, link=Link.INPUT)
-            preprocess.uses(b1, link=Link.OUTPUT)
-            preprocess.uses(b2, link=Link.OUTPUT)
-            diamond.addJob(preprocess)
-
-            # Add left Findrange job
-            frl = Job(namespace="diamond", name="findrange", version="4.0")
-            c1 = File("f.c1")
-            frl.addArguments("-a findrange","-T6-","-i",b1,"-o",c1)
-            frl.uses(b1, link=Link.INPUT)
-            frl.uses(c1, link=Link.OUTPUT)
-            diamond.addJob(frl)
-
-            # Add right Findrange job
-            frr = Job(namespace="diamond", name="findrange", version="4.0")
-            c2 = File("f.c2")
-            frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-            frr.uses(b2, link=Link.INPUT)
-            frr.uses(c2, link=Link.OUTPUT)
-            diamond.addJob(frr)
-
-            # Add Analyze job
-            analyze = Job(namespace="diamond", name="analyze", version="4.0")
-            d = File("f.d")
-            analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-            analyze.uses(c1, link=Link.INPUT)
-            analyze.uses(c2, link=Link.INPUT)
-            analyze.uses(d, link=Link.OUTPUT, register=True)
-            diamond.addJob(analyze)
-
-            # Add control-flow dependencies
-            diamond.addDependency(Dependency(parent=preprocess, child=frl))
-            diamond.addDependency(Dependency(parent=preprocess, child=frr))
-            diamond.addDependency(Dependency(parent=frl, child=analyze))
-            diamond.addDependency(Dependency(parent=frr, child=analyze))
-
-            # Write the DAX to stdout
-            diamond.writeXML(sys.stdout)                
-
-    .. tab:: Pegasus.api
+   .. tab:: Pegasus.api
 
         .. code-block:: python
 
@@ -463,16 +380,98 @@ representations of the classic *diamond* workflow.
             except PegasusClientError as e:
                 print(e.output)
 
+
+   .. tab:: Pegasus.DAX3
+
+        .. code-block:: python
+
+            #!/usr/bin/env python
+
+            from Pegasus.DAX3 import *
+            import sys
+            import os
+
+            if len(sys.argv) != 3:
+                print "Usage: %s PEGASUS_HOME SHARED_SCRATCH" % (sys.argv[0])
+                sys.exit(1)
+
+            # Create a abstract dag
+            diamond = ADAG("diamond")
+
+            # Add input file to the DAX-level replica catalog
+            a = File("f.a")
+            a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
+            diamond.addFile(a)
+
+            a1 = File("f.a1")
+            a1.addPFN(PFN("file://" + sys.argv[2] + "/f.a1", "condorpool"))
+            diamond.addFile(a1)
+                
+            # Add executables to the DAX-level replica catalog
+            # In this case the binary is pegasus-keg, which is shipped with Pegasus, so we use
+            # the remote PEGASUS_HOME to build the path.
+            e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
+            e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
+            diamond.addExecutable(e_preprocess)
+                
+            e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=False)
+            e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
+            diamond.addExecutable(e_findrange)
+                
+            e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=False)
+            e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
+            diamond.addExecutable(e_analyze)
+
+            # Add a preprocess job
+            preprocess = Job(namespace="diamond", name="preprocess", version="4.0")
+            b1 = File("f.b1")
+            b2 = File("f.b2")
+            preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
+            preprocess.uses(a, link=Link.INPUT)
+            preprocess.uses(a1, link=Link.INPUT)
+            preprocess.uses(b1, link=Link.OUTPUT)
+            preprocess.uses(b2, link=Link.OUTPUT)
+            diamond.addJob(preprocess)
+
+            # Add left Findrange job
+            frl = Job(namespace="diamond", name="findrange", version="4.0")
+            c1 = File("f.c1")
+            frl.addArguments("-a findrange","-T6-","-i",b1,"-o",c1)
+            frl.uses(b1, link=Link.INPUT)
+            frl.uses(c1, link=Link.OUTPUT)
+            diamond.addJob(frl)
+
+            # Add right Findrange job
+            frr = Job(namespace="diamond", name="findrange", version="4.0")
+            c2 = File("f.c2")
+            frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
+            frr.uses(b2, link=Link.INPUT)
+            frr.uses(c2, link=Link.OUTPUT)
+            diamond.addJob(frr)
+
+            # Add Analyze job
+            analyze = Job(namespace="diamond", name="analyze", version="4.0")
+            d = File("f.d")
+            analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
+            analyze.uses(c1, link=Link.INPUT)
+            analyze.uses(c2, link=Link.INPUT)
+            analyze.uses(d, link=Link.OUTPUT, register=True)
+            diamond.addJob(analyze)
+
+            # Add control-flow dependencies
+            diamond.addDependency(Dependency(parent=preprocess, child=frl))
+            diamond.addDependency(Dependency(parent=preprocess, child=frr))
+            diamond.addDependency(Dependency(parent=frl, child=analyze))
+            diamond.addDependency(Dependency(parent=frr, child=analyze))
+
+            # Write the DAX to stdout
+            diamond.writeXML(sys.stdout)                
+
+
 To begin creating a workflow, you will first need to import the classes made
 available in ``Pegasus.api``. Simply replace ``DAX3`` with ``api``.
 
 .. tabs::
-
-    .. tab:: Pegasus.DAX3
-
-        .. code-block:: python
-
-            from Pegasus.DAX3 import *
 
     .. tab:: Pegasus.api
 
@@ -480,10 +479,24 @@ available in ``Pegasus.api``. Simply replace ``DAX3`` with ``api``.
 
             from Pegasus.api import *
 
+    .. tab:: Pegasus.DAX3
+
+        .. code-block:: python
+
+            from Pegasus.DAX3 import *
+
+
+
 The workflow object has been changed from ``ADAG`` to ``Workflow``. By default,
 job dependencies will be inferred based on job input and output files. 
 
 .. tabs::
+
+    .. tab:: Pegasus.api
+
+        .. code-block:: python
+
+            wf = Workflow("diamond")
 
     .. tab:: Pegasus.DAX3
 
@@ -491,11 +504,6 @@ job dependencies will be inferred based on job input and output files.
 
             diamond = ADAG("diamond")
 
-    .. tab:: Pegasus.api
-
-        .. code-block:: python
-
-            wf = Workflow("diamond")
 
 In DAX3, you were able to add files directly to the ``ADAG`` object. With the newer 5.0 api, 
 any file that has a physical file name (i.e. any initial input file to the workflow)
@@ -506,6 +514,14 @@ for ``pegasus-plan`` to pick up.
 
 .. tabs::
 
+    .. tab:: Pegasus.api
+
+        .. code-block:: python
+
+            fa = File("f.a").add_metadata(creator="ryan")
+            rc = ReplicaCatalog().add_replica("local", fa, Path(".").resolve() / "f.a")
+            wf.add_replica_catalog(rc)   
+
     .. tab:: Pegasus.DAX3
 
         .. code-block:: python
@@ -514,13 +530,6 @@ for ``pegasus-plan`` to pick up.
             a.addPFN(PFN("file://"+ os.getcwd() + "/f.a", "local"))
             diamond.addFile(a)
 
-    .. tab:: Pegasus.api
-
-        .. code-block:: python
-
-            fa = File("f.a").add_metadata(creator="ryan")
-            rc = ReplicaCatalog().add_replica("local", fa, Path(".").resolve() / "f.a")
-            wf.add_replica_catalog(rc)   
 
 In DAX3, you were also able to add executables directly to the ``ADAG`` object. In
 5.0, the way to do this is to first add them to a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`
@@ -534,14 +543,6 @@ you have the option to write this catalog out to a separate file for ``pegasus-p
 to pick up.
 
 .. tabs::
-
-    .. tab:: Pegasus.DAX3
-
-        .. code-block:: python
-
-            e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
-            e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
-            diamond.addExecutable(e_preprocess)
 
     .. tab:: Pegasus.api
 
@@ -559,11 +560,32 @@ to pick up.
             tc.add_transformations(preprocess)
             wf.add_transformation_catalog(tc)
 
+    .. tab:: Pegasus.DAX3
+
+        .. code-block:: python
+
+            e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
+            e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
+            diamond.addExecutable(e_preprocess)
+
+
 When specifying :py:class:`~Pegasus.api.workflow.AbstractJob` inputs and outputs, 
 simply add the :py:class:`~Pegasus.api.replica_catalog.File`\s as inputs or outputs.
 Unlike DAX3, you do not need to specify ``job.uses(..)`` as seen below. 
 
 .. tabs::
+
+    .. tab:: Pegasus.api
+
+        .. code-block:: python
+
+            fb1 = File("f.b1")
+            fb2 = File("f.b2")
+            job_preprocess = Job(preprocess)\
+                                .add_args("-a", "preprocess", "-T", "3", "-i", fa, "-o", fb1, fb2)\
+                                .add_inputs(fa)\
+                                .add_outputs(fb1, fb2)
+            wf.add_jobs(job_reprocess)
 
     .. tab:: Pegasus.DAX3
 
@@ -577,18 +599,6 @@ Unlike DAX3, you do not need to specify ``job.uses(..)`` as seen below.
             preprocess.uses(b1, link=Link.OUTPUT)
             preprocess.uses(b2, link=Link.OUTPUT)
             diamond.addJob(preprocess)
-
-    .. tab:: Pegasus.api
-
-        .. code-block:: python
-
-            fb1 = File("f.b1")
-            fb2 = File("f.b2")
-            job_preprocess = Job(preprocess)\
-                                .add_args("-a", "preprocess", "-T", "3", "-i", fa, "-o", fb1, fb2)\
-                                .add_inputs(fa)\
-                                .add_outputs(fb1, fb2)
-            wf.add_jobs(job_reprocess)
 
 
 Profile functionality remains the same in Pegasus 5.0 (see :py:class:`~Pegasus.api.mixins.ProfileMixin`). 
@@ -607,13 +617,6 @@ Profiles can be added to the following:
 
 .. tabs::
 
-    .. tab:: Pegasus.DAX3
-
-        .. code-block:: python
-
-            job.addProfile(Profile(Namespace.ENV,'PATH','/bin'))
-            job.profile(Namespace.CONDOR, "universe", "vanilla")
-
     .. tab:: Pegasus.api
 
         .. code-block:: python
@@ -628,6 +631,13 @@ Profiles can be added to the following:
             # When profile keys contain non-alphanumeric characters, you can use:
             job.add_profiles(Namespace.CONDOR, key="+KeyName", value="val")
 
+    .. tab:: Pegasus.DAX3
+
+        .. code-block:: python
+
+            job.addProfile(Profile(Namespace.ENV,'PATH','/bin'))
+            job.profile(Namespace.CONDOR, "universe", "vanilla")
+
 Metadata functionality also remains the same in Pegasus 5.0 (see :py:class:`~Pegasus.api.mixins.MetadataMixin`). 
 Metadata can be added to the following:
 
@@ -641,6 +651,12 @@ Metadata can be added to the following:
 
 .. tabs::
 
+    .. tab:: Pegasus.api
+
+        .. code-block:: python
+
+            preprocess.add_metadata(time=60, created_by="ryan")
+
     .. tab:: Pegasus.DAX3
 
         .. code-block:: python
@@ -648,11 +664,6 @@ Metadata can be added to the following:
             preprocess.metadata("time", "60")
             preprocess.metadata("created_by", "ryan")
 
-    .. tab:: Pegasus.api
-
-        .. code-block:: python
-
-            preprocess.add_metadata(time=60, created_by="ryan")
 
 Running Workflows
 -----------------
