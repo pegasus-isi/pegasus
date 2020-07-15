@@ -32,7 +32,7 @@ Example workflow generator using the Python API:
       f.write("This is sample input to KEG")
 
    fa = File("f.a").add_metadata(creator="ryan")
-   rc = ReplicaCatalog().add_replica("local", fa, Path(".") / "f.a")
+   rc = ReplicaCatalog().add_replica("local", fa, Path(".").resolve() / "f.a")
 
    # --- Transformations ----------------------------------------------------------
    preprocess = Transformation(
