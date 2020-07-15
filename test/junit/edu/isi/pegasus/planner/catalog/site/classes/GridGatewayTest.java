@@ -62,7 +62,7 @@ public class GridGatewayTest {
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         String expected =
                 "---\n"
-                        + "type: \"gt2\"\n"
+                        + "type: \"gt5\"\n"
                         + "contact: \"smarty.isi.edu/jobmanager-pbs\"\n"
                         + "scheduler: \"pbs\"\n"
                         + "jobtype: \"compute\"\n"
