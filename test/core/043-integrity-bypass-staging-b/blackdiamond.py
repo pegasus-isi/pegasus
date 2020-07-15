@@ -73,7 +73,7 @@ fa = File("f.a")
 rc = ReplicaCatalog().add_replica(
     LOCAL,
     fa,
-    "file://" + str(TOP_DIR / fa.lfn),
+    "gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/043-integrity-bypass-staging-b/" + fa.lfn,
     checksum={"sha256": readable_hash}
 )
 
@@ -163,7 +163,7 @@ try:
         verbose=3,
         relative_dir=RUN_ID,
         sites=[CONDOR_POOL],
-        staging_site=[CONDOR_POOL=LOCAL],
+        staging_sites={CONDOR_POOL:LOCAL},
         output_site=LOCAL,
         force=True,
         submit=True,
