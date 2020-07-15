@@ -107,7 +107,10 @@ public class DAX2Metadata implements Callback {
      * @param profile profile element of namespace metadata
      */
     public void cbMetadata(Profile p) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        // empty implementation as on the yaml parser calls this on
+        // encounter pegasus vendor extensions such as below
+        // x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '07-15-20T12:17:46Z'}
+
     }
 
     /**

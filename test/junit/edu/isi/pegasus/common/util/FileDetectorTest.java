@@ -50,6 +50,24 @@ public class FileDetectorTest {
     }
 
     @Test
+    public void simpleYAMLWithVendorExtensions() {
+        BufferedWriter writer = null;
+        try {
+            mTestFile = File.createTempFile("pegasus", ".txt");
+            writer = new BufferedWriter(new FileWriter(mTestFile));
+            writer.write(
+                    "x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '07-15-20T12:17:46Z'}\n");
+            writer.write("pegasus: '5.0'\n");
+            writer.write("name: blackdiamond");
+            writer.close();
+            assertTrue(FileDetector.isTypeYAML(mTestFile));
+        } catch (IOException ex) {
+        } finally {
+            mTestFile.delete();
+        }
+    }
+
+    @Test
     public void malformedYAMLWithHeader() {
         BufferedWriter writer = null;
         try {
