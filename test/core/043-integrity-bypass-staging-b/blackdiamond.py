@@ -16,12 +16,8 @@ RUN_ID = "black-diamond-integrity-checking-condorio-5.0api-" + datetime.now().st
     "%s"
 )
 TOP_DIR = Path(Path.cwd())
-WORK_DIR = TOP_DIR / "work"
+WORK_DIR = "/lizard/scratch-90-days/bamboo/${TEST_NAME}/work"
 
-try:
-    Path.mkdir(WORK_DIR)
-except FileExistsError:
-    pass
 
 # --- Configuration ------------------------------------------------------------
 
@@ -38,8 +34,8 @@ conf.write()
 LOCAL = "local"
 CONDOR_POOL = "condorpool"
 
-shared_scratch_dir = str(WORK_DIR / "LOCAL/shared-scratch")
-shared_storage_dir = str(WORK_DIR / "LOCAL/shared-storage")
+shared_scratch_dir = WORK_DIR + "/LOCAL/shared-scratch"
+shared_storage_dir = WORK_DIR + "/LOCAL/shared-storage"
 
 print("Generating site catalog")
 
@@ -159,7 +155,7 @@ try:
         .add_inputs(fc1, fc2)
         .add_outputs(fd, register_replica=True),
     ).add_site_catalog(sc).add_replica_catalog(rc).add_transformation_catalog(tc).plan(
-        dir=str(WORK_DIR),
+        dir=str(TOP_DIR / "dags"),
         verbose=3,
         relative_dir=RUN_ID,
         sites=[CONDOR_POOL],

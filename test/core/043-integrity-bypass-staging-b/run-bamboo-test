@@ -4,6 +4,14 @@ set -e
 set -o pipefail
 TOP_DIR=`pwd`
 
+# determine TEST_NAME to setup site catalog
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+fi
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+export TEST_NAME
+
 echo "Running blackdiamond.py"
 export PYTHONPATH=`pegasus-config --python`
 python3 blackdiamond.py 2>&1 | tee $TOP_DIR/plan.out
