@@ -85,7 +85,7 @@ public abstract class Abstract implements CredentialHandler {
      * @param path the path to the credential
      * @throws RuntimeException in case of being unable to verify credential.
      */
-    public void verifyCredential(Job job, CredentialHandler.TYPE type, String path) {
+    public void verify(Job job, CredentialHandler.TYPE type, String path) {
         Path credPath = Paths.get(path);
         // short circuit
         if (this.mVerifiedCredentials.contains(credPath)) {

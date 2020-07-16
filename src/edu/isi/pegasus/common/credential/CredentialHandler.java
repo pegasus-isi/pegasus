@@ -99,5 +99,5 @@ public interface CredentialHandler {
      * @param path the path to the credential
      * @throws RuntimeException in case of being unable to verify credential.
      */
-    public void verifyCredential(Job job, CredentialHandler.TYPE type, String path);
+    public void verify(Job job, CredentialHandler.TYPE type, String path);
 }
