@@ -23,6 +23,11 @@
 # Author: Mats Rynge <rynge@isi.edu>
 #
 
+# ensure we have a good working environment
+if [ "X$PATH" = "X" ]; then
+    PATH=/usr/bin:/bin
+    export PATH
+fi
 
 # a default used if no other worker packages can be found
 pegasus_lite_default_system="x86_64_rhel_7"
