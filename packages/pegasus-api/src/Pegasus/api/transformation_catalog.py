@@ -1,5 +1,6 @@
 from collections import OrderedDict, defaultdict
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from .errors import DuplicateError
@@ -162,7 +163,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
     def __init__(
         self,
         name: str,
-        pfn: str,
+        pfn: Union[str, Path],
         is_stageable: bool = False,
         bypass_staging: bool = False,
         arch: Optional[Arch] = None,
@@ -174,8 +175,8 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         """
         :param name: name of the site at which this :py:class:`~Pegasus.api.transformation_catalog.Transformation` resides
         :type name: str
-        :param pfn: physical file name
-        :type pfn: str
+        :param pfn: physical file name, an absolute path given as a str or Path
+        :type pfn: Union[str, Path]
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
         :type type: bool, optional
         :param bypass_staging: whether or not to bypass the stage in job of this executable (Note that this only works for transformations where :code:`is_stageable=False`), defaults to False
@@ -192,10 +193,22 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :type container: Optional[Union[Container, str]], optional
         :raises TypeError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises TypeError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
+        :raises ValueError: pfn must be given as an absolute path when :code:`pathlib.Path` is used
         :raises ValueError: :code:`bypass_staging=True` can only be used when :code:`is_stageable=True`
         """
 
         self.name = name
+
+        if isinstance(pfn, Path):
+            if not pfn.is_absolute():
+                raise ValueError(
+                    "invalid pfn: {}, the given pfn must be an absolute path".format(
+                        str(pfn)
+                    )
+                )
+
+            pfn = str(pfn)
+
         self.pfn = pfn
         self.transformation_type = "stageable" if is_stageable else "installed"
 
@@ -284,7 +297,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         namespace: Optional[str] = None,
         version: Optional[str] = None,
         site: Optional[str] = None,
-        pfn: Optional[str] = None,
+        pfn: Optional[Union[str, Path]] = None,
         is_stageable: bool = False,
         bypass_staging: bool = False,
         arch: Optional[Arch] = None,
@@ -344,7 +357,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :param site: a :py:class:`~Pegasus.api.site_catalog.Site` specified in the :py:class:`~Pegasus.api.site_catalog.SiteCatalog` on which this transformation resides, defaults to None
         :type site: Optional[str]
         :param pfn: the physical filename of this transformation (e.g. :code:`"/usr/bin/tar"`), defaults to None
-        :type pfn: Optional[str]
+        :type pfn: Optional[Union[str, Path]]
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
         :type type: bool, optional
         :param bypass_staging: whether or not to bypass the stage in job of this executable (Note that this only works for transformations where :code:`is_stageable=False`), defaults to False
@@ -365,6 +378,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :raises TypeError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises TypeError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
         :raises ValueError: fields: namespace, name, and field must not contain any :code:`:` (colons)
+        :raises ValueError: pfn must be given as an absolute path when :code:`pathlib.Path` is used
         :raises ValueError: :code:`bypass_staging=True` can only be used when :code:`is_stageable=True`
         """
 

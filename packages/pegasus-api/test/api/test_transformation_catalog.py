@@ -155,6 +155,12 @@ class TestTransformationSite:
             "bypass_staging can only be used when is_stageable is set to True" in str(e)
         )
 
+    def test_invalid_pfn(self):
+        with pytest.raises(ValueError) as e:
+            TransformationSite("local", Path("."), False)
+
+        assert "invalid pfn" in str(e)
+
     @pytest.mark.parametrize(
         "transformation_site, expected_json",
         [
@@ -164,6 +170,10 @@ class TestTransformationSite:
             ),
             (
                 TransformationSite("local", "/pfn", True, bypass_staging=True),
+                {"name": "local", "pfn": "/pfn", "type": "stageable", "bypass": True},
+            ),
+            (
+                TransformationSite("local", Path("/pfn"), True, bypass_staging=True),
                 {"name": "local", "pfn": "/pfn", "type": "stageable", "bypass": True},
             ),
             (
@@ -281,6 +291,14 @@ class TestTransformation:
             Transformation("tr", checksum={"md5": "abc123"})
 
         assert "invalid checksum: md5" in str(e)
+
+    def test_invalid_pfn(self):
+        with pytest.raises(ValueError) as e:
+            Transformation(
+                "executable", site="local", pfn=Path("."), is_stageable=False
+            )
+
+        assert "invalid pfn" in str(e)
 
     def test_add_single_tranformation_site_constructor(self):
         t1 = Transformation("t1")

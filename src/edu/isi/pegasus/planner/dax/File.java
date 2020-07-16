@@ -512,15 +512,6 @@ public class File extends CatalogType {
             // lfn
             gen.writeStringField("lfn", f.mName);
 
-            // metadata
-            if (!f.mMetadata.isEmpty()) {
-                gen.writeArrayFieldStart("metadata");
-                for (MetaData m : f.mMetadata) {
-                    gen.writeObject(m);
-                }
-                gen.writeEndArray();
-            }
-
             // type
             gen.writeStringField("type", f.mLink.toString().toLowerCase());
 

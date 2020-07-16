@@ -1221,11 +1221,12 @@ public class ADAG {
 
             // metadata
             if (!adag.mMetaDataAttributes.isEmpty()) {
-                gen.writeArrayFieldStart("metadata");
+                Map<String, String> md = new HashMap<>();
                 for (MetaData m : adag.mMetaDataAttributes) {
-                    gen.writeObject(m);
+                    md.put(m.getKey(), m.getValue());
                 }
-                gen.writeEndArray();
+                gen.writeFieldName("metadata");
+                gen.writeObject(md);
             }
 
             // replica catalog if specified
@@ -1261,15 +1262,6 @@ public class ADAG {
                 }
                 gen.writeEndArray();
                 gen.writeEndObject();
-            }
-
-            // metadata
-            if (!adag.mMetaDataAttributes.isEmpty()) {
-                gen.writeArrayFieldStart("metadata");
-                for (MetaData m : adag.mMetaDataAttributes) {
-                    gen.writeObject(m);
-                }
-                gen.writeEndArray();
             }
 
             // jobs

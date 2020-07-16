@@ -2,6 +2,7 @@ import json
 from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import wraps
+from pathlib import Path
 from typing import Dict, List, Optional, TextIO, Union
 
 from ._utils import _chained, _get_enum_str
@@ -764,9 +765,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         sites: Optional[List[str]] = None,
         output_sites: List[str] = ["local"],
         staging_sites: Optional[Dict[str, str]] = None,
-        input_dirs: Optional[List[str]] = None,
-        output_dir: Optional[str] = None,
-        dir: Optional[str] = None,
+        input_dirs: Optional[List[Union[str, Path]]] = None,
+        output_dir: Optional[Union[str, Path]] = None,
+        dir: Optional[Union[str, Path]] = None,
         relative_dir: Optional[str] = None,
         cleanup: str = "inplace",
         verbose: int = 0,
@@ -794,11 +795,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :param staging_sites: key, value pairs of execution site to staging site mappings such as :code:`{"condorpool": "staging-site"}`, defaults to None
         :type staging_sites: Optional[Dict[str,str]]
         :param input_dirs: comma separated list of optional input directories where the input files reside on submit host, defaults to None
-        :type input_dirs: Optional[List[str]]
+        :type input_dirs: Optional[List[Union[str, Path]]]
         :param output_dir: an optional output directory where the output files should be transferred to on submit host, defaults to None
-        :type output_dir: Optional[str]
+        :type output_dir: Optional[Union[str, Path]]
         :param dir: the directory where to generate the executable workflow, defaults to None
-        :type dir: Optional[str]
+        :type dir: Optional[Union[str, Path]]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
         :type relative_dir: Optional[str]
         :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
@@ -824,9 +825,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             sites=sites,
             output_sites=output_sites,
             staging_sites=staging_sites,
-            input_dirs=input_dirs,
-            output_dir=output_dir,
-            dir=dir,
+            input_dirs=[str(_dir) for _dir in input_dirs] if input_dirs else None,
+            output_dir=str(output_dir) if output_dir else None,
+            dir=str(dir) if dir else None,
             relative_dir=relative_dir,
             cleanup=cleanup,
             verbose=verbose,
