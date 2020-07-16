@@ -13,6 +13,7 @@
  */
 package edu.isi.pegasus.common.credential;
 
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
@@ -89,4 +90,14 @@ public interface CredentialHandler {
      * @return
      */
     public String getBaseName(String site);
+
+    /**
+     * Verify a local credential accessible via path specified
+     *
+     * @param job the job with which the credential is associated
+     * @param type the type of credential
+     * @param path the path to the credential
+     * @throws RuntimeException in case of being unable to verify credential.
+     */
+    public void verifyCredential(Job job, CredentialHandler.TYPE type, String path);
 }

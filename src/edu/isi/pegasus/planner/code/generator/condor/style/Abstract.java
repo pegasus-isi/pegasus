@@ -164,6 +164,9 @@ public abstract class Abstract implements CondorStyle {
                     this.complainForCredential(job, handler.getProfileKey(), siteHandle);
                 }
 
+                // PM-1150 verify credential
+                handler.verifyCredential(job, credType, credentialPath);
+
                 switch (credType) {
                     case x509:
                         // check if x509userproxy not already set. can be set
@@ -252,6 +255,10 @@ public abstract class Abstract implements CondorStyle {
                         if (path == null) {
                             this.complainForCredential(job, handler.getProfileKey(), siteHandle);
                         }
+
+                        // PM-1150 verify credential
+                        handler.verifyCredential(job, credType, path);
+
                         // PM-1358 check if local credential path is valid or not
                         if (this.localCredentialPathValid(path)) {
                             job.envVariables.construct(
@@ -308,6 +315,7 @@ public abstract class Abstract implements CondorStyle {
                         // flag an error
                         this.complainForMountUnderScratch(job, path);
                     }
+                    handler.verifyCredential(job, cred, path);
                 }
                 job.condorVariables.construct(Condor.X509USERPROXY_KEY, path);
                 break;
