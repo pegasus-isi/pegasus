@@ -1242,11 +1242,48 @@ class TestWorkflow:
 
         os.remove(path)
 
+    def test_Path_args_parsed_correctly_in_plan(self, wf, mocker):
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+        mocker.patch("Pegasus.client._client.Client.plan")
+
+        path = "wf.yml"
+        wf.write(path).plan(
+            input_dirs=["/path1", Path("/path2")],
+            output_dir=Path("/output_dir"),
+            relative_dir="run1",
+            dir=Path("/dir"),
+        )
+
+        assert wf._path == path
+
+        Pegasus.client._client.Client.plan.assert_called_once_with(
+            abstract_workflow=path,
+            cleanup="inplace",
+            conf=None,
+            dir="/dir",
+            force=False,
+            input_dirs=["/path1", "/path2"],
+            output_dir="/output_dir",
+            output_sites=["local"],
+            relative_dir="run1",
+            sites=None,
+            staging_sites=None,
+            submit=False,
+            verbose=0,
+        )
+
+        os.remove(path)
+
     def test_plan_workflow_not_written(self, wf, mocker):
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
         mocker.patch("Pegasus.client._client.Client.plan")
 
-        wf.plan()
+        wf.plan(
+            dir="/dir",
+            relative_dir="run1",
+            input_dirs=["/dir1", "/dir2"],
+            output_dir="/out",
+        )
 
         assert wf._path == DEFAULT_WF_PATH
 
@@ -1254,12 +1291,12 @@ class TestWorkflow:
             abstract_workflow=DEFAULT_WF_PATH,
             cleanup="inplace",
             conf=None,
-            dir=None,
+            dir="/dir",
             force=False,
-            input_dirs=None,
-            output_dir=None,
+            input_dirs=["/dir1", "/dir2"],
+            output_dir="/out",
             output_sites=["local"],
-            relative_dir=None,
+            relative_dir="run1",
             sites=None,
             staging_sites=None,
             submit=False,
