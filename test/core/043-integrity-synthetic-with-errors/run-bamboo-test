@@ -11,7 +11,7 @@ export PYTHONPATH=`pegasus-config --python`
 # site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.2">
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.2.xsd" version="4.2">
     <site handle="local">
         <directory  path="${TOPDIR}/LOCAL/shared-scratch" type="shared-scratch">
             <file-server  operation="all" url="file:///${TOPDIR}/LOCAL/shared-scratch" />

@@ -28,7 +28,7 @@ def add_level(level_id, num_jobs, input_files, final_outputs):
 
     print("Level " + str(level_id) + ": " + str(inputs_per_job) + " inputs per job")
 
-    exe = Executable(name="level" + str(level_id), installed=False)
+    exe = Executable(name="level" + str(level_id), installed=False, arch="x86_64")
     exe.addPFN(PFN("file://" + os.getcwd() + "/job.sh", "local"))
     wf.addExecutable(exe)
 
