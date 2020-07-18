@@ -62,6 +62,7 @@ pegasus-plan \
     --dir work \
     --cleanup leaf \
     --submit \
+    --randomdir \
     blackdiamond.dax \
     | tee plan.out
 

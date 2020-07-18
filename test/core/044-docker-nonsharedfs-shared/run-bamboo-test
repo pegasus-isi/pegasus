@@ -47,4 +47,5 @@ pegasus-plan \
     --force \
     -v \
     --submit \
+    --randomdir \
     blackdiamond.dax 
