@@ -64,6 +64,7 @@ pegasus-plan \
     --output-sites local \
     --cleanup leaf \
     --submit \
+    --randomdir \
     blackdiamond.dax \
     | tee plan.out
 
