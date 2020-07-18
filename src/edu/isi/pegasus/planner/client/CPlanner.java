@@ -1162,11 +1162,12 @@ public class CPlanner extends Executable {
                         "\n --staging-site        comma separated list of key=value pairs , where the key is the execution site and value is the")
                 .append("\n                       staging site for that execution site.")
                 .append(
-                        "\n -r |--randomdir       create random directories on remote execution sites in which jobs are executed")
+                        "\n -r |--randomdir       create random directories based on workflow label and the workflow uuid (listed in the ")
+                .append("\n                       braindump file) on remote staging sites where data transfer jobs for the workflow are executed.")
+                .append("\n                       If the basename option is set, then instead of the workflow label, the basename is used for")
+                .append("\n                       generating the random directory name along with the workflow uuid.")
                 // "\n --rescue           the number of times rescue dag should be submitted for sub
                 // workflows before triggering re-planning" +
-                .append(
-                        "\n                       can optionally specify the basename of the remote directories")
                 .append("\n -S |--submit          submit the executable workflow generated")
                 .append(
                         "\n --staging-site        comma separated list of key=value pairs, where key is the execution site and value is the")

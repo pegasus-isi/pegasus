@@ -341,17 +341,21 @@ Any option will be displayed with its long options synonym(s).
    Decreases the logging level.
 
 **-r**\ [*dirname*]; \ **--randomdir**\ [=*dirname*]
-   Pegasus Worfklow Planner adds create directory jobs to the executable
-   workflow that create a directory in which all jobs for that workflow
-   execute on a particular site. The directory created is in the working
-   directory (specified in the site catalog with each site).
+   Pegasus Workflow Planner adds create directory jobs to the executable
+   workflow that create a directory on the staging sites associated with
+   the execution sites on which the workflow executes. The directory
+   created is in the working directory for the staging site (specified
+   in the site catalog with each site). By default, Pegasus duplicates
+   the relative directory structure on the submit host on the remote site.
 
-   By default, Pegasus duplicates the relative directory structure on
-   the submit host on the remote site. The user can specify this option
-   without arguments to create a random timestamp based name for the
-   execution directory that are created by the create dir jobs. The user
-   can can specify the optional argument to this option to specify the
-   basename of the directory that is to be created.
+   This option creates random directories based on workflow label and
+   the workflow uuid (listed in the braindump file in the sumit directory)
+   on the remote staging sites where data transfer jobs for the workflow
+   are executed. If the basename option is set, then instead of the
+   workflow label, the basename is used for generating the random
+   directory name along with the workflow uuid. The user can also
+   specify the optional argument to this option to specify the
+   the relative directory that is to be created.
 
    The create dir jobs refer to the **dirmanager** executable that is
    shipped as part of the PEGASUS worker package. The transformation
