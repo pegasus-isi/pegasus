@@ -1017,12 +1017,14 @@ public class CPlanner extends Executable {
             // the prefix is not null using it
             sb.append(bprefix);
             sb.append("-");
-            // append timestamp to generate some uniqueness
-            sb.append(dag.getFlowTimestamp());
+
         } else {
-            // use the flow ID that contains the timestamp and the name both.
-            sb.append(dag.getFlowID());
+            // use the flow name that contains dax name and index both
+            sb.append(dag.getFlowName()).append("-");
         }
+        // PM-1324 For 5.0 the --randomdir option isb updated to generate w
+        // workflow uuid based names to create the scratch directories on the staging site.
+        sb.append(dag.getWorkflowUUID());
         return sb.toString();
     }
 
