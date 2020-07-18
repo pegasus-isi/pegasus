@@ -761,6 +761,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_client
     def plan(
         self,
+        *,
         conf: Optional[str] = None,
         sites: Optional[List[str]] = None,
         output_sites: List[str] = ["local"],
@@ -769,6 +770,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         output_dir: Optional[Union[str, Path]] = None,
         dir: Optional[Union[str, Path]] = None,
         relative_dir: Optional[str] = None,
+        random_dir: Union[bool, str, Path] = False,
         cleanup: str = "inplace",
         verbose: int = 0,
         force: bool = False,
@@ -776,7 +778,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         **kwargs
     ):
         """
-        plan(self, conf: Optional[str] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, cleanup: str = "inplace", verbose: int = 0, force: bool = False, submit: bool = False, **kwargs)
+        plan(self, conf: Optional[str] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, random_dir: Union[bool, str, Path] = False, cleanup: str = "inplace", verbose: int = 0, force: bool = False, submit: bool = False, **kwargs)
         Plan the workflow.
 
         .. code-block:: python
@@ -802,6 +804,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type dir: Optional[Union[str, Path]]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
         :type relative_dir: Optional[str]
+        :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`pathlib.Path`, then that will be used as the basename of the directory that is to be created, defaults to False 
+        :type random_dir: Union[bool, str, Path], optional
         :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
         :type cleanup: str, optional
         :param verbose: verbosity, defaults to 0
@@ -829,6 +833,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             output_dir=str(output_dir) if output_dir else None,
             dir=str(dir) if dir else None,
             relative_dir=relative_dir,
+            random_dir=random_dir if isinstance(random_dir, bool) else str(random_dir),
             cleanup=cleanup,
             verbose=verbose,
             force=force,
@@ -841,7 +846,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
     @_chained
     @_needs_client
-    def run(self, verbose: int = 0, json: bool = False):
+    def run(self, *, verbose: int = 0, json: bool = False):
         """
         run(self, verbose: int = 0, json: bool = False)
         Run the planned workflow.
@@ -858,7 +863,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def status(self, long: bool = False, verbose: int = 0):
+    def status(self, *, long: bool = False, verbose: int = 0):
         """
         status(self, long: bool = False, verbose: int = 0)
         Monitor the workflow by quering Condor and directories.
@@ -876,7 +881,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def wait(self, delay: int = 2):
+    def wait(self, *, delay: int = 2):
         """
         wait(self, delay: int = 2)
         Displays progress bar to stdout and blocks until the workflow either
@@ -893,7 +898,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def remove(self, verbose: int = 0):
+    def remove(self, *, verbose: int = 0):
         """
         remove(self, verbose: int = 0)
         Removes this workflow that has been planned and submitted.
@@ -908,7 +913,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def analyze(self, verbose: int = 0):
+    def analyze(self, *, verbose: int = 0):
         """
         analyze(self, verbose: int = 0)
         Debug a workflow.
@@ -925,7 +930,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def statistics(self, verbose: int = 0):
+    def statistics(self, *, verbose: int = 0):
         """
         statistics(self, verbose: int = 0)
         Generate statistics about the workflow run.

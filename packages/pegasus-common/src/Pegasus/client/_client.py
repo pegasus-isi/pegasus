@@ -7,7 +7,7 @@ import time
 from functools import partial
 from os import path
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from Pegasus import braindump, yaml
 
@@ -74,6 +74,7 @@ class Client:
         output_dir: str = None,
         dir: str = None,
         relative_dir: str = None,
+        random_dir: Union[bool, str] = False,
         cleanup: str = "none",
         verbose: int = 0,
         force: bool = False,
@@ -138,6 +139,12 @@ class Client:
 
         if relative_dir:
             cmd.extend(("--relative-dir", relative_dir))
+
+        if random_dir:
+            if random_dir == True:
+                cmd.append("--randomdir")
+            else:
+                cmd.append("--randomdir={}".format(random_dir))
 
         if cleanup:
             cmd.extend(("--cleanup", cleanup))

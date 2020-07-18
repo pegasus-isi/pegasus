@@ -1234,6 +1234,7 @@ class TestWorkflow:
             output_dir=None,
             output_sites=["local"],
             relative_dir=None,
+            random_dir=False,
             sites=None,
             staging_sites=None,
             submit=False,
@@ -1266,11 +1267,89 @@ class TestWorkflow:
             output_dir="/output_dir",
             output_sites=["local"],
             relative_dir="run1",
+            random_dir=False,
             sites=None,
             staging_sites=None,
             submit=False,
             verbose=0,
         )
+
+        os.remove(path)
+
+    @pytest.mark.parametrize(
+        "random_dir, expected_kwargs",
+        [
+            (
+                True,
+                {
+                    "abstract_workflow": "wf.yml",
+                    "cleanup": "inplace",
+                    "conf": None,
+                    "dir": None,
+                    "force": False,
+                    "input_dirs": None,
+                    "output_dir": None,
+                    "output_sites": ["local"],
+                    "relative_dir": None,
+                    "random_dir": True,
+                    "sites": None,
+                    "staging_sites": None,
+                    "submit": False,
+                    "verbose": 0,
+                },
+            ),
+            (
+                "/path/to/dir",
+                {
+                    "abstract_workflow": "wf.yml",
+                    "cleanup": "inplace",
+                    "conf": None,
+                    "dir": None,
+                    "force": False,
+                    "input_dirs": None,
+                    "output_dir": None,
+                    "output_sites": ["local"],
+                    "relative_dir": None,
+                    "random_dir": "/path/to/dir",
+                    "sites": None,
+                    "staging_sites": None,
+                    "submit": False,
+                    "verbose": 0,
+                },
+            ),
+            (
+                Path("/path/to/dir"),
+                {
+                    "abstract_workflow": "wf.yml",
+                    "cleanup": "inplace",
+                    "conf": None,
+                    "dir": None,
+                    "force": False,
+                    "input_dirs": None,
+                    "output_dir": None,
+                    "output_sites": ["local"],
+                    "relative_dir": None,
+                    "random_dir": "/path/to/dir",
+                    "sites": None,
+                    "staging_sites": None,
+                    "submit": False,
+                    "verbose": 0,
+                },
+            ),
+        ],
+    )
+    def test_random_dir_option_correctly_parsed_in_plan(
+        self, wf, mocker, random_dir, expected_kwargs
+    ):
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+        mocker.patch("Pegasus.client._client.Client.plan")
+
+        path = "wf.yml"
+        wf.write(path).plan(random_dir=random_dir)
+
+        assert wf._path == path
+
+        Pegasus.client._client.Client.plan.assert_called_once_with(**expected_kwargs)
 
         os.remove(path)
 
@@ -1297,6 +1376,7 @@ class TestWorkflow:
             output_dir="/out",
             output_sites=["local"],
             relative_dir="run1",
+            random_dir=False,
             sites=None,
             staging_sites=None,
             submit=False,
