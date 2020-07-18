@@ -233,7 +233,7 @@ class ReplicaCatalog(Writable):
         :param lfn: logical file name
         :type lfn: Union[str, File]
         :param pfn: physical file name such as :code:`Path("f.txt").resolve()`, :code:`/home/ryan/file.txt`, or :code:`http://pegasus.isi.edu/file.txt`
-        :type pfn: str
+        :type pfn: Union[str, Path]
         :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as :code:`{"sha256": <value>}`, defaults to :code:`{}`
         :type checksum: Dict[str, str], optional
         :param metadata: metadata key value pairs associated with this lfn such as :code:`{"created": "Thu Jun 18 22:18:36 PDT 2020", "owner": "pegasus"}`, defaults to :code:`{}`
