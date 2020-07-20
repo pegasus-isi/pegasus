@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.code.generator.condor.style.GLite;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -240,13 +241,24 @@ public class Condor implements SLS {
                 || !(style.equals(Pegasus.CONDOR_STYLE)
                         || style.equals(Pegasus.GLIDEIN_STYLE)
                         || style.equals(Pegasus.CONDORC_STYLE)
-                        || style.equals(Pegasus.CREAMCE_STYLE)
-                        || style.equals(Pegasus.GLITE_STYLE))) {
+                        || style.equals(Pegasus.CREAMCE_STYLE))) {
 
-            mLogger.log(
-                    "Invalid style " + style + " for the job " + job.getName(),
-                    LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
+            boolean invalid = true;
+            if (style != null && style.equals(Pegasus.GLITE_STYLE)) {
+                // PM-1539 we allow for condor file transfers for panda gahp
+                // since they are supported in it
+                String gridResource = GLite.getGridResource(job);
+                if (gridResource != null
+                        && gridResource.startsWith(GLite.PANDA_GRID_RESOURCE_PREFIX)) {
+                    invalid = false;
+                }
+            }
+            if (invalid) {
+                mLogger.log(
+                        "Invalid style " + style + " for the job " + job.getName(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+                return false;
+            }
         }
 
         // remove any directory. let condor figure it out
