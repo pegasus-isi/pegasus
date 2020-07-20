@@ -110,6 +110,12 @@ public class GLite extends Abstract {
 
     public static final String PBS_GRID_RESOURCE = "pbs";
 
+    /** the panda grid resource */
+    public static String PANDA_GRID_RESOURCE_PREFIX = "panda";
+
+    /** the panda grid resource */
+    public static String BATCH_GRID_RESOURCE_PREFIX = "batch";
+
     /**
      * The internal mapping of globus keys to BLAHP directives.
      *
@@ -129,9 +135,6 @@ public class GLite extends Abstract {
         {Globus.MAX_WALLTIME_KEY, "+BatchWallclock"} // pegasus.runtime specify in seconds
     };
 
-    /** the panda grid resource */
-    public static String PANDA_GRID_RESOURCE_PREFIX = "panda";
-
     /**
      * Convenience method to retrieve the batch system associated with a grid_resource entry.
      *
@@ -139,8 +142,16 @@ public class GLite extends Abstract {
      * @return the batch system. If not found returns null
      */
     public static final String getBatchSystem(Job job) {
-        /* figure out the remote scheduler. should be specified with the job*/
-        String gridResource = GLite.getGridResource(job);
+        return GLite.getBatchSystem(job, GLite.getGridResource(job));
+    }
+
+    /**
+     * Convenience method to retrieve the batch system associated with a grid_resource entry.
+     *
+     * @param job
+     * @return the batch system. If not found returns null
+     */
+    public static final String getBatchSystem(Job job, String gridResource) {
         if (gridResource == null) {
             return null;
         }
@@ -245,20 +256,31 @@ public class GLite extends Abstract {
         /* universe is always set to grid*/
         job.condorVariables.construct(Condor.UNIVERSE_KEY, Condor.GRID_UNIVERSE);
 
-        String batchSystem = GLite.getBatchSystem(job);
-        if (batchSystem == null) {
+        String gridResource = GLite.getGridResource(job);
+        if (gridResource == null) {
             throw new CondorStyleException(missingKeyError(job, Condor.GRID_RESOURCE_KEY));
         }
 
+        String batchSystem = GLite.getBatchSystem(job, gridResource);
         if (!supportedBatchSystem(batchSystem)) {
             // if it is not one of the support types, log a warning but use PBS.
             mLogger.log(
-                    "Glite mode supports only pbs, sge , slurm, moab or cobalt submission. Will use PBS style attributes for job "
+                    "Glite mode supports only pbs, sge, slurm, moab or cobalt submission. Will use PBS style attributes for job "
                             + job.getID()
                             + " with grid resource "
-                            + GLite.getGridResource(job),
+                            + gridResource,
                     LogManager.WARNING_MESSAGE_LEVEL);
             batchSystem = "pbs";
+        }
+
+        if (gridResource.startsWith(GLite.PANDA_GRID_RESOURCE_PREFIX)) {
+            // PM-1539 at the moment condor does not support grid resource of type
+            // panda . so we revert the grid resoure back to batch
+            gridResource =
+                    gridResource.replaceAll(
+                            "^" + GLite.PANDA_GRID_RESOURCE_PREFIX,
+                            GLite.BATCH_GRID_RESOURCE_PREFIX);
+            job.condorVariables.construct(Condor.GRID_RESOURCE_KEY, gridResource);
         }
 
         job.condorVariables.construct(
