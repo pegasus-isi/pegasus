@@ -21,12 +21,12 @@ Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, python36-PyYA
 %global __python %{python3}
 
 BuildRequires:  java-devel = 1:1.8.0, python36-pyOpenSSL, python36-PyYAML, python3-devel, python3-setuptools
-Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, python36-pika, python36-PyYAML, python36-attrs
+Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, python36-pika, python36-PyYAML
 %endif
 
 %if 0%{?rhel} >= 8
 BuildRequires:  java-11-openjdk-devel, python3-pyOpenSSL, python3-PyYAML, python3-devel, python3-setuptools
-Requires:       jre-11-openjdk-headless, python3, condor >= 8.8, graphviz, python3-pyOpenSSL, python3-pika, python3-PyYAML, python3-attrs
+Requires:       jre-11-openjdk-headless, python3, condor >= 8.8, graphviz, python3-pyOpenSSL, python3-pika, python3-PyYAML
 %endif
 
 %define sourcedir %{name}-%{version}
