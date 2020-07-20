@@ -434,7 +434,7 @@ class AMQPEventSink(EventSink):
                         "Connection to %s:%s was closed - Will try to recover the connection"
                         % (self._params.host, self._params.port)
                     )
-                    time.sleep((2**reconnect_attempts)*10)
+                    time.sleep((2 ** reconnect_attempts) * 10)
                     continue
 
         if not self._conn is None:

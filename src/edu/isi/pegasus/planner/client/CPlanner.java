@@ -1163,9 +1163,12 @@ public class CPlanner extends Executable {
                 .append("\n                       staging site for that execution site.")
                 .append(
                         "\n -r |--randomdir       create random directories based on workflow label and the workflow uuid (listed in the ")
-                .append("\n                       braindump file) on remote staging sites where data transfer jobs for the workflow are executed.")
-                .append("\n                       If the basename option is set, then instead of the workflow label, the basename is used for")
-                .append("\n                       generating the random directory name along with the workflow uuid.")
+                .append(
+                        "\n                       braindump file) on remote staging sites where data transfer jobs for the workflow are executed.")
+                .append(
+                        "\n                       If the basename option is set, then instead of the workflow label, the basename is used for")
+                .append(
+                        "\n                       generating the random directory name along with the workflow uuid.")
                 // "\n --rescue           the number of times rescue dag should be submitted for sub
                 // workflows before triggering re-planning" +
                 .append("\n -S |--submit          submit the executable workflow generated")
