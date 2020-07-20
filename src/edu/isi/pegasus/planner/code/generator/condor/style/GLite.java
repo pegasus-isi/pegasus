@@ -129,6 +129,9 @@ public class GLite extends Abstract {
         {Globus.MAX_WALLTIME_KEY, "+BatchWallclock"} // pegasus.runtime specify in seconds
     };
 
+    /** the panda grid resource */
+    public static String PANDA_GRID_RESOURCE_PREFIX = "panda";
+
     /**
      * Convenience method to retrieve the batch system associated with a grid_resource entry.
      *
@@ -144,7 +147,7 @@ public class GLite extends Abstract {
 
         // Sample grid resource constructed for bosco/ssh
         // batch slurm user@bridges.psc.edu
-        String batchSystem = gridResource.replace("batch ", "");
+        String batchSystem = gridResource.replaceAll("^(batch|panda) ", "");
         return batchSystem.split(" ")[0];
     }
 
