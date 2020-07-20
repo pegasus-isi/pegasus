@@ -129,6 +129,42 @@ public class GLite extends Abstract {
         {Globus.MAX_WALLTIME_KEY, "+BatchWallclock"} // pegasus.runtime specify in seconds
     };
 
+    /**
+     * Convenience method to retrieve the batch system associated with a grid_resource entry.
+     *
+     * @param job
+     * @return the batch system. If not found returns null
+     */
+    public static final String getBatchSystem(Job job) {
+        /* figure out the remote scheduler. should be specified with the job*/
+        String gridResource = GLite.getGridResource(job);
+        if (gridResource == null) {
+            return null;
+        }
+
+        // Sample grid resource constructed for bosco/ssh
+        // batch slurm user@bridges.psc.edu
+        String batchSystem = gridResource.replace("batch ", "");
+        return batchSystem.split(" ")[0];
+    }
+
+    /**
+     * Return the grid resource associated with the job
+     *
+     * @param job
+     * @return the associated grid resource, else null
+     */
+    public static final String getGridResource(Job job) {
+        /* figure out the remote scheduler. should be specified with the job*/
+        String gridResource = (String) job.condorVariables.get(Condor.GRID_RESOURCE_KEY);
+        if (gridResource == null) {
+            return null;
+        }
+        // PM-1087 make it lower case first
+        gridResource = gridResource.toLowerCase();
+        return gridResource;
+    }
+
     /** Handle to escaping class for environment variables */
     private CondorEnvironmentEscape mEnvEscape;
 
@@ -206,18 +242,10 @@ public class GLite extends Abstract {
         /* universe is always set to grid*/
         job.condorVariables.construct(Condor.UNIVERSE_KEY, Condor.GRID_UNIVERSE);
 
-        /* figure out the remote scheduler. should be specified with the job*/
-        String gridResource = (String) job.condorVariables.get(Condor.GRID_RESOURCE_KEY);
-        if (gridResource == null) {
+        String batchSystem = GLite.getBatchSystem(job);
+        if (batchSystem == null) {
             throw new CondorStyleException(missingKeyError(job, Condor.GRID_RESOURCE_KEY));
         }
-        // PM-1087 make it lower case first
-        gridResource = gridResource.toLowerCase();
-
-        // Sample grid resource constructed for bosco/ssh
-        // batch slurm user@bridges.psc.edu
-        String batchSystem = gridResource.replace("batch ", "");
-        batchSystem = batchSystem.split(" ")[0];
 
         if (!supportedBatchSystem(batchSystem)) {
             // if it is not one of the support types, log a warning but use PBS.
@@ -225,7 +253,7 @@ public class GLite extends Abstract {
                     "Glite mode supports only pbs, sge , slurm, moab or cobalt submission. Will use PBS style attributes for job "
                             + job.getID()
                             + " with grid resource "
-                            + gridResource,
+                            + GLite.getGridResource(job),
                     LogManager.WARNING_MESSAGE_LEVEL);
             batchSystem = "pbs";
         }
