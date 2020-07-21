@@ -220,7 +220,7 @@ class Client:
         #     0     0     0     0     0     8     0 100.0 Success *appends-0.dag
         #
         # the pattern would match the second line
-        p = re.compile(r"\s*((\d+\s+){7})(\d+\.\d+\s+)(\w+\s+)(.*)")
+        p = re.compile(r"\s*(([\d,]+\s+){7})(\d+\.\d+\s+)(\w+\s+)(.*)")
 
         # indexes for info provided from status
         # UNRDY = 0
@@ -250,18 +250,20 @@ class Client:
             if rv.returncode != 0:
                 raise Exception(rv.stderr)
 
+            found_match = False
             for line in rv.stdout.decode("utf8").split("\n"):
                 matched = p.match(line)
 
                 if matched:
+                    found_match = True
                     v = matched.group(1).split()
                     v.append(float(matched.group(3).strip()))
                     v.append(matched.group(4).strip())
 
-                    completed = green("Completed: " + v[DONE])
-                    queued = yellow("Queued: " + v[READY])
-                    running = blue("Running: " + v[IN_Q])
-                    fail = red("Failed: " + v[FAIL])
+                    completed = green("Completed: " + str(v[DONE]).replace(",", ""))
+                    queued = yellow("Queued: " + str(v[READY]).replace(",", ""))
+                    running = blue("Running: " + str(v[IN_Q]).replace(",", ""))
+                    fail = red("Failed: " + str(v[FAIL]).replace(",", ""))
 
                     stats = (
                         "("
@@ -302,6 +304,12 @@ class Client:
 
                     # skip the rest of the lines
                     break
+
+            if not found_match:
+                raise PegasusClientError(
+                    "Client.wait() encountered an error parsing pegasus-status output",
+                    self._make_result(rv),
+                )
 
             time.sleep(delay)
 
