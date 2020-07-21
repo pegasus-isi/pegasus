@@ -104,7 +104,7 @@ public class ReplicaOutputMapperTest {
             NameValue[] expectedPFNS = new NameValue[2];
             expectedPFNS[0] = new NameValue("local", expected1);
             expectedPFNS[1] = new NameValue("local", expected2);
-            List<NameValue> pfns = mapper.mapAll(lfn, "local", operation);
+            List<NameValue<String, String>> pfns = mapper.mapAll(lfn, "local", operation);
             assertArrayEquals(expectedPFNS, pfns.toArray());
         }
         mLogger.logEventCompletion();
@@ -120,7 +120,7 @@ public class ReplicaOutputMapperTest {
                 assertEquals(lfn + " not mapped to right location ", expected, pfn);
                 NameValue[] expectedPFNS = new NameValue[1];
                 expectedPFNS[0] = new NameValue("local", expected);
-                List<NameValue> pfns = mapper.mapAll(lfn, "local", operation);
+                List<NameValue<String, String>> pfns = mapper.mapAll(lfn, "local", operation);
                 assertArrayEquals(expectedPFNS, pfns.toArray());
             }
         }

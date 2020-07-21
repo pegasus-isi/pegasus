@@ -105,7 +105,7 @@ public class Fixed implements OutputMapper {
      *     the mapped file
      * @throws MapperException if unable to construct URL for any reason
      */
-    public NameValue map(String lfn, String site, FileServer.OPERATION operation)
+    public NameValue<String, String> map(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException {
         // in this case we want to create an entry in factory namespace and use that addOn
         return this.map(lfn, site, operation, false);
@@ -124,7 +124,8 @@ public class Fixed implements OutputMapper {
      *     the mapped file
      * @throws MapperException if unable to construct URL for any reason
      */
-    public NameValue map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
+    public NameValue<String, String> map(
+            String lfn, String site, FileServer.OPERATION operation, boolean existing)
             throws MapperException {
         StringBuilder url = new StringBuilder();
         url.append(this.mDirectoryURL).append(File.separator).append(lfn);
@@ -143,8 +144,8 @@ public class Fixed implements OutputMapper {
      *     site information
      * @throws MapperException if unable to construct URL for any reason
      */
-    public List<NameValue> mapAll(String lfn, String site, FileServer.OPERATION operation)
-            throws MapperException {
+    public List<NameValue<String, String>> mapAll(
+            String lfn, String site, FileServer.OPERATION operation) throws MapperException {
         NameValue nv = this.map(lfn, site, operation);
         List result = new LinkedList();
         result.add(nv);

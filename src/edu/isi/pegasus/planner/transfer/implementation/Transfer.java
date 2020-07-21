@@ -400,7 +400,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             FileTransfer ft = (FileTransfer) it.next();
             Collection<String> sourceSites = ft.getSourceSites();
 
-            NameValue dest = ft.getDestURL(true);
+            NameValue<String, String> dest = ft.getDestURL(true);
 
             // write to the file one URL pair at a time
             StringBuffer urlPair = new StringBuffer();

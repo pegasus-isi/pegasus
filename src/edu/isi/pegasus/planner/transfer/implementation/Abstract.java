@@ -473,7 +473,7 @@ public abstract class Abstract implements Implementation {
      * @return the chmod job, else null if it is not able to be created for some reason.
      */
     protected Job createSetXBitJob(FileTransfer file, String name) {
-        NameValue destURL = (NameValue) file.getDestURL();
+        NameValue<String, String> destURL = (NameValue) file.getDestURL();
         String eSiteHandle = destURL.getKey();
         Collection<FileTransfer> fts = new LinkedList();
         fts.add(file);
@@ -542,7 +542,7 @@ public abstract class Abstract implements Implementation {
         StringBuffer arguments = new StringBuffer();
         arguments.append(" +x ");
         for (FileTransfer file : files) {
-            NameValue destURL = (NameValue) file.getDestURL();
+            NameValue<String, String> destURL = (NameValue) file.getDestURL();
             arguments.append(" ");
             arguments.append(new PegasusURL(destURL.getValue()).getPath());
         }

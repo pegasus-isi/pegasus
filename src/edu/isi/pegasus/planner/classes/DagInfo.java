@@ -591,10 +591,14 @@ public class DagInfo extends Data {
             if (!(entry.equals('b') || entry.equals(type))) {
                 // types do not match. so upgrade the type to both
                 mLFNMap.put(lfn, 'b');
-            }
-            else if( entry.equals('o') && type == 'o'){
+            } else if (entry.equals('o') && type == 'o') {
                 // PM-1619 pre-existing entry and new entry both are of type o
-                throw new RuntimeException("Output file " + lfn + " found for job " + id  + " has already been associated as output for a previous job"); 
+                throw new RuntimeException(
+                        "Output file "
+                                + lfn
+                                + " found for job "
+                                + id
+                                + " has already been associated as output for a previous job");
             }
         }
     }
@@ -609,7 +613,7 @@ public class DagInfo extends Data {
         int inter = 0;
         int output = 0;
         for (Character type : mLFNMap.values()) {
-            if (type == 'i' ) {
+            if (type == 'i') {
                 input++;
             } else if (type.equals('b')) {
                 inter++;

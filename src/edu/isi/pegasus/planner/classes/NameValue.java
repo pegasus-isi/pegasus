@@ -20,18 +20,18 @@ package edu.isi.pegasus.planner.classes;
  * @author Gaurang Mehta
  * @version $Revision$
  */
-public class NameValue extends Data implements Comparable {
+public class NameValue<K, V> extends Data implements Comparable {
 
     /** stores the name of the pair. */
-    private String name;
+    private K name;
 
     /** stores the corresponding value to the name in the pair. */
-    private String value;
+    private V value;
 
     /** the default constructor which initialises the class member variables. */
     public NameValue() {
-        name = "";
-        value = "";
+        name = null;
+        value = null;
     }
 
     /**
@@ -40,7 +40,7 @@ public class NameValue extends Data implements Comparable {
      * @param name corresponds to the name in the NameValue pair.
      * @param value corresponds to the value for the name in the NameValue pair.
      */
-    public NameValue(String name, String value) {
+    public NameValue(K name, V value) {
         this.name = name;
         this.value = value;
     }
@@ -50,7 +50,7 @@ public class NameValue extends Data implements Comparable {
      *
      * @param key the key associated with the tuple.
      */
-    public void setKey(String key) {
+    public void setKey(K key) {
         this.name = key;
     }
 
@@ -59,7 +59,7 @@ public class NameValue extends Data implements Comparable {
      *
      * @param value the value associated with the tuple.
      */
-    public void setValue(String value) {
+    public void setValue(V value) {
         this.value = value;
     }
 
@@ -68,7 +68,7 @@ public class NameValue extends Data implements Comparable {
      *
      * @return the key associated with the tuple.
      */
-    public String getKey() {
+    public K getKey() {
         return this.name;
     }
 
@@ -77,7 +77,7 @@ public class NameValue extends Data implements Comparable {
      *
      * @return value associated with the tuple.
      */
-    public String getValue() {
+    public V getValue() {
         return this.value;
     }
 
@@ -132,7 +132,14 @@ public class NameValue extends Data implements Comparable {
     public int compareTo(Object o) {
         if (o instanceof NameValue) {
             NameValue nv = (NameValue) o;
-            return this.name.compareTo(nv.name);
+            if (this.name instanceof Comparable) {
+                return ((Comparable) this.name).compareTo(nv.name);
+            } else {
+                throw new IllegalArgumentException(
+                        "The key for the object "
+                                + this
+                                + " does not implment comparable interface");
+            }
         } else {
             throw new ClassCastException("Object is not a NameValue");
         }

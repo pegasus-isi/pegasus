@@ -814,7 +814,8 @@ public class DeployWorkerPackage extends Engine {
                     this.makeUntarJob(
                             stagingSite,
                             this.getUntarJobName(dag, site),
-                            getBasename(((NameValue) ft.getSourceURL()).getValue()));
+                            getBasename(
+                                    ((NameValue<String, String>) ft.getSourceURL()).getValue()));
             untarJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
             untarJob.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
             untarJob.dagmanVariables.construct(
@@ -892,8 +893,8 @@ public class DeployWorkerPackage extends Engine {
 
             // PM-1127 do an extra site if both source and destination
             // site match and are set to local
-            NameValue source = ft.getSourceURL();
-            NameValue destination = ft.getSourceURL();
+            NameValue<String, String> source = ft.getSourceURL();
+            NameValue<String, String> destination = ft.getSourceURL();
             if (source.getKey().equals(destination.getKey()) && source.getKey().equals("local")) {
                 // make sure the full canonical urls are different
                 // only if source and destination urls both are file

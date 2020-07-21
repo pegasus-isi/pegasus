@@ -148,7 +148,7 @@ public class Replica implements OutputMapper {
      *     the mapped file
      * @throws MapperException if unable to construct URL for any reason
      */
-    public NameValue map(String lfn, String site, FileServer.OPERATION operation)
+    public NameValue<String, String> map(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException {
         // in this case we want to create an entry in factory namespace and use that addOn
         return this.map(lfn, site, operation, false);
@@ -169,7 +169,8 @@ public class Replica implements OutputMapper {
      * @throws MapperException if unable to construct URL for any reason and exception throwing is
      *     enabled.
      */
-    public NameValue map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
+    public NameValue<String, String> map(
+            String lfn, String site, FileServer.OPERATION operation, boolean existing)
             throws MapperException {
 
         String url = null;
@@ -213,8 +214,8 @@ public class Replica implements OutputMapper {
      *     site information
      * @throws MapperException if unable to construct URL for any reason
      */
-    public List<NameValue> mapAll(String lfn, String site, FileServer.OPERATION operation)
-            throws MapperException {
+    public List<NameValue<String, String>> mapAll(
+            String lfn, String site, FileServer.OPERATION operation) throws MapperException {
         List result = new LinkedList();
 
         Collection<ReplicaCatalogEntry> c = mRCCatalog.lookup(lfn);

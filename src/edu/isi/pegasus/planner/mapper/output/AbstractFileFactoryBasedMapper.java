@@ -201,8 +201,8 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      *     information
      * @throws MapperException if unable to construct URL for any reason
      */
-    public List<NameValue> mapAll(String lfn, String site, FileServer.OPERATION operation)
-            throws MapperException {
+    public List<NameValue<String, String>> mapAll(
+            String lfn, String site, FileServer.OPERATION operation) throws MapperException {
         Directory directory =
                 mStageoutDirectoriesStore.containsKey(site)
                         ? mStageoutDirectoriesStore.get(site)
@@ -219,7 +219,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
                             + site);
         }
 
-        List<NameValue> urls = new LinkedList();
+        List<NameValue<String, String>> urls = new LinkedList();
 
         // figure out the addon only once first.
         // the factory will give us the relative

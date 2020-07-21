@@ -394,9 +394,9 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
             throws Exception {
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             FileTransfer ft = (FileTransfer) it.next();
-            NameValue source = ft.getSourceURL();
+            NameValue<String, String> source = ft.getSourceURL();
             // we want to leverage multiple dests if possible
-            NameValue dest = ft.getDestURL(true);
+            NameValue<String, String> dest = ft.getDestURL(true);
             StringBuffer entry = new StringBuffer();
             entry.append("#")
                     .append(source.getKey())

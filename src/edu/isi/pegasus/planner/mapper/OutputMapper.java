@@ -51,7 +51,7 @@ public interface OutputMapper extends Mapper {
      * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
      *     reason
      */
-    public NameValue map(String lfn, String site, FileServer.OPERATION operation)
+    public NameValue<String, String> map(String lfn, String site, FileServer.OPERATION operation)
             throws MapperException;
 
     /**
@@ -68,7 +68,8 @@ public interface OutputMapper extends Mapper {
      * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
      *     reason
      */
-    public NameValue map(String lfn, String site, FileServer.OPERATION operation, boolean existing)
+    public NameValue<String, String> map(
+            String lfn, String site, FileServer.OPERATION operation, boolean existing)
             throws MapperException;
 
     /**
@@ -85,6 +86,6 @@ public interface OutputMapper extends Mapper {
      * @throws edu.isi.pegasus.planner.mapper.MapperException if unable to construct URL for any
      *     reason
      */
-    public List<NameValue> mapAll(String lfn, String site, FileServer.OPERATION operation)
-            throws MapperException;
+    public List<NameValue<String, String>> mapAll(
+            String lfn, String site, FileServer.OPERATION operation) throws MapperException;
 }

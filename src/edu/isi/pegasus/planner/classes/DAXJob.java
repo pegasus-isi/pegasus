@@ -124,7 +124,7 @@ public class DAXJob extends Job {
         if (this.mOutputMapperBackend == null) {
             intializeOutputMapperBackend(bag);
         }
-        NameValue nv = ft.getDestURL();
+        NameValue<String, String> nv = ft.getDestURL();
         int result = this.mOutputMapperBackend.insert(ft.getLFN(), nv.getValue(), nv.getKey());
         return result == 1;
     }

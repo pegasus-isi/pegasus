@@ -268,7 +268,7 @@ public class TransferEngine extends Engine {
     private boolean runTransferRemotely(Job job, SiteCatalogEntry stagingSite, FileTransfer ft) {
         boolean remote = false;
 
-        NameValue destTX = ft.getDestURL();
+        NameValue<String, String> destTX = ft.getDestURL();
         for (String sourceSite : ft.getSourceSites()) {
             // traverse through all the URL's on that site
             for (ReplicaCatalogEntry rce : ft.getSourceURLs(sourceSite)) {
@@ -843,7 +843,8 @@ public class TransferEngine extends Engine {
             ft.setMetadata(pf.getAllMetadata());
             ft.setType(pf.getType());
 
-            for (NameValue nv : this.mOutputMapper.mapAll(lfn, destSiteHandle, OPERATION.put)) {
+            for (NameValue<String, String> nv :
+                    this.mOutputMapper.mapAll(lfn, destSiteHandle, OPERATION.put)) {
                 String destURL = nv.getValue();
                 // if the paths match of dest URI
                 // and execDirURL we return null
@@ -925,11 +926,12 @@ public class TransferEngine extends Engine {
             sourceURL = sb.toString();
         }
 
-        List<NameValue> nvs = this.mParentScratchOutputMapper.mapAll(lfn, null, OPERATION.put);
+        List<NameValue<String, String>> nvs =
+                this.mParentScratchOutputMapper.mapAll(lfn, null, OPERATION.put);
         if (nvs == null) {
             return result;
         }
-        for (NameValue nv : nvs) {
+        for (NameValue<String, String> nv : nvs) {
             ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
             // we are only transferring outputs to the scratch dir of parent workflow
             // without registering them ever
@@ -1317,7 +1319,7 @@ public class TransferEngine extends Engine {
             ReplicaLocation rl = null;
 
             String lfn = pf.getLFN();
-            NameValue nv = null;
+            NameValue<String, String> nv = null;
 
             // PM-833 figure out the addOn component just once per lfn
             File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSite, lfn);
@@ -1353,7 +1355,7 @@ public class TransferEngine extends Engine {
                 // PM-1213 remote the source URL. will be added later back
                 nv = ((FileTransfer) pf).removeSourceURL();
 
-                NameValue destNV = ((FileTransfer) pf).removeDestURL();
+                NameValue<String, String> destNV = ((FileTransfer) pf).removeDestURL();
 
                 // PM-833 we have to explicity set the remote executable
                 // especially for the staging of executables in sharedfs
@@ -1688,7 +1690,8 @@ public class TransferEngine extends Engine {
         StringBuffer newPFN = new StringBuffer();
         if (mSRMServiceURLToMountPointMap.containsKey(rce.getResourceHandle())) {
             // try to do replacement of URL with internal mount point
-            NameValue nv = mSRMServiceURLToMountPointMap.get(rce.getResourceHandle());
+            NameValue<String, String> nv =
+                    mSRMServiceURLToMountPointMap.get(rce.getResourceHandle());
             String urlPrefix = nv.getKey();
             if (pfn.startsWith(urlPrefix)) {
                 // replace the starting with the mount point

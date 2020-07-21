@@ -102,7 +102,8 @@ public class FixedOutputMapperTest {
                 "gsiftp://outputs.isi.edu/shared/outputs/f.a",
                 pfn);
 
-        List<NameValue> pfns = mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
+        List<NameValue<String, String>> pfns =
+                mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
         NameValue[] expected = new NameValue[1];
         expected[0] = new NameValue("local", "gsiftp://outputs.isi.edu/shared/outputs/f.a");
         assertArrayEquals(expected, pfns.toArray());

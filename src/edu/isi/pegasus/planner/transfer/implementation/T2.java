@@ -256,9 +256,9 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
             writer.write("\n");
             writer.flush();
 
-            NameValue source = ft.getSourceURL();
+            NameValue<String, String> source = ft.getSourceURL();
             // we want to leverage multiple dests if possible
-            NameValue dest = ft.getDestURL(true);
+            NameValue<String, String> dest = ft.getDestURL(true);
 
             // associate any credential required , both with destination
             // and the source urls

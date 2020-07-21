@@ -153,7 +153,7 @@ public class FileTransfer extends PegasusFile {
      * @param nv the NameValue object containing the name of the site as the key and URL as the
      *     value.
      */
-    public void addSource(NameValue nv) {
+    public void addSource(NameValue<String, String> nv) {
         this.addSource(nv.getKey(), nv.getValue());
     }
 
@@ -193,7 +193,7 @@ public class FileTransfer extends PegasusFile {
      * @param nv the NameValue object containing the name of the site as the key and URL as the
      *     value.
      */
-    public void addDestination(NameValue nv) {
+    public void addDestination(NameValue<String, String> nv) {
         this.addDestination(nv.getKey(), nv.getValue());
     }
 
@@ -319,7 +319,7 @@ public class FileTransfer extends PegasusFile {
      * @return NameValue where the name would be the site on which the URL is and value the URL.
      *     null if no urls are assoiciated with the object.
      */
-    public NameValue getSourceURL() {
+    public NameValue<String, String> getSourceURL() {
         return getSourceURL(false);
     }
 
@@ -331,7 +331,7 @@ public class FileTransfer extends PegasusFile {
      * @return NameValue where the name would be the site on which the URL is and value the URL.
      *     null if no urls are assoiciated with the object.
      */
-    public NameValue getSourceURL(boolean random) {
+    public NameValue<String, String> getSourceURL(boolean random) {
         return getURL(mSourceMap, random);
     }
 
@@ -342,7 +342,7 @@ public class FileTransfer extends PegasusFile {
      * @return NameValue where the name would be the site on which the URL is and value the URL.
      *     null if no urls are assoiciated with the object.
      */
-    public NameValue getDestURL() {
+    public NameValue<String, String> getDestURL() {
         return getDestURL(false);
     }
 
@@ -354,7 +354,7 @@ public class FileTransfer extends PegasusFile {
      * @return NameValue where the name would be the site on which the URL is and value the URL.
      *     null if no urls are assoiciated with the object.
      */
-    public NameValue getDestURL(boolean random) {
+    public NameValue<String, String> getDestURL(boolean random) {
         return getURL(mDestMap, random);
     }
 
@@ -365,7 +365,7 @@ public class FileTransfer extends PegasusFile {
      * @return NameValue where the name would be the site on which the URL is and value the URL.
      *     null if no urls are assoiciated with the object.
      */
-    public NameValue removeSourceURL() {
+    public NameValue<String, String> removeSourceURL() {
         return removeURL(mSourceMap);
     }
 
@@ -376,7 +376,7 @@ public class FileTransfer extends PegasusFile {
      * @return NameValue where the name would be the site on which the URL is and value the URL.
      *     null if no urls are assoiciated with the object.
      */
-    public NameValue removeDestURL() {
+    public NameValue<String, String> removeDestURL() {
         return removeURL(mDestMap);
     }
 
@@ -410,7 +410,8 @@ public class FileTransfer extends PegasusFile {
      * @return NameValue where the name would be the site on which the URL is and value the URL.
      *     null if no urls are assoiciated with the object.
      */
-    private NameValue getURL(Map<String, List<ReplicaCatalogEntry>> m, boolean random) {
+    private NameValue<String, String> getURL(
+            Map<String, List<ReplicaCatalogEntry>> m, boolean random) {
         if (m == null || m.keySet().isEmpty()) {
             return null;
         }
@@ -441,7 +442,7 @@ public class FileTransfer extends PegasusFile {
      * @return NameValue where the name would be the site on which the URL is and value the URL.
      *     null if no urls are assoiciated with the object.
      */
-    private NameValue removeURL(Map<String, List<ReplicaCatalogEntry>> m) {
+    private NameValue<String, String> removeURL(Map<String, List<ReplicaCatalogEntry>> m) {
         if (m == null || m.keySet().isEmpty()) {
             return null;
         }

@@ -111,7 +111,8 @@ public class FlatOutputMapperTest {
                 "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/f.a",
                 pfn);
 
-        List<NameValue> pfns = mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
+        List<NameValue<String, String>> pfns =
+                mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
         NameValue[] expected = new NameValue[1];
         expected[0] =
                 new NameValue(
@@ -155,7 +156,8 @@ public class FlatOutputMapperTest {
                         + "/f.a",
                 deepPFN);
 
-        List<NameValue> deepPFNS = mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
+        List<NameValue<String, String>> deepPFNS =
+                mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
         NameValue[] expectedDeepPFNS = new NameValue[1];
         expectedDeepPFNS[0] =
                 new NameValue(
@@ -200,7 +202,8 @@ public class FlatOutputMapperTest {
                         + "/f.a",
                 deepPFN);
 
-        List<NameValue> deepPFNS = mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
+        List<NameValue<String, String>> deepPFNS =
+                mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
         NameValue[] expectedDeepPFNS = new NameValue[1];
         expectedDeepPFNS[0] =
                 new NameValue(
@@ -246,7 +249,8 @@ public class FlatOutputMapperTest {
                         + "/f.a",
                 deepPFN);
 
-        List<NameValue> deepPFNS = mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
+        List<NameValue<String, String>> deepPFNS =
+                mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
         NameValue[] expectedDeepPFNS = new NameValue[1];
         expectedDeepPFNS[0] =
                 new NameValue(
