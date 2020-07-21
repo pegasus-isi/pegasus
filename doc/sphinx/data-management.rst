@@ -907,8 +907,8 @@ staging site, when a job exceeds it's advertised running time. In order
 to use this feature, you need to
 
 1. Associate a job checkpoint file ( that the job creates ) with the job
-   in the DAX. A checkpoint file is specified by setting the link
-   attribute to checkpoint for the uses tag.
+   in the abstract workflow. A checkpoint file is specified by setting
+   the link attribute to checkpoint for the uses tag.
 
 2. Associate a Pegasus profile key named **checkpoint.time** is the time
    in minutes after which a job is sent the TERM signal by
@@ -926,6 +926,21 @@ checkpoint time of job is reached. A KILL signal is sent at
 (checkpoint.time + (maxwalltime-checkpoint.time)/2) minutes. This
 ensures that there is enough time for pegasus-lite to transfer the
 checkpoint file before the job is killed by the underlying scheduler.
+
+In order to use Pegasus support for checkpointing, it is recommended
+that your application
+
+1. exits with a non zero exit code; when it exits as a result of the
+   job being checkpointed. For an application that regularly creates
+   a checkpoint file, and is still running at T=
+   (checkpoint.time + (maxwalltime-checkpoint.time)/2) minutes; it will
+   be killed by pegasus-kickstart.
+
+2. always create zero byte output files for files that are designated
+   as outputs for the associated job in the workflow. If your code, only
+   creates the checkpoint file, the PegasusLite job will fail at
+   transferring outputs, and that leads to a lot of unnecessary errors
+   appearing in the job .out file.
 
 .. _bypass-input-staging:
 
