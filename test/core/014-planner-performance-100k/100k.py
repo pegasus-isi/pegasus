@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from Pegasus.DAX3 import *
 import sys
@@ -13,7 +13,7 @@ a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
 dax.addFile(a)
 	
 # Add executables to the DAX-level replica catalog
-exe = Executable(name="mymodel", installed=False)
+exe = Executable(name="mymodel", installed=False, arch="x86_64")
 exe.addPFN(PFN("file:///usr/bin/pegasus-keg", "local"))
 dax.addExecutable(exe)
 
