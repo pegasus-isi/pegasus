@@ -430,7 +430,7 @@ nodes. Running in that mode is explained in detail
 
 .. tip::
 
-   Set p **egasus.data.configuration** to **nonsharedfs** to run in this
+   Set  **pegasus.data.configuration** to **nonsharedfs** to run in this
    configuration. The staging site can be specified using the
    **--staging-site** option to pegasus-plan.
 
@@ -440,17 +440,8 @@ staging site. The PegasusLite jobs that start up on the worker nodes,
 then pull the input data from the staging site for each job. In some
 cases, it might be useful to setup the PegasusLite jobs to pull input
 data directly from the input site without going through the staging
-server. This is based on the assumption that the worker nodes can access
-the input site. Starting 4.3 release, users can enable this. However,
-you should be aware that the access to the input site is no longer
-throttled ( as in case of stage in jobs). If large number of compute
-jobs start at the same time in a workflow, the input server will see a
-connection from each job.
+server. More details can be found at :ref:`bypass-input-staging`.
 
-.. tip::
-
-   Set **pegasus.transfer.bypass.input.staging** to **true**\ to enable
-   the bypass of staging of input files via the staging server.
 
 Condor Pool Without a Shared Filesystem
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -935,6 +926,62 @@ checkpoint time of job is reached. A KILL signal is sent at
 (checkpoint.time + (maxwalltime-checkpoint.time)/2) minutes. This
 ensures that there is enough time for pegasus-lite to transfer the
 checkpoint file before the job is killed by the underlying scheduler.
+
+.. _bypass-input-staging:
+
+Bypass Input File Staging
+-------------------------
+When executing a workflow in PegasusLite mode (i.e the data configuration is
+either condorio (default) or bypass), then it is possible to bypass the
+placement of the raw input data required by the workflow on to the staging
+site. Instead the PegasusLite wrapped compute jobs, can directly pull the
+data from the locations specified in the replica catalog.  This is based on
+the assumption that the worker nodes can access the input site. However,
+you should be aware that the access to the input site is no longer throttled
+( as in case of stage in jobs). If large number of compute jobs start at
+the same time in a workflow, the input server will see a connection
+from each job.
+
+To enable this you can either
+
+* Set the property **pegasus.transfer.bypass.input.staging** to **true** to
+  enable bypass of all input files.
+
+OR
+
+* You can associate the **bypass flag** at a per file(data file, executable or
+  container) basis while constructing your workflow using the Python API.
+  Below is a snippet of a generated abstract workflow that highlights bypass
+  at a per file level:
+
+  .. code-block:: yaml
+
+     transformationCatalog:
+       transformations:
+         - namespace: pegasus
+           name: preprocess
+           version: '4.0'
+        sites:
+          - {name: condorpool, pfn: /usr/bin/pegasus-keg, type: stageable, **bypass: true**,
+                arch: x86_64, os.type: linux, container: osgvo-el7}
+       containers:
+         - name: osgvo-el7
+           type: singularity
+           image: gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img
+           **bypass: true**
+           checksum: {sha256: dd78aaa88e1c6a8bf31c052eacfa03fba616ebfd903d7b2eb1b0ed6853b48713}
+     jobs:
+       - type: job
+         namespace: pegasus
+         version: '4.0'
+         name: preprocess
+         id: ID0000001
+         arguments: [-a, preprocess, -T, '60', -i, f.a, -o, f.b1, f.b2]
+         uses:
+           - {lfn: f.b2, type: output, stageOut: true, registerReplica: true}
+           - {lfn: f.a, type: input, **bypass: true**}
+           - {lfn: f.b1, type: output, stageOut: true, registerReplica: true}
+
 
 .. _transfer-protocols:
 
