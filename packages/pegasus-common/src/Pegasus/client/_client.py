@@ -306,7 +306,10 @@ class Client:
                     break
 
             if not found_match:
-                raise PegasusClientError("Client.wait() encountered an error parsing pegasus-status output", self._make_result(rv))
+                raise PegasusClientError(
+                    "Client.wait() encountered an error parsing pegasus-status output",
+                    self._make_result(rv),
+                )
 
             time.sleep(delay)
 
