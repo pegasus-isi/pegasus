@@ -576,10 +576,11 @@ public class DagInfo extends Data {
     /**
      * Updates the lfn map, that contains the mapping of an lfn with the type.
      *
+     * @param id the logical id of the job
      * @param lfn the logical file name.
      * @param type type the type of lfn (i|o|b). usually a character.
      */
-    public void updateLFNMap(String lfn, char type) {
+    public void updateLFNMap(String id, String lfn, char type) {
         Object entry = mLFNMap.get(lfn);
         if (entry == null) {
             mLFNMap.put(lfn, type);
@@ -593,7 +594,7 @@ public class DagInfo extends Data {
             }
             else if( entry.equals('o') && type == 'o'){
                 // PM-1619 pre-existing entry and new entry both are of type o
-                throw new RuntimeException("Already parsed job with output file " + lfn); 
+                throw new RuntimeException("Output file " + lfn + " found for job " + id  + " has already been associated as output for a previous job"); 
             }
         }
     }
