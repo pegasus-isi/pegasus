@@ -517,13 +517,13 @@ bypass the creation of separate stage in jobs that copy the data to the
 workflow specific directory on the submit host. Instead, Condor file
 transfers can be setup to transfer the input files directly from the
 locally accessible input locations ( file URL's with "*site*" attribute
-set to local) specified in the replica catalog. Starting 4.3 release,
-users can enable this.
+set to local) specified in the replica catalog. More details can be
+found at :ref:`bypass-input-staging`.
 
-.. tip::
-
-   Set **pegasus.transfer.bypass.input.staging** to **true**\ to bypass
-   the creation of separate stage in jobs.
+ In some
+cases, it might be useful to setup the PegasusLite jobs to pull input
+data directly from the input site without going through the staging
+server.
 
 .. _local-vs-remote-transfers:
 
@@ -962,13 +962,13 @@ OR
            name: preprocess
            version: '4.0'
         sites:
-          - {name: condorpool, pfn: /usr/bin/pegasus-keg, type: stageable, **bypass: true**,
+          - {name: condorpool, pfn: /usr/bin/pegasus-keg, type: stageable, bypass: true,
                 arch: x86_64, os.type: linux, container: osgvo-el7}
        containers:
          - name: osgvo-el7
            type: singularity
            image: gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img
-           **bypass: true**
+           bypass: true
            checksum: {sha256: dd78aaa88e1c6a8bf31c052eacfa03fba616ebfd903d7b2eb1b0ed6853b48713}
      jobs:
        - type: job
@@ -979,9 +979,22 @@ OR
          arguments: [-a, preprocess, -T, '60', -i, f.a, -o, f.b1, f.b2]
          uses:
            - {lfn: f.b2, type: output, stageOut: true, registerReplica: true}
-           - {lfn: f.a, type: input, **bypass: true**}
+           - {lfn: f.a, type: input, bypass: true}
            - {lfn: f.b1, type: output, stageOut: true, registerReplica: true}
 
+Bypass in condorio mode
+~~~~~~~~~~~~~~~~~~~~~~~
+
+In case of **condorio** data configuration where condor file transfers are
+used to transfer the input files directly from the locally accessible input
+locations, you must ensure that file URL's with "*site*" attribute
+set to local are specified in the replica catalog.
+
+Pegasus use of HTCondor File Transfers does not allow for the destination file
+to have a name that differs from the basename of the file url in the replica
+catalog. As a result, if the lfn for the input file does not match the basename
+of the file location specified in the Replica Catalog for that LFN, Pegasus
+will automatically disable bypass for that file even if it is marked for bypass.
 
 .. _transfer-protocols:
 
