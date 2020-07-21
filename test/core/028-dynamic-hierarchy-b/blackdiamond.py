@@ -71,6 +71,6 @@ diamond.addDependency(Dependency(parent=frr, child=analyze))
 
 # Write the DAX to daxfile
 f = open(daxfile, "w")
-print "Writing DAX to %s" % (os.path.abspath(daxfile))
+print ("Writing DAX to %s" % (os.path.abspath(daxfile)))
 diamond.writeXML(f)
 f.close()
