@@ -591,6 +591,10 @@ public class DagInfo extends Data {
                 // types do not match. so upgrade the type to both
                 mLFNMap.put(lfn, 'b');
             }
+            else if( entry.equals('o') && type == 'o'){
+                // PM-1619 pre-existing entry and new entry both are of type o
+                throw new RuntimeException("Already parsed job with output file " + lfn); 
+            }
         }
     }
 
