@@ -218,7 +218,7 @@ public class DAX2CDAG implements Callback {
             for (PegasusFile pf : ct.getDependantFiles()) {
                 job.addInputFile(pf);
                 String lfn = pf.getLFN();
-                dinfo.updateLFNMap(lfn, "i");
+                dinfo.updateLFNMap(lfn, 'i');
             }
             job.addNotifications(ct.getNotifications());
         }
@@ -227,7 +227,7 @@ public class DAX2CDAG implements Callback {
         for (Iterator it = job.inputFiles.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
-            dinfo.updateLFNMap(lfn, "i");
+            dinfo.updateLFNMap(lfn, 'i');
         }
 
         for (Iterator it = job.outputFiles.iterator(); it.hasNext(); ) {
@@ -247,7 +247,7 @@ public class DAX2CDAG implements Callback {
                 throw new RuntimeException(
                         "File " + lfn + " is listed as input and output for job " + job.getID());
             }
-            dinfo.updateLFNMap(lfn, "o");
+            dinfo.updateLFNMap(lfn, 'o');
             if (this.mAddDataDependencies) {
                 mFileCreationMap.put(lfn, job);
             }

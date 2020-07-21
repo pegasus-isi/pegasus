@@ -98,7 +98,7 @@ public class DagInfo extends Data {
      * this file is an input(i) or output(o) or both (b) or none(n). A value of none(n) would denote
      * an error condition.
      */
-    private TreeMap mLFNMap;
+    private TreeMap<String, Character> mLFNMap;
 
     /** The DAX Version */
     private String mDAXVersion;
@@ -211,7 +211,7 @@ public class DagInfo extends Data {
 
         Set lfns = onlyInput ? new HashSet(mLFNMap.size() / 3) : new HashSet(mLFNMap.size());
         String key = null;
-        String val = null;
+        char val;
 
         // if the force option is set we
         // need to search only for the
@@ -221,9 +221,9 @@ public class DagInfo extends Data {
         if (onlyInput) {
             for (Iterator it = mLFNMap.keySet().iterator(); it.hasNext(); ) {
                 key = (String) it.next();
-                val = (String) mLFNMap.get(key);
+                val = mLFNMap.get(key);
 
-                if (val.equals("i")) {
+                if (val == 'i') {
                     lfns.add(key);
                 }
             }
@@ -579,7 +579,7 @@ public class DagInfo extends Data {
      * @param lfn the logical file name.
      * @param type type the type of lfn (i|o|b). usually a character.
      */
-    public void updateLFNMap(String lfn, String type) {
+    public void updateLFNMap(String lfn, char type) {
         Object entry = mLFNMap.get(lfn);
         if (entry == null) {
             mLFNMap.put(lfn, type);
@@ -587,9 +587,9 @@ public class DagInfo extends Data {
         } else {
             // there is a preexisting entry in the map, check if it needs to be
             // updated
-            if (!(entry.equals("b") || entry.equals(type))) {
+            if (!(entry.equals('b') || entry.equals(type))) {
                 // types do not match. so upgrade the type to both
-                mLFNMap.put(lfn, "b");
+                mLFNMap.put(lfn, 'b');
             }
         }
     }
@@ -603,12 +603,12 @@ public class DagInfo extends Data {
         int input = 0;
         int inter = 0;
         int output = 0;
-        for (Object type : mLFNMap.values()) {
-            if (type.equals("i")) {
+        for (Character type : mLFNMap.values()) {
+            if (type == 'i' ) {
                 input++;
-            } else if (type.equals("b")) {
+            } else if (type.equals('b')) {
                 inter++;
-            } else if (type.equals("o")) {
+            } else if (type.equals('o')) {
                 output++;
             } else {
                 throw new RuntimeException("Invalid type " + type);
