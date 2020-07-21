@@ -25,6 +25,9 @@ configuration can be generated with this API. If you have existing catalogs that
 to the newer format, usage of Pegasus catalog conversion tools are covered in the
 subsequent sections. 
 
+.. attention::
+    The :doc:`/python/Pegasus.api` requires **Python3.5+**.
+
 Properties
 --------
 
