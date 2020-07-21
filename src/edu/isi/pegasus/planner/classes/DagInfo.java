@@ -95,11 +95,11 @@ public class DagInfo extends Data {
      * Contains a unique ordered listing of the logical names referred to by the dag. The TreeMap
      * implementation guarentees us a log(n) execution time for the basic operations. Hence should
      * scale well. The key for the map is the lfn name. The value is a NameValue object, where key
-     * is the name of the job that this file is currently associated with and value is a character flag denoting whether
-     * this file is an input(i) or output(o) or both (b) or none(n). A value of none(n) would denote
-     * an error condition.
+     * is the name of the job that this file is currently associated with and value is a character
+     * flag denoting whether this file is an input(i) or output(o) or both (b) or none(n). A value
+     * of none(n) would denote an error condition.
      */
-    private TreeMap<String, NameValue<String,Character>> mLFNMap;
+    private TreeMap<String, NameValue<String, Character>> mLFNMap;
 
     /** The DAX Version */
     private String mDAXVersion;
@@ -582,7 +582,7 @@ public class DagInfo extends Data {
      * @param type type the type of lfn (i|o|b). usually a character.
      */
     public void updateLFNMap(String id, String lfn, char type) {
-        NameValue<String,Character> entry = mLFNMap.get(lfn);
+        NameValue<String, Character> entry = mLFNMap.get(lfn);
         if (entry == null) {
             mLFNMap.put(lfn, new NameValue(id, type));
             return;
@@ -592,7 +592,7 @@ public class DagInfo extends Data {
             Character existingType = entry.getValue();
             if (!(existingType.equals('b') || existingType.equals(type))) {
                 // types do not match. so upgrade the type to both
-                //mLFNMap.put(lfn, 'b');
+                // mLFNMap.put(lfn, 'b');
                 entry.setKey(id);
                 entry.setValue('b');
             } else if (existingType.equals('o') && type == 'o') {
@@ -603,7 +603,8 @@ public class DagInfo extends Data {
                                 + lfn
                                 + " found for job "
                                 + id
-                                + " has already been associated as output for a previous job " + entry.getKey());
+                                + " has already been associated as output for a previous job "
+                                + entry.getKey());
             }
         }
     }
@@ -617,7 +618,7 @@ public class DagInfo extends Data {
         int input = 0;
         int inter = 0;
         int output = 0;
-        for (NameValue<String,Character> tuple : mLFNMap.values()) {
+        for (NameValue<String, Character> tuple : mLFNMap.values()) {
             Character type = tuple.getValue();
             if (type == 'i') {
                 input++;
