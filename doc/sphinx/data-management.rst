@@ -969,33 +969,76 @@ OR
   Below is a snippet of a generated abstract workflow that highlights bypass
   at a per file level:
 
-  .. code-block:: yaml
+  .. tabs::
 
-     transformationCatalog:
-       transformations:
-         - namespace: pegasus
-           name: preprocess
-           version: '4.0'
-        sites:
-          - {name: condorpool, pfn: /usr/bin/pegasus-keg, type: stageable, bypass: true,
-                arch: x86_64, os.type: linux, container: osgvo-el7}
-       containers:
-         - name: osgvo-el7
-           type: singularity
-           image: gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img
-           bypass: true
-           checksum: {sha256: dd78aaa88e1c6a8bf31c052eacfa03fba616ebfd903d7b2eb1b0ed6853b48713}
-     jobs:
-       - type: job
-         namespace: pegasus
-         version: '4.0'
-         name: preprocess
-         id: ID0000001
-         arguments: [-a, preprocess, -T, '60', -i, f.a, -o, f.b1, f.b2]
-         uses:
-           - {lfn: f.b2, type: output, stageOut: true, registerReplica: true}
-           - {lfn: f.a, type: input, bypass: true}
-           - {lfn: f.b1, type: output, stageOut: true, registerReplica: true}
+   .. code-tab:: python Python API
+
+        tc = TransformationCatalog()
+        # A container that will be used to execute the following transformations.
+        tools_container = Container(
+            "osgvo-el7",
+            Container.SINGULARITY,
+            image="gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img",
+            checksum={"sha256": "dd78aaa88e1c6a8bf31c052eacfa03fba616ebfd903d7b2eb1b0ed6853b48713"},
+            bypass_staging=True
+        )
+
+        tc.add_containers(tools_container)
+
+        preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
+            TransformationSite(
+                CONDOR_POOL,
+                PEGASUS_LOCATION,
+                is_stageable=True,
+                arch=Arch.X86_64,
+                os_type=OS.LINUX,
+                bypass_staging=True,
+                container=tools_container
+            )
+        )
+        print("Generating workflow")
+
+        fb1 = File("f.b1")
+        fb2 = File("f.b2")
+        fc1 = File("f.c1")
+        fc2 = File("f.c2")
+        fd = File("f.d")
+
+        try:
+            Workflow("blackdiamond").add_jobs(
+                Job(preprocess)
+                .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+                .add_inputs(fa, bypass_staging=True)
+                .add_outputs(fb1, fb2, register_replica=True))
+
+   .. code-tab:: yaml  YAML Workflow Snippet
+
+         transformationCatalog:
+           transformations:
+             - namespace: pegasus
+               name: preprocess
+               version: '4.0'
+            sites:
+              - {name: condorpool, pfn: /usr/bin/pegasus-keg, type: stageable, bypass: true,
+                    arch: x86_64, os.type: linux, container: osgvo-el7}
+           containers:
+             - name: osgvo-el7
+               type: singularity
+               image: gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img
+               bypass: true
+               checksum: {sha256: dd78aaa88e1c6a8bf31c052eacfa03fba616ebfd903d7b2eb1b0ed6853b48713}
+         jobs:
+           - type: job
+             namespace: pegasus
+             version: '4.0'
+             name: preprocess
+             id: ID0000001
+             arguments: [-a, preprocess, -T, '60', -i, f.a, -o, f.b1, f.b2]
+             uses:
+               - {lfn: f.b2, type: output, stageOut: true, registerReplica: true}
+               - {lfn: f.a, type: input, bypass: true}
+               - {lfn: f.b1, type: output, stageOut: true, registerReplica: true}
+
 
 Bypass in condorio mode
 ~~~~~~~~~~~~~~~~~~~~~~~
