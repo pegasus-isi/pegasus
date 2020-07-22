@@ -1011,7 +1011,7 @@ OR
                 .add_inputs(fa, bypass_staging=True)
                 .add_outputs(fb1, fb2, register_replica=True))
 
-   .. code-tab:: yaml  YAML Workflow Snippet
+   .. code-tab:: yaml  Workflow Snippet
 
          transformationCatalog:
            transformations:
