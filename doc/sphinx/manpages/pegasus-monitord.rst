@@ -225,7 +225,7 @@ running **pegasus-monitord** manually. For example:
 
 ::
 
-   $ pegasus_monitord -r diamond-0.dag.dagman.out
+   $ pegasus-monitord -r diamond-0.dag.dagman.out
 
 will launch **pegasus-monitord** in replay mode. In this case, if a
 *jobstate.log* file already exists, it will be rotated and a new file
@@ -236,13 +236,13 @@ associated with that workflow id.
 
 ::
 
-   $ pegasus_monitord -r --no-database diamond-0.dag.dagman.out
+   $ pegasus-monitord -r --no-database diamond-0.dag.dagman.out
 
 will do the same thing, but without generating any log events.
 
 ::
 
-   $ pegasus_monitord -r --dest `pwd`/diamond-0.bp diamond-0.dag.dagman.out
+   $ pegasus-monitord -r --dest `pwd`/diamond-0.bp diamond-0.dag.dagman.out
 
 will create the file *diamond-0.bp* in the current directory, containing
 NetLogger events with all the workflow data. This is in addition to the
@@ -265,7 +265,7 @@ example:
 
 ::
 
-   $ pegasus_monitord -r --dest sqlite:////home/user/diamond_database.db diamond-0.dag.dagman.out
+   $ pegasus-monitord -r --dest sqlite:////home/user/diamond_database.db diamond-0.dag.dagman.out
 
 Here are docs with details for all of the supported drivers:
 http://www.sqlalchemy.org/docs/05/reference/dialects/index.html
