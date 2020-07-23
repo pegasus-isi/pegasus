@@ -472,8 +472,8 @@ properties
 
 5. **pegasus.catalog.replica.db.password=<database password>**
 
-Users can use the command line client :ref:`rc-pegasus-rc-client` to
-interface to query, insert and remove entries from the JDBCRC backend.
+Users can use the command line client :ref:`pegasus-rc-client <rc-pegasus-rc-client>`
+to interface to query, insert and remove entries from the JDBCRC backend.
 Starting 4.5 release, there is also support for sqlite databases.
 Specify the jdbc url to refer to a sqlite database.
 
@@ -620,34 +620,230 @@ Resource Discovery (Site Catalog)
 =================================
 
 The Site Catalog describes the compute resources (which are often
-clusters) that we intend to run the workflow upon. A site is a
-homogeneous part of a cluster that has at least a single GRAM gatekeeper
-with a **jobmanager-fork** and\ *jobmanager-<scheduler>* interface and
-at least one **gridftp** server along with a shared file system. The
-GRAM gatekeeper can be either WS GRAM or Pre-WS GRAM. A site can also be
-a condor pool or glidein pool with a shared file system.
+clusters or a local HTCondor pool) that we intend to run the workflow
+upon. A site is a homogeneous part of a cluster that has one or more
+directories associated with it. Usually you associate directories
+of type
 
-The Site Catalog can be described as an XML . Pegasus currently supports
-two schemas for the Site Catalog:
+* shared-scratch
+* local-storage
 
-1. **YAML**\ (Default) Corresponds to the schema described
+Each directory in turn has a file server associated with it that tells
+Pegasus how to stage-in and stage-out data to those directories on the
+site.  A site can also be
+a glidein pool such as when submitting workflows from a OSG submit
+node.
+
+Described below are some of the entries in the site catalog.
+
+1. **site** - A site identifier.
+
+2. **grid-gateway** - A site can optionally have a grid gateway
+   associated with it that designates a GRAM gatekeeper
+   (with a **jobmanager-fork** or **jobmanager-<scheduler>** interface)
+   or a remote BOSCO endpoint to allow for remote job submissions to
+   the site.
+
+3. **Directory** - Info about filesystems Pegasus can use for storing
+   temporary and long-term files. There are several configurations:
+
+   -  **shared-scratch** - This describes the scratch file systems.
+      Pegasus will use this to store intermediate data between jobs and
+      other temporary files.
+
+   -  **local-storage** - This describes the storage file systems (long
+      term). This is the directory Pegasus will stage output files to.
+
+   -  **local-scratch** - This describes the scratch file systems
+      available locally on a compute node. This parameter is not
+      commonly used and can be left unset in most cases.
+
+   For each of the directories, you can specify access methods. Allowed
+   methods are **put**, **get**, and **all** which means both put and
+   get. For each mehod, specify a URL including the protocol. For
+   example, if you want share data via http using the /var/www/staging
+   directory, you can use scp://hostname/var/www for the put element and
+   http://hostname/staging for the get element.
+
+4. **arch,os,osrelease,osversion,** - The
+   arch/os/osrelease/osversion/ of the site.
+
+   ARCH can have one of the following values with the default value of
+   **x86_64**.
+
+    * x86
+    * x86_64
+    * ppc
+    * ppc_64
+    * ppc64le
+    * ia64
+    * sparcv7
+    * sparcv9
+    * amd64
+
+   OS can have one of the following values
+
+    * linux
+    * sunos
+    * macosx
+    * aix
+    * windows
+
+5. **Profiles** - One or many profiles can be attached to a site.
+
+   One example is the environments to be set on a remote site.
+
+**Reserved Sites in Pegasus**
+
+1. **local**
+
+   In Pegasus local site is a reserved site that is used to designate
+   the workflow submit node where Pegasus and HTCondor Schedd is
+   installed. Pegasus usually does not execute any compute jobs specified
+   by the user on this site. It is usually reserved for running Pegasus
+   auxillary jobs in the HTCondor *local* universe.
+
+   Pegasus will create an automatic entry for the local site if you don't
+   specify one yourself in the site catalog.
+
+2. **condorpool**
+
+    Starting with the 5.0 release, Pegasus automatically also creates a
+    *condorpool* site that can be used to run compute jobs. This site
+    maps to the local HTCondor pool on your submit node and jobs scheduled
+    to this site rely on HTCondor file transfers and are executed in
+    HTCondor *vanilla* universe.
+
+The rest of this section shows how to configure the site catalog.
+
+Pegasus supports the following implementations of the Site Catalog.
+
+1. **YAML** (Default) Corresponds to the schema described
+   `here <schemas/sc-5.0.yml>`__.
+
+2. **XML** Corresponds to the schema described
    `here <schemas/sc-4.0/sc-4.0.html>`__.
 
-2. **XML4**\ (Default) Corresponds to the schema described
-   `here <schemas/sc-4.0/sc-4.0.html>`__.
+The above two formats are functionally equivalent
 
 .. _sc-YAML:
 
-Coming Soon
+YAML
+----
+
+The YAML mode is the Default mode, and by default Pegasus picks up a
+file named **sites.yml** in the current working directory ( from
+where pegasus-plan is invoked) as the Site Catalog for planning.
+To override this you have to set the following properties
+
+1.  **pegasus.catalog.site.file=<path to the site catalog file>**
+
+We recommend that users use the Python API to generate the site catalog
+
+The following illustrates how :py:class:`Pegasus.api.site_catalog.SiteCatalog`
+can be used to generate a new Site Catalog programatically.
+
+.. tabs::
+
+    .. code-tab:: python generate_sc.py
+
+        from Pegasus.api import *
+
+        # create a SiteCatalog object
+        sc = SiteCatalog()
+
+        # create a "local" site
+        local = Site("local", arch=Arch.X86_64, os_type=OS.LINUX)
+
+        # create and add a shared scratch and local storage directories to the site "local"
+        local_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/tmp/workflows/scratch")\
+                                    .add_file_servers(FileServer("file:///tmp/workflows/scratch", Operation.ALL))
+
+        local_local_storage_dir = Directory(Directory.LOCAL_STORAGE, path="/tmp/workflows/outputs")\
+                                    .add_file_servers(FileServer("file:///tmp/workflows/outputs", Operation.ALL))
+
+        local.add_directories(local_shared_scratch_dir, local_local_storage_dir)
+
+        # create a "condorpool" site
+        condorpool = Site("condorpool", arch=Arch.X86_64, os_type=OS.LINUX)
+
+        # create and add job managers to the site "condorpool"
+        condorpool.add_grids(
+            Grid(Grid.GT5, contact="smarty.isi.edu/jobmanager-pbs", scheduler_type=Scheduler.PBS, job_type=SupportedJobs.AUXILLARY),
+            Grid(Grid.GT5, contact="smarty.isi.edu/jobmanager-pbs", scheduler_type=Scheduler.PBS, job_type=SupportedJobs.COMPUTE)
+        )
+
+        # create and add a shared scratch directory to the site "condorpool"
+        condorpool_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/lustre")\
+                                            .add_file_servers(FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL))
+        condorpool.add_directories(condorpool_shared_scratch_dir)
+
+        # create a "staging_site" site
+        staging_site = Site("staging_site", arch=Arch.X86_64, os_type=OS.LINUX)
+
+        # create and add a shared scratch directory to the site "staging_site"
+        staging_site_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/data")\
+                                            .add_file_servers(
+                                                FileServer("scp://obelix.isi.edu/data", Operation.PUT),
+                                                FileServer("http://obelix.isi.edu/data", Operation.GET)
+                                            )
+        staging_site.add_directories(staging_site_shared_scratch_dir)
+
+        # add all the sites to the site catalog object
+        sc.add_sites(
+            local,
+            condorpool,
+            staging_site
+        )
+
+        # write the site catalog to the default path "./sites.yml"
+        sc.write()
+
+    .. code-tab:: yaml YAML SC
+
+        x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '07-23-20T14:05:48Z'}
+        pegasus: '5.0'
+        sites:
+        - name: local
+          arch: x86_64
+          os.type: linux
+          directories:
+          - type: sharedScratch
+            path: /tmp/workflows/scratch
+            fileServers:
+            - {url: 'file:///tmp/workflows/scratch', operation: all}
+          - type: localStorage
+            path: /tmp/workflows/outputs
+            fileServers:
+            - {url: 'file:///tmp/workflows/outputs', operation: all}
+        - name: condorpool
+          arch: x86_64
+          os.type: linux
+          directories:
+          - type: sharedScratch
+            path: /lustre
+            fileServers:
+            - {url: 'gsiftp://smarty.isi.edu/lustre', operation: all}
+          grids:
+          - {type: gt5, contact: smarty.isi.edu/jobmanager-pbs, scheduler: pbs, jobtype: auxillary}
+          - {type: gt5, contact: smarty.isi.edu/jobmanager-pbs, scheduler: pbs, jobtype: compute}
+        - name: staging_site
+          arch: x86_64
+          os.type: linux
+          directories:
+          - type: sharedScratch
+            path: /data
+            fileServers:
+            - {url: 'scp://obelix.isi.edu/data', operation: put}
+            - {url: 'http://obelix.isi.edu/data', operation: get}
 
 .. _sc-XML4:
 
 XML4
 ----
 
-This is the default format for Pegasus 4.2. This format allows defining
-filesystem of shared as well as local type on the head node of the
-remote cluster as well as on the backend nodes
+This format allows defining filesystem of shared as well as local type
+on the head node of the remote cluster as well as on the backend nodes
 
 .. figure:: images/sc-4.0_p2.png
    :alt: Schema Image of the Site Catalog XML4
@@ -692,76 +888,21 @@ Below is an example of the XML4 site catalog
    </sitecatalog>
 
 
-Described below are some of the entries in the site catalog.
-
-1. **site** - A site identifier.
-
-2. **Directory** - Info about filesystems Pegasus can use for storing
-   temporary and long-term files. There are several configurations:
-
-   -  **shared-scratch** - This describes the scratch file systems.
-      Pegasus will use this to store intermediate data between jobs and
-      other temporary files.
-
-   -  **local-storage** - This describes the storage file systems (long
-      term). This is the directory Pegasus will stage output files to.
-
-   -  **local-scratch** - This describes the scratch file systems
-      available locally on a compute node. This parameter is not
-      commonly used and can be left unset in most cases.
-
-   For each of the directories, you can specify access methods. Allowed
-   methods are **put**, **get**, and **all** which means both put and
-   get. For each mehod, specify a URL including the protocol. For
-   example, if you want share data via http using the /var/www/staging
-   directory, you can use scp://hostname/var/www for the put element and
-   http://hostname/staging for the get element.
-
-3. **arch,os,osrelease,osversion, glibc** - The
-   arch/os/osrelease/osversion/glibc of the site. OSRELEASE, OSVERSION
-   and GLIBC are optional
-
-   ARCH can have one of the following values X86, X86_64, SPARCV7,
-   SPARCV9, AIX, PPC.
-
-   OS can have one of the following values LINUX,SUNOS,MACOSX. The
-   default value for sysinfo if none specified is X86::LINUX
-
-4. **replica-catalog** - URL for a local replica catalog (LRC) to
-   register your files in. Only used for RLS implementation of the RC.
-   This is optional and support for RLS has been dropped in Pegasus
-   4.5.0 release.
-
-5. **Profiles** - One or many profiles can be attached to a site.
-
-   One example is the environments to be set on a remote site.
-
-To use this site catalog the follow properties need to be set:
-
-1. **pegasus.catalog.site.file=<path to the site catalog file>**
-
 Site Catalog Converter pegasus-sc-converter
 -------------------------------------------
 
-Pegasus 4.2 by default now parses Site Catalog format conforming to the
-SC schema 4.0 (XML4) available `here <schemas/sc-4.0/sc-4.0.xsd>`__ and
-is explained in detail in the Catalog Properties section of `Running
-Workflows <#running_workflows>`__.
+The recommended and default format for Site Catalog is YAML now and
+we recommend users to use :ref:`cli-pegasus-sc-converter` to convert
+their existing catalogs to the yaml format.
 
-Pegasus 4.2 comes with a pegasus-sc-converter that will convert users
-old site catalog (XML3) to the XML4 format. Sample usage is given below.
 
-::
+For example, to convert a Site Catalog file, ``sites.xml``, to YAML,
+use the following
 
-   $ pegasus-sc-converter -i sample.sites.xml -I XML3 -o sample.sites.xml4 -O XML4
+command::
 
-   2010.11.22 12:55:14.169 PST:   Written out the converted file to sample.sites.xml4
+    pegasus-sc-converter -i sites.xml -o sites.yml
 
-To use the converted site catalog, in the properties do the following:
-
-1. unset pegasus.catalog.site or set pegasus.catalog.site to XML
-
-2. point pegasus.catalog.site.file to the converted site catalog
 
 .. _transformation:
 
