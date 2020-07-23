@@ -1,3 +1,4 @@
+
 from enum import Enum
 from functools import partialmethod, wraps
 from typing import Dict, Optional, Union
@@ -10,9 +11,9 @@ class MetadataMixin:
     """Derived class can have metadata assigned to it as key value pairs."""
 
     @_chained
-    def add_metadata(self, *args: Dict[str, Union[str, int, float]], **kwargs):
+    def add_metadata(self, *args: Dict[str, Union[str, int, float, bool]], **kwargs):
         """
-        add_metadata(self, *args: Dict[str, Union[str, int, float]], **kwargs)
+        add_metadata(self, *args: Dict[str, Union[str, int, float, bool]], **kwargs)
         Add metadata key value pairs to this object
 
         .. code-block:: python
@@ -24,7 +25,7 @@ class MetadataMixin:
             job.add_metadata(key1="value1, key2="value2")
 
         :param args: dictionary of key value pair to add as metadata
-        :type args: Dict[str, Union[str, int, float]]
+        :type args: Dict[str, Union[str, int, float, bool]]
         :raises TypeError: each arg in args must be a dict
         :return: self
         """
