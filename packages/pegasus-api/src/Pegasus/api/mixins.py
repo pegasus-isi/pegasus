@@ -1,4 +1,3 @@
-
 from enum import Enum
 from functools import partialmethod, wraps
 from typing import Dict, Optional, Union
