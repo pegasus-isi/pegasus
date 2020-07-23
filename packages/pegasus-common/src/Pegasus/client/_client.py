@@ -3,10 +3,11 @@ import logging
 import multiprocessing
 import re
 import shutil
+import signal
 import subprocess
 import time
 from functools import partial
-from os import path
+from os import path, kill
 from pathlib import Path
 from typing import Dict, List, Union
 
@@ -164,6 +165,7 @@ class Client:
         if abstract_workflow:
             cmd.append(abstract_workflow)
 
+        # a simple loading animation to signal that pegasus-plan is not hanging
         def _loading_animation():
             chars = "\\|/-\\/"
             i = 1
@@ -179,8 +181,8 @@ class Client:
         loading_animation.start()
 
         rv = self._exec(cmd)
+        kill(loading_animation.pid, signal.SIGKILL)
 
-        loading_animation.kill()
         # clear last "planning workflow .."
         print("\r" + (" " * 26))
 
