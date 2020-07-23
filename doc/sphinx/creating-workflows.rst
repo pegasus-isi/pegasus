@@ -13,7 +13,7 @@ The Abstract Workflow is a description of an user workflow, usually in
 **YAML** format (before 5.0 release, it was a XML based format called the DAX)
 that is used as the primary input into Pegasus. The workflow schema is
 described using JSON schemas in
-`wf-5.0.yml <https://pegasus.isi.edu/schema/wf-5.0.yml>`__ .
+`wf-5.0.yml <schemas/5.0/wf-5.0.yml>`__ .
 We recommend that users  use the Workflow API to generate the abstract
 workflows. The documentation of the API's can be found at
 :ref:`api-reference` . The Workflow API is available for users to use in
@@ -236,7 +236,7 @@ YAML
 Starting 5.0 release, this is the default Replica Catalog backend in
 Pegasus, replacing the old File format. In this format, you describe
 the locations of your files in a YAML format that is described
-using JSON schemas in `rc-5.0.yml <https://pegasus.isi.edu/schema/rc-5.0.yml>`__ .
+using JSON schemas in `rc-5.0.yml <schemas/5.0/rc-5.0.yml>`__ .
 
 The YAML mode is the Default mode, and by default Pegasus picks up a
 file named **replicas.yml** in the current working directory ( from
@@ -719,7 +719,7 @@ The rest of this section shows how to configure the site catalog.
 Pegasus supports the following implementations of the Site Catalog.
 
 1. **YAML** (Default) Corresponds to the schema described
-   `here <schemas/sc-5.0.yml>`__.
+   `here <schemas/5.0/sc-5.0.yml>`__.
 
 2. **XML** Corresponds to the schema described
    `here <schemas/sc-4.0/sc-4.0.html>`__.
