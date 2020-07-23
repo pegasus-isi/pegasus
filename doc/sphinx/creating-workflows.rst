@@ -16,7 +16,7 @@ described using JSON schemas in
 `wf-5.0.yml <https://pegasus.isi.edu/schema/wf-5.0.yml>`__ .
 We recommend that users  use the Workflow API to generate the abstract
 workflows. The documentation of the API's can be found at
-:ref:`_api-reference`. The Workflow API is available for users to use in
+:ref:`api-reference` . The Workflow API is available for users to use in
 Python, Java and R format.
 
 
@@ -388,18 +388,6 @@ your file.
 
 .. _rc-directory:
 
-Checksum
---------
-
-In this mode, checksums for raw input files to your workflow can be specified.
-Pegasus will check against these checksums to ensure data integrity. An example
-of this is shown below. More information in integrity checking can be found in the
-section of this guide on `Integrity Checking <#integrity-checking>`__.
-
-::
-
-   # file-based replica catalog: 2018-10-25T02:10:02.293-07:00
-   f.a file:///lfs1/input-data/f.a checksum.type="sha256" checksum.value="ca8ed5988cb4ca0b67c45fd80fd17423aba2a066ca8a63a4e1c6adab067a3e92" site="condorpool"
 
 Directory
 ---------
@@ -456,7 +444,7 @@ JDBCRC
 
 In this mode, Pegasus queries a SQL based replica catalog that is
 accessed via JDBC. To create the schema for JDBCRC use the
-`pegasus-db-admin <#cli-pegasus-db-admin>`__ command line tool.
+:ref:`pegasus-db-admin <cli-pegasus-db-admin>`  command line tool.
 
 .. note::
 
@@ -484,10 +472,10 @@ properties
 
 5. **pegasus.catalog.replica.db.password=<database password>**
 
-Users can use the command line client *pegasus-rc-client* to interface
-to query, insert and remove entries from the JDBCRC backend. Starting
-4.5 release, there is also support for sqlite databases. Specify the
-jdbc url to refer to a sqlite database.
+Users can use the command line client :ref:`rc-pegasus-rc-client` to
+interface to query, insert and remove entries from the JDBCRC backend.
+Starting 4.5 release, there is also support for sqlite databases.
+Specify the jdbc url to refer to a sqlite database.
 
 .. _rc-MRC:
 
@@ -551,8 +539,40 @@ properties for that configuration are listed below
 
 .. _pegasus-rc-client:
 
+Checksums in Replica Catalog
+----------------------------
+
+You can specify checksums for raw input files to your workflow in a Replica
+Catalog. Pegasus will check against these checksums to ensure data integrity.
+An example of this is shown below. More information in integrity checking
+can be found in the section of this guide on
+`Integrity Checking <#integrity-checking>`__.
+
+Below is an example of how checksums are specified in YAML and File based
+RC's. JDBC backend also supports specification of checksums. For that use
+a File based rc as an input to the :ref:`pegasus-rc-client<rc-pegasus-rc-client>` .
+
+.. tabs::
+
+    .. code-tab:: yaml YAML
+
+        pegasus: '5.0'
+        replicas:
+          - lfn: input.txt
+            pfns:
+              - {site: local, pfn: 'http://example.com/pegasus/input/input.txt'}
+            checksum: {sha256: 66a42b4be204c824a7533d2c677ff7cc5c44526300ecd6b450602e06128063f9}
+
+
+    .. code-tab:: text
+
+       # file-based replica catalog: 2018-10-25T02:10:02.293-07:00
+       f.a file:///lfs1/input-data/f.a checksum.type="sha256" checksum.value="ca8ed5988cb4ca0b67c45fd80fd17423aba2a066ca8a63a4e1c6adab067a3e92" site="condorpool"
+
+.. _rc-pegasus-rc-client:
+
 Replica Catalog Client pegasus-rc-client
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 The client used to interact with the Replica Catalogs is
 pegasus-rc-client. The implementation that the client talks to is
