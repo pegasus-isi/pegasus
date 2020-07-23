@@ -1,5 +1,6 @@
 import json
 import logging
+import multiprocessing
 import re
 import shutil
 import subprocess
@@ -163,7 +164,25 @@ class Client:
         if abstract_workflow:
             cmd.append(abstract_workflow)
 
+        def _loading_animation():
+            chars = "\\|/-\\/"
+            i = 1
+            while True:
+                for c in chars:
+                    print(
+                        "\r{} planning workflow {}   ".format(c, "." * (i % 4)), end=""
+                    )
+                    i += 1
+                    time.sleep(0.3)
+
+        loading_animation = multiprocessing.Process(target=_loading_animation)
+        loading_animation.start()
+
         rv = self._exec(cmd)
+
+        loading_animation.kill()
+        # clear last "planning workflow .."
+        print("\r" + (" " * 26))
 
         header = "\n################\n# pegasus-plan #\n################"
 
