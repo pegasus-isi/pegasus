@@ -10,7 +10,7 @@ Abstract Workflows
 ==================
 
 The Abstract Workflow is a description of an user workflow, usually in
-YAML format (before 5.0 release, it was a XML based format called the DAX)
+**YAML** format (before 5.0 release, it was a XML based format called the DAX)
 that is used as the primary input into Pegasus. The workflow schema is
 described using JSON schemas in
 `wf-5.0.yml <https://pegasus.isi.edu/schema/wf-5.0.yml>`__ .
@@ -189,6 +189,31 @@ A PFN consists of a URL with protocol, host and port information and a
 path to a file. Along with the PFN one can also store additional
 key/value attributes to be associated with a PFN.
 
+The Replica Catalog has two uses in Pegasus.
+
+1. **Input Replica Catalog:** Discover the location of input files or
+   previously generated datasets to use for planning purposes. To
+   configure the input replica catalog use the properties prefix
+   **pegasus.catalog.replica**.
+
+2. **Output Replica Catalog:** Register the generated outputs if the
+   outputs are marked for registration. Starting 5.0 release, by
+   default Pegasus will registers outputs to a JDBC based Replica
+   Catalog (*workflow-name.replicas.db*) in the workflow submit directory.
+   For hierarchical workflows only one output replica catalog db is
+   generated in the root workflow submit directory. To
+   configure the output replica catalog use the properties prefix
+   **pegasus.catalog.replica.output**.
+
+The rest of this section shows how to configure input replica catalogs.
+You can replace *pegasus.catalog.replica* with *pegasus.catalog.replica.output*
+to configure output replica catalog.
+
+.. note::
+
+   Before 5.0 release, there was no differentiation between the input
+   and the output replica catalog.
+
 Pegasus supports the following implementations of the Replica Catalog.
 
 1. **YAML** (Default)
@@ -208,17 +233,65 @@ Pegasus supports the following implementations of the Replica Catalog.
 YAML
 ----
 
-Coming Soon
+Starting 5.0 release, this is the default Replica Catalog backend in
+Pegasus, replacing the old File format. In this format, you describe
+the locations of your files in a YAML format that is described
+using JSON schemas in `rc-5.0.yml <https://pegasus.isi.edu/schema/rc-5.0.yml>`__ .
+
+The YAML mode is the Default mode, and by default Pegasus picks up a
+file named **replicas.yml** in the current working directory ( from
+where pegasus-plan is invoked) as the Replica Catalog for planning.
+To override this you have to set the following properties
+
+1. **pegasus.catalog.replica=YAML**
+
+2. **pegasus.catalog.replica.file=<path to the replica catalog file>**
+
+This backend is not transactionally safe for use as an output replica catalog.
+Concurrent instances will conflict with each other especially in case
+of hierarchical workflows.
+
+We recommend that users use the Python Workflow API to generate their
+Replica Catalog files. Below is a snippet of how you would do it
+
+.. tabs::
+
+    .. code-tab:: python generate_rc.py
+
+        from Pegasus.api import *
+
+        infile = File('input.txt')
+        rc = ReplicaCatalog()\
+              .add_replica('local', infile, "http://example.com/pegasus/input/" + infile.lfn,\
+                            checksum = {'sha256':'66a42b4be204c824a7533d2c677ff7cc5c44526300ecd6b450602e06128063f9'})\
+               .write()
+
+        # the Replica Catalog will be written to the default path "./replicas.yml"
+
+    .. code-tab:: yaml YAML RC
+
+        pegasus: '5.0'
+        replicas:
+          - lfn: input.txt
+            pfns:
+              - {site: local, pfn: 'http://example.com/pegasus/input/input.txt'}
+            checksum: {sha256: 66a42b4be204c824a7533d2c677ff7cc5c44526300ecd6b450602e06128063f9}
 
 .. _rc-FILE:
+
+.. tip::
+
+    **Regular Expressions**
+    This backend also supports for specification of regular expressions for
+    file locations (similar to the Regex type backend), with the caveat that
+    if regular expressions are used, then the Replica Catalog should be a
+    separate file, and not embedded in the workflow description.
 
 File
 ----
 
 In this mode, Pegasus queries a file based replica catalog. The file
-format is a simple multicolumn format. It is neither transactionally
-safe, nor advised to use for production purposes in any way. Multiple
-concurrent instances will conflict with each other. The site attribute
+format is a simple multicolumn format. The site attribute
 should be specified whenever possible. The attribute key for the site
 attribute is **"site".**
 
@@ -236,12 +309,16 @@ same conditions apply for the PFN. The attribute key-value pairs are
 separated by an equality sign without any whitespaces. The value may be
 quoted. The LFN sentiments about quoting apply.
 
-The file mode is the Default mode. In order to use the File mode you
+In order to use the File mode you
 have to set the following properties
 
 1. **pegasus.catalog.replica=File**
 
 2. **pegasus.catalog.replica.file=<path to the replica catalog file>**
+
+This backend is not transactionally safe for use as an output replica catalog.
+Concurrent instances will conflict with each other especially in case
+of hierarchical workflows.
 
 .. _rc-regex:
 
