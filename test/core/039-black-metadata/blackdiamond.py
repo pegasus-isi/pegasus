@@ -1,98 +1,131 @@
-#!/usr/bin/env python
-import sys
-import os
-from Pegasus.DAX3 import *
+import logging
 
-if len(sys.argv) != 2:
-        print "Usage: %s PEGASUS_BIN" % (sys.argv[0])
-        sys.exit(1)
+from pathlib import Path
+from datetime import datetime
 
+from Pegasus.api import *
 
-# Create a DAX
-diamond = ADAG("diamond")
- 
-# Add some metadata
-diamond.metadata("name", "diamond")
-diamond.metadata("createdby", "Karan Vahi")
- 
-# Add input file to the DAX-level replica catalog
-a = File("f.a")
-a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
-a.metadata("size", "1024")
-a.metadata("raw_input", "true")
-diamond.addFile(a)
- 
-# Add executables to the DAX-level replica catalog
-keg = PFN("file://" + sys.argv[1] + "/pegasus-keg", "local")
-e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
-e_preprocess.metadata("size", "2048")
-e_preprocess.metadata("transformation", "preprocess")
-e_preprocess.addPFN(keg)
-diamond.addExecutable(e_preprocess)
- 
-e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=False)
-e_findrange.metadata("size", "2048")
-e_findrange.metadata("transformation", "findrange")
-e_findrange.addPFN(keg)
-diamond.addExecutable(e_findrange)
- 
-e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=False)
-e_analyze.metadata("size", "2048")
-e_analyze.metadata("transformation", "analyze")
-e_analyze.addPFN(keg)
-diamond.addExecutable(e_analyze)
- 
-# Add a preprocess job
-preprocess = Job(e_preprocess)
-preprocess.metadata("time", "60")
-b1 = File("f.b1")
-b2 = File("f.b2")
-preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1, "-o",b2)
-preprocess.uses(a, link=Link.INPUT)
-preprocess.uses(b1, link=Link.OUTPUT, transfer=True, register=True)
-preprocess.uses(b2, link=Link.OUTPUT, transfer=True, register=True)
-diamond.addJob(preprocess)
- 
-# Add left Findrange job
-frl = Job(e_findrange)
-frl.metadata("time", "60")
-c1 = File("f.c1")
-frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-frl.uses(b1, link=Link.INPUT)
-frl.uses(c1, link=Link.OUTPUT, transfer=True, register=True)
-diamond.addJob(frl)
- 
-# Add right Findrange job
-frr = Job(e_findrange)
-frr.metadata("time", "60")
-c2 = File("f.c2")
-frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-frr.uses(b2, link=Link.INPUT)
-frr.uses(c2, link=Link.OUTPUT, transfer=True, register=True)
-diamond.addJob(frr)
- 
-# Add Analyze job
-analyze = Job(e_analyze)
-analyze.metadata("time", "60")
-d = File("f.d")
-d.metadata("final_output", "true")
-analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-analyze.uses(c1, link=Link.INPUT)
-analyze.uses(c2, link=Link.INPUT)
-analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
-diamond.addJob(analyze)
- 
-# Add dependencies
-diamond.depends(parent=preprocess, child=frl)
-diamond.depends(parent=preprocess, child=frr)
-diamond.depends(parent=frl, child=analyze)
-diamond.depends(parent=frr, child=analyze)
- 
-# Write the DAX to stdout
-import sys
-diamond.writeXML(sys.stdout)
- 
-# Write the DAX to a file
-f = open("diamond.dax","w")
-diamond.writeXML(f)
-f.close()
+logging.basicConfig(level=logging.DEBUG)
+
+PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
+
+# --- Work Dir Setup -----------------------------------------------------------
+RUN_ID = "black-diamond-metadata-" + datetime.now().strftime("%s")
+TOP_DIR = Path.cwd()
+WORK_DIR = TOP_DIR / "work"
+
+try:
+    Path.mkdir(WORK_DIR)
+except FileExistsError:
+    pass
+
+# --- Configuration ------------------------------------------------------------
+
+print("Generating pegasus.conf at: {}".format(TOP_DIR / "pegasus.properties"))
+
+conf = Properties()
+conf["pegasus.catalog.site.file"] = "./conf/sites.yml"
+conf["pegasus.catalog.site"] = "YAML"
+conf.write()
+
+# --- Replicas -----------------------------------------------------------------
+
+print("Generating replica catalog at: {}".format(TOP_DIR / "replicas.yml"))
+
+# create initial input file
+with open("f.a", "w") as f:
+    f.write("This is sample input to KEG\n")
+
+fa = File("f.a", size=1024).add_metadata({"raw_input": "true"})
+ReplicaCatalog().add_replica("local", fa, TOP_DIR / fa.lfn).write()
+
+# --- Transformations ----------------------------------------------------------
+
+print(
+    "Generating transformation catalog at: {}".format(TOP_DIR / "transformations.yml")
+)
+
+preprocess = Transformation(
+                "preprocess", 
+                namespace="pegasus", 
+                version="4.0",
+                site="condorpool",
+                pfn=PEGASUS_LOCATION,
+                is_stageable=False,
+                arch=Arch.X86_64,
+                os_type=OS.LINUX
+            ).add_metadata(size=2048, transformation="preprocess")
+
+findrange = Transformation(
+                "findrange", 
+                namespace="pegasus", 
+                version="4.0",
+                site="condorpool",
+                pfn=PEGASUS_LOCATION,
+                is_stageable=False,
+                arch=Arch.X86_64,
+                os_type=OS.LINUX
+            ).add_metadata(size=2048, transformation="findrange")
+
+analyze = Transformation(
+                "analyze", 
+                namespace="pegasus", 
+                version="4.0",
+                site="condorpool",
+                pfn=PEGASUS_LOCATION,
+                is_stageable=False,
+                arch=Arch.X86_64,
+                os_type=OS.LINUX
+            ).add_metadata(size=2048, transformation="analyze")
+
+TransformationCatalog().add_transformations(preprocess, findrange, analyze).write()
+
+# --- Workflow -----------------------------------------------------------------
+print("Generating workflow")
+
+wf = Workflow("diamond")
+wf.add_metadata(label="keg-diamond", group="test")
+
+fb1 = File("f.ƀ1")
+fb2 = File("f.β2")
+fc1 = File("f.Ҫ1")
+fc2 = File("f.Ͻ2")
+fd = File("f.Ɗ").add_metadata(final_output=True)
+
+preprocess_job = Job(preprocess)\
+                    .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)\
+                    .add_inputs(fa)\
+                    .add_outputs(fb1, fb2, register_replica=True)\
+                    .add_metadata(time=60)
+
+findrange_1_job = Job(findrange)\
+                    .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)\
+                    .add_inputs(fb1)\
+                    .add_outputs(fc1, register_replica=True)\
+                    .add_metadata(time=60)
+
+findrange_2_job = Job(findrange)\
+                    .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)\
+                    .add_inputs(fb2)\
+                    .add_outputs(fc2, register_replica=True)\
+                    .add_metadata(time=60)
+
+analyze_job = Job(analyze)\
+                .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)\
+                .add_inputs(fc1, fc2)\
+                .add_outputs(fd, register_replica=True)\
+                .add_metadata(time=60)
+
+wf.add_jobs(preprocess_job, findrange_1_job, findrange_2_job, analyze_job)
+
+try:
+    wf.plan(
+        dir=WORK_DIR,
+        verbose=3,
+        relative_dir=RUN_ID,
+        sites=["condorpool"],
+        force=True,
+        submit=True,
+    )
+except PegasusClientError as e:
+    print(e.output)
