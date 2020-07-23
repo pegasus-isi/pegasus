@@ -165,10 +165,12 @@ class Client:
 
         rv = self._exec(cmd)
 
-        if rv.exit_code:
-            self._log.fatal("Plan:\n{} \n{}".format(rv.stdout, rv.stderr))
+        header = "\n################\n# pegasus-plan #\n################"
 
-        self._log.info("Plan:\n{} \n{}".format(rv.stdout, rv.stderr))
+        if rv.exit_code:
+            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
+
+        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
 
         submit_dir = self._get_submit_dir(rv.stdout)
         workflow = Workflow(submit_dir, self)
@@ -187,10 +189,12 @@ class Client:
 
         rv = self._exec(cmd)
 
-        if rv.exit_code:
-            self._log.fatal("Run:\n{} \n{}".format(rv.stdout, rv.stderr))
+        header = "###############\n# pegasus-run #\n###############"
 
-        self._log.info("Run:\n{} \n{}".format(rv.stdout, rv.stderr))
+        if rv.exit_code:
+            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
+
+        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
 
     def status(self, submit_dir: str, long: bool = False, verbose: int = 0):
         cmd = [self._status]
@@ -205,10 +209,12 @@ class Client:
 
         rv = self._exec(cmd)
 
-        if rv.exit_code:
-            self._log.fatal("Status:\n{} \n{}".format(rv.stdout, rv.stderr))
+        header = "##################\n# pegasus-status #\n##################"
 
-        self._log.info("Status:\n{} \n{}".format(rv.stdout, rv.stderr))
+        if rv.exit_code:
+            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
+
+        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
 
     def wait(self, submit_dir: str, delay: int = 2):
         """Prints progress bar and blocks until workflow completes or fails"""
@@ -323,10 +329,12 @@ class Client:
 
         rv = self._exec(cmd)
 
-        if rv.exit_code:
-            self._log.fatal("Remove:\n{} \n{}".format(rv.stdout, rv.stderr))
+        header = "##################\n# pegasus-remove #\n##################"
 
-        self._log.info("Remove:\n{} \n{}".format(rv.stdout, rv.stderr))
+        if rv.exit_code:
+            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
+
+        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
 
     def analyzer(self, submit_dir: str, verbose: int = 0):
         cmd = [self._analyzer]
@@ -336,12 +344,14 @@ class Client:
 
         cmd.append(submit_dir)
 
+        header = "####################\n# pegasus-analyzer #\n####################"
+
         rv = self._exec(cmd)
 
         if rv.exit_code:
-            self._log.fatal("Analyzer:\n{} \n{}".format(rv.stdout, rv.stderr))
+            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
 
-        self._log.info("Analyzer:\n{} \n{}".format(rv.stdout, rv.stderr))
+        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
 
     def statistics(self, submit_dir: str, verbose: int = 0):
         cmd = [self._statistics]
@@ -351,12 +361,16 @@ class Client:
 
         cmd.append(submit_dir)
 
+        header = (
+            "######################\n# pegasus-statistics #\n######################"
+        )
+
         rv = self._exec(cmd)
 
         if rv.exit_code:
-            self._log.fatal("Statistics:\n{} \n{}".format(rv.stdout, rv.stderr))
+            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
 
-        self._log.info("Statistics:\n{} \n{}".format(rv.stdout, rv.stderr))
+        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
 
     @staticmethod
     def _exec(cmd):
