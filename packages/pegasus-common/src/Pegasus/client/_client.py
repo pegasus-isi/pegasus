@@ -1,13 +1,11 @@
 import json
 import logging
-import multiprocessing
 import re
 import shutil
-import signal
 import subprocess
 import time
 from functools import partial
-from os import path, kill
+from os import path
 from pathlib import Path
 from typing import Dict, List, Union
 
@@ -165,33 +163,9 @@ class Client:
         if abstract_workflow:
             cmd.append(abstract_workflow)
 
-        # a simple loading animation to signal that pegasus-plan is not hanging
-        def _loading_animation():
-            chars = "\\|/-\\/"
-            i = 1
-            while True:
-                for c in chars:
-                    print(
-                        "\r{} planning workflow {}   ".format(c, "." * (i % 4)), end=""
-                    )
-                    i += 1
-                    time.sleep(0.3)
-
-        loading_animation = multiprocessing.Process(target=_loading_animation)
-        loading_animation.start()
+        self._log.info("\n################\n# pegasus-plan #\n################")
 
         rv = self._exec(cmd)
-        kill(loading_animation.pid, signal.SIGKILL)
-
-        # clear last "planning workflow .."
-        print("\r" + (" " * 26))
-
-        header = "\n################\n# pegasus-plan #\n################"
-
-        if rv.exit_code:
-            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
-
-        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
 
         submit_dir = self._get_submit_dir(rv.stdout)
         workflow = Workflow(submit_dir, self)
@@ -208,14 +182,8 @@ class Client:
 
         cmd.append(submit_dir)
 
-        rv = self._exec(cmd)
-
-        header = "###############\n# pegasus-run #\n###############"
-
-        if rv.exit_code:
-            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
-
-        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
+        self._log.info("\n###############\n# pegasus-run #\n###############")
+        self._exec(cmd)
 
     def status(self, submit_dir: str, long: bool = False, verbose: int = 0):
         cmd = [self._status]
@@ -228,14 +196,8 @@ class Client:
 
         cmd.append(submit_dir)
 
-        rv = self._exec(cmd)
-
-        header = "##################\n# pegasus-status #\n##################"
-
-        if rv.exit_code:
-            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
-
-        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
+        self._log.info("\n##################\n# pegasus-status #\n##################")
+        self._exec(cmd)
 
     def wait(self, submit_dir: str, delay: int = 2):
         """Prints progress bar and blocks until workflow completes or fails"""
@@ -335,7 +297,12 @@ class Client:
             if not found_match:
                 raise PegasusClientError(
                     "Client.wait() encountered an error parsing pegasus-status output",
-                    self._make_result(rv),
+                    Result(
+                        ["pegasus-status", "-l", submit_dir],
+                        rv.returncode,
+                        rv.stdout,
+                        rv.stderr,
+                    ),
                 )
 
             time.sleep(delay)
@@ -348,14 +315,8 @@ class Client:
 
         cmd.append(submit_dir)
 
-        rv = self._exec(cmd)
-
-        header = "##################\n# pegasus-remove #\n##################"
-
-        if rv.exit_code:
-            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
-
-        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
+        self._log.info("\n##################\n# pegasus-remove #\n##################")
+        self._exec(cmd)
 
     def analyzer(self, submit_dir: str, verbose: int = 0):
         cmd = [self._analyzer]
@@ -365,14 +326,11 @@ class Client:
 
         cmd.append(submit_dir)
 
-        header = "####################\n# pegasus-analyzer #\n####################"
+        self._log.info(
+            "\n####################\n# pegasus-analyzer #\n####################"
+        )
 
-        rv = self._exec(cmd)
-
-        if rv.exit_code:
-            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
-
-        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
+        self._exec(cmd)
 
     def statistics(self, submit_dir: str, verbose: int = 0):
         cmd = [self._statistics]
@@ -382,37 +340,41 @@ class Client:
 
         cmd.append(submit_dir)
 
-        header = (
-            "######################\n# pegasus-statistics #\n######################"
+        self._log.info(
+            "\n######################\n# pegasus-statistics #\n######################"
         )
 
-        rv = self._exec(cmd)
+        self._exec(cmd)
 
-        if rv.exit_code:
-            self._log.fatal("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
-
-        self._log.info("{}\n{} \n{}".format(header, rv.stdout, rv.stderr))
-
-    @staticmethod
-    def _exec(cmd):
+    def _exec(self, cmd):
         if not cmd:
             raise ValueError("cmd is required")
 
-        rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        r = Client._make_result(rv)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out = []
 
-        if r.exit_code != 0:
-            raise PegasusClientError("Pegasus command: {} FAILED".format(cmd), r)
+        # stream output
+        while True:
+            stdout_line = proc.stdout.readline()
 
-        return r
+            # has proc terminated?
+            if proc.poll() is not None:
+                break
 
-    @staticmethod
-    def _make_result(rv: subprocess.CompletedProcess):
-        if not rv:
-            raise ValueError("rv is required")
+            if stdout_line:
+                out.append(stdout_line)
+                self._log.info(stdout_line.strip().decode())
 
-        r = Result(rv.args, rv.returncode, rv.stdout, rv.stderr)
-        return r
+        err = proc.stderr.read()
+        self._log.error(err.decode())
+        exit_code = proc.returncode
+
+        result = Result(cmd, exit_code, b"".join(out), err)
+
+        if exit_code != 0:
+            raise PegasusClientError("Pegasus command: {} FAILED".format(cmd), result)
+
+        return result
 
     @staticmethod
     def _get_submit_dir(output: str):

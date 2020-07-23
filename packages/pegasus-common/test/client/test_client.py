@@ -1,3 +1,4 @@
+import io
 import shutil
 import subprocess
 from collections import namedtuple
@@ -49,8 +50,20 @@ def test_from_env_no_pegasus_home(monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_subprocess(mocker):
-    cp = CompletedProcess(None, returncode=0, stdout=b" ", stderr=b" ")
-    mocker.patch("subprocess.run", return_value=cp)
+    class Popen:
+        def __init__(self):
+            self.stdout = io.BytesIO(b"some initial binary data: \x00\x01\n")
+            self.stderr = io.BytesIO(b"some initial binary data: \x00\x01\n")
+            self.returncode = 0
+
+        def poll(self):
+            return 0
+
+        def __del__(self):
+            self.stdout.close()
+            self.stderr.close()
+
+    mocker.patch("subprocess.Popen", return_value=Popen())
 
 
 @pytest.fixture(scope="function")
@@ -81,7 +94,7 @@ class TestClient:
             submit=True,
             env=123,
         )
-        subprocess.run.assert_called_once_with(
+        subprocess.Popen.assert_called_once_with(
             [
                 "/path/bin/pegasus-plan",
                 "-Denv=123",
@@ -141,13 +154,13 @@ class TestClient:
 
     def test_run(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3, json=True)
-        subprocess.run.assert_called_once_with(
+        subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-run", "-vvv", "-j", "submit_dir"], stderr=-1, stdout=-1
         )
 
     def test_status(self, mock_subprocess, client):
         client.status("submit_dir", long=True, verbose=3)
-        subprocess.run.assert_called_once_with(
+        subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-status", "--long", "-vvv", "submit_dir"],
             stderr=-1,
             stdout=-1,
@@ -219,34 +232,28 @@ class TestClient:
 
     def test_remove(self, mock_subprocess, client):
         client.remove("submit_dir", verbose=3)
-        subprocess.run.assert_called_once_with(
+        subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-remove", "-vvv", "submit_dir"], stderr=-1, stdout=-1
         )
 
     def test_analyzer(self, mock_subprocess, client):
         client.analyzer("submit_dir", verbose=3)
-        subprocess.run.assert_called_once_with(
+        subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-analyzer", "-vvv", "submit_dir"], stderr=-1, stdout=-1
         )
 
     def test_statistics(self, mock_subprocess, client):
         client.statistics("submit_dir", verbose=3)
-        subprocess.run.assert_called_once_with(
+        subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"], stderr=-1, stdout=-1
         )
 
-    def test__exec(self, mock_subprocess):
-        Client._exec("ls")
+    def test__exec(self, mock_subprocess, client):
+        client._exec("ls")
         with pytest.raises(ValueError) as e:
-            Client._exec(None)
+            client._exec(None)
 
         assert str(e.value) == "cmd is required"
-
-    def test__make_result(self):
-        with pytest.raises(ValueError) as e:
-            Client._make_result(None)
-
-        assert str(e.value) == "rv is required"
 
     def test__get_submit_dir(self):
         plan_output_with_direct_submit = dedent(
