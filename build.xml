@@ -393,12 +393,15 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </copy>
     <fixcrlf srcdir="${dist.doc}/schemas" includes="**/*.xsd" eol="lf"/>
     <fixcrlf srcdir="${dist.doc}/schemas" includes="**/*.xml" eol="lf"/>
+    <fixcrlf srcdir="${dist.doc}/schemas" includes="**/*.yml" eol="lf"/>
+
     <mkdir dir="${dist.doc}/wordpress/schemas"/>
     <copy preservelastmodified="true" todir="${dist.doc}/wordpress/schemas">
       <fileset dir="doc/schemas" includes="**/*"/>
     </copy>
     <fixcrlf srcdir="${dist.doc}/wordpress/schemas" includes="**/*.xsd" eol="lf"/>
     <fixcrlf srcdir="${dist.doc}/wordpress/schemas" includes="**/*.xml" eol="lf"/>
+    <fixcrlf srcdir="${dist.doc}/wordpress/schemas" includes="**/*.yml" eol="lf"/>
   </target>
 
   <target name="doc" depends="setup,doc-schemas,doc-user-guide,doc-java,doc-r" description="Generate documentation"/>
