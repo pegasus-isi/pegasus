@@ -1,3 +1,5 @@
+.. _cli-pegasus-globus-online:
+
 =====================
 pegasus-globus-online
 =====================

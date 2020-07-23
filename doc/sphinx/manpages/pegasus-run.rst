@@ -1,3 +1,5 @@
+.. _cli-pegasus-run:
+
 ===========
 pegasus-run
 ===========

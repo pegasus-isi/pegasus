@@ -1,3 +1,5 @@
+.. _cli-pegasus-graphviz:
+
 ================
 pegasus-graphviz
 ================

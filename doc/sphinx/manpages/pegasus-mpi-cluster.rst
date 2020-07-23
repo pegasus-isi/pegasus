@@ -1,3 +1,5 @@
+.. _cli-pegasus-mpi-cluster:
+
 ===================
 pegasus-mpi-cluster
 ===================

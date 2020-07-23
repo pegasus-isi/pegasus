@@ -1,3 +1,5 @@
+.. _cli-pegasus-sc-converter:
+
 ====================
 pegasus-sc-converter
 ====================

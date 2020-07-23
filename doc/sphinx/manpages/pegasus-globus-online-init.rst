@@ -1,3 +1,5 @@
+.. _cli-pegasus-globus-online-init:
+
 ==========================
 pegasus-globus-online-init
 ==========================

@@ -1,3 +1,5 @@
+.. _cli-pegasus-tc-converter:
+
 ====================
 pegasus-tc-converter
 ====================

@@ -1,3 +1,5 @@
+.. _cli-pegasus-cwl-converter:
+
 =====================
 pegasus-cwl-converter
 =====================

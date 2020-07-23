@@ -1,3 +1,6 @@
+.. _cli-pegasus-analyzer:
+
+
 ================
 pegasus-analyzer
 ================

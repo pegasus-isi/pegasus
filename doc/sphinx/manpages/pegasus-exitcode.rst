@@ -1,3 +1,5 @@
+.. _cli-pegasus-exitcode:
+
 ================
 pegasus-exitcode
 ================

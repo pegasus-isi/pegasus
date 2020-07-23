@@ -1,3 +1,5 @@
+.. _cli-pegasus-rc-client:
+
 =================
 pegasus-rc-client
 =================

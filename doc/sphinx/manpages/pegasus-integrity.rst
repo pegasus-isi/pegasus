@@ -1,3 +1,5 @@
+.. _cli-pegasus-integrity:
+
 =================
 pegasus-integrity
 =================

@@ -1,3 +1,5 @@
+.. _cli-pegasus-s3:
+
 ==========
 pegasus-s3
 ==========

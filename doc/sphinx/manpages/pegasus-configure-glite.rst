@@ -1,3 +1,5 @@
+.. _cli-pegasus-configure-glite:
+
 =======================
 pegasus-configure-glite
 =======================

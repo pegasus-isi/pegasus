@@ -1,3 +1,5 @@
+.. _cli-pegasus-rc-converter:
+
 ====================
 pegasus-rc-converter
 ====================

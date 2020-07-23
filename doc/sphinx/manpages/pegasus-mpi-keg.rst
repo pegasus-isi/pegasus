@@ -1,3 +1,5 @@
+.. _cli-pegasus-mpi-keg:
+
 ===============
 pegasus-mpi-keg
 ===============

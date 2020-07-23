@@ -1,3 +1,5 @@
+.. _cli-pegasus-config:
+
 ==============
 pegasus-config
 ==============
