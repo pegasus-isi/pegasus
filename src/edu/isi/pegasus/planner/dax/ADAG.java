@@ -1219,6 +1219,17 @@ public class ADAG {
             // name
             gen.writeStringField("name", adag.mName);
 
+            // hooks
+            if (!adag.mInvokes.isEmpty()) {
+                gen.writeObjectFieldStart("hooks");
+                gen.writeArrayFieldStart("shell");
+                for (Invoke iv : adag.mInvokes) {
+                    gen.writeObject(iv);
+                }
+                gen.writeEndArray();
+                gen.writeEndObject();
+            }
+
             // metadata
             if (!adag.mMetaDataAttributes.isEmpty()) {
                 Map<String, String> md = new HashMap<>();
@@ -1251,17 +1262,6 @@ public class ADAG {
                 }
                 gen.writeFieldName("transformationCatalog");
                 gen.writeObject(store);
-            }
-
-            // hooks
-            if (!adag.mInvokes.isEmpty()) {
-                gen.writeObjectFieldStart("hooks");
-                gen.writeArrayFieldStart("shell");
-                for (Invoke iv : adag.mInvokes) {
-                    gen.writeObject(iv);
-                }
-                gen.writeEndArray();
-                gen.writeEndObject();
             }
 
             // jobs
