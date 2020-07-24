@@ -839,7 +839,7 @@ can be used to generate a new Site Catalog programatically.
 
 .. _sc-XML4:
 
-XML4
+XML
 ----
 
 This format allows defining filesystem of shared as well as local type
@@ -1009,11 +1009,26 @@ The entries in this catalog have the following meaning
     * **arch, os, osrelease, osversion** - The arch/os/osrelease/osversion
       of the transformation. osrelease and osversion are optional.
 
-      ARCH can have one of the following values x86, x86_64, sparcv7,
-      sparcv9, ppc, aix. The default value for arch is x86
+      ARCH can have one of the following values with the default value of
+      **x86_64**.
 
-      OS can have one of the following values linux,sunos,macosx. The
-      default value for OS if none specified is linux
+        * x86
+        * x86_64
+        * ppc
+        * ppc_64
+        * ppc64le
+        * ia64
+        * sparcv7
+        * sparcv9
+        * amd64
+
+      OS can have one of the following values
+
+        * linux
+        * sunos
+        * macosx
+        * aix
+        * windows
 
 #. **Profiles** - One or many profiles can be attached to a
    transformation for all sites or to a transformation on a particular
@@ -1107,7 +1122,7 @@ following properties
 .. _tc-container:
 
 Containerized Applications in the Transformation Catalog
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+========================================================
 
 Users can specify what container they want to use for running their
 application in the Transformation Catalog using the multi line text
@@ -1187,7 +1202,7 @@ transformations can refer to the same container.
 3. **image_site** - The site identifier for the site where the container
    is available
 
-4. mount - mount information to mount host directories into container of
+4. **mount** - mount information to mount host directories into container of
    format src-dir:dest-dir[:options] . Consult Docker and Singularity
    documentation for options supported for -v and -B options
    respectively.
