@@ -1,3 +1,74 @@
+====================================
+Release Notes for Pegasus 5.0.0beta1
+====================================
+We are happy to announce the beta1 release of Pegasus 5.0.  Pegasus
+5.0 will be a major release of pegasus and this beta version has most
+of the features and bug fixes that will be in 5.0.
+
+We invite our users to give it a try. Since this is a beta release,
+it has to manually downloaded from the website at 
+https://download.pegasus.isi.edu/pegasus/5.0.0beta1/ 
+
+There, you can find there the various RPM/DEB packages and the binary
+tarballs.
+
+If you are an existing user, please carefully follow these instructions
+to upgrade.
+https://pegasus.isi.edu/docs/5.0.0dev/migration.html#migrating-from-pegasus-4-9-x-to-pegasus-5-0 
+
+Highlights of the new Release
+------------------------------
+
+1) Reworked Python API:
+
+   This new API has been developed from the grounds up that in addition
+   to generating the abstract workflow and all the catalogs, allows you to
+   plan, submit, monitor, analyze and generate statistics of your workflow.
+   To use this new Python API refer to the Moving From DAX3 to Pegasus.api.
+   https://pegasus.isi.edu/docs/5.0.0dev/migration.html#moving-from-dax3
+   
+2) Adoption of YAML formats:
+
+   With Pegasus 5.0, we are moving to adoption of YAML for representation
+   of all major catalogs. In 5.0, the following are now represented in YAML
+
+      * Abstract Workflow
+      * Replica Catalog
+      * Transformation Catalog
+      * Site Catalog
+      * Kickstart Provenance Records
+      
+3) Python3 Support
+      * All Pegasus tools are Python 3 compliant.
+      * 5.0 release will require Python 3 on workflow submit node
+      * Python PIP packages for workflow composition and monitoring
+      
+4) Default data configuration
+
+   In Pegasus 5.0, the default data configuration has been changed to condorio .
+   Uptil 4.9.x releases, the default configuration was sharedfs.
+
+5) Zero configuration required to submit to local HTCondor pool
+
+6) Data Management Improvements
+
+     * New output replica catalog that registers outputs including file metadata
+       such as size and checksums
+     * Ability to do bypass staging of files at a per file, executable and container
+       level.
+     * Improved support for hierarchal workflows allow you to create data dependencies
+       between sub workflow jobs and compute jobs
+       
+7) Support for integrity checking of user executables and application containers
+   in addition to data
+   
+8) Revamped Documentation
+
+   The documentation has been moved to readthedocs style documentation using
+   restructured text. The documentation can be found at
+   https://pegasus.isi.edu/docs/5.0.0dev/index.html 
+
+
 ===============================
 Release Notes for Pegasus 4.9.3
 ===============================
