@@ -636,15 +636,15 @@ node.
 
 Described below are some of the entries in the site catalog.
 
-1. **site** - A site identifier.
+#. **site** - A site identifier.
 
-2. **grid-gateway** - A site can optionally have a grid gateway
+#. **grid-gateway** - A site can optionally have a grid gateway
    associated with it that designates a GRAM gatekeeper
    (with a **jobmanager-fork** or **jobmanager-<scheduler>** interface)
    or a remote BOSCO endpoint to allow for remote job submissions to
    the site.
 
-3. **Directory** - Info about filesystems Pegasus can use for storing
+#. **Directory** - Info about filesystems Pegasus can use for storing
    temporary and long-term files. There are several configurations:
 
    -  **shared-scratch** - This describes the scratch file systems.
@@ -665,7 +665,7 @@ Described below are some of the entries in the site catalog.
    directory, you can use scp://hostname/var/www for the put element and
    http://hostname/staging for the get element.
 
-4. **arch,os,osrelease,osversion,** - The
+#. **arch,os,osrelease,osversion,** - The
    arch/os/osrelease/osversion/ of the site.
 
    ARCH can have one of the following values with the default value of
@@ -689,7 +689,7 @@ Described below are some of the entries in the site catalog.
     * aix
     * windows
 
-5. **Profiles** - One or many profiles can be attached to a site.
+#. **Profiles** - One or many profiles can be attached to a site.
 
    One example is the environments to be set on a remote site.
 
@@ -925,7 +925,99 @@ In this guide we will look at the format of the Multiline Text based TC.
 
 .. _tc-YAML:
 
-YAML
+The YAML mode is the Default mode, and by default Pegasus picks up a
+file named **transformations.yml** in the current working directory ( from
+where pegasus-plan is invoked) as the Site Catalog for planning.
+To override this you have to set the following properties
+
+1.  **pegasus.catalog.transformation.file=<path to the transformation catalog file>**
+
+We recommend that users use the Python API to generate the site catalog
+
+The following illustrates how
+:py:class:`Pegasus.api.transformation_catalog.TransformationCatalog`
+can be used to generate a new Transformation Catalog programmatically.
+
+.. tabs::
+
+    .. code-tab:: python generate_tc.py
+
+        from Pegasus.api import *
+
+        # create the TransformationCatalog object
+        tc = TransformationCatalog()
+
+        # create and add the transformation
+        keg = Transformation(
+                "keg",
+                namespace="example",
+                version="1.0",
+                site="isi",
+                pfn="/path/to/keg",
+                is_stageable=False,
+
+            ).add_profiles(Namespace.ENV, APP_HOME="/tmp/myscratch", JAVA_HOME="/opt/java/1.6")
+
+        tc.add_transformations(keg)
+
+        # write the transformation catalog to the default file path "./transformations.yml"
+        tc.write()
+
+    .. code-tab:: yaml YAML TC
+
+        x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '07-23-20T16:43:51Z'}
+        pegasus: '5.0'
+        transformations:
+        - namespace: example
+          name: keg
+          version: '1.0'
+          sites:
+          - {name: isi, pfn: /path/to/keg, type: installed}
+          profiles:
+            env: {APP_HOME: /tmp/myscratch, JAVA_HOME: /opt/java/1.6}
+
+
+
+The entries in this catalog have the following meaning
+
+#. **transformations**  - This is the key to refer to an array of
+   transformation catalog entries, with each entry defined by a
+   namespace, name, version attributes with (namespace and version
+   being optional)
+
+#. **sites** - within each transformation array entry, sites is the
+   key to refer to an array of sites with each site identified by a
+   name attribute to designate the name of the site where the
+   transformation is installed or available. For each site entry,
+   you can specify the following keys
+
+    * **pfn** - URL or file path for the location of the executable. The
+      pfn is a file path if the transformation is of type INSTALLED and
+      generally a url (file:/// or http:// or gridftp://) if of type
+      STAGEABLE
+
+    * **site** - The site identifier for the site where the transformation
+      is available
+
+    * **type** - The type of transformation. Whether it is installed
+      ("INSTALLED") on the remote site or is available to stage
+      ("STAGEABLE").
+
+    * **container** - reference to a container in which this transformation
+      is supposed to execute in. See :ref:`tc-container`
+
+    * **arch, os, osrelease, osversion** - The arch/os/osrelease/osversion
+      of the transformation. osrelease and osversion are optional.
+
+      ARCH can have one of the following values x86, x86_64, sparcv7,
+      sparcv9, ppc, aix. The default value for arch is x86
+
+      OS can have one of the following values linux,sunos,macosx. The
+      default value for OS if none specified is linux
+
+#. **Profiles** - One or many profiles can be attached to a
+   transformation for all sites or to a transformation on a particular
+   site.
 
 .. _tc-Text:
 
@@ -945,7 +1037,7 @@ file sample.tc.text in the etc directory contains an example
    tr example::keg:1.0 {
 
    #specify profiles that apply for all the sites for the transformation
-   #in each site entry the profile can be overriden
+   #in each site entry the profile can be overridden
 
      profile env "APP_HOME" "/tmp/myscratch"
      profile env "JAVA_HOME" "/opt/java/1.6"
@@ -988,7 +1080,7 @@ The entries in this catalog have the following meaning
    is available
 
 4. **type** - The type of transformation. Whether it is installed
-   ("INSTALLED") on the remote site or is availabe to stage
+   ("INSTALLED") on the remote site or is available to stage
    ("STAGEABLE").
 
 5. **arch, os, osrelease, osversion** - The arch/os/osrelease/osversion
