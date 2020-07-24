@@ -73,8 +73,10 @@ Only the final result file ``f.d`` is staged out.
 
 
 There are two main ways of generating the abstract workfow
-1. Using a Workflow generating API in `Python <#api-python>`__,
-   `Java <#api-java>`__, or `R <#api-r>`__.
+1. Using a Workflow generating API in
+   * :ref:`Python <api-python>`,
+   * :ref:`Java <api-java>`, or
+   * :ref:`R <api-r>`.
 
    **Note:** We recommend this option.
 
