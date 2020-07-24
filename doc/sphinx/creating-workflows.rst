@@ -91,116 +91,186 @@ can look like the following:
 
     .. code-tab:: python Pegasus.api
 
-        #! /usr/bin/env python3
-        import logging
+      #! /usr/bin/env python3
+      import logging
 
-        from pathlib import Path
+      from pathlib import Path
 
-        from Pegasus.api import *
+      from Pegasus.api import *
 
-        logging.basicConfig(level=logging.DEBUG)
+      logging.basicConfig(level=logging.DEBUG)
 
-        # --- Raw input file -----------------------------------------------------------------
+      # --- Raw input file -----------------------------------------------------------------
 
-        fa = File("f.a").add_metadata(creator="ryan")
+      fa = File("f.a").add_metadata(creator="ryan")
 
-        # --- Workflow -----------------------------------------------------------------
-        '''
-                                [f.b1] - (findrange) - [f.c1]
-                                /                             \
-        [f.a] - (preprocess)                               (analyze) - [f.d]
-                                \                             /
-                                [f.b2] - (findrange) - [f.c2]
+      # --- Workflow -----------------------------------------------------------------
+      '''
+                              [f.b1] - (findrange) - [f.c1]
+                              /                             \
+      [f.a] - (preprocess)                               (analyze) - [f.d]
+                              \                             /
+                              [f.b2] - (findrange) - [f.c2]
 
-        '''
-        wf = Workflow("diamond")
+      '''
+      wf = Workflow("diamond")
 
-        fb1 = File("f.b1")
-        fb2 = File("f.b2")
-        job_preprocess = Job("preprocess")\
-                                .add_args("-a", "preprocess", "-T", "3", "-i", fa, "-o", fb1, fb2)\
-                                .add_inputs(fa)\
-                                .add_outputs(fb1, fb2)\
-                                .add_metadata(time=60)
+      wf.add_shell_hook(EventType.START, "/pegasus/libexec/notification/email -t notify@example.com")
+      wf.add_shell_hook(EventType.END, "/pegasus/libexec/notification/email -t notify@example.com")
+
+      fb1 = File("f.b1")
+      fb2 = File("f.b2")
+      job_preprocess = Job("preprocess")\
+                              .add_args("-a", "preprocess", "-T", "3", "-i", fa, "-o", fb1, fb2)\
+                              .add_inputs(fa)\
+                              .add_outputs(fb1, fb2)\
+                              .add_metadata(time=60)\
+                              .add_shell_hook(EventType.START, "/pegasus/libexec/notification/email -t notify@example.com")\
+                              .add_shell_hook(EventType.END, "/pegasus/libexec/notification/email -t notify@example.com")
 
 
-        fc1 = File("f.c1")
-        job_findrange_1 = Job("findrange")\
-                                .add_args("-a", "findrange", "-T", "3", "-i", fb1, "-o", fc1)\
-                                .add_inputs(fb1)\
-                                .add_outputs(fc1)\
-                                .add_metadata(time=60)
+      fc1 = File("f.c1")
+      job_findrange_1 = Job("findrange")\
+                              .add_args("-a", "findrange", "-T", "3", "-i", fb1, "-o", fc1)\
+                              .add_inputs(fb1)\
+                              .add_outputs(fc1)\
+                              .add_metadata(time=60)\
+                              .add_shell_hook(EventType.START, "/pegasus/libexec/notification/email -t notify@example.com")\
+                              .add_shell_hook(EventType.END, "/pegasus/libexec/notification/email -t notify@example.com")
 
-        fc2 = File("f.c2")
-        job_findrange_2 = Job("findrange")\
-                                .add_args("-a", "findrange", "-T", "3", "-i", fb2, "-o", fc2)\
-                                .add_inputs(fb2)\
-                                .add_outputs(fc2)\
-                                .add_metadata(time=60)
+      fc2 = File("f.c2")
+      job_findrange_2 = Job("findrange")\
+                              .add_args("-a", "findrange", "-T", "3", "-i", fb2, "-o", fc2)\
+                              .add_inputs(fb2)\
+                              .add_outputs(fc2)\
+                              .add_metadata(time=60)\
+                              .add_shell_hook(EventType.START, "/pegasus/libexec/notification/email -t notify@example.com")\
+                              .add_shell_hook(EventType.END, "/pegasus/libexec/notification/email -t notify@example.com")
 
-        fd = File("f.d").add_metadata(final_output="true")
-        job_analyze = Job("analyze")\
-                        .add_args("-a", "analyze", "-T", "3", "-i", fc1, fc2, "-o", fd)\
-                        .add_inputs(fc1, fc2)\
-                        .add_outputs(fd)\
-                        .add_metadata(time=60)
+      fd = File("f.d").add_metadata(final_output="true")
+      job_analyze = Job("analyze")\
+                     .add_args("-a", "analyze", "-T", "3", "-i", fc1, fc2, "-o", fd)\
+                     .add_inputs(fc1, fc2)\
+                     .add_outputs(fd)\
+                     .add_metadata(time=60)\
+                     .add_shell_hook(EventType.START, "/pegasus/libexec/notification/email -t notify@example.com")\
+                     .add_shell_hook(EventType.END, "/pegasus/libexec/notification/email -t notify@example.com")
 
-        wf.add_jobs(job_preprocess, job_findrange_1, job_findrange_2, job_analyze)
-        wf.write()
+      wf.add_jobs(job_preprocess, job_findrange_1, job_findrange_2, job_analyze)
+      wf.write()
 
     .. code-tab:: yaml YAML
 
-        x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '07-23-20T19:14:25Z'}
-        pegasus: '5.0'
-        name: diamond
-        jobs:
-        - type: job
-          name: preprocess
-          id: ID0000001
-          arguments: [-a, preprocess, -T, '3', -i, f.a, -o, f.b1, f.b2]
-          uses:
-          - {lfn: f.b1, type: output, stageOut: true, registerReplica: true}
-          - lfn: f.a
-            metadata: {creator: ryan}
+      x-pegasus:
+      apiLang: python
+      createdBy: ryantanaka
+      createdOn: 07-24-20T10:08:48Z
+      pegasus: "5.0"
+      name: diamond
+      hooks:
+      shell:
+         - _on: start
+            cmd: /pegasus/libexec/notification/email -t notify@example.com
+         - _on: end
+            cmd: /pegasus/libexec/notification/email -t notify@example.com
+      jobs:
+      - type: job
+         name: preprocess
+         id: ID0000001
+         arguments: [-a, preprocess, -T, "3", -i, f.a, -o, f.b1, f.b2]
+         uses:
+            - lfn: f.a
+            metadata:
+               creator: ryan
             type: input
-          - {lfn: f.b2, type: output, stageOut: true, registerReplica: true}
-          metadata: {time: '60'}
-        - type: job
-          name: findrange
-          id: ID0000002
-          arguments: [-a, findrange, -T, '3', -i, f.b1, -o, f.c1]
-          uses:
-          - {lfn: f.b1, type: input}
-          - {lfn: f.c1, type: output, stageOut: true, registerReplica: true}
-          metadata: {time: '60'}
-        - type: job
-          name: findrange
-          id: ID0000003
-          arguments: [-a, findrange, -T, '3', -i, f.b2, -o, f.c2]
-          uses:
-          - {lfn: f.c2, type: output, stageOut: true, registerReplica: true}
-          - {lfn: f.b2, type: input}
-          metadata: {time: '60'}
-        - type: job
-          name: analyze
-          id: ID0000004
-          arguments: [-a, analyze, -T, '3', -i, f.c1, f.c2, -o, f.d]
-          uses:
-          - {lfn: f.c2, type: input}
-          - lfn: f.d
-            metadata: {final_output: 'true'}
+            - lfn: f.b1
             type: output
             stageOut: true
             registerReplica: true
-          - {lfn: f.c1, type: input}
-          metadata: {time: '60'}
-        jobDependencies:
-        - id: ID0000001
-          children: [ID0000003, ID0000002]
-        - id: ID0000002
-          children: [ID0000004]
-        - id: ID0000003
-          children: [ID0000004]
+            - lfn: f.b2
+            type: output
+            stageOut: true
+            registerReplica: true
+         metadata:
+            time: "60"
+         hooks:
+            shell:
+            - _on: start
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+            - _on: end
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+      - type: job
+         name: findrange
+         id: ID0000002
+         arguments: [-a, findrange, -T, "3", -i, f.b1, -o, f.c1]
+         uses:
+            - lfn: f.b1
+            type: input
+            - lfn: f.c1
+            type: output
+            stageOut: true
+            registerReplica: true
+         metadata:
+            time: "60"
+         hooks:
+            shell:
+            - _on: start
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+            - _on: end
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+      - type: job
+         name: findrange
+         id: ID0000003
+         arguments: [-a, findrange, -T, "3", -i, f.b2, -o, f.c2]
+         uses:
+            - lfn: f.c2
+            type: output
+            stageOut: true
+            registerReplica: true
+            - lfn: f.b2
+            type: input
+         metadata:
+            time: "60"
+         hooks:
+            shell:
+            - _on: start
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+            - _on: end
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+      - type: job
+         name: analyze
+         id: ID0000004
+         arguments: [-a, analyze, -T, "3", -i, f.c1, f.c2, -o, f.d]
+         uses:
+            - lfn: f.d
+            metadata:
+               final_output: "true"
+            type: output
+            stageOut: true
+            registerReplica: true
+            - lfn: f.c2
+            type: input
+            - lfn: f.c1
+            type: input
+         metadata:
+            time: "60"
+         hooks:
+            shell:
+            - _on: start
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+            - _on: end
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+      jobDependencies:
+      - id: ID0000001
+         children:
+            - ID0000002
+            - ID0000003
+      - id: ID0000002
+         children:
+            - ID0000004
+      - id: ID0000003
+         children:
+            - ID0000004
 
     .. code-tab:: xml XML
 
