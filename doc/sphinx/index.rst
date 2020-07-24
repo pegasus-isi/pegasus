@@ -28,7 +28,6 @@ Welcome to Pegasus WMS's documentation!
     data-management.rst
     pegasus-service.rst
     reference-configuration.rst
-    jupyter.rst
     optimization.rst
     glossary.rst
 
