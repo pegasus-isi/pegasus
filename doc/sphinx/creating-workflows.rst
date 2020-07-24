@@ -925,6 +925,9 @@ In this guide we will look at the format of the Multiline Text based TC.
 
 .. _tc-YAML:
 
+YAML TC (YAML)
+------------------------------
+
 The YAML mode is the Default mode, and by default Pegasus picks up a
 file named **transformations.yml** in the current working directory ( from
 where pegasus-plan is invoked) as the Site Catalog for planning.
@@ -1030,6 +1033,8 @@ The entries in this catalog have the following meaning
         * aix
         * windows
 
+    * **checksum** - the sha256 checksum of the associated executable
+
 #. **Profiles** - One or many profiles can be attached to a
    transformation for all sites or to a transformation on a particular
    site.
@@ -1122,7 +1127,7 @@ following properties
 .. _tc-container:
 
 Containerized Applications in the Transformation Catalog
-========================================================
+--------------------------------------------------------
 
 Users can specify what container they want to use for running their
 application in the Transformation Catalog using the multi line text
@@ -1130,66 +1135,94 @@ based format described in this section. Users can specify an optional
 attribute named container that refers to the container to be used for
 the application.
 
-::
+.. tabs::
 
-   tr example::keg:1.0 {
+    .. code-tab:: python generate_tc.py
 
-     #specify profiles that apply for all the sites for the transformation
-     #in each site entry the profile can be overriden
+        from Pegasus.api import *
 
-     profile env "APP_HOME" "/tmp/myscratch"
-     profile env "JAVA_HOME" "/opt/java/1.6"
+        # create the TransformationCatalog object
+        tc = TransformationCatalog()
 
-     site isi {
-       # environment to be set when the job is run in the container
-       # overrides env profiles specified in the container
-       profile env "HELLo" "WORLD"
-       profile env "JAVA_HOME" "/bin/java.1.6"
+        # create and add the centos-pegasus container
+        centos_cont = Container(
+                        "centos-pegasus",
+                        Container.DOCKER,
+                        "docker:///rynge/montage:latest",
+                        mounts=["/Volumes/Workf/lfs1:/shared-data/:ro"],
+                        checksum={"sha256": "dd78aaa88e1c6a8bf31c052eacfa03fba616ebfd903d7b2eb1b0ed6853b48713"}
+                    ).add_profiles(Namespace.ENV, JAVA_HOME="/opt/java/1.6")
 
-       profile condor "FOO" "bar"
+        tc.add_containers(centos_cont)
 
-       pfn "/path/to/keg
-       arch "x86"
-       os "linux"
-       osrelease "fc"
-       osversion "4"
+        # create and add the transformation
+        keg = Transformation(
+                "keg",
+                namespace="example",
+                version="1.0",
+                site="isi",
+                pfn="/path/to/keg",
+                is_stageable=False,
+                container=centos_cont
+            ).add_profiles(Namespace.ENV, APP_HOME="/tmp/myscratch", JAVA_HOME="/opt/java/1.6")
 
-       # INSTALLED means pfn refers to path in the container.
-       # STAGEABLE means the executable can be staged into the container
-       type "INSTALLED"
+        tc.add_transformations(keg)
 
-       #optional attribute to specify the container to use
-       container "centos-pegasus"
-     }
-   }
+        # write the transformation catalog to the default file path "./transformations.yml"
+        tc.write()
 
-   cont centos-pegasus{
-        # can be either docker or singularity or shifter
-        type "docker"
+    .. code-tab:: yaml YAML TC
 
-        # URL to image in a docker|singularity hub|shitfer repo url OR
-        # URL to an existing docker image exported as a tar file or singularity image
-        image "docker:///rynge/montage:latest"
+        x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '07-23-20T16:43:51Z'}
+        pegasus: '5.0'
+        transformations:
+        - namespace: example
+          name: keg
+          version: '1.0'
+          sites:
+          - {name: isi,
+             pfn: /path/to/keg,
 
-        # optional site attribute to tell pegasus which site tar file
-        # exists. useful for handling file URL's correctly
-        image_site "optional site"
+             # installed means pfn refers to path in the container.
+             # stageable means the executable can be staged into the container
+             type: installed,
 
-        # mount information to mount host directories into container
-        # format src-dir:dest-dir[:options]
-        mount "/Volumes/Work/lfs1:/shared-data/:ro"
+             # optional attribute to specify the container to use
+             container: centos-pegasus}
+          profiles:
+            env: {APP_HOME: /tmp/myscratch, JAVA_HOME: /opt/java/1.6}
+        containers:
+        - name: centos-pegasus
+          # can be either docker or singularity or shifter
+          type: docker
 
-        # environment to be set when the job is run in the container
-        # only env profiles are supported
-        profile env "JAVA_HOME" "/opt/java/1.6"
-   }
+          # URL to image in a docker|singularity hub|shitfer repo url OR
+          # URL to an existing docker image exported as a tar file or singularity image
+          image: docker:///rynge/montage:latest
+
+          # optional site attribute to tell pegasus which site tar file
+          # exists. useful for handling file URL's correctly
+          image_site "optional site"
+
+          # the checksum of the container when it is exported as a file
+          checksum: {sha256: dd78aaa88e1c6a8bf31c052eacfa03fba616ebfd903d7b2eb1b0ed6853b48713}
+
+          # mount information to mount host directories into container
+          # format for each entry src-dir:dest-dir[:options]
+          mounts: ['/Volumes/Workf/lfs1:/shared-data/:ro']
+
+          # environment to be set when the job is run in the container
+          # only env profiles and metadata are supported
+          profiles:
+            env: {JAVA_HOME: /opt/java/1.6}
+
 
 The container itself is defined using the cont entry. Multiple
 transformations can refer to the same container.
 
-1. **cont** cont - A container identifier.
+#. **cont** cont - A container identifier.
 
-2. **image** - URL to image in a docker|singularity hub\| singularity
+#. **image** - URL to image in a docker|singularity hub\| singularity
    library \| shifter repo URL or URL to an existing docker image
    exported as a tar file or singularity image. An example docker hub
    URL is docker:///rynge/montage:latest. An example Singularity hub URL
@@ -1199,24 +1232,36 @@ transformations can refer to the same container.
    that the image is available in the local shifter repository on the
    compute site. For example shifter:///papajim/namd_image:latest .
 
-3. **image_site** - The site identifier for the site where the container
+#. **image_site** - The site identifier for the site where the container
    is available
 
-4. **mount** - mount information to mount host directories into container of
+#. **mount** - mount information to mount host directories into container of
    format src-dir:dest-dir[:options] . Consult Docker and Singularity
    documentation for options supported for -v and -B options
    respectively.
 
-5. **Profiles** - One or many profiles can be attached to a
+#. * **checksum** - the sha256 checksum of the associated executable
+
+#. **profiles** - One or many profiles can be attached to a
    transformation for all sites or to a transformation on a particular
    site. For containers, only env profiles are supported.
 
-..
+Transformation Catalog Converter pegasus-tc-converter
+-----------------------------------------------------
 
-.. note::
+The recommended and default format for Site Catalog is YAML now and
+we recommend users to use :ref:`cli-pegasus-tc-converter` to convert
+their existing catalogs to the yaml format.
 
-   Containerized Applications can only be specified in the
-   transformation catalog, not via the DAX API.
+
+For example, to convert a Site Catalog file, ``tc.txt``, to YAML,
+use the following
+
+command::
+
+    pegasus-tc-converter -i tc.txt -I Text -O YAML -o transformations.yml
+
+
 
 TC Converter Client pegasus-tc-converter
 ----------------------------------------
