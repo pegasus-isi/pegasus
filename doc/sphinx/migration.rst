@@ -28,6 +28,12 @@ To use this new API refer to the :ref:`moving-from-dax3`.
 If you are an existing user, please follow these instructions to
 upgrade.
 
+#. **Python3 Support**
+
+    * All Pegasus tools are Python 3 compliant.
+    * 5.0 release will require Python 3 on workflow submit node
+    * Python PIP packages for workflow composition and monitoring
+
 #. **Change in default data configuration**
 
    In Pegasus 5.0, the default data configuration has been changed
