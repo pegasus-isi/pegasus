@@ -30,9 +30,8 @@ import traceback
 import urllib
 from pathlib import Path
 
-import attr
-
 from Pegasus import braindump
+from Pegasus.vendor import attr
 
 __all__ = ("quote", "unquote")
 
