@@ -1298,8 +1298,8 @@ Variable Expansion
 Pegasus Planner supports notion of variable expansions in the DAX and
 the catalog files along the same lines as bash variable expansion works.
 This is often useful, when you want paths in your catalogs or profile
-values in the DAX to be picked up from the environment. An error is
-thrown if a variable cannot be expanded.
+values in the abstract workflow to be picked up from the environment.
+An error is thrown if a variable cannot be expanded.
 
 To specify a variable that needs to be expanded, the syntax is
 ${VARIABLE_NAME} , similar to BASH variable expansion. An important
@@ -1315,15 +1315,38 @@ Also variable names are case sensitive.
 
 Some examples of variable expansion are illustrated below:
 
--  **DAX**
+-  **Abstract Workflow**
 
-   A job in the DAX file needs to have a globus profile key project
+   A job in the workflow file needs to have a globus profile key project
    associated and the value has to be picked up (per user) from user
    environment.
 
-   ::
+   .. tabs::
 
-      <profile namespace="globus" key="project">${PROJECT}</profile>
+    .. code-tab:: yaml YAML Snippet
+
+        jobs:
+        - type: job
+          namespace: diamond
+          version: '4.0'
+          name: preprocess
+          id: ID0000001
+          arguments: [-a, preprocess, -T, '60', -i, f.a, -o, f.b1, f.b2]
+          uses:
+          - {lfn: f.a, type: input}
+          - {lfn: f.b2, type: output, stageOut: true, registerReplica: true}
+          profiles:
+            globus: {project: ${PROJECT}}
+
+    .. code-tab:: xml XML Snippet
+
+        <job id="ID0000001" namespace="diamond" name="preprocess" version="4.0">
+                <argument>-a preprocess -T60 -i <file name="f.a"/> -o <file name="f.b1"/> <file name="f.b2"/></argument>
+                <uses name="f.a" link="input"/>
+                <uses name="f.b1" link="output"/>
+                <uses name="f.b2" link="output"/>
+                <profile namespace="globus" key="project">${PROJECT}</profile>
+        </job>
 
 -  **Site Catalog**
 
@@ -1332,7 +1355,25 @@ Some examples of variable expansion are illustrated below:
    For example, below is a templated entry for a local site where $PWD
    is the working directory from where pegasus-plan is invoked.
 
-   .. code-block:: xml
+   .. tabs::
+
+    .. code-tab:: yaml YAML Snippet
+
+        sites:
+        - name: local
+          arch: x86_64
+          os.type: linux
+          directories:
+          - type: sharedScratch
+            path: ${PWD}/LOCAL/shared-scratch
+            fileServers:
+            - {url: 'file://${PWD}/LOCAL/shared-scratch', operation: all}
+          - type: localStorage
+            path: ${PWD}/LOCAL/shared-storage
+            fileServers:
+            - {url: 'file://${PWD}/LOCAL/shared-storage', operation: all}
+
+    .. code-tab:: xml  XML Snippet
 
       <site  handle="local" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
          <directory  path="${PWD}/LOCAL/shared-scratch" type="shared-scratch" free-size="" total-size="">
@@ -1352,16 +1393,24 @@ Some examples of variable expansion are illustrated below:
    The input file locations in the Replica Catalog can be resolved based
    on values of environment variables.
 
-   ::
+   .. tabs::
 
+    .. code-tab:: yaml YAML Snippet
+
+        replicas:
+          - lfn: input.txt
+            pfns:
+              - {site: local, pfn: 'http://${HOSTNAME}/pegasus/input/input.txt'}
+
+    .. code-tab:: text File Snippet
       # File Based Replica Catalog
-      production_200.conf file://$PWD/production_200.conf site="local"
+      production_200.conf file://${PWD}/production_200.conf site="local"
 
    ..
 
    .. note::
 
-      Variable expansion is only supported for File based Replica
+      Variable expansion is only supported for YAML and File based Replica
       Catalog, not Regex or other file based formats.
 
 -  **Transformation Catalog**
@@ -1371,7 +1420,24 @@ Some examples of variable expansion are illustrated below:
    and PROJECT are defined in user environment when launching
    pegasus-plan.
 
-   ::
+   .. tabs::
+
+    .. code-tab:: yaml YAML Snippet
+
+        transformations:
+        - namespace: pegasus
+          name: keg
+          sites:
+          - {name: isi,
+             pfn: /path/to/keg,
+             type: installed,
+             arch:${ARCH},
+             os: ${OS}}
+          profiles:
+            globus: {project: ${PROJECT}}
+
+
+    .. code-tab:: text Text Snippet
 
       # Snippet from a Text Based Transformation Catalog
       tr pegasus::keg{
