@@ -55,9 +55,25 @@ and are linked by six files.
    them). Often, these files represent intermediary results that can be
    cleaned.
 
-There are two main ways of generating DAX's
+The example workflow representation in form of an abstract requires external
+catalogs, such as
 
-1. Using a DAX generating API in `Python <#api-python>`__,
+* :ref:`replica catalog (RC) <replica>`  to resolve the input file ``f.a``.
+
+* :ref:`transformation catalog (TC) <transformation>` to resolve the logical job
+names (such as diamond::preprocess:2.0) and
+
+* :ref:`site catalog (SC) <site>` to resolve on what compute resources will
+  the jobs execute on.
+
+The  workflow below defines the four jobs just like the example picture,
+and the files that flow between the jobs.The intermediary files are neither
+registered nor staged out, and can be considered transient.
+Only the final result file ``f.d`` is staged out.
+
+
+There are two main ways of generating the abstract workfow
+1. Using a Workflow generating API in `Python <#api-python>`__,
    `Java <#api-java>`__, or `R <#api-r>`__.
 
    **Note:** We recommend this option.
@@ -84,42 +100,9 @@ can look like the following:
 
         logging.basicConfig(level=logging.DEBUG)
 
-        # --- Replicas -----------------------------------------------------------------
-        with open("f.a", "w") as f:
-            f.write("This is sample input to KEG")
+        # --- Raw input file -----------------------------------------------------------------
 
-        fa = File("f.a").add_metadata(creator="karan")
-        rc = ReplicaCatalog().add_replica("local", fa, Path(".").resolve() / "f.a")
-
-        # --- Transformations ----------------------------------------------------------
-        preprocess = Transformation(
-                        "preprocess",
-                        site="condorpool",
-                        pfn="/usr/bin/pegasus-keg",
-                        is_stageable=False,
-                        arch=Arch.X86_64,
-                        os_type=OS.LINUX
-                    ).add_metadata(size=2048, transformation="preprocess")
-
-        findrange = Transformation(
-                        "findrange",
-                        site="condorpool",
-                        pfn="/usr/bin/pegasus-keg",
-                        is_stageable=False,
-                        arch=Arch.X86_64,
-                        os_type=OS.LINUX
-                    ).add_metadata(size=2048, transformation="findrange")
-
-        analyze = Transformation(
-                        "analyze",
-                        site="condorpool",
-                        pfn="/usr/bin/pegasus-keg",
-                        is_stageable=False,
-                        arch=Arch.X86_64,
-                        os_type=OS.LINUX
-                    ).add_metadata(size=2048, transformation="analyze")
-
-        tc = TransformationCatalog().add_transformations(preprocess, findrange, analyze)
+        fa = File("f.a").add_metadata(creator="ryan")
 
         # --- Workflow -----------------------------------------------------------------
         '''
@@ -134,7 +117,7 @@ can look like the following:
 
         fb1 = File("f.b1")
         fb2 = File("f.b2")
-        job_preprocess = Job(preprocess)\
+        job_preprocess = Job("preprocess")\
                                 .add_args("-a", "preprocess", "-T", "3", "-i", fa, "-o", fb1, fb2)\
                                 .add_inputs(fa)\
                                 .add_outputs(fb1, fb2)\
@@ -142,69 +125,44 @@ can look like the following:
 
 
         fc1 = File("f.c1")
-        job_findrange_1 = Job(findrange)\
+        job_findrange_1 = Job("findrange")\
                                 .add_args("-a", "findrange", "-T", "3", "-i", fb1, "-o", fc1)\
                                 .add_inputs(fb1)\
                                 .add_outputs(fc1)\
                                 .add_metadata(time=60)
 
         fc2 = File("f.c2")
-        job_findrange_2 = Job(findrange)\
+        job_findrange_2 = Job("findrange")\
                                 .add_args("-a", "findrange", "-T", "3", "-i", fb2, "-o", fc2)\
                                 .add_inputs(fb2)\
                                 .add_outputs(fc2)\
                                 .add_metadata(time=60)
 
         fd = File("f.d").add_metadata(final_output="true")
-        job_analyze = Job(analyze)\
+        job_analyze = Job("analyze")\
                         .add_args("-a", "analyze", "-T", "3", "-i", fc1, fc2, "-o", fd)\
                         .add_inputs(fc1, fc2)\
                         .add_outputs(fd)\
                         .add_metadata(time=60)
 
         wf.add_jobs(job_preprocess, job_findrange_1, job_findrange_2, job_analyze)
-        wf.add_replica_catalog(rc)
-        wf.add_transformation_catalog(tc)
         wf.write()
 
     .. code-tab:: yaml YAML
 
-         x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '07-23-20T18:53:22Z'}
+        x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '07-23-20T19:14:25Z'}
         pegasus: '5.0'
         name: diamond
-        replicaCatalog:
-          replicas:
-          - lfn: f.a
-            pfns:
-            - {site: local, pfn: /scitech/home/vahi/014-planner-performance-ahope/f.a}
-            metadata: {creator: karan}
-        transformationCatalog:
-          transformations:
-          - name: preprocess
-            sites:
-            - {name: condorpool, pfn: /usr/bin/pegasus-keg, type: installed, arch: x86_64,
-              os.type: linux}
-            metadata: {size: '2048', transformation: preprocess}
-          - name: findrange
-            sites:
-            - {name: condorpool, pfn: /usr/bin/pegasus-keg, type: installed, arch: x86_64,
-              os.type: linux}
-            metadata: {size: '2048', transformation: findrange}
-          - name: analyze
-            sites:
-            - {name: condorpool, pfn: /usr/bin/pegasus-keg, type: installed, arch: x86_64,
-              os.type: linux}
-            metadata: {size: '2048', transformation: analyze}
         jobs:
         - type: job
           name: preprocess
           id: ID0000001
           arguments: [-a, preprocess, -T, '3', -i, f.a, -o, f.b1, f.b2]
           uses:
-          - lfn: f.a
-            metadata: {creator: karan}
-            type: input
           - {lfn: f.b1, type: output, stageOut: true, registerReplica: true}
+          - lfn: f.a
+            metadata: {creator: ryan}
+            type: input
           - {lfn: f.b2, type: output, stageOut: true, registerReplica: true}
           metadata: {time: '60'}
         - type: job
@@ -212,8 +170,8 @@ can look like the following:
           id: ID0000002
           arguments: [-a, findrange, -T, '3', -i, f.b1, -o, f.c1]
           uses:
-          - {lfn: f.c1, type: output, stageOut: true, registerReplica: true}
           - {lfn: f.b1, type: input}
+          - {lfn: f.c1, type: output, stageOut: true, registerReplica: true}
           metadata: {time: '60'}
         - type: job
           name: findrange
@@ -228,17 +186,17 @@ can look like the following:
           id: ID0000004
           arguments: [-a, analyze, -T, '3', -i, f.c1, f.c2, -o, f.d]
           uses:
-          - {lfn: f.c1, type: input}
           - {lfn: f.c2, type: input}
           - lfn: f.d
             metadata: {final_output: 'true'}
             type: output
             stageOut: true
             registerReplica: true
+          - {lfn: f.c1, type: input}
           metadata: {time: '60'}
         jobDependencies:
         - id: ID0000001
-          children: [ID0000002, ID0000003]
+          children: [ID0000003, ID0000002]
         - id: ID0000002
           children: [ID0000004]
         - id: ID0000003
@@ -337,13 +295,7 @@ can look like the following:
           </child>
        </adag>
 
-The example workflow representation in form of a DAX requires external
-catalogs, such as transformation catalog (TC) to resolve the logical job
-names (such as diamond::preprocess:2.0), and a replica catalog (RC) to
-resolve the input file ``f.a``. The above workflow defines the four jobs
-just like the example picture, and the files that flow between the jobs.
-The intermediary files are neither registered nor staged out, and can be
-considered transient. Only the final result file ``f.d`` is staged out.
+
 
 .. _replica:
 
@@ -1462,11 +1414,11 @@ following:
 Variable Expansion
 ==================
 
-Pegasus Planner supports notion of variable expansions in the DAX and
-the catalog files along the same lines as bash variable expansion works.
-This is often useful, when you want paths in your catalogs or profile
-values in the abstract workflow to be picked up from the environment.
-An error is thrown if a variable cannot be expanded.
+Pegasus Planner supports notion of variable expansions in the Abstract
+Workflow and the catalog files along the same lines as bash variable
+expansion works. This is often useful, when you want paths in your
+catalogs or profile values in the abstract workflow to be picked up
+from the environment. An error is thrown if a variable cannot be expanded.
 
 To specify a variable that needs to be expanded, the syntax is
 ${VARIABLE_NAME} , similar to BASH variable expansion. An important
