@@ -32,12 +32,14 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -85,6 +87,9 @@ public class TransformationCatalogEntry implements CatalogEntry {
     /** Boolean flag to indicate whether to bypass staging in the executable via the staging site */
     private boolean mBypassStaging;
 
+    /** Executables that this Executable requires */
+    private List<String> mRequirements;
+
     /**
      * if a compound transformation then this is the reference to the container that has all the
      * dependent transformations.
@@ -105,6 +110,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
         mContainer = null;
         mCompoundTX = null;
         mBypassStaging = false;
+        mRequirements = new ArrayList<String>();
     }
 
     /**
@@ -624,6 +630,26 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
+     * Add an executable as a requirement to this executable
+     * 
+     * @param e 
+     */
+    public void addRequirement(Executable e) {
+        StringBuilder sb = new StringBuilder();
+        if (e.getNamespace() != null && !"".equals(e.getNamespace())) {
+            sb.append(e.getNamespace() + "::");
+        }
+
+        sb.append(e.getName());
+
+        if (e.getVersion() != null && !"".equals(e.getVersion())) {
+            sb.append(":" + e.getVersion());
+        }
+
+        this.mRequirements.add(sb.toString());
+    }
+
+    /**
      * Return the container to be used to launch the executable
      *
      * @return
@@ -763,6 +789,15 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
+     * Get the list of transformations that this transformation requires
+     *
+     * @return list of required transformations formatted as namespace::name:version
+     */
+    public List<String> getRequirements() {
+        return this.mRequirements;
+    }
+
+    /**
      * Returns a boolean indicating whether there is a checksum associated with the executable or
      * not.
      *
@@ -867,6 +902,14 @@ public class TransformationCatalogEntry implements CatalogEntry {
             if (!entry.getNotifications().isEmpty()) {
                 gen.writeFieldName(TransformationCatalogKeywords.HOOKS.getReservedName());
                 gen.writeObject(entry.getNotifications());
+            }
+
+            if (!entry.mRequirements.isEmpty()) {
+                gen.writeArrayFieldStart("requires");
+                for (String exe : entry.mRequirements) {
+                    gen.writeString(exe);
+                }
+                gen.writeEndArray();
             }
 
             if (entry.getResourceId() == null) {
