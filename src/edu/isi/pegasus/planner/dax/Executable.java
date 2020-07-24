@@ -20,8 +20,10 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.Notifications;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The Transformation Catalog object the represent the entries in the DAX transformation section.
@@ -85,6 +87,9 @@ public class Executable extends CatalogType {
     /** List of Notification objects */
     protected List<Invoke> mInvokes;
 
+    /** Other executables this executable requires */
+    protected Set<Executable> mRequires;
+
     /**
      * Create a new executable
      *
@@ -126,6 +131,7 @@ public class Executable extends CatalogType {
         mName = (name == null) ? "" : name;
         mVersion = (version == null) ? "" : version;
         mInvokes = new LinkedList<Invoke>();
+        mRequires = new HashSet<Executable>();
     }
 
     /**
@@ -380,6 +386,27 @@ public class Executable extends CatalogType {
         return true;
     }
 
+    /**
+     * Get the set of executables that this executable requires
+     *
+     * @return
+     */
+    public Set<Executable> getRequirements() {
+        return this.mRequires;
+    }
+
+    /**
+     * Add another executable as a requirement to this executable
+     *
+     * @param e
+     * @return
+     */
+    public Executable addRequirement(Executable e) {
+        this.mRequires.add(e);
+
+        return this;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -520,6 +547,11 @@ public class Executable extends CatalogType {
             tce.setType(this.getInstalled() ? TCType.INSTALLED : TCType.STAGEABLE);
             tce.setResourceId(pfn.getSite());
             tce.setPhysicalTransformation(pfn.getURL());
+
+            for (Executable e : this.mRequires) {
+                tce.addRequirement(e);
+            }
+
             Notifications notifications = new Notifications();
             for (Invoke invoke : this.getInvoke()) {
                 notifications.add(new Invoke(invoke));
