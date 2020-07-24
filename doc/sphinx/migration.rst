@@ -4,6 +4,116 @@
 Migration Notes
 ===============
 
+.. _migrating-from-49-to-50:
+
+Migrating From Pegasus 4.9.X to Pegasus 5.0
+===========================================
+The Pegasus 5.0 Release is a major release of Pegasus with
+adoption of YAML for representation of all major catalogs.
+In 5.0, the following are now represented in YAML
+
+#. Abstract Workflow
+#. Replica Catalog
+#. Transformation Catalog
+#. Site Catalog
+#. Kickstart Provenance Records
+
+In addition, 5.0 has a new Python API developed from the grounds
+up that in addition to generating the abstract workflow and all
+the catalogs, allows you to plan, submit, monitor, analyze and
+generate statistics of your workflow.
+
+To use this new API refer to the :ref:`moving-from-dax3`.
+
+If you are an existing user, please follow these instructions to
+upgrade.
+
+#. **Change in default data configuration**
+
+   In Pegasus 5.0, the default data configuration has been changed
+   to *condorio* . Uptil 4.9.x releases, the default configuration
+   was *sharedfs*.
+
+    .. note::
+
+        Your current workflows won't plan successfully, if you don't
+        have the property **pegasus.data.configuration** set. Set
+        the property **pegasus.data.configuration** to **sharedfs**
+        if you dont have it explicitly set in your properties file.
+
+
+#. **Output Replica Catalog**
+
+    In Pegasus 5.0 your outputs are now registered into a sqlite
+    database in your root workflow submit directory. This is
+    different from the input replica catalog that you specify using
+    the **pegasus.catalog.prefix** . See the chapter on
+    :ref:`Replica Catalog<replica>` for more details.
+
+#. **Database upgrade**
+
+    **RAFAEL** PLEASE UPDATE and also give a summary of the schema
+    changes.
+
+
+To migrate your 4.9.x databases to 5.0 refer to the section below
+on how to use **pegasus-db-admin**.
+
+Database Upgrades From Pegasus 4.9.x to Pegasus current version
+---------------------------------------------------------------
+
+Since Pegasus 4.5 all databases are managed by a single tool:
+**pegasus-db-admin**. Databases will be automatically updated when
+**pegasus-plan** is invoked, but WORKFLOW databases from past runs may
+not be updated accordingly. Since Pegasus 4.6.0, the
+**pegasus-db-admin** tool provides an option to automatically update all
+databases from completed workflows in the MASTER database. To enable
+this option, run the following command:
+
+::
+
+   $ pegasus-db-admin update -a
+   Your database has been updated.
+   Your database is compatible with Pegasus version: 4.7.0
+
+   Verifying and updating workflow databases:
+   21/21
+
+   Summary:
+   Verified/Updated: 21/21
+   Failed: 0/21
+   Unable to connect: 0/21
+   Unable to update (active workflows): 0/21
+
+   Log files:
+   20161006T134415-dbadmin.out (Succeeded operations)
+   20161006T134415-dbadmin.err (Failed operations)
+
+
+This option generates a log file for succeeded operations, and a log
+file for failed operations. Each file contains the list of URLs of the
+succeeded/failed databases.
+
+Note that, if no URL is provided, the tool will create/use a SQLite
+database in the user's home directory: *${HOME}/.pegasus/workflow.db*.
+
+For complete description of pegasus-db-admin, see the `man
+page <#cli-pegasus-db-admin>`__.
+
+Migration from Pegasus 4.6 to 4.7
+---------------------------------
+
+In addition to the database changes, in Pegasus 4.7 the default submit
+directory layout was changed from a flat structure where all submit
+files independent of the number of jobs in the workflow appeared in a
+single directory. For 4.7, the default is a hierarchal directory
+structure two levels deep. To use the earlier layout, set the following
+property
+
+::
+
+   pegasus.dir.submit.mapper     Flat
+
 .. _moving-from-dax3:
 
 Moving From DAX3 to Pegasus.api
@@ -773,7 +883,7 @@ then ``wf.plan(submit=True).wait()`` can be used.
 
 .. _migrating-from-lt47:
 
-Migrating From Pegasus 4.5.X to Pegasus current version
+Migrating From Pegasus 4.5.X to Pegasus 4.9.x
 =======================================================
 
 Most of the migrations from one version to another are related to
