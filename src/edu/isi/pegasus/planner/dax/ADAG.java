@@ -1247,6 +1247,10 @@ public class ADAG {
                 for (File f : adag.getFiles()) {
                     store.add(f.toReplicaLocation());
                 }
+                // PM-1669 set the version to null so that it is not
+                // serialized out . the RC in included in the workflow 
+                // description here
+                store.setVersion(null);
                 gen.writeFieldName("replicaCatalog");
                 gen.writeObject(store);
             }
@@ -1255,6 +1259,10 @@ public class ADAG {
             if (!adag.mExecutables.isEmpty()) {
                 // create a ReplicaStore object that can serialize all the files
                 TransformationStore store = new TransformationStore();
+                // PM-1669 set the version to null so that it is not
+                // serialized out . the tc in included in the workflow 
+                // description here
+                store.setVersion(null);
                 for (Executable ex : adag.getExecutables()) {
                     for (TransformationCatalogEntry entry : ex.toTransformationCatalogEntries()) {
                         store.addEntry(entry);
