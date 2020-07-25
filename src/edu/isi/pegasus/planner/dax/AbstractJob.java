@@ -1711,9 +1711,7 @@ public class AbstractJob {
             // am I a job, DAG, or DAX
             if (job.isJob()) {
                 gen.writeStringField("type", "job");
-
                 gen.writeStringField("name", job.mName);
-
                 // namespace
                 if (job.mNamespace != null && !job.mNamespace.trim().isEmpty()) {
                     gen.writeStringField("namespace", job.mNamespace);
@@ -1819,19 +1817,17 @@ public class AbstractJob {
             }
 
             // arguments
-            if (!job.mArguments.isEmpty()) {
-                gen.writeArrayFieldStart("arguments");
-                for (Object o : job.mArguments) {
-                    if (o.getClass() == String.class) {
-                        gen.writeString((String) o);
-                    }
-
-                    if (o.getClass() == File.class) {
-                        gen.writeString(((File) o).mName);
-                    }
+            gen.writeArrayFieldStart("arguments");
+            for (Object o : job.mArguments) {
+                if (o.getClass() == String.class) {
+                    gen.writeString((String) o);
                 }
-                gen.writeEndArray();
+
+                if (o.getClass() == File.class) {
+                    gen.writeString(((File) o).mName);
+                }
             }
+            gen.writeEndArray();
 
             // uses
             gen.writeArrayFieldStart("uses");
