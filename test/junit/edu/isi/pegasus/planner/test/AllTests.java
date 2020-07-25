@@ -20,7 +20,6 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    /*
     edu.isi.pegasus.common.util.VersionTest.class,
     edu.isi.pegasus.common.util.PegasusURLTest.class,
     edu.isi.pegasus.common.util.FileDetectorTest.class,
@@ -68,7 +67,6 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.parser.DAXParserFactoryTest.class,
     edu.isi.pegasus.planner.parser.dax.DAXParser3Test.class,
     edu.isi.pegasus.planner.parser.dax.DAXParser5Test.class,
-    */
     edu.isi.pegasus.planner.dax.ADAGTest.class
 })
 public class AllTests {}
