@@ -28,9 +28,14 @@ import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import edu.isi.pegasus.planner.parser.dax.Callback;
+import edu.isi.pegasus.planner.parser.dax.DAX2CDAG;
+import edu.isi.pegasus.planner.parser.dax.DAXParser5;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -1248,7 +1253,7 @@ public class ADAG {
                     store.add(f.toReplicaLocation());
                 }
                 // PM-1669 set the version to null so that it is not
-                // serialized out . the RC in included in the workflow 
+                // serialized out . the RC in included in the workflow
                 // description here
                 store.setVersion(null);
                 gen.writeFieldName("replicaCatalog");
@@ -1260,7 +1265,7 @@ public class ADAG {
                 // create a ReplicaStore object that can serialize all the files
                 TransformationStore store = new TransformationStore();
                 // PM-1669 set the version to null so that it is not
-                // serialized out . the tc in included in the workflow 
+                // serialized out . the tc in included in the workflow
                 // description here
                 store.setVersion(null);
                 for (Executable ex : adag.getExecutables()) {
@@ -1333,6 +1338,15 @@ public class ADAG {
         if (args.length > 0) {
             dax = args[0];
             Diamond().writeToFile(dax);
+
+            Callback c = new DAX2CDAG();
+            PegasusBag bag = new PegasusBag();
+            bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+            bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("", ""));
+            DAXParser5 parser = new DAXParser5(bag, "5.0");
+            c.initialize(bag, dax);
+            System.err.println("Validation of file " + parser.validate(dax));
+
         } else {
             Diamond().writeToSTDOUT(FORMAT.yaml);
         }
@@ -1379,21 +1393,21 @@ public class ADAG {
         Executable preprocess = new Executable("pegasus", "preproces", "1.0");
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(false);
-        preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg"));
+        preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg", "local"));
         preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
         preprocess.addMetaData("project", "pegasus");
 
         Executable findrange = new Executable("pegasus", "findrange", "1.0");
         findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         findrange.unsetInstalled();
-        findrange.addPhysicalFile(new PFN("http://pegasus.isi.edu/code/bin/keg"));
+        findrange.addPhysicalFile(new PFN("http://pegasus.isi.edu/code/bin/keg", "local"));
         findrange.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
         findrange.addMetaData("project", "pegasus");
 
         Executable analyze = new Executable("pegasus", "analyze", "1.0");
         analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         analyze.unsetInstalled();
-        analyze.addPhysicalFile(new PFN("gsiftp://localhost/opt/pegasus/default/bin/keg"));
+        analyze.addPhysicalFile(new PFN("gsiftp://localhost/opt/pegasus/default/bin/keg", "local"));
         analyze.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
         analyze.addMetaData("project", "pegasus");
 

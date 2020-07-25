@@ -631,8 +631,8 @@ public class TransformationCatalogEntry implements CatalogEntry {
 
     /**
      * Add an executable as a requirement to this executable
-     * 
-     * @param e 
+     *
+     * @param e
      */
     public void addRequirement(Executable e) {
         StringBuilder sb = new StringBuilder();

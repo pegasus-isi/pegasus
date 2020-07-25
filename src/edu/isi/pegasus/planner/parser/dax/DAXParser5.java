@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.parser.dax;
 
+import static edu.isi.pegasus.planner.parser.SiteCatalogYAMLParser.SCHEMA_URI;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
@@ -37,6 +39,8 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import edu.isi.pegasus.planner.parser.YAMLParser;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -48,7 +52,10 @@ import java.util.Map;
 
 /** @author Karan Vahi */
 @JsonDeserialize(using = DAXParser5.YAMLStreamingDeserializer.class)
-public class DAXParser5 implements DAXParser {
+public class DAXParser5 extends YAMLParser implements DAXParser {
+
+    /** The "not-so-official" location URL of the Site Catalog Schema. */
+    public static final String SCHEMA_URI = "https://pegasus.isi.edu/schema/wf-5.0.yml";
 
     /** Handle to the callback */
     protected Callback mCallback;
@@ -59,6 +66,9 @@ public class DAXParser5 implements DAXParser {
     /** the key that we pick from vendor extensions and remap to dax.api key */
     private static final String API_LANG_KEY = "apiLang";
 
+    /** File object of the schema.. */
+    private final File SCHEMA_FILENAME;
+
     /**
      * The overloaded constructor. The schema version passed is determined in the DAXFactory
      *
@@ -66,7 +76,21 @@ public class DAXParser5 implements DAXParser {
      * @param schemaVersion the schema version specified in the DAX file.
      */
     public DAXParser5(PegasusBag bag, String schemaVersion) {
+        super(bag);
         mBag = bag;
+        File schemaDir = this.mProps.getSchemaDir();
+        File yamlSchemaDir = new File(schemaDir, "yaml");
+        SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
+    }
+
+    /**
+     * Validates a workflow file against the Workflow Schema file
+     *
+     * @param workflow the path to the workflow file.
+     * @return
+     */
+    public boolean validate(String workflow) {
+        return this.validate(new File(workflow), SCHEMA_FILENAME, "workflow");
     }
 
     /**
@@ -306,6 +330,7 @@ public class DAXParser5 implements DAXParser {
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("", ""));
         DAXParser5 parser = new DAXParser5(bag, "5.0");
         c.initialize(bag, dax);
+        parser.validate(dax);
         parser.setDAXCallback(c);
         parser.parse(dax);
     }
