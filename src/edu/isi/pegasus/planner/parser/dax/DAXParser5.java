@@ -90,6 +90,7 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
      * @return
      */
     public boolean validate(String workflow) {
+        mLogger.log("Validating against " + SCHEMA_FILENAME, LogManager.INFO_MESSAGE_LEVEL);
         return this.validate(new File(workflow), SCHEMA_FILENAME, "workflow");
     }
 

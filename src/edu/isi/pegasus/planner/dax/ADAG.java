@@ -50,6 +50,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.log4j.Level;
 
 /**
  * <pre>
@@ -1343,6 +1344,7 @@ public class ADAG {
             PegasusBag bag = new PegasusBag();
             bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
             bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("", ""));
+            bag.getLogger().setLevel(Level.DEBUG);
             DAXParser5 parser = new DAXParser5(bag, "5.0");
             c.initialize(bag, dax);
             System.err.println("Validation of file " + parser.validate(dax));
