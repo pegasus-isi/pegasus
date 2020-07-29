@@ -1,18 +1,18 @@
+import argparse
 import logging
 import os
+import re
 import sys
 import time
-import argparse 
-import re
-from urllib import parse as urlparse
 from multiprocessing.connection import Client
+from urllib import parse as urlparse
 
 import requests
 
 from Pegasus.command import Command, CompoundCommand, LoggingCommand
 from Pegasus.db.ensembles import EnsembleStates, EnsembleWorkflowStates
 from Pegasus.service.ensembles import emapp, manager
-from Pegasus.service.ensembles.trigger import TriggerManagerMessage, TriggerManager
+from Pegasus.service.ensembles.trigger import TriggerManager, TriggerManagerMessage
 
 log = logging.getLogger(__name__)
 
@@ -516,7 +516,9 @@ class PriorityCommand(EnsembleClientCommand):
 
         print("Priority:", result["priority"])
 
+
 # --- Trigger Commands ---------------------------------------------------------
+
 
 class TriggerCommand:
     """Base class for any Trigger related commands"""
@@ -545,7 +547,7 @@ class TriggerCommand:
     def main(self, args=None):
         self.args = self.parser.parse_args(args)
         self.run()
-    
+
     def send_msg(self, msg: TriggerManagerMessage):
         """Send a TriggerManagerMessage to the TriggerManager
 
@@ -555,12 +557,15 @@ class TriggerCommand:
         """
 
         try:
-            address = ('localhost', 3000)
+            address = ("localhost", 3000)
             conn = Client(address, authkey=b"123")
             conn.send(msg)
             conn.close()
         except ConnectionRefusedError:
-            print("Unable to connect to TriggerManager. Has the Ensemble Manager been started?")
+            print(
+                "Unable to connect to TriggerManager. Has the Ensemble Manager been started?"
+            )
+
 
 class StopTriggerCommand(TriggerCommand):
     """Command to stop a given trigger"""
@@ -571,24 +576,18 @@ class StopTriggerCommand(TriggerCommand):
     def __init__(self):
         TriggerCommand.__init__(self)
         self.parser.add_argument(
-            "ensemble",
-            type=str,
-            help="The ensemble that this trigger belongs to"
+            "ensemble", type=str, help="The ensemble that this trigger belongs to"
         )
 
         self.parser.add_argument(
-            "trigger_name",
-            type=str,
-            help="The name of the trigger to stop"
+            "trigger_name", type=str, help="The name of the trigger to stop"
         )
-    
+
     def run(self):
-        self.send_msg(        
-                TriggerManagerMessage(
-                    TriggerManagerMessage.STOP_TRIGGER,
-                    **vars(self.args)
-                )
-            )
+        self.send_msg(
+            TriggerManagerMessage(TriggerManagerMessage.STOP_TRIGGER, **vars(self.args))
+        )
+
 
 class StartPatternIntervalTriggerCommand(TriggerCommand):
     """Command to start a timed interval and file pattern based trigger"""
@@ -604,7 +603,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             "--ensemble",
             required=True,
             type=str,
-            help="The name of the ensemble to which workflows started by this trigger will be added"
+            help="The name of the ensemble to which workflows started by this trigger will be added",
         )
 
         self.parser.add_argument(
@@ -612,7 +611,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             "--trigger-name",
             required=True,
             type=str,
-            help="The a unique name that this trigger can be refferred by"
+            help="The a unique name that this trigger can be refferred by",
         )
 
         self.parser.add_argument(
@@ -620,7 +619,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             "--workflow-name-prefix",
             required=True,
             type=str,
-            help="A prefix that will be attached to workflow names"
+            help="A prefix that will be attached to workflow names",
         )
 
         self.parser.add_argument(
@@ -628,7 +627,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             "--file-pattern",
             required=True,
             type=str,
-            help="A file pattern that will be passed to glob.Glob to collect files"
+            help="A file pattern that will be passed to glob.Glob to collect files",
         )
 
         self.parser.add_argument(
@@ -636,7 +635,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             "--workflow-script",
             required=True,
             type=str,
-            help="The workflow script to be executed"
+            help="The workflow script to be executed",
         )
 
         self.parser.add_argument(
@@ -644,7 +643,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             "--interval",
             required=True,
             type=str,
-            help="Duration of each trigger interval. Must be given as '<int> <s|m|h|d>'"
+            help="Duration of each trigger interval. Must be given as '<int> <s|m|h|d>'",
         )
 
         self.parser.add_argument(
@@ -653,7 +652,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             required=False,
             default=None,
             type=str,
-            help="Additional args to be passed to the workflow script"
+            help="Additional args to be passed to the workflow script",
         )
 
     @staticmethod
@@ -671,20 +670,21 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
         value = value.strip()
         pattern = re.compile(r"\d+ *[sSmMhHdD]")
         if not pattern.fullmatch(value):
-            raise ValueError("invalid interval: {}, interval must be given as '<int> <s|m|h|d>".format(self.args.interval))
+            raise ValueError(
+                "invalid interval: {}, interval must be given as '<int> <s|m|h|d>".format(
+                    self.args.interval
+                )
+            )
 
-        num = int(value[0:len(value)-1])
+        num = int(value[0 : len(value) - 1])
         unit = value[-1].lower()
 
         if unit not in "smhd":
-            raise ValueError("invalid unit: {}, unit must be one of s, S, m, M, h, H, d, D")
+            raise ValueError(
+                "invalid unit: {}, unit must be one of s, S, m, M, h, H, d, D"
+            )
 
-        as_seconds = {
-            "s": 1,
-            "m": 60,
-            "h": 60 * 60,
-            "d": 60 * 60 * 24
-        }
+        as_seconds = {"s": 1, "m": 60, "h": 60 * 60, "d": 60 * 60 * 24}
 
         return as_seconds[unit] * num
 
@@ -693,7 +693,9 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
         interval = StartPatternIntervalTriggerCommand.to_seconds(self.args.interval)
 
         if interval <= 0:
-            raise ValueError("invalid interval: {}, must be greater than 0 seconds".format(interval))
+            raise ValueError(
+                "invalid interval: {}, must be greater than 0 seconds".format(interval)
+            )
 
         kwargs = vars(self.args)
         # replace str interval with interval in seconds as int
@@ -701,16 +703,18 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
 
         self.send_msg(
             TriggerManagerMessage(
-                TriggerManagerMessage.START_PATTERN_INTERVAL_TRIGGER, 
-                **kwargs
+                TriggerManagerMessage.START_PATTERN_INTERVAL_TRIGGER, **kwargs
             )
         )
+
 
 # TODO: implement
 class TriggerStatusCommand(EnsembleClientCommand):
     pass
 
+
 # ------------------------------------------------------------------------------
+
 
 class EnsembleCommand(CompoundCommand):
     description = "Client for ensemble management"
@@ -729,7 +733,7 @@ class EnsembleCommand(CompoundCommand):
         ("rerun", RerunCommand),
         ("priority", PriorityCommand),
         ("trigger", StartPatternIntervalTriggerCommand),
-        ("stop-trigger", StopTriggerCommand)
+        ("stop-trigger", StopTriggerCommand),
     ]
     aliases = {
         "c": "create",
