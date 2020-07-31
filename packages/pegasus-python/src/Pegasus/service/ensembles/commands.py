@@ -1,10 +1,12 @@
 import argparse
 import logging
 import os
+import pickle
 import re
 import sys
 import time
 from multiprocessing.connection import Client
+from pathlib import Path
 from urllib import parse as urlparse
 
 import requests
@@ -540,6 +542,9 @@ class TriggerCommand:
         if not self.password:
             raise Exception("Specify PASSWORD in configuration")
 
+        # TriggerManager state (read only)
+        self._running_triggers_file = Path().home() / ".pegasus/triggers/running.p"
+
     def run(self):
         """Command logic. To be overwritten in derived class"""
         raise NotImplementedError
@@ -584,9 +589,23 @@ class StopTriggerCommand(TriggerCommand):
         )
 
     def run(self):
-        self.send_msg(
-            TriggerManagerMessage(TriggerManagerMessage.STOP_TRIGGER, **vars(self.args))
-        )
+        try:
+            with self._running_triggers_file.open("rb") as f:
+                running = pickle.load(f)
+
+            trigger = "::".join([self.args.ensemble, self.args.trigger_name])
+            if trigger not in running:
+                print("Invalid trigger: {} is not running".format(trigger))
+            else:
+                self.send_msg(
+                    TriggerManagerMessage(
+                        TriggerManagerMessage.STOP_TRIGGER, **vars(self.args)
+                    )
+                )
+        except FileNotFoundError:
+            print(
+                "Unable to locate TriggerManager file, has the ensemble manager been started?"
+            )
 
 
 class StartPatternIntervalTriggerCommand(TriggerCommand):
@@ -701,11 +720,23 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
         # replace str interval with interval in seconds as int
         kwargs["interval"] = interval
 
-        self.send_msg(
-            TriggerManagerMessage(
-                TriggerManagerMessage.START_PATTERN_INTERVAL_TRIGGER, **kwargs
+        try:
+            with self._running_triggers_file.open("rb") as f:
+                running = pickle.load(f)
+
+            trigger = "::".join([self.args.ensemble, self.args.trigger_name])
+            if trigger in running:
+                print("Invalid trigger: {} is already running".format(trigger))
+            else:
+                self.send_msg(
+                    TriggerManagerMessage(
+                        TriggerManagerMessage.START_PATTERN_INTERVAL_TRIGGER, **kwargs
+                    )
+                )
+        except FileNotFoundError:
+            print(
+                "Unable to locate TriggerManager file, has the ensemble manager been started?"
             )
-        )
 
 
 # TODO: implement

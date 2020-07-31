@@ -1,6 +1,9 @@
 import datetime
+import fcntl
 import logging
 import math
+import pickle
+import queue
 import subprocess
 from enum import Enum
 from glob import glob
@@ -48,10 +51,27 @@ class TriggerManager(Process):
     def __init__(self):
         Process.__init__(self, daemon=True)
 
-        # TODO: serialize so that state can be visible to pegasus-em client (read only)
-        self._running_triggers = dict()
         # TODO: add file handler so that logs can be written to ~/.pegasus/ensembles/triggers
         self._log = logging.getLogger("TriggerManager")
+
+        # key="<ensemble>::<trigger_name>", value=trigger_thread
+        self._running_triggers = dict()
+
+        # triggers that can be removed from self._running_triggers
+        self._to_del = queue.Queue()
+
+        # make state visible to pegasus-em client via file
+        trigger_dir = Path().home() / ".pegasus/triggers"
+        trigger_dir.mkdir(parents=True, exist_ok=True)
+        self._running_triggers_file = trigger_dir / "running.p"
+
+        self._log.debug(
+            "writing trigger state file to : {}".format(
+                self._running_triggers_file.resolve()
+            )
+        )
+        with self._running_triggers_file.open("wb") as f:
+            pickle.dump(set(), f)
 
     def run(self):
         # TODO: make configurable
@@ -83,18 +103,20 @@ class TriggerManager(Process):
                         self._log.error("invalid message: {}".format(msg))
 
     def _stop_trigger_handler(self, ensemble: str, trigger_name: str):
+        """Handler for a STOP_TRIGGER message"""
+        trigger = "::".join([ensemble, trigger_name])
         try:
-            self._running_triggers[ensemble][trigger_name].shutdown()
-            del self._running_triggers[ensemble][trigger_name]
+            self._running_triggers[trigger].shutdown()
+            del self._running_triggers[trigger]
+            self._save_running_threads()
 
-            if len(self._running_triggers[ensemble]) == 0:
-                del self._running_triggers[ensemble]
+            self._log.info("stopped trigger {}".format(trigger))
 
-            self._log.info("stopped trigger {}::{}".format(ensemble, trigger_name))
+        # case: trigger doesn't exist; should not happen as pegsus em client would
+        # have thrown an exception after seeing that this trigger is not in running
+        # triggers file
         except KeyError:
-            self._log.error(
-                "TriggerManager does not contain: {}::{}".format(ensemble, trigger_name)
-            )
+            self._log.error("TriggerManager does not contain: {}".format(trigger))
 
     def _start_pattern_interval_trigger_handler(
         self,
@@ -106,6 +128,7 @@ class TriggerManager(Process):
         interval: int,
         additional_args: List[str],
     ):
+        """Handler for a START_PATTERN_INTERVAL_TRIGGER message"""
 
         t = PatternIntervalTrigger(
             ensemble=ensemble,
@@ -117,17 +140,14 @@ class TriggerManager(Process):
             additional_args=additional_args,
         )
 
-        # ensemble doesn't exist
-        if ensemble not in self._running_triggers:
-            self._running_triggers[ensemble] = {trigger_name: t}
+        if t.name not in self._running_triggers:
+            self._running_triggers[t.name] = t
+            self._save_running_threads()
             t.start()
 
-        # ensemble exists
-        elif trigger_name not in self._running_triggers[ensemble]:
-            self._running_triggers[ensemble][trigger_name] = t
-            t.start()
-
-        # trigger already exists
+        # case: trigger already exists, however this should never happen as pegasus em
+        # client would have thrown an error after seeing it in the running
+        # triggers file
         else:
             self._log.error(
                 "Cannot overwrite existing trigger: {}::{}".format(
@@ -136,7 +156,24 @@ class TriggerManager(Process):
             )
 
     def _status_handler(self, ensemble: str, name: Optional[str] = None):
+        """Handler for a STATUS message"""
+
         raise NotImplementedError("trigger status not yet implemented")
+
+    def _save_running_threads(self):
+        """
+        Overwrite ~/.pegasus/triggers/running.p with the current set of
+        running triggers.
+        """
+        running_triggers = {t for t in self._running_triggers}
+        self._log.debug(
+            "writing {} to {}".format(running_triggers, self._running_triggers_file)
+        )
+
+        with self._running_triggers_file.open("wb") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            pickle.dump(running_triggers, f)
+            fcntl.flock(f, fcntl.LOCK_UN)
 
 
 class PatternIntervalTrigger(Thread):
@@ -153,7 +190,7 @@ class PatternIntervalTrigger(Thread):
         interval: int,
         additional_args: Optional[str] = None
     ):
-        Thread.__init__(self, daemon=True)
+        Thread.__init__(self, name="::".join([ensemble, trigger_name]), daemon=True)
         # TODO: add file handler so that logs can be written to ~/.pegasus/ensembles/triggers
         self._log = logging.getLogger("PatternIntervalTrigger")
         self._stop_event = Event()
@@ -228,10 +265,17 @@ class PatternIntervalTrigger(Thread):
             # update last time ran to the time of current iteration
             self.last_ran = time_now
 
-        self._log.info("{}::{} done".format(self.ensemble, self.trigger_name))
+            # sleep for interval
+            time.sleep(self.interval)
+
+        self._log.info("{} done".format(self.name))
+
+        # TODO: add myself to the q to be cleaned up
 
     def shutdown(self):
         """Gracefully shutdown this thread."""
 
         self._log.info("shutting down {}".format(self.trigger_name))
         self._stop_event.set()
+
+        # TODO: add myself to the q to be cleaned  up
