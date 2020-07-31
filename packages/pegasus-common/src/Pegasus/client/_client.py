@@ -199,7 +199,7 @@ class Client:
         self._log.info("\n##################\n# pegasus-status #\n##################")
         self._exec(cmd)
 
-    def wait(self, submit_dir: str, delay: int = 2):
+    def wait(self, submit_dir: str, delay: int = 3):
         """Prints progress bar and blocks until workflow completes or fails"""
 
         # match output from pegasus-status
@@ -228,6 +228,9 @@ class Client:
         blue = lambda s: "\x1b[1;36m" + s + "\x1b[0m"
         red = lambda s: "\x1b[1;31m" + s + "\x1b[0m"
 
+        # progress bar length
+        bar_len = 50
+        
         can_continue = True
         while can_continue:
             rv = subprocess.run(
@@ -266,8 +269,6 @@ class Client:
                         + ")"
                     )
 
-                    # progress bar
-                    bar_len = 50
                     filled_len = int(round(bar_len * (v[PCNT_DONE] * 0.01)))
 
                     bar = (
@@ -294,16 +295,16 @@ class Client:
                     # skip the rest of the lines
                     break
 
+            # When workflow is submitted, the pattern above may not be initially
+            # present when the workflow job is idle or has just started running. 
             if not found_match:
-                raise PegasusClientError(
-                    "Client.wait() encountered an error parsing pegasus-status output",
-                    Result(
-                        ["pegasus-status", "-l", submit_dir],
-                        rv.returncode,
-                        rv.stdout,
-                        rv.stderr,
-                    ),
-                )
+                    bar = (
+                        "\r["
+                        + ("-" * bar_len)
+                        + "] {percent:>5}% ..".format(percent=0.0)
+                    )
+
+                    print(bar, end="")
 
             time.sleep(delay)
 

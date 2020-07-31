@@ -207,29 +207,6 @@ class TestClient:
         out, _ = capsys.readouterr()
         assert out == expected_wait_out
 
-    def test_wait_invalid_output_from_pegasus_status(self, mocker, client):
-        pegasus_status_out = dedent(
-            """
-                (no matching jobs found in Condor Q)
-                UNRDY READY   PRE  IN_Q  POST  DONE   FAIL   %DONE STATE   DAGNAME
-                    0     0     0     0     0  1,000  1,a000  100.0 Success *appends-0.dag
-                Summary: 1 DAG total (Success:1)
-                """
-        ).encode("utf-8")
-
-        mocker.patch(
-            "subprocess.run",
-            return_value=CompletedProcess(
-                None, returncode=0, stdout=pegasus_status_out, stderr=b""
-            ),
-        )
-        with pytest.raises(PegasusClientError) as e:
-            client.wait("submit_dir")
-
-        assert (
-            "Client.wait() encountered an error parsing pegasus-status output" in str(e)
-        )
-
     def test_remove(self, mock_subprocess, client):
         client.remove("submit_dir", verbose=3)
         subprocess.Popen.assert_called_once_with(
