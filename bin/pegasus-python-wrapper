@@ -4,10 +4,15 @@
 # Python version to use, then execute the real tool 
 
 # Always set PEGASUS_HOME based on where the tool was run from
-PEGASUS_HOME=$(realpath $0)
-PEGASUS_HOME=$(dirname $PEGASUS_HOME)/..
-PEGASUS_HOME=$(cd $PEGASUS_HOME && pwd)
+PEGASUS_HOME=`dirname $0`"/.."
+PEGASUS_HOME=`cd $PEGASUS_HOME && pwd`
 export PEGASUS_HOME
+
+# when running tools from /bin, / becomes a special case
+if [ "$PEGASUS_HOME" = "/" ]; then
+    PEGASUS_HOME=/usr
+    export PEGASUS_HOME
+fi
 
 # The base name is used to decide what Python tool to invoke
 BASE_NAME=%%BASE_NAME%%
