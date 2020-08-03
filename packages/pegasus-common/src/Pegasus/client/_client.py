@@ -230,7 +230,7 @@ class Client:
 
         # progress bar length
         bar_len = 50
-        
+
         can_continue = True
         while can_continue:
             rv = subprocess.run(
@@ -296,15 +296,11 @@ class Client:
                     break
 
             # When workflow is submitted, the pattern above may not be initially
-            # present when the workflow job is idle or has just started running. 
+            # present when the workflow job is idle or has just started running.
             if not found_match:
-                    bar = (
-                        "\r["
-                        + ("-" * bar_len)
-                        + "] {percent:>5}% ..".format(percent=0.0)
-                    )
+                bar = "\r[" + ("-" * bar_len) + "] {percent:>5}% ..".format(percent=0.0)
 
-                    print(bar, end="")
+                print(bar, end="")
 
             time.sleep(delay)
 
