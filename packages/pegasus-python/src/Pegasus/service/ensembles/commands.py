@@ -545,6 +545,31 @@ class TriggerCommand:
         # TriggerManager state (read only)
         self._running_triggers_file = Path().home() / ".pegasus/triggers/running.p"
 
+    def _request(self, method: str, path: str, **kwargs):
+        """Handle http requests to ensemble manager flask app"""
+
+        headers = {"accept": "application/json"}
+        defaults = {"auth": (self.username, self.password), "headers": headers}
+        defaults.update(kwargs)
+        url = urlparse.urljoin(self.endpoint, path)
+        response = requests.request(method, url, **defaults)
+
+        if 200 <= response.status_code < 300:
+            return response
+
+        try:
+            result = response.json()
+            print("ERROR:", result["message"])
+        except Exception:
+            print("ERROR:", response.text)
+
+        exit(1)
+
+    def get(self, path: str, **kwargs):
+        """Make a GET req to the given path"""
+
+        return self._request("get", path, **kwargs)
+
     def run(self):
         """Command logic. To be overwritten in derived class"""
         raise NotImplementedError
@@ -708,17 +733,38 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
         return as_seconds[unit] * num
 
     def run(self):
+        # ensure given ensemble is valid
+        resp = self.get("/ensembles")
+
+        found = False
+        for r in resp.json():
+            if r["name"] == self.args.ensemble:
+                found = True
+                break
+
+        if not found:
+            print(
+                "Ensemble: {0} has not yet been created. Use `pegasus-em create {0}`".format(
+                    self.args.ensemble
+                )
+            )
+            sys.exit(1)
+
         # get get interval as seconds
         interval = StartPatternIntervalTriggerCommand.to_seconds(self.args.interval)
 
         if interval <= 0:
-            raise ValueError(
-                "invalid interval: {}, must be greater than 0 seconds".format(interval)
+            print(
+                "Invalid interval: {}, must be greater than 0 seconds".format(interval)
             )
+            sys.exit(1)
 
         kwargs = vars(self.args)
         # replace str interval with interval in seconds as int
         kwargs["interval"] = interval
+
+        # set abspath for workflow script
+        kwargs["workflow_script"] = str(Path(self.args.workflow_script).resolve())
 
         try:
             with self._running_triggers_file.open("rb") as f:
@@ -740,7 +786,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
 
 
 # TODO: implement
-class TriggerStatusCommand(EnsembleClientCommand):
+class TriggerStatusCommand(TriggerCommand):
     pass
 
 
