@@ -96,12 +96,16 @@ void yamldump(FILE *in, FILE *out, const int indent) {
     wint_t c;
     int first_line = 1;
     while ((c = fgetwc(in)) != WEOF) {
-        /* first line can not have leading spaces */
-        if (first_line && c == 0x20) {
+        /* first line can not have leading white spaces */
+        if (first_line && (
+              c == 0x20 ||
+              c == 0x9  ||
+              c == 0xD  )) {
             continue;
         }
 
-        if (c == 0xA) {
+        /* newline or cr maps to a new line */
+        if (c == 0xA || c == 0xD) {
             fprintf(out, "\n%*s", indent, "");
         }
         else if (yamlprintable(c)) {

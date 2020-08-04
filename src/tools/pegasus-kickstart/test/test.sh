@@ -551,6 +551,13 @@ function test_locale {
     return $ec
 }
 
+function test_special_charts {
+    kickstart cat progress-bar.txt
+    ec=$?
+    return $ec
+}
+
+
 export START_DIR=`pwd`
 
 # make sure we start cleanly
@@ -608,4 +615,5 @@ run_test test_integrity_failure
 run_test test_integrity_yaml_inc
 run_test test_w_with_rel_exec
 run_test test_locale
+run_test test_special_charts
 
