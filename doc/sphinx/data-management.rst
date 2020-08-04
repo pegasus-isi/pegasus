@@ -709,6 +709,14 @@ specified for the file
    #viz viz
    file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exec-dir/f.input
 
+Symlinking in Containers
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Also when jobs are launched via application containers, Pegasus does support
+symbolic linking of input data sets from directories visible on the host
+filesystem. More details can be found :ref:`here <containers-symlinking>`.
+
+
 .. _data-movement-nodes:
 
 Addition of Separate Data Movement Nodes to Executable Workflow
