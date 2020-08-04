@@ -18,19 +18,6 @@ from typing import List, Optional
 trigger_dir = Path().home() / ".pegasus/triggers"
 trigger_dir.mkdir(parents=True, exist_ok=True)
 
-# --- logging conf -------------------------------------------------------------
-logger = logging.getLogger("trigger")
-
-# setup file handler
-log_file = str(trigger_dir / "trigger_manager.log")
-fh = logging.FileHandler(log_file)
-
-# setup log format
-formatter = logging.Formatter("%(asctime)s - %(name)18s - %(levelname)6s - %(message)s")
-fh.setFormatter(formatter)
-
-logger.addHandler(fh)
-
 # --- messages -----------------------------------------------------------------
 class _TriggerManagerMessageType(Enum):
     """Message types to be handled by TriggerManager"""
@@ -278,8 +265,12 @@ class _PatternIntervalTrigger(Thread):
             # early termination condition
             if len(input_files) == 0:
                 self.log.info(
-                    "{} encountered no new input files at {}, shutting down".format(
-                        self.name, datetime.datetime.fromtimestamp(time_now).isoformat()
+                    "{} encountered no new input files for interval {}, shutting down".format(
+                        self.name,
+                        "[{} - {})".format(
+                            datetime.datetime.fromtimestamp(self.last_ran).isoformat(),
+                            datetime.datetime.fromtimestamp(time_now).isoformat(),
+                        ),
                     )
                 )
                 break

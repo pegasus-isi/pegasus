@@ -105,6 +105,24 @@ def configureLogging(level=logging.INFO):
     cl.setFormatter(formatter)
     root.addHandler(cl)
 
+    # logging configuration for the TriggerManager
+    trigger_dir = Path().home() / ".pegasus/triggers"
+    trigger_dir.mkdir(parents=True, exist_ok=True)
+
+    trigger = logging.getLogger("trigger")
+
+    # setup file handler
+    log_file = str(trigger_dir / "trigger_manager.log")
+    fh = logging.FileHandler(log_file)
+
+    # setup log format
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)18s - %(levelname)6s - %(message)s"
+    )
+    fh.setFormatter(formatter)
+
+    trigger.addHandler(fh)
+
 
 def quote(s):
     """
