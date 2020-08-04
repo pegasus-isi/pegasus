@@ -337,6 +337,8 @@ are defined below.
    This is the directory created on the worker nodes per job usually by
    the job wrapper that launches the job.
 
+.. _ref-data-staging-sharedfs:
+
 Shared File System
 ~~~~~~~~~~~~~~~~~~
 
@@ -371,6 +373,9 @@ The data flow is as follows in this case
 
    Set **pegasus.data.configuration** to **sharedfs** to run in this
    configuration.
+
+
+.. _ref-data-staging-nonsharedfs:
 
 Non Shared Filesystem
 ~~~~~~~~~~~~~~~~~~~~~
@@ -442,6 +447,8 @@ cases, it might be useful to setup the PegasusLite jobs to pull input
 data directly from the input site without going through the staging
 server. More details can be found at :ref:`bypass-input-staging`.
 
+
+.. _ref-data-staging-condorio:
 
 Condor Pool Without a Shared Filesystem
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -524,6 +531,42 @@ found at :ref:`bypass-input-staging`.
 cases, it might be useful to setup the PegasusLite jobs to pull input
 data directly from the input site without going through the staging
 server.
+
+
+.. _ref-data-staging-nonsharedfs-shared:
+
+Hybrid Shared Filesystem with Non Shared Filesystem semantics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When executing your workflow in shared filesystem mode, the compute jobs
+are launched directly using *pegasus-kickstart*. The are not wrapped further
+in a PegasusLite wrapper invocation, that allows users to execute the jobs
+on the worker node filesystem (as in the nonsharedfs and condorio mode).
+The PegasusLite wrapper also enables integrity checking and allows jobs to
+be launched via application containers. If running in shared filesystem mode,
+and you want to leverage these features, you can opt to designate the
+staging site for your compute site to be the shared filesystem on the compute
+site itself.
+
+To do is you need to
+
+1) Set **pegasus.data.configuration** to **nonsharedfs** .
+
+2) For your compute site with a shared filesystem, add the shared-scratch
+   directory that points to a directory on the shared filesystem of the
+   cluster.
+
+3) To prevent a copy of the inputs from the shared filesystem directory
+   where the Pegasus data stagein jobs place data for the workflow, to
+   the local directory on the local worker nodes, you can enable symlinking
+   by setting **pegasus.transfer.links** to **true**. In this case, in the
+   PegasusLite jobs the input data will be symlinked from the directory on
+   the shared filesystem, and the outputs will be file copied from the local
+   directory on the worker node, back to the shared filesystem directory.
+   Also when jobs are launched via application containers, Pegasus will ensure
+   that the shared filesystem directory is mounted into the container.
+
+
 
 .. _local-vs-remote-transfers:
 
