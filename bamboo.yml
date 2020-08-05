@@ -4325,7 +4325,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T045C
-              name: 045-hierarchy-sharedfs-C
+              name: 045-hierarchy-sharedfs-c
               description: Baseline hierarchal workflow in nonsharedfs, with compute job dependent on outputs of a sub workflow
               tasks:
                 - !script
