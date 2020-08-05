@@ -669,9 +669,10 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
         self.parser.add_argument(
             "-f",
             "--file-pattern",
+            nargs="+",
             required=True,
-            type=str,
-            help="A file pattern that will be passed to glob.Glob to collect files",
+            dest="file_patterns",
+            help="File pattern(s) that will be passed to glob.Glob to collect files",
         )
 
         self.parser.add_argument(
@@ -749,6 +750,16 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
                 )
             )
             sys.exit(1)
+
+        # ensure that file patterns given as abspath
+        for fp in self.args.file_patterns:
+            if fp[0] != "/":
+                print(
+                    "Invalid file pattern: {}, must be an absolute path such as /home/scitech/*.txt".format(
+                        fp
+                    )
+                )
+                sys.exit(1)
 
         # get get interval as seconds
         interval = StartPatternIntervalTriggerCommand.to_seconds(self.args.interval)

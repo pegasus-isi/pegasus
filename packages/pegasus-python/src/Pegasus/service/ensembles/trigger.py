@@ -18,19 +18,6 @@ from typing import List, Optional
 trigger_dir = Path().home() / ".pegasus/triggers"
 trigger_dir.mkdir(parents=True, exist_ok=True)
 
-# --- logging conf -------------------------------------------------------------
-logger = logging.getLogger("trigger")
-
-# setup file handler
-log_file = str(trigger_dir / "trigger_manager.log")
-fh = logging.FileHandler(log_file)
-
-# setup log format
-formatter = logging.Formatter("%(asctime)s - %(name)18s - %(levelname)6s - %(message)s")
-fh.setFormatter(formatter)
-
-logger.addHandler(fh)
-
 # --- messages -----------------------------------------------------------------
 class _TriggerManagerMessageType(Enum):
     """Message types to be handled by TriggerManager"""
@@ -170,7 +157,7 @@ class _TriggerDispatcher(Thread):
         ensemble: str,
         trigger_name: str,
         workflow_name_prefix: str,
-        file_pattern: str,
+        file_patterns: List[str],
         workflow_script: str,
         interval: int,
         additional_args: List[str],
@@ -182,7 +169,7 @@ class _TriggerDispatcher(Thread):
             ensemble=ensemble,
             trigger_name=trigger_name,
             workflow_name_prefix=workflow_name_prefix,
-            file_pattern=file_pattern,
+            file_patterns=file_patterns,
             workflow_script=workflow_script,
             interval=interval,
             additional_args=additional_args,
@@ -235,7 +222,7 @@ class _PatternIntervalTrigger(Thread):
         ensemble: str,
         trigger_name: str,
         workflow_name_prefix: str,
-        file_pattern: str,
+        file_patterns: List[str],
         workflow_script: str,
         interval: int,
         additional_args: Optional[str] = None
@@ -249,7 +236,7 @@ class _PatternIntervalTrigger(Thread):
         self.ensemble = ensemble
         self.trigger_name = trigger_name
         self.workflow_name_prefix = workflow_name_prefix
-        self.file_pattern = file_pattern
+        self.file_patterns = file_patterns
         self.workflow_script = workflow_script
         self.interval = interval
         self.additional_args = additional_args
@@ -269,17 +256,25 @@ class _PatternIntervalTrigger(Thread):
             # get paths of all files that match pattern with mod date s.t.
             # self._last_ran <= mod date < time_now
             input_files = []
-            for match in glob(self.file_pattern):
-                p = Path(match).resolve()
+            for pattern in self.file_patterns:
+                for match in glob(pattern):
+                    p = Path(match).resolve()
 
-                if self.last_ran <= p.stat().st_mtime and p.stat().st_mtime < time_now:
-                    input_files.append(str(p))
+                    if (
+                        self.last_ran <= p.stat().st_mtime
+                        and p.stat().st_mtime < time_now
+                    ):
+                        input_files.append(str(p))
 
             # early termination condition
             if len(input_files) == 0:
                 self.log.info(
-                    "{} encountered no new input files at {}, shutting down".format(
-                        self.name, datetime.datetime.fromtimestamp(time_now).isoformat()
+                    "{} encountered no new input files for interval {}, shutting down".format(
+                        self.name,
+                        "[{} - {})".format(
+                            datetime.datetime.fromtimestamp(self.last_ran).isoformat(),
+                            datetime.datetime.fromtimestamp(time_now).isoformat(),
+                        ),
                     )
                 )
                 break
@@ -302,7 +297,7 @@ class _PatternIntervalTrigger(Thread):
                 cmd.extend(self.additional_args.split())
 
             self.log.debug(
-                "{} executing command: {} for interval {}".format(
+                "{} executing command: [{}] for interval {}".format(
                     self.name,
                     " ".join(cmd),
                     "[{} - {})".format(

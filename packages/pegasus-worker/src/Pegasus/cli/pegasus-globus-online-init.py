@@ -5,7 +5,11 @@ import os
 from optparse import OptionParser
 
 import globus_sdk
-from ConfigParser import ConfigParser
+
+try:
+    from configparser import ConfigParser
+except Exception:
+    from ConfigParser import ConfigParser
 
 client_id = "d7382f5a-4ea3-4b69-b094-99c392fc820d"
 config_file = os.path.expanduser("~/.pegasus/globus.conf")
