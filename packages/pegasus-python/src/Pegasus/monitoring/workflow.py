@@ -1279,11 +1279,12 @@ class Workflow:
 
                     # PM-1355 the static.bp file is netlogger formatted.
                     # so the id keys have a . before them. Replace them with __
+                    remapped_keys={}
                     for k, v in my_keys.items():
-                        my_keys[k.replace(".id", "__id")] = my_keys.pop(k)
+                        remapped_keys[k.replace(".id", "__id")] = v
 
                     # Send event to database
-                    self.output_to_db(my_event, my_keys)
+                    self.output_to_db(my_event, remapped_keys)
             except Exception:
                 logger.critical(
                     "error processing static bp file %s, exiting..."
