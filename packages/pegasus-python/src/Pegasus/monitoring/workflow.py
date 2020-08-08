@@ -1279,7 +1279,7 @@ class Workflow:
 
                     # PM-1355 the static.bp file is netlogger formatted.
                     # so the id keys have a . before them. Replace them with __
-                    remapped_keys={}
+                    remapped_keys = {}
                     for k, v in my_keys.items():
                         remapped_keys[k.replace(".id", "__id")] = v
 
