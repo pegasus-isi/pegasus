@@ -50,18 +50,16 @@ transformation_stats_col_name_text = [
     "Transformation",
     "Type",
     "Count",
-    "Min",
-    "Max",
-    "Mean",
-    "Total",
-    "Min (maxrss)",
-    "Max (maxrss)",
-    "Mean (maxrss)",
-    "Total (maxrss)",
+    "Min (runtime)",
+    "Max (runtime)",
+    "Mean (runtime)",
+    "Total (runtime)",
+    "Min (mem)",
+    "Max (mem)",
+    "Mean (mem)",
     "Min (avg. cpu)",
     "Max (avg. cpu)",
     "Mean (avg. cpu)",
-    "Total (avg. cpu)",
 ]
 transformation_stats_col_name_csv = [
     "Workflow_Id",
@@ -69,36 +67,32 @@ transformation_stats_col_name_csv = [
     "Transformation",
     "Type",
     "Count",
-    "Min",
-    "Max",
-    "Mean",
-    "Total",
-    "Min (maxrss)",
-    "Max (maxrss)",
-    "Mean (maxrss)",
-    "Total (maxrss)",
+    "Min (runtime)",
+    "Max (runtime)",
+    "Mean (runtime)",
+    "Total (runtime)",
+    "Min (mem)",
+    "Max (mem)",
+    "Mean (mem)",
     "Min (avg. cpu)",
     "Max (avg. cpu)",
     "Mean (avg. cpu)",
-    "Total (avg. cpu)",
 ]
 
 transformation_stats_col_size = [
-    25,
-    10,
-    8,
-    10,
-    10,
-    10,
-    10,
-    12,
-    12,
-    14,
     15,
+    5,
+    6,
+    14,
+    14,
+    21,
+    22,
+    10,
+    10,
+    11,
     15,
     15,
     16,
-    17,
 ]
 
 # Integrity file column names
@@ -386,21 +380,17 @@ def formatted_transformation_stats_legends():
 #                    to the transformation.
 # Total(sec)       - the cumulative of invocation runtime corresponding
 #                    to the transformation.
-# Min (maxrss)     - the minimum of the max. resident set size (RSS) value corresponding
+# Min (mem)        - the minimum of the max. resident set size (RSS) value corresponding
 #                    to the transformation. In MB.
-# Max (maxrss)     - the maximum of the max. resident set size (RSS) value corresponding
+# Max (mem)        - the maximum of the max. resident set size (RSS) value corresponding
 #                    to the transformation. In MB.
-# Mean (maxrss)    - the mean of the max. resident set size (RSS) value corresponding
+# Mean (mem)       - the mean of the max. resident set size (RSS) value corresponding
 #                    to the transformation. In MB.
-# Total (maxrss)   - the cumulative of the max. resident set size (RSS) value
-#                    corresponding to the transformation. In MB.
 # Min (avg. cpu)   - the minimum of the average cpu utilization value corresponding
 #                    to the transformation.
 # Max (avg. cpu)   - the maximum of the average cpu utilization value corresponding
 #                    to the transformation.
 # Mean (avg. cpu)  - the mean of the average cpu utilization value corresponding
-#                    to the transformation.
-# Total (avg. cpu) - the cumulative of the average cpu utilization value corresponding
 #                    to the transformation."""
 
 
@@ -509,6 +499,17 @@ def fstr(value, to=3):
     if value is None:
         return "-"
     return stats_utils.round_decimal_to_str(value, to)
+
+
+def pstr(value, to=2):
+    """
+    Utility method for rounding the float value to rounded string
+    @param value :  value to round
+    @param to    :  how many decimal points to round to
+    """
+    if value is None:
+        return "-"
+    return stats_utils.round_decimal_to_str(value, to) + "%"
 
 
 def print_row(row, sizes, fmt):
@@ -1570,8 +1571,8 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
     transformation_statistics = stats.get_transformation_statistics()
 
     if fmt == "text":
-        max_length = [max(0, len(col_names[i])) for i in range(15)]
-        columns = ["" for i in range(15)]
+        max_length = [max(0, len(col_names[i])) for i in range(13)]
+        columns = ["" for i in range(13)]
 
         for t in transformation_statistics:
             max_length[0] = max(max_length[0], len(t.transformation))
@@ -1585,12 +1586,10 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
             max_length[7] = max(max_length[7], len(str(t.min_maxrss)))
             max_length[8] = max(max_length[8], len(str(t.max_maxrss)))
             max_length[9] = max(max_length[9], len(str(t.avg_maxrss)))
-            max_length[10] = max(max_length[10], len(str(t.sum_maxrss)))
             # avg_cpu
-            max_length[11] = max(max_length[11], len(str(t.min_avg_cpu)))
-            max_length[12] = max(max_length[12], len(str(t.max_avg_cpu)))
-            max_length[13] = max(max_length[13], len(str(t.avg_avg_cpu)))
-            max_length[14] = max(max_length[14], len(str(t.sum_avg_cpu)))
+            max_length[10] = max(max_length[10], len(str(t.min_avg_cpu)))
+            max_length[11] = max(max_length[11], len(str(t.max_avg_cpu)))
+            max_length[12] = max(max_length[12], len(str(t.avg_avg_cpu)))
 
         max_length = [i + 1 for i in max_length]
 
@@ -1608,15 +1607,13 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
             fstr(t.min_maxrss / 1024) if t.min_maxrss else "-",
             fstr(t.max_maxrss / 1024) if t.max_maxrss else "-",
             fstr(t.avg_maxrss / 1024) if t.avg_maxrss else "-",
-            fstr(t.sum_maxrss / 1024) if t.sum_maxrss else "-",
-            fstr(t.min_avg_cpu),
-            fstr(t.max_avg_cpu),
-            fstr(t.avg_avg_cpu),
-            fstr(t.sum_avg_cpu),
+            pstr(t.min_avg_cpu * 100) if t.min_avg_cpu else "-",
+            pstr(t.max_avg_cpu * 100) if t.max_avg_cpu else "-",
+            pstr(t.avg_avg_cpu * 100) if t.avg_avg_cpu else "-",
         ]
 
         if fmt == "text":
-            for i in range(0, 15):
+            for i in range(0, 13):
                 columns[i] = col_names[i].ljust(max_length[i])
                 content[i] = content[i].ljust(max_length[i])
 

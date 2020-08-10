@@ -1759,12 +1759,10 @@ class StampedeStatistics:
             func.min(Invocation.maxrss).label("min_maxrss"),
             func.max(Invocation.maxrss).label("max_maxrss"),
             cast(func.avg(Invocation.maxrss), Float,).label("avg_maxrss"),
-            func.sum(Invocation.maxrss).label("sum_maxrss"),
             # avg_cpu
             cast(func.min(Invocation.avg_cpu), Float,).label("min_avg_cpu"),
             cast(func.max(Invocation.avg_cpu), Float,).label("max_avg_cpu"),
             cast(func.avg(Invocation.avg_cpu), Float,).label("avg_avg_cpu"),
-            cast(func.sum(Invocation.avg_cpu), Float,).label("sum_avg_cpu"),
         )
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
         q = q.filter(Invocation.wf_id.in_(self._wfs))
