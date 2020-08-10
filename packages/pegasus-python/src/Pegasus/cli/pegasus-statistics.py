@@ -375,7 +375,7 @@ def formatted_job_stats_legends():
 def formatted_transformation_stats_legends():
     return """
 # Transformation   - name of the transformation.
-# Type             - succesful or failed
+# Type             - successful or failed
 # Count            - the number of times the invocations corresponding to
 #                    the transformation was executed.
 # Min(sec)         - the minimum invocation runtime value corresponding
@@ -387,13 +387,13 @@ def formatted_transformation_stats_legends():
 # Total(sec)       - the cumulative of invocation runtime corresponding
 #                    to the transformation.
 # Min (maxrss)     - the minimum of the max. resident set size (RSS) value corresponding
-#                    to the transformation.
+#                    to the transformation. In MB.
 # Max (maxrss)     - the maximum of the max. resident set size (RSS) value corresponding
-#                    to the transformation.
+#                    to the transformation. In MB.
 # Mean (maxrss)    - the mean of the max. resident set size (RSS) value corresponding
-#                    to the transformation.
+#                    to the transformation. In MB.
 # Total (maxrss)   - the cumulative of the max. resident set size (RSS) value
-#                    corresponding to the transformation.
+#                    corresponding to the transformation. In MB.
 # Min (avg. cpu)   - the minimum of the average cpu utilization value corresponding
 #                    to the transformation.
 # Max (avg. cpu)   - the maximum of the average cpu utilization value corresponding
@@ -1605,10 +1605,10 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
             fstr(t.max),
             fstr(t.avg),
             fstr(t.sum),
-            str(t.min_maxrss) if t.min_maxrss else "-",
-            str(t.max_maxrss) if t.max_maxrss else "-",
-            fstr(t.avg_maxrss),
-            str(t.sum_maxrss) if t.sum_maxrss else "-",
+            fstr(t.min_maxrss / 1024) if t.min_maxrss else "-",
+            fstr(t.max_maxrss / 1024) if t.max_maxrss else "-",
+            fstr(t.avg_maxrss / 1024) if t.avg_maxrss else "-",
+            fstr(t.sum_maxrss / 1024) if t.sum_maxrss else "-",
             fstr(t.min_avg_cpu),
             fstr(t.max_avg_cpu),
             fstr(t.avg_avg_cpu),
