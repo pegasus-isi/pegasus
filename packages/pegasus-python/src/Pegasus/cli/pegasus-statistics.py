@@ -48,27 +48,58 @@ uses_PMC = False
 # Transformations file column names
 transformation_stats_col_name_text = [
     "Transformation",
+    "Type",
     "Count",
-    "Succeeded",
-    "Failed",
     "Min",
     "Max",
     "Mean",
     "Total",
+    "Min (maxrss)",
+    "Max (maxrss)",
+    "Mean (maxrss)",
+    "Total (maxrss)",
+    "Min (avg. cpu)",
+    "Max (avg. cpu)",
+    "Mean (avg. cpu)",
+    "Total (avg. cpu)",
 ]
 transformation_stats_col_name_csv = [
     "Workflow_Id",
     "Dax_Label",
     "Transformation",
+    "Type",
     "Count",
-    "Succeeded",
-    "Failed",
     "Min",
     "Max",
     "Mean",
     "Total",
+    "Min (maxrss)",
+    "Max (maxrss)",
+    "Mean (maxrss)",
+    "Total (maxrss)",
+    "Min (avg. cpu)",
+    "Max (avg. cpu)",
+    "Mean (avg. cpu)",
+    "Total (avg. cpu)",
 ]
-transformation_stats_col_size = [25, 10, 10, 8, 10, 10, 10, 10]
+
+transformation_stats_col_size = [
+    25,
+    10,
+    8,
+    10,
+    10,
+    10,
+    10,
+    12,
+    12,
+    14,
+    15,
+    15,
+    15,
+    16,
+    17,
+]
 
 # Integrity file column names
 integrity_stats_col_name_text = ["Type", "File Type", "Count", "Total Duration"]
@@ -343,21 +374,34 @@ def formatted_job_stats_legends():
 
 def formatted_transformation_stats_legends():
     return """
-# Transformation - name of the transformation.
-# Count          - the number of times the invocations corresponding to
-#                  the transformation was executed.
-# Succeeded      - the count of the succeeded invocations corresponding
-#                  to the transformation.
-# Failed         - the count of the failed invocations corresponding to
-#                  the transformation.
-# Min(sec)       - the minimum invocation runtime value corresponding
-#                  to the transformation.
-# Max(sec)       - the maximum invocation runtime value corresponding
-#                  to the transformation.
-# Mean(sec)      - the mean of the invocation runtime corresponding
-#                  to the transformation.
-# Total(sec)     - the cumulative of invocation runtime corresponding
-#                  to the transformation."""
+# Transformation   - name of the transformation.
+# Type             - succesful or failed
+# Count            - the number of times the invocations corresponding to
+#                    the transformation was executed.
+# Min(sec)         - the minimum invocation runtime value corresponding
+#                    to the transformation.
+# Max(sec)         - the maximum invocation runtime value corresponding
+#                    to the transformation.
+# Mean(sec)        - the mean of the invocation runtime corresponding
+#                    to the transformation.
+# Total(sec)       - the cumulative of invocation runtime corresponding
+#                    to the transformation.
+# Min (maxrss)     - the minimum of the max. resident set size (RSS) value corresponding
+#                    to the transformation.
+# Max (maxrss)     - the maximum of the max. resident set size (RSS) value corresponding
+#                    to the transformation.
+# Mean (maxrss)    - the mean of the max. resident set size (RSS) value corresponding
+#                    to the transformation.
+# Total (maxrss)   - the cumulative of the max. resident set size (RSS) value
+#                    corresponding to the transformation.
+# Min (avg. cpu)   - the minimum of the average cpu utilization value corresponding
+#                    to the transformation.
+# Max (avg. cpu)   - the maximum of the average cpu utilization value corresponding
+#                    to the transformation.
+# Mean (avg. cpu)  - the mean of the average cpu utilization value corresponding
+#                    to the transformation.
+# Total (avg. cpu) - the cumulative of the average cpu utilization value corresponding
+#                    to the transformation."""
 
 
 def formatted_integrity_stats_legends():
@@ -1526,18 +1570,27 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
     transformation_statistics = stats.get_transformation_statistics()
 
     if fmt == "text":
-        max_length = [max(0, len(col_names[i])) for i in range(8)]
-        columns = ["" for i in range(8)]
+        max_length = [max(0, len(col_names[i])) for i in range(15)]
+        columns = ["" for i in range(15)]
 
         for t in transformation_statistics:
             max_length[0] = max(max_length[0], len(t.transformation))
-            max_length[1] = max(max_length[1], len(str(t.count)))
-            max_length[2] = max(max_length[2], len(str(t.success)))
-            max_length[3] = max(max_length[3], len(str(t.failure)))
-            max_length[4] = max(max_length[4], len(str(t.min)))
-            max_length[5] = max(max_length[5], len(str(t.max)))
-            max_length[6] = max(max_length[6], len(str(t.avg)))
-            max_length[7] = max(max_length[7], len(str(t.sum)))
+            max_length[1] = max(max_length[1], len(str(t.type)))
+            max_length[2] = max(max_length[2], len(str(t.count)))
+            max_length[3] = max(max_length[3], len(str(t.min)))
+            max_length[4] = max(max_length[4], len(str(t.max)))
+            max_length[5] = max(max_length[5], len(str(t.avg)))
+            max_length[6] = max(max_length[6], len(str(t.sum)))
+            # maxrss
+            max_length[7] = max(max_length[7], len(str(t.min_maxrss)))
+            max_length[8] = max(max_length[8], len(str(t.max_maxrss)))
+            max_length[9] = max(max_length[9], len(str(t.avg_maxrss)))
+            max_length[10] = max(max_length[10], len(str(t.sum_maxrss)))
+            # avg_cpu
+            max_length[11] = max(max_length[11], len(str(t.min_avg_cpu)))
+            max_length[12] = max(max_length[12], len(str(t.max_avg_cpu)))
+            max_length[13] = max(max_length[13], len(str(t.avg_avg_cpu)))
+            max_length[14] = max(max_length[14], len(str(t.sum_avg_cpu)))
 
         max_length = [i + 1 for i in max_length]
 
@@ -1546,17 +1599,24 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
     for t in transformation_statistics:
         content = [
             t.transformation,
+            t.type,
             str(t.count),
-            str(t.success),
-            str(t.failure),
             fstr(t.min),
             fstr(t.max),
             fstr(t.avg),
             fstr(t.sum),
+            str(t.min_maxrss) if t.min_maxrss else "-",
+            str(t.max_maxrss) if t.max_maxrss else "-",
+            fstr(t.avg_maxrss),
+            str(t.sum_maxrss) if t.sum_maxrss else "-",
+            fstr(t.min_avg_cpu),
+            fstr(t.max_avg_cpu),
+            fstr(t.avg_avg_cpu),
+            fstr(t.sum_avg_cpu),
         ]
 
         if fmt == "text":
-            for i in range(0, 8):
+            for i in range(0, 15):
                 columns[i] = col_names[i].ljust(max_length[i])
                 content[i] = content[i].ljust(max_length[i])
 
@@ -1864,8 +1924,9 @@ def main():
         root_logger.setLevel(logging.DEBUG)
 
     def check_dump(dir):
-        braindump = os.path.join(dir, "braindump.yml")
-        if not os.path.isfile(braindump):
+        if not os.path.isfile(
+            os.path.join(dir, "braindump.yml")
+        ) and not os.path.isfile(os.path.join(dir, "braindump.txt")):
             sys.stderr.write("Not a workflow submit directory: %s\n" % submit_dir)
             sys.exit(1)
 

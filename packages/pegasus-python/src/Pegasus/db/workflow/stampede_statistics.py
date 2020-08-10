@@ -1720,24 +1720,29 @@ class StampedeStatistics:
                count(CASE WHEN (invoc.exitcode != 0 and invoc.exitcode is NOT NULL) THEN invoc.exitcode END) AS failure,
                max(remote_duration * multiplier_factor) as max,
                avg(remote_duration * multiplier_factor) as avg,
-               sum(remote_duration * multiplier_factor) as sum FROM
+               sum(remote_duration * multiplier_factor) as sum
+        FROM
         invocation as invoc, job_instance as ji WHERE
         invoc.job_instance_id = ji.job_instance_id and
         invoc.wf_id IN (1,2,3) GROUP BY transformation
         """
         q = self.session.query(
             Invocation.transformation,
+            case([(Invocation.exitcode == 0, "successful")], else_="failed").label(
+                "type"
+            ),
             func.count(Invocation.invocation_id).label("count"),
-            cast(
-                func.min(Invocation.remote_duration * JobInstance.multiplier_factor),
-                Float,
-            ).label("min"),
             func.count(case([(Invocation.exitcode == 0, Invocation.exitcode)])).label(
                 "success"
             ),
             func.count(case([(Invocation.exitcode != 0, Invocation.exitcode)])).label(
                 "failure"
             ),
+            # runtime
+            cast(
+                func.min(Invocation.remote_duration * JobInstance.multiplier_factor),
+                Float,
+            ).label("min"),
             cast(
                 func.max(Invocation.remote_duration * JobInstance.multiplier_factor),
                 Float,
@@ -1750,10 +1755,21 @@ class StampedeStatistics:
                 func.sum(Invocation.remote_duration * JobInstance.multiplier_factor),
                 Float,
             ).label("sum"),
+            # maxrss
+            func.min(Invocation.maxrss).label("min_maxrss"),
+            func.max(Invocation.maxrss).label("max_maxrss"),
+            cast(func.avg(Invocation.maxrss), Float,).label("avg_maxrss"),
+            func.sum(Invocation.maxrss).label("sum_maxrss"),
+            # avg_cpu
+            cast(func.min(Invocation.avg_cpu), Float,).label("min_avg_cpu"),
+            cast(func.max(Invocation.avg_cpu), Float,).label("max_avg_cpu"),
+            cast(func.avg(Invocation.avg_cpu), Float,).label("avg_avg_cpu"),
+            cast(func.sum(Invocation.avg_cpu), Float,).label("sum_avg_cpu"),
         )
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
         q = q.filter(Invocation.wf_id.in_(self._wfs))
-        q = q.group_by(Invocation.transformation)
+        q = q.group_by(Invocation.transformation).group_by("type")
+        q = q.order_by(Invocation.transformation)
 
         return q.all()
 
