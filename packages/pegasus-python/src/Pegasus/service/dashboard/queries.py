@@ -907,6 +907,7 @@ class WorkflowInfo:
         w = orm.aliased(Workflow, name="w")
 
         q = self.session.query(
+            w.root_wf_id,
             w.wf_id,
             w.wf_uuid,
             w.dax_label,
