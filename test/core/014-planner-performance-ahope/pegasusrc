@@ -20,5 +20,6 @@ pegasus.code.generator Shell
 #log memory usage at the end of the planning process
 pegasus.log.memory.usage = true
 
-
+# sharedfs to keep it same as what is in 4.9 branch
+pegasus.data.configuration = sharedfs
 
