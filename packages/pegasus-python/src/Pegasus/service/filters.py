@@ -74,36 +74,36 @@ def time_to_str(time):
     time = int(time)
 
     if time >= DAY:
-        temp_time = time / DAY
+        temp_time = time // DAY
 
         if temp_time > 1:
             str_time += str(temp_time) + " days "
         else:
-            str_time += str(time / DAY) + " day "
+            str_time += str(temp_time) + " day "
 
         time = time % DAY
         num_units += 1
 
     if time >= HOUR:
 
-        temp_time = time / HOUR
+        temp_time = time // HOUR
 
         if temp_time > 1:
             str_time += str(temp_time) + " hours "
         else:
-            str_time += str(time / HOUR) + " hour "
+            str_time += str(temp_time) + " hour "
 
         time = time % HOUR
         num_units += 1
 
     if time >= MIN and num_units < max_units:
 
-        temp_time = time / MIN
+        temp_time = time // MIN
 
         if temp_time > 1:
             str_time += str(temp_time) + " mins "
         else:
-            str_time += str(time / MIN) + " min "
+            str_time += str(temp_time) + " min "
 
         time = time % MIN
         num_units += 1
