@@ -236,3 +236,96 @@ They can also be updated using the config command:
 ::
 
    $ pegasus-em config myruns.run1 -P 1 -R 5
+
+
+File Pattern, Timed Interval, Based Workflow Trigger
+---------------------------------------------------
+
+Workflows can be dynamically triggered for submission to the ensemble manager
+using the ``pegasus-em trigger`` command. This will start up a thread that, at
+each given time interval, collects all new input files based on given file patterns,
+and calls ``pegasus-em submit <ensemble>.<runXXX> <workflow script> --inputs <file1> <file2> ... <fileN>``.
+The workflow generation script **must** have a CLI argument flag ``--inputs`` which
+takes one or more arguments as this is the interface between the ensemble manager
+trigger and the workflow. The workflow developer is responsible for handling those
+input file paths appropriately. 
+
+The workflow script used with the trigger should be as follows:
+
+.. code-block:: python
+
+   import argparse
+   import sys
+
+    from Pegasus.api import *
+
+    def parse_args(args):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--inputs", nargs="+")
+        # optionally add more arguments if needed
+
+        return parser.parse_args(args)
+
+    args = parse_args(sys.arv[1:])
+
+    wf = Workflow("test")
+    # build up workflow using args.inputs
+
+    try:
+        # do not set submit=True
+        wf.plan()
+    except PegasusClientError as e:
+        print(e.output)
+        sys.exit(1)
+
+
+Usage of the ``pegasus-em trigger`` command is as follows:
+
+::
+
+    pegasus-em trigger -e ENSEMBLE \ 
+                        -t TRIGGER_NAME \
+                        -p PREFIX \
+                        -f FILE_PATTERN \
+                        -w WORKFLOW_SCRIPT \
+                        -i INTERVAL \
+                        [-a 'ADDITIONAL_ARGS']
+
+
+- ``ENSEMBLE``: the name of the (already created) ensemble to which newly submitted 
+  workflows will be added
+
+- ``TRIGGER_NAME``: a name to be associated with this trigger; may be used to shutdown 
+  the trigger
+
+- ``PREFIX``: a prefix that will be attached to each newly created workflow; workflows will
+  have the name ``<PREFIX>_<UNIX TS>`` within the ensemble manager
+
+- ``FILE_PATTERN``: a file pattern acceptible by ``glob.glob``; note that
+  this pattern must begin with an absolute path (e.g., ``/inputs/*.csv``) and that more 
+  than one file pattern may be given by passing another ``-f FILE_PATTERN`` argument
+
+- ``WORKFLOW_SCRIPT``: a workflow generation & planning script as outlined above
+
+- ``INTERVAL``: the time interval on which the trigger will operate; must be formatted as
+  ``<int><s|m|h|d>`` (e.g. ``5m``)
+
+- ``ADDITIONAL_ARGS``: any additional named arguments to be passed to the ``WORKFLOW_SCRIPT``;
+  these should be quoted when given (passed as a single string)
+ 
+**Example Usage**
+
+:: 
+
+    pegasus-em trigger \
+        --ensemble myruns \
+        --trigger-name 10s_txt \
+        --workflow-name-prefix trigger-wf \
+        --file-pattern "/tmp/input/*.txt" \
+        --file-pattern "/tmp/input/*.csv" \
+        --workflow-script workflow.py \
+        --interval 10s
+ 
+
+
+
