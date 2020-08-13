@@ -245,6 +245,12 @@ Workflows can be dynamically triggered for submission to the ensemble manager
 using the ``pegasus-em trigger`` command. This will start up a thread that, at
 each given time interval, collects all new input files based on given file patterns,
 and calls ``pegasus-em submit <ensemble>.<runXXX> <workflow script> --inputs <file1> <file2> ... <fileN>``.
+If no new files are detected which match the given file pattern(s), the trigger will shutdown.
+As such, the trigger may shutdown early if the interval is set to be too small. For example, 
+if at least one new input file is expected to be generated every hour, 
+the time interval should be set to be at least ``1h``. 
+
+
 The workflow generation script **must** have a CLI argument flag ``--inputs`` which
 takes one or more arguments as this is the interface between the ensemble manager
 trigger and the workflow. The workflow developer is responsible for handling those
