@@ -16,40 +16,65 @@ echo "This is sample input to KEG" >f.a
 # output directory
 mkdir -p outputs
 
-# build the dax generator
+# build the workflow generator
 export CLASSPATH=$testdir:`pegasus-config --classpath`
-javac $testdir/BlackDiamondDAX.java
+javac $testdir/BlackDiamondWorkflow.java
 
-# generate the dax
-java BlackDiamondDAX /usr blackdiamond.dax
+# generate the workflow
+java BlackDiamondWorkflow /usr blackdiamond.yml
 
 # create the site catalog
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <directory type="shared-scratch" path="$TOPDIR/scratch">
-            <file-server operation="all" url="file://$TOPDIR/scratch"/>
-        </directory>
-        <directory type="local-storage" path="$TOPDIR/outputs">
-            <file-server operation="all" url="file://$TOPDIR/outputs"/>
-        </directory>
-        <profile namespace="env" key="PATH">$PEGASUS_BIN_DIR:/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
-    </site>
-    <site handle="condorpool" arch="x86_64" os="LINUX" >
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PATH">/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
-    </site>
-
-    <site handle="cartman-data" arch="x86" os="LINUX">
-         <directory type="shared-scratch" path="${TOPDIR}/staging-site/scratch">
-            <file-server operation="all" url="gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch"/>
-        </directory>
-
-    </site>
-
-</sitecatalog>
+cat >sites.yml <<EOF
+---
+pegasus: "5.0"
+sites:
+ -
+  name: "cartman-data"
+  arch: "x86"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "${TOPDIR}/staging-site/scratch"
+    fileServers:
+     -
+      operation: "all"
+      url: "gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch"
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    env:
+      PATH: "/ccg/software/irods/3.3/bin:/usr/bin:/bin"
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
+  directories:
+   -
+    type: "localStorage"
+    path: "$TOPDIR/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$TOPDIR/scratch"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/scratch"
+  profiles:
+    env:
+      PATH: "$PEGASUS_BIN_DIR:/ccg/software/irods/3.3/bin:/usr/bin:/bin"
 EOF
 
 # plan and submit the  workflow
@@ -59,7 +84,7 @@ pegasus-plan \
     --staging-site cartman-data \
     --dir work \
     --output-sites local \
-    blackdiamond.dax  | tee $TOPDIR/plan.out
+    blackdiamond.yml  | tee $TOPDIR/plan.out
 
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`
 cd $WORK_DIR

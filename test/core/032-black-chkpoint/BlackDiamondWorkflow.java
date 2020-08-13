@@ -16,15 +16,15 @@
 
 import edu.isi.pegasus.planner.dax.*;
 
-public class BlackDiamondDAX {
+public class BlackDiamondWorkflow {
 
     /**
-     * Create an example DIAMOND DAX
+     * Create an example DIAMOND Workflow
      * @param args
      */
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.println("Usage: java ADAG <site_handle> <pegasus_location> <filename.dax>");
+            System.out.println("Usage: java ADAG <site_handle> <pegasus_location> <filename.yml>");
             System.exit(1);
         }
 
@@ -42,11 +42,11 @@ public class BlackDiamondDAX {
         java.io.File cwdFile = new java.io.File (".");
         String cwd = cwdFile.getCanonicalPath(); 
 
-        ADAG dax = new ADAG("blackdiamond");
+        ADAG wf = new ADAG("blackdiamond");
 
         File fa = new File("f.a");
         fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
-        dax.addFile(fa);
+        wf.addFile(fa);
 
         File fb1 = new File("f.b1");
         File fb2 = new File("f.b2");
@@ -81,8 +81,8 @@ public class BlackDiamondDAX {
         postanalyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
 
-        dax.addExecutable(checkpoint).addExecutable(findrange).addExecutable(analyze);
-	dax.addExecutable(postanalyze);
+        wf.addExecutable(checkpoint).addExecutable(findrange).addExecutable(analyze);
+	wf.addExecutable(postanalyze);
 
         // Add a checkpoint job
         Job j1 = new Job("j1", "pegasus", "checkpoint", "4.0");        
@@ -92,7 +92,7 @@ public class BlackDiamondDAX {
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
 	j1.uses(fcheckpoint, File.LINK.CHECKPOINT);
-        dax.addJob(j1);
+        wf.addJob(j1);
 
         // Add left Findrange job
         Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
@@ -102,7 +102,7 @@ public class BlackDiamondDAX {
         j2.uses(fc1, File.LINK.OUTPUT);
 	j2.addProfile( "pegasus" , "label", "cluster1");
 	
-        dax.addJob(j2);
+        wf.addJob(j2);
 
         // Add right Findrange job
         Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
@@ -111,7 +111,7 @@ public class BlackDiamondDAX {
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
 	j3.addProfile( "pegasus" , "label", "cluster1");
-        dax.addJob(j3);
+        wf.addJob(j3);
 
         // Add analyze job
         Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
@@ -122,7 +122,7 @@ public class BlackDiamondDAX {
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
 	j4.addProfile( "pegasus" , "label", "cluster1");
-        dax.addJob(j4);
+        wf.addJob(j4);
 
 	//add left post-analyze job
         Job j5 = new Job("j5", "pegasus", "post-analyze", "4.0");
@@ -131,7 +131,7 @@ public class BlackDiamondDAX {
         j5.uses(fd, File.LINK.INPUT);
         j5.uses(fe1, File.LINK.OUTPUT);
 	j5.addProfile( "pegasus" , "label", "cluster2");
-        dax.addJob(j5);
+        wf.addJob(j5);
 
 	//add right post-analyze job
         Job j6 = new Job("j6", "pegasus", "post-analyze", "4.0");
@@ -140,16 +140,16 @@ public class BlackDiamondDAX {
         j6.uses(fd, File.LINK.INPUT);
         j6.uses(fe2, File.LINK.OUTPUT);
 	j6.addProfile( "pegasus" , "label", "cluster2");
-        dax.addJob(j6);
+        wf.addJob(j6);
 
 	
-        dax.addDependency("j1", "j2");
-        dax.addDependency("j1", "j3");
-        dax.addDependency("j2", "j4");
-        dax.addDependency("j3", "j4");
-	dax.addDependency("j4", "j5");
-	dax.addDependency("j4", "j6");
+        wf.addDependency("j1", "j2");
+        wf.addDependency("j1", "j3");
+        wf.addDependency("j2", "j4");
+        wf.addDependency("j3", "j4");
+	wf.addDependency("j4", "j5");
+	wf.addDependency("j4", "j6");
 
-        return dax;
+        return wf;
     }
 }
