@@ -17,7 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.namespace.Hints;
+import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.Iterator;
 import java.util.List;
@@ -50,12 +50,14 @@ public abstract class AbstractPerJob extends Abstract {
 
             // only map a job for which execute site hint
             // is not specified in the DAX
-            if (job.hints.containsKey(Hints.EXECUTION_SITE_KEY)) {
+            String executionKey = Selector.EXECUTION_SITE_KEY;
+            if (job.getSelectorProfiles().containsKey(executionKey)
+                    || job.hints.containsKey(executionKey)) {
                 mLogger.log(
                         "Job "
                                 + job.getID()
-                                + " will be mapped based on hints profile to site "
-                                + job.hints.get(Hints.EXECUTION_SITE_KEY),
+                                + " will be mapped based on selector|hints profile key "
+                                + executionKey,
                         LogManager.DEBUG_MESSAGE_LEVEL);
             } else {
                 if (job instanceof DataFlowJob) {
