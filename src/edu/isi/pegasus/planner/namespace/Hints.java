@@ -34,19 +34,19 @@ public class Hints extends Namespace {
     public static final String NAMESPACE_NAME = Profile.HINTS;
 
     /** The jobmanager universe key. */
-    public static final String GRID_JOB_TYPE_KEY = "grid.jobtype";
+    public static final String GRID_JOB_TYPE_KEY = Selector.GRID_JOB_TYPE_KEY;
 
     /** The deprecated execution site key */
     public static final String DEPRECATED_EXECUTION_SITE_KEY = "executionPool";
 
     /** The execution pool key */
-    public static final String EXECUTION_SITE_KEY = "execution.site";
+    public static final String EXECUTION_SITE_KEY = Selector.EXECUTION_SITE_KEY;
 
     /** The pfnHint key */
     public static final String DEPRECATED_PFN_HINT_KEY = "pfnHint";
 
     /** The pfnHint key */
-    public static final String PFN_HINT_KEY = "pfn";
+    public static final String PFN_HINT_KEY = Selector.PFN_HINT_KEY;
 
     /** The table containing the mapping of the deprecated keys to the newer keys. */
     protected static Map mDeprecatedTable = null;

@@ -37,8 +37,9 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.estimate.Estimator;
 import edu.isi.pegasus.planner.estimate.EstimatorFactory;
 import edu.isi.pegasus.planner.namespace.Globus;
-import edu.isi.pegasus.planner.namespace.Hints;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.selector.SiteSelector;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
@@ -239,7 +240,7 @@ public class InterPoolEngine extends Engine implements Refiner {
     protected void incorporateSiteMapping(Job job, List<String> sites) {
         StringBuilder error = null;
         // check if the user has specified any hints in the dax
-        incorporateHint(job, Hints.EXECUTION_SITE_KEY);
+        incorporateHint(job, Selector.EXECUTION_SITE_KEY);
 
         String site = job.getSiteHandle();
         mLogger.log(
@@ -699,29 +700,46 @@ public class InterPoolEngine extends Engine implements Refiner {
      * @return true the hint was successfully incorporated. false the hint was not set in job or was
      *     not successfully incorporated.
      */
-    private boolean incorporateHint(Job job, String key) {
+    public boolean incorporateHint(Job job, String key) {
         // sanity check
         if (key.length() == 0) {
             return false;
         }
 
+        // PM-1674 first look for the key in selector and if not specified
+        // fall back to hints namespace
+        Namespace n = job.getSelectorProfiles();
+        boolean contains = n.containsKey(key);
+        if (!contains) {
+            n = job.hints;
+            contains = n.containsKey(key);
+            if (contains) {
+                mLogger.log(
+                        "Hints namespace is deprecated. Please use selector namespace instead. Found key "
+                                + key
+                                + " for job "
+                                + job.getID(),
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            }
+        }
+        if (!contains) {
+            return false;
+        }
+
         switch (key.charAt(0)) {
             case 'e':
-                if (key.equals(Hints.EXECUTION_SITE_KEY) && job.hints.containsKey(key)) {
+                if (key.equals(Selector.EXECUTION_SITE_KEY)) {
                     // user has overridden in the dax which execution Pool to use
-                    job.executionPool = (String) job.hints.removeKey(Hints.EXECUTION_SITE_KEY);
+                    job.executionPool = (String) n.removeKey(Selector.EXECUTION_SITE_KEY);
 
-                    incorporateHint(job, Hints.PFN_HINT_KEY);
+                    incorporateHint(job, Selector.PFN_HINT_KEY);
                     return true;
                 }
                 break;
 
             case 'p':
-                if (key.equals(Hints.PFN_HINT_KEY)) {
-                    job.setRemoteExecutable(
-                            job.hints.containsKey(Hints.PFN_HINT_KEY)
-                                    ? (String) job.hints.removeKey(Hints.PFN_HINT_KEY)
-                                    : null);
+                if (key.equals(Selector.PFN_HINT_KEY)) {
+                    job.setRemoteExecutable((String) n.removeKey(Selector.PFN_HINT_KEY));
 
                     return true;
                 }

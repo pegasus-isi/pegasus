@@ -31,6 +31,15 @@ public class Selector extends Namespace {
     /** The name of the namespace that this class implements. */
     public static final String NAMESPACE_NAME = Profile.SELECTOR;
 
+    /** The jobmanager universe key. */
+    public static final String GRID_JOB_TYPE_KEY = "grid.jobtype";
+
+    /** The execution pool key */
+    public static final String EXECUTION_SITE_KEY = "execution.site";
+
+    /** The pfnHint key */
+    public static final String PFN_HINT_KEY = "pfn";
+
     /**
      * The name of the implementing namespace. It should be one of the valid namespaces always.
      *
