@@ -61,6 +61,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.mapper.output.ReplicaOutputMapperTest.class,
     edu.isi.pegasus.planner.mapper.output.FixedOutputMapperTest.class,
     edu.isi.pegasus.planner.refiner.DataReuseEngineTest.class,
+    edu.isi.pegasus.planner.refiner.InterPoolEngineTest.class,
     edu.isi.pegasus.common.util.GLiteEscapeTest.class,
     edu.isi.pegasus.common.util.VariableExpanderTest.class,
     edu.isi.pegasus.planner.partitioner.graph.CycleCheckerTest.class,
