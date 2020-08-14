@@ -36,8 +36,8 @@ import edu.isi.pegasus.planner.classes.WorkflowMetrics;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
-import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.HashMap;
@@ -172,10 +172,10 @@ public class DAX2CDAG implements Callback {
                     XMLParser.makeDAGManCompliant(((DAXJob) job).generateName(this.mJobPrefix)));
             // the job should always execute on local site
             // for time being
-            job.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
+            job.getSelectorProfiles().construct(Selector.EXECUTION_SITE_KEY, "local");
 
             // also set a fake executable to be used
-            job.hints.construct(Hints.PFN_HINT_KEY, "/tmp/pegasus-plan");
+            job.getSelectorProfiles().construct(Selector.PFN_HINT_KEY, "/tmp/pegasus-plan");
 
             // add default name and namespace information
             job.setTransformation("pegasus", "pegasus-plan", Version.instance().toString());
@@ -186,10 +186,11 @@ public class DAX2CDAG implements Callback {
                     XMLParser.makeDAGManCompliant(((DAGJob) job).generateName(this.mJobPrefix)));
             // the job should always execute on local site
             // for time being
-            job.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
+            job.getSelectorProfiles().construct(Selector.EXECUTION_SITE_KEY, "local");
 
             // also set the executable to be used
-            job.hints.construct(Hints.PFN_HINT_KEY, "/opt/condor/bin/condor-dagman");
+            job.getSelectorProfiles()
+                    .construct(Selector.PFN_HINT_KEY, "/opt/condor/bin/condor-dagman");
 
             // add default name and namespace information
             job.setTransformation("condor", "dagman", null);
