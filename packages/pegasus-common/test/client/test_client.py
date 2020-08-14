@@ -174,7 +174,7 @@ class TestClient:
                     """
                 (no matching jobs found in Condor Q)
                 UNRDY READY   PRE  IN_Q  POST  DONE   FAIL   %DONE STATE   DAGNAME
-                    0     0     0     0     0  1,000  1,000  100.0 Success *appends-0.dag
+                    0     0     0     0     0  1,000  1,000  100.0 Success *wf-name-0.dag
                 Summary: 1 DAG total (Success:1)
                 """
                 ).encode("utf8"),
@@ -188,12 +188,25 @@ class TestClient:
                 Summary: 1 Condor job total (R:1)
 
                 UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
-                    4     0     0     0     0     3     1  37.5 Failure *appends-0.dag
+                    4     0     0     0     0     3     1  37.5 Failure *wf-name-0.dag
                 Summary: 1 DAG total (Failure:1)
                 """
                 ).encode("utf8"),
                 "\r[\x1b[1;32m###################\x1b[0m-------------------------------]  37.5% ..Failure (\x1b[1;32mCompleted: 3\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1\x1b[0m)\n",
             ),
+            (
+                dedent(
+                    """
+                UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
+                0     0     0     0     0     6     0 100.0 Success 00/00/analysis-wf_ID0000001/analysis-wf-0.dag
+                0     0     0     0     0     3     0 100.0 Success 00/00/sleep-wf_ID0000002/sleep-wf-0.dag
+                0     0     0     0     0    11     0 100.0 Success *wf-name-0.dag
+                0     0     0     0     0    20     0 100.0         TOTALS (20 jobs)
+                Summary: 3 DAGs total (Success:3)
+                """
+                ).encode("utf8"),
+                "\r[\x1b[1;32m##################################################\x1b[0m] 100.0% ..Success (\x1b[1;32mCompleted: 11\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 0\x1b[0m)\n",
+            )
         ],
     )
     def test_wait(self, mocker, capsys, client, pegasus_status_out, expected_wait_out):
@@ -203,7 +216,7 @@ class TestClient:
                 None, returncode=0, stdout=pegasus_status_out, stderr=""
             ),
         )
-        client.wait("submit_dir")
+        client.wait(root_wf_name="wf-name", submit_dir="submit_dir")
         out, _ = capsys.readouterr()
         assert out == expected_wait_out
 
