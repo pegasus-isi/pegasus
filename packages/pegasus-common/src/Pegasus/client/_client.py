@@ -354,13 +354,18 @@ class Client:
         while True:
             stdout_line = proc.stdout.readline()
 
-            # has proc terminated?
-            if proc.poll() is not None:
-                break
-
             if stdout_line:
                 out.append(stdout_line)
                 self._log.info(stdout_line.strip().decode())
+
+            # has proc terminated?
+            if proc.poll() is not None:
+                # handle any output still left in stdout
+                for line in proc.stdout.readlines():
+                    out.append(line)
+                    self._log.info(line.strip().decode())
+
+                break
 
         err = proc.stderr.read()
         self._log.error(err.decode())
