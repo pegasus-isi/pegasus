@@ -10,11 +10,14 @@ fi
 
 TOPDIR=`pwd`
 
+export PEGASUS_BIN_DIR=`pegasus-config --bin`
+
 # generate the input file
 echo "This is sample input to KEG" >f.a
 
 # output directory
 mkdir -p outputs
+
 
 # build the workflow generator
 export CLASSPATH=$testdir:`pegasus-config --classpath`

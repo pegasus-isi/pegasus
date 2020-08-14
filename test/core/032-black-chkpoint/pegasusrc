@@ -5,4 +5,6 @@ pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = nonsharedfs
 
+pegasus.transfer.lite.arguments = -m 1
+
 dagman.retry 3
