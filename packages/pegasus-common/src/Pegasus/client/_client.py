@@ -199,7 +199,7 @@ class Client:
         self._log.info("\n##################\n# pegasus-status #\n##################")
         self._exec(cmd)
 
-    def wait(self, submit_dir: str, delay: int = 3):
+    def wait(self, root_wf_name: str, submit_dir: str, delay: int = 5):
         """Prints progress bar and blocks until workflow completes or fails"""
 
         # match output from pegasus-status
@@ -209,7 +209,7 @@ class Client:
         #     0     0     0     0     0     8     0 100.0 Success *appends-0.dag
         #
         # the pattern would match the second line
-        p = re.compile(r"\s*(([\d,]+\s+){7})(\d+\.\d+\s+)(\w+\s+)(.*)")
+        p = re.compile(r"\s*(([\d,]+\s+){{7}})(\d+\.\d+\s+)(\w+\s+)(\*{wf_name}.*)".format(wf_name=root_wf_name))
 
         # indexes for info provided from status
         # UNRDY = 0

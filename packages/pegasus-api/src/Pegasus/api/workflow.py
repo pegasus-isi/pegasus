@@ -881,19 +881,19 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def wait(self, *, delay: int = 2):
+    def wait(self, *, delay: int = 5):
         """
-        wait(self, delay: int = 2)
+        wait(self, delay: int = 5)
         Displays progress bar to stdout and blocks until the workflow either
         completes or fails.
 
-        :param delay: refresh rate in seconds of the progress bar, defaults to 2
+        :param delay: refresh rate in seconds of the progress bar, defaults to 5
         :type delay: int, optional
         :raises PegasusClientError: pegasus-status encountered an error
         :return: self
         """
 
-        self._client.wait(self._submit_dir, delay=delay)
+        self._client.wait(self.name, self._submit_dir, delay=delay)
 
     @_chained
     @_needs_submit_dir
