@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+set -v
+
+export PYTHONPATH=`pegasus-config --python`
+
+# generate the workflow and submit all in one go
+./workflow.py
+

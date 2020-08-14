@@ -3281,6 +3281,35 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
+            - key: T32B
+              name: 032-kickstart-chkpoint-signal-condorio
+              description: Testing that kickstart sends SIGTERM to job executable for checkpointing
+              tasks:
+                - !script
+                  description: Cleanup
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+                - capabilityKey: condor
+                  matchType: !exists exists
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T33
               name: 033-pegasuslite-multi
               description: TODO
