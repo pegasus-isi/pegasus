@@ -206,7 +206,7 @@ class TestClient:
                 """
                 ).encode("utf8"),
                 "\r[\x1b[1;32m##################################################\x1b[0m] 100.0% ..Success (\x1b[1;32mCompleted: 11\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 0\x1b[0m)\n",
-            )
+            ),
         ],
     )
     def test_wait(self, mocker, capsys, client, pegasus_status_out, expected_wait_out):

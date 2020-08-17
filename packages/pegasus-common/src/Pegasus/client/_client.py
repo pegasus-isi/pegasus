@@ -209,7 +209,11 @@ class Client:
         #     0     0     0     0     0     8     0 100.0 Success *appends-0.dag
         #
         # the pattern would match the second line
-        p = re.compile(r"\s*(([\d,]+\s+){{7}})(\d+\.\d+\s+)(\w+\s+)(\*{wf_name}.*)".format(wf_name=root_wf_name))
+        p = re.compile(
+            r"\s*(([\d,]+\s+){{7}})(\d+\.\d+\s+)(\w+\s+)(\*{wf_name}.*)".format(
+                wf_name=root_wf_name
+            )
+        )
 
         # indexes for info provided from status
         # UNRDY = 0
