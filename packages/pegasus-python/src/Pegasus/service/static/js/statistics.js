@@ -174,20 +174,29 @@ function render_job_breakdown(dest, data) {
   var content = "";
   content = '<table id="job_breakdown_stats_table">';
   content += "<thead><tr>";
+  content += "<td colspan=3></td><td colspan=4 align=center>Runtime (sec)</td>";
+  content += "<td colspan=3 align=center>Memory (MB)</td>";
+  content += "<td colspan=3 align=center>Avg. CPU (%)</td>";
+  content += "</tr><tr>";
   content += "<th>Transformation</th>";
+  content += "<th>Type</th>";
   content += "<th>Count</th>";
-  content += "<th>Succeeded</th>";
-  content += "<th>Failed</th>";
   content += "<th>Min</th>";
   content += "<th>Max</th>";
   content += "<th>Mean</th>";
   content += "<th>Total</th>";
+  content += "<th>Min</th>";
+  content += "<th>Max</th>";
+  content += "<th>Mean</th>";
+  content += "<th>Min</th>";
+  content += "<th>Max</th>";
+  content += "<th>Mean</th>";
   content += "</tr></thead>";
   content += "<tbody>";
 
   for (var i = 0; i < data.length; ++i) {
     content +=
-      '<tr class="' + (data[i][3] === 0 ? "successful" : "failed") + '">';
+      '<tr class="' + data[i][1].toLowerCase() + '">';
     for (var j = 0; j < data[i].length; ++j) {
       content += "<td>";
       content += formatData(data[i][j]);

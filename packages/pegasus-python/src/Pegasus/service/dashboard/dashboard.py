@@ -180,13 +180,18 @@ class Dashboard:
                 content.append(
                     [
                         t.transformation,
+                        t.type,
                         int(t.count),
-                        int(t.success),
-                        int(t.failure),
-                        float(t.min),
-                        float(t.max),
-                        float(t.avg),
-                        float(t.sum),
+                        t.min,
+                        t.max,
+                        t.avg,
+                        t.sum,
+                        "{:.2f}".format(t.min_maxrss / 1024) if t.min_maxrss else "-",
+                        "{:.2f}".format(t.max_maxrss / 1024) if t.max_maxrss else "-",
+                        "{:.2f}".format(t.avg_maxrss / 1024) if t.avg_maxrss else "-",
+                        "{:.2f}%".format(t.min_avg_cpu * 100) if t.min_avg_cpu else "-",
+                        "{:.2f}%".format(t.max_avg_cpu * 100) if t.max_avg_cpu else "-",
+                        "{:.2f}%".format(t.avg_avg_cpu * 100) if t.avg_avg_cpu else "-",
                     ]
                 )
 
