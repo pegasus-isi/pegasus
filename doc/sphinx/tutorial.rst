@@ -650,16 +650,16 @@ tells the program to generate all statistics it knows how to calculate:
    Sub-Workflows  0         0       0           0         0         0
    ------------------------------------------------------------------------------
 
-   Workflow wall time                                       : 1 min, 39 secs
-   Cumulative job wall time                                 : 10.522 secs
-   Cumulative job wall time as seen from submit side        : 14.0 secs
-   Cumulative job badput wall time                          : 0.0 secs
-   Cumulative job badput wall time as seen from submit side : 0.0 secs
+   Workflow wall time                                       : 1 min, 56 secs
+   Cumulative job wall time                                 : 12.41 secs
+   Cumulative job wall time as seen from submit side        : 21.0 secs
+   Cumulative job badput wall time                          : 0.0 sec
+   Cumulative job badput wall time as seen from submit side : 0.0 sec
 
    # Integrity Metrics
    # Number of files for which checksums were compared/computed along with total time spent doing it.
-   9 files checksums compared with total duration of 0.358 secs
-   9 files checksums generated with total duration of 0.192 secs
+   9 files checksums compared with total duration of 0.76 secs
+   9 files checksums generated with total duration of 0.04 secs
 
    # Integrity Errors
    # Total:
@@ -668,12 +668,12 @@ tells the program to generate all statistics it knows how to calculate:
    #       Number of failed jobs where the last job instance had integrity errors.
    Failures: 0 job failures had integrity errors
 
-   Summary                       : submit/tutorial/pegasus/split/run0001/statistics/summary.txt
-   Workflow execution statistics : submit/tutorial/pegasus/split/run0001/statistics/workflow.txt
-   Job instance statistics       : submit/tutorial/pegasus/split/run0001/statistics/jobs.txt
-   Transformation statistics     : submit/tutorial/pegasus/split/run0001/statistics/breakdown.txt
-   Integrity statistics          : submit/tutorial/pegasus/split/run0001/statistics/integrity.txt
-   Time statistics               : submit/tutorial/pegasus/split/run0001/statistics/time.txt
+   Summary                       : split/submit/mayani/pegasus/split/run0001/statistics/summary.txt
+   Workflow execution statistics : split/submit/mayani/pegasus/split/run0001/statistics/workflow.txt
+   Job instance statistics       : split/submit/mayani/pegasus/split/run0001/statistics/jobs.txt
+   Transformation statistics     : split/submit/mayani/pegasus/split/run0001/statistics/breakdown.txt
+   Integrity statistics          : split/submit/mayani/pegasus/split/run0001/statistics/integrity.txt
+   Time statistics               : split/submit/mayani/pegasus/split/run0001/statistics/time.txt
 
 The output of ``pegasus-statistics`` contains many definitions to help
 users understand what all of the values reported mean. Among these are
@@ -696,42 +696,51 @@ for each transformation:
 
    $ more submit/tutorial/pegasus/split/run0001/statistics/breakdown.txt
    # legends
-   # Transformation - name of the transformation.
-   # Count          - the number of times the invocations corresponding to
-   #                  the transformation was executed.
-   # Succeeded      - the count of the succeeded invocations corresponding
-   #                  to the transformation.
-   # Failed         - the count of the failed invocations corresponding to
-   #                  the transformation.
-   # Min(sec)       - the minimum invocation runtime value corresponding to
-   #                  the transformation.
-   # Max(sec)       - the maximum invocation runtime value corresponding to
-   #                  the transformation.
-   # Mean(sec)      - the mean of the invocation runtime corresponding to
-   #                  the transformation.
-   # Total(sec)     - the cumulative of invocation runtime corresponding to
-   #                  the transformation.
+   # Transformation   - name of the transformation.
+   # Type             - successful or failed
+   # Count            - the number of times the invocations corresponding to
+   #                    the transformation was executed.
+   # Min(sec)         - the minimum invocation runtime value corresponding
+   #                    to the transformation.
+   # Max(sec)         - the maximum invocation runtime value corresponding
+   #                    to the transformation.
+   # Mean(sec)        - the mean of the invocation runtime corresponding
+   #                    to the transformation.
+   # Total(sec)       - the cumulative of invocation runtime corresponding
+   #                    to the transformation.
+   # Min (mem)        - the minimum of the max. resident set size (RSS) value corresponding
+   #                    to the transformation. In MB.
+   # Max (mem)        - the maximum of the max. resident set size (RSS) value corresponding
+   #                    to the transformation. In MB.
+   # Mean (mem)       - the mean of the max. resident set size (RSS) value corresponding
+   #                    to the transformation. In MB.
+   # Min (avg. cpu)   - the minimum of the average cpu utilization value corresponding
+   #                    to the transformation.
+   # Max (avg. cpu)   - the maximum of the average cpu utilization value corresponding
+   #                    to the transformation.
+   # Mean (avg. cpu)  - the mean of the average cpu utilization value corresponding
+   #                    to the transformation.
 
-   # 773d8fa3-8bff-4f75-8e2b-38e2c904f803 (split)
-   Transformation           Count     Succeeded Failed  Min       Max       Mean      Total
-   dagman::post             15        15        0       5.0       6.0       5.412     92.0
-   pegasus::cleanup         6         6         0       1.474     3.178     2.001     12.008
-   pegasus::dirmanager      1         1         0       2.405     2.405     2.405     2.405
-   pegasus::rc-client       2         2         0       2.382     7.406     4.894     9.788
-   pegasus::transfer        3         3         0       3.951     5.21      4.786     14.358
-   split                    1         1         0       0.009     0.009     0.009     0.009
-   wc                       4         4         0       0.005     0.029     0.012     0.047
+   # 214ef9bf-2923-45f0-b214-e660c82bce0f (split)
+   Transformation      Type       Count Min (runtime) Max (runtime) Mean (runtime)       Total (runtime)       Min (mem) Max (mem) Mean (mem) Min (avg. cpu)      Max (avg. cpu)      Mean (avg. cpu)
+   dagman::post        successful 11    0.0           1.0           0.444                4.0                   -         -         -          -                   -                   -
+   pegasus::cleanup    successful 1     2.41          2.41          2.41                 2.41                  16.824    16.824    16.824     13.2%               13.2%               13.2%
+   pegasus::dirmanager successful 1     2.612         2.612         2.612                2.612                 16.75     16.75     16.75      12.86%              12.86%              12.86%
+   pegasus::rc-client  failed     2     0.087         0.176         0.132                0.263                 6.371     6.449     6.41       39.2%               86.21%              62.71%
+   pegasus::transfer   successful 2     2.72          4.387         3.553                7.107                 16.547    16.762    16.654     18.24%              20.58%              19.41%
+   split               successful 1     0.007         0.007         0.007                0.007                 0.742     0.742     0.742      85.71%              85.71%              85.71%
+   wc                  successful 4     0.002         0.004         0.003                0.012                 0.73      0.758     0.74       66.67%              100.0%              83.33%
 
 
    # All (All)
-   Transformation           Count     Succeeded  Failed  Min       Max       Mean      Total
-   dagman::post             15        15         0       5.0       6.0       5.412     92.0
-   pegasus::cleanup         6         6          0       1.474     3.178     2.001     12.008
-   pegasus::dirmanager      1         1          0       2.405     2.405     2.405     2.405
-   pegasus::rc-client       2         2          0       2.382     7.406     4.894     9.788
-   pegasus::transfer        3         3          0       3.951     5.21      4.786     14.358
-   split                    1         1          0       0.009     0.009     0.009     0.009
-   wc                       4         4          0       0.005     0.029     0.012     0.047
+   Transformation      Type       Count Min (runtime) Max (runtime) Mean (runtime)       Total (runtime)       Min (mem) Max (mem) Mean (mem) Min (avg. cpu)      Max (avg. cpu)      Mean (avg. cpu)
+   dagman::post        successful 11    0.0           1.0           0.444                4.0                   -         -         -          -                   -                   -
+   pegasus::cleanup    successful 1     2.41          2.41          2.41                 2.41                  16.824    16.824    16.824     13.2%               13.2%               13.2%
+   pegasus::dirmanager successful 1     2.612         2.612         2.612                2.612                 16.75     16.75     16.75      12.86%              12.86%              12.86%
+   pegasus::rc-client  failed     2     0.087         0.176         0.132                0.263                 6.371     6.449     6.41       39.2%               86.21%              62.71%
+   pegasus::transfer   successful 2     2.72          4.387         3.553                7.107                 16.547    16.762    16.654     18.24%              20.58%              19.41%
+   split               successful 1     0.007         0.007         0.007                0.007                 0.742     0.742     0.742      85.71%              85.71%              85.71%
+   wc                  successful 4     0.002         0.004         0.003                0.012                 0.73      0.758     0.74       66.67%              100.0%              83.33%
 
 In this case, because the example transformation sleeps for 30 seconds,
 the min, mean, and max runtimes for each of the analyze, findrange, and
