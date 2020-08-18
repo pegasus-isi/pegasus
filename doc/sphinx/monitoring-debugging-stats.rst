@@ -932,103 +932,107 @@ workflow over time.
 
    Dashboard Plots - Workflow Gantt Chart
 
-Notifications
-=============
+Hooks
+=====
 
-The Pegasus Workflow Mapper now supports job and workflow level
-notifications. You can specify in the DAX with the job or the workflow
+The Pegasus Workflow Mapper supports job and workflow level
+shell hooks (formerly called **notifications**). For each shell hook, the following
+must be given:
 
--  the event when the notification needs to be sent
+-  the event when the hook is to be executed
 
--  the executable that needs to be invoked.
+-  the executable that needs to be invoked as part of the hook
 
-The notifications are issued from the submit host by the
+Hooks are executed from the submit host by the
 pegasus-monitord daemon that monitors the Condor logs for the workflow.
-When a notification is issued, pegasus-monitord while invoking the
-notifying executable sets certain environment variables that contain
+When a hook is executed, pegasus-monitord
+sets certain environment variables that contain
 information about the job and workflow state.
 
-The Pegasus release comes with default notification clients that send
-notifications via email or jabber.
+The Pegasus release comes with an email notification client that can be used
+as a shell hook to send notifications as events occur. 
 
-Specifying Notifications in the DAX
------------------------------------
+.. note::
 
-Currently, you can specify notifications for the jobs and the workflow
-by the use of invoke elements.
+   Prior to Pegasus5.0, Pegasus supported the notion of an **Invoke** or
+   **Notification**. In Pegasus5.0, this has been renamed to **Hooks** as
+   there are plans to support additional hooks beyond shell script/executable
+   invocations. In the following sections, we use these terms interchangeably. 
 
-Invoke elements can be sub elements for the following elements in the
-DAX schema.
+Specifying Hooks in the Workflow
+--------------------------------
 
--  job - to associate notifications with a compute job in the DAX.
+You can specify shell hooks for the entire workflow, individual jobs (including subworkflows),
+and transformations (executables). This guide is written from the perspective of the
+Python API, however the following illustrates how shell hooks can also be added using
+the Java API. 
 
--  dax - to associate notifications with a dax job in the DAX.
+.. tabs::
 
--  dag - to associate notifications with a dag job in the DAX.
+   .. tab:: python
+    
+    .. code-block:: python
 
--  executable - to associate notifications with a job that uses a
-   particular notification
+        wf = Workflow("diamond")
+        wf.add_shell_hook(EventType.START, "/pegasus/dist/pegasus-5.0.0dev/share/pegasus/notification/email --to email@school.edu")
+        wf.add_shell_hook(EventType.END, "echo 'the workflow has ended'")
 
-The invoke element can be specified at the root element level of the DAX
-to indicate workflow level notifications.
+        j = Job("preprocess")
+        j.add_shell_hook(EventType.ERROR, "echo 'error'")
 
-The invoke element may be specified multiple times, as needed. It has a
-mandatory **when** attribute with the following value set
+   .. tab:: java
+    
+    .. code-block:: java
 
-.. table:: Invoke Element attributes and meaning.
+        ADAG wf = new ADAG("diamond");
+        wf.addNotification(Invoke.WHEN.start, "/pegasus/dist/pegasus-5.0.0dev/share/pegasus/notification/email --to email@school.edu");
+        wf.addNotification(Invoke.WHEN.end, "echo done");
+
+        Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
+        j1.addNotification(Invoke.WHEN.error, "echo error");
+
+Hooks may be specified multiple times, as needed. Each has a
+mandatory **EventType** (**when**) attribute with the following value set. 
+
+.. table:: 
 
    ======================================== =====================================================================================================
    Enumeration of Values for when attribute Meaning
    ======================================== =====================================================================================================
-   never                                    (default). Never notify of anything. This is useful to temporarily disable an existing notifications.
-   start                                    create a notification when the job is submitted.
-   on_error                                 after a job finishes with failure (exitcode != 0).
-   on_success                               after a job finishes with success (exitcode == 0).
-   at_end                                   after a job finishes, regardless of exitcode.
-   all                                      like start and at_end combined.
+   NEVER                                    (default). This is useful to temporarily disable an existing hooks.
+   START                                    when the job is submitted.
+   ERROR                                    after a job finishes with failure (exitcode != 0).
+   SUCCESS                                  after a job finishes with success (exitcode == 0).
+   END                                      after a job finishes, regardless of exitcode.
+   ALL                                      start and end combined.
    ======================================== =====================================================================================================
 
-You can specify multiple invoke elements corresponding to same when
-attribute value in the DAX. This will allow you to have multiple
-notifications for the same event.
+You can specify multiple hooks corresponding to the same attribute (workflow, job,
+subworkflow, transformation).
 
 Here is an example that illustrates that.
 
-::
+.. code-block:: python
 
-   <job id="ID000001" namespace="example" name="mDiffFit" version="1.0"
-          node-label="preprocess" >
-       <argument>-a top -T 6  -i <file name="f.a"/>  -o <file name="f.b1"/></argument>
+    wf = Workflow("diamond")
+    wf.add_shell_hook(EventType.START, "echo hello1")
+    wf.add_shell_hook(EventType.START, "echo hello2")
 
-       <!-- profiles are optional -->
-       <profile namespace="execution" key="site">isi_viz</profile>
-       <profile namespace="condor" key="getenv">true</profile>
+In the above example, the executable ``echo`` will be invoked twice when
+the workflow starts, once with the argument, ``hello1``, and a second time
+with the argument ``hello2``.
 
-       <uses name="f.a" link="input"  register="false" transfer="true" type="data" />
-       <uses name="f.b" link="output" register="false" transfer="true" type="data" />
-
-       <!-- 'WHEN' enumeration: never, start, on_error, on_success, at_end, all -->
-       <invoke when="start">/path/to/notify1 arg1 arg2</invoke>
-       <invoke when="start">/path/to/notify1 arg3 arg4</invoke>
-       <invoke when="on_success">/path/to/notify2 arg3 arg4</invoke>
-     </job>
-
-In the above example the executable notify1 will be invoked twice when a
-job is submitted ( when="start" ), once with arguments arg1 and arg2 and
-second time with arguments arg3 and arg4.
-
-The DAX Generator API `chapter <#dax_generator_api>`__ has information
-about how to add notifications to the DAX using the DAX api's.
+See :py:class:`~Pegasus.api.mixings.HookMixin` for API usage documentation. 
 
 .. _pegasus-notify-file:
 
 Notify File created by Pegasus in the submit directory
 ------------------------------------------------------
 
-Pegasus while planning a workflow writes out a notify file in the submit
-directory that contains all the notifications that need to be sent for
+Pegasus, while planning a workflow writes out a notify file in the submit
+directory that contains all the hooks that need to be handled for
 the workflow. pegasus-monitord picks up this notifications file to
-determine what notifications need to be sent and when.
+determine what hooks need to be handled and when.
 
 1. ENTITY_TYPE ID NOTIFICATION_CONDITION ACTION
 
@@ -1054,8 +1058,7 @@ determine what notifications need to be sent and when.
          workflow ( DAG ).
 
    -  NOTIFICATION_CONDITION is the condition when the notification
-      needs to be sent. The notification conditions are enumerated in
-      `this table <#notification_conditions_table>`__
+      needs to be sent (e.g. start, success, error, etc.).
 
    -  ACTION is what needs to happen when condition is satisfied. It is
       executable + arguments
@@ -1073,8 +1076,8 @@ determine what notifications need to be sent and when.
       which the notification needs to be sent.
 
    -  NOTIFICATION_CONDITION is the condition when the notification
-      needs to be sent. The notification conditions are enumerated in
-      `Table 1 <#notification_conditions_table>`__
+      needs to be sent (e.g. start, success, error, etc.).
+
 
    -  ACTION is what needs to happen when condition is satisfied. It is
       executable + arguments
@@ -1095,42 +1098,42 @@ A sample notifications file generated is listed below.
    DAXJOB subdax_black_ID000003 on_error /bin/date13
    JOB    analyze_ID00004    on_success /bin/date
 
-Configuring pegasus-monitord for notifications
-----------------------------------------------
+Configuring pegasus-monitord for hooks
+--------------------------------------
 
 Whenever pegasus-monitord enters a workflow (or sub-workflow) directory,
 it will read the notifications file generated by Pegasus.
 Pegasus-monitord will match events in the running workflow against the
-notifications specified in the notifications file and will initiate the
-script specified in a notification when that notification matches an
+hooks specified in the notifications file and will initiate the
+script specified in a hook when that hook matches an
 event in the workflow. It is important to note that there will be a
 delay between a certain event happening in the workflow, and
 pegasus-monitord processing the log file and executing the corresponding
-notification script.
+hook.
 
 The following command line options (and properties) can change how
-pegasus-monitord handles notifications:
+pegasus-monitord handles hooks:
 
--  --no-notifications (pegasus.monitord.notifications=False): Will
-   disable notifications completely.
+-  ``--no-notifications`` ``(pegasus.monitord.notifications=False)``: Will
+   disable hooks completely.
 
--  --notifications-max=nn (pegasus.monitord.notifications.max=nn): Will
-   limit the number of concurrent notification scripts to nn. Once
+-  ``--notifications-max=nn`` ``(pegasus.monitord.notifications.max=nn)``: Will
+   limit the number of concurrent hooks to nn. Once
    pegasus-monitord reaches this number, it will wait until one
-   notification script finishes before starting a new one. Notifications
+   hook finishes before starting a new one. Hooks
    happening during this time will be queued by the system. The default
-   number of concurrent notification scripts for pegasus-monitord is 10.
+   number of concurrent hooks for pegasus-monitord is 10.
 
--  --notifications-timeout=nn
-   (pegasus.monitord.notifications.timeout=nn): This setting is used to
-   change how long will pegasus-monitord wait for a notification script
+-  ``--notifications-timeout=nn``
+   ``(pegasus.monitord.notifications.timeout=nn)``: This setting is used to
+   change how long will pegasus-monitord wait for a hook 
    to finish. By default pegasus-monitord will wait for as long as it
-   takes (possibly indefinitely) until a notification script ends. With
+   takes (possibly indefinitely) until a hook ends. With
    this option, pegasus-monitord will wait for at most nn seconds before
-   killing the notification script.
+   killing the hook.
 
 It is also important to understand that pegasus-monitord will not issue
-any notifications when it is executed in replay mode.
+any hook when it is executed in replay mode.
 
 Environment set for the notification scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1141,42 +1144,42 @@ specified in the ACTION field of the notifications file.
 Pegasus-monitord will set the following environment variables for each
 notification script is starts:
 
--  PEGASUS_EVENT: The NOTIFICATION_CONDITION that caused the
+-  ``PEGASUS_EVENT``: The NOTIFICATION_CONDITION that caused the
    notification. In the case of the "all" condition, pegasus-monitord
    will substitute it for the actual event that caused the match (e.g.
    "start" or "at_end").
 
--  PEGASUS_EVENT_TIMESTAMP: Timestamp in EPOCH format for the event
+-  ``PEGASUS_EVENT_TIMESTAMP``: Timestamp in EPOCH format for the event
    (better for automated processing).
 
--  PEGASUS_EVENT_TIMESTAMP_ISO: Same as above, but in ISO format (better
+-  ``PEGASUS_EVENT_TIMESTAMP_ISO``: Same as above, but in ISO format (better
    for human readability).
 
--  PEGASUS_SUBMIT_DIR: The submit directory for the workflow (usually
+-  ``PEGASUS_SUBMIT_DIR``: The submit directory for the workflow (usually
    the value from "submit_dir" in the braindump.txt file)
 
--  PEGASUS_STDOUT: For workflow notifications, this will correspond to
+-  ``PEGASUS_STDOUT``: For workflow notifications, this will correspond to
    the dagman.out file for that workflow. For job and invocation
    notifications, this field will contain the output file (stdout) for
    that particular job instance.
 
--  PEGASUS_STDERR: For job and invocation notifications, this field will
+-  ``PEGASUS_STDERR``: For job and invocation notifications, this field will
    contain the error file (stderr) for the particular executable job
    instance. This field does not exist in case of workflow
    notifications.
 
--  PEGASUS_WFID: Contains the workflow id for this notification in the
-   form of DAX_LABEL + DAX_INDEX (from the braindump.txt file).
+-  ``PEGASUS_WFID``: Contains the workflow id for this notification in the
+   form of DAX_LABEL + DAX_INDEX (from the ``braindump.yml`` file).
 
--  PEGASUS_JOBID: For workflow notifications, this contains the
-   worfkflow wf_uuid (from the braindump.txt file). For job and
+-  ``PEGASUS_JOBID``: For workflow notifications, this contains the
+   worfkflow wf_uuid (from the ``braindump.yml`` file). For job and
    invocation notifications, this field contains the job identifier in
    the executable workflow ( DAG ) for the particular notification.
 
--  PEGASUS_INVID: Contains the index of the task in the clustered job
+-  ``PEGASUS_INVID``: Contains the index of the task in the clustered job
    for the notification.
 
--  PEGASUS_STATUS: For workflow notifications, this contains DAGMan's
+-  ``PEGASUS_STATUS``: For workflow notifications, this contains DAGMan's
    exit code. For job and invocation notifications, this field contains
    the exit code for the particular job/task. Please note that this
    field is not present for 'start' notification events.
@@ -1184,17 +1187,17 @@ notification script is starts:
 Default Notification Scripts
 ----------------------------
 
-Pegasus ships with two reference notification scripts. These can be used
-as starting point when creating your own notification scripts, or if the
-default one is all you need, you can use them directly in your
-workflows. The scripts are:
+Pegasus ships with a reference notification script that can be used as a shell
+hook. This can be used as a starting point when creating your own notification
+script, or if the default one is all you need, you can use it directly in
+your workflows.
 
--  **libexec/notification/email** - sends email, including the output
+-  **share/pegasus/notification/email** - sends email, including the output
    from ``pegasus-status`` (default) or ``pegasus-analyzer``.
 
    ::
 
-      $ ./libexec/notification/email --help
+      $ ./share/pegasus/notification/email --help
       Usage: email [options]
 
       Options:
@@ -1209,36 +1212,12 @@ workflows. The scripts are:
                               Include workflow report. Valid values are: none
                               pegasus-analyzer pegasus-status (default)
 
--  **libexec/notification/jabber**- sends simple notifications to
-   Jabber/GTalk. This can be useful for job failures.
 
-   ::
+This can be used as follows:
 
-      $ ./libexec/notification/jabber --help
-      Usage: jabber [options]
+.. code-block:: python
 
-      Options:
-        -h, --help            show this help message and exit
-        -i JABBER_ID, --jabberid=JABBER_ID
-                              Your jabber id. Example: user@jabberhost.com
-        -p PASSWORD, --password=PASSWORD
-                              Your jabber password
-        -s HOST, --host=HOST  Jabber host, if different from the host in your jabber
-                              id. For Google talk, set this to talk.google.com
-        -r RECIPIENT, --recipient=RECIPIENT
-                              Jabber id of the recipient. Not necessary if you want
-                              to send to your own jabber id
-
-For example, if the DAX generator is written in Python and you want
-notifications on 'at_end' events (successful or failed):
-
-::
-
-   # job level notifications - in this case for at_end events
-   job.invoke('at_end', pegasus_home + "/libexec/notifications/email --to me@somewhere.edu")
-
-Please see the `notifications example <#notifications_example>`__ to see
-a full workflow using notifications.
+    wf.add_shell_hook(EventType.START, "/pegasus/dist/pegasus-5.0.0dev/share/pegasus/notification/email --to email@school.edu")
 
 .. _monitoring:
 
