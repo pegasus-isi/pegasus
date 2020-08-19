@@ -8,7 +8,6 @@ import subprocess
 import time
 from enum import Enum
 from glob import glob
-from multiprocessing import Process
 from multiprocessing.connection import Listener
 from pathlib import Path
 from threading import Event, Thread
@@ -47,7 +46,7 @@ class TriggerManagerMessage:
 
 
 # --- manager ------------------------------------------------------------------
-class TriggerManager(Process):
+class TriggerManager(Thread):
     """
     Manager to be spawned by the pegasus-em server process. It will listen for 
     commands (in the form of TriggerManagerMessage's) by a peagsus-em client. 
@@ -55,13 +54,12 @@ class TriggerManager(Process):
     """
 
     def __init__(self):
-        Process.__init__(self, daemon=True)
+        Thread.__init__(self, daemon=True)
 
         self.log = logging.getLogger("trigger.manager")
 
         # messages to be consumed by worker
         self.mailbox = queue.Queue()
-
         self.dispatcher = _TriggerDispatcher(self.mailbox)
 
     def run(self):
