@@ -288,13 +288,15 @@ class _PatternIntervalTrigger(Thread):
                     self.ensemble, self.workflow_name_prefix, math.floor(time_now)
                 ),
                 self.workflow_script,
-                "--inputs",
             ]
 
-            cmd.extend(input_files)
-
+            # add any additional arguments passed (positional & named)
             if self.additional_args:
                 cmd.extend(self.additional_args.split())
+
+            # add files passed as inputs
+            cmd.append("--inputs")
+            cmd.extend(input_files)
 
             self.log.debug(
                 "{} executing command: [{}] for interval {}".format(
