@@ -637,12 +637,29 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
     """Command to start a timed interval and file pattern based trigger"""
 
     description = "Start a timed, pattern, based trigger"
-    usage = "pegasus-em trigger -e ENSEMBLE -t TRIGGER_NAME -p PREFIX -f FILE_PATTERN -w WORKFLOW_SCRIPT -i INTERVAL [-a 'ADDITIONAL_ARGS']"
+    usage = "pegasus-em trigger -e ENSEMBLE -t TRIGGER_NAME -p PREFIX -f FILE_PATTERN -w WORKFLOW_SCRIPT -i INTERVAL [-k TIMEOUT] [-a 'ADDITIONAL_ARGS']"
 
     def __init__(self):
         TriggerCommand.__init__(self)
-        # using required named args instead of positional args to avoid misordering
-        self.parser.add_argument(
+
+        # setup arg parser a little differently here so we can get required,
+        # and optional args to show up correctly in help
+        self.parser = argparse.ArgumentParser(
+            usage=self.usage, description=self.description, add_help=False
+        )
+        required = self.parser.add_argument_group("required arguments")
+        optional = self.parser.add_argument_group("optional arguments")
+
+        optional.add_argument(
+            "-h",
+            "--help",
+            action="help",
+            default=argparse.SUPPRESS,
+            help="show this help message and exit",
+        )
+
+        # using required named args instead of positional args to avoid misordering of positional args
+        required.add_argument(
             "-e",
             "--ensemble",
             required=True,
@@ -650,7 +667,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             help="The name of the ensemble to which workflows started by this trigger will be added",
         )
 
-        self.parser.add_argument(
+        required.add_argument(
             "-t",
             "--trigger-name",
             required=True,
@@ -658,7 +675,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             help="The a unique name that this trigger can be refferred by",
         )
 
-        self.parser.add_argument(
+        required.add_argument(
             "-p",
             "--workflow-name-prefix",
             required=True,
@@ -666,7 +683,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             help="A prefix that will be attached to workflow names",
         )
 
-        self.parser.add_argument(
+        required.add_argument(
             "-f",
             "--file-pattern",
             nargs="+",
@@ -675,7 +692,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             help="File pattern(s) that will be passed to glob.Glob to collect files",
         )
 
-        self.parser.add_argument(
+        required.add_argument(
             "-w",
             "--workflow-script",
             required=True,
@@ -683,15 +700,27 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             help="The workflow script to be executed",
         )
 
-        self.parser.add_argument(
+        required.add_argument(
             "-i",
             "--interval",
             required=True,
             type=str,
-            help="Duration of each trigger interval. Must be given as '<int> <s|m|h|d>'",
+            help="Duration of each trigger interval. Must be given as '<int> <s|m|h|d>' "
+            "and be greater than 0 seconds",
         )
 
-        self.parser.add_argument(
+        optional.add_argument(
+            "-k",
+            "--timeout",
+            required=False,
+            default=None,
+            type=str,
+            help="Trigger timeout. Must be given as `<int> <s|m|h|d>` and be greater than 0 seconds."
+            "If not set, the trigger will cease on the next interval for "
+            "which no new input files have been detected",
+        )
+
+        optional.add_argument(
             "-a",
             "--additional-args",
             required=False,
@@ -761,7 +790,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
                 )
                 sys.exit(1)
 
-        # get get interval as seconds
+        # get interval as seconds
         interval = StartPatternIntervalTriggerCommand.to_seconds(self.args.interval)
 
         if interval <= 0:
@@ -770,14 +799,31 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             )
             sys.exit(1)
 
+        # get timeout as seconds
+        timeout = None
+        if self.args.timeout:
+            timeout = StartPatternIntervalTriggerCommand.to_seconds(self.args.timeout)
+
+            if timeout <= 0:
+                print(
+                    "Invalid timeout: {}, must be greater than 0 seconds".format(
+                        timeout
+                    )
+                )
+
         kwargs = vars(self.args)
         # replace str interval with interval in seconds as int
         kwargs["interval"] = interval
 
+        # replace str timeout with timeout in seconds as int
+        kwargs["timeout"] = timeout
+
         # set abspath for workflow script
         kwargs["workflow_script"] = str(Path(self.args.workflow_script).resolve())
 
+        # send req to trigger manager
         try:
+            # first ensure trigger doesn't already exist in this ensemble
             with self._running_triggers_file.open("rb") as f:
                 running = pickle.load(f)
 

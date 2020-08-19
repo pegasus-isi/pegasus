@@ -63,14 +63,14 @@ class TriggerManager(Thread):
         self.dispatcher = _TriggerDispatcher(self.mailbox)
 
     def run(self):
-        # TODO: make configurable
+        # TODO: make configurable?
         address = ("localhost", 3000)
         self.log.info("starting and will listen on: {}".format(address))
 
         # start up trigger manager worker
         self.dispatcher.start()
 
-        # TODO: change authkey
+        # TODO: change authkey?
         with Listener(address, authkey=b"123") as listener:
             while True:
                 self.log.debug("listening for new connection")
@@ -97,6 +97,9 @@ class _TriggerDispatcher(Thread):
         self.running_triggers_file = trigger_dir / "running.p"
         with self.running_triggers_file.open("wb") as f:
             pickle.dump(set(), f)
+
+        # TODO: create file containing all workflows submitted to em by each trigger
+        # self.submitted_workflows = trigger_dir / "submitted.p"
 
         # work passed down by the TriggerManager
         self.mailbox = mailbox
@@ -158,7 +161,8 @@ class _TriggerDispatcher(Thread):
         file_patterns: List[str],
         workflow_script: str,
         interval: int,
-        additional_args: List[str],
+        timeout: Optional[int] = None,
+        additional_args: Optional[str] = None,
     ):
         """Handler for a START_PATTERN_INTERVAL_TRIGGER message"""
 
@@ -170,6 +174,7 @@ class _TriggerDispatcher(Thread):
             file_patterns=file_patterns,
             workflow_script=workflow_script,
             interval=interval,
+            timeout=timeout,
             additional_args=additional_args,
         )
 
@@ -223,6 +228,7 @@ class _PatternIntervalTrigger(Thread):
         file_patterns: List[str],
         workflow_script: str,
         interval: int,
+        timeout: Optional[str] = None,
         additional_args: Optional[str] = None
     ):
         Thread.__init__(self, name="::".join([ensemble, trigger_name]), daemon=True)
@@ -231,6 +237,7 @@ class _PatternIntervalTrigger(Thread):
         self.stop_event = Event()
         self.checkout = checkout
 
+        # workflow specific args
         self.ensemble = ensemble
         self.trigger_name = trigger_name
         self.workflow_name_prefix = workflow_name_prefix
@@ -238,18 +245,26 @@ class _PatternIntervalTrigger(Thread):
         self.workflow_script = workflow_script
         self.interval = interval
         self.additional_args = additional_args
-        self.last_ran = 0
 
-        # TODO: add some accounting like list of workflows started, total time running, etc.
+        # state of trigger
+        self.last_ran = 0
+        self.start_time = 0
+        self.timeout = timeout
 
     def __str__(self):
         return "<PatternIntervalTrigger {}>".format(self.name)
 
     def run(self):
         self.log.info("{} starting".format(self.name))
+        self.start_time = datetime.datetime.now().timestamp()
 
         while not self.stop_event.isSet():
             time_now = datetime.datetime.now().timestamp()
+
+            # check if timeout condition met if it is set
+            if self.timeout and (time_now - self.start_time) >= self.timeout:
+                self.log.info("{} timed out".format(self.name))
+                break
 
             # get paths of all files that match pattern with mod date s.t.
             # self._last_ran <= mod date < time_now
@@ -264,10 +279,9 @@ class _PatternIntervalTrigger(Thread):
                     ):
                         input_files.append(str(p))
 
-            # early termination condition
             if len(input_files) == 0:
                 self.log.info(
-                    "{} encountered no new input files for interval {}, shutting down".format(
+                    "{} encountered no new input files for interval {}".format(
                         self.name,
                         "[{} - {})".format(
                             datetime.datetime.fromtimestamp(self.last_ran).isoformat(),
@@ -275,48 +289,47 @@ class _PatternIntervalTrigger(Thread):
                         ),
                     )
                 )
-                break
-
-            # build up peagsus-em submit command
-            # example: pegasus-em submit myruns.run1 ./workflow.py --inputs /f1.txt f2.txt
-            cmd = [
-                "pegasus-em",
-                "submit",
-                "{}.{}_{}".format(
-                    self.ensemble, self.workflow_name_prefix, math.floor(time_now)
-                ),
-                self.workflow_script,
-            ]
-
-            # add any additional arguments passed (positional & named)
-            if self.additional_args:
-                cmd.extend(self.additional_args.split())
-
-            # add files passed as inputs
-            cmd.append("--inputs")
-            cmd.extend(input_files)
-
-            self.log.debug(
-                "{} executing command: [{}] for interval {}".format(
-                    self.name,
-                    " ".join(cmd),
-                    "[{} - {})".format(
-                        datetime.datetime.fromtimestamp(self.last_ran).isoformat(),
-                        datetime.datetime.fromtimestamp(time_now).isoformat(),
+            else:
+                # build up peagsus-em submit command
+                # example: pegasus-em submit myruns.run1 ./workflow.py --inputs /f1.txt f2.txt
+                cmd = [
+                    "pegasus-em",
+                    "submit",
+                    "{}.{}_{}".format(
+                        self.ensemble, self.workflow_name_prefix, math.floor(time_now)
                     ),
-                )
-            )
+                    self.workflow_script,
+                ]
 
-            # invoke pegasus-em submit
-            cp = subprocess.run(cmd)
+                # add any additional arguments passed (positional & named)
+                if self.additional_args:
+                    cmd.extend(self.additional_args.split())
 
-            if cp.returncode != 0:
-                self.log.error(
-                    "{} encountered error submitting workflow with: {}, shutting down".format(
-                        self.name, cmd
+                # add files passed as inputs
+                cmd.append("--inputs")
+                cmd.extend(input_files)
+
+                self.log.debug(
+                    "{} executing command: [{}] for interval {}".format(
+                        self.name,
+                        " ".join(cmd),
+                        "[{} - {})".format(
+                            datetime.datetime.fromtimestamp(self.last_ran).isoformat(),
+                            datetime.datetime.fromtimestamp(time_now).isoformat(),
+                        ),
                     )
                 )
-                break
+
+                # invoke pegasus-em submit
+                cp = subprocess.run(cmd)
+
+                if cp.returncode != 0:
+                    self.log.error(
+                        "{} encountered error submitting workflow with: {}, shutting down".format(
+                            self.name, cmd
+                        )
+                    )
+                    break
 
             # update last time ran to the time of current iteration
             self.last_ran = time_now
