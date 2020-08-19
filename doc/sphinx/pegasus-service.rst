@@ -244,12 +244,8 @@ File Pattern, Timed Interval, Based Workflow Trigger
 Workflows can be dynamically triggered for submission to the ensemble manager
 using the ``pegasus-em trigger`` command. This will start up a thread that, at
 each given time interval, collects all new input files based on given file patterns,
-and calls ``pegasus-em submit <ensemble>.<runXXX> <workflow script> --inputs <file1> <file2> ... <fileN>``.
-If no new files are detected which match the given file pattern(s), the trigger will shutdown.
-As such, the trigger may shutdown early if the interval is set to be too small. For example, 
-if at least one new input file is expected to be generated every hour, 
-the time interval should be set to be at least ``1h``. 
-
+and calls ``pegasus-em submit <ensemble>.<runXXX> <workflow script> [ADDITIONAL_ARGS] --inputs <file1> <file2> ... <fileN>``.
+If no new files are detected, the trigger will try again on the next interval.
 
 The workflow generation script **must** have a CLI argument flag ``--inputs`` which
 takes one or more arguments as this is the interface between the ensemble manager
@@ -295,6 +291,7 @@ Usage of the ``pegasus-em trigger`` command is as follows:
                         -f FILE_PATTERN \
                         -w WORKFLOW_SCRIPT \
                         -i INTERVAL \
+                        [-k TIMEOUT] \ 
                         [-a 'ADDITIONAL_ARGS']
 
 
@@ -316,8 +313,10 @@ Usage of the ``pegasus-em trigger`` command is as follows:
 - ``INTERVAL``: the time interval on which the trigger will operate; must be formatted as
   ``<int><s|m|h|d>`` (e.g. ``5m``)
 
-- ``ADDITIONAL_ARGS``: any additional named arguments to be passed to the ``WORKFLOW_SCRIPT``;
-  these should be quoted when given (passed as a single string)
+- ``TIMEOUT``: a timeout for the trigger; must be formatted as ``<int><s|m|h|d>`` (e.g. ``1h``)
+
+- ``ADDITIONAL_ARGS``: any additional arguments to be passed to the ``WORKFLOW_SCRIPT``;
+  these should be quoted when given (passed as a single string). 
  
 **Example Usage**
 
@@ -325,13 +324,28 @@ Usage of the ``pegasus-em trigger`` command is as follows:
 
     pegasus-em trigger \
         --ensemble myruns \
-        --trigger-name 10s_txt \
+        --trigger-name 10s_txt_csv \
         --workflow-name-prefix trigger-wf \
         --file-pattern "/tmp/input/*.txt" \
         --file-pattern "/tmp/input/*.csv" \
         --workflow-script workflow.py \
-        --interval 10s
+        --interval 10s \ 
+        --timeout 10m \
+        --additional-args 'arg1 -f arg2'
  
+This means that a trigger called ``10s_txt_csv`` will be created for the ensemble
+``myruns``. Every ``10 seconds``, this trigger will look for new ``*.csv`` and ``*.txt``
+files in the ``/tmp/input`` directory. Say that on the current interval the files
+``/tmp/input/f1.txt`` and ``/tmp/input/f1.csv`` are found. The trigger will
+internally call:
+
+.. code-block:: none
+
+    pegasus-em submit \
+        myruns.trigger-wf_<time now as UNIX TS> \
+        workflow.py arg1 -f arg2 --inputs /tmp/input/f1.txt /tmp/input.f2.txt
+
+10 minutes after the trigger has started, it will shutdown.
 
 
 
