@@ -75,7 +75,7 @@ function render_workflow_stats(dest, all_data) {
     ordering: false,
     searching: false,
     paging: false,
-    info: false
+    info: false,
   });
 
   $("#workflow_stats_all_table").dataTable({
@@ -84,7 +84,7 @@ function render_workflow_stats(dest, all_data) {
     ordering: false,
     searching: false,
     paging: false,
-    info: false
+    info: false,
   });
 }
 
@@ -154,13 +154,13 @@ function getJobBreakdownStats(url, container) {
   var ajaxOpt = {
     url: url,
     dataType: "json",
-    error: function(xhr, textStatus, errorThrown) {
+    error: function (xhr, textStatus, errorThrown) {
       alert("Error occurred: " + textStatus + xhr.responseText);
     },
-    success: function(data, textStatus, xhr) {
+    success: function (data, textStatus, xhr) {
       render_job_breakdown(container, data);
       jobBreakdownStats.isLoaded = true;
-    }
+    },
   };
 
   $.ajax(ajaxOpt);
@@ -177,14 +177,18 @@ function render_job_breakdown(dest, data) {
   content += "<td colspan=2></td>";
   content += "<td></td><td colspan=4 align=center>Runtime (sec)</td>";
   content += "<td colspan=3 align=center>Memory (MB) ";
-  content += "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='top' title='Amount of physical memory (maxrss) used by the job as reported by kickstart'> </i></td>";
+  content +=
+    "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='top' title='Amount of physical memory (maxrss) used by the job as reported by kickstart'> </i></td>";
   content += "<td colspan=3 align=center>Avg. CPU (%) ";
-  content += "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='top' title='% of total duration of job that was spent running on cpu (stime+utime)/duration'> </i></td>";
+  content +=
+    "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='top' title='% of total duration of job that was spent running on cpu (stime+utime)/duration'> </i></td>";
   content += "</tr><tr>";
   content += "<th>Transformation ";
-  content += "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='right' title='The transformation associated with task in the workflow'> </i></th>";
+  content +=
+    "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='right' title='The transformation associated with task in the workflow'> </i></th>";
   content += "<th>Type ";
-  content += "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='right' title='Grouping based on whether tasks succeeded or failed'> </i></th>";
+  content +=
+    "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='right' title='Grouping based on whether tasks succeeded or failed'> </i></th>";
   content += "<th>Count</th>";
   content += "<th>Min</th>";
   content += "<th>Max</th>";
@@ -200,8 +204,7 @@ function render_job_breakdown(dest, data) {
   content += "<tbody>";
 
   for (var i = 0; i < data.length; ++i) {
-    content +=
-      '<tr class="' + data[i][1].toLowerCase() + '">';
+    content += '<tr class="' + data[i][1].toLowerCase() + '">';
     for (var j = 0; j < data[i].length; ++j) {
       content += "<td>";
       content += formatData(data[i][j]);
@@ -218,10 +221,10 @@ function render_job_breakdown(dest, data) {
     pagingType: "full_numbers",
     processing: true,
     serverSide: false,
-    autoWidth: false
+    autoWidth: false,
   });
 
-  $('[data-toggle="tooltip"]').tooltip()
+  $('[data-toggle="tooltip"]').tooltip();
 }
 
 function getJobStats(url, container) {
@@ -232,13 +235,13 @@ function getJobStats(url, container) {
   var ajaxOpt = {
     url: url,
     dataType: "json",
-    error: function(xhr, textStatus, errorThrown) {
+    error: function (xhr, textStatus, errorThrown) {
       alert("Error occurred: " + textStatus + " " + xhr.responseText);
     },
-    success: function(data, textStatus, xhr) {
+    success: function (data, textStatus, xhr) {
       render_job_stats(container, data);
       jobStats.isLoaded = true;
-    }
+    },
   };
 
   $.ajax(ajaxOpt);
@@ -290,7 +293,7 @@ function render_job_stats(dest, data) {
     jQueryUI: true,
     pagingType: "full_numbers",
     processing: true,
-    serverSide: false
+    serverSide: false,
   });
 }
 
@@ -302,13 +305,13 @@ function getIntegrityStats(url, container) {
   var ajaxOpt = {
     url: url,
     dataType: "json",
-    error: function(xhr, textStatus, errorThrown) {
+    error: function (xhr, textStatus, errorThrown) {
       alert("Error occurred: " + textStatus + " " + xhr.responseText);
     },
-    success: function(data, textStatus, xhr) {
+    success: function (data, textStatus, xhr) {
       render_integrity_stats(container, data);
       intStats.isLoaded = true;
-    }
+    },
   };
 
   $.ajax(ajaxOpt);
@@ -372,7 +375,7 @@ function render_integrity_stats(dest, all_data) {
     ordering: false,
     searching: false,
     paging: false,
-    info: false
+    info: false,
   });
 
   $("#int_stats_all_table").dataTable({
@@ -381,7 +384,7 @@ function render_integrity_stats(dest, all_data) {
     ordering: false,
     searching: false,
     paging: false,
-    info: false
+    info: false,
   });
 }
 
