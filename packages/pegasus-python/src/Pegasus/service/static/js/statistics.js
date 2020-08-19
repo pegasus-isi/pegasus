@@ -174,12 +174,17 @@ function render_job_breakdown(dest, data) {
   var content = "";
   content = '<table id="job_breakdown_stats_table">';
   content += "<thead><tr>";
-  content += "<td colspan=3></td><td colspan=4 align=center>Runtime (sec)</td>";
-  content += "<td colspan=3 align=center>Memory (MB)</td>";
-  content += "<td colspan=3 align=center>Avg. CPU (%)</td>";
+  content += "<td colspan=2></td>";
+  content += "<td></td><td colspan=4 align=center>Runtime (sec)</td>";
+  content += "<td colspan=3 align=center>Memory (MB) ";
+  content += "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='top' title='Amount of physical memory (maxrss) used by the job as reported by kickstart'> </i></td>";
+  content += "<td colspan=3 align=center>Avg. CPU (%) ";
+  content += "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='top' title='% of total duration of job that was spent running on cpu (stime+utime)/duration'> </i></td>";
   content += "</tr><tr>";
-  content += "<th>Transformation</th>";
-  content += "<th>Type</th>";
+  content += "<th>Transformation ";
+  content += "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='right' title='The transformation associated with task in the workflow'> </i></th>";
+  content += "<th>Type ";
+  content += "<i class='fa fa-info-circle' data-toggle='tooltip' data-placement='right' title='Grouping based on whether tasks succeeded or failed'> </i></th>";
   content += "<th>Count</th>";
   content += "<th>Min</th>";
   content += "<th>Max</th>";
@@ -215,6 +220,8 @@ function render_job_breakdown(dest, data) {
     serverSide: false,
     autoWidth: false
   });
+
+  $('[data-toggle="tooltip"]').tooltip()
 }
 
 function getJobStats(url, container) {
