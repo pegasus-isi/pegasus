@@ -34,8 +34,13 @@ profiles:
 -  **pegasus** configures the behaviour of various planner/mapper
    components.
 
--  **hints** allows to override site selection behavior of the planner.
+-  **selector** allows to override site selection behavior of the planner.
    Can be specified only in the DAX.
+
+.. note::
+
+      The hints namespace is deprecated starting Pegasus 5.0. Use the
+      selector namespace instead.
 
 Properties are primarily used to configure the behavior of the Pegasus
 WMS system at a global level. The properties file is actually a java
@@ -696,15 +701,25 @@ Pegasus profile key runtime when running jobs via HTCondorG.
 
 The Hints Profile Namespace
 ---------------------------
+The *hints* namespace is now deprecated and has been replaced by the
+*selector* namespace. If you have any hints profiles in your configuration,
+please change their namespace value to *selector* instead. The support for
+*hints* namespace will be dropped in a future release.
 
-The *hints* namespace allows users to override the behavior of the
+.. _selector-profiles:
+
+The Selector Profile Namespace
+---------------------------
+
+The *selector* namespace allows users to override the behavior of the
 Workflow Mapper during site selection. This gives you finer grained
 control over where a job executes and what executable it refers to. The
 hints namespace keys ( execution.site and pfn ) can only be specified in
-the DAX. It is important to note that these particular keys once
-specified in the DAX, cannot be overriden like other profiles.
+the input abstract workflow. It is important to note that these particular
+keys once specified in the workflow, cannot be overridden like other
+profiles.
 
-.. table:: Useful Hints Profile Keys
+.. table:: Useful Selector Profile Keys
 
    ============================================================================================================================================= =====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
    **Key Attributes**                                                                                                                            **Description**
