@@ -14,8 +14,7 @@ from threading import Event, Thread
 from typing import List, Optional
 
 # --- setup dir for trigger related files --------------------------------------
-trigger_dir = Path().home() / ".pegasus/triggers"
-trigger_dir.mkdir(parents=True, exist_ok=True)
+_TRIGGER_DIR = Path().home() / ".pegasus/triggers"
 
 # --- messages -----------------------------------------------------------------
 class _TriggerManagerMessageType(Enum):
@@ -56,6 +55,8 @@ class TriggerManager(Thread):
     def __init__(self):
         Thread.__init__(self, daemon=True)
 
+        _TRIGGER_DIR.mkdir(parents=True, exist_ok=True)
+
         self.log = logging.getLogger("trigger.manager")
 
         # messages to be consumed by worker
@@ -94,12 +95,12 @@ class _TriggerDispatcher(Thread):
         self.log = logging.getLogger("trigger.dispatcher")
 
         # make state visible to pegasus-em client via file
-        self.running_triggers_file = trigger_dir / "running.p"
+        self.running_triggers_file = _TRIGGER_DIR / "running.p"
         with self.running_triggers_file.open("wb") as f:
             pickle.dump(set(), f)
 
         # TODO: create file containing all workflows submitted to em by each trigger
-        # self.submitted_workflows = trigger_dir / "submitted.p"
+        # self.submitted_workflows = _TRIGGER_DIR / "submitted.p"
 
         # work passed down by the TriggerManager
         self.mailbox = mailbox
