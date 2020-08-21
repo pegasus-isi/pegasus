@@ -736,7 +736,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
         :param value: input str
         :type value: str
         :raises ValueError: value must be given as '<int> <s|m|h|d>
-        :raises ValueError: result must be > 0s
+        :raises ValueError: value must be > 0s
         :return: value given in seconds
         :rtype: int
         """
@@ -746,21 +746,25 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
         if not pattern.fullmatch(value):
             raise ValueError(
                 "invalid interval: {}, interval must be given as '<int> <s|m|h|d>".format(
-                    self.args.interval
+                    value
                 )
             )
 
         num = int(value[0 : len(value) - 1])
         unit = value[-1].lower()
 
-        if unit not in "smhd":
-            raise ValueError(
-                "invalid unit: {}, unit must be one of s, S, m, M, h, H, d, D"
-            )
-
         as_seconds = {"s": 1, "m": 60, "h": 60 * 60, "d": 60 * 60 * 24}
 
-        return as_seconds[unit] * num
+        result = as_seconds[unit] * num
+
+        if result <= 0:
+            raise ValueError(
+                "invalid interval: {}, interval must be greater than 0 seconds".format(
+                    result
+                )
+            )
+
+        return result
 
     def run(self):
         # ensure given ensemble is valid
