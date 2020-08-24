@@ -198,7 +198,7 @@ class TestPatternIntervalTrigger:
         t.run()
 
         # ensure pegasus-em submit command properly built up
-        args = subprocess.run.call_args.args[0]
+        args = subprocess.run.call_args[0][0]
         assert args[0:2] == ["pegasus-em", "submit"]
         assert "test-ensemble.wf_" in args[2]
         assert args[3:] == [
