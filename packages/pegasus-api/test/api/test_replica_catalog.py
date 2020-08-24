@@ -10,13 +10,7 @@ from conftest import _tojson
 from jsonschema import validate
 
 from Pegasus.api.errors import DuplicateError
-from Pegasus.api.replica_catalog import (
-    _PFN,
-    PEGASUS_VERSION,
-    File,
-    ReplicaCatalog,
-    _ReplicaCatalogEntry,
-)
+from Pegasus.api.replica_catalog import _PFN, File, ReplicaCatalog, _ReplicaCatalogEntry
 
 
 class TestFile:

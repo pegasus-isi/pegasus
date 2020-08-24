@@ -1,15 +1,7 @@
 import logging
 import os
 
-from flask import (
-    g,
-    json,
-    redirect,
-    render_template,
-    request,
-    send_from_directory,
-    url_for,
-)
+from flask import g, redirect, render_template, request, send_from_directory, url_for
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db.admin.admin_loader import DBAdminError
