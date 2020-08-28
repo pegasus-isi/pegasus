@@ -19,6 +19,7 @@ import os
 import re
 import stat
 import sys
+import logging as log
 from argparse import ArgumentParser
 
 from six.moves.configparser import ConfigParser
@@ -54,6 +55,11 @@ MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
 
+def configure_logging(verbose: bool):
+    log.basicConfig(
+        level=log.DEBUG if verbose else log.INFO,
+        format="%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s"
+    )
 
 def human_size(size):
     if size >= TB:
@@ -94,24 +100,6 @@ DEFAULT_CONFIG = {
     "batch_delete_size": str(1000),
 }
 
-DEBUG = False
-VERBOSE = False
-
-# TODO: use logging instead
-def debug(message):
-    if DEBUG:
-        sys.stderr.write("%s\n" % message)
-
-
-def info(message):
-    if VERBOSE:
-        sys.stdout.write("%s\n" % message)
-
-
-def warn(message):
-    sys.stderr.write("WARNING: %s\n" % message)
-
-
 def fix_file(url):
     if url.startswith("file://"):
         url = url.replace("file:", "")
@@ -126,13 +114,6 @@ def has_wildcards(string):
         if c in string:
             return True
     return False
-
-
-def help(*args):
-    sys.stderr.write("Usage: %s COMMAND\n\n" % os.path.basename(sys.argv[0]))
-    sys.stderr.write("Commands:\n")
-    for cmd in COMMANDS:
-        sys.stderr.write("    %-8s%s\n" % (cmd, COMMANDS[cmd]))
 
 
 def get_path_for_key(bucket, searchkey, key, output):
@@ -175,7 +156,7 @@ def get_config(options):
     if not os.path.isfile(cfg):
         raise Exception("Config file not found")
 
-    debug("Found config file: %s" % cfg)
+    log.debug("Found config file: %s" % cfg)
 
     # Make sure nobody else can read the file
     mode = os.stat(cfg).st_mode
@@ -352,13 +333,11 @@ def ls(args):
                 Bucket=uri.bucket, Prefix=uri.key if uri.key else "", FetchOwner=True
             )
         except s3.exceptions.NoSuchBucket:
-            print("Invalid bucket: {}".format(uri.bucket))
-            sys.exit(1)
+            raise Exception("Invalid bucket: {}".format(uri.bucket))
         except botocore.exceptions.ClientError as e:
             # endpoint may also raise this for invalid bucket name
             if e.response["Error"]["Code"] == "InvalidBucketName":
-                print("Invalid bucket: {}".format(uri.bucket))
-                sys.exit(1)
+                raise Exception("Invalid bucket: {}".format(uri.bucket))
             else:
                 raise e
 
@@ -436,12 +415,11 @@ def cp(args):
 
             # 403 forbidden means bucket already taken
             if code == "403":
-                print(
+                raise Exception(
                     "Bucket: {} is already taken. Unable to create bucket.".format(
                         dest.bucket
                     )
                 )
-                sys.exit(1)
 
             # 404 not found means bucket can be created
             elif code != "404":
@@ -456,57 +434,39 @@ def cp(args):
             for src in srcs:
                 try:
                     s3.head_object(Bucket=dest.bucket, Key=src.key)
-                    print(
+                    raise Exception(
                         "Key: {key} already exists in destination bucket: {bucket}, (see --force)".format(
                             key=src.key, bucket=dest.bucket
                         )
                     )
-                    sys.exit(1)
                 except s3.exceptions.ClientError as e:
                     error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
-                    if error_code == 403:
-                        print(
-                            "Access to bucket: {bucket} forbidden".format(
-                                bucket=dest.bucket
-                            )
-                        )
-                        sys.exit(1)
+                    if error_code != 404:
+                        raise e
                     elif error_code == 404:
-                        #
+                        # NOT FOUND ERROR  
                         pass
-                    else:
-                        print("Unknown client error")
-                        sys.exit(1)
+
         else:
             assert len(srcs) == 1
             src = srcs[0]
             try:
                 s3.head_object(Bucket=dest.bucket, Key=dest.key)
-                print(
+                raise Exception(
                     "Key: {key} already exists in destination bucket: {bucket}, (see --force)".format(
                         key=dest.key, bucket=dest.bucket
                     )
                 )
-                sys.exit(1)
             except s3.exceptions.ClientError as e:
                 error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
-                if error_code == 403:
-                    print(
-                        "Access to bucket: {bucket}, key: {key} forbidden".format(
-                            bucket=dest.bucket, key=dest.key
-                        )
-                    )
-                    sys.exit(1)
+                if error_code != 404:
+                    raise e
                 elif error_code == 404:
-                    #
+                    # NOT FOUND ERROR
                     pass
-                else:
-                    print("Unknown client error")
-                    sys.exit(1)
 
-    # TODO: catch possible botocore.exceptions.ClientError and exit
     if dest.key == None:
         for src in srcs:
             s3.copy(
@@ -525,25 +485,12 @@ def cp(args):
 
 
 def mkdir(args):
-    """
-    parser.add_option(
-        "-r",
-        "--region",
-        dest="region",
-        action="store_true",
-        default=None,
-        help="Create the destination bucket if it does not already exist",
-    )
-    """
-
     uri = parse_uri(args.url)
 
     if uri.bucket is None:
-        print("URL for mkdir must contain a bucket: %s" % arg)
-        sys.exit(1)
+        raise Exception("URL for mkdir must contain a bucket: %s" % arg)
     if uri.key is not None:
-        print("URL for mkdir cannot contain a key: %s" % arg)
-        sys.exit(1)
+        raise Exception("URL for mkdir cannot contain a key: %s" % arg)
 
     config = get_config(args)
     s3 = get_s3_client(config, uri)
@@ -559,26 +506,26 @@ def mkdir(args):
 
         # 403 forbidden means bucket already taken
         if code == "403":
-            print(
+            raise Exception(
                 "Bucket: {} is already taken. Unable to create bucket.".format(
                     uri.bucket
                 )
             )
-            sys.exit(1)
 
         # 404 not found means bucket can be created
         elif code != "404":
             raise e
 
     if can_create:
-        s3.create_bucket(Bucket=dest.bucket)
+        s3.create_bucket(Bucket=uri.bucket)
     else:
-        print("Bucket: {} is already owned by user: {}".format(uri.bucket, uri.ident))
+        raise Exception("Bucket: {} is already owned by user: {}".format(uri.bucket, uri.ident))
 
 
 def rm(args):
     if args.url is None and args.file is None:
-        parser.error("Specify URL")
+        print("Specify URL")
+        sys.exit(1)
 
     uris = []
     if args.file:
@@ -734,17 +681,12 @@ def put(args):
     url = args.url
 
     if not os.path.exists(path):
-        print("No such file or directory: {}".format(path))
-        sys.exit(1)
+        raise Exception("No such file or directory: {}".format(path))
 
     if os.path.isdir(path):
         raise Exception("FILE: %s is a directory. FILE must be a file." % path)
 
-    # TODO: without recursive, infile for loops need to be removed
-    # usage is just pegasus-s3 put FILE <uri>
-    infiles = [path]
-
-    print("Attempting to upload {} files".format(len(infiles)))
+    print("Attempting to upload {}".format(path))
 
     # Validate URL
     uri = parse_uri(url)
@@ -770,7 +712,7 @@ def put(args):
             can_create = False
         except botocore.exceptions.ClientError as e:
             code = e.response["Error"]["Code"]
-
+            log.error(code)
             # 403 forbidden means bucket already taken
             if code == "403":
                 print(
@@ -791,57 +733,39 @@ def put(args):
         # check if all keys do not yet exist
         # accepted method of checking for existence of a key
         key_already_exists = False
-        pre_existing_key = ""
-        for f in infiles:
-            try:
-                s3.head_object(Bucket=uri.bucket, Key=uri.key)
 
-                key_already_exists = True
-                pre_existing_key = f
-                break
-            except s3.exceptions.ClientError as e:
-                error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
+        try:
+            s3.head_object(Bucket=uri.bucket, Key=uri.key)
+            key_already_exists = True
+        except s3.exceptions.ClientError as e:
+            error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
-                if error_code == 403:
-                    print(
-                        "Access to bucket: {bucket}, key: {key} forbidden".format(
-                            bucket=uri.bucket, key=f
-                        )
-                    )
-                    sys.exit(1)
-                elif error_code == 404:
-                    pass
-                else:
-                    print("Unknown client error")
-                    sys.exit(1)
+            if error_code != 404:
+                raise e
+            elif error_code == 404:
+                pass
 
         if key_already_exists:
-            print(
+            raise Exception(
                 "Key: {} already exists. Try --force to overwrite".format(
-                    pre_existing_key
+                    path
                 )
             )
-            sys.exit(1)
 
-    for f in infiles:
-        try:
-            key = f if uri.key is None else uri.key
-            s3.upload_file(f, uri.bucket, key)
-            print(
-                "Uploaded file: {file} to bucket: {bucket} as key: {key}".format(
-                    file=f, bucket=uri.bucket, key=key
-                )
+    try:
+        key = path if uri.key is None else uri.key
+        s3.upload_file(path, uri.bucket, key)
+        log.info(
+            "Uploaded file: {file} to bucket: {bucket} as key: {key}".format(
+                file=path, bucket=uri.bucket, key=key
             )
-        except boto3.exceptions.S3UploadFailedError:
-            # TODO: specify if bucket doesn't exist so --create-bucket flag can be used
-            print(
-                "Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
-                    file=f, bucket=uri.bucket, key=key
-                )
+        )
+    except boto3.exceptions.S3UploadFailedError:
+        raise Exception(
+            "Failed to upload file: {file} to bucket: {bucket} as key: {key}".format(
+                file=path, bucket=uri.bucket, key=key
             )
-            sys.exit(1)
-
-    print("Successfully uploaded {} files".format(len(infiles)))
+        )
 
 
 def get(args):
@@ -857,7 +781,7 @@ def get(args):
     else:
         output = os.path.basename(uri.key.rstrip("/"))
 
-    info("Downloading %s" % uri)
+    log.info("Downloading %s" % uri)
 
     config = get_config(args)
     s3 = get_s3_client(config, uri)
@@ -865,17 +789,13 @@ def get(args):
     try:
         s3.download_file(Bucket=uri.bucket, Key=uri.key, Filename=output)
     except s3.exceptions.NoSuchBucket:
-        print("Invalid bucket: {}".format(uri.bucket))
-        sys.exit(1)
+        raise Exception("Invalid bucket: {}".format(uri.bucket))
     except botocore.exceptions.ClientError as e:
         # endpoint may also raise this for invalid bucket name
-        if e.response["Error"]["Code"] == "InvalidBucketName":
-            print("Invalid bucket: {}".format(uri.bucket))
-            sys.exit(1)
-        else:
-            raise e
+        log.error("Response error code: {}".format(e.response["Error"]["Code"]))
+        raise e
 
-    info("Download: {} complete".format(uri))
+    log.info("Download: {} complete".format(uri))
 
 
 # --- Handle Command Line Arguments --------------------------------------------
@@ -1024,9 +944,19 @@ def parse_args(args):
 def main():
     parser, args = parse_args(sys.argv[1:])
 
+    configure_logging(args.verbose)
+
     if args.cmd is None:
         parser.print_usage()
     else:
-        args.func(args)
+        try:
+            args.func(args)
+        except Exception as e:
+            if args.verbose:
+                log.exception("Encountered error:")
+            else:
+                log.error(e)
 
-    # TODO: if verbose raise exception
+            sys.exit(1)
+
+
