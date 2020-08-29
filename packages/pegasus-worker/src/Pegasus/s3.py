@@ -14,12 +14,11 @@
 #  limitations under the License.
 #
 
-import fnmatch
+import logging as log
 import os
 import re
 import stat
 import sys
-import logging as log
 from argparse import ArgumentParser
 
 from six.moves.configparser import ConfigParser
@@ -55,11 +54,21 @@ MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
 
-def configure_logging(verbose: bool):
-    log.basicConfig(
-        level=log.DEBUG if verbose else log.INFO,
-        format="%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s"
-    )
+
+def configure_logging(verbose: bool, debug: bool):
+
+    if verbose or debug:
+        if verbose:
+            level = log.INFO
+
+        if debug:
+            level = log.DEBUG
+
+        log.basicConfig(
+            level=level,
+            format="%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s",
+        )
+
 
 def human_size(size):
     if size >= TB:
@@ -99,6 +108,7 @@ DEFAULT_CONFIG = {
     "batch_delete": str(True),
     "batch_delete_size": str(1000),
 }
+
 
 def fix_file(url):
     if url.startswith("file://"):
@@ -156,7 +166,7 @@ def get_config(options):
     if not os.path.isfile(cfg):
         raise Exception("Config file not found")
 
-    log.debug("Found config file: %s" % cfg)
+    log.info("Found config file: %s" % cfg)
 
     # Make sure nobody else can read the file
     mode = os.stat(cfg).st_mode
@@ -439,14 +449,11 @@ def cp(args):
                             key=src.key, bucket=dest.bucket
                         )
                     )
-                except s3.exceptions.ClientError as e:
+                except botocore.exceptions.ClientError as e:
                     error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
                     if error_code != 404:
                         raise e
-                    elif error_code == 404:
-                        # NOT FOUND ERROR  
-                        pass
 
         else:
             assert len(srcs) == 1
@@ -458,14 +465,10 @@ def cp(args):
                         key=dest.key, bucket=dest.bucket
                     )
                 )
-            except s3.exceptions.ClientError as e:
+            except botocore.exceptions.ClientError as e:
                 error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
-
                 if error_code != 404:
                     raise e
-                elif error_code == 404:
-                    # NOT FOUND ERROR
-                    pass
 
     if dest.key == None:
         for src in srcs:
@@ -519,7 +522,9 @@ def mkdir(args):
     if can_create:
         s3.create_bucket(Bucket=uri.bucket)
     else:
-        raise Exception("Bucket: {} is already owned by user: {}".format(uri.bucket, uri.ident))
+        raise Exception(
+            "Bucket: {} is already owned by user: {}".format(uri.bucket, uri.ident)
+        )
 
 
 def rm(args):
@@ -533,6 +538,8 @@ def rm(args):
             if len(rec) != 1:
                 raise Exception("Invalid record: %s" % rec)
             uris.append(rec[0])
+    else:
+        uris.append(args.url)
 
     buckets = {}
     for uri in uris:
@@ -546,67 +553,49 @@ def rm(args):
         buri = S3URI(uri.user, uri.site, uri.bucket, uri.secure)
 
         if bid not in buckets:
-            buckets[bid] = (buri, [])
-        buckets[bid][1].append(uri)
+            buckets[bid] = (buri, set())
+        buckets[bid][1].add(uri)
 
     config = get_config(args)
 
     for bucket in buckets:
 
         # Connect to the bucket
-        debug("Deleting keys from bucket %s" % bucket)
+        log.info("Deleting keys from bucket %s" % bucket)
         uri, keys = buckets[bucket]
         try:
             s3 = get_s3_client(config, uri)
 
-            # Get a final list of all the keys, resolving wildcards as necessary
-            bucket_contents = None
-            keys_to_delete = set()
-            for key in keys:
-                key_name = key.key
+            keys_to_delete = {k.key for k in keys}
 
-                if has_wildcards(key_name):
+            # check that all keys to be deleted exist if force is not set
+            if not args.force:
+                bucket_contents = {
+                    obj["Key"]
+                    for obj in s3.list_objects_v2(Bucket=uri.bucket)["Contents"]
+                }
+                if not keys_to_delete.issubset(bucket_contents):
+                    raise Exception(
+                        "Some keys to delete do not exist in bucket: {}; use --force to ignore non existing keys".format(
+                            uri.bucket
+                        )
+                    )
 
-                    # If we haven't yet queried the bucket, then do so now
-                    # so that we can match the wildcards
-                    if bucket_contents is None:
-                        # bucket_contents = b.list()
-                        keys = s3.list_objects_v2(Bucket=uri.bucket)
-                        try:
-                            bucket_contents = [obj["Key"] for obj in keys["Contents"]]
-                        except KeyError:
-                            print(
-                                "Unable to fetch objects list from bucket: {}".format(
-                                    uri.bucket
-                                )
-                            )
-                            sys.exit(1)
-
-                    # Collect all the keys that match
-                    for k in bucket_contents:
-                        if fnmatch.fnmatch(k, key_name):
-                            keys_to_delete.add(k)
-
-                else:
-                    keys_to_delete.add(key_name)
-
-            info("Deleting %d keys" % len(keys_to_delete))
+            log.info("Deleting %d keys" % len(keys_to_delete))
 
             batch_delete = config.getboolean(uri.site, "batch_delete")
 
-            # TODO: what about versioned buckets?
             if batch_delete:
-                debug("Using batch deletes")
+                log.info("Using batch deletes")
 
                 # Delete the keys in batches
                 batch_delete_size = config.getint(uri.site, "batch_delete_size")
-                debug("batch_delete_size: %d" % batch_delete_size)
+                log.info("batch_delete_size: %d" % batch_delete_size)
                 batch = []
                 for k in keys_to_delete:
                     batch.append(k)
                     if len(batch) == batch_delete_size:
-                        info("Deleting batch of %d keys" % len(batch))
-                        # b.delete_keys(batch, quiet=True)
+                        log.info("Deleting batch of %d keys" % len(batch))
 
                         resp = s3.delete_objects(
                             Bucket=uri.bucket,
@@ -614,42 +603,38 @@ def rm(args):
                         )
 
                         if not len(resp["Deleted"]) == len(batch):
-                            print(
+                            raise Exception(
                                 "Incomplete batch delete, some keys were not successfully deleted."
                             )
-                            sys.exit(1)
 
                         batch = []
 
                 # Delete the final batch
                 if len(batch) > 0:
-                    info("Deleting batch of %d keys" % len(batch))
+                    log.info("Deleting batch of %d keys" % len(batch))
                     resp = s3.delete_objects(
                         Bucket=uri.bucket,
                         Delete={"Objects": [{"Key": item} for item in batch]},
                     )
 
                     if not len(resp["Deleted"]) == len(batch):
-                        print(
+                        raise Exception(
                             "Incomplete batch delete, some keys were not successfully deleted."
                         )
-                        sys.exit(1)
 
             else:
                 for key_name in keys_to_delete:
-                    debug("Deleting %s" % key_name)
+                    log.info("Deleting %s" % key_name)
                     s3.delete_object(Bucket=uri.bucket, Key=key_name)
 
         except s3.exceptions.NoSuchBucket:
-            print("Invalid bucket: {}".format(uri.bucket))
-            sys.exit(1)
+            raise Exception("Invalid bucket: {}".format(uri.bucket))
         except botocore.exceptions.ClientError as e:
             # endpoint may also raise this for invalid bucket name
             if e.response["Error"]["Code"] == "InvalidBucketName":
-                print("Invalid bucket: {}".format(uri.bucket))
-                sys.exit(1)
-            else:
-                raise e
+                log.error("Invalid bucket: {}".format(uri.bucket))
+
+            raise e
 
 
 def get_key_for_path(path, infile, outkey):
@@ -686,13 +671,12 @@ def put(args):
     if os.path.isdir(path):
         raise Exception("FILE: %s is a directory. FILE must be a file." % path)
 
-    print("Attempting to upload {}".format(path))
+    log.info("Attempting to upload {}".format(path))
 
     # Validate URL
     uri = parse_uri(url)
     if uri.bucket is None:
-        print("URL for put must have a bucket: %s" % url)
-        sys.exit(1)
+        raise Exception("URL for put must have a bucket: %s" % url)
     if uri.key is None:
         uri.key = os.path.basename(path)
 
@@ -712,18 +696,9 @@ def put(args):
             can_create = False
         except botocore.exceptions.ClientError as e:
             code = e.response["Error"]["Code"]
-            log.error(code)
-            # 403 forbidden means bucket already taken
-            if code == "403":
-                print(
-                    "Bucket: {} is already taken. Unable to create bucket.".format(
-                        uri.bucket
-                    )
-                )
-                sys.exit(1)
 
-            # 404 not found means bucket can be created
-            elif code != "404":
+            if code != "404":
+                log.error(code)
                 raise e
 
         if can_create:
@@ -738,18 +713,15 @@ def put(args):
             s3.head_object(Bucket=uri.bucket, Key=uri.key)
             key_already_exists = True
         except s3.exceptions.ClientError as e:
-            error_code = e.response["ResponseMetadata"]["HTTPStatusCode"]
+            code = e.response["ResponseMetadata"]["HTTPStatusCode"]
 
-            if error_code != 404:
+            if code != 404:
+                log.error(code)
                 raise e
-            elif error_code == 404:
-                pass
 
         if key_already_exists:
             raise Exception(
-                "Key: {} already exists. Try --force to overwrite".format(
-                    path
-                )
+                "Key: {} already exists. Try --force to overwrite".format(path)
             )
 
     try:
@@ -806,6 +778,8 @@ def parse_args(args):
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose mode"
     )
+
+    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode")
 
     parser.add_argument(
         "-C", "--conf", dest="config", default=None, help="Path to configuration file"
@@ -944,7 +918,7 @@ def parse_args(args):
 def main():
     parser, args = parse_args(sys.argv[1:])
 
-    configure_logging(args.verbose)
+    configure_logging(args.verbose, args.debug)
 
     if args.cmd is None:
         parser.print_usage()
@@ -952,11 +926,9 @@ def main():
         try:
             args.func(args)
         except Exception as e:
-            if args.verbose:
+            if args.verbose or args.debug:
                 log.exception("Encountered error:")
             else:
-                log.error(e)
+                print(e)
 
             sys.exit(1)
-
-
