@@ -131,7 +131,11 @@ def test_file():
 
 # assumption is that .pegasus/credentials.conf exists with proper configuration
 def is_missing_credentials():
-    CFG_PATH = (Path.home() / ".pegasus/credentials.conf").resolve()
+    try:
+        CFG_PATH = (Path.home() / ".pegasus/credentials.conf").resolve()
+    except FileNotFoundError:
+        return True
+        
     cfg = ConfigParser()
     if len(cfg.read(str(CFG_PATH))) != 1:
         return True
