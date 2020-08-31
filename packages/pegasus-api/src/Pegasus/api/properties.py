@@ -211,7 +211,7 @@ class Properties:
         """List property keys. Refer to
         `Configuration docs <https://pegasus.isi.edu/documentation/configuration.php>`_
         for additional information. If :code:`prop` is given, all properties beginning with
-        prop will be printed, else all properties will be printed. 
+        prop will be printed, else all properties will be printed.
 
         .. code-block:: python
 

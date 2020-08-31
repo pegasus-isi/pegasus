@@ -288,7 +288,7 @@ class WorkflowProcessor:
 
     def get_dashboard_state_for_running_workflow(self):
         """Get the latest state of the workflow from the dashboard
-           tables where timestamp is > last updated of the ensemble workflow"""
+        tables where timestamp is > last updated of the ensemble workflow"""
         # We can only use this for running workflows because we are assuming
         # that the last state of the workflow should be after the updated
         # timestamp of the ensemble workflow. That might not be true for

@@ -294,7 +294,7 @@ def _set_log_level(debug):
 def _validate_conf_type_options(
     dburi, properties, config_properties, submit_dir, db_type
 ):
-    """ Validate DB type parameter
+    """Validate DB type parameter
     :param dburi: database URI
     :param config_properties: Pegasus configuration properties file
     :param submit_dir: workflow submit directory

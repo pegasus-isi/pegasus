@@ -290,8 +290,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         set_stderr(self, file: Union[str, File], stage_out: bool = True, register_replica: bool = True)
         Set stderr to a :py:class:`~Pegasus.api.replica_catalog.File` . If file is given as a str,
-        a :py:class:`~Pegasus.api.replica_catalog.File` object is created for you internally 
-        with the given value as its lfn. 
+        a :py:class:`~Pegasus.api.replica_catalog.File` object is created for you internally
+        with the given value as its lfn.
 
         :param file: a file that stderr will be written to
         :type file: Union[str, File]
@@ -741,7 +741,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
             try:
                 wf.plan(submit=True)
-                
+
                 print(wf.braindump.user)
                 print(wf.braindump.submit_hostname)
                 print(wf.braindump.submit_dir)
@@ -804,7 +804,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type dir: Optional[Union[str, Path]]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
         :type relative_dir: Optional[str]
-        :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`pathlib.Path`, then that will be used as the basename of the directory that is to be created, defaults to False 
+        :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`pathlib.Path`, then that will be used as the basename of the directory that is to be created, defaults to False
         :type random_dir: Union[bool, str, Path], optional
         :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
         :type cleanup: str, optional
@@ -854,7 +854,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
         :param json: Output in JSON format, defaults to False
-        :type json: bool 
+        :type json: bool
         :raises PegasusClientError: pegasus-run encountered an error
         :return: self
         """
@@ -921,7 +921,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
         :raises PegasusClientError: pegasus-analyzer encountered an error
-        :return: self 
+        :return: self
         """
         self._client.analyzer(self._submit_dir, verbose=verbose)
 
@@ -1021,8 +1021,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def add_replica_catalog(self, rc: ReplicaCatalog):
         """
         add_replica_catalog(self, rc: ReplicaCatalog)
-        Add a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` to this workflow. 
-        The contents fo the replica catalog will be inlined into the same file as 
+        Add a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` to this workflow.
+        The contents fo the replica catalog will be inlined into the same file as
         this workflow when it is written.
 
         :param rc: the :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog` to be added
@@ -1047,8 +1047,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def add_transformation_catalog(self, tc: TransformationCatalog):
         """
         add_transformation_catalog(self, tc: TransformationCatalog)
-        Add a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` 
-        to this workflow. The contents fo the transformation catalog will be inlined 
+        Add a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`
+        to this workflow. The contents fo the transformation catalog will be inlined
         into the same file as this workflow when it is written.
 
         :param tc: the :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` to be added
@@ -1081,8 +1081,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     ):
         """
         add_dependency(self, job: Union[Job, SubWorkflow], *, parents: List[Union[Job, SubWorkflow]] = [], children: List[Union[Job, SubWorkflow]] = [])
-        Add parent, child dependencies for a given job. 
-        
+        Add parent, child dependencies for a given job.
+
         .. code-block::python
 
             # Example 1: set parents of a given job

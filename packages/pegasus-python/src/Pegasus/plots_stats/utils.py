@@ -223,9 +223,9 @@ def convert_stats_to_base_time(stats_by_time, date_time_filter="hour", isHost=Fa
 
 def round_decimal_to_str(value, to=3):
     """
-        Utility method for rounding the decimal value to string to given digits
-        @param value :  value to round
-        @param to    :  how many decimal points to round to
+    Utility method for rounding the decimal value to string to given digits
+    @param value :  value to round
+    @param to    :  how many decimal points to round to
     """
     rounded_value = "-"
     if value is None:

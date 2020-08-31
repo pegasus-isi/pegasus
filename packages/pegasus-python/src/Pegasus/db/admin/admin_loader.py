@@ -685,7 +685,7 @@ def _get_max_minor_version(version):
 
 
 def _version_sanity_check(db, version):
-    """ Verify whether db version is higher than current version.
+    """Verify whether db version is higher than current version.
     :param db: db connection
     :param version: version to be verified
     """

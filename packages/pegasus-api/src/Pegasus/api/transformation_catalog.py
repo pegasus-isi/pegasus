@@ -31,7 +31,7 @@ class _ContainerType(Enum):
 class Container(ProfileMixin):
     """
     Describes a container that can be added to the :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` .
-    Note that the :code:`checksum` parameter refers to the checksum of the tar file of the image and not the specific 
+    Note that the :code:`checksum` parameter refers to the checksum of the tar file of the image and not the specific
     version of an image (digest/content-addressable identifer in the case of Docker).
 
     .. code-block:: python
@@ -44,7 +44,7 @@ class Container(ProfileMixin):
                             arguments="--shm-size",
                             mounts=["/Volumes/Work/lfs1:/shared-data/:ro"]
                         )
-        
+
         # Example 2: Singularity
         fb_nlp = Container(
                     "fb-nlp",
@@ -180,7 +180,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
         :type type: bool, optional
         :param bypass_staging: whether or not to bypass the stage in job of this executable (Note that this only works for transformations where :code:`is_stageable=False`), defaults to False
-        :type bypass_staging: bool, optional 
+        :type bypass_staging: bool, optional
         :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
         :type arch: Optional[Arch], optional
         :param os_type: name of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS`), defaults to None
@@ -286,7 +286,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
 
 class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     """A transformation, which can be a standalone executable, or one that
-    requires other executables. 
+    requires other executables.
     """
 
     _SUPPORTED_CHECKSUMS = {"sha256"}

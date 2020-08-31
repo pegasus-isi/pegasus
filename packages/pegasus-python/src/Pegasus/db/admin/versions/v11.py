@@ -39,9 +39,7 @@ class Version(BaseVersion):
         self.db.commit()
 
     def downgrade(self, force=False):
-        """
-
-        """
+        """"""
         log.info("Downgrading from version %s" % DB_VERSION)
         try:
             log.debug("Renaming integrity table...")

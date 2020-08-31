@@ -15,7 +15,7 @@ class _CustomEncoder(json.JSONEncoder):
         # TODO: handle instance of Date and Path
         """
         if isinstance(obj, Date):
-			return "whatever spec we come up with for Date such as ISO8601"
+                        return "whatever spec we come up with for Date such as ISO8601"
         elif isinstance(obj, Path):
             return obj.resolve
         """

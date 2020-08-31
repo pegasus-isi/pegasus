@@ -236,8 +236,7 @@ def _bp_extract(s, as_dict=True, validate=False):
 
 
 class ProcessInterface:
-    """Process interface for a parser
-    """
+    """Process interface for a parser"""
 
     def process(self, line):
         """Subclasses must override this method to return a list
@@ -386,13 +385,11 @@ class BaseParser(ProcessInterface, DoesLogging):
         """
 
     def setHeaderValues(self, value_dict):
-        """Set a dictionary of header keyword, value pairs.
-        """
+        """Set a dictionary of header keyword, value pairs."""
         self._header_values = value_dict
 
     def getHeaderValue(self, key):
-        """Get value from group named 'key', or None.
-        """
+        """Get value from group named 'key', or None."""
         return self._header_values.get(key, None)
 
     def __iter__(self):
@@ -462,8 +459,7 @@ class BaseParser(ProcessInterface, DoesLogging):
             return self._result(item)
 
     def _read_line(self):
-        """Read one line.
-        """
+        """Read one line."""
         if self._trace:
             self.log.trace("readline.start")
         if self._fake_file or select(self._infile_rlist, (), (), 0.1)[0]:
@@ -475,8 +471,7 @@ class BaseParser(ProcessInterface, DoesLogging):
         return line
 
     def updateOffset(self):
-        """Advance offset by length previously parsed input.
-        """
+        """Advance offset by length previously parsed input."""
         self._offs += self._prev_len
         self._prev_len = 0  # do not add this to offset again
 
@@ -665,8 +660,7 @@ class NLFastParser(NLSimpleParser, NLBaseParser):
 if HAVE_PYPARSING:
 
     class NLPyParser(NLBaseParser):
-        """pyparsing--based implementation of the NLBaseParser
-        """
+        """pyparsing--based implementation of the NLBaseParser"""
 
         notSpace = CharsNotIn(" \n")
         eq = Literal("=").suppress()

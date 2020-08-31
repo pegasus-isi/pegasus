@@ -102,8 +102,7 @@ class Scheduler(Enum):
 
 
 class FileServer(ProfileMixin):
-    """Describes the fileserver to access data from outside
-    """
+    """Describes the fileserver to access data from outside"""
 
     def __init__(self, url: str, operation_type: Operation):
         """
@@ -162,7 +161,7 @@ class Directory:
         """
         :param directory_type: directory type defined in :py:class:`~Pegasus.api.site_catalog.DirectoryType` (e.g. :code:`Directory.SHARED_SCRATCH` or :code:`Directory.LOCAL_STORAGE`)
         :type directory_type: _DirectoryType
-        :param path: directory path 
+        :param path: directory path
         :type path: Union[str, Path]
         :raises ValueError: directory_type must be one of :py:class:`~Pegasus.api.site_catalog.DirectoryType`
         :raises ValueError: path must be given as an absolute path

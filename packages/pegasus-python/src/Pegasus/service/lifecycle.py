@@ -35,7 +35,7 @@ def _basic_auth_response():
 
 def _is_user_an_admin(username):
     """
-        Check if user ia a valid admin user.
+    Check if user ia a valid admin user.
     """
     admin_users = current_app.config["ADMIN_USERS"]
 

@@ -61,13 +61,11 @@ DATA_DIR = os.path.join(os.path.dirname(Pegasus.netlogger.__file__), "data")
 
 
 class ConfigError(Exception):
-    """Use this exception for configuration-time error handling.
-    """
+    """Use this exception for configuration-time error handling."""
 
 
 class DBConnectError(Exception):
-    """Used for failed database connections.
-    """
+    """Used for failed database connections."""
 
 
 ## Classes
@@ -130,8 +128,7 @@ class FIFODict:
     """
 
     class CircularBuffer:
-        """Specialized circular buffer
-        """
+        """Specialized circular buffer"""
 
         def __init__(self, size):
             self._data = []
@@ -215,8 +212,7 @@ def parseDatetime(d, utc=False):
 
 
 class ProgressMeter:
-    """A simple textual progress meter.
-    """
+    """A simple textual progress meter."""
 
     REPORT_INTERVAL = 1000
 
@@ -308,8 +304,7 @@ def mostRecentFile(dir, file_pattern, after_time=None):
 
 
 def daemonize(log=None, root_log=None, close_fds=True):
-    """Make current process into a daemon.
-    """
+    """Make current process into a daemon."""
     # Do a double-fork so that the daemon process is completely
     # detached from its parent (it becomes a child of init).
     # For details the classic text is:
@@ -453,8 +448,7 @@ class ThrottleTimer:
         self.min_sleep_sec = min_sleep_sec
 
     def start(self):
-        """Start the timer.
-        """
+        """Start the timer."""
         self.t0 = time.time()
 
     def throttle(self):
@@ -485,8 +479,7 @@ class NullThrottleTimer(ThrottleTimer):
 
 
 class NullFile:
-    """Null-object pattern for 'file' class.
-    """
+    """Null-object pattern for 'file' class."""
 
     def __init__(self, name="(null)", mode="r", buffering=None):
         self.name = name
@@ -539,8 +532,7 @@ class NullFile:
 
 
 def rm_rf(d):
-    """Remove directories and their contents, recursively.
-    """
+    """Remove directories and their contents, recursively."""
     for path in (os.path.join(d, f) for f in os.listdir(d)):
         if os.path.isdir(path):
             rm_rf(path)
@@ -628,8 +620,7 @@ class IncConfigObj(configobj.ConfigObj):
         return self._has_logging_section
 
     def _setHasLoggingSection(self, value):
-        """Set whether configuration has a [logging] section.
-        """
+        """Set whether configuration has a [logging] section."""
         self._has_logging_section = value
 
 
@@ -722,13 +713,11 @@ class ScriptOption(Option):
 
 
 def noop(*args, **kwargs):
-    """Handy no-operation function.
-    """
+    """Handy no-operation function."""
 
 
 def as_bool(x):
-    """Convert value (possibly a string) into a boolean.
-    """
+    """Convert value (possibly a string) into a boolean."""
     if x is True or x is False:
         return x
     if isinstance(x, int):
@@ -789,8 +778,7 @@ def parseParams(opt):
 
 
 def getProgFromFile(f):
-    """Get program name from __file__.
-    """
+    """Get program name from __file__."""
     if f.endswith(".py"):
         f = f[:-3]
     return os.path.basename(f)

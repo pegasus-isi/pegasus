@@ -116,8 +116,7 @@ HASH_FIELD = "nlhash"
 
 
 def quotestr(v):
-    """Quote a string value to be output.
-    """
+    """Quote a string value to be output."""
     if not v:
         v = '""'
     elif " " in v or "\t" in v or '"' in v or "=" in v:
@@ -150,8 +149,7 @@ def setGuid(id, env=GID_ENV):
 
 
 def clearGuid(env=GID_ENV):
-    """Unset guid
-    """
+    """Unset guid"""
     old_gid = os.environ.get(env, None)
     if old_gid:
         del os.environ[env]
@@ -247,8 +245,7 @@ class Log:
         float_time=False,
         meta={},
     ):
-        """Constructor.
-        """
+        """Constructor."""
         self._logfile = None
         self._float_time = float_time
         self._pretty = pretty
@@ -301,20 +298,18 @@ class Log:
             self._pfx = prefix + "."
 
     def debugging(self):
-        """Return whether the level >= debug.
-        """
+        """Return whether the level >= debug."""
         return self._level >= Level.DEBUG
 
     def flush(self):
-        """Flush output object.
-        """
+        """Flush output object."""
         if self._logfile:
             self._logfile.flush()
 
     def write(self, event="event", ts=None, level=Level.INFO, **kw):
         """Write a NetLogger string.
-           If there is a logfile, returns None
-           Otherwise, returns a string that would have been written.
+        If there is a logfile, returns None
+        Otherwise, returns a string that would have been written.
         """
         if self._level != Level.ALL and level > self._level:
             if self._logfile:

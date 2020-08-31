@@ -169,7 +169,7 @@ class ReplicaCatalog(Writable):
 
                 # Example 3: Specifying a default location for all lfns that don't match any
                 # regular expressions. Note that this should be the last entry into the replica
-                # catalog if used. 
+                # catalog if used.
 
                 rc.add_regex("local", ".*", "/Volumes/data/input/[0]")
 
@@ -206,7 +206,7 @@ class ReplicaCatalog(Writable):
     ):
         """
         add_replica(self, site: str, lfn: Union[str, File], pfn: Union[str, Path], checksum: Dict[str, str] = dict(), metadata: Dict[str, Union[int, str, float]] = dict())
-        Add an entry to this replica catalog. 
+        Add an entry to this replica catalog.
 
             .. code-block:: python
 
@@ -216,10 +216,10 @@ class ReplicaCatalog(Writable):
 
                 # Example 2: Adding metadata and a checksum
                 rc.add_replica(
-                    "local", 
-                    "in.txt", 
-                    "/home/ryan/wf/in.txt", 
-                    checksum={"sha256": "abc123"}, 
+                    "local",
+                    "in.txt",
+                    "/home/ryan/wf/in.txt",
+                    checksum={"sha256": "abc123"},
                     metadata={"creator": "pegasus"}
                 )
 
@@ -238,8 +238,8 @@ class ReplicaCatalog(Writable):
         :type checksum: Dict[str, str], optional
         :param metadata: metadata key value pairs associated with this lfn such as :code:`{"created": "Thu Jun 18 22:18:36 PDT 2020", "owner": "pegasus"}`, defaults to :code:`{}`
         :type metadata: Dict[str, Union[int, str, float]], optional
-        :raises ValueError: if pfn is given as a :code:`pathlib.Path`, it must be an absolute path 
-        :raises ValueError: an unsupported checksum type was given 
+        :raises ValueError: if pfn is given as a :code:`pathlib.Path`, it must be an absolute path
+        :raises ValueError: an unsupported checksum type was given
         """
 
         # handle Path obj if given for pfn

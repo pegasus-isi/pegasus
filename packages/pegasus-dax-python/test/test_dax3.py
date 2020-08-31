@@ -1172,7 +1172,7 @@ class TestADAG(unittest.TestCase):
 
     def testGetJobFiles(self):
         """Given a job, should be able to obtain a set of
-            its input and output files"""
+        its input and output files"""
         a = ADAG("adag")
         j = Job("job")
 

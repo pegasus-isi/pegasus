@@ -81,7 +81,7 @@ monitord_shutdown_time = 0
 
 def dagman_launch(dagman_bin, arguments=[]):
     """Launches the condor_dagman program with all
-       the arguments passed to pegasus-dagman"""
+    the arguments passed to pegasus-dagman"""
     if dagman_bin is not None:
         arguments.insert(0, "condor_scheduniv_exec." + os.getenv("CONDOR_ID"))
         try:

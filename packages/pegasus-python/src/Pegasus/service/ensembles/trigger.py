@@ -47,9 +47,9 @@ class TriggerManagerMessage:
 # --- manager ------------------------------------------------------------------
 class TriggerManager(Thread):
     """
-    Manager to be spawned by the pegasus-em server process. It will listen for 
-    commands (in the form of TriggerManagerMessage's) by a peagsus-em client. 
-    Any triggers created will be managed by this class. 
+    Manager to be spawned by the pegasus-em server process. It will listen for
+    commands (in the form of TriggerManagerMessage's) by a peagsus-em client.
+    Any triggers created will be managed by this class.
     """
 
     def __init__(self):

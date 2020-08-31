@@ -28,8 +28,7 @@ _logger_class = None
 
 
 def setLoggerClass(clazz):
-    """Set the class used by NetLogger logging
-     """
+    """Set the class used by NetLogger logging"""
     global _logger_class
     _logger_class = clazz
 
@@ -64,8 +63,7 @@ def get_logger(filename):
 
 
 def get_root_logger():
-    """Return root for all NetLogger loggers.
-    """
+    """Return root for all NetLogger loggers."""
     return _logger("")  # logging.getLogger(PROJECT_NAMESPACE)
 
 
@@ -328,8 +326,7 @@ class FakeBPLogger(logging.Logger):
 
 
 def profile(func):
-    """ decorator for start,end event function profiling with netlogger.
-    """
+    """decorator for start,end event function profiling with netlogger."""
     if os.getenv("NETLOGGER_ON", False) in ("off", "0", "no", "false", "", False):
         return func
     if not isinstance(func, types.FunctionType):
@@ -359,7 +356,7 @@ def profile(func):
 
 
 def profile_result(func):
-    """ decorator for start,end event function profiling with netlogger.
+    """decorator for start,end event function profiling with netlogger.
     return value is logged as result.
     """
     if os.getenv("NETLOGGER_ON", False) in ("off", "0", "no", "false", "", False):
@@ -391,7 +388,7 @@ def profile_result(func):
 
 
 class Profiler(type):
-    """ metaclass that will wrap all user defined methods with start and end event logs.
+    """metaclass that will wrap all user defined methods with start and end event logs.
     Currently wrapping only instancemethod type.
 
     Variables:
@@ -411,7 +408,7 @@ class Profiler(type):
 
     @staticmethod
     def __profile_method(func):
-        """ decorator for start,end event method profiling with netlogger
+        """decorator for start,end event method profiling with netlogger
         skips any classmethod or staticmethod types.
         """
         if not isinstance(func, types.FunctionType):
@@ -460,7 +457,7 @@ class Profiler(type):
 
 
 class MethodProfiler(Profiler):
-    """ metaclass that will wrap all user defined methods with start and end event logs.
+    """metaclass that will wrap all user defined methods with start and end event logs.
     Currently wrapping only instancemethod type.
     """
 
@@ -468,7 +465,7 @@ class MethodProfiler(Profiler):
 
 
 class BasicProfiler(Profiler):
-    """ metaclass does not wrap methods with 'start' and 'end' tags, to do that use 'Profiler'.
+    """metaclass does not wrap methods with 'start' and 'end' tags, to do that use 'Profiler'.
     Useful for classes where one only wants to do 'precision' logging.
     """
 

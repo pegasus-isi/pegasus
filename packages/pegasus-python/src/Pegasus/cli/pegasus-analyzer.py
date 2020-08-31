@@ -1473,8 +1473,8 @@ def analyze_db(config_properties):
 
 def addon(options):
     """
-        This function constructs a command line invocation that needs to be passed for invoking for a sub workflow.
-        Only a certain subset of options are propogated to the sub workflow invocations if passed.
+    This function constructs a command line invocation that needs to be passed for invoking for a sub workflow.
+    Only a certain subset of options are propogated to the sub workflow invocations if passed.
     """
     cmd_line_args = ""
 
