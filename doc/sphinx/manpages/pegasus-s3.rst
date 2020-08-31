@@ -264,16 +264,11 @@ Configuration Variables
 **endpoint** (site)
    The URL of the web service endpoint.
 
-**max_object_size** (site)
-   The maximum size of an object in GB (default: 5GB)
+**batch_delete** (site)
+   Whether to perform deletions in batches per bucket. Defaults to ``True``.
 
-**multipart_uploads** (site)
-   Does the service support multipart uploads (True/False, default:
-   False)
-
-**ranged_downloads** (site)
-   Does the service support ranged downloads? (True/False, default:
-   False)
+**batch_delete_size** (site)
+   Size of each batch when ``batch_delete=True``. Defaults to ``1000``.
 
 **access_key** (identity)
    The access key for the identity
@@ -282,23 +277,17 @@ Configuration Variables
    The secret key for the identity
 
 
-
 Example Configuration
 ---------------------
 
 This is an example configuration that specifies a two sites (amazon and
 magellan) and three identities (``pegasus@amazon``,\ ``juve@magellan``,
-and ``voeckler@magellan``). For the amazon site the maximum object size
-is 5TB, and the site supports both multipart uploads and ranged
-downloads, so both uploads and downloads can be done in parallel.
+and ``voeckler@magellan``). 
 
 ::
 
    [amazon]
    endpoint = https://s3.amazonaws.com/
-   max_object_size = 5120
-   multipart_uploads = True
-   ranged_downloads = True
 
    [pegasus@amazon]
    access_key = 90c4143642cb097c88fe2ec66ce4ad4e

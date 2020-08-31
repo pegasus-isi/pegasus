@@ -102,9 +102,6 @@ LOCATIONS = {
 }
 
 DEFAULT_CONFIG = {
-    "max_object_size": str(5),
-    "multipart_uploads": str(False),
-    "ranged_downloads": str(False),
     "batch_delete": str(True),
     "batch_delete_size": str(1000),
 }
@@ -681,7 +678,6 @@ def put(args):
         uri.key = os.path.basename(path)
 
     config = get_config(args)
-    config.getint(uri.site, "max_object_size")
 
     # get s3 client with associated endpoint
     s3 = get_s3_client(config, uri)
