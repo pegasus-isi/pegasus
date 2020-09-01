@@ -36,7 +36,7 @@ COLORS = [
 
 
 def rgb2hex(r, g, b):
-    return "#{:02x}{:02x}{:02x}".format(r * 255, g * 255, b * 255)
+    return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
 
 
 # Generate some colors to add to the list
