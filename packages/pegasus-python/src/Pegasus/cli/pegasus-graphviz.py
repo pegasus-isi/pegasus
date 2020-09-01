@@ -6,6 +6,7 @@ import sys
 import xml.sax
 import xml.sax.handler
 from optparse import OptionParser
+from functools import cmp_to_key
 
 COLORS = [
     "#1b9e77",
@@ -390,7 +391,7 @@ def transitivereduction(dag):
         # We need to sort the children in topological order, otherwise the
         # reduction won't work properly. Sorting by level should produce
         # a valid topological ordering.
-        v.children.sort(lvlcmp)
+        v.children.sort(key=cmp_to_key(lvlcmp))
 
         # Compute the transitive closure and identify redundant edges
         reduced = []
