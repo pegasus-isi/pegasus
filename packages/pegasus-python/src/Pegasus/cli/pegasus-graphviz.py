@@ -322,15 +322,20 @@ def remove_xforms(dag, xforms):
     nodes = dag.nodes
     if len(xforms) == 0:
         return
-    for id in nodes.keys():
-        node = nodes[id]
+
+    to_delete = []
+    for _id in nodes.keys():
+        node = nodes[_id]
         if isinstance(node, Job) and node.xform in xforms:
-            print("Removing %s" % job.id)
+            print("Removing %s" % node.id)
             for p in node.parents:
                 p.children.remove(node)
             for c in node.children:
                 c.parents.remove(node)
-            del nodes[id]
+            to_delete.append(_id)
+
+    for _id in to_delete:
+        del nodes[_id]
 
 
 def transitivereduction(dag):
