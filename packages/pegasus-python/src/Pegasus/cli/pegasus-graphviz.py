@@ -5,8 +5,10 @@ import os
 import sys
 import xml.sax
 import xml.sax.handler
-from optparse import OptionParser
 from functools import cmp_to_key
+from optparse import OptionParser
+
+from Pegasus import yaml
 
 COLORS = [
     "#1b9e77",
@@ -315,6 +317,63 @@ def parse_dagfile(fname):
     return dag
 
 
+def parse_yamlfile(fname, include_files):
+    """
+    Parse a DAG from a YAML workflow file.
+    """
+    with open(fname) as f:
+        wf = yaml.load(f)
+
+    dag = DAG()
+
+    for job in wf["jobs"]:
+        # parse job
+        j = Job()
+        j.xform = job["name"]
+        j.id = j.label = job["id"]
+        dag.nodes[j.id] = j
+
+        # parse uses (files)
+        if include_files:
+            for use in job["uses"]:
+                if use["lfn"] in dag.nodes:
+                    f = dag.nodes[use["lfn"]]
+                else:
+                    f = File()
+                    f.id = f.label = use["lfn"]
+                    dag.nodes[f.id] = f
+
+                link_type = use["type"]
+
+                if link_type == "input":
+                    j.parents.append(f)
+                    f.children.append(j)
+                elif link_type == "output":
+                    j.children.append(f)
+                    f.parents.append(j)
+                elif link_type == "inout":
+                    print(
+                        "WARNING: inout file {} of {} creates a cycle.".format(
+                            f.id, j.id
+                        )
+                    )
+                    f.children.append(j)
+                    f.parents.append(j)
+                    j.parents.append(f)
+                    j.children.append(f)
+                elif link_type == "none":
+                    pass
+                else:
+                    raise Exception("Unrecognized link value: {}".format(link_type))
+
+    for dep in wf["jobDependencies"]:
+        for child in dep["children"]:
+            dag.nodes[dep["id"]].children.append(dag.nodes[child])
+            dag.nodes[child].parents.append(dag.nodes[dep["id"]])
+
+    return dag
+
+
 def remove_xforms(dag, xforms):
     """
     Remove transformations in the DAG by name
@@ -575,8 +634,14 @@ DAGMan file, or a Pegasus DAX file."""
     dagfile = args[0]
     if dagfile.endswith(".dag"):
         dag = parse_dagfile(dagfile)
-    else:
+    elif dagfile.endswith(".dax") or dagfile.endswith(".xml"):
         dag = parse_daxfile(dagfile, options.files)
+    elif dagfile.lower().endswith(".yml"):
+        dag = parse_yamlfile(dagfile, options.files)
+    else:
+        raise RuntimeError(
+            "Unrecognizable file format. Acceptable formats are '.dag', '.dax', '.xml', '.yml'"
+        )
 
     remove_xforms(dag, options.remove)
 
