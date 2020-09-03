@@ -329,7 +329,14 @@ def parse_yamlfile(fname, include_files):
     for job in wf["jobs"]:
         # parse job
         j = Job()
-        j.xform = job["name"]
+
+        # compute job
+        if job["type"] == "job":
+            j.xform = job["name"]
+        # subworkflow job
+        else:
+            j.xform = job["file"]
+
         j.id = j.label = job["id"]
         dag.nodes[j.id] = j
 
