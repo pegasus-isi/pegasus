@@ -4,7 +4,8 @@
 pegasus-graphviz
 ================
 
-Convert a DAX or DAG into a graphviz dot file
+Convert a Pegasus workflow YAML or DAX file, or Condor DAGMan file into a 
+graphviz dot file
 
    ::
 
@@ -16,7 +17,8 @@ Description
 ===========
 
 pegasus-graphviz is a tool that generates a graphviz DOT file based on a
-Pegasus DAX file or DAGMan DAG file.
+Pegasus DAX file or DAGMan DAG file. **FILE** in ``pegasus-graphviz [options] FILE``
+must have the extension ``.yml``, ``.dax``, ``.xml``, or ``.dag``.
 
 
 
@@ -51,7 +53,20 @@ Options
    Include files. This option is only valid for DAX files. [default:
    false]
 
+Example
+=======
 
+::
+
+   pegasus-graphviz workflow.yml
+
+::
+
+   pegasus-graphviz workflow.dax
+
+:: 
+
+   pegasus-graphviz workflow.yml --label=xform-id --output=wf.dot
 
 Author
 ======
