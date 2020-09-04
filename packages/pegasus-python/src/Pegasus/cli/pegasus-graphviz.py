@@ -557,7 +557,7 @@ def main():
     usage = "%prog [options] FILE"
     description = """Parses FILE and generates a DOT-formatted
 graphical representation of the DAG. FILE can be a Condor
-DAGMan file, or a Pegasus DAX file."""
+DAGMan file, Pegasus YAML file, or Pegasus DAX file."""
     parser = OptionParser(usage=usage, description=description)
     parser.add_option(
         "-s",
@@ -593,7 +593,7 @@ DAGMan file, or a Pegasus DAX file."""
         dest="remove",
         metavar="XFORM",
         default=[],
-        help="Remove jobs from the workflow by transformation name",
+        help="Remove jobs from the workflow by transformation name. For subworkflows, use the workflow file name.",
     )
     parser.add_option(
         "-W",
@@ -619,7 +619,7 @@ DAGMan file, or a Pegasus DAX file."""
         action="store_true",
         dest="files",
         default=False,
-        help="Include files. This option is only valid for DAX files. [default: false]",
+        help="Include files. This option is only valid for YAML and DAX files. [default: false]",
     )
 
     (options, args) = parser.parse_args()
