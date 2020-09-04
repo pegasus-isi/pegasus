@@ -7,7 +7,7 @@ import time
 from functools import partial
 from os import path
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Literal, Union
 
 from Pegasus import braindump, yaml
 
@@ -62,6 +62,7 @@ class Client:
         self._remove = path.join(base, "pegasus-remove")
         self._analyzer = path.join(base, "pegasus-analyzer")
         self._statistics = path.join(base, "pegasus-statistics")
+        self._graph = path.join(base, "pegasus-graphviz")
 
     def plan(
         self,
@@ -343,6 +344,47 @@ class Client:
 
         self._log.info(
             "\n######################\n# pegasus-statistics #\n######################"
+        )
+
+        self._exec(cmd)
+
+    def graph(
+        self,
+        workflow_file: str,
+        no_simplify: bool = True,
+        label: Literal[
+            "label", "xform", "id", "xform-id", "label-xform", "label-id"
+        ] = "label",
+        output: str = None,
+        remove: List[str] = None,
+        width: int = None,
+        height: int = None,
+    ):
+
+        cmd = [self._graph]
+
+        cmd.append(workflow_file)
+
+        if not no_simplify:
+            cmd.append("--no-simplify")
+
+        cmd.append("--label={}".format(label))
+
+        if output:
+            cmd.append("--output={}".format(output))
+
+        if remove:
+            for item in remove:
+                cmd.append("--remove={}".format(item))
+
+        if width:
+            cmd.append("--width={}".format(width))
+
+        if height:
+            cmd.append("--height={}".format(height))
+
+        self._log.info(
+            "\n####################\n# pegasus-graphviz #\n####################"
         )
 
         self._exec(cmd)

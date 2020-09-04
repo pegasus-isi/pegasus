@@ -238,6 +238,32 @@ class TestClient:
             ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"], stderr=-1, stdout=-1
         )
 
+    def test_graph(self, mock_subprocess, client):
+        client.graph(
+            workflow_file="workflow.yml",
+            no_simplify=False,
+            label="label",
+            output="wf.dot",
+            remove=["tr1", "tr2"],
+            width=256,
+            height=256,
+        )
+        subprocess.Popen.assert_called_once_with(
+            [
+                "/path/bin/pegasus-graphviz",
+                "workflow.yml",
+                "--no-simplify",
+                "--label=label",
+                "--output=wf.dot",
+                "--remove=tr1",
+                "--remove=tr2",
+                "--width=256",
+                "--height=256",
+            ],
+            stderr=-1,
+            stdout=-1,
+        )
+
     def test__exec(self, mock_subprocess, client):
         client._exec("ls")
         with pytest.raises(ValueError) as e:
