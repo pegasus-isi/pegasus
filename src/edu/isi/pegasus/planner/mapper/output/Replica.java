@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.mapper.output;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Boolean;
+import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
@@ -75,7 +76,7 @@ public class Replica implements OutputMapper {
     private static final String SHORT_NAME = "Replica";
 
     /** The default replica catalog backend. */
-    private String DEFAULT_REPLICA_BACKEND = "Regex";
+    private static final String DEFAULT_REPLICA_BACKEND = "Regex";
 
     /** The handle to the logger. */
     protected LogManager mLogger;
@@ -123,8 +124,21 @@ public class Replica implements OutputMapper {
         // we only are reading not inserting any entries
         props.setProperty(Replica.READ_ONLY_KEY, "true");
 
-        catalogImplementor =
-                (catalogImplementor == null) ? DEFAULT_REPLICA_BACKEND : catalogImplementor;
+        if (catalogImplementor == null) {
+            // PM-1675 we default to old Regex (default until 4.9.x) if file
+            // is not of type yaml
+            catalogImplementor = Replica.DEFAULT_REPLICA_BACKEND;
+
+            // check if the file backend is specified
+            String key = "file";
+            if (props.containsKey(key)) {
+                String fileBackend = props.getProperty(key);
+                if (FileDetector.isTypeYAML(fileBackend)) {
+                    catalogImplementor = ReplicaFactory.YAML_CATALOG_IMPLEMENTOR;
+                }
+            }
+        }
+
         try {
             mRCCatalog = ReplicaFactory.loadInstance(catalogImplementor, bag, props);
         } catch (Exception e) {

@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
 import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.test.TestSetup;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import org.junit.After;
@@ -42,6 +43,13 @@ public class ReplicaOutputMapperTest {
 
     /** The properties used for this test. */
     private static final String PROPERTIES_BASENAME = "replica.properties";
+
+    /** The prefix for the property subset for connecting to the replica backend */
+    public static final String REPLICA_MAPPER_PROPERTY_KEY = "pegasus.dir.storage.mapper.replica";
+
+    /** The prefix for the property subset for connecting to the replica backend */
+    public static final String REPLICA_MAPPER_FILE_PROPERTY_KEY =
+            "pegasus.dir.storage.mapper.replica.file";
 
     private PegasusBag mBag;
 
@@ -92,6 +100,8 @@ public class ReplicaOutputMapperTest {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.output.mapper.Replica", "set", Integer.toString(set++));
         mProps.setProperty(OutputMapperFactory.PROPERTY_KEY, "Replica");
+        // make sure that the file property is unset
+        mProps.removeProperty(ReplicaOutputMapperTest.REPLICA_MAPPER_PROPERTY_KEY);
         OutputMapper mapper = OutputMapperFactory.loadInstance(new ADag(), mBag);
 
         for (FileServer.OPERATION operation : FileServer.OPERATION.values()) {
@@ -127,6 +137,30 @@ public class ReplicaOutputMapperTest {
         mLogger.logEventCompletion();
     }
 
+    @Test
+    public void yamlReplicaBackend() {
+        int set = 1;
+        // test with no deep storage structure enabled
+        mLogger.logEventStart("test.output.mapper.Replica", "set", Integer.toString(set++));
+        mProps.setProperty(OutputMapperFactory.PROPERTY_KEY, "Replica");
+
+        // make sure that the file property is unset
+        mProps.removeProperty(ReplicaOutputMapperTest.REPLICA_MAPPER_PROPERTY_KEY);
+        mProps.setProperty(
+                ReplicaOutputMapperTest.REPLICA_MAPPER_FILE_PROPERTY_KEY,
+                this.mTestSetup.getInputDirectory() + File.separator + "replicas.yml");
+        OutputMapper mapper = OutputMapperFactory.loadInstance(new ADag(), mBag);
+
+        for (FileServer.OPERATION operation : FileServer.OPERATION.values()) {
+            // replica mapper maps all operations to the same pfn
+            String lfn = "f0";
+            String expected1 = "/Users/vahi/Pegasus/PM-1675-output-mapper/" + lfn;
+            String pfn = mapper.map(lfn, "local", operation).getValue();
+            assertEquals(lfn + " not mapped to right location ", expected1, pfn);
+        }
+        mLogger.logEventCompletion();
+    }
+
     @After
     public void tearDown() {
         mLogger = null;
@@ -142,7 +176,7 @@ public class ReplicaOutputMapperTest {
      */
     protected List<String> getPropertyKeysForSanitization() {
         List<String> keys = new LinkedList();
-        keys.add("pegasus.dir.storage.mapper.replica.file");
+        keys.add(REPLICA_MAPPER_FILE_PROPERTY_KEY);
         keys.add(PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY);
         return keys;
     }
