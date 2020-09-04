@@ -1,0 +1,12 @@
+Package: pegasus
+Type: Package
+Title: API for Generating Pegasus Abstract Workflows
+Version: 5.0
+Authors@R: c(person("Rafael Ferreira da Silva", role = c("aut", "cre"), email = "rafsilva@isi.edu"))
+Author: Rafael Ferreira da Silva [aut, cre]
+Maintainer: Rafael Ferreira da Silva <rafsilva@isi.edu>
+Description: The classes in this package can be used to generate DAXes that can be read by Pegasus.
+License: Apache License (== 2.0)
+LazyData: TRUE
+URL: https://pegasus.isi.edu
+RoxygenNote: 7.1.1
