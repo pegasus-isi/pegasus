@@ -5,6 +5,7 @@ import os
 import sys
 import xml.sax
 import xml.sax.handler
+from collections import OrderedDict
 from functools import cmp_to_key
 from optparse import OptionParser
 
@@ -54,7 +55,7 @@ for l in [0.70, 0.55]:
 
 class DAG:
     def __init__(self):
-        self.nodes = {}
+        self.nodes = OrderedDict()
 
 
 class Node:
