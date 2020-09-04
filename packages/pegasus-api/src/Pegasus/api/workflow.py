@@ -3,7 +3,7 @@ from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import wraps
 from pathlib import Path
-from typing import Dict, List, Optional, TextIO, Union
+from typing import Dict, List, Literal, Optional, TextIO, Union
 
 from ._utils import _chained, _get_enum_str
 from .errors import DuplicateError, NotFoundError, PegasusError
@@ -941,6 +941,58 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :return: self
         """
         self._client.statistics(self._submit_dir, verbose=verbose)
+
+    @_chained
+    @_needs_client
+    def graph(
+        self,
+        no_simplify: bool = True,
+        label: Literal[
+            "label", "xform", "id", "xform-id", "label-xform", "label-id"
+        ] = "label",
+        output: Optional[str] = None,
+        remove: Optional[List[str]] = None,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+    ):
+        """
+        graph(self, no_simplify: bool = True, label: Literal["label", "xform", "id", "xform-id", "label-xform", "label-id"] = "label", output: Optional[str] = None, remove: Optional[List[str]] = None, width: Optional[int] = None, height: Optional[int] = None)
+        Convert workflow into a graphviz dot format
+
+        :param no_simplify: when set to :code:`False` a transitive reduction is performed to remove extra edges, defaults to True
+        :type no_simplify: bool, optional
+        :param label: what attribute to use for labels, defaults to "label"
+        :type label: Literal["label", "xform", "id", "xform-id", "label-xform", "label-id"], optional
+        :param output: write output to a file; if none is given output is written to stdout, defaults to None
+        :type output: Optional[str], optional
+        :param remove: remove one or more nodes by transformation name, defaults to None
+        :type remove: Optional[List[str]], optional
+        :param width: width of the digraph, defaults to None
+        :type width: Optional[int], optional
+        :param height: height of the digraph, defaults to None
+        :type height: Optional[int], optional
+        :return: self
+        :raises PegasusError: workflow must be written to a file prior to invoking :py:class:`~Pegasus.api.workflow.Workflow.graph` with :py:class:`~Pegasus.api.workflow.Workflow.write` or :py:class:`~Pegasus.api.workflow.Workflow.plan`
+        :raises ValueError: label must be one of :code:`label`, :code:`xform`, :code:`id`, :code:`xform-id`, :code:`label-xform`, or :code:`label-id`
+        """
+
+        # check that workflow has been written
+        if not self._path:
+            raise PegasusError(
+                "Workflow must be written to a file prior to invoking Workflow.graph"
+                "using Workflow.write or Workflow.plan"
+            )
+
+        # check that correct label parameter is used
+        labels = {"label", "xform", "id", "xform-id", "label-xform", "label-id"}
+        if label not in labels:
+            raise ValueError(
+                "Invalid label: {}, label must be one of {}".format(label, labels)
+            )
+
+        self._client.graph(
+            self._path, no_simplify, label, output, remove, width, height
+        )
 
     @_chained
     def add_jobs(self, *jobs: Union[Job, SubWorkflow]):

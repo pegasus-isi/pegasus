@@ -1470,6 +1470,43 @@ class TestWorkflow:
             wf._submit_dir, verbose=0
         )
 
+    def test_graph(self, wf, mocker):
+        mocker.patch("Pegasus.client._client.Client.graph")
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        wf._path = "workflow.yml"
+        wf.graph(
+            no_simplify=True,
+            label="label",
+            output="wf.dot",
+            remove=["tr1"],
+            width=256,
+            height=256,
+        )
+
+        Pegasus.client._client.Client.graph.assert_called_once_with(
+            "workflow.yml", True, "label", "wf.dot", ["tr1"], 256, 256,
+        )
+
+    def test_graph_workflow_not_yet_written(self, wf, mocker):
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        with pytest.raises(PegasusError) as e:
+            wf.graph()
+
+        assert "Workflow must be written" in str(e)
+
+    def test_graph_invalid_label(self, wf, mocker):
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        # must be set so the label check can be reached
+        wf._path = "workflow.yml"
+
+        with pytest.raises(ValueError) as e:
+            wf.graph(label="bad-label")
+
+        assert "Invalid label: bad-label" in str(e)
+
 
 @pytest.fixture(scope="function")
 def obj():
