@@ -327,8 +327,8 @@ this example.
 R
 =
 
-The R DAX API provided with the Pegasus distribution allows easy
-creation of complex and large workflows in R environments. The API
+The R Pegasus API provided with the Pegasus distribution allows easy
+creation of complex and large scale workflows in R environments. The API
 follows the `Google' R style
 guide <http://google.github.io/styleguide/Rguide.xml>`__, and all
 objects and methods are defined using the *S3* OOP system.
@@ -341,46 +341,47 @@ The API can be installed as follows:
 
       install.packages("/path/to/source/package.tar.gz", repo=NULL)
 
-   The source package can be obtained using ``pegasus-config --r`` or from the `Pegasus' downloads <http://pegasus.isi.edu/downloads>`__ page.
+   The source package can be obtained using ``pegasus-config --r`` or
+   from the `Pegasus' downloads <http://pegasus.isi.edu/downloads>`__ page.
 
 The R API is well documented using
-`Roxygen <http://http://roxygen.org>`__. In an R environment, it can be
-accessed using ``help(package=dax3)``. A `PDF
-manual <r/dax3-manual.pdf>`__ is also available.
+`Roxygen2 <https://cran.r-project.org/web/packages/roxygen2/vignettes/roxygen2.html>`__. In an R environment, it can be
+accessed using ``help(package=pegasus)``. A `PDF
+manual <r/pegasus-manual.pdf>`__ is also available.
 
-The steps involved in creating a DAX using the API are
+The steps involved in creating an abstrace workflow using the API include:
 
-1.  Create a new *ADAG* object
+1.  Create a new *Workflow* object
 
 2.  Add any metadata attributes associated with the whole workflow.
 
-3.  Add any Workflow notification elements.
+3.  Add any workflow notification elements.
 
 4.  Create *File* objects as necessary. You can augment the files with
-    physical information, if you want to include them into your DAX.
+    physical information, if you want to include them into your workflow.
     Otherwise, the physical information is determined from the replica
     catalog.
 
 5.  (Optional) Create *Executable* objects, if you want to include your
-    transformation catalog into your DAX. Otherwise, the translation of
+    transformation catalog into your workflow. Otherwise, the translation of
     a job/task into executable location happens with the transformation
     catalog.
 
 6.  Create a new *Job* object.
 
-7.  Add arguments, files, profiles, notifications and other information
-    to the *Job* object
+7.  Add arguments, files, profiles, notifications, and other information
+    to the *Job* object.
 
-8.  Add the job object to the *ADAG* object
+8.  Add the job object to the *Workflow* object.
 
-9.  Repeat step 4-6 as necessary.
+9.  Repeat steps 4-6 as necessary.
 
-10. Add all dependencies to the *ADAG* object.
+10. Add all dependencies to the *Workflow* object.
 
-11. Call the ``WriteXML()`` method on the *ADAG* object to render the
-    XML DAX file.
+11. Call the ``WriteYAML()`` method on the *Workflow* object to render the
+    YAML workflow file.
 
-An example R code that generates the diamond dax show previously is
+An example R code that generates the diamond workflow show previously is
 listed below. A workflow example code can be found in the Pegasus
 distribution in the ``examples/grid-blackdiamond-r`` directory as
 ``blackdiamond.R``:
@@ -392,7 +393,7 @@ distribution in the ``examples/grid-blackdiamond-r`` directory as
    library(dax3)
 
    # Create a DAX
-   diamond <- ADAG("diamond")
+   diamond <- Workflow("diamond")
 
    # Add some metadata
    diamond <- Metadata(diamond, "name", "diamond")
@@ -400,61 +401,61 @@ distribution in the ``examples/grid-blackdiamond-r`` directory as
 
    # Add input file to the DAX-level replica catalog
    a <- File("f.a")
-   a <- AddPFN(a, PFN("gsiftp://site.com/inputs/f.a","site"))
+   a <- AddPFN(a, PFN("gsiftp://site.com/inputs/f.a", "site"))
    a <- Metadata(a, "size", "1024")
    diamond <- AddFile(diamond, a)
 
    # Add executables to the DAX-level replica catalog
-   e_preprocess <- Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
-   e_preprocess <- Metadata(e_preprocess, "size", "2048")
-   e_preprocess <- AddPFN(e_preprocess, PFN("gsiftp://site.com/bin/preprocess","site"))
-   diamond <- AddExecutable(diamond, e_preprocess)
+   e.preprocess <- Executable(namespace="bd",name="process",version="4.0",os="linux",arch="x86_64")
+   e.preprocess <- Metadata(e.preprocess,"size","2048")
+   e.preprocess <- AddPFN(e.preprocess, PFN("gsiftp://site.com/bin/preprocess", "site"))
+   diamond <- AddExecutable(diamond, e.preprocess)
 
-   e_findrange <- Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
-   e_findrange <- AddPFN(e_findrange, PFN("gsiftp://site.com/bin/findrange","site"))
-   diamond <- AddExecutable(diamond, e_findrange)
+   e.findrange <- Executable(namespace="bd",name="frange",version="4.0",os="linux",arch="x86_64")
+   e.findrange <- AddPFN(e.findrange, PFN("gsiftp://site.com/bin/findrange", "site"))
+   diamond <- AddExecutable(diamond, e.findrange)
 
-   e_analyze <- Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
-   e_analyze <- AddPFN(e_analyze, PFN("gsiftp://site.com/bin/analyze","site"))
-   diamond <- AddExecutable(diamond, e_analyze)
+   e.analyze <- Executable(namespace="bd",name="analyze",version="4.0",os="linux",arch="x86_64")
+   e.analyze <- AddPFN(e.analyze, PFN("gsiftp://site.com/bin/analyze", "site"))
+   diamond <- AddExecutable(diamond, e.analyze)
 
    # Add a preprocess job
-   preprocess <- Job(e_preprocess)
+   preprocess <- Job(e.preprocess)
    preprocess <- Metadata(preprocess, "time", "60")
    b1 <- File("f.b1")
    b2 <- File("f.b2")
-   preprocess <- AddArguments(preprocess, list("-a preprocess","-T60","-i",a,"-o",b1,b2))
-   preprocess <- Uses(preprocess, a, link=DAX3.Link$INPUT)
-   preprocess <- Uses(preprocess, b1, link=DAX3.Link$OUTPUT, transfer=TRUE)
-   preprocess <- Uses(preprocess, b2, link=DAX3.Link$OUTPUT, transfer=TRUE)
+   preprocess <- AddArguments(preprocess, list("-a","preprocess","-T","3","-i",a,"-o",b1,b2))
+   preprocess <- Uses(preprocess, a, link=Pegasus.Link$INPUT)
+   preprocess <- Uses(preprocess, b1, link=Pegasus.Link$OUTPUT, transfer=TRUE)
+   preprocess <- Uses(preprocess, b2, link=Pegasus.Link$OUTPUT, transfer=TRUE)
    diamond <- AddJob(diamond, preprocess)
 
    # Add left Findrange job
-   frl <- Job(e_findrange)
+   frl <- Job(e.findrange)
    frl <- Metadata(frl, "time", "60")
    c1 <- File("f.c1")
-   frl <- AddArguments(frl, list("-a findrange","-T60","-i",b1,"-o",c1))
-   frl <- Uses(frl, b1, link=DAX3.Link$INPUT)
-   frl <- Uses(frl, c1, link=DAX3.Link$OUTPUT, transfer=TRUE)
+   frl <- AddArguments(frl, list("-a","findrange","-T","3","-i",b1,"-o",c1))
+   frl <- Uses(frl, b1, link=Pegasus.Link$INPUT)
+   frl <- Uses(frl, c1, link=Pegasus.Link$OUTPUT, transfer=TRUE)
    diamond <- AddJob(diamond, frl)
 
    # Add right Findrange job
-   frr <- Job(e_findrange)
+   frr <- Job(e.findrange)
    frr <- Metadata(frr, "time", "60")
    c2 <- File("f.c2")
-   frr <- AddArguments(frr, list("-a findrange","-T60","-i",b2,"-o",c2))
-   frr <- Uses(frr, b2, link=DAX3.Link$INPUT)
-   frr <- Uses(frr, c2, link=DAX3.Link$OUTPUT, transfer=TRUE)
+   frr <- AddArguments(frr, list("-a","findrange","-T","3","-i",b2,"-o",c2))
+   frr <- Uses(frr, b2, link=Pegasus.Link$INPUT)
+   frr <- Uses(frr, c2, link=Pegasus.Link$OUTPUT, transfer=TRUE)
    diamond <- AddJob(diamond, frr)
 
    # Add Analyze job
-   analyze <- Job(e_analyze)
+   analyze <- Job(e.analyze)
    analyze <- Metadata(analyze, "time", "60")
    d <- File("f.d")
-   analyze <- AddArguments(analyze, list("-a analyze","-T60","-i",c1,c2,"-o",d))
-   analyze <- Uses(analyze, c1, link=DAX3.Link$INPUT)
-   analyze <- Uses(analyze, c2, link=DAX3.Link$INPUT)
-   analyze <- Uses(analyze, d, link=DAX3.Link$OUTPUT, transfer=TRUE)
+   analyze <- AddArguments(analyze, list("-a","analyze","-T","3","-i",c1,c2,"-o",d))
+   analyze <- Uses(analyze, c1, link=Pegasus.Link$INPUT)
+   analyze <- Uses(analyze, c2, link=Pegasus.Link$INPUT)
+   analyze <- Uses(analyze, d, link=Pegasus.Link$OUTPUT, transfer=TRUE)
    diamond <- AddJob(diamond, analyze)
 
    # Add dependencies
@@ -463,8 +464,8 @@ distribution in the ``examples/grid-blackdiamond-r`` directory as
    diamond <- Depends(diamond, parent=frl, child=analyze)
    diamond <- Depends(diamond, parent=frr, child=analyze)
 
-   # Get generated diamond dax
-   WriteXML(diamond, stdout())
+   # Get generated diamond workflow
+   WriteYAML(diamond, stdout())
 
 .. _rest-api-monitoring:
 
