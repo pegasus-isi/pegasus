@@ -520,12 +520,15 @@ class emit_dot:
         self.out.write('    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n')
         self.out.write("    edge [arrowhead=normal,arrowsize=1.0]\n\n")
 
+        # Ensure that dot rendered in a deterministic manner
+        nodes = sorted(dag.nodes.values(), key=lambda n: n.id)
+
         # Render nodes
-        for n in dag.nodes.values():
+        for n in nodes:
             n.renderNode(self)
 
         # Render edges
-        for p in dag.nodes.values():
+        for p in nodes:
             for c in p.children:
                 c.renderEdge(self, p)
 

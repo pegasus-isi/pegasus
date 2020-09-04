@@ -14,7 +14,7 @@ def diamond_wf_file():
     fb1 = File("f.b1")
     fb2 = File("f.b2")
     fc1 = File("f.c1")
-    fc2 = File("c.c2")
+    fc2 = File("f.c2")
     fd = File("f.d")
 
     Workflow("blackdiamond").add_jobs(
@@ -105,25 +105,25 @@ class TestEmitDot:
             '    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n'
             "    edge [arrowhead=normal,arrowsize=1.0]\n\n"
             '    "ID0000001" [shape=ellipse,color="#000000",fillcolor="#1b9e77",label="ID0000001"]\n'
-            '    "f.b2" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.b2"]\n'
-            '    "f.b1" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.b1"]\n'
-            '    "f.a" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.a"]\n'
             '    "ID0000002" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="ID0000002"]\n'
-            '    "f.c1" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.c1"]\n'
             '    "ID0000003" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="ID0000003"]\n'
-            '    "c.c2" [shape=rect,color="#000000",fillcolor="#ffed6f",label="c.c2"]\n'
             '    "ID0000004" [shape=ellipse,color="#000000",fillcolor="#7570b3",label="ID0000004"]\n'
+            '    "f.a" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.a"]\n'
+            '    "f.b1" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.b1"]\n'
+            '    "f.b2" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.b2"]\n'
+            '    "f.c1" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.c1"]\n'
+            '    "f.c2" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.c2"]\n'
             '    "f.d" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.d"]\n'
             '    "ID0000001" -> "f.b2" [color="#000000"]\n'
             '    "ID0000001" -> "f.b1" [color="#000000"]\n'
-            '    "f.b2" -> "ID0000003" [color="#000000"]\n'
-            '    "f.b1" -> "ID0000002" [color="#000000"]\n'
-            '    "f.a" -> "ID0000001" [color="#000000"]\n'
             '    "ID0000002" -> "f.c1" [color="#000000"]\n'
-            '    "f.c1" -> "ID0000004" [color="#000000"]\n'
-            '    "ID0000003" -> "c.c2" [color="#000000"]\n'
-            '    "c.c2" -> "ID0000004" [color="#000000"]\n'
+            '    "ID0000003" -> "f.c2" [color="#000000"]\n'
             '    "ID0000004" -> "f.d" [color="#000000"]\n'
+            '    "f.a" -> "ID0000001" [color="#000000"]\n'
+            '    "f.b1" -> "ID0000002" [color="#000000"]\n'
+            '    "f.b2" -> "ID0000003" [color="#000000"]\n'
+            '    "f.c1" -> "ID0000004" [color="#000000"]\n'
+            '    "f.c2" -> "ID0000004" [color="#000000"]\n'
             "}\n"
         )
         # cleanup
@@ -148,18 +148,18 @@ class TestEmitDot:
             '    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n'
             "    edge [arrowhead=normal,arrowsize=1.0]\n\n"
             '    "ID0000001" [shape=ellipse,color="#000000",fillcolor="#1b9e77",label="ID0000001"]\n'
-            '    "analysis_output" [shape=rect,color="#000000",fillcolor="#ffed6f",label="analysis_output"]\n'
-            '    "analysis-wf.yml" [shape=rect,color="#000000",fillcolor="#ffed6f",label="analysis-wf.yml"]\n'
             '    "ID0000002" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="ID0000002"]\n'
-            '    "sleep-wf.yml" [shape=rect,color="#000000",fillcolor="#ffed6f",label="sleep-wf.yml"]\n'
+            '    "analysis-wf.yml" [shape=rect,color="#000000",fillcolor="#ffed6f",label="analysis-wf.yml"]\n'
+            '    "analysis_output" [shape=rect,color="#000000",fillcolor="#ffed6f",label="analysis_output"]\n'
             '    "ls" [shape=ellipse,color="#000000",fillcolor="#7570b3",label="ls"]\n'
             '    "ls_out.txt" [shape=rect,color="#000000",fillcolor="#ffed6f",label="ls_out.txt"]\n'
+            '    "sleep-wf.yml" [shape=rect,color="#000000",fillcolor="#ffed6f",label="sleep-wf.yml"]\n'
             '    "ID0000001" -> "analysis_output" [color="#000000"]\n'
-            '    "analysis_output" -> "ls" [color="#000000"]\n'
-            '    "analysis-wf.yml" -> "ID0000001" [color="#000000"]\n'
             '    "ID0000002" -> "ls" [color="#000000"]\n'
-            '    "sleep-wf.yml" -> "ID0000002" [color="#000000"]\n'
+            '    "analysis-wf.yml" -> "ID0000001" [color="#000000"]\n'
+            '    "analysis_output" -> "ls" [color="#000000"]\n'
             '    "ls" -> "ls_out.txt" [color="#000000"]\n'
+            '    "sleep-wf.yml" -> "ID0000002" [color="#000000"]\n'
             "}\n"
         )
 
