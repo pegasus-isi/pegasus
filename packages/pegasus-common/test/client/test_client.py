@@ -254,7 +254,7 @@ class TestClient:
                 "/path/bin/pegasus-graphviz",
                 "workflow.yml",
                 "--files",
-                "--no-simplify",
+                "--nosimplify",
                 "--label=label",
                 "--output=wf.dot",
                 "--remove=tr1",

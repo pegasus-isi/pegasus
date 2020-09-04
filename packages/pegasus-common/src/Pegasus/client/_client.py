@@ -368,7 +368,7 @@ class Client:
             cmd.append("--files")
 
         if not no_simplify:
-            cmd.append("--no-simplify")
+            cmd.append("--nosimplify")
 
         cmd.append("--label={}".format(label))
 
