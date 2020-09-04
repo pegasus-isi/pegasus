@@ -3,7 +3,7 @@ from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import wraps
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, TextIO, Union
+from typing import Dict, List, Optional, TextIO, Union
 
 from ._utils import _chained, _get_enum_str
 from .errors import DuplicateError, NotFoundError, PegasusError
@@ -947,9 +947,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def graph(
         self,
         no_simplify: bool = True,
-        label: Literal[
-            "label", "xform", "id", "xform-id", "label-xform", "label-id"
-        ] = "label",
+        label: str = "label",
         output: Optional[str] = None,
         remove: Optional[List[str]] = None,
         width: Optional[int] = None,

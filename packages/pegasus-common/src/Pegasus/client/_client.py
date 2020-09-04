@@ -7,7 +7,7 @@ import time
 from functools import partial
 from os import path
 from pathlib import Path
-from typing import Dict, List, Literal, Union
+from typing import Dict, List, Union
 
 from Pegasus import braindump, yaml
 
@@ -352,9 +352,7 @@ class Client:
         self,
         workflow_file: str,
         no_simplify: bool = True,
-        label: Literal[
-            "label", "xform", "id", "xform-id", "label-xform", "label-id"
-        ] = "label",
+        label: str = "label",
         output: str = None,
         remove: List[str] = None,
         width: int = None,
