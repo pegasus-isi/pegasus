@@ -351,6 +351,7 @@ class Client:
     def graph(
         self,
         workflow_file: str,
+        include_files: bool = True,
         no_simplify: bool = True,
         label: str = "label",
         output: str = None,
@@ -362,6 +363,9 @@ class Client:
         cmd = [self._graph]
 
         cmd.append(workflow_file)
+
+        if include_files:
+            cmd.append("--files")
 
         if not no_simplify:
             cmd.append("--no-simplify")

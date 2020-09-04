@@ -946,6 +946,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_needs_client
     def graph(
         self,
+        include_files: bool = True,
         no_simplify: bool = True,
         label: str = "label",
         output: Optional[str] = None,
@@ -954,9 +955,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         height: Optional[int] = None,
     ):
         """
-        graph(self, no_simplify: bool = True, label: Literal["label", "xform", "id", "xform-id", "label-xform", "label-id"] = "label", output: Optional[str] = None, remove: Optional[List[str]] = None, width: Optional[int] = None, height: Optional[int] = None)
+        graph(self, include_files: bool = True, no_simplify: bool = True, label: Literal["label", "xform", "id", "xform-id", "label-xform", "label-id"] = "label", output: Optional[str] = None, remove: Optional[List[str]] = None, width: Optional[int] = None, height: Optional[int] = None)
         Convert workflow into a graphviz dot format
 
+        :param include_files: include files as nodes, defaults to True
+        :type include_files: bool, optional
         :param no_simplify: when set to :code:`False` a transitive reduction is performed to remove extra edges, defaults to True
         :type no_simplify: bool, optional
         :param label: what attribute to use for labels, defaults to "label"
@@ -989,7 +992,14 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             )
 
         self._client.graph(
-            self._path, no_simplify, label, output, remove, width, height
+            workflow_file=self._path,
+            include_files=include_files,
+            no_simplify=no_simplify,
+            label=label,
+            output=output,
+            remove=remove,
+            width=width,
+            height=height,
         )
 
     @_chained

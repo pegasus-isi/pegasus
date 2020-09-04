@@ -1476,6 +1476,7 @@ class TestWorkflow:
 
         wf._path = "workflow.yml"
         wf.graph(
+            include_files=True,
             no_simplify=True,
             label="label",
             output="wf.dot",
@@ -1485,7 +1486,14 @@ class TestWorkflow:
         )
 
         Pegasus.client._client.Client.graph.assert_called_once_with(
-            "workflow.yml", True, "label", "wf.dot", ["tr1"], 256, 256,
+            workflow_file="workflow.yml",
+            include_files=True,
+            no_simplify=True,
+            label="label",
+            output="wf.dot",
+            remove=["tr1"],
+            width=256,
+            height=256,
         )
 
     def test_graph_workflow_not_yet_written(self, wf, mocker):

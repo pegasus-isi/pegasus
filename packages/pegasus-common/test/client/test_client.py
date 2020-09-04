@@ -241,6 +241,7 @@ class TestClient:
     def test_graph(self, mock_subprocess, client):
         client.graph(
             workflow_file="workflow.yml",
+            include_files=True,
             no_simplify=False,
             label="label",
             output="wf.dot",
@@ -252,6 +253,7 @@ class TestClient:
             [
                 "/path/bin/pegasus-graphviz",
                 "workflow.yml",
+                "--files",
                 "--no-simplify",
                 "--label=label",
                 "--output=wf.dot",
