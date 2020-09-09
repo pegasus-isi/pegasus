@@ -216,6 +216,56 @@ class TestPatternIntervalTrigger:
         f2.unlink()
         temp_dir.rmdir()
 
+    def test_symlinks_resolved(self, mocker):
+        """
+        Ensure that symlinks picked up by glob pattern are resolved and the
+        appropriate 'pegasus-em submit' command is generated.
+        """
+        mocker.patch("subprocess.run")
+
+        # create test input file and symlink
+        temp_dir = Path(mkdtemp())
+        f1 = temp_dir / "f1.jpg"
+        f1_link = temp_dir / "f1.link"
+
+        with f1.open("w") as f:
+            f.write("test file1")
+
+        f1_link.symlink_to(target=f1)
+
+        # create trigger using *.link as the file pattern to look for
+        t = _PatternIntervalTrigger(
+            checkout=queue.Queue(),
+            ensemble="test-ensemble",
+            trigger_name="test-trigger",
+            workflow_name_prefix="wf",
+            file_patterns=[str(temp_dir / "*.link")],
+            workflow_script="/workflow.py",
+            interval=2,
+            timeout=1,
+            additional_args="arg1 --flag arg2",
+        )
+
+        t.run()
+
+        # ensure pegasus-em submit command properly built up
+        args = subprocess.run.call_args[0][0]
+        assert args[0:2] == ["pegasus-em", "submit"]
+        assert "test-ensemble.wf_" in args[2]
+        assert args[3:] == [
+            "/workflow.py",
+            "arg1",
+            "--flag",
+            "arg2",
+            "--inputs",
+            str(f1.resolve()),
+        ]
+
+        # cleanup
+        f1.unlink()
+        f1_link.unlink()
+        temp_dir.rmdir()
+
 
 class TestStartPatternIntervalTriggerCommand:
     @pytest.mark.parametrize(
