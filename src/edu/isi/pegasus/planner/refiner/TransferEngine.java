@@ -1005,7 +1005,12 @@ public class TransferEngine extends Engine {
             Job pJob = (Job) parent.getContent();
             sourceSite = mSiteStore.lookup(pJob.getStagingSiteHandle());
 
-            if (sourceSite.getSiteHandle().equalsIgnoreCase(destSiteHandle)) {
+            if ( // PM-1676 if parent job is a sub workflow job, then we cannot
+            // short circuit the inter pool transfer, as the sub workflow job
+            // outputs need to be placed explicitly using the output map for
+            // the compute job to pick up
+            !(pJob instanceof DAXJob)
+                    && sourceSite.getSiteHandle().equalsIgnoreCase(destSiteHandle)) {
                 // no need to add transfers, as the parent job and child
                 // job are run in the same directory on the pool
                 continue;
