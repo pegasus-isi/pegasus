@@ -8,6 +8,7 @@ import subprocess
 import time
 from enum import Enum
 from glob import glob
+from collections import defaultdict
 from multiprocessing.connection import Listener
 from pathlib import Path
 from threading import Event, Thread
@@ -99,8 +100,10 @@ class _TriggerDispatcher(Thread):
         with self.running_triggers_file.open("wb") as f:
             pickle.dump(set(), f)
 
-        # TODO: create file containing all workflows submitted to em by each trigger
-        # self.submitted_workflows = _TRIGGER_DIR / "submitted.p"
+        # file containing all workflows submitted to em by each trigger
+        self.submitted_workflows = _TRIGGER_DIR / "submitted.p"
+        with self.submitted_workflows.open("wb") as f:
+            pickle.dump(defaultdict(list), f)
 
         # work passed down by the TriggerManager
         self.mailbox = mailbox
@@ -117,7 +120,6 @@ class _TriggerDispatcher(Thread):
         work = {
             TriggerManagerMessage.START_PATTERN_INTERVAL_TRIGGER: self.start_pattern_interval_trigger_handler,
             TriggerManagerMessage.STOP_TRIGGER: self.stop_trigger_handler,
-            TriggerManagerMessage.STATUS: self.status_handler,
         }
 
         while True:
@@ -194,11 +196,6 @@ class _TriggerDispatcher(Thread):
                 )
             )
 
-    def status_handler(self, ensemble: str, name: Optional[str] = None):
-        """Handler for a STATUS message"""
-
-        raise NotImplementedError("trigger status not yet implemented")
-
     def update_state_file(self):
         """
         Overwrite ~/.pegasus/triggers/running.p with the current set of
@@ -215,8 +212,36 @@ class _TriggerDispatcher(Thread):
             fcntl.flock(f, fcntl.LOCK_UN)
 
 
-# --- trigger(s) ---------------------------------------------------------------
-class _PatternIntervalTrigger(Thread):
+# --- trigger--- ---------------------------------------------------------------
+class _Trigger(Thread):
+    def __init__(self, ensemble, trigger_name, checkout):
+        Thread.__init__(self, name="::".join([ensemble, trigger_name]), daemon=True)
+
+        self.ensemble = ensemble
+        self.trigger_name = trigger_name
+
+        # queue to advertise myself to when my work is done
+        self.checkout = checkout
+
+        # thread stopping condition
+        self.stop_event = Event()
+
+        # where to advertise workflows I have submitted
+        self.submitted_workflows = _TRIGGER_DIR / "submitted.p"
+
+        self.log = logging.getLogger("trigger.{}".format(self.name))
+
+    def shutdown(self):
+        """Gracefully shutdown this thread."""
+
+        self.log.info("{} shutting down".format(self.name))
+        self.stop_event.set()
+
+        # advertise that my work is complete
+        self.checkout.put(self.name)
+
+
+class _PatternIntervalTrigger(_Trigger):
     """Time interval and file pattern based workflow trigger."""
 
     def __init__(
@@ -232,15 +257,11 @@ class _PatternIntervalTrigger(Thread):
         timeout: Optional[str] = None,
         additional_args: Optional[str] = None
     ):
-        Thread.__init__(self, name="::".join([ensemble, trigger_name]), daemon=True)
-
-        self.log = logging.getLogger("trigger.trigger")
-        self.stop_event = Event()
-        self.checkout = checkout
+        _Trigger.__init__(
+            self, ensemble=ensemble, trigger_name=trigger_name, checkout=checkout
+        )
 
         # workflow specific args
-        self.ensemble = ensemble
-        self.trigger_name = trigger_name
         self.workflow_name_prefix = workflow_name_prefix
         self.file_patterns = file_patterns
         self.workflow_script = workflow_script
@@ -350,12 +371,3 @@ class _PatternIntervalTrigger(Thread):
         # advertise that my work is complete
         self.checkout.put(self.name)
         self.log.info("{} done".format(self.name))
-
-    def shutdown(self):
-        """Gracefully shutdown this thread."""
-
-        self.log.info("{} shutting down".format(self.name))
-        self.stop_event.set()
-
-        # advertise that my work is complete
-        self.checkout.put(self.name)

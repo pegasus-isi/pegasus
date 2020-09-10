@@ -13,6 +13,7 @@ from Pegasus.service.ensembles.commands import StartPatternIntervalTriggerComman
 from Pegasus.service.ensembles.trigger import (
     TriggerManagerMessage,
     _PatternIntervalTrigger,
+    _Trigger,
     _TriggerManagerMessageType,
 )
 
@@ -32,9 +33,9 @@ def trigger_dir():
 class TestTriggerManagerMessage:
     def test_valid_msg(self):
         msg = TriggerManagerMessage(
-            TriggerManagerMessage.STATUS, ensemble="casa", trigger_name="20s*.txt"
+            TriggerManagerMessage.STOP_TRIGGER, ensemble="casa", trigger_name="20s*.txt"
         )
-        assert msg._type == _TriggerManagerMessageType.STATUS
+        assert msg._type == _TriggerManagerMessageType.STOP_TRIGGER
         assert msg.kwargs == {"ensemble": "casa", "trigger_name": "20s*.txt"}
 
 
@@ -81,10 +82,6 @@ class TestTriggerDispatcher:
                     TriggerManagerMessage.STOP_TRIGGER, test_kwarg=None
                 ),
                 "stop_trigger_handler",
-            ),
-            (
-                TriggerManagerMessage(TriggerManagerMessage.STATUS, test_kwarg=None),
-                "status_handler",
             ),
             (
                 TriggerManagerMessage(
@@ -166,6 +163,19 @@ class TestTriggerDispatcher:
             assert set() == pickle.load(f)
 
         assert "test-ensemble::test-trigger" not in trigger_dispatcher.running
+
+
+class TestTrigger:
+    def test_shutdown(self):
+        t = _Trigger(ensemble="ens", trigger_name="t", checkout=queue.Queue())
+        assert t.stop_event.isSet() == False
+        t.shutdown()
+
+        # ensure that stop even is set
+        assert t.stop_event.isSet() == True
+
+        # ensure that t has advertised itself to the 'checkout' queue
+        assert t.checkout.get() == t.name
 
 
 class TestPatternIntervalTrigger:
