@@ -318,6 +318,13 @@ Usage of the ``pegasus-em trigger`` command is as follows:
 - ``ADDITIONAL_ARGS``: any additional arguments to be passed to the ``WORKFLOW_SCRIPT``;
   these should be quoted when given (passed as a single string). 
  
+.. note::
+
+   If any of the given ``FILE_PATTERN`` s match against a symlink, the timestamp used
+   to determine if the linked file is to be included in the workflow submission will
+   be the last modification date of the symlink itself and not the file it resolves
+   to. 
+
 **Example Usage**
 
 :: 
