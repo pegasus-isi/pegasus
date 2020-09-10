@@ -3,6 +3,7 @@ import queue
 import subprocess
 import threading
 from pathlib import Path
+from subprocess import CompletedProcess
 from tempfile import mkdtemp
 
 import pytest
@@ -264,6 +265,98 @@ class TestPatternIntervalTrigger:
         # cleanup
         f1.unlink()
         f1_link.unlink()
+        temp_dir.rmdir()
+
+    def test_multiple_symlinks(self, mocker):
+        """
+        Ensure that symlinks are stat'ed and not the files they link to. The scenario
+        is as follows:
+
+        create f1.txt (ts: 1)
+        create f2.txt (ts: 2)
+
+        start trigger with pattern *.link on a 15s interval
+
+        create f1.link (ts: 10) -> f1.txt
+
+        trigger picks up f1.txt
+
+        create f2.link (ts: 20) -> f2.txt
+
+        trigger picks up f2.txt
+        """
+        mocker.patch(
+            "subprocess.run",
+            return_value=CompletedProcess(None, returncode=0, stdout="", stderr=""),
+        )
+
+        # create test input file and symlink
+        temp_dir = Path(mkdtemp())
+        f1 = temp_dir / "f1"
+        f2 = temp_dir / "f2"
+
+        f1_link = temp_dir / "f1.link"
+        f2_link = temp_dir / "f2.link"
+
+        with f1.open("w") as f:
+            f.write("test file1")
+
+        with f2.open("w") as f:
+            f.write("test file2")
+
+        f1_link.symlink_to(target=f1)
+
+        # create trigger using *.link as the file pattern to look for
+        t = _PatternIntervalTrigger(
+            checkout=queue.Queue(),
+            ensemble="test-ensemble",
+            trigger_name="test-trigger",
+            workflow_name_prefix="wf",
+            file_patterns=[str(temp_dir / "*.link")],
+            workflow_script="/workflow.py",
+            interval=2,
+            timeout=1,
+            additional_args="arg1 --flag arg2",
+        )
+
+        t.run()
+
+        # ensure pegasus-em submit command properly built up
+        # f1 should be passed as an input file
+        args = subprocess.run.call_args[0][0]
+        assert args[0:2] == ["pegasus-em", "submit"]
+        assert "test-ensemble.wf_" in args[2]
+        assert args[3:] == [
+            "/workflow.py",
+            "arg1",
+            "--flag",
+            "arg2",
+            "--inputs",
+            str(f1.resolve()),
+        ]
+
+        f2_link.symlink_to(target=f2)
+        t.run()
+
+        # ensure pegasus-em submit command properly built up
+        # f2 should be passed as an input file
+        args = subprocess.run.call_args[0][0]
+        assert args[0:2] == ["pegasus-em", "submit"]
+        assert "test-ensemble.wf_" in args[2]
+        assert args[3:] == [
+            "/workflow.py",
+            "arg1",
+            "--flag",
+            "arg2",
+            "--inputs",
+            str(f2.resolve()),
+        ]
+
+        # cleanup
+        f1.unlink()
+        f2.unlink()
+        f1_link.unlink()
+        f2_link.unlink()
         temp_dir.rmdir()
 
 
