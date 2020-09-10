@@ -272,13 +272,22 @@ class _PatternIntervalTrigger(Thread):
             input_files = []
             for pattern in self.file_patterns:
                 for match in glob(pattern):
-                    p = Path(match).resolve()
+                    p = Path(match)
 
+                    # if a symlink matched, using the symlink's info and not
+                    # the resolved file
                     if (
-                        self.last_ran <= p.stat().st_mtime
-                        and p.stat().st_mtime < time_now
+                        self.last_ran <= p.lstat().st_mtime
+                        and p.lstat().st_mtime < time_now
                     ):
-                        input_files.append(str(p))
+                        if p.exists():
+                            input_files.append(str(p.resolve()))
+                        else:
+                            self.log.debug(
+                                "File {} does not exist and will not be included in workflow submission".format(
+                                    p
+                                )
+                            )
 
             if len(input_files) == 0:
                 self.log.info(
