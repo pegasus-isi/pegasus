@@ -2,6 +2,7 @@ import pickle
 import queue
 import subprocess
 import threading
+from collections import defaultdict
 from pathlib import Path
 from subprocess import CompletedProcess
 from tempfile import mkdtemp
@@ -13,8 +14,15 @@ from Pegasus.service.ensembles.commands import StartPatternIntervalTriggerComman
 from Pegasus.service.ensembles.trigger import (
     TriggerManagerMessage,
     _PatternIntervalTrigger,
+    _Trigger,
     _TriggerManagerMessageType,
 )
+
+
+# helper function to create a defaultdict(defaultdict(list))
+# that can be serialized
+def dd_list():
+    return defaultdict(list)
 
 
 # use to override Pegasus.service.ensembles.trigger._TRIGGER_DIR so that any files
@@ -32,9 +40,9 @@ def trigger_dir():
 class TestTriggerManagerMessage:
     def test_valid_msg(self):
         msg = TriggerManagerMessage(
-            TriggerManagerMessage.STATUS, ensemble="casa", trigger_name="20s*.txt"
+            TriggerManagerMessage.STOP_TRIGGER, ensemble="casa", trigger_name="20s*.txt"
         )
-        assert msg._type == _TriggerManagerMessageType.STATUS
+        assert msg._type == _TriggerManagerMessageType.STOP_TRIGGER
         assert msg.kwargs == {"ensemble": "casa", "trigger_name": "20s*.txt"}
 
 
@@ -73,6 +81,41 @@ class TestTriggerDispatcher:
             assert "t3" in state_file_contents
             assert len(state_file_contents) == 1
 
+    def test_update_submited_workflows_file(self, trigger_dir, monkeypatch):
+        monkeypatch.setattr(trigger, "_TRIGGER_DIR", trigger_dir)
+        trigger_dispatcher = trigger._TriggerDispatcher(None)
+
+        # testing that newly submitted workflows are added to the submitted
+        # workflows file
+
+        # enter items into submitted queue to be processed
+        trigger_dispatcher.submitted.put(("ens1", "trigger", "wf1"))
+
+        # update submitted workflows file
+        trigger_dispatcher.update_submitted_workflows_file()
+
+        # test that file updated correctly
+        with (trigger_dir / "submitted.p").open("rb") as f:
+            workflows = pickle.load(f)
+
+        assert dict(workflows) == {"ens1": {"trigger": ["wf1"]}}
+
+        # enter items into submitted queue to be processed
+        trigger_dispatcher.submitted.put(("ens1", "trigger", "wf2"))
+        trigger_dispatcher.submitted.put(("ens2", "trigger", "wf1"))
+
+        # update submitted workflows file
+        trigger_dispatcher.update_submitted_workflows_file()
+
+        # test that file updated correctly and existing data not overwritten
+        with (trigger_dir / "submitted.p").open("rb") as f:
+            workflows = pickle.load(f)
+
+        assert dict(workflows) == {
+            "ens1": {"trigger": ["wf1", "wf2"]},
+            "ens2": {"trigger": ["wf1"]},
+        }
+
     @pytest.mark.parametrize(
         "msg, func",
         [
@@ -81,10 +124,6 @@ class TestTriggerDispatcher:
                     TriggerManagerMessage.STOP_TRIGGER, test_kwarg=None
                 ),
                 "stop_trigger_handler",
-            ),
-            (
-                TriggerManagerMessage(TriggerManagerMessage.STATUS, test_kwarg=None),
-                "status_handler",
             ),
             (
                 TriggerManagerMessage(
@@ -168,6 +207,39 @@ class TestTriggerDispatcher:
         assert "test-ensemble::test-trigger" not in trigger_dispatcher.running
 
 
+class TestTrigger:
+    def test_shutdown(self):
+        t = _Trigger(
+            ensemble="ens",
+            trigger_name="t",
+            checkout=queue.Queue(),
+            submitted=queue.Queue(),
+        )
+        assert t.stop_event.isSet() == False
+        t.shutdown()
+
+        # ensure that stop even is set
+        assert t.stop_event.isSet() == True
+
+        # ensure that t has advertised itself to the 'checkout' queue
+        assert t.checkout.get() == t.name
+
+    def test_update_submitted_workflows(self):
+        # create trigger (without starting)
+        t = _Trigger(
+            ensemble="ensemble_name",
+            trigger_name="trigger_name",
+            checkout=queue.Queue(),
+            submitted=queue.Queue(),
+        )
+
+        # update file
+        t.update_submitted_workflows("test_workflow")
+
+        # test workflow has been added to submitted queue
+        assert t.submitted.get() == ("ensemble_name", "trigger_name", "test_workflow")
+
+
 class TestPatternIntervalTrigger:
     def test_submit_command(self, mocker):
         mocker.patch("subprocess.run")
@@ -182,6 +254,7 @@ class TestPatternIntervalTrigger:
             ff.write("test file2")
 
         t = _PatternIntervalTrigger(
+            submitted=queue.Queue(),
             checkout=queue.Queue(),
             ensemble="test-ensemble",
             trigger_name="test-trigger",
@@ -236,6 +309,7 @@ class TestPatternIntervalTrigger:
 
         # create trigger using *.link as the file pattern to look for
         t = _PatternIntervalTrigger(
+            submitted=queue.Queue(),
             checkout=queue.Queue(),
             ensemble="test-ensemble",
             trigger_name="test-trigger",
@@ -308,6 +382,7 @@ class TestPatternIntervalTrigger:
 
         # create trigger using *.link as the file pattern to look for
         t = _PatternIntervalTrigger(
+            submitted=queue.Queue(),
             checkout=queue.Queue(),
             ensemble="test-ensemble",
             trigger_name="test-trigger",
