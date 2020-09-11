@@ -766,11 +766,32 @@ exclusive list ( highest priority first ) of property file locations.
    ${user.home}/.pegasusrc
    have lowest priority.
 
+Starting Pegasus 5.0 release, pegasus properties can also be specified as
+environment variables. The properties specified by an environment variable
+have higher precedence than those specified in a properties file.
+
+To specify a pegasus property as an environment variable you need to
+do the following:
+
+1. Convert your property name to upper case
+2. Replace . with __ .
+3. Add a leading _ to the property name.
+
+For example, to specify pegasus.catalog.replica in your environment you
+will specify
+
+..
+
+ _PEGASUS__CATALOG__REPLICA__FILE = /path/to/replicas.yml
+
+
 Commandline properties have the highest priority. These override any
 property loaded from a property file. Each commandline property is
 introduced by a -D argument. Note that these arguments are parsed by the
 shell wrapper, and thus the -D arguments must be the first arguments to
 any command. Commandline properties are useful for debugging purposes.
+
+
 
 From Pegasus 3.1 release onwards, support has been dropped for the
 following properties that were used to signify the location of the
