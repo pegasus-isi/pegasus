@@ -25,6 +25,7 @@ import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -73,6 +74,9 @@ public class CommonProperties implements Cloneable {
 
     /** Basename of the (new) file to read for user properties. */
     public static final String USER_PROPERTY_FILENAME = ".pegasusrc";
+
+    /** the prefix for picking up properties from the user environment * */
+    public static final String ENV_PEGASUS_PROPERTY_PREFIX = "_PEGASUS";
 
     /** Default encoding set to be used for properties * */
     public static final Charset DEFAULT_ENCODING_SET = Charsets.UTF_8;
@@ -212,6 +216,10 @@ public class CommonProperties implements Cloneable {
 
             this.m_props = addProperties(this.m_props, temp);
         }
+
+        // PM-1391 pick any properties from the environment
+        Properties envProperties = retrievePropertiesFromEnvironment();
+        this.m_props = addProperties(this.m_props, envProperties);
 
         // now set the paths: set sysconfdir to correct latest value
         this.m_binDir =
@@ -583,5 +591,44 @@ public class CommonProperties implements Cloneable {
      */
     public String removeProperty(String key) {
         return (String) this.m_props.remove(key);
+    }
+
+    /**
+     * Returns all Pegasus properties set in the user environment as environment variables. The
+     * following logic is used to retrieve corresponding pegasus properties
+     *
+     * <pre> - find all env variables starting with ENV_PEGASUS_PROPERTY_PREFIX
+     *       - the variable names are lower cased
+     *       - __ is replaced by .
+     * </pre>
+     *
+     * @return properties object with all the properties from the environment
+     * @see #ENV_PEGASUS_PROPERTY_PREFIX
+     */
+    public final Properties retrievePropertiesFromEnvironment() {
+        Properties p = new Properties();
+        Map<String, String> envs = System.getenv();
+
+        for (Map.Entry<String, String> entry : envs.entrySet()) {
+            String key = entry.getKey();
+            if (!key.startsWith(CommonProperties.ENV_PEGASUS_PROPERTY_PREFIX)) {
+                // continue
+            }
+
+            // strip leading _
+            if (key.startsWith("_")) {
+                key = key.substring(1);
+            }
+
+            // convert to lower case
+            key = key.toLowerCase();
+
+            // replace __ with _
+            key = key.replaceAll("__", ".");
+
+            p.put(key, entry.getValue());
+        }
+
+        return p;
     }
 }
