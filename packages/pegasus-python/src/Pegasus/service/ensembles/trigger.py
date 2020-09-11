@@ -6,13 +6,19 @@ import pickle
 import queue
 import subprocess
 import time
+from collections import defaultdict
 from enum import Enum
 from glob import glob
-from collections import defaultdict
 from multiprocessing.connection import Listener
 from pathlib import Path
 from threading import Event, Thread
 from typing import List, Optional
+
+
+# --- util ---------------------------------------------------------------------
+def defaultdict_list():
+    return defaultdict(list)
+
 
 # --- setup dir for trigger related files --------------------------------------
 _TRIGGER_DIR = Path().home() / ".pegasus/triggers"
@@ -101,9 +107,13 @@ class _TriggerDispatcher(Thread):
             pickle.dump(set(), f)
 
         # file containing all workflows submitted to em by each trigger
+        # key: ensemble, value dict of trigger_names mapped to list of workflows submitted
         self.submitted_workflows = _TRIGGER_DIR / "submitted.p"
         with self.submitted_workflows.open("wb") as f:
-            pickle.dump(defaultdict(list), f)
+            pickle.dump(defaultdict(defaultdict_list), f)
+
+        # workflows that need to be added to submitted workflows file
+        self.submitted = queue.Queue()
 
         # work passed down by the TriggerManager
         self.mailbox = mailbox
@@ -131,6 +141,9 @@ class _TriggerDispatcher(Thread):
 
             if has_changed:
                 self.update_state_file()
+
+            # handle accounting: add submitted workflows to submitted workflows file
+            self.update_submitted_workflows_file()
 
             # handle work
             try:
@@ -170,6 +183,7 @@ class _TriggerDispatcher(Thread):
         """Handler for a START_PATTERN_INTERVAL_TRIGGER message"""
 
         t = _PatternIntervalTrigger(
+            submitted=self.submitted,
             checkout=self.checkout,
             ensemble=ensemble,
             trigger_name=trigger_name,
@@ -211,10 +225,39 @@ class _TriggerDispatcher(Thread):
             pickle.dump(running_triggers, f)
             fcntl.flock(f, fcntl.LOCK_UN)
 
+    def update_submitted_workflows_file(self):
+        """
+        Update ~/.pegasus/triggers/submitted.p with new workflows that have been
+        submitted by running triggers.
+        """
+        if not self.submitted.empty():
+            with self.submitted_workflows.open("rb") as f:
+                workflows = pickle.load(f)
 
-# --- trigger--- ---------------------------------------------------------------
+            added_wfs = []
+            while not self.submitted.empty():
+                wf = self.submitted.get()
+                added_wfs.append(wf)
+
+                ensemble, trigger, workflow = wf
+
+                workflows[ensemble][trigger].append(workflow)
+
+            with self.submitted_workflows.open("wb") as f:
+                pickle.dump(workflows, f)
+
+            self.log.debug("{} added to submitted workflows file".format(added_wfs))
+
+
+# --- trigger ------------------------------------------------------------------
 class _Trigger(Thread):
-    def __init__(self, ensemble, trigger_name, checkout):
+    def __init__(
+        self,
+        ensemble: str,
+        trigger_name: str,
+        checkout: queue.Queue,
+        submitted: queue.Queue,
+    ):
         Thread.__init__(self, name="::".join([ensemble, trigger_name]), daemon=True)
 
         self.ensemble = ensemble
@@ -223,13 +266,26 @@ class _Trigger(Thread):
         # queue to advertise myself to when my work is done
         self.checkout = checkout
 
+        # queue to advertise workflows that I have submitted
+        self.submitted = submitted
+
         # thread stopping condition
         self.stop_event = Event()
 
-        # where to advertise workflows I have submitted
-        self.submitted_workflows = _TRIGGER_DIR / "submitted.p"
-
         self.log = logging.getLogger("trigger.{}".format(self.name))
+
+    def update_submitted_workflows(self, workflow_name: str):
+        """
+        Whenver a new workflow is submitted, added workflow name to queue so that
+        _TriggerDispatcher can update file containing all workflows written by
+        triggers.
+        """
+        ensemble, trigger = self.name.split("::")
+        self.submitted.put((ensemble, trigger, workflow_name))
+
+        self.log.debug(
+            "Added {} to submitted queue".format((ensemble, trigger, workflow_name))
+        )
 
     def shutdown(self):
         """Gracefully shutdown this thread."""
@@ -247,6 +303,7 @@ class _PatternIntervalTrigger(_Trigger):
     def __init__(
         self,
         *,
+        submitted: queue.Queue,
         checkout: queue.Queue,
         ensemble: str,
         trigger_name: str,
@@ -258,7 +315,11 @@ class _PatternIntervalTrigger(_Trigger):
         additional_args: Optional[str] = None
     ):
         _Trigger.__init__(
-            self, ensemble=ensemble, trigger_name=trigger_name, checkout=checkout
+            self,
+            ensemble=ensemble,
+            trigger_name=trigger_name,
+            checkout=checkout,
+            submitted=submitted,
         )
 
         # workflow specific args
