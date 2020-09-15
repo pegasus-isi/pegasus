@@ -376,12 +376,27 @@ even for jobs that run locally
 
 .. table:: Useful Environment Settings
 
-   ================================================================================================================================================= ========================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                **Description**
-   **Property Key:**\ env.PEGASUS_HOME\ **Profile Key:**\ PEGASUS_HOME\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String       Used by auxillary jobs created by Pegasus both on remote site and local site. Should be set usually set in the Site Catalog for the sites
-   **Property Key:**\ env.GLOBUS_LOCATION\ **Profile Key:**\ GLOBUS_LOCATION\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String Used by auxillary jobs created by Pegasus both on remote site and local site. Should be set usually set in the Site Catalog for the sites
-   **Property Key:**\ env.LD_LIBRARY_PATH\ **Profile Key:**\ LD_LIBRARY_PATH\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String Point this to $GLOBUS_LOCATION/lib, except you cannot use the dollar variable. You must use the full path. Applies to both, local and remote jobs that use Globus components and should be usually set in the site catalog for the sites
-   ================================================================================================================================================= ========================================================================================================================================================================================================================================
+    +------------------------------------+----------------------------------------------------------------+
+    | Key Attributes                     | Description                                                    |
+    +====================================+================================================================+
+    || Property Key: env.PEGASUS_HOME    || Used by auxillary jobs created by Pegasus both on remote site |
+    || Profile Key: PEGASUS_HOME         || and local site. Should be set usually set in the Site Catalog |
+    || Scope : TC, SC, DAX, Properties   || for the sites                                                 |
+    || Since : 2.0                       ||                                                               |
+    || Type :String                      ||                                                               |
+    +------------------------------------+----------------------------------------------------------------+
+    || Property Key: env.GLOBUS_LOCATION || Used by auxillary jobs created by Pegasus both on remote site |
+    || Profile Key: GLOBUS_LOCATION      || and local site. Should be set usually set in the Site Catalog |
+    || Scope : TC, SC, DAX, Properties   || for the sites                                                 |
+    || Since : 2.0                       ||                                                               |
+    || Type :String                      ||                                                               |
+    +------------------------------------+----------------------------------------------------------------+
+    || Property Key: env.LD_LIBRARY_PATH || Point this to $GLOBUS_LOCATION/lib, except you cannot use the |
+    || Profile Key: LD_LIBRARY_PATH      || dollar variable. You must use the full path. Applies to both, |
+    || Scope : TC, SC, DAX, Properties   || local and remote jobs that use Globus components and should   |
+    || Since : 2.0                       || be usually set in the site catalog for the sites              |
+    || Type :String                      ||                                                               |
+    +------------------------------------+----------------------------------------------------------------+
 
 Even though Condor and Globus both permit environment variable settings
 through their profiles, all remote environment variables must be set
@@ -410,7 +425,7 @@ RSL specification.
 
    ============================================================================================================================================= ===========================================================================================================================
    **Property Key**                                                                                                                              **Description**
-   **Property Key:**\ globus.count\ **Profile Key:**\ count\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer             the number of times an executable is started.
+   **Property Key:**\ globus.count **Profile Key:**\ count\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer             the number of times an executable is started.
    **Property Key:**\ globus.jobtype\ **Profile Key:**\ jobtype\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String          specifies how the job manager should start the remote job. While Pegasus defaults to single, use mpi when running MPI jobs.
    **Property Key:**\ globus.maxcputime\ **Profile Key:**\ maxcputime\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer   the max CPU time in minutes for a single execution of a job.
    **Property Key:**\ globus.maxmemory\ **Profile Key:**\ maxmemory\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer     the maximum memory in MB required for the job
