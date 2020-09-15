@@ -422,19 +422,64 @@ authoritative list of all possible RSL instructions refer to the Globus
 RSL specification.
 
 .. table:: Useful Globus RSL Instructions
-
-   ============================================================================================================================================= ===========================================================================================================================
-   **Property Key**                                                                                                                              **Description**
-   **Property Key:**\ globus.count **Profile Key:**\ count\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer             the number of times an executable is started.
-   **Property Key:**\ globus.jobtype\ **Profile Key:**\ jobtype\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String          specifies how the job manager should start the remote job. While Pegasus defaults to single, use mpi when running MPI jobs.
-   **Property Key:**\ globus.maxcputime\ **Profile Key:**\ maxcputime\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer   the max CPU time in minutes for a single execution of a job.
-   **Property Key:**\ globus.maxmemory\ **Profile Key:**\ maxmemory\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer     the maximum memory in MB required for the job
-   **Property Key:**\ globus.maxtime\ **Profile Key:**\ maxtime\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer         the maximum time or walltime in minutes for a single execution of a job.
-   **Property Key:**\ globus.maxwalltime\ **Profile Key:**\ maxwalltime\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer the maximum walltime in minutes for a single execution of a job.
-   **Property Key:**\ globus.minmemory\ **Profile Key:**\ minmemory\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer     the minumum amount of memory required for this job
-   **Property Key:**\ globus.project\ **Profile Key:**\ project\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String          associates an account with a job at the remote end.
-   **Property Key:**\ globus.queue\ **Profile Key:**\ queue\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String              the remote queue in which the job should be run. Used when remote scheduler is PBS that supports queues.
-   ============================================================================================================================================= ===========================================================================================================================
+    
+    +------------------------------------+---------------------------------------------------------------+
+    | Property Key                       | Description                                                   |
+    +====================================+===============================================================+
+    | | Property Key: globus.count       | the number of times an executable is started.                 |
+    | | Profile Key:count                |                                                               |
+    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Since : 2.0                      |                                                               |
+    | | Type :Integer                    |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.jobtype     | | specifies how the job manager should start the remote job.  |
+    | | Profile Key: jobtype             | | While Pegasus defaults to single, use mpi when running      |
+    | | Scope : TC, SC, DAX, Properties  | | MPI jobs.                                                   |
+    | | Since : 2.0                      |                                                               |
+    | | Type :String                     |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.maxcputime  | the max CPU time in minutes for a single execution of a job.  |
+    | | Profile Key: maxcputime          |                                                               |
+    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Since : 2.0                      |                                                               |
+    | | Type :Integer                    |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.maxmemory   | the maximum memory in MB required for the job                 |
+    | | Profile Key: maxmemory           |                                                               |
+    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Since : 2.0                      |                                                               |
+    | | Type :Integer                    |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.maxtime     | | the maximum time or walltime in minutes for a single        |
+    | | Profile Key:maxtime              | | execution of a job.                                         |
+    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Since : 2.0                      |                                                               |
+    | | Type  : Integer                  |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.maxwalltime | | the maximum walltime in minutes for a single execution      |
+    | | Profile Key: maxwalltime         | | of a job.                                                   |
+    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Since : 2.0                      |                                                               |
+    | | Type :Integer                    |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.minmemory   | the minumum amount of memory required for this job            |
+    | | Profile Key: minmemory           |                                                               |
+    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Since : 2.0                      |                                                               |
+    | | Type :Integer                    |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.project     | associates an account with a job at the remote end.           |
+    | | Profile Key: project             |                                                               |
+    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Since : 2.0                      |                                                               |
+    | | Type :String                     |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.queue       | | the remote queue in which the job should be run. Used when  |
+    | | Profile Key: queue               | | remote scheduler is a scheduler such PBS that supports      |
+    | | Scope : TC, SC, DAX, Properties  | | queues.                                                     |
+    | | Since : 2.0                      |                                                               |
+    | | Type :String                     |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
 
 Pegasus prevents the user from specifying certain RSL instructions as
 globus profiles, because they are either automatically generated or can
@@ -444,16 +489,28 @@ the globus profiles. Use one or more env profiles instead.
 
 .. table:: RSL Instructions that are not permissible
 
-   =========== ===============================================================================================================================================================================================================================================================================================================
-   **Key**     **Reason for Prohibition**
-   arguments   you specify arguments in the arguments section for a job in the DAX
-   directory   the site catalog and properties determine which directory a job will run in.
-   environment use multiple env profiles instead
-   executable  the physical executable to be used is specified in the transformation catalog and is also dependant on the gridstart module being used. If you are launching jobs via kickstart then the executable created is the path to kickstart and the application executable path appears in the arguments for kickstart
-   stdin       you specify in the DAX for the job
-   stdout      you specify in the DAX for the job
-   stderr      you specify in the DAX for the job
-   =========== ===============================================================================================================================================================================================================================================================================================================
+    +-------------+------------------------------------------------------------------------------+
+    | Key         | Reason for Prohibition                                                       |
+    +=============+==============================================================================+
+    | arguments   | you specify arguments in the arguments section for a job in the DAX          |
+    +-------------+------------------------------------------------------------------------------+
+    | directory   | the site catalog and properties determine which directory a job will run in. |
+    +-------------+------------------------------------------------------------------------------+
+    | environment | use multiple env profiles instead                                            |
+    +-------------+------------------------------------------------------------------------------+
+    | executable  || the physical executable to be used is specified in the transformation       |
+    |             || catalog and is also dependant on the gridstart module being used. If you    |
+    |             || are launching jobs via kickstart then the executable created is the path    |
+    |             || to kickstart and the application executable path appears in the arguments   |
+    |             || for kickstart                                                               |
+    +-------------+------------------------------------------------------------------------------+
+    | stdin       | you specify in the abstract workflow for the job                             |
+    +-------------+------------------------------------------------------------------------------+
+    | stdout      | you specify in the abstract workflow for the job                             |
+    +-------------+------------------------------------------------------------------------------+
+    | stderr      | you specify in the abstract workflow for the job                             |
+    +-------------+------------------------------------------------------------------------------+
+
 
 .. _condor-profiles:
 
