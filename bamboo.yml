@@ -1040,8 +1040,8 @@ project:
                     buildJdk: JDK
                     workingSubDirectory: pegasus-source
               artifactDefinitions:
-                - name: pegasus-r-dax3
-                  copyPattern: "pegasus-r-dax3*.tar.gz"
+                - name: pegasus-r-pegasus
+                  copyPattern: "pegasus-r-pegasus*.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1477,7 +1477,7 @@ project:
                       mv pegasus-doc-*.tar.gz $DOWNLOADS/
                       mv *.deb $DOWNLOADS/
                       mv *.rpm $DOWNLOADS/
-                      mv pegasus-r-dax3*.tar.gz $DOWNLOADS/
+                      mv pegasus-r-pegasus*.tar.gz $DOWNLOADS/
 
                       # debian
                       mkdir -p $DOWNLOADS/debian/dists/stretch/main/binary-amd64
@@ -1539,7 +1539,7 @@ project:
                 - name: pegasus-deb-x86_64_ubuntu_20
                 - name: pegasus-doc
                 - name: pegasus-python-source-versioned
-                - name: pegasus-r-dax3
+                - name: pegasus-r-pegasus
                 - name: pegasus-rpm-x86_64_rhel_7
                 - name: pegasus-rpm-x86_64_rhel_8
                 - name: pegasus-source

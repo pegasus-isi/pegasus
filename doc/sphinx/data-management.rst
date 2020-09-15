@@ -956,44 +956,49 @@ Staging of Job Checkpoint Files
 -------------------------------
 
 Pegasus has support for transferring job checkpoint files back to the
-staging site, when a job exceeds it's advertised running time. In order
-to use this feature, you need to
+staging site when a job exceeds its advertised running time. This can be done
+by marking file(s) as checkpoint(s) using one of the workflow APIs. The following
+describes how to do this, using the :ref:`api-python` API, for two different application scenarios:
 
-1. Associate a job checkpoint file ( that the job creates ) with the job
-   in the abstract workflow. A checkpoint file is specified by setting
-   the link attribute to checkpoint for the uses tag.
+1. **The application regularly updates/overwrites a fixed number of checkpoint files.** 
 
-2. Associate a Pegasus profile key named **checkpoint.time** is the time
-   in minutes after which a job is sent the TERM signal by
-   pegasus-kickstart, telling it to create the checkpoint file.
+.. code-block:: python
 
-3. Associate a Pegasus profile key named **maxwalltime** with the job
-   that specifies the max runtime in minutes before the job will be
-   killed by the local resource manager ( such as PBS) deployed on the
-   site. Usually, this value should be associated with the execution
-   site in the site catalog.
+   job = Job(exe)\
+         .add_checkpoint(File("saved_state_a.txt"))\
+         .add_checkpoint(File("saved_state_b.txt"))\
+         .add_profiles(Namespace.PEGASUS, key="maxwalltime", value=2)
 
-Pegasus planner uses the above mentioned profile keys to setup
-pegasus-kickstart such that the job is sent a TERM signal when the
-checkpoint time of job is reached. A KILL signal is sent at
-(checkpoint.time + (maxwalltime-checkpoint.time)/2) minutes. This
-ensures that there is enough time for pegasus-lite to transfer the
-checkpoint file before the job is killed by the underlying scheduler.
 
-In order to use Pegasus support for checkpointing, it is recommended
-that your application
+2. **The application needs a signal to begin writing a checkpoint file.** In this
+   scenario, a ``SIGTERM`` will be sent by **pegasus-kickstart** to the running
+   executable at time ``checkpoint.time`` minutes. The executable should then handle
+   the ``SIGTERM`` by starting to write out a checkpoint file. At time 
+   ``(checkpoint.time + (maxwalltime-checkpoint.time)/2)``, a ``KILL`` signal
+   will be sent to the job. The given formula is used to allow the application
+   time to write the checkpoint file and have it staged out.
 
-1. exits with a non zero exit code; when it exits as a result of the
-   job being checkpointed. For an application that regularly creates
-   a checkpoint file, and is still running at T=
-   (checkpoint.time + (maxwalltime-checkpoint.time)/2) minutes; it will
-   be killed by pegasus-kickstart.
+.. code-block:: python
 
-2. always create zero byte output files for files that are designated
-   as outputs for the associated job in the workflow. If your code, only
-   creates the checkpoint file, the PegasusLite job will fail at
-   transferring outputs, and that leads to a lot of unnecessary errors
-   appearing in the job .out file.
+   # SIGTERM will be sent at time = 1 minute
+   # KILL will be sent at time = (1 + (2 - 1)/2) = 1.5 minutes
+
+   job = Job(exe)\
+         .add_checkpoint(File("saved_state.txt"))\
+         .add_profiles(Namespace.PEGASUS, key="checkpoint.time", value=1)\
+         .add_profiles(Namespace.PEGASUS, key="maxwalltime", value=2)
+
+.. note::
+
+   When using the ``condorio`` data staging configuration, an empty checkpoint
+   file (placeholder) must be created and referenced in the replica catalog prior to submitting
+   the workflow. 
+
+
+.. caution::
+
+   - ``dagman.retry`` should be large enough to allow the job to run until completion
+   - ``maxwalltime`` should be large enough to allow the job to write a checkpoint file at least once
 
 .. _bypass-input-staging:
 
