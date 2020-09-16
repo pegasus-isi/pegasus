@@ -1289,17 +1289,46 @@ rarely changing data. These two axis form a space of four distinct
 directories.
 
 .. table:: Local Directories Related Properties
-
-   ===================================================================================================================================================================== =====================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                    **Description**
-   **Property Key:**\ pegasus.home.datadir\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** ${pegasus.home}/share      The datadir directory contains broadly visible and possibly exported configuration files that rarely change. This directory is currently unused.
-   **Property Key:**\ pegasus.home.sysconfdir\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** ${pegasus.home}/etc     The system configuration directory contains configuration files that are specific to the machine or installation, and that rarely change. This is the directory where the XML schema definition copies are stored, and where the base pool configuration file is stored.
-   **Property Key:**\ pegasus.home.sharedstatedir\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** ${pegasus.home}/com Frequently changing files that are broadly visible are stored in the shared state directory. This is currently unused.
-   **Property Key:**\ pegasus.home.localstatedir\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** ${pegasus.home}/var  Frequently changing files that are specific to a machine and/or installation are stored in the local state directory. This is currently unused
-   **Property Key:**\ pegasus.dir.submit.logs\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** (no default)            This property can be used to specify the directory where the condor logs for the workflow should go to. By default, starting 4.2.1 release, Pegasus will setup the log to be in the workflow submit directory. This can create problems, in case users submit directories are on NSF.
-
-                                                                                                                                                                         This is done to ensure that the logs are created in a local directory even though the submit directory maybe on NFS
-   ===================================================================================================================================================================== =====================================================================================================================================================================================================================================================================================
+    
+    +---------------------------------------------+-------------------------------------------------------------------+
+    | Key Attributes                              | Description                                                       |
+    +=============================================+===================================================================+
+    | | Property Key: pegasus.home.datadir        | | The datadir directory contains broadly visible and possibly     |
+    | | Profile Key: N/A                          | | exported configuration files that rarely change. This           |
+    | | Scope : Properties                        | | directory is currently unused.                                  |
+    | | Since : 2.0                               |                                                                   |
+    | | Type  : file path                         |                                                                   |
+    | | Default : ${pegasus.home}/share           |                                                                   |
+    +---------------------------------------------+-------------------------------------------------------------------+
+    | | Property Key: pegasus.home.sysconfdir     | | The system configuration directory contains configuration       |
+    | | Profile Key: N/A                          | | files that are specific to the machine or installation, and     |
+    | | Scope : Properties                        | | that rarely change. This is the directory where the YAML/XML    |
+    | | Since : 2.0                               | | schema definition copies are stored, and where the base         |
+    | | Type  :file path                          | | site configuration file is stored.                              |
+    | | Default : ${pegasus.home}/etc             |                                                                   |
+    +---------------------------------------------+-------------------------------------------------------------------+
+    | | Property Key: pegasus.home.sharedstatedir | | Frequently changing files that are broadly visible are          |
+    | | Profile Key: N/A                          | | stored in the shared state directory. This is currently         |
+    | | Scope : Properties                        | | unused.                                                         |
+    | | Since : 2.0                               |                                                                   |
+    | | Type :file path                           |                                                                   |
+    | | Default : ${pegasus.home}/com             |                                                                   |
+    +---------------------------------------------+-------------------------------------------------------------------+
+    | | Property Key: pegasus.home.localstatedir  | | Frequently changing files that are specific to a machine        |
+    | | Profile Key: N/A                          | | and/or installation are stored in the local state directory.    |
+    | | Scope : Properties                        | | This is currently unused                                        |
+    | | Since : 2.0                               |                                                                   |
+    | | Type   :file path                         |                                                                   |
+    | | Default : ${pegasus.home}/var             |                                                                   |
+    +---------------------------------------------+-------------------------------------------------------------------+
+    | | Property Key: pegasus.dir.submit.logs     | | This property can be used to specify the directory where the    |
+    | | Profile Key: N/A                          | | condor logs for the workflow should go to. By default, starting |
+    | | Scope : Properties                        | | 4.2.1 release, Pegasus will setup the log to be in the          |
+    | | Since : 2.0                               | | workflow submit directory. This can create problems, in case    |
+    | | Type :file path                           | | users submit directories are on NSF.                            |
+    | | Default : (no default)                    | | This is done to ensure that the logs are created in a local     |
+    |                                             | | directory even though the submit directory maybe on NFS.        |
+    +---------------------------------------------+-------------------------------------------------------------------+
 
 .. _site-dir-props:
 
