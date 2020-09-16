@@ -1289,7 +1289,7 @@ rarely changing data. These two axis form a space of four distinct
 directories.
 
 .. table:: Local Directories Related Properties
-    
+
     +---------------------------------------------+-------------------------------------------------------------------+
     | Key Attributes                              | Description                                                       |
     +=============================================+===================================================================+
@@ -1340,80 +1340,152 @@ In rare occasions, it may also pertain to locally run compute jobs.
 
 .. table:: Site Directories Related Properties
 
-   ===================================================================================================================================================================================================== ================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                                    **Description**
-   **Property Key:**\ pegasus.dir.useTimestamp\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.1 **Type :**\ Boolean **Default :** false                                                    While creating the submit directory, Pegasus employs a run numbering scheme. Users can use this Boolean property to use a timestamp based numbering scheme instead of the runxxxx scheme.
-   **Property Key:**\ pegasus.dir.exec\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** (no default)                                                   This property modifies the remote location work directory in which all your jobs will run. If the path is relative then it is appended to the work directory (associated with the site), as specified in the site catalog. If the path is absolute then it overrides the work directory specified in the site catalog.
-   **Property Key:**\ pegasus.dir.submit.mapper\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.7 **Type :**\ Enumeration **Values :** Flat|Hashed **Default :** Hashed                     This property modifies determines how the directory for job submit files are mapped on the submit host.
-
-                                                                                                                                                                                                         Flat
-                                                                                                                                                                                                            This mapper results in Pegasus placing all the job submit files in the submit directory as determined from the planner options. This can result in too many files in one directory for large workflows, and was the only option before Pegasus 4.7.0 release.
-                                                                                                                                                                                                         Hashed
-                                                                                                                                                                                                            This mapper results in the creation of a deep directory structure rooted at the submit directory. The base directory is the submit directory as determined from the planner options. By default, the directory structure created is two levels deep. To control behavior of this mapper, users can specify the following properties
-                                                                                                                                                                                                            ::
-
-                                                                                                                                                                                                               pegasus.dir.submit.mapper.hashed.levels     the number of directory levels used
-                                                                                                                                                                                                                                                           to accomodate the files. Defaults to 2.
-                                                                                                                                                                                                               pegasus.dir.submit.mapper.hashed.multiplier the number of files associated with a job
-                                                                                                                                                                                                                                                           in the submit directory. defaults to 5.
-   **Property Key:**\ pegasus.dir.staging.mapper\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.7 **Type :**\ Enumeration **Values :** Flat|Hashed **Default :** Hashed                    This property modifies determines how the job input and output files are mapped on the staging site. This only applies when the pegasus data configuration is set to nonsharedfs.
-
-                                                                                                                                                                                                         Flat
-                                                                                                                                                                                                            This mapper results in Pegasus placing all the job submit files in the staging site directory as determined from the Site Catalog and planner options. This can result in too many files in one directory for large workflows, and was the only option before Pegasus 4.7.0 release.
-                                                                                                                                                                                                         Hashed
-                                                                                                                                                                                                            This mapper results in the creation of a deep directory structure rooted at the staging site directory created by the create dir jobs. The binning is at the job level, and not at the file level i.e each job will push out it's outputs to the same directory on the staging site, independent of the number of output files. To control behavior of this mapper, users can specify the following properties
-                                                                                                                                                                                                            ::
-
-                                                                                                                                                                                                               pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used
-                                                                                                                                                                                                                                                           to accomodate the files. Defaults to 2.
-                                                                                                                                                                                                               pegasus.dir.staging.mapper.hashed.multiplier the number of files associated with a job
-                                                                                                                                                                                                                                                           in the submit directory. defaults to 5.
-   **Property Key:**\ pegasus.dir.storage.mapper\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.3 **Type :**\ Enumeration **Values :** Flat|Fixed|Hashed|Replica **Default :** Flat        This property modifies determines how the output files are mapped on the output site storage location.
-                                                                                                                                                                                                         In order to preserve backward compatibility, setting the boolean property pegasus.dir.storage.deep results in the Hashed output mapper to be loaded, if no output mapper property is specified.
-
-                                                                                                                                                                                                         Flat
-                                                                                                                                                                                                            By default, Pegasus will place the output files in the storage directory specified in the site catalog for the output site.
-                                                                                                                                                                                                         Fixed
-                                                                                                                                                                                                            Using this mapper, users can specify an externally accesible url to the storage directory in their properties file. The following property needs to be set.
-                                                                                                                                                                                                            ::
-
-                                                                                                                                                                                                               pegasus.dir.storage.mapper.fixed.url  an externally accessible URL to the
-                                                                                                                                                                                                               storage directory on the output site
-                                                                                                                                                                                                               e.g. gsiftp://outputs.isi.edu/shared/outputs
-
-                                                                                                                                                                                                            Note: For hierarchal workflows, the above property needs to be set separately for each dax job, if you want the sub workflow outputs to goto a different directory.
-                                                                                                                                                                                                         Hashed
-                                                                                                                                                                                                            This mapper results in the creation of a deep directory structure on the output site, while populating the results. The base directory on the remote end is determined from the site catalog. Depending on the number of files being staged to the remote site a Hashed File Structure is created that ensures that only 256 files reside in one directory. To create this directory structure on the storage site, Pegasus relies on the directory creation feature of the Grid FTP server, which appeared in globus 4.0.x
-                                                                                                                                                                                                         Replica
-                                                                                                                                                                                                            This mapper determines the path for an output file on the output site by querying an output replica catalog. The output site is one that is passed on the command line. The output replica catalog can be configured by specifiing the properties with the prefix pegasus.dir.storage.replica. By default, a Regex File based backend is assumed unless overridden. For example
-                                                                                                                                                                                                            ::
-
-                                                                                                                                                                                                               pegasus.dir.storage.mapper.replica       Regex|File
-                                                                                                                                                                                                               pegasus.dir.storage.mapper.replica.file  the RC file at the backend to use if using a file based RC
-   **Property Key:**\ pegasus.dir.storage.deep\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.1 **Type :**\ Boolean **Default :** false                                                    This Boolean property results in the creation of a deep directory structure on the output site, while populating the results. The base directory on the remote end is determined from the site catalog.
-
-                                                                                                                                                                                                         To this base directory, the relative submit directory structure ( $user/$vogroup/$label/runxxxx ) is appended.
-
-                                                                                                                                                                                                         $storage = $base + $relative_submit_directory
-
-                                                                                                                                                                                                         This is the base directory that is passed to the storage mapper.
-
-                                                                                                                                                                                                         Note: To preserve backward compatibilty, setting this property results in the Hashed mapper to be loaded unless pegasus.dir.storage.mapper is explicitly specified. Before 4.3, this property resulted in HashedDirectory structure.
-   **Property Key:**\ pegasus.dir.create.strategy\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.2 **Type :**\ Enumeration **Values :** HourGlass|Tentacles|Minimal\ **Default :** Minimal If the
-
-                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                            --randomdir
-
-                                                                                                                                                                                                         option is given to the Planner at runtime, the Pegasus planner adds nodes that create the random directories at the remote pool sites, before any jobs are actually run. The two modes determine the placement of these nodes and their dependencies to the rest of the graph.
-
-                                                                                                                                                                                                         HourGlass
-                                                                                                                                                                                                            It adds a make directory node at the top level of the graph, and all these concat to a single dummy job before branching out to the root nodes of the original/ concrete dag so far. So we introduce a classic X shape at the top of the graph. Hence the name HourGlass.
-                                                                                                                                                                                                         Tentacles
-                                                                                                                                                                                                            This option places the jobs creating directories at the top of the graph. However instead of constricting it to an hour glass shape, this mode links the top node to all the relevant nodes for which the create dir job is necessary. It looks as if the node spreads its tentacleas all around. This puts more load on the DAGMan because of the added dependencies but removes the restriction of the plan progressing only when all the create directory jobs have progressed on the remote pools, as is the case in the HourGlass model.
-                                                                                                                                                                                                         Minimal
-                                                                                                                                                                                                            The strategy involves in walking the graph in a BFS order, and updating a bit set associated with each job based on the BitSet of the parent jobs. The BitSet indicates whether an edge exists from the create dir job to an ancestor of the node. For a node, the bit set is the union of all the parents BitSets. The BFS traversal ensures that the bitsets are of a node are only updated once the parents have been processed.
-   ===================================================================================================================================================================================================== ================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +---------------------------------------------+-----------------------------------------------------------------------+
+    | Key Attributes                              | Description                                                           |
+    +=============================================+=======================================================================+
+    | | Property Key: pegasus.dir.useTimestamp    | | While creating the submit directory, Pegasus employs a run          |
+    | | Profile Key: N/A                          | | numbering scheme. Users can use this Boolean property to            |
+    | | Scope : Properties                        | | use a timestamp based numbering scheme instead of the runxxxx       |
+    | | Since : 2.1                               | | scheme.                                                             |
+    | | Type  :Boolean                            |                                                                       |
+    | | Default : false                           |                                                                       |
+    +---------------------------------------------+-----------------------------------------------------------------------+
+    | | Property Key: pegasus.dir.exec            | | This property modifies the remote location work directory in        |
+    | | Profile Key: N/A                          | | which all your jobs will run. If the path is relative then          |
+    | | Scope : Properties                        | | it is appended to the work directory (associated with the           |
+    | | Since : 2.0                               | | site), as specified in the site catalog. If the path is             |
+    | | Type  : file path                         | | absolute then it overrides the work directory specified in          |
+    | | Default : (no default)                    | | the site catalog.                                                   |
+    +---------------------------------------------+-----------------------------------------------------------------------+
+    | | Property Key:pegasus.dir.submit.mapper    | | This property modifies determines how the directory for             |
+    | | Profile Key:N/A                           | | job submit files are mapped on the submit host.                     |
+    | | Scope : Properties                        | |                                                                     |
+    | | Since : 4.7                               | | - **Flat**: This mapper results in Pegasus placing all the          |
+    | | Type : Enumeration                        | |   job submit files in the submit directory as determined from       |
+    | | Values : Flat|Hashed                      | |   the planner options. This can result in too many files in         |
+    | | Default : Hashed                          | |   one directory for large workflows, and was the only option        |
+    |                                             | |   before Pegasus 4.7.0 release.                                     |
+    |                                             | | - **Hashed**: This mapper results in the creation of a deep         |
+    |                                             | |   directory structure rooted at the submit directory. The           |
+    |                                             | |   base directory is the submit directory as determined from         |
+    |                                             | |   the planner options. By default, the directory structure          |
+    |                                             | |   created is two levels deep. To control behavior of this           |
+    |                                             | |   mapper, users can specify the following properties                |
+    |                                             | |                                                                     |
+    |                                             | |   **pegasus.dir.submit.mapper.hashed.levels** - the number of       |
+    |                                             | |     directory levels used to accomodate the files. Defaults to      |
+    |                                             | |     2.                                                              |
+    |                                             | |   **pegasus.dir.submit.mapper.hashed.multiplier** - the number      |
+    |                                             | |     of files associated with a job in the submit directory.         |
+    |                                             | |     Defaults to 5.                                                  |
+    +---------------------------------------------+-----------------------------------------------------------------------+
+    | | Property Key: pegasus.dir.staging.mapper  | | This property modifies determines how the job input and output      |
+    | | Profile Key: N/A                          | | files are mapped on the staging site. This only applies when        |
+    | | Scope : Properties                        | | the pegasus data configuration is set to nonsharedfs.               |
+    | | Since : 4.7                               | |                                                                     |
+    | | Type :Enumeration                         | | - **Flat**: This mapper results in Pegasus placing all the          |
+    | | Values : Flat|Hashed                      | |   job submit files in the staging site directory as determined      |
+    | | Default : Hashed                          | |   from the Site Catalog and planner options. This can result        |
+    |                                             | |   in too many files in one directory for large workflows, and       |
+    |                                             | |   was the only option before Pegasus 4.7.0 release.                 |
+    |                                             | | - **Hashed**: This mapper results in the creation of a deep         |
+    |                                             | |   directory structure rooted at the staging site directory          |
+    |                                             | |   created by the create dir jobs. The binning is at the job         |
+    |                                             | |   level,and not at the file level i.e each job will push out        |
+    |                                             | |   it’s  outputs to the same directory on the staging site,          |
+    |                                             | |   independent of the number of output files. To control             |
+    |                                             | |   behavior of this mapper, users can specify the following          |
+    |                                             | |   properties                                                        |
+    |                                             | |                                                                     |
+    |                                             | |   **pegasus.dir.staging.mapper.hashed.levels** - the number of      |
+    |                                             | |   directory levels used to accomodate the files. Defaults to        |
+    |                                             | |   2.                                                                |
+    |                                             | |   **pegasus.dir.staging.mapper.hashed.multiplier**- the number      |
+    |                                             | |   of files associated with a job in the submit directory.           |
+    |                                             | |   Defaults to 5.                                                    |
+    +---------------------------------------------+-----------------------------------------------------------------------+
+    | | Property Key: pegasus.dir.storage.mapper  | | This property modifies determines how the output files are          |
+    | | Profile Key : N/A                         | | mapped on the output site storage location. In order to             |
+    | | Scope : Properties                        | | preserve backward compatibility, setting the boolean property       |
+    | | Since : 4.3                               | | **pegasus.dir.storage.deep** results in the Hashed output mapper    |
+    | | Type :Enumeration                         | | to be loaded, if no output mapper property is specified.            |
+    | | Values : Flat|Fixed|Hashed|Replica        | |                                                                     |
+    | | Default : Flat                            | | - **Flat**: By default, Pegasus will place the output files in      |
+    |                                             | |   the storage directory specified in the site catalog for the       |
+    |                                             | |   output site.                                                      |
+    |                                             | | - **Fixed**: Using this mapper, users can specify an externally     |
+    |                                             | |    accesible url to the storage directory in their properties       |
+    |                                             | |    file. The following property needs to be set.                    |
+    |                                             | |    **pegasus.dir.storage.mapper.fixed.url** - an externally         |
+    |                                             | |    accessible URL to the storage directory on the output site       |
+    |                                             | |    e.g. gsiftp://outputs.isi.edu/shared/outputs                     |
+    |                                             | |    **Note:** For hierarchal workflows, the above property needs to  |
+    |                                             | |    be set separately for each pegasusWorkflow/dax job, if you want  |
+    |                                             | |    the sub workflow outputs to goto a different directory.          |
+    |                                             | | - **Hashed**: This mapper results in the creation of a deep         |
+    |                                             | |    directory structure on the output site, while populating         |
+    |                                             | |    the results. The base directory on the remote end is             |
+    |                                             | |    determined from the site catalog. Depending on the number        |
+    |                                             | |    of files being staged to the remote site a Hashed File           |
+    |                                             | |    Structure is created that ensures that only 256 files reside     |
+    |                                             | |    in one directory. To create this directory structure on the      |
+    |                                             | |    storage site, Pegasus relies on the directory creation           |
+    |                                             | |    feature of the Grid FTP server, which appeared in globus 4.0.x   |
+    |                                             | | - **Replica**: This mapper determines the path for an output        |
+    |                                             | |    file on the output site by querying an output replica            |
+    |                                             | |    catalog. The output site is one that is passed on the            |
+    |                                             | |    command line. The output replica catalog can be configured       |
+    |                                             | |    by specifiing the properties with the prefix                     |
+    |                                             | |    **pegasus.dir.storage.replica**. By default, a Regex File        |
+    |                                             | |    based backend is assumed unless overridden. For example          |
+    |                                             | |    pegasus.dir.storage.mapper.replica       Regex|File              |
+    |                                             | |    pegasus.dir.storage.mapper.replica.file  the RC file at the      |
+    |                                             | |                           backend to use if using a file based RC   |
+    +---------------------------------------------+-----------------------------------------------------------------------+
+    | | Property Key: pegasus.dir.storage.deep    | | This Boolean property results in the creation of a deep             |
+    | | Profile Key: N/A                          | | directory structure on the output site, while populating            |
+    | | Scope : Properties                        | | the results. The base directory on the remote end is                |
+    | | Since : 2.1                               | | determined from the site catalog.                                   |
+    | | Type  : Boolean                           | | To this base directory, the relative submit directory               |
+    | | Default : false                           | | structure ( $user/$vogroup/$label/runxxxx ) is appended.            |
+    |                                             | | $storage = $base + $relative_submit_directory                       |
+    |                                             | | This is the base directory that is passed to the storage mapper.    |
+    |                                             | | **Note:** To preserve backward compatibilty, setting this property  |
+    |                                             | | results in the Hashed mapper to be loaded unless                    |
+    |                                             | | pegasus.dir.storage.mapper is explicitly specified. Before 4.3,     |
+    |                                             | | this property resulted in HashedDirectory structure.                |
+    +---------------------------------------------+-----------------------------------------------------------------------+
+    | | Property Key: pegasus.dir.create.strategy | | If the **--randomdir** option is given to the Planner at            |
+    | | Profile Key: N/A                          | | runtime, the Pegasus planner adds nodes that create the             |
+    | | Scope : Properties                        | | random directories at the remote sites, before any jobs             |
+    | | Since : 2.2                               | | are actually run. The two modes determine the placement             |
+    | | Type :Enumeration                         | | of these nodes and their dependencies to the rest of the            |
+    | | Values : HourGlass|Tentacles|Minimal      | | graph.                                                              |
+    | | Default : Minimal                         | |                                                                     |
+    |                                             | | - **HourGlass**: It adds a make directory node at the               |
+    |                                             | |    top level of the graph, and all these concat to a single         |
+    |                                             | |    dummy job before branching out to the root nodes of the          |
+    |                                             | |    original/ concrete dag so far. So we introduce a classic         |
+    |                                             | |    X shape at the top of the graph. Hence the name HourGlass.       |
+    |                                             | | - **Tentacles**: This option places the jobs creating               |
+    |                                             | |    directories at the top of the graph. However instead of          |
+    |                                             | |    constricting it to an hour glass shape, this mode links          |
+    |                                             | |    the top node to all the relevant nodes for which the create      |
+    |                                             | |    dir job is necessary. It looks as if the node spreads its        |
+    |                                             | |    tentacleas all around. This puts more load on the DAGMan         |
+    |                                             | |    because of the added dependencies but removes the                |
+    |                                             | |    restriction of the plan progressing only when all the            |
+    |                                             | |    create directory jobs have progressed on the remote sites,       |
+    |                                             | |    as is the case in the HourGlass model.                           |
+    |                                             | | - **Minimal**: The strategy involves in walking the graph in        |
+    |                                             | |   a BFS order, and updating a bit set associated with each          |
+    |                                             | |   job based on the BitSet of the parent jobs. The BitSet            |
+    |                                             | |   indicates whether an edge exists from the create dir job          |
+    |                                             | |   to an ancestor of the node. For a node, the bit set is the        |
+    |                                             | |   union of all the parents BitSets. The BFS traversal ensures       |
+    |                                             | |   that the bitsets are of a node are only updated once the          |
+    |                                             | |   parents have been processed.                                      |
+    +---------------------------------------------+-----------------------------------------------------------------------+
 
 .. _schema-props:
 
