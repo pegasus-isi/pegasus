@@ -1069,16 +1069,51 @@ by the local attributes.sh. The profiles are described below.
 
 .. table:: Task Resource Requirement Profiles.
 
-   ============================================================================================================================================================== =======================================================================================================================================================================================================================================================
-   **Property Key**                                                                                                                                               **Description**
-   **Property Key:**\ pegasus.runtime\ **Profile Key:**\ runtime\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Long                            This profile specifies the expected runtime of a job in seconds. Refer to the `Pegasus Clustering Guide <#runtime_clustering>`__ for description on using it for runtime clustering.
-   **Property Key:**\ pegasus.clusters.maxruntime\ **Profile Key:**\ clusters.maxruntime\ **Scope :** TC, SC, DAX, Properties **Since :** 4.0 **Type :**\ Integer Please refer to the `Pegasus Clustering Guide <#runtime_clustering>`__ for detailed description. This profile specifies the maximum runtime of a job.
-   **Property Key:**\ pegasus.cores\ **Profile Key:**\ cores\ **Scope :** TC, SC, DAX, Properties **Since :** 4.0 **Type :**\ Integer                             The total number of cores, required for a job. This is also used for accounting purposes in the database while generating statistics. It corresponds to the multiplier_factor in the job_instance table described `here <#stampede_schema_overview>`__.
-   **Property Key:**\ pegasus.nodes\ **Profile Key:**\ nodes\ **Scope :** TC, SC, DAX, Properties **Since :** 4.6 **Type :**\ Integer                             Indicates the the number of nodes a job requires.
-   **Property Key:**\ pegasus.ppn\ **Profile Key:**\ ppn\ **Scope :** TC, SC, DAX, Properties **Since :** 4.6 **Type :**\ Integer                                 Indicates the number of processors per node . This profile is best set in the Site Catalog and usually set when running workflows with MPI jobs.
-   **Property Key:**\ pegasus.memory\ **Profile Key:**\ memory\ **Scope :** TC, SC, DAX, Properties **Since :** 4.6 **Type :**\ Long                              Indicates the maximum memory a job requires in MB.
-   **Property Key:**\ pegasus.diskspace\ **Profile Key:**\ diskspace\ **Scope :** TC, SC, DAX, Properties **Since :** 4.6 **Type :**\ Long                        Indicates the maximum diskspace a job requires in MB.
-   ============================================================================================================================================================== =======================================================================================================================================================================================================================================================
+    +---------------------------------------------+------------------------------------------------------------------+
+    | Property Key                                | Description                                                      |
+    +=============================================+==================================================================+
+    | | Property Key: pegasus.runtime             | | This profile specifies the expected runtime of a job           |
+    | | Profile Key: runtime                      | | in seconds. Refer to the                                       |
+    | | Scope : TC, SC, Abstract WF, Properties   | | `Pegasus Clustering Guide <#runtime_clustering>`__             |
+    | | Since : 2.0                               | | for description on using it for runtime clustering.            |
+    | | Type : Long                               |                                                                  |
+    +---------------------------------------------+------------------------------------------------------------------+
+    | | Property Key: pegasus.clusters.maxruntime | | Please refer to the                                            |
+    | | Profile Key: clusters.maxruntime          | | `Pegasus Clustering Guide <#runtime_clustering>`__             |
+    | | Scope : TC, SC, Abstract WF, Properties   | | for detailed description. This profile specifies the           |
+    | | Since : 4.0                               | | maximum runtime of a job in seconds.                           |
+    | | Type : Integer                            |                                                                  |
+    +---------------------------------------------+------------------------------------------------------------------+
+    | | Property Key: pegasus.cores               | | The total number of cores, required for a job. This is also    |
+    | | Profile Key:cores                         | | used for accounting purposes in the database while             |
+    | | Scope : TC, SC, Abstract WF, Properties   | | generating statistics. It corresponds to the multiplier_factor |
+    | | Since : 4.0                               | | in the job_instance table described                            |
+    | | Type : Integer                            | | `here <#stampede_schema_overview>`__ .                         |
+    +---------------------------------------------+------------------------------------------------------------------+
+    | | Property Key: pegasus.nodes               | Indicates the the number of nodes a job requires.                |
+    | | Profile Key: nodes                        |                                                                  |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                  |
+    | | Since : 4.6                               |                                                                  |
+    | | Type : Integer                            |                                                                  |
+    +---------------------------------------------+------------------------------------------------------------------+
+    | | Property Key: pegasus.ppn                 | | Indicates the number of processors per node . This profile is  |
+    | | Profile Key: ppn                          | | best set in the Site Catalog and usually set when running      |
+    | | Scope : TC, SC, Abstract WF, Properties   | | workflows with MPI jobs.                                       |
+    | | Since : 4.6                               |                                                                  |
+    | | Type : Integer                            |                                                                  |
+    +---------------------------------------------+------------------------------------------------------------------+
+    | | Property Key: pegasus.memory              | Indicates the maximum memory a job requires in MB.               |
+    | | Profile Key: memory                       |                                                                  |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                  |
+    | | Since : 4.6                               |                                                                  |
+    | | Type : Long                               |                                                                  |
+    +---------------------------------------------+------------------------------------------------------------------+
+    | | Property Key: pegasus.diskspace           | Indicates the maximum diskspace a job requires in MB.            |
+    | | Profile Key: diskspace                    |                                                                  |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                  |
+    | | Since : 4.6                               |                                                                  |
+    | | Type : Long                               |                                                                  |
+    +---------------------------------------------+------------------------------------------------------------------+
 
 The automatic translation to various execution environment specific
 directives is explained below. It is important, to note that execution
