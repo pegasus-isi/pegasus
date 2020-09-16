@@ -1158,12 +1158,34 @@ profiles.
 
 .. table:: Useful Selector Profile Keys
 
-   ============================================================================================================================================= =====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                            **Description**
-   **Property Key:**\ N/A\ **Profile Key:**\ execution.site\ **Scope :** DAX **Since :** 4.5 **Type :**\ String                                  the execution site where a job should be executed.
-   **Property Key:**\ N/A\ **Profile Key:**\ pfn\ **Scope :** TC, SC, DAX, Properties **Since :** 4.5 **Type :**\ String                         the physical file name to the main executable that a job refers to. Overrides any entries specified in the transformation catalog.
-   **Property Key:**\ hints.grid.jobtype\ **Profile Key:**\ grid.jobtype\ **Scope :** TC, SC, DAX, Properties **Since :** 4.5 **Type :**\ String applicable when submitting to remote sites via GRAM. The site catalog allows you to associate multiple jobmanagers with a GRAM site, for different type of jobs [compute, auxillary, transfer, register, cleanup ] that Pegasus generates in the executable workflow. This profile is usually used to ensure that a compute job executes on another job manager. For example, if in site catalog you have headnode.example.com/jobmanager-condor for compute jobs, and headnode.example.com/jobmanager-fork for auxillary jobs. Associating this profile and setting value to auxillary for a compute job, will cause the compute job to run on the fork jobmanager instead of the condor jobmanager.
-   ============================================================================================================================================= =====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +--------------------------------------------+--------------------------------------------------------------------+
+    | Key Attributes                             | Description                                                        |
+    +============================================+====================================================================+
+    | | Property Key: N/A                        | the execution site where a job should be executed.                 |
+    | | Profile Key: execution.site              |                                                                    |
+    | | Scope : Abstract WF                      |                                                                    |
+    | | Since : 4.5                              |                                                                    |
+    | | Type : String                            |                                                                    |
+    +--------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: N/A                        | | the physical file name to the main executable that a job refers  |
+    | | Profile Key: pfn                         | | to. Overrides any entries specified in the transformation        |
+    | | Scope : TC, SC, Abstract WF, Properties  | | catalog.                                                         |
+    | | Since : 4.5                              |                                                                    |
+    | | Type  : String                           |                                                                    |
+    +--------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: hints.grid.jobtype         | | applicable when submitting to remote sites via GRAM. The site    |
+    | | Profile Key:grid.jobtype                 | | catalog allows you to associate multiple jobmanagers with a      |
+    | | Scope : TC, SC, Abstract WF, Properties  | | GRAM site, for different type of jobs                            |
+    | | Since : 4.5                              | | [compute, auxillary, transfer, register, cleanup ] that          |
+    | | Type  : String                           | | Pegasus generates in the executable workflow. This profile is    |
+    |                                            | | usually used to ensure that a compute job executes on another    |
+    |                                            | | job manager. For example, if in site catalog you have            |
+    |                                            | | headnode.example.com/jobmanager-condor for compute jobs,         |
+    |                                            | | and headnode.example.com/jobmanager-fork for auxillary jobs.     |
+    |                                            | | Associating this profile and setting value to auxillary for      |
+    |                                            | | a compute job, will cause the compute job to run on the fork     |
+    |                                            | | jobmanager instead of the condor jobmanager.                     |
+    +--------------------------------------------+--------------------------------------------------------------------+
 
 Properties
 ==========
