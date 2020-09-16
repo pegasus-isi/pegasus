@@ -824,52 +824,234 @@ for their decision-making.
 The table below shows some of the useful configuration option Pegasus
 understands.
 
-.. table:: Useful pegasus Profiles.
+.. table:: Useful Pegasus Profiles
 
-   ======================================================================================================================================================================== ========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Property Key**                                                                                                                                                         **Description**
-   **Property Key:**\ pegasus.clusters.num\ **Profile Key:**\ clusters.num\ **Scope :** TC, SC, DAX, Properties **Since :** 3.0 **Type :**\ Integer                         Please refer to the `Pegasus Clustering Guide <#horizontal_clustering>`__ for detailed description. This option determines the total number of clusters per level. Jobs are evenly spread across clusters.
-   **Property Key:**\ pegasus.clusters.size\ **Profile Key:**\ clusters.size\ **Scope :** TC, SC, DAX, Properties **Since :** 3.0 **Type :**\ Integer                       Please refer to the `Pegasus Clustering Guide <#horizontal_clustering>`__ for detailed description. This profile determines the number of jobs in each cluster. The number of clusters depends on the total number of jobs on the level.
-   **Property Key:**\ pegasus.job.aggregator\ **Profile Key:**\ job.aggregator\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer                     Indicates the clustering executable that is used to run the clustered job on the remote site.
-   **Property Key:**\ pegasus.gridstart\ **Profile Key:**\ gridstart\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                                Determines the executable for launching a job. This covers both tasks ( jobs specified by the user in the DAX) and additional jobs added by Pegasus during the planning operation. Possible values are **Kickstart \| NoGridStart** \| PegasusLite \| Distribute at the moment.
-                                                                                                                                                                               **Note**
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | Property Key                               | Description                                                         |
+    +============================================+=====================================================================+
+    | | Property Key: pegasus.clusters.num       | | Please refer to the                                               |
+    | | Profile Key: clusters.num                | | `Pegasus Clustering Guide <#horizontal_clustering>`__             |
+    | | Scope : TC, SC, Abstract WF, Properties  | | for detailed description. This option determines the              |
+    | | Since : 3.0                              | | total number of clusters per level. Jobs are evenly spread        |
+    | | Type :Integer                            | | across clusters.                                                  |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.clusters.size      | | Please refer to the                                               |
+    | | Profile Key:clusters.size                | | `Pegasus Clustering Guide <#horizontal_clustering>`__             |
+    | | Scope : TC, SC, Abstract WF, Properties  | | for detailed description. This profile determines the number of   |
+    | | Since : 3.0                              | | jobs in each cluster. The number of clusters depends on the total |
+    | | Type : Integer                           | | number of jobs on the level.                                      |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.job.aggregator     | | Indicates the clustering executable that is used to run the       |
+    | | Profile Key:job.aggregator               | | clustered job on the remote site.                                 |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 2.0                              |                                                                     |
+    | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.gridstart          | | Determines the executable for launching a job. This               |
+    | | Profile Key: gridstart                   | | covers both tasks ( jobs specified by the user in the             |
+    | | Scope : TC, SC, Abstract WF, Properties  | | Abstract Workflow) and additional jobs added by Pegasus           |
+    | | Since : 2.0                              | | during the planning operation. Possible values are                |
+    | | Type :String                             | | Kickstart | NoGridStart | PegasusLite | Distribute                |
+    |                                            | | at the moment.                                                    |
+    |                                            | | Note: This profile should only be set by users if you know        |
+    |                                            | | what you are doing. Otherwise, let Pegasus do the right thing     |
+    |                                            | | based on your configuration.                                      |
+    |                                            | | - **Kickstart**                                                   |
+    |                                            | |   By default, all jobs executed are launched using a lightweight  |
+    |                                            | |   C executable called pegasus-kickstart. This generates valuable  |
+    |                                            | |   runtime provenance information for the job as it is executed    |
+    |                                            | |   on a remote node. This information serves as the basis for      |
+    |                                            | |   the monitoring and debugging capabilities provided by Pegasus.  |
+    |                                            | | - **NoGridStart**                                                 |
+    |                                            | |   This explicity disables the wrapping of the jobs with           |
+    |                                            | |   pegasus-kickstart. This is internally used by the planner to    |
+    |                                            | |   launch jobs directly. If this is set, then the information      |
+    |                                            | |   populated in the monitoring database is on the basis of what    |
+    |                                            | |   is recorded in the DAGMan out file.                             |
+    |                                            | | - **PegasusLite**                                                 |
+    |                                            | |   This value is automatically associated by the Planner whenever  |
+    |                                            | |   the job runs in either nonsharedfs or condorio mode. The        |
+    |                                            | |   property pegasus.data.configuration decides whether a job is    |
+    |                                            | |   launched via PegasusLite or not. PegasusLite is a lightweight   |
+    |                                            | |   Pegasus wrapper generated for each job that allows a job to     |
+    |                                            | |   run in a nonshared file system environment and is responsible   |
+    |                                            | |   for staging in the input data and staging out the output data   |
+    |                                            | |   back to a remote staging site for the job.                      |
+    |                                            | | - **Distribute**                                                  |
+    |                                            | |   This wrapper is a HubZero specfiic wrapper that allows compute  |
+    |                                            | |   jobs that are scheduled for a local PBS cluster to be run       |
+    |                                            | |   locally on the submit host. The jobs are wrapped with a         |
+    |                                            | |   distribute wrapper that is responsible for doing the qsub       |
+    |                                            | |   and tracking of the status of the jobs in the PBS cluster.      |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.gridstart.path     | | Sets the path to the gridstart . This profile is best set in      |
+    | | Profile Key: gridstart.path              | | the Site Catalog.                                                 |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 2.0                              |                                                                     |
+    | | Type :file path                          |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | Sets the arguments with which GridStart is used to launch a job   |
+    | |    pegasus.gridstart.arguments           | | on the remote site.                                               |
+    | | Profile Key:gridstart.arguments          |                                                                     |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 2.0                              |                                                                     |
+    | | Type :String                             |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.stagein.clusters   | | This key determines the maximum number of stage-in jobs that      |
+    | | Profile Key: stagein.clusters            | | are can executed locally or remotely per compute site per         |
+    | | Scope : TC, SC, Abstract WF, Properties  | | workflow. This is used to configure the                           |
+    | | Since : 4.0                              | | `BalancedCluster <#transfer-refiner-balanced-cluster>`__          |
+    | | Type :Integer                            | | Transfer Refiner, which is the Default Refiner used in Pegasus.   |
+    |                                            | | This profile is best set in the Site Catalog or in the            |
+    |                                            | | Properties file                                                   |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | This key provides finer grained control in determining the        |
+    | |           pegasus.stagein.local.clusters | | number of stage-in jobs that are executed locally and are         |
+    | | Profile Key: stagein.local.clusters      | | responsible for staging data to a particular remote site.         |
+    | | Scope : TC, SC, Abstract WF, Properties  | | This profile is best set in the Site Catalog or in the            |
+    | | Since : 4.0                              | | Properties file                                                   |
+    | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | This key provides finer grained control in determining the        |
+    | |          pegasus.stagein.remote.clusters | | number of stage-in jobs that are executed remotely on the         |
+    | | Profile Key:stagein.remote.clusters      | | remote site and are responsible for staging data to it.           |
+    | | Scope : TC, SC, Abstract WF, Properties  | | This profile is best set in the Site Catalog or in the            |
+    | | Since : 4.0                              | | Properties file                                                   |
+    | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.stageout.clusters  | | This key determines the maximum number of stage-out jobs          |
+    | | Profile Key: stageout.clusters           | | that are can executed locally or remotely per compute site        |
+    | | Scope : TC, SC, Abstract WF, Properties  | | per workflow. This is used to configure the                       |
+    | | Since : 4.0                              | | `BalancedCluster <#transfer-refiner-balanced-cluster>`__          |
+    | | Type : Integer                           | | Transfer Refiner, which is the Default Refiner used               |
+    |                                            | | in Pegasus.                                                       |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | This key provides finer grained control in determining the        |
+    | |       pegasus.stageout.local.clusters    | | number of stage-out jobs that are executed locally and are        |
+    | | Profile Key: stageout.local.clusters     | | responsible for staging data from a particular remote site.       |
+    | | Scope : TC, SC, Abstract WF, Properties  | | This profile is best set in the Site Catalog or in the            |
+    | | Since : 4.0                              | | Properties file                                                   |
+    | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | This key provides finer grained control in determining the        |
+    | |        pegasus.stageout.remote.clusters  | | number of stage-out jobs that are executed remotely on the        |
+    | | Profile Key: stageout.remote.clusters    | | remote site and are responsible for staging data from it.         |
+    | | Scope : TC, SC, Abstract WF, Properties  | | This profile is best set in the Site Catalog or in the            |
+    | | Since : 4.0                              | | Properties file                                                   |
+    | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.group              | | Tags a job with an arbitrary group identifier. The group          |
+    | | Profile Key:group                        | | site selector makes use of the tag.                               |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 2.0                              |                                                                     |
+    | | Type :String                             |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.change.dir         | | If true, tells kickstart to change into the remote working        |
+    | | Profile Key: change.dir                  | | directory. Kickstart itself is executed in whichever directory    |
+    | | Scope : TC, SC, Abstract WF, Properties  | | the remote scheduling system chose for the job.                   |
+    | | Since : 2.0                              |                                                                     |
+    | | Type :Boolean                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.create.dir         | | If true, tells kickstart to create the the remote working         |
+    | | Profile Key: create.dir                  | | directory before changing into the remote working directory.      |
+    | | Scope : TC, SC, Abstract WF, Properties  | | Kickstart itself is executed in whichever directory the           |
+    | | Since : 2.0                              | | remote scheduling system chose for the job.                       |
+    | | Type : Boolean                           |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.transfer.proxy     | | If true, tells Pegasus to explicitly transfer the proxy for       |
+    | | Profile Key:transfer.proxy               | | transfer jobs to the remote site. This is useful, when you        |
+    | | Scope : TC, SC, Abstract WF, Properties  | | want to use a full proxy at the remote end, instead of the        |
+    | | Since : 2.0                              | | limited proxy that is transferred by CondorG.                     |
+    | | Type :Boolean                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.style              | | Sets the condor submit file style. If set to globus, submit       |
+    | | Profile Key:style                        | | file generated refers to CondorG job submissions. If set to       |
+    | | Scope : TC, SC, Abstract WF, Properties  | | condor, submit file generated refers to direct Condor             |
+    | | Since : 2.0                              | | submission to the local Condor pool. It applies for glidein,      |
+    | | Type :String                             | | where nodes from remote grid sites are glided into the local      |
+    |                                            | | condor pool. The default style that is applied is globus.         |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | This key is used to set the -m option for pegasus-mpi-cluster.    |
+    | |    pegasus.pmc_request_memory            | | It specifies the amount of memory in MB that a job requires.      |
+    | | Profile Key:pmc_request_memory           | | This profile is usually set in the Abstract WF for each job.      |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 4.2                              |                                                                     |
+    | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.pmc_request_cpus   | | This key is used to set the -c option for pegasus-mpi-cluster.    |
+    | | Profile Key: pmc_request_cpus            | | It specifies the number of cpu’s that a job requires.             |
+    | | Scope : TC, SC, Abstract WF, Properties  | | This profile is usually set in the Abstract WF for each job.      |
+    | | Since : 4.2                              |                                                                     |
+    | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.pmc_priority       | | This key is used to set the -p option for pegasus-mpi-cluster.    |
+    | | Profile Key: pmc_priority                | | It specifies the priority for a job . This profile is usually     |
+    | | Scope : TC, SC, Abstract WF, Properties  | | set in the Abstract WF for each job. Negative values are          |
+    | | Since : 4.2                              | | allowed for priorities.                                           |
+    | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | The key is used to pass any extra arguments to the PMC task       |
+    | |         pegasus.pmc_task_arguments       | | during the planning time. They are added to the very end          |
+    | | Profile Key: pmc_task_arguments          | | of the argument string constructed for the task in the            |
+    | | Scope : TC, SC, Abstract WF, Properties  | | PMC file. Hence, allows for overriding of any argument            |
+    | | Since : 4.2                              | | constructed by the planner for any particular task in             |
+    | | Type :String                             | | the PMC job.                                                      |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | The message string that pegasus-exitcode searches for in          |
+    | |       pegasus.exitcode.failuremsg        | | the stdout and stderr of the job to flag failures.                |
+    | | Profile Key: exitcode.failuremsg         |                                                                     |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 4.4                              |                                                                     |
+    | | Type :String                             |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | The message string that pegasus-exitcode searches for in          |
+    | |          pegasus.exitcode.successmsg     | | the stdout and stderr of the job to determine whether a           |
+    | | Profile Key: exitcode.successmsg         | | job logged it’s success message or not. Note this value           |
+    | | Scope : TC, SC, Abstract WF, Properties  | | is used to check for whether a job failed or not i.e if           |
+    | | Since : 4.4                              | | this profile is specified, and pegasus-exitcode DOES NOT          |
+    | | Type :String                             | | find the string in the job stdout or stderr, the job              |
+    |                                            | | is flagged as failed. The complete rules for determining          |
+    |                                            | | failure are described in the man page for pegasus-exitcode.       |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.checkpoint.time    | | the expected time in minutes for a job after which it should      |
+    | | Profile Key: checkpoint.time             | | be sent a TERM signal to generate a job checkpoint file           |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 4.5                              |                                                                     |
+    | | Type : Integer                           |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.maxwalltime        | the maximum walltime in minutes for a single execution of a job.    |
+    | | Profile Key: maxwalltime                 |                                                                     |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 4.5                              |                                                                     |
+    | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.glite.arguments    | | specifies the extra arguments that must appear in the local       |
+    | | Profile Key: glite.arguments             | | PBS or LRMS generated script for a job, when running workflows    |
+    | | Scope : TC, SC, Abstract WF, Properties  | | on a local cluster with submissions through Glite. This is        |
+    | | Since : 4.5                              | | useful when you want to pass through special options to           |
+    | | Type :String                             | | underlying LRMS such as PBS e.g.                                  |
+    |                                            | | you can set value -l walltime=01:23:45 -l nodes=2 to specify      |
+    |                                            | | your job’s resource requirements.                                 |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Profile Key: auxillary.local             | | indicates whether auxillary jobs associated with a compute site   |
+    | | Scope : SC                               | | X, can be run on local site. This CAN ONLY be specified as a      |
+    | | Since : 4.6                              | | profile in the site catalog and should be set when the compute    |
+    | | Type :Boolean                            | | site filesystem is accessible locally on the submit host.         |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | indicates whether condor quoting rules should be applied for      |
+    | |      pegasus.condor.arguments.quote      | | writing out the arguments key in the condor submit file. By       |
+    | | Profile Key: condor.arguments.quote      | | default it is true unless the job is schedule to a glite          |
+    | | Scope : SC, Properties                   | | style site. The value is automatically set to false for           |
+    | | Since : 4.6                              | | glite style sites, as condor quoting is broken in batch_gahp.     |
+    | | Type :Boolean                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Profile Key: container.arguments         | | indicates additional arguments that will be appended to           |
+    | | Scope : TC, Workflow                     | | the docker container run/singularity exec commands when           |
+    | | Since : 5.0                              | |the container associated with this profile is executed             |
+    | | Type :String                             |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
 
-                                                                                                                                                                               This profile should only be set by users if you know what you are doing. Otherwise, let Pegasus do the right thing based on your configuration.
 
-                                                                                                                                                                            Kickstart
-                                                                                                                                                                               By default, all jobs executed are launched using a lightweight C executable called pegasus-kickstart. This generates valuable runtime provenance information for the job as it is executed on a remote node. This information serves as the basis for the monitoring and debugging capabilities provided by Pegasus.
-                                                                                                                                                                            NoGridStart
-                                                                                                                                                                               This explicity disables the wrapping of the jobs with pegasus-kickstart. This is internally used by the planner to launch dax jobs directly. If this is set, then the information populated in the monitording database is on the basis of what is recorded in the DAGMan out file.
-                                                                                                                                                                            PegasusLite
-                                                                                                                                                                               This value is automatically associated by the Planner whenever the job runs in either nonsharedfs or condorio mode. The property pegasus.data.configuration decides whether a job is launched via PegasusLite or not. PegasusLite is a lightweight Pegasus wrapper generated for each job that allows a job to run in a nonshared file system environment and is responsible for staging in the input data and staging out the output data back to a remote staging site for the job.
-                                                                                                                                                                            Distribute
-                                                                                                                                                                               This wrapper is a HubZero specfiic wrapper that allows compute jobs that are scheduled for a local PBS cluster to be run locally on the submit host. The jobs are wrapped with a distribute wrapper that is responsible for doing the qsub and tracking of the status of the jobs in the PBS cluster.
-   **Property Key:**\ pegasus.gridstart.path\ **Profile Key:**\ gridstart.path\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ file path                   Sets the path to the gridstart . This profile is best set in the Site Catalog.
-   **Property Key:**\ pegasus.gridstart.arguments\ **Profile Key:**\ gridstart.arguments\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String            Sets the arguments with which GridStart is used to launch a job on the remote site.
-   **Property Key:**\ pegasus.stagein.clusters\ **Profile Key:**\ stagein.clusters\ **Scope :** TC, SC, DAX, Properties **Since :** 4.0 **Type :**\ Integer                 This key determines the maximum number of *stage-in* jobs that are can executed locally or remotely per compute site per workflow. This is used to configure the `BalancedCluster <#transfer-refiner-balanced-cluster>`__ Transfer Refiner, which is the Default Refiner used in Pegasus. This profile is best set in the Site Catalog or in the Properties file
-   **Property Key:**\ pegasus.stagein.local.clusters\ **Profile Key:**\ stagein.local.clusters\ **Scope :** TC, SC, DAX, Properties **Since :** 4.0 **Type :**\ Integer     This key provides finer grained control in determining the number of stage-in jobs that are executed locally and are responsible for staging data to a particular remote site. This profile is best set in the Site Catalog or in the Properties file
-   **Property Key:**\ pegasus.stagein.remote.clusters\ **Profile Key:**\ stagein.remote.clusters\ **Scope :** TC, SC, DAX, Properties **Since :** 4.0 **Type :**\ Integer   This key provides finer grained control in determining the number of stage-in jobs that are executed remotely on the remote site and are responsible for staging data to it. This profile is best set in the Site Catalog or in the Properties file
-   **Property Key:**\ pegasus.stageout.clusters\ **Profile Key:**\ stageout.clusters\ **Scope :** TC, SC, DAX, Properties **Since :** 4.0 **Type :**\ Integer               This key determines the maximum number of *stage-out* jobs that are can executed locally or remotely per compute site per workflow. This is used to configure the `BalancedCluster <#transfer-refiner-balanced-cluster>`__ Transfer Refiner, , which is the Default Refiner used in Pegasus.
-   **Property Key:**\ pegasus.stageout.local.clusters\ **Profile Key:**\ stageout.local.clusters\ **Scope :** TC, SC, DAX, Properties **Since :** 4.0 **Type :**\ Integer   This key provides finer grained control in determining the number of stage-out jobs that are executed locally and are responsible for staging data from a particular remote site. This profile is best set in the Site Catalog or in the Properties file
-   **Property Key:**\ pegasus.stageout.remote.clusters\ **Profile Key:**\ stageout.remote.clusters\ **Scope :** TC, SC, DAX, Properties **Since :** 4.0 **Type :**\ Integer This key provides finer grained control in determining the number of stage-out jobs that are executed remotely on the remote site and are responsible for staging data from it. This profile is best set in the Site Catalog or in the Properties file
-   **Property Key:**\ pegasus.group\ **Profile Key:**\ group\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                                        Tags a job with an arbitrary group identifier. The group site selector makes use of the tag.
-   **Property Key:**\ pegasus.change.dir\ **Profile Key:**\ change.dir\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Boolean                             If true, tells *kickstart* to change into the remote working directory. Kickstart itself is executed in whichever directory the remote scheduling system chose for the job.
-   **Property Key:**\ pegasus.create.dir\ **Profile Key:**\ create.dir\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Boolean                             If true, tells *kickstart* to create the the remote working directory before changing into the remote working directory. Kickstart itself is executed in whichever directory the remote scheduling system chose for the job.
-   **Property Key:**\ pegasus.transfer.proxy\ **Profile Key:**\ transfer.proxy\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Boolean                     If true, tells Pegasus to explicitly transfer the proxy for transfer jobs to the remote site. This is useful, when you want to use a full proxy at the remote end, instead of the limited proxy that is transferred by CondorG.
-   **Property Key:**\ pegasus.style\ **Profile Key:**\ style\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                                        Sets the condor submit file style. If set to globus, submit file generated refers to CondorG job submissions. If set to condor, submit file generated refers to direct Condor submission to the local Condor pool. It applies for glidein, where nodes from remote grid sites are glided into the local condor pool. The default style that is applied is globus.
-   **Property Key:**\ pegasus.pmc_request_memory\ **Profile Key:**\ pmc_request_memory\ **Scope :** TC, SC, DAX, Properties **Since :** 4.2 **Type :**\ Integer             This key is used to set the -m option for pegasus-mpi-cluster. It specifies the amount of memory in MB that a job requires. This profile is usually set in the DAX for each job.
-   **Property Key:**\ pegasus.pmc_request_cpus\ **Profile Key:**\ pmc_request_cpus\ **Scope :** TC, SC, DAX, Properties **Since :** 4.2 **Type :**\ Integer                 This key is used to set the -c option for pegasus-mpi-cluster. It specifies the number of cpu's that a job requires. This profile is usually set in the DAX for each job.
-   **Property Key:**\ pegasus.pmc_priority\ **Profile Key:**\ pmc_priority\ **Scope :** TC, SC, DAX, Properties **Since :** 4.2 **Type :**\ Integer                         This key is used to set the -p option for pegasus-mpi-cluster. It specifies the priority for a job . This profile is usually set in the DAX for each job. Negative values are allowed for priorities.
-   **Property Key:**\ pegasus.pmc_task_arguments\ **Profile Key:**\ pmc_task_arguments\ **Scope :** TC, SC, DAX, Properties **Since :** 4.2 **Type :**\ String              The key is used to pass any extra arguments to the PMC task during the planning time. They are added to the very end of the argument string constructed for the task in the PMC file. Hence, allows for overriding of any argument constructed by the planner for any particular task in the PMC job.
-   **Property Key:**\ pegasus.exitcode.failuremsg\ **Profile Key:**\ exitcode.failuremsg\ **Scope :** TC, SC, DAX, Properties **Since :** 4.4 **Type :**\ String            The message string that pegasus-exitcode searches for in the stdout and stderr of the job to flag failures.
-   **Property Key:**\ pegasus.exitcode.successmsg\ **Profile Key:**\ exitcode.successmsg\ **Scope :** TC, SC, DAX, Properties **Since :** 4.4 **Type :**\ String            The message string that pegasus-exitcode searches for in the stdout and stderr of the job to determine whether a job logged it's success message or not. Note this value is used to check for whether a job failed or not i.e if this profile is specified, and pegasus-exitcode DOES NOT find the string in the job stdout or stderr, the job is flagged as failed. The complete rules for determining failure are described in the man page for pegasus-exitcode.
-   **Property Key:**\ pegasus.checkpoint.time\ **Profile Key:**\ checkpoint_time\ **Scope :** TC, SC, DAX, Properties **Since :** 4.5 **Type :**\ Integer                   the expected time in minutes for a job after which it should be sent a TERM signal to generate a job checkpoint file
-   **Property Key:**\ pegasus.maxwalltime\ **Profile Key:**\ maxwalltime\ **Scope :** TC, SC, DAX, Properties **Since :** 4.5 **Type :**\ Integer                           the maximum walltime in minutes for a single execution of a job.
-   **Property Key:**\ pegasus.glite.arguments\ **Profile Key:**\ glite.arguments\ **Scope :** TC, SC, DAX, Properties **Since :** 4.5 **Type :**\ String                    specifies the extra arguments that must appear in the local PBS generated script for a job, when running workflows on a local cluster with submissions through Glite. This is useful when you want to pass through special options to underlying LRMS such as PBS e.g. you can set value -l walltime=01:23:45 -l nodes=2 to specify your job's resource requirements.
-   **Profile Key:**\ auxillary.local\ **Scope :** SC **Since :** 4.6 **Type :**\ Boolean                                                                                    indicates whether auxillary jobs associated with a compute site X, can be run on local site. This CAN ONLY be specified as a profile in the site catalog and should be set when the compute site filesystem is accessible locally on the submit host.
-   **Property Key:**\ pegasus.condor.arguments.quote\ **Profile Key:**\ condor.arguments.quote\ **Scope :** SC, Properties **Since :** 4.6 **Type :**\ Boolean              indicates whether condor quoting rules should be applied for writing out the arguments key in the condor submit file. By default it is true unless the job is schedule to a glite style site. The value is automatically set to false for glite style sites, as condor quoting is broken in batch_gahp.
-   **Profile Key:**\ container.arguments\ **Scope :** TC, Workflow **Since :** 5.0 **Type :**\ String                                                                       indicates additional arguments that will be appended to the ``docker container run``/``singularity exec`` commands when the container associated with this profile is executed
-   ======================================================================================================================================================================== ========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
 
 .. _task-resource-profiles:
 
