@@ -422,7 +422,7 @@ authoritative list of all possible RSL instructions refer to the Globus
 RSL specification.
 
 .. table:: Useful Globus RSL Instructions
-    
+
     +------------------------------------+---------------------------------------------------------------+
     | Property Key                       | Description                                                   |
     +====================================+===============================================================+
@@ -535,20 +535,75 @@ where it is being run.
 
 .. table:: Useful Condor Commands
 
-   ====================================================================================================================================================== ==============================================================================================================================================================================================================================
-   **Property Key**                                                                                                                                       **Description**
-   **Property Key:**\ condor.universe\ **Profile Key:**\ universe\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                 Pegasus defaults to either globus or scheduler universes. Set to standard for compute jobs that require standard universe. Set to vanilla to run natively in a condor pool, or to run on resources grabbed via condor glidein.
-   **Property Key:**\ condor.periodic_release\ **Profile Key:**\ periodic_release\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String is the number of times job is released back to the queue if it goes to HOLD, e.g. due to Globus errors. Pegasus defaults to 3.
-   **Property Key:**\ condor.periodic_remove\ **Profile Key:**\ periodic_remove\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String   is the number of times a job is allowed to get into HOLD state before being removed from the queue. Pegasus defaults to 3.
-   **Property Key:**\ condor.filesystemdomain\ **Profile Key:**\ filesystemdomain\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String Useful for Condor glide-ins to pin a job to a remote site.
-   **Property Key:**\ condor.stream_error\ **Profile Key:**\ stream_error **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Boolean         boolean to turn on the streaming of the stderr of the remote job back to submit host.
-   **Property Key:**\ condor.stream_output\ **Profile Key:**\ stream_output\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Boolean      boolean to turn on the streaming of the stdout of the remote job back to submit host.
-   **Property Key:**\ condor.priority\ **Profile Key:**\ priority\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                 integer value to assign the priority of a job. Higher value means higher priority. The priorities are only applied for vanilla / standard/ local universe jobs. Determines the order in which a users own jobs are executed.
-   **Property Key:**\ condor.request_cpus\ **Profile Key:**\ request_cpus\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String         New in Condor 7.8.0 . Number of CPU's a job requires.
-   **Property Key:**\ condor.request_gpus\ **Profile Key:**\ request_gpus\ **Scope :** TC, SC, DAX, Properties **Since :** 4.6 **Type :**\ String         Number of GPU's a job requires.
-   **Property Key:**\ condor.request_memory\ **Profile Key:**\ request_memory\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String     New in Condor 7.8.0 . Amount of memory a job requires.
-   **Property Key:**\ condor.request_disk\ **Profile Key:**\ request_disk\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String         New in Condor 7.8.0 . Amount of disk a job requires.
-   ====================================================================================================================================================== ==============================================================================================================================================================================================================================
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | Property Key                                | Description                                                        |
+    +=============================================+====================================================================+
+    | | Property Key: condor.universe             | | Pegasus defaults to either globus or scheduler universes. Set to |
+    | | Profile Key: universe                     | | grid for compute jobs that require grid universe. Set to         |
+    | | Scope : TC, SC, Abstract WF, Properties   | | vanilla to run natively in a condor pool, or to run on           |
+    | | Since : 2.0                               | | resources grabbed via condor glidein.                            |
+    | | Type : String                             |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: condor.periodic_release     | | is the number of times job is released back to the queue if      |
+    | | Profile Key: periodic_release             | | it goes to HOLD, e.g. due to Globus errors. Pegasus defaults     |
+    | | Scope : TC, SC,  Abstract WF, Properties  | | to 3.                                                            |
+    | | Since : 2.0                               |                                                                    |
+    | | Type : String                             |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key:condor.periodic_remove       | | is the number of times a job is allowed to get into HOLD         |
+    | | Profile Key:periodic_remove               | | state before being removed from the queue.                       |
+    | | Scope : TC, SC,Abstract WF, Properties    | | Pegasus defaults to 3.                                           |
+    | | Since : 2.0                               |                                                                    |
+    | | Type : String                             |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: condor.filesystemdomain     | Useful for Condor glide-ins to pin a job to a remote site.         |
+    | | Profile Key: filesystemdomain             |                                                                    |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                    |
+    | | Since : 2.0                               |                                                                    |
+    | | Type :String                              |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: condor.stream_error         | | boolean to turn on the streaming of the stderr of the            |
+    | | Profile Key: stream_error                 | | remote job back to submit host.                                  |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                    |
+    | | Since : 2.0                               |                                                                    |
+    | | Type :Boolean                             |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: condor.stream_output        | | boolean to turn on the streaming of the stdout of the            |
+    | | Profile Key: stream_output                | | remote job back to submit host.                                  |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                    |
+    | | Since : 2.0 Type :Boolean                 |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: condor.priority             | | integer value to assign the priority of a job. Higher            |
+    | | Profile Key:priority                      | | value means higher priority. The priorities are only             |
+    | | Scope : TC, SC, Abstract WF, Properties   | | applied for vanilla / standard/ local universe jobs.             |
+    | | Since : 2.0                               | | Determines the order in which a users own jobs are executed.     |
+    | | Type :String                              |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: condor.request_cpus         | New in Condor 7.8.0 . Number of CPU’s a job requires.              |
+    | | Profile Key: request_cpus                 |                                                                    |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                    |
+    | | Since : 2.0                               |                                                                    |
+    | | Type :String                              |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: condor.request_gpus         | Number of GPU’s a job requires.                                    |
+    | | Profile Key:request_gpus                  |                                                                    |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                    |
+    | | Since : 4.6                               |                                                                    |
+    | | Type :String                              |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: condor.request_memory       | New in Condor 7.8.0 . Amount of memory a job requires.             |
+    | | Profile Key: request_memory               |                                                                    |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                    |
+    | | Since : 2.0                               |                                                                    |
+    | | Type :String                              |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+    | | Property Key: condor.request_disk         | New in Condor 7.8.0 . Amount of disk a job requires.               |
+    | | Profile Key: request_disk                 |                                                                    |
+    | | Scope : TC, SC, Abstract WF, Properties   |                                                                    |
+    | | Since : 2.0                               |                                                                    |
+    | | Type :String                              |                                                                    |
+    +---------------------------------------------+--------------------------------------------------------------------+
+
 
 Other useful condor keys, that advanced users may find useful and can be
 set by profiles are
@@ -572,12 +627,19 @@ prohibited Condor commands.
 
 .. table:: Condor commands prohibited in condor profiles
 
-   =========== ===============================================================================================================================================================================================================================================================================================================
-   **Key**     **Reason for Prohibition**
-   arguments   you specify arguments in the arguments section for a job in the DAX
-   environment use multiple env profiles instead
-   executable  the physical executable to be used is specified in the transformation catalog and is also dependant on the gridstart module being used. If you are launching jobs via kickstart then the executable created is the path to kickstart and the application executable path appears in the arguments for kickstart
-   =========== ===============================================================================================================================================================================================================================================================================================================
+    +-------------+------------------------------------------------------------------------------+
+    | Key         | Reason for Prohibition                                                       |
+    +=============+==============================================================================+
+    | arguments   | you specify arguments in the arguments section for a job in the Abstract WF. |
+    +-------------+------------------------------------------------------------------------------+
+    | environment | use multiple env profiles instead                                            |
+    +-------------+------------------------------------------------------------------------------+
+    | executable  | | the physical executable to be used is specified in the transformation      |
+    |             | | catalog and is also dependant on the gridstart module being used.          |
+    |             | | If you are launching jobs via kickstart then the executable created        |
+    |             | | is the path to kickstart and the application executable path appears       |
+    |             | | in the arguments for kickstart                                             |
+    +-------------+------------------------------------------------------------------------------+
 
 .. _dagman-profiles:
 
