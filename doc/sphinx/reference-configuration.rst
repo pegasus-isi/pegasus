@@ -671,36 +671,91 @@ understood by Pegasus and can be associated at a per job basis.
 
 .. table:: Useful dagman Commands that can be associated at a per job basis
 
-   ====================================================================================================================================================================================== ==========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Property Key**                                                                                                                                                                       **Description**
-   **Property Key:**\ dagman.pre\ **Profile Key:**\ PRE\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                                                           is the path to the pre-script. DAGMan executes the pre-script before it runs the job.
-   **Property Key:**\ dagman.pre.arguments\ **Profile Key:**\ PRE.ARGUMENTS\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                                       are command-line arguments for the pre-script, if any.
-   **Property Key:**\ dagman.post\ **Profile Key:**\ POST\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                                                         is the postscript type/mode that a user wants to associate with a job.
+    +------------------------------------------------+-----------------------------------------------------------------+
+    | Property Key                                   | Description                                                     |
+    +================================================+=================================================================+
+    | | Property Key: dagman.pre                     | | is the path to the pre-script. DAGMan executes the pre-script |
+    | | Profile Key:PRE                              | | before it runs the job.                                       |
+    | | Scope : TC, SC, Abstract WF, Properties      |                                                                 |
+    | | Since : 2.0                                  |                                                                 |
+    | | Type :String                                 |                                                                 |
+    +------------------------------------------------+-----------------------------------------------------------------+
+    | | Property Key: dagman.pre.arguments           | are command-line arguments for the pre-script, if any.          |
+    | | Profile Key: PRE.ARGUMENTS                   |                                                                 |
+    | | Scope : TC, SC, Abstract WF, Properties      |                                                                 |
+    | | Since : 2.0                                  |                                                                 |
+    | | Type :String                                 |                                                                 |
+    +------------------------------------------------+-----------------------------------------------------------------+
+    | | Property Key: dagman.post                    | | is the postscript type/mode that a user wants to associate    |
+    | | Profile Key: POST                            | | with a job.                                                   |
+    | | Scope : TC, SC, Abstract WF, Properties      | | - **pegasus-exitcode** - pegasus will by default              |
+    | | Since : 2.0                                  | |    associate this postscript with all jobs launched via       |
+    | | Type :String                                 | |    kickstart, as long the POST.SCOPE value is not set to      |
+    |                                                | |    NONE.                                                      |
+    |                                                | | - **none** -means that no postscript is generated for the     |
+    |                                                | |    jobs. This is useful for MPI jobs that are not launched    |
+    |                                                | |    via kickstart currently.                                   |
+    |                                                | | - **any legal identifier** - Any other identifier of the      |
+    |                                                | |    form ([_A-Za-z][_A-Za-z0-9]*), than one of the 2 reserved  |
+    |                                                | |    keywords above, signifies a user postscript. This allows   |
+    |                                                | |    the user to specify their own postscript for the jobs in   |
+    |                                                | |    the workflow. The path to the postscript can be specified  |
+    |                                                | |    by the dagman profile POST.PATH.[value] where [value] is   |
+    |                                                | |    this legal identifier specified. The user postscript is    |
+    |                                                | |    passed the name of the .out file of the job as the last    |
+    |                                                | |    argument on the command line.                              |
+    |                                                | |    For e.g. if the following dagman profiles were associated  |
+    |                                                | |    with a job X                                               |
+    |                                                | |    POST with value user_script /bin/user_postscript           |
+    |                                                | |    POST.PATH.user_script with value /path/to/user/script      |
+    |                                                | |    POST.ARGUMENTS with value -verbose                         |
+    |                                                | |    then the following postscript will be associated with the  |
+    |                                                | |    job X in the .dag file is                                  |
+    |                                                | |    /path/to/user/script -verbose X.out where X.out contains   |
+    |                                                | |    the stdout of the job X                                    |
+    +------------------------------------------------+-----------------------------------------------------------------+
+    | | Property Key:                                | the path to the post script on the submit host.                 |
+    | |      dagman.post.path.[value of dagman.post] |                                                                 |
+    | | Profile Key:post.path.[value of dagman.post] |                                                                 |
+    | | Scope : TC, SC, Abstract WF, Properties      |                                                                 |
+    | | Since : 2.0                                  |                                                                 |
+    | | Type :String                                 |                                                                 |
+    +------------------------------------------------+-----------------------------------------------------------------+
+    | | Property Key: dagman.post.arguments          | are the command line arguments for the post script, if any.     |
+    | | Profile Key:POST.ARGUMENTS                   |                                                                 |
+    | | Scope : TC, SC, Abstract WF, Properties      |                                                                 |
+    | | Since : 2.0                                  |                                                                 |
+    | | Type :String                                 |                                                                 |
+    +------------------------------------------------+-----------------------------------------------------------------+
+    | | Property Key: dagman.retry                   | | is the number of times DAGMan retries the full job cycle      |
+    | | Profile Key:RETRY                            | | from pre-script through post-script, if failure was           |
+    | | Scope : TC, SC, Abstract WF, Properties      | | detected.                                                     |
+    | | Since : 2.0                                  |                                                                 |
+    | | Type :Integer                                |                                                                 |
+    | | Default : 1                                  |                                                                 |
+    +------------------------------------------------+-----------------------------------------------------------------+
+    | | Property Key: dagman.category                | the DAGMan category the job belongs to.                         |
+    | | Profile Key:CATEGORY                         |                                                                 |
+    | | Scope : TC, SC, Abstract WF, Properties      |                                                                 |
+    | | Since : 2.0                                  |                                                                 |
+    | | Type :String                                 |                                                                 |
+    +------------------------------------------------+-----------------------------------------------------------------+
+    | | Property Key: dagman.priority                | | the priority to apply to a job. DAGMan uses this to select    |
+    | | Profile Key: PRIORITY                        | | what jobs to release when MAXJOBS is enforced for the DAG.    |
+    | | Scope : TC, SC, Abstract WF, Properties      |                                                                 |
+    | | Since : 2.0                                  |                                                                 |
+    | | Type :Integer                                |                                                                 |
+    +------------------------------------------------+-----------------------------------------------------------------+
+    | | Property Key: dagman.abort-dag-on            | | The ABORT-DAG-ON key word provides a way to abort the         |
+    | | Profile Key:ABORT-DAG-ON                     | | entire DAG if a given node returns a specific exit code       |
+    | | Scope : TC, Abstract WF,                     | | (AbortExitValue). The syntax for the value of the key is      |
+    | | Since : 4.5                                  | | AbortExitValue [RETURN DAGReturnValue] . When a DAG aborts,   |
+    | | Type :String                                 | | by default it exits with the node return value that caused    |
+    |                                                | | the abort. This can be changed by using the optional          |
+    |                                                | | RETURN key word along with specifying the desired             |
+    |                                                | | DAGReturnValue                                                |
+    +------------------------------------------------+-----------------------------------------------------------------+
 
-                                                                                                                                                                                          1. **pegasus-exitcode** - pegasus will by default associate this postscript with all jobs launched via kickstart, as long the POST.SCOPE value is not set to NONE.
-
-                                                                                                                                                                                          2. **none** -means that no postscript is generated for the jobs. This is useful for MPI jobs that are not launched via kickstart currently.
-
-                                                                                                                                                                                          3. **any legal identifier** - Any other identifier of the form ([_A-Za-z][_A-Za-z0-9]*), than one of the 2 reserved keywords above, signifies a user postscript. This allows the user to specify their own postscript for the jobs in the workflow. The path to the postscript can be specified by the dagman profile **POST.PATH.[value**] where [value] is this legal identifier specified. The user postscript is passed the name of the .out file of the job as the last argument on the command line.
-
-                                                                                                                                                                                             For e.g. if the following dagman profiles were associated with a job X
-
-                                                                                                                                                                                             1. POST with value user_script /bin/user_postscript
-
-                                                                                                                                                                                             2. POST.PATH.user_script with value /path/to/user/script
-
-                                                                                                                                                                                             3. POST.ARGUMENTS with value -verbose
-
-                                                                                                                                                                                             then the following postscript will be associated with the job X in the .dag file
-
-                                                                                                                                                                                             /path/to/user/script -verbose X.out where X.out contains the stdout of the job X
-   **Property Key:**\ dagman.post.path.[value of dagman.post]\ **Profile Key:**\ post.path.[value of dagman.post]\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String the path to the post script on the submit host.
-   **Property Key:**\ dagman.post.arguments\ **Profile Key:**\ POST.ARGUMENTS\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                                     are the command line arguments for the post script, if any.
-   **Property Key:**\ dagman.retry\ **Profile Key:**\ RETRY\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer **Default :** 1                                      is the number of times DAGMan retries the full job cycle from pre-script through post-script, if failure was detected.
-   **Property Key:**\ dagman.category\ **Profile Key:**\ CATEGORY\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ String                                                 the DAGMan category the job belongs to.
-   **Property Key:**\ dagman.priority\ **Profile Key:**\ PRIORITY\ **Scope :** TC, SC, DAX, Properties **Since :** 2.0 **Type :**\ Integer                                                the priority to apply to a job. DAGMan uses this to select what jobs to release when MAXJOBS is enforced for the DAG.
-   **Property Key:**\ dagman.abort-dag-on\ **Profile Key:**\ ABORT-DAG-ON **Scope :** TC, DAX, **Since :** 4.5 **Type :**\ String                                                         The ABORT-DAG-ON key word provides a way to abort the entire DAG if a given node returns a specific exit code (AbortExitValue). The syntax for the value of the key is AbortExitValue [RETURN DAGReturnValue] . When a DAG aborts, by default it exits with the node return value that caused the abort. This can be changed by using the optional RETURN key word along with specifying the desired DAGReturnValue
-   ====================================================================================================================================================================================== ==========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
 
 The table below shows the keys in the dagman profile domain that are
 understood by Pegasus and can be used to apply to the whole workflow.
@@ -709,21 +764,52 @@ are recommended to be specified in the properties file.
 
 .. table:: Useful dagman Commands that can be specified in the properties file.
 
-   ===================================================================================================================================================== ================================================================================================================================================================================================================================================================================
-   **Property Key**                                                                                                                                      **Description**
-   **Property Key:**\ dagman.maxpre\ **Profile Key:**\ MAXPRE\ **Scope :** Properties **Since :** 2.0 **Type :**\ String                                 sets the maximum number of PRE scripts within the DAG that may be running at one time
-   **Property Key:**\ dagman.maxpost\ **Profile Key:**\ MAXPOST\ **Scope :** Properties **Since :** 2.0 **Type :**\ String                               sets the maximum number of POST scripts within the DAG that may be running at one time
-   **Property Key:**\ dagman.maxjobs\ **Profile Key:**\ MAXJOBS\ **Scope :** Properties **Since :** 2.0 **Type :**\ String                               sets the maximum number of jobs within the DAG that will be submitted to Condor at one time.
-   **Property Key:**\ dagman.maxidle\ **Profile Key:**\ MAXIDLE\ **Scope :** Properties **Since :** 2.0 **Type :**\ String                               Sets the maximum number of idle jobs allowed before HTCondor DAGMan stops submitting more jobs. Once idle jobs start to run, HTCondor DAGMan will resume submitting jobs. If the option is omitted, the number of idle jobs is unlimited.
-   **Property Key:**\ dagman.[CATEGORY-NAME].maxjobs\ **Profile Key:**\ [CATEGORY-NAME].MAXJOBS**Scope :** Properties **Since :** 2.0 **Type :**\ String is the value of maxjobs for a particular category. Users can associate different categories to the jobs at a per job basis. However, the value of a dagman knob for a category can only be specified at a per workflow basis in the properties.
-   **Property Key:**\ dagman.post.scope\ **Profile Key:**\ POST.SCOPE\ **Scope :** Properties **Since :** 2.0 **Type :**\ String                         scope for the postscripts.
-
-                                                                                                                                                         1. If set to **all** , means each job in the workflow will have a postscript associated with it.
-
-                                                                                                                                                         2. If set to **none** , means no job has postscript associated with it. None mode should be used if you are running vanilla / standard/ local universe jobs, as in those cases Condor traps the remote exitcode correctly. None scope is not recommended for grid universe jobs.
-
-                                                                                                                                                         3. If set to **essential**, means only essential jobs have post scripts associated with them. At present the only non essential job is the replica registration job.
-   ===================================================================================================================================================== ================================================================================================================================================================================================================================================================================
+    +---------------------------------------+-------------------------------------------------------------------+
+    | Property Key                          | Description                                                       |
+    +=======================================+===================================================================+
+    | | Property Key: dagman.maxpre         | | sets the maximum number of PRE scripts within the DAG that may  |
+    | | Profile Key: MAXPRE                 | | be running at one time                                          |
+    | | Scope : Properties                  |                                                                   |
+    | | Since : 2.0                         |                                                                   |
+    | | Type :String                        |                                                                   |
+    +---------------------------------------+-------------------------------------------------------------------+
+    | | Property Key: dagman.maxpost        | | sets the maximum number of POST scripts within the DAG that     |
+    | | Profile Key: MAXPOST                | | may be running at one time                                      |
+    | | Scope : Properties                  |                                                                   |
+    | | Since : 2.0                         |                                                                   |
+    | | Type :String                        |                                                                   |
+    +---------------------------------------+-------------------------------------------------------------------+
+    | | Property Key: dagman.maxjobs        | | sets the maximum number of jobs within the DAG that will be     |
+    | | Profile Key: MAXJOBS                | | submitted to Condor at one time.                                |
+    | | Scope : Properties                  |                                                                   |
+    | | Since : 2.0                         |                                                                   |
+    | | Type :String                        |                                                                   |
+    +---------------------------------------+-------------------------------------------------------------------+
+    | | Property Key: dagman.maxidle        | | Sets the maximum number of idle jobs allowed before HTCondor    |
+    | | Profile Key:MAXIDLE                 | | DAGMan stops submitting more jobs. Once idle jobs start to run, |
+    | | Scope : Properties                  | | HTCondor DAGMan will resume submitting jobs. If the option      |
+    | | Since : 2.0                         | | is omitted, the number of idle jobs is unlimited.               |
+    | | Type :String                        |                                                                   |
+    +---------------------------------------+-------------------------------------------------------------------+
+    | | Property Key:                       | | is the value of maxjobs for a particular category. Users can    |
+    | |      dagman.[CATEGORY-NAME].maxjobs | | associate different categories to the jobs at a per job basis.  |
+    | | Profile Key:[CATEGORY-NAME].MAXJOBS | | However, the value of a dagman knob for a category can only     |
+    | | Scope : Properties                  | | be specified at a per workflow basis in the properties.         |
+    | | Since : 2.0                         |                                                                   |
+    | | Type :String                        |                                                                   |
+    +---------------------------------------+-------------------------------------------------------------------+
+    | | Property Key: dagman.post.scope     | | scope for the postscripts.                                      |
+    | | Profile Key:POST.SCOPE              | | - If set to all , means each job in the workflow will           |
+    | | Scope : Properties                  | |   have a postscript associated with it.                         |
+    | | Since : 2.0                         | | - If set to none , means no job has postscript associated       |
+    | | Type :String                        | |   with it. None mode should be used if you are running vanilla  |
+    |                                       | |   / standard/ local universe jobs, as in those cases Condor     |
+    |                                       | |   traps the remote exitcode correctly. None scope is not        |
+    |                                       | |   recommended for grid universe jobs.                           |
+    |                                       | | - If set to essential, means only essential jobs have post      |
+    |                                       | |   scripts associated with them. At present the only non         |
+    |                                       | |   essential job is the replica registration job.                |
+    +---------------------------------------+-------------------------------------------------------------------+
 
 .. _pegasus-profiles:
 
