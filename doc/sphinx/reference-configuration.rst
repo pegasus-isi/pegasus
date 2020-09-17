@@ -1666,14 +1666,14 @@ Catalog Related Properties
     |                                                    | |   an equality sign without any whitespaces. The value                          |
     |                                                    | |   may be in quoted. The LFN sentiments about quoting                           |
     |                                                    | |   apply.                                                                       |
-    |                                                    | |                                                                                |
-    |                                                    | |   ::                                                                           |
-    |                                                    | |                                                                                |
-    |                                                    | |       LFN PFN                                                                  |
-    |                                                    | |       LFN PFN a=b [..]                                                         |
-    |                                                    | |       LFN PFN a="b" [..]                                                       |
-    |                                                    | |       "LFN w/LWS" "PFN w/LWS" [..]                                             |
-    |                                                    | |                                                                                |
+    |                                                    |                                                                                  |
+    |                                                    |  ::                                                                              |
+    |                                                    |                                                                                  |
+    |                                                    |       LFN PFN                                                                    |
+    |                                                    |       LFN PFN a=b [..]                                                           |
+    |                                                    |       LFN PFN a="b" [..]                                                         |
+    |                                                    |       "LFN w/LWS" "PFN w/LWS" [..]                                               |
+    |                                                    |                                                                                  |
     |                                                    | |   To use File, the user additionally needs to specify                          |
     |                                                    | |   **pegasus.catalog.replica.file** property to                                 |
     |                                                    | |   specify the path to the file based RC. IF not                                |
@@ -1715,16 +1715,16 @@ Catalog Related Properties
     |                                                    | |   which uses a regular expression. In this entry f.a                           |
     |                                                    | |   refers to files having name as f[any-character]a                             |
     |                                                    | |   i.e. faa, f.a, f0a, etc.                                                     |
-    |                                                    | |                                                                                |
-    |                                                    | |   ::                                                                           |
-    |                                                    | |                                                                                |
-    |                                                    | |      f.a file:///Vol/input/f.a site="local"                                    |
-    |                                                    | |      f.a file:///Vol/input/f.a site="local" regex="true"                       |
-    |                                                    | |                                                                                |
+    |                                                    |                                                                                  |
+    |                                                    |  ::                                                                              |
+    |                                                    |                                                                                  |
+    |                                                    |       f.a file:///Vol/input/f.a site="local"                                     |
+    |                                                    |       f.a file:///Vol/input/f.a site="local" regex="true"                        |
+    |                                                    |                                                                                  |
     |                                                    | |   Regular expression based entries also support                                |
     |                                                    | |   substitutions. For example, consider the regular                             |
     |                                                    | |   expression based entry shown below.                                          |
-    |                                                    |                                                                                  |
+    |                                                    | |                                                                                |
     |                                                    | |   Entry 3 will match files with name alpha.csv,                                |
     |                                                    | |   alpha.txt, alpha.xml. In addition, values matched                            |
     |                                                    | |   in the expression can be used to generate a PFN.                             |
@@ -1739,11 +1739,11 @@ Catalog Related Properties
     |                                                    | |   i.e. alpha.csv. Section [1] refers to a partial                              |
     |                                                    | |   match in the input i.e. csv, or txt, or xml.                                 |
     |                                                    | |   Users can utilize as many sections as they wish.                             |
-    |                                                    | |                                                                                |
-    |                                                    | |   ::                                                                           |
-    |                                                    | |                                                                                |
-    |                                                    | |       alpha\.(csv|txt|xml) file:///Vol/input/[1]/[0] site="local" regex="true" |
-    |                                                    | |                                                                                |
+    |                                                    |                                                                                  |
+    |                                                    |    ::                                                                            |
+    |                                                    |                                                                                  |
+    |                                                    |        alpha\.(csv|txt|xml) file:///Vol/input/[1]/[0] site="local" regex="true"  |
+    |                                                    |                                                                                  |
     |                                                    | |   To use File, the user additionally needs to specify                          |
     |                                                    | |   pegasus.catalog.replica.file property to specify the                         |
     |                                                    | |   path to the file based RC.                                                   |
@@ -1753,35 +1753,35 @@ Catalog Related Properties
     |                                                    | |   recursively, resulting in deep LFN mappings.                                 |
     |                                                    | |   For example, if an input directory $input is specified                       |
     |                                                    | |   with the following structure                                                 |
-    |                                                    | |                                                                                |
-    |                                                    | |   ::                                                                           |
-    |                                                    | |                                                                                |
-    |                                                    | |      $input                                                                    |
-    |                                                    | |      $input/f.1                                                                |
-    |                                                    | |      $input/f.2                                                                |
-    |                                                    | |      $input/D1                                                                 |
-    |                                                    | |      $input/D1/f.3                                                             |
-    |                                                    | |                                                                                |
+    |                                                    |                                                                                  |
+    |                                                    |    ::                                                                            |
+    |                                                    |                                                                                  |
+    |                                                    |        $input                                                                    |
+    |                                                    |        $input/f.1                                                                |
+    |                                                    |        $input/f.2                                                                |
+    |                                                    |        $input/D1                                                                 |
+    |                                                    |        $input/D1/f.3                                                             |
+    |                                                    |                                                                                  |
     |                                                    | |   Pegasus will create the mappings the following                               |
     |                                                    | |   LFN PFN mappings internally                                                  |
-    |                                                    | |                                                                                |
-    |                                                    | |   ::                                                                           |
-    |                                                    | |                                                                                |
-    |                                                    | |      f.1 file://$input/f.1  site="local"                                       |
-    |                                                    | |      f.2 file://$input/f.2  site="local"                                       |
-    |                                                    | |      D1/f.3 file://$input/D2/f.3 site="local"                                  |
-    |                                                    | |                                                                                |
+    |                                                    |                                                                                  |
+    |                                                    |     ::                                                                           |
+    |                                                    |                                                                                  |
+    |                                                    |        f.1 file://$input/f.1  site="local"                                       |
+    |                                                    |        f.2 file://$input/f.2  site="local"                                       |
+    |                                                    |        D1/f.3 file://$input/D2/f.3 site="local"                                  |
+    |                                                    |                                                                                  |
     |                                                    | |   If you don’t want the deep lfn’s to be created then,                         |
     |                                                    | |   you can set pegasus.catalog.replica.directory.flat.lfn                       |
     |                                                    | |   to true In that case, for the previous example, Pegasus                      |
     |                                                    | |   will create the following LFN PFN mappings internally.                       |
-    |                                                    | |                                                                                |
-    |                                                    | |   ::                                                                           |
-    |                                                    | |                                                                                |
-    |                                                    | |      f.1 file://$input/f.1  site="local"                                       |
-    |                                                    | |      f.2 file://$input/f.2  site="local"                                       |
-    |                                                    | |      D1/f.3 file://$input/D2/f.3 site="local"                                  |
-    |                                                    | |                                                                                |
+    |                                                    |                                                                                  |
+    |                                                    |    ::                                                                            |
+    |                                                    |                                                                                  |
+    |                                                    |        f.1 file://$input/f.1  site="local"                                       |
+    |                                                    |        f.2 file://$input/f.2  site="local"                                       |
+    |                                                    |        D1/f.3 file://$input/D2/f.3 site="local"                                  |
+    |                                                    |                                                                                  |
     |                                                    | |   pegasus-plan has –input-dir option that can be used                          |
     |                                                    | |   to specify an input directory.                                               |
     |                                                    | |   Users can optionally specify additional properties to                        |
@@ -1806,23 +1806,23 @@ Catalog Related Properties
     |                                                    | |   (concretely [A-Za-z][_A-Za-z0-9]*) . For each                                |
     |                                                    | |   associated replica catalogs the user specifies                               |
     |                                                    | |   the following properties.                                                    |
-    |                                                    | |                                                                                |
-    |                                                    | |    ::                                                                          |
-    |                                                    | |                                                                                |
-    |                                                    | |      pegasus.catalog.replica.mrc.[value] specifies the                         |
-    |                                                    | |                type of replica catalog.                                        |
-    |                                                    | |      pegasus.catalog.replica.mrc.[value].key specifies                         |
-    |                                                    | |        a property name key for a particular catalog                            |
-    |                                                    | |                                                                                |
-    |                                                    | |    ::                                                                          |
-    |                                                    | |                                                                                |
-    |                                                    | |      pegasus.catalog.replica.mrc.directory1 Directory                          |
-    |                                                    | |      pegasus.catalog.replica.mrc.directory1.directory /input/dir1              |
-    |                                                    | |      pegasus.catalog.replica.mrc.directory1.directory.site  siteX              |
-    |                                                    | |      pegasus.catalog.replica.mrc.directory2 Directory                          |
-    |                                                    | |      pegasus.catalog.replica.mrc.directory2.directory /input/dir2              |
-    |                                                    | |      pegasus.catalog.replica.mrc.directory1.directory.site  siteY|             |
-    |                                                    | |                                                                                |
+    |                                                    |                                                                                  |
+    |                                                    |      ::                                                                          |
+    |                                                    |                                                                                  |
+    |                                                    |        pegasus.catalog.replica.mrc.[value] specifies the                         |
+    |                                                    |                  type of replica catalog.                                        |
+    |                                                    |        pegasus.catalog.replica.mrc.[value].key specifies                         |
+    |                                                    |          a property name key for a particular catalog                            |
+    |                                                    |                                                                                  |
+    |                                                    |      ::                                                                          |
+    |                                                    |                                                                                  |
+    |                                                    |        pegasus.catalog.replica.mrc.directory1 Directory                          |
+    |                                                    |        pegasus.catalog.replica.mrc.directory1.directory /input/dir1              |
+    |                                                    |        pegasus.catalog.replica.mrc.directory1.directory.site  siteX              |
+    |                                                    |        pegasus.catalog.replica.mrc.directory2 Directory                          |
+    |                                                    |        pegasus.catalog.replica.mrc.directory2.directory /input/dir2              |
+    |                                                    |        pegasus.catalog.replica.mrc.directory1.directory.site  siteY|             |
+    |                                                    |                                                                                  |
     |                                                    | |   In the above example, directory1, directory2 are any                         |
     |                                                    | |   valid identifier names and url is the property key that                      |
     |                                                    | |   needed to be specified.                                                      |
@@ -1881,11 +1881,11 @@ Catalog Related Properties
     |                                                    | | are used for discovery of input files.                                         |
     |                                                    | | For example to specify a separate file based output                            |
     |                                                    | | replica catalog, specify                                                       |
-    |                                                    | |                                                                                |
-    |                                                    | | ::                                                                             |
-    |                                                    | |                                                                                |
-    |                                                    | |    pegasus.catalog.replica.output        File                                  |
-    |                                                    | |    pegasus.catalog.replica.output.file   /workflow/output.rc                   |
+    |                                                    |                                                                                  |
+    |                                                    |   ::                                                                             |
+    |                                                    |                                                                                  |
+    |                                                    |      pegasus.catalog.replica.output        File                                  |
+    |                                                    |      pegasus.catalog.replica.output.file   /workflow/output.rc                   |
     +----------------------------------------------------+----------------------------------------------------------------------------------+
 
 .. table:: Site Catalog Properties
