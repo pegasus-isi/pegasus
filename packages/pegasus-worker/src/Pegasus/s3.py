@@ -519,8 +519,10 @@ def mkdir(args):
     if can_create:
         s3.create_bucket(Bucket=uri.bucket)
     else:
-        raise Exception(
-            "Bucket: {} is already owned by user: {}".format(uri.bucket, uri.ident)
+        log.warning(
+            "Bucket: {} exists and is already owned by user: {}".format(
+                uri.bucket, uri.ident
+            )
         )
 
 
