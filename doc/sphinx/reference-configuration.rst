@@ -1499,12 +1499,24 @@ being online.
 
 .. table:: Schema File Location Properties
 
-   =============================================================================================================================================================================== ===========================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                              **Description**
-   **Property Key:**\ pegasus.schema.dax\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** ${pegasus.home.sysconfdir}/dax-3.4.xsd This file is a copy of the XML schema that describes abstract DAG files that are the result of the abstract planning process, and input into any concrete planning. Providing a copy of the schema enables the parser to use the local copy instead of reaching out to the Internet, and obtaining the latest version from the Pegasus website dynamically.
-   **Property Key:**\ pegasus.schema.sc\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** ${pegasus.home.sysconfdir}/sc-4.0.xsd   This file is a copy of the XML schema that describes the xml description of the site catalog. Providing a copy of the schema enables the parser to use the local copy instead of reaching out to the internet, and obtaining the latest version from the GriPhyN website dynamically.
-   **Property Key:**\ pegasus.schema.ivr\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** ${pegasus.home.sysconfdir}/iv-2.0.xsd  This file is a copy of the XML schema that describes invocation record files that are the result of the a grid launch in a remote or local site. Providing a copy of the schema enables the parser to use the local copy instead of reaching out to the Internet, and obtaining the latest version from the Pegasus website dynamically.
-   =============================================================================================================================================================================== ===========================================================================================================================================================================================================================================================================================================================================================
+    +----------------------------------------------------+------------------------------------------------------------+
+    | Key Attributes                                     | Description                                                |
+    +====================================================+============================================================+
+    | | Property Key: pegasus.schema.dax                 | | This file is a copy of the XML schema that describes     |
+    | | Profile Key : N/A                                | | abstract DAG files that are the result of the abstract   |
+    | | Scope : Properties                               | | planning process, and input into any concrete planning.  |
+    | | Since : 2.0                                      | | Providing a copy of the schema enables the parser to use |
+    | | Type :file path                                  | | the local copy instead of reaching out to the Internet,  |
+    | | Default : ${pegasus.home.sysconfdir}/dax-3.4.xsd | | and obtaining the latest version from the Pegasus        |
+    |                                                    | | website dynamically.                                     |
+    +----------------------------------------------------+------------------------------------------------------------+
+    | | Property Key:pegasus.schema.sc                   | | This file is a copy of the XML schema that describes     |
+    | | Profile Key:N/A                                  | | the xml description of the site catalog. Providing a     |
+    | | Scope : Properties                               | | copy of the schema enables the parser to use the local   |
+    | | Since : 2.0                                      | | copy instead of reaching out to the internet, and        |
+    | | Type :file path                                  | | obtaining the latest version from the GriPhyN website    |
+    | | Default : ${pegasus.home.sysconfdir}/sc-4.0.xsd  | | dynamically.                                             |
+    +----------------------------------------------------+------------------------------------------------------------+
 
 .. _db-props:
 
@@ -1513,109 +1525,106 @@ Database Drivers For All Relational Catalogs
 
 .. table:: Database Driver Properties
 
-   ===================================================================================================================================================================================================== ==============================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Property Key**                                                                                                                                                                                      **Description**
-   **Property Key:**\ pegasus.catalog.*.db.driver\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ Enumeration **Values :**\ MySQL|PostGres|SQLite\ **Default :** (no default) The database driver class is dynamically loaded, as required by the schema. Currently, only MySQL 5.x, PostGreSQL >= 8.1 and SQlite are supported. Their respective JDBC3 driver is provided as part and parcel of the PEGASUS.
-
-                                                                                                                                                                                                         The \* in the property name can be replaced by a catalog name to apply the property only for that catalog. Valid catalog names are
-
-                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                            replica
-   **Property Key:**\ pegasus.catalog.*.db.url\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ Database URL **Default :** (no default)                                        Each database has its own string to contact the database on a given host, port, and database. Although most driver URLs allow to pass arbitrary arguments, please use the pegasus.catalog.[catalog-name].db.\* keys or pegasus.catalog.*.db.\* to preload these arguments.
-                                                                                                                                                                                                         THE URL IS A MANDATORY PROPERTY FOR ANY DBMS BACKEND.
-   **Property Key:**\ pegasus.catalog.*.db.user\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ String **Default :**                                                          In order to access a database, you must provide the name of your account on the DBMS. This property is database-independent. THIS IS A MANDATORY PROPERTY FOR MANY DBMS BACKENDS.
-
-                                                                                                                                                                                                         The \* in the property name can be replaced by a catalog name to apply the property only for that catalog. Valid catalog names are
-
-                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                            replica
-   **Property Key:**\ pegasus.catalog.*.db.password\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ String **Default :** (no default)                                         In order to access a database, you must provide an optional password of your account on the DBMS. This property is database-independent. THIS IS A MANDATORY PROPERTY, IF YOUR DBMS BACKEND ACCOUNT REQUIRES A PASSWORD.
-
-                                                                                                                                                                                                         The \* in the property name can be replaced by a catalog name to apply the property only for that catalog. Valid catalog names are
-
-                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                            replica
-   **Property Key:**\ pegasus.catalog.*.db.\*\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ String **Default :** (no default)                                               Each database has a multitude of options to control in fine detail the further behaviour. You may want to check the JDBC3 documentation of the JDBC driver for your database for details. The keys will be passed as part of the connect properties by stripping the "pegasus.catalog.[catalog-name].db." prefix from them. The catalog-name can be replaced by the following values provenance for Provenance Catalog (PTC), replica for Replica Catalog (RC)
-
-                                                                                                                                                                                                         Postgres >= 8.1 parses the following properties:
-
-                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                            pegasus.catalog.*.db.user
-                                                                                                                                                                                                            pegasus.catalog.*.db.password
-                                                                                                                                                                                                            pegasus.catalog.*.db.PGHOST
-                                                                                                                                                                                                            pegasus.catalog.*.db.PGPORT
-                                                                                                                                                                                                            pegasus.catalog.*.db.charSet
-                                                                                                                                                                                                            pegasus.catalog.*.db.compatible
-
-                                                                                                                                                                                                         MySQL 5.0 parses the following properties:
-
-                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                            pegasus.catalog.*.db.user
-                                                                                                                                                                                                            pegasus.catalog.*.db.password
-                                                                                                                                                                                                            pegasus.catalog.*.db.databaseName
-                                                                                                                                                                                                            pegasus.catalog.*.db.serverName
-                                                                                                                                                                                                            pegasus.catalog.*.db.portNumber
-                                                                                                                                                                                                            pegasus.catalog.*.db.socketFactory
-                                                                                                                                                                                                            pegasus.catalog.*.db.strictUpdates
-                                                                                                                                                                                                            pegasus.catalog.*.db.ignoreNonTxTables
-                                                                                                                                                                                                            pegasus.catalog.*.db.secondsBeforeRetryMaster
-                                                                                                                                                                                                            pegasus.catalog.*.db.queriesBeforeRetryMaster
-                                                                                                                                                                                                            pegasus.catalog.*.db.allowLoadLocalInfile
-                                                                                                                                                                                                            pegasus.catalog.*.db.continueBatchOnError
-                                                                                                                                                                                                            pegasus.catalog.*.db.pedantic
-                                                                                                                                                                                                            pegasus.catalog.*.db.useStreamLengthsInPrepStmts
-                                                                                                                                                                                                            pegasus.catalog.*.db.useTimezone
-                                                                                                                                                                                                            pegasus.catalog.*.db.relaxAutoCommit
-                                                                                                                                                                                                            pegasus.catalog.*.db.paranoid
-                                                                                                                                                                                                            pegasus.catalog.*.db.autoReconnect
-                                                                                                                                                                                                            pegasus.catalog.*.db.capitalizeTypeNames
-                                                                                                                                                                                                            pegasus.catalog.*.db.ultraDevHack
-                                                                                                                                                                                                            pegasus.catalog.*.db.strictFloatingPoint
-                                                                                                                                                                                                            pegasus.catalog.*.db.useSSL
-                                                                                                                                                                                                            pegasus.catalog.*.db.useCompression
-                                                                                                                                                                                                            pegasus.catalog.*.db.socketTimeout
-                                                                                                                                                                                                            pegasus.catalog.*.db.maxReconnects
-                                                                                                                                                                                                            pegasus.catalog.*.db.initialTimeout
-                                                                                                                                                                                                            pegasus.catalog.*.db.maxRows
-                                                                                                                                                                                                            pegasus.catalog.*.db.useHostsInPrivileges
-                                                                                                                                                                                                            pegasus.catalog.*.db.interactiveClient
-                                                                                                                                                                                                            pegasus.catalog.*.db.useUnicode
-                                                                                                                                                                                                            pegasus.catalog.*.db.characterEncoding
-
-                                                                                                                                                                                                         MS SQL Server 2000 support the following properties (keys are case-insensitive, e.g. both "user" and "User" are valid):
-
-                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                            pegasus.catalog.*.db.User
-                                                                                                                                                                                                            pegasus.catalog.*.db.Password
-                                                                                                                                                                                                            pegasus.catalog.*.db.DatabaseName
-                                                                                                                                                                                                            pegasus.catalog.*.db.ServerName
-                                                                                                                                                                                                            pegasus.catalog.*.db.HostProcess
-                                                                                                                                                                                                            pegasus.catalog.*.db.NetAddress
-                                                                                                                                                                                                            pegasus.catalog.*.db.PortNumber
-                                                                                                                                                                                                            pegasus.catalog.*.db.ProgramName
-                                                                                                                                                                                                            pegasus.catalog.*.db.SendStringParametersAsUnicode
-                                                                                                                                                                                                            pegasus.catalog.*.db.SelectMethod
-
-                                                                                                                                                                                                         The \* in the property name can be replaced by a catalog name to apply the property only for that catalog. Valid catalog names are
-
-                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                            replica
-   **Property Key:**\ pegasus.catalog.*.timeout\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.5.1 **Type :**\ Integer **Default :** (no default)                                          This property sets a busy handler that sleeps for a specified amount of time (in seconds) when a table is locked. This property has effect only in a sqlite database.
-
-                                                                                                                                                                                                         The \* in the property name can be replaced by a catalog name to apply the property only for that catalog. Valid catalog names are
-
-                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                            master
-                                                                                                                                                                                                            workflow
-   ===================================================================================================================================================================================================== ==============================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +-------------------------------------------------------+---------------------------------------------------------------------+
+    | Property Key                                          | Description                                                         |
+    +=======================================================+=====================================================================+
+    | | Property Key: pegasus.catalog.*.db.driver           | | The database driver class is dynamically loaded, as               |
+    | | Profile Key: N/A                                    | | required by the schema. Currently, only MySQL 5.x,                |
+    | | Scope : Properties                                  | | PostGreSQL >= 8.1 and SQlite are supported. Their                 |
+    | | Since : 2.0                                         | | respective JDBC3 driver is provided as part and parcel            |
+    | | Type  : Enumeration                                 | | of the PEGASUS.                                                   |
+    | | Values :MySQL|PostGres|SQLiteDefault : (no default) | | The * in the property name can be replaced by a                   |
+    |                                                       | | catalog name to apply the property only for that                  |
+    |                                                       | | catalog. Valid catalog names are replica.                         |
+    +-------------------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:pegasus.catalog.*.db.url               | | Each database has its own string to contact the                   |
+    | | Profile Key:N/A                                     | | database on a given host, port, and database.                     |
+    | | Scope : Properties                                  | | Although most driver URLs allow to pass arbitrary                 |
+    | | Since : 2.0                                         | | arguments, please use the                                         |
+    | | Type :Database URL                                  | | pegasus.catalog.[catalog-name].db.* keys or                       |
+    | | Default : (no default)                              | | pegasus.catalog.*.db.* to preload these arguments.                |
+    |                                                       | | THE URL IS A MANDATORY PROPERTY FOR ANY DBMS BACKEND.             |
+    +-------------------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:pegasus.catalog.*.db.user              | | In order to access a database, you must provide the               |
+    | | Profile Key:N/A                                     | | name of your account on the DBMS. This property is                |
+    | | Scope : Properties                                  | | database-independent. THIS IS A MANDATORY PROPERTY                |
+    | | Since : 2.0                                         | | FOR MANY DBMS BACKENDS.                                           |
+    | | Type :String                                        | | The * in the property name can be replaced by a                   |
+    | | Default : (no default)                              | | catalog name to apply the property only for that                  |
+    |                                                       | | catalog. Valid catalog names are                                  |
+    |                                                       | | replica                                                           |
+    +-------------------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.*.db.password         | | In order to access a database, you must provide an                |
+    | | Profile Key: N/A                                    | | optional password of your account on the DBMS.                    |
+    | | Scope : Properties                                  | | This property is database-independent. THIS IS A                  |
+    | | Since : 2.0                                         | | MANDATORY PROPERTY, IF YOUR DBMS BACKEND ACCOUNT                  |
+    | | Type :String                                        | | REQUIRES A PASSWORD.                                              |
+    | | Default : (no default)                              | | The * in the property name can be replaced by a                   |
+    |                                                       | | catalog name to apply the property only for that                  |
+    |                                                       | | catalog. Valid catalog names are replica.                         |
+    +-------------------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.*.db.*                | | Each database has a multitude of options to control               |
+    | | Profile Key: N/A                                    | | in fine detail the further behaviour. You may want to             |
+    | | Scope : Properties                                  | | check the JDBC3 documentation of the JDBC driver for              |
+    | | Since : 2.0                                         | | your database for details. The keys will be passed as             |
+    | | Type : String                                       | | part of the connect properties by stripping the                   |
+    | | Default : (no default)                              | | “pegasus.catalog.[catalog-name].db.” prefix from them.            |
+    |                                                       | | The catalog-name can be replaced by the following values          |
+    |                                                       | | replica for Replica Catalog (RC)                                  |
+    |                                                       | |                                                                   |
+    |                                                       | | - Postgres >= 8.1 parses the following properties:                |
+    |                                                       | |   pegasus.catalog.*.db.user                                       |
+    |                                                       | |   pegasus.catalog.*.db.password                                   |
+    |                                                       | |   pegasus.catalog.*.db.PGHOST                                     |
+    |                                                       | |   pegasus.catalog.*.db.PGPORT                                     |
+    |                                                       | |   pegasus.catalog.*.db.charSet                                    |
+    |                                                       | |   pegasus.catalog.*.db.compatible                                 |
+    |                                                       | | - MySQL 5.0 parses the following properties:                      |
+    |                                                       | |   pegasus.catalog.*.db.user                                       |
+    |                                                       | |   pegasus.catalog.*.db.password                                   |
+    |                                                       | |   pegasus.catalog.*.db.databaseName                               |
+    |                                                       | |   pegasus.catalog.*.db.serverName                                 |
+    |                                                       | |   pegasus.catalog.*.db.portNumber                                 |
+    |                                                       | |   pegasus.catalog.*.db.socketFactory                              |
+    |                                                       | |   pegasus.catalog.*.db.strictUpdates                              |
+    |                                                       | |   pegasus.catalog.*.db.ignoreNonTxTables                          |
+    |                                                       | |   pegasus.catalog.*.db.secondsBeforeRetryMaster                   |
+    |                                                       | |   pegasus.catalog.*.db.queriesBeforeRetryMaster                   |
+    |                                                       | |   pegasus.catalog.*.db.allowLoadLocalInfile                       |
+    |                                                       | |   pegasus.catalog.*.db.continueBatchOnError                       |
+    |                                                       | |   pegasus.catalog.*.db.pedantic                                   |
+    |                                                       | |   pegasus.catalog.*.db.useStreamLengthsInPrepStmts                |
+    |                                                       | |   pegasus.catalog.*.db.useTimezone                                |
+    |                                                       | |   pegasus.catalog.*.db.relaxAutoCommit                            |
+    |                                                       | |   pegasus.catalog.*.db.paranoid                                   |
+    |                                                       | |   pegasus.catalog.*.db.autoReconnect                              |
+    |                                                       | |   pegasus.catalog.*.db.capitalizeTypeNames                        |
+    |                                                       | |   pegasus.catalog.*.db.ultraDevHack                               |
+    |                                                       | |   pegasus.catalog.*.db.strictFloatingPoint                        |
+    |                                                       | |   pegasus.catalog.*.db.useSSL pegasus.catalog.*.db.useCompression |
+    |                                                       | |   pegasus.catalog.*.db.socketTimeout                              |
+    |                                                       | |   pegasus.catalog.*.db.maxReconnects                              |
+    |                                                       | |   pegasus.catalog.*.db.initialTimeout                             |
+    |                                                       | |   pegasus.catalog.*.db.maxRows                                    |
+    |                                                       | |   pegasus.catalog.*.db.useHostsInPrivileges                       |
+    |                                                       | |   pegasus.catalog.*.db.interactiveClient                          |
+    |                                                       | |   pegasus.catalog.*.db.useUnicode                                 |
+    |                                                       | |   pegasus.catalog.*.db.characterEncoding                          |
+    |                                                       | |                                                                   |
+    |                                                       | | The * in the property name can be replaced by a                   |
+    |                                                       | | catalog name to apply the property only for that                  |
+    |                                                       | | catalog. Valid catalog names are replica.                         |
+    +-------------------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.*.timeout             | | This property sets a busy handler that sleeps for                 |
+    | | Profile Key: N/A                                    | | a specified amount of time (in seconds) when a                    |
+    | | Scope : Properties                                  | | table is locked. This property has effect only                    |
+    | | Since : 4.5.1                                       | | in a sqlite database.                                             |
+    | | Type :Integer                                       | | The * in the property name can be replaced by a                   |
+    | | Default : (no default)                              | | catalog name to apply the property only for that                  |
+    |                                                       | | catalog. Valid catalog names are                                  |
+    |                                                       | | - master                                                          |
+    |                                                       | | - workflow                                                        |
+    +-------------------------------------------------------+---------------------------------------------------------------------+
 
 .. _catalog-props:
 
