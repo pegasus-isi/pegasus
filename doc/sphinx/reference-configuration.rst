@@ -1047,7 +1047,7 @@ understands.
     +--------------------------------------------+---------------------------------------------------------------------+
     | | Profile Key: container.arguments         | | indicates additional arguments that will be appended to           |
     | | Scope : TC, Workflow                     | | the docker container run/singularity exec commands when           |
-    | | Since : 5.0                              | |the container associated with this profile is executed             |
+    | | Since : 5.0                              | | the container associated with this profile is executed            |
     | | Type :String                             |                                                                     |
     +--------------------------------------------+---------------------------------------------------------------------+
 
@@ -1146,7 +1146,7 @@ please change their namespace value to *selector* instead. The support for
 .. _selector-profiles:
 
 The Selector Profile Namespace
----------------------------
+------------------------------
 
 The *selector* namespace allows users to override the behavior of the
 Workflow Mapper during site selection. This gives you finer grained
