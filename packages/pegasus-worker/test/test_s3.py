@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import unittest
 from configparser import ConfigParser
 from pathlib import Path
