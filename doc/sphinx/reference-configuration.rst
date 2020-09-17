@@ -1633,139 +1633,260 @@ Catalog Related Properties
 
 .. table:: Replica Catalog Properties
 
-   ========================================================================================================================================== ==========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                         **Description**
-   **Property Key:**\ pegasus.catalog.replica\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** File               Pegasus queries a Replica Catalog to discover the physical filenames (PFN) for input files specified in the DAX. Pegasus can interface with various types of Replica Catalogs. This property specifies which type of Replica Catalog to use during the planning process.
-
-                                                                                                                                              JDBCRC
-                                                                                                                                                 In this mode, Pegasus queries a SQL based replica catalog that is accessed via JDBC. To use JDBCRC, the user additionally needs to set the following properties
-
-                                                                                                                                                 1. pegasus.catalog.replica.db.driver = mysql \| postgres \|sqlite
-                                                                                                                                                 2. pegasus.catalog.replica.db.url = <jdbc url to the database> e.g jdbc:mysql://database-host.isi.edu/database-name \| jdbc:sqlite:/shared/jdbcrc.db
-                                                                                                                                                 3. pegasus.catalog.replica.db.user = database-user
-                                                                                                                                                 4. pegasus.catalog.replica.db.password = database-password
-
-                                                                                                                                              File
-                                                                                                                                                 In this mode, Pegasus queries a file based replica catalog. It is neither transactionally safe, nor advised to use for production purposes in any way. Multiple concurrent instances *will clobber* each other!. The site attribute should be specified whenever possible. The attribute key for the site attribute is "site".
-
-                                                                                                                                                 The LFN may or may not be quoted. If it contains linear whitespace, quotes, backslash or an equality sign, it must be quoted and escaped. Ditto for the PFN. The attribute key-value pairs are separated by an equality sign without any whitespaces. The value may be in quoted. The LFN sentiments about quoting apply.
-
-                                                                                                                                                 ::
-
-                                                                                                                                                    LFN PFN
-                                                                                                                                                    LFN PFN a=b [..]
-                                                                                                                                                    LFN PFN a="b" [..]
-                                                                                                                                                    "LFN w/LWS" "PFN w/LWS" [..]
-
-                                                                                                                                                 To use File, the user additionally needs to specify **pegasus.catalog.replica.file** property to specify the path to the file based RC. IF not specified , defaults to $PWD/rc.txt file.
-
-                                                                                                                                              Regex
-                                                                                                                                                 In this mode, Pegasus queries a file based replica catalog. It is neither transactionally safe, nor advised to use for production purposes in any way. Multiple concurrent access to the File will end up clobbering the contents of the file. The site attribute should be specified whenever possible. The attribute key for the site attribute is "site".
-
-                                                                                                                                                 The LFN may or may not be quoted. If it contains linear whitespace, quotes, backslash or an equality sign, it must be quoted and escaped. Ditto for the PFN. The attribute key-value pairs are separated by an equality sign without any whitespaces. The value may be in quoted. The LFN sentiments about quoting apply.
-
-                                                                                                                                                 In addition users can specifiy regular expression based LFN's. A regular expression based entry should be qualified with an attribute named 'regex'. The attribute regex when set to true identifies the catalog entry as a regular expression based entry. Regular expressions should follow Java regular expression syntax.
-
-                                                                                                                                                 For example, consider a replica catalog as shown below.
-
-                                                                                                                                                 Entry 1 refers to an entry which does not use a resular expressions. This entry would only match a file named 'f.a', and nothing else. Entry 2 referes to an entry which uses a regular expression. In this entry f.a referes to files having name as f[any-character]a i.e. faa, f.a, f0a, etc.
-
-                                                                                                                                                 ::
-
-                                                                                                                                                    f.a file:///Vol/input/f.a site="local"
-                                                                                                                                                    f.a file:///Vol/input/f.a site="local" regex="true"
-
-                                                                                                                                                 Regular expression based entries also support substitutions. For example, consider the regular expression based entry shown below.
-
-                                                                                                                                                 Entry 3 will match files with name alpha.csv, alpha.txt, alpha.xml. In addition, values matched in the expression can be used to generate a PFN.
-
-                                                                                                                                                 For the entry below if the file being looked up is alpha.csv, the PFN for the file would be generated as file:///Volumes/data/input/csv/alpha.csv. Similary if the file being lookedup was alpha.csv, the PFN for the file would be generated as file:///Volumes/data/input/xml/alpha.xml i.e. The section [0], [1] will be replaced. Section [0] refers to the entire string i.e. alpha.csv. Section [1] refers to a partial match in the input i.e. csv, or txt, or xml. Users can utilize as many sections as they wish.
-
-                                                                                                                                                 ::
-
-                                                                                                                                                    alpha\.(csv|txt|xml) file:///Vol/input/[1]/[0] site="local" regex="true"
-
-                                                                                                                                                 To use File, the user additionally needs to specify pegasus.catalog.replica.file property to specify the path to the file based RC.
-
-                                                                                                                                              Directory
-                                                                                                                                                 In this mode, Pegasus does a directory listing on an input directory to create the LFN to PFN mappings. The directory listing is performed recursively, resulting in deep LFN mappings. For example, if an input directory $input is specified with the following structure
-
-                                                                                                                                                 ::
-
-                                                                                                                                                    $input
-                                                                                                                                                    $input/f.1
-                                                                                                                                                    $input/f.2
-                                                                                                                                                    $input/D1
-                                                                                                                                                    $input/D1/f.3
-
-                                                                                                                                                 Pegasus will create the mappings the following LFN PFN mappings internally
-
-                                                                                                                                                 ::
-
-                                                                                                                                                    f.1 file://$input/f.1  site="local"
-                                                                                                                                                    f.2 file://$input/f.2  site="local"
-                                                                                                                                                    D1/f.3 file://$input/D2/f.3 site="local"
-
-                                                                                                                                                 If you don't want the deep lfn's to be created then, you can set pegasus.catalog.replica.directory.flat.lfn to true In that case, for the previous example, Pegasus will create the following LFN PFN mappings internally.
-
-                                                                                                                                                 ::
-
-                                                                                                                                                    f.1 file://$input/f.1  site="local"
-                                                                                                                                                    f.2 file://$input/f.2  site="local"
-                                                                                                                                                    f.3 file://$input/D2/f.3 site="local"
-
-                                                                                                                                                 pegasus-plan has --input-dir option that can be used to specify an input directory.
-
-                                                                                                                                                 Users can optionally specify additional properties to configure the behvavior of this implementation.
-
-                                                                                                                                                 **pegasus.catalog.replica.directory** to specify the path to the directory containing the files
-
-                                                                                                                                                 **pegasus.catalog.replica.directory.site** to specify a site attribute other than local to associate with the mappings.
-
-                                                                                                                                                 **pegasus.catalog.replica.directory.url.prefix** to associate a URL prefix for the PFN's constructed. If not specified, the URL defaults to file://
-
-                                                                                                                                              MRC
-                                                                                                                                                 In this mode, Pegasus queries multiple replica catalogs to discover the file locations on the grid. To use it set
-
-                                                                                                                                                 ::
-
-                                                                                                                                                    pegasus.catalog.replica MRC
-
-                                                                                                                                                 Each associated replica catalog can be configured via properties as follows.
-
-                                                                                                                                                 The user associates a variable name referred to as [value] for each of the catalogs, where [value] is any legal identifier (concretely [A-Za-z][_A-Za-z0-9]*) For each associated replica catalogs the user specifies the following properties.
-
-                                                                                                                                                 ::
-
-                                                                                                                                                    pegasus.catalog.replica.mrc.[value]       specifies the type of \
-                                                                                                                                                                                              replica catalog.
-                                                                                                                                                    pegasus.catalog.replica.mrc.[value].key   specifies a property name\
-                                                                                                                                                                                              key for a particular catalog
-
-                                                                                                                                                 ::
-
-                                                                                                                                                    pegasus.catalog.replica.mrc.directory1 Directory
-                                                                                                                                                    pegasus.catalog.replica.mrc.directory1.directory /input/dir1
-                                                                                                                                                    pegasus.catalog.replica.mrc.directory1.directory.site  siteX
-                                                                                                                                                    pegasus.catalog.replica.mrc.directory2 Directory
-                                                                                                                                                    pegasus.catalog.replica.mrc.directory2.directory /input/dir2
-                                                                                                                                                    pegasus.catalog.replica.mrc.directory1.directory.site  siteY
-
-                                                                                                                                                 In the above example, directory1, directory2 are any valid identifier names and url is the property key that needed to be specified.
-   **Property Key:**\ pegasus.catalog.replica.chunk.size\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** 1000    The pegasus-rc-client takes in an input file containing the mappings upon which to work. This property determines, the number of lines that are read in at a time, and worked upon at together. This allows the various operations like insert, delete happen in bulk if the underlying replica implementation supports it.
-   **Property Key:**\ pegasus.catalog.replica.cache.asrc\ **Profile Key :**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** false  This Boolean property determines whether to treat the cache file specified as a supplemental replica catalog or not. User can specify on the command line to pegasus-plan a comma separated list of cache files using the --cache option. By default, the LFN->PFN mappings contained in the cache file are treated as cache, i.e if an entry is found in a cache file the replica catalog is not queried. This results in only the entry specified in the cache file to be available for replica selection.
-
-                                                                                                                                              Setting this property to true, results in the cache files to be treated as supplemental replica catalogs. This results in the mappings found in the replica catalog (as specified by pegasus.catalog.replica) to be merged with the ones found in the cache files. Thus, mappings for a particular LFN found in both the cache and the replica catalog are available for replica selection.
-   **Property Key:**\ pegasus.catalog.replica.dax.asrc\ **Profile Key :**\ N/A\ **Scope :** Properties **Since :** 4.5.2 **Default :** false  This Boolean property determines whether to treat the locations of files recorded in the DAX as a supplemental replica catalog or not. By default, the LFN->PFN mappings contained in the DAX file overrides any specified in a replica catalog. This results in only the entry specified in the DAX file to be available for replica selection.
-
-                                                                                                                                              Setting this property to true, results in the locations of files recorded in the DAX files to be treated as a supplemental replica catalog. This results in the mappings found in the replica catalog (as specified by pegasus.catalog.replica) to be merged with the ones found in the cache files. Thus, mappings for a particular LFN found in both the DAX and the replica catalog are available for replica selection.
-   **Property Key:**\ pegasus.catalog.replica.output\ **.\* Profile Key :**\ N/A\ **Scope :** Properties **Since :** 4.5.3 **Default :** None Normally, the registration jobs in the executable workflow register to the replica catalog specified by the user in the properties file . This property prefix allows the user to specify a separate output replica catalog that is different from the one used for discovery of input files. This is normally the case, when a Directory or MRC based replica catalog backend that don't support insertion of entries are used for discovery of input files. For example to specify a separate file based output replica catalog, specify
-
-                                                                                                                                              ::
-
-                                                                                                                                                 pegasus.catalog.replica.output        File
-                                                                                                                                                 pegasus.catalog.replica.output.file   /workflow/output.rc
-   ========================================================================================================================================== ==========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +----------------------------------------------------+----------------------------------------------------------------------------------+
+    | Key Attributes                                     | Description                                                                      |
+    +====================================================+==================================================================================+
+    | | Property Key: pegasus.catalog.replica            | | Pegasus queries a Replica Catalog to discover the                              |
+    | | Profile Key: N/A                                 | | physical filenames (PFN) for input files specified in                          |
+    | | Scope : Properties                               | | the Abstract Workflow. Pegasus can interface with                              |
+    | | Since : 2.0                                      | | various types of Replica Catalogs. This property                               |
+    | | Default : File                                   | | specifies which type of Replica Catalog to use during                          |
+    |                                                    | | the planning process.                                                          |
+    |                                                    | |                                                                                |
+    |                                                    | | - **JDBCRC**: In this mode, Pegasus queries a SQL                              |
+    |                                                    | |   based replica catalog that is accessed via JDBC.                             |
+    |                                                    | |   To use JDBCRC, the user additionally needs to set                            |
+    |                                                    | |   the following properties                                                     |
+    |                                                    | |   pegasus.catalog.replica.db.driver = mysql | postgres |sqlite                 |
+    |                                                    | |   pegasus.catalog.replica.db.url = <jdbc url to the database>                  |
+    |                                                    | |     e.g jdbc:mysql://database-host.isi.edu/database-name |                     |
+    |                                                    | |     jdbc:sqlite:/shared/jdbcrc.db                                              |
+    |                                                    | |   pegasus.catalog.replica.db.user = database-user                              |
+    |                                                    | |   pegasus.catalog.replica.db.password = database-password                      |
+    |                                                    | | - **File**: In this mode, Pegasus queries a file based                         |
+    |                                                    | |   replica catalog. It is neither transactionally safe,                         |
+    |                                                    | |   nor advised to use for production purposes in any way.                       |
+    |                                                    | |   Multiple concurrent instances will clobber each other!.                      |
+    |                                                    | |   The site attribute should be specified whenever possible.                    |
+    |                                                    | |   The attribute key for the site attribute is “site”.                          |
+    |                                                    | |   The LFN may or may not be quoted. If it contains                             |
+    |                                                    | |   linear whitespace, quotes, backslash or an equality                          |
+    |                                                    | |   sign, it must be quoted and escaped. Ditto for the                           |
+    |                                                    | |   PFN. The attribute key-value pairs are separated by                          |
+    |                                                    | |   an equality sign without any whitespaces. The value                          |
+    |                                                    | |   may be in quoted. The LFN sentiments about quoting                           |
+    |                                                    | |   apply.                                                                       |
+    |                                                    | |                                                                                |
+    |                                                    | |   ::                                                                           |
+    |                                                    | |                                                                                |
+    |                                                    | |       LFN PFN                                                                  |
+    |                                                    | |       LFN PFN a=b [..]                                                         |
+    |                                                    | |       LFN PFN a="b" [..]                                                       |
+    |                                                    | |       "LFN w/LWS" "PFN w/LWS" [..]                                             |
+    |                                                    | |                                                                                |
+    |                                                    | |   To use File, the user additionally needs to specify                          |
+    |                                                    | |   **pegasus.catalog.replica.file** property to                                 |
+    |                                                    | |   specify the path to the file based RC. IF not                                |
+    |                                                    | |   specified , defaults to $PWD/rc.txt file.                                    |
+    |                                                    | | - **YAML**: This is the new YAML based file format                             |
+    |                                                    | |   introduced in Pegasus 5.0. The format does support                           |
+    |                                                    | |   regular expressions similar to Regex catalog type.                           |
+    |                                                    | |   To specify regular expressions you need to associate                         |
+    |                                                    | |   an attribute named regex and set to true.                                    |
+    |                                                    | |   To use YAML, the user additionally needs to specify                          |
+    |                                                    | |   **pegasus.catalog.replica.file** property to                                 |
+    |                                                    | |   specify the path to the file based RC. IF not                                |
+    |                                                    | |   specified , defaults to $PWD/replicas.yml file.                              |
+    |                                                    | | - **Regex**: In this mode, Pegasus queries a file                              |
+    |                                                    | |   based replica catalog. It is neither transactionally                         |
+    |                                                    | |   safe, nor advised to use for production purposes in any                      |
+    |                                                    | |   way. Multiple concurrent access to the File will end                         |
+    |                                                    | |   up clobbering the contents of the file. The site                             |
+    |                                                    | |   attribute should be specified whenever possible.                             |
+    |                                                    | |   The attribute key for the site attribute is “site”.                          |
+    |                                                    | |   The LFN may or may not be quoted. If it contains                             |
+    |                                                    | |   linear whitespace, quotes, backslash or an equality                          |
+    |                                                    | |   sign, it must be quoted and escaped. Ditto for the                           |
+    |                                                    | |   PFN. The attribute key-value pairs are separated by                          |
+    |                                                    | |   an equality sign without any whitespaces. The value                          |
+    |                                                    | |   may be in quoted. The LFN sentiments about quoting                           |
+    |                                                    | |   apply.                                                                       |
+    |                                                    | |   In addition users can specifiy regular expression                            |
+    |                                                    | |   based LFN’s. A regular expression based entry should                         |
+    |                                                    | |   be qualified with an attribute named ‘regex’. The                            |
+    |                                                    | |   attribute regex when set to true identifies the                              |
+    |                                                    | |   catalog entry as a regular expression based entry.                           |
+    |                                                    | |   Regular expressions should follow Java regular                               |
+    |                                                    | |   expression syntax.                                                           |
+    |                                                    | |   For example, consider a replica catalog as shown below.                      |
+    |                                                    | |   Entry 1 refers to an entry which does not use a regular                      |
+    |                                                    | |   expressions. This entry would only match a file named                        |
+    |                                                    | |   ‘f.a’, and nothing else. Entry 2 referes to an entry                         |
+    |                                                    | |   which uses a regular expression. In this entry f.a                           |
+    |                                                    | |   refers to files having name as f[any-character]a                             |
+    |                                                    | |   i.e. faa, f.a, f0a, etc.                                                     |
+    |                                                    | |                                                                                |
+    |                                                    | |   ::                                                                           |
+    |                                                    | |                                                                                |
+    |                                                    | |      f.a file:///Vol/input/f.a site="local"                                    |
+    |                                                    | |      f.a file:///Vol/input/f.a site="local" regex="true"                       |
+    |                                                    | |                                                                                |
+    |                                                    | |   Regular expression based entries also support                                |
+    |                                                    | |   substitutions. For example, consider the regular                             |
+    |                                                    | |   expression based entry shown below.                                          |
+    |                                                    |                                                                                  |
+    |                                                    | |   Entry 3 will match files with name alpha.csv,                                |
+    |                                                    | |   alpha.txt, alpha.xml. In addition, values matched                            |
+    |                                                    | |   in the expression can be used to generate a PFN.                             |
+    |                                                    | |   For the entry below if the file being looked up is                           |
+    |                                                    | |   alpha.csv, the PFN for the file would be generated as                        |
+    |                                                    | |   file:///Volumes/data/input/csv/alpha.csv. Similary if                        |
+    |                                                    | |   the file being lookedup was alpha.csv, the PFN for the                       |
+    |                                                    | |   file would be generated as                                                   |
+    |                                                    | |   file:///Volumes/data/input/xml/alpha.xml i.e.                                |
+    |                                                    | |   The section [0], [1] will be replaced.                                       |
+    |                                                    | |   Section [0] refers to the entire string                                      |
+    |                                                    | |   i.e. alpha.csv. Section [1] refers to a partial                              |
+    |                                                    | |   match in the input i.e. csv, or txt, or xml.                                 |
+    |                                                    | |   Users can utilize as many sections as they wish.                             |
+    |                                                    | |                                                                                |
+    |                                                    | |   ::                                                                           |
+    |                                                    | |                                                                                |
+    |                                                    | |       alpha\.(csv|txt|xml) file:///Vol/input/[1]/[0] site="local" regex="true" |
+    |                                                    | |                                                                                |
+    |                                                    | |   To use File, the user additionally needs to specify                          |
+    |                                                    | |   pegasus.catalog.replica.file property to specify the                         |
+    |                                                    | |   path to the file based RC.                                                   |
+    |                                                    | | - **Directory**: In this mode, Pegasus does a directory                        |
+    |                                                    | |   listing on an input directory to create the LFN to PFN                       |
+    |                                                    | |   mappings. The directory listing is performed                                 |
+    |                                                    | |   recursively, resulting in deep LFN mappings.                                 |
+    |                                                    | |   For example, if an input directory $input is specified                       |
+    |                                                    | |   with the following structure                                                 |
+    |                                                    | |                                                                                |
+    |                                                    | |   ::                                                                           |
+    |                                                    | |                                                                                |
+    |                                                    | |      $input                                                                    |
+    |                                                    | |      $input/f.1                                                                |
+    |                                                    | |      $input/f.2                                                                |
+    |                                                    | |      $input/D1                                                                 |
+    |                                                    | |      $input/D1/f.3                                                             |
+    |                                                    | |                                                                                |
+    |                                                    | |   Pegasus will create the mappings the following                               |
+    |                                                    | |   LFN PFN mappings internally                                                  |
+    |                                                    | |                                                                                |
+    |                                                    | |   ::                                                                           |
+    |                                                    | |                                                                                |
+    |                                                    | |      f.1 file://$input/f.1  site="local"                                       |
+    |                                                    | |      f.2 file://$input/f.2  site="local"                                       |
+    |                                                    | |      D1/f.3 file://$input/D2/f.3 site="local"                                  |
+    |                                                    | |                                                                                |
+    |                                                    | |   If you don’t want the deep lfn’s to be created then,                         |
+    |                                                    | |   you can set pegasus.catalog.replica.directory.flat.lfn                       |
+    |                                                    | |   to true In that case, for the previous example, Pegasus                      |
+    |                                                    | |   will create the following LFN PFN mappings internally.                       |
+    |                                                    | |                                                                                |
+    |                                                    | |   ::                                                                           |
+    |                                                    | |                                                                                |
+    |                                                    | |      f.1 file://$input/f.1  site="local"                                       |
+    |                                                    | |      f.2 file://$input/f.2  site="local"                                       |
+    |                                                    | |      D1/f.3 file://$input/D2/f.3 site="local"                                  |
+    |                                                    | |                                                                                |
+    |                                                    | |   pegasus-plan has –input-dir option that can be used                          |
+    |                                                    | |   to specify an input directory.                                               |
+    |                                                    | |   Users can optionally specify additional properties to                        |
+    |                                                    | |   configure the behvavior of this implementation.                              |
+    |                                                    | |   - **pegasus.catalog.replica.directory** to specify                           |
+    |                                                    | |      the path to the directory containing the files                            |
+    |                                                    | |   - **pegasus.catalog.replica.directory.site** to                              |
+    |                                                    | |      specify a site attribute other than local to                              |
+    |                                                    | |      associate with the mappings.                                              |
+    |                                                    | |   - **pegasus.catalog.replica.directory.url.prefix**                           |
+    |                                                    | |      to associate a URL prefix for the PFN’s constructed.                      |
+    |                                                    | |      If not specified, the URL defaults to file://                             |
+    |                                                    | | - **MRC**: In this mode, Pegasus queries multiple                              |
+    |                                                    | |   replica catalogs to discover the file locations on the                       |
+    |                                                    | |   grid. To use it set                                                          |
+    |                                                    | |   pegasus.catalog.replica MRC                                                  |
+    |                                                    | |   Each associated replica catalog can be configured via                        |
+    |                                                    | |   properties as follows.                                                       |
+    |                                                    | |   The user associates a variable name referred to as                           |
+    |                                                    | |   [value] for each of the catalogs, where [value]                              |
+    |                                                    | |   is any legal identifier                                                      |
+    |                                                    | |   (concretely [A-Za-z][_A-Za-z0-9]*) . For each                                |
+    |                                                    | |   associated replica catalogs the user specifies                               |
+    |                                                    | |   the following properties.                                                    |
+    |                                                    | |                                                                                |
+    |                                                    | |    ::                                                                          |
+    |                                                    | |                                                                                |
+    |                                                    | |      pegasus.catalog.replica.mrc.[value] specifies the                         |
+    |                                                    | |                type of replica catalog.                                        |
+    |                                                    | |      pegasus.catalog.replica.mrc.[value].key specifies                         |
+    |                                                    | |        a property name key for a particular catalog                            |
+    |                                                    | |                                                                                |
+    |                                                    | |    ::                                                                          |
+    |                                                    | |                                                                                |
+    |                                                    | |      pegasus.catalog.replica.mrc.directory1 Directory                          |
+    |                                                    | |      pegasus.catalog.replica.mrc.directory1.directory /input/dir1              |
+    |                                                    | |      pegasus.catalog.replica.mrc.directory1.directory.site  siteX              |
+    |                                                    | |      pegasus.catalog.replica.mrc.directory2 Directory                          |
+    |                                                    | |      pegasus.catalog.replica.mrc.directory2.directory /input/dir2              |
+    |                                                    | |      pegasus.catalog.replica.mrc.directory1.directory.site  siteY|             |
+    |                                                    | |                                                                                |
+    |                                                    | |   In the above example, directory1, directory2 are any                         |
+    |                                                    | |   valid identifier names and url is the property key that                      |
+    |                                                    | |   needed to be specified.                                                      |
+    +----------------------------------------------------+----------------------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.replica.chunk.size | | The pegasus-rc-client takes in an input file containing the                    |
+    | | Profile Key: N/A                                 | | mappings upon which to work. This property determines, the                     |
+    | | Scope : Properties                               | | number of lines that are read in at a time, and worked upon                    |
+    | | Since : 2.0                                      | | at together. This allows the various operations like insert,                   |
+    | | Default : 1000                                   | | delete happen in bulk if the underlying replica                                |
+    |                                                    | | implementation supports it.                                                    |
+    +----------------------------------------------------+----------------------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.replica.cache.asrc | | This Boolean property determines whether to treat the                          |
+    | | Profile Key : N/A                                | | cachefile specified as a supplemental replica catalog                          |
+    | | Scope : Properties                               | | or not. User can specify on the command line to                                |
+    | | Since : 2.0                                      | | pegasus-plan a comma separated list of cache files                             |
+    | | Default : false                                  | | using the –cache option. By default, the LFN->PFN                              |
+    |                                                    | | mappings contained in the cache file are treated                               |
+    |                                                    | | as cache, i.e if an entry is found in a cache file                             |
+    |                                                    | | the replica catalog is not queried. This results                               |
+    |                                                    | | in only the entry specified in the cache file to be                            |
+    |                                                    | | available for replica selection.                                               |
+    |                                                    | | Setting this property to true, results in the cache                            |
+    |                                                    | | files to be treated as supplemental replica catalogs.                          |
+    |                                                    | | This results in the mappings found in the replica                              |
+    |                                                    | | catalog (as specified by pegasus.catalog.replica)                              |
+    |                                                    | | to be merged with the ones found in the cache files.                           |
+    |                                                    | | Thus, mappings for a particular LFN found in both the                          |
+    |                                                    | | cache and the replica catalog are available for                                |
+    |                                                    | | replica selection.                                                             |
+    +----------------------------------------------------+----------------------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.replica.dax.asrc   | | This Boolean property determines whether to treat the                          |
+    | | Profile Key :N/A                                 | | locations of files recorded in the DAX as a supplemental                       |
+    | | Scope : Properties                               | | replica catalog or not. By default, the LFN->PFN                               |
+    | | Since : 4.5.2                                    | | mappings contained in the DAX file overrides any                               |
+    | | Default : false                                  | | specified in a replica catalog. This results in only                           |
+    |                                                    | | the entry specified in the DAX file to be available                            |
+    |                                                    | | for replica selection.                                                         |
+    |                                                    | | Setting this property to true, results in the                                  |
+    |                                                    | | locations of files recorded in the DAX files to                                |
+    |                                                    | | be treated as a supplemental replica catalog.                                  |
+    |                                                    | | This results in the mappings found in the replica                              |
+    |                                                    | | catalog (as specified by pegasus.catalog.replica) to                           |
+    |                                                    | | be merged with the ones found in the cache files.                              |
+    |                                                    | | Thus, mappings for a particular LFN found in both                              |
+    |                                                    | | the Abstract Workflow/DAX and the replica catalog                              |
+    |                                                    | | are available for replica selection.                                           |
+    +----------------------------------------------------+----------------------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.replica.output.*   | | Normally, the registration jobs in the executable                              |
+    | | Profile Key : N/A                                | | workflow register to the replica catalog specified                             |
+    | | Scope : Properties                               | | by the user in the properties file . This property                             |
+    | | Since : 4.5.3                                    | | prefix allows the user to specify a separate output                            |
+    | | Default : None                                   | | replica catalog that is different from the one used                            |
+    |                                                    | | for discovery of input files. This is normally the                             |
+    |                                                    | | case, when a Directory or MRC based replica catalog                            |
+    |                                                    | | backend that don’t support insertion of entries                                |
+    |                                                    | | are used for discovery of input files.                                         |
+    |                                                    | | For example to specify a separate file based output                            |
+    |                                                    | | replica catalog, specify                                                       |
+    |                                                    | |                                                                                |
+    |                                                    | | ::                                                                             |
+    |                                                    | |                                                                                |
+    |                                                    | |    pegasus.catalog.replica.output        File                                  |
+    |                                                    | |    pegasus.catalog.replica.output.file   /workflow/output.rc                   |
+    +----------------------------------------------------+----------------------------------------------------------------------------------+
 
 .. table:: Site Catalog Properties
 
