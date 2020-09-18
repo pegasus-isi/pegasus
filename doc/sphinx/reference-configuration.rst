@@ -2930,7 +2930,7 @@ Cleanup Properties
 ------------------
 
 .. table:: Cleanup Properties
-    
+
     +------------------------------------------------------+----------------------------------------------------------+
     | Key Attributes                                       | Description                                              |
     +======================================================+==========================================================+
@@ -3036,35 +3036,59 @@ Cleanup Properties
 AWS Batch Properties
 --------------------
 
-.. table:: Miscellaneous Properties
-
-   ======================================================================================================================================================================= ===============================================================================================================
-   **Key Attributes**                                                                                                                                                      **Description**
-   **Property Key:**\ pegasus.aws.account\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.9.0 **Type :**\ String **Default :** (no default)                   This property is used to specify the amazon account under which you are running jobs.
-   **Property Key:**\ pegasus.aws.region\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.9.0 **Type :**\ String **Default :** (no default)                    This property is used to specify the amazon region in which you are running jobs.
-   **Property Key:**\ pegasus.aws.batch.job_definition\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.9.0 **Type :**\ String **Default :** (no default)      This property is used to specify
-
-                                                                                                                                                                           -  the JSON file containing job definition to register for executing jobs **OR**
-
-                                                                                                                                                                           -  the ARN of existing job definition **OR**
-
-                                                                                                                                                                           -  basename of an existing job definition
-   **Property Key:**\ pegasus.aws.batch.compute_environment\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.9.0 **Type :**\ String **Default :** (no default) This property is used to specify
-
-                                                                                                                                                                           -  the JSON file containing compute environment to register for executing jobs **OR**
-
-                                                                                                                                                                           -  the ARN of existing compute environment **OR**
-
-                                                                                                                                                                           -  basename of an existing compute environment
-   **Property Key:**\ pegasus.aws.batch.job_queue\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.9.0 **Type :**\ String **Default :** (no default)           This property is used to specify
-
-                                                                                                                                                                           -  the JSON file containing Job Queue to use for executing jobs **OR**
-
-                                                                                                                                                                           -  the ARN of existing job queue **OR**
-
-                                                                                                                                                                           -  basename of an existing job queue
-   **Property Key:**\ pegasus.aws.batch.s3_bucket\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.9.0 **Type :**\ URL **Default :** (no default)              This property is used to specify the S3 Bucket URL to use for data transfers while executing jobs on AWS Batch.
-   ======================================================================================================================================================================= ===============================================================================================================
+.. table:: AWS Batch Properties
+    
+    +-------------------------------------------------------+--------------------------------------------------------+
+    | Key Attributes                                        | Description                                            |
+    +=======================================================+========================================================+
+    | | Property Key: pegasus.aws.account                   | | This property is used to specify the amazon account  |
+    | | Profile Key: N/A                                    | | under which you are running jobs.                    |
+    | | Scope : Properties                                  |                                                        |
+    | | Since : 4.9.0                                       |                                                        |
+    | | Type :String                                        |                                                        |
+    | | Default : (no default)                              |                                                        |
+    +-------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.aws.region                    | | This property is used to specify the amazon region   |
+    | | Profile Key: N/A                                    | | in which you are running jobs.                       |
+    | | Scope : Properties                                  |                                                        |
+    | | Since : 4.9.0                                       |                                                        |
+    | | Type :String                                        |                                                        |
+    | | Default : (no default)                              |                                                        |
+    +-------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.aws.batch.job_definition      | | This property is used to specify                     |
+    | | Profile Key: N/A                                    |                                                        |
+    | | Scope : Properties                                  | - the JSON file containing job definition to register  |
+    | | Since : 4.9.0                                       | | for executing jobs OR                                |
+    | | Type :String                                        |                                                        |
+    | | Default : (no default)                              | - the ARN of existing job definition OR                |
+    |                                                       |                                                        |
+    |                                                       | - basename of an existing job definition               |
+    +-------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.aws.batch.compute_environment | | This property is used to specify                     |
+    | | Profile Key:N/A                                     |                                                        |
+    | | Scope : Properties                                  | - the JSON file containing compute environment to      |
+    | | Since : 4.9.0                                       | | register for executing jobs OR                       |
+    | | Type :String                                        |                                                        |
+    | | Default : (no default)                              | - the ARN of existing compute environment OR           |
+    |                                                       |                                                        |
+    |                                                       | - basename of an existing compute environment          |
+    +-------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.aws.batch.job_queue           | | This property is used to specify                     |
+    | | Profile Key: N/A                                    |                                                        |
+    | | Scope : Properties                                  | - the JSON file containing Job Queue to use for        |
+    | | Since : 4.9.0                                       | | executing jobs OR                                    |
+    | | Type :String                                        |                                                        |
+    | | Default : (no default)                              | - the ARN of existing job queue OR                     |
+    |                                                       |                                                        |
+    |                                                       | - basename of an existing job queue                    |
+    +-------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.aws.batch.s3_bucket           | | This property is used to specify the S3 Bucket       |
+    | | Profile Key: N/A                                    | | URL to use for data transfers while executing        |
+    | | Scope : Properties                                  | | jobs on AWS Batch.                                   |
+    | | Since : 4.9.0                                       |                                                        |
+    | | Type :URL                                           |                                                        |
+    | | Default : (no default)                              |                                                        |
+    +-------------------------------------------------------+--------------------------------------------------------+
 
 .. _misc-props:
 
