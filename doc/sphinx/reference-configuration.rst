@@ -2070,52 +2070,153 @@ Site Selection Properties
 
 .. table:: Site Selection Properties
 
-   =================================================================================================================================================================================================================================================================================================================================== =====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                                                                                                                                                                  **Description**
-   **Property Key:**\ pegasus.selector.site\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ String **Default :** Random **See Also :** pegasus.selector.site.path\ **See Also :** pegasus.selector.site.timeout **See Also :** pegasus.selector.site.keep.tmp\ **See Also :**\ pegasus.selector.site.env.\* The site selection in Pegasus can be on basis of any of the following strategies.
-
-                                                                                                                                                                                                                                                                                                                                       Random
-                                                                                                                                                                                                                                                                                                                                          In this mode, the jobs will be randomly distributed among the sites that can execute them.
-                                                                                                                                                                                                                                                                                                                                       RoundRobin
-                                                                                                                                                                                                                                                                                                                                          In this mode. the jobs will be assigned in a round robin manner amongst the sites that can execute them. Since each site cannot execute everytype of job, the round robin scheduling is done per level on a sorted list. The sorting is on the basis of the number of jobs a particular site has been assigned in that level so far. If a job cannot be run on the first site in the queue (due to no matching entry in the transformation catalog for the transformation referred to by the job), it goes to the next one and so on. This implementation defaults to classic round robin in the case where all the jobs in the workflow can run on all the sites.
-                                                                                                                                                                                                                                                                                                                                       NonJavaCallout
-                                                                                                                                                                                                                                                                                                                                          In this mode, Pegasus will callout to an external site selector.In this mode a temporary file is prepared containing the job information that is passed to the site selector as an argument while invoking it. The path to the site selector is specified by setting the property pegasus.site.selector.path. The environment variables that need to be set to run the site selector can be specified using the properties with a pegasus.site.selector.env. prefix. The temporary file contains information about the job that needs to be scheduled. It contains key value pairs with each key value pair being on a new line and separated by a =.
-
-                                                                                                                                                                                                                                                                                                                                          The following pairs are currently generated for the site selector temporary file that is generated in the NonJavaCallout.
-
-                                                                                                                                                                                                                                                                                                                                          ============== ==============================================================================================================================================================================================================================
-                                                                                                                                                                                                                                                                                                                                          version        is the version of the site selector api,currently 2.0.
-                                                                                                                                                                                                                                                                                                                                          transformation is the fully-qualified definition identifier for the transformation (TR) namespace::name:version.
-                                                                                                                                                                                                                                                                                                                                          derivation     is teh fully qualified definition identifier for the derivation (DV), namespace::name:version.
-                                                                                                                                                                                                                                                                                                                                          job.level      is the job's depth in the tree of the workflow DAG.
-                                                                                                                                                                                                                                                                                                                                          job.id         is the job's ID, as used in the DAX file.
-                                                                                                                                                                                                                                                                                                                                          resource.id    is a site handle, followed by whitespace, followed by a gridftp server. Typically, each gridftp server is enumerated once, so you may have multiple occurances of the same site. There can be multiple occurances of this key.
-                                                                                                                                                                                                                                                                                                                                          input.lfn      is an input LFN, optionally followed by a whitespace and file size. There can be multiple occurances of this key,one for each input LFN required by the job.
-                                                                                                                                                                                                                                                                                                                                          wf.name        label of the dax, as found in the DAX's root element. wf.index is the DAX index, that is incremented for each partition in case of deferred planning.
-                                                                                                                                                                                                                                                                                                                                          wf.time        is the mtime of the workflow.
-                                                                                                                                                                                                                                                                                                                                          wf.manager     is the name of the workflow manager being used .e.g condor
-                                                                                                                                                                                                                                                                                                                                          vo.name        is the name of the virtual organization that is running this workflow. It is currently set to NONE
-                                                                                                                                                                                                                                                                                                                                          vo.group       unused at present and is set to NONE.
-                                                                                                                                                                                                                                                                                                                                          \
-                                                                                                                                                                                                                                                                                                                                          ============== ==============================================================================================================================================================================================================================
-
-                                                                                                                                                                                                                                                                                                                                       Group
-                                                                                                                                                                                                                                                                                                                                          In this mode, a group of jobs will be assigned to the same site that can execute them. The use of the PEGASUS profile key group in the dax, associates a job with a particular group. The jobs that do not have the profile key associated with them, will be put in the default group. The jobs in the default group are handed over to the "Random" Site Selector for scheduling.
-                                                                                                                                                                                                                                                                                                                                       Heft
-                                                                                                                                                                                                                                                                                                                                          In this mode, a version of the HEFT processor scheduling algorithm is used to schedule jobs in the workflow to multiple grid sites. The implementation assumes default data communication costs when jobs are not scheduled on to the same site. Later on this may be made more configurable.
-
-                                                                                                                                                                                                                                                                                                                                          The runtime for the jobs is specified in the transformation catalog by associating the pegasus profile key runtime with the entries.
-
-                                                                                                                                                                                                                                                                                                                                          The number of processors in a site is picked up from the attribute idle-nodes associated with the vanilla jobmanager of the site in the site catalog.
-   **Property Key:**\ pegasus.selector.site.path\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** (no default)                                                                                                                                                                                             If one calls out to an external site selector using the NonJavaCallout mode, this refers to the path where the site selector is installed. In case other strategies are used it does not need to be set.
-   **Property Key:**\ pegasus.selector.site.env.\*\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** (no default)                                                                                                                                                                                           The environment variables that need to be set while callout to the site selector. These are the variables that the user would set if running the site selector on the command line. The name of the environment variable is got by stripping the keys of the prefix "pegasus.site.selector.env." prefix from them. The value of the environment variable is the value of the property.
-
-                                                                                                                                                                                                                                                                                                                                       e.g pegasus.site.selector.path.LD_LIBRARY_PATH /globus/lib would lead to the site selector being called with the LD_LIBRARY_PATH set to /globus/lib.
-   **Property Key:**\ pegasus.selector.site.timeout\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.3.0 **Default :** 60\ **See Also :** pegasus.selector.site                                                                                                                                                            It sets the number of seconds Pegasus waits to hear back from an external site selector using the NonJavaCallout interface before timing out.
-   **Property Key:**\ pegasus.selector.site.keep.tmp\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.3.0 **Values** : onerror|always|never **Default :** onerror\ **See Also :** pegasus.selector.site                                                                                                                    It determines whether Pegasus deletes the temporary input files that are generated in the temp directory or not. These temporary input files are passed as input to the external site selectors.
-
-                                                                                                                                                                                                                                                                                                                                       A temporary input file is created for each that needs to be scheduled.
-   =================================================================================================================================================================================================================================================================================================================================== =====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +------------------------------------------------+------------------------------------------------------------------------+
+    | Key Attributes                                 | Description                                                            |
+    +================================================+========================================================================+
+    | | Property Key: pegasus.selector.site          | | The site selection in Pegasus can be on basis of any of the          |
+    | | Profile Key: N/A                             | | following strategies.                                                |
+    | | Scope : Properties                           |                                                                        |
+    | | Since : 2.0                                  | - **Random**                                                           |
+    | | Type  : String                               | | In this mode, the jobs will be randomly distributed among            |
+    | | Default : Random                             | | the sites that can execute them.                                     |
+    | | See Also :                                   |                                                                        |
+    | |   pegasus.selector.site.path                 | - **RoundRobin**                                                       |
+    | | See Also :                                   | | In this mode. the jobs will be assigned in a round robin             |
+    | |   pegasus.selector.site.timeout              | | manner amongst the sites that can execute them. Since                |
+    | | See Also :                                   | | each site cannot execute everytype of job, the round                 |
+    | |    pegasus.selector.site.keep.tmp            | | robin scheduling is done per level on a sorted list.                 |
+    | | See Also :                                   | | The sorting is on the basis of the number of jobs a                  |
+    | |    pegasus.selector.site.env.*               | | particular site has been assigned in that level so far.              |
+    |                                                | | If a job cannot be run on the first site in the queue                |
+    |                                                | | (due to no matching entry in the transformation catalog              |
+    |                                                | | for the transformation referred to by the job), it goes              |
+    |                                                | | to the next one and so on. This implementation defaults              |
+    |                                                | | to classic round robin in the case where all the jobs                |
+    |                                                | | in the workflow can run on all the sites.                            |
+    |                                                |                                                                        |
+    |                                                | - **NonJavaCallout**                                                   |
+    |                                                | | In this mode, Pegasus will callout to an external site               |
+    |                                                | | selector.In this mode a temporary file is prepared                   |
+    |                                                | | containing the job information that is passed to the                 |
+    |                                                | | site selector as an argument while invoking it. The                  |
+    |                                                | | path to the site selector is specified by setting                    |
+    |                                                | | the property pegasus.site.selector.path.                             |
+    |                                                | | The environment variables that need to be set to run                 |
+    |                                                | | the site selector can be specified using the properties              |
+    |                                                | | with a **pegasus.site.selector.env.** prefix. The temporary          |
+    |                                                | | file contains information about the job that needs to be             |
+    |                                                | | scheduled. It contains key value pairs with each key value           |
+    |                                                | | pair being on a new line and separated by a =.                       |
+    |                                                | | The following pairs are currently generated for the site             |
+    |                                                | | selector temporary file that is generated in the NonJavaCallout.     |
+    |                                                | |                                                                      |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | Key            | Description                                       | |
+    |                                                | +================+===================================================+ |
+    |                                                | | version        | | is the version of the site selector api,        | |
+    |                                                | |                | | currently 2.0.                                  | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | transformation | | is the fully-qualified definition identifier    | |
+    |                                                | |                | | for the transformation (TR)                     | |
+    |                                                | |                | | namespace::name:version.                        | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | derivation     | | is the fully qualified definition identifier    | |
+    |                                                | |                | | for the derivation (DV),                        | |
+    |                                                | |                | | namespace::name:version.                        | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | job.level      | | is the job’s depth in the tree of the           | |
+    |                                                | |                | | workflow DAG.                                   | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | job.id         | | is the job’s ID, as used in the DAX file.       | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | resource.id    | | is a site handle, followed by whitespace,       | |
+    |                                                | |                | | followed by a gridftp server. Typically,        | |
+    |                                                | |                | | each gridftp server is enumerated once,         | |
+    |                                                | |                | | so you may have multiple occurances of          | |
+    |                                                | |                | | the same site. There can be multiple            | |
+    |                                                | |                | | occurances of this key.                         | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | input.lfn      | | is an input LFN, optionally followed            | |
+    |                                                | |                | | by a whitespace and file size. There            | |
+    |                                                | |                | | can be multiple occurances of this              | |
+    |                                                | |                | | key,one for each input LFN required by the job. | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | wf.name        | | label of the dax, as found in the DAX’s         | |
+    |                                                | |                | | root element. wf.index is the DAX index,        | |
+    |                                                | |                | | that is incremented for each partition          | |
+    |                                                | |                | | in case of deferred planning.                   | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | wf.time        | | is the mtime of the workflow.                   | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | wf.manager     | | is the name of the workflow manager             | |
+    |                                                | |                | | being used .e.g condor                          | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | vo.name        | | is the name of the virtual organization         | |
+    |                                                | |                | | that is running this workflow.                  | |
+    |                                                | |                | | It is currently set to NONE                     | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                | | vo.group       | unused at present and is set to NONE.             | |
+    |                                                | +----------------+---------------------------------------------------+ |
+    |                                                |                                                                        |
+    |                                                | - **Group**                                                            |
+    |                                                | | In this mode, a group of jobs will be assigned to the same site      |
+    |                                                | | that can execute them. The use of the PEGASUS profile key            |
+    |                                                | | group in the abstract workflow, associates a job with a              |
+    |                                                | | particular group. The jobs that do not have the profile              |
+    |                                                | | key associated with them, will be put in the default group.          |
+    |                                                | | The jobs in the default group are handed over to the “Random”        |
+    |                                                | | Site Selector for scheduling.                                        |
+    |                                                |                                                                        |
+    |                                                | - **Heft**                                                             |
+    |                                                | | In this mode, a version of the HEFT processor scheduling             |
+    |                                                | | algorithm is used to schedule jobs in the workflow to multiple       |
+    |                                                | | grid sites. The implementation assumes default data communication    |
+    |                                                | | costs when jobs are not scheduled on to the same site. Later on      |
+    |                                                | | this may be made more configurable.                                  |
+    |                                                | | The runtime for the jobs is specified in the transformation          |
+    |                                                | | catalog by associating the pegasus profile key runtime with the      |
+    |                                                | | entries.                                                             |
+    |                                                | | The number of processors in a site is picked up from the             |
+    |                                                | | attribute idle-nodes associated with the vanilla jobmanager          |
+    |                                                | | of the site in the site catalog.                                     |
+    +------------------------------------------------+------------------------------------------------------------------------+
+    | | Property Key: pegasus.selector.site.path     | | If one calls out to an external site selector using the              |
+    | | Profile Key: N/A                             | | NonJavaCallout mode, this refers to the path where the               |
+    | | Scope : Properties                           | | site selector is installed. In case other strategies are             |
+    | | Since : 2.0                                  | | used it does not need to be set.                                     |
+    | | Default : (no default)                       |                                                                        |
+    +------------------------------------------------+------------------------------------------------------------------------+
+    | | Property Key: pegasus.selector.site.env.*    | | The environment variables that need to be set while callout          |
+    | | Profile Key: N/A                             | | to the site selector. These are the variables that the user          |
+    | | Scope : Properties                           | | would set if running the site selector on the command line.          |
+    | | Since : 2.0                                  | | The name of the environment variable is got by stripping the         |
+    | | Default : (no default)                       | | keys of the prefix “pegasus.site.selector.env.” prefix from          |
+    |                                                | | them. The value of the environment variable is the value of          |
+    |                                                | | the property.                                                        |
+    |                                                | | e.g                                                                  |
+    |                                                |                                                                        |
+    |                                                | ::                                                                     |
+    |                                                |                                                                        |
+    |                                                |     pegasus.site.selector.path.LD_LIBRARY_PATH /globus/lib             |
+    |                                                |                                                                        |
+    |                                                | | would lead to the site selector being called with the                |
+    |                                                | | LD_LIBRARY_PATH set to /globus/lib.                                  |
+    +------------------------------------------------+------------------------------------------------------------------------+
+    | | Property Key: pegasus.selector.site.timeout  | | It sets the number of seconds Pegasus waits to hear back             |
+    | | Profile Key:N/A                              | | from an external site selector using the NonJavaCallout              |
+    | | Scope : Properties                           | | interface before timing out.                                         |
+    | | Since : 2.3.0                                |                                                                        |
+    | | Default : 60                                 |                                                                        |
+    | | See Also : pegasus.selector.site             |                                                                        |
+    +------------------------------------------------+------------------------------------------------------------------------+
+    | | Property Key: pegasus.selector.site.keep.tmp | | It determines whether Pegasus deletes the temporary input            |
+    | | Profile Key:N/A                              | | files that are generated in the temp directory or not.               |
+    | | Scope : Properties                           | | These temporary input files are passed as input to the               |
+    | | Since : 2.3.0                                | | external site selectors.                                             |
+    | | Values : onerror|always|never                |                                                                        |
+    | | Default : onerror                            |                                                                        |
+    | | See Also : pegasus.selector.site             |                                                                        |
+    +------------------------------------------------+------------------------------------------------------------------------+
 
 .. _data-conf-props:
 
