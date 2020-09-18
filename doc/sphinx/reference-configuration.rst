@@ -2351,52 +2351,228 @@ Transfer Configuration Properties
 
 .. table:: Transfer Configuration Properties
 
-   ================================================================================================================================================================================================================================= =========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                                                                **Description**
-   **Property Key:**\ pegasus.transfer.*.impl\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0.0 **Values** : Transfer|GUC **Default :** Transfer\ **See Also :** pegasus.transfer.refiner
-   **Property Key:**\ pegasus.transfer.arguments\ **Profile Key:**\ transfer.arguments\ **Scope :** Properties **Since :** 2.0.0 **Type :**\ String\ **Default :** (no default)\ **See Also :** pegasus.transfer.lite.arguments      This determines the extra arguments with which the transfer implementation is invoked. The transfer executable that is invoked is dependant upon the transfer mode that has been selected. The property can be overloaded by associated the pegasus profile key transfer.arguments either with the site in the site catalog or the corresponding transfer executable in the transformation catalog.
-   **Property Key:**\ pegasus.transfer.threads\ **Profile Key:**\ transfer.threads\ **Scope :** Properties **Since :** 4.4.0 **Type :**\ Integer\ **Default :** 2                                                                    This property set the number of threads pegasus-transfer uses to transfer the files. This property to applies to the separate data transfer nodes that are added by Pegasus to the executable workflow. The property can be overloaded by associated the pegasus profile key transfer.threads either with the site in the site catalog or the corresponding transfer executable in the transformation catalog.
-   **Property Key:**\ pegasus.transfer.lite.arguments\ **Profile Key:**\ transfer.lite.arguments\ **Scope :** Properties **Since :** 4.4.0 **Type :**\ String\ **Default :** (no default)\ **See Also :** pegasus.transfer.arguments This determines the extra arguments with which the PegasusLite transfer implementation is invoked. The transfer executable that is invoked is dependant upon the PegasusLite transfer implementation that has been selected.
-   **Property Key:**\ pegasus.transfer.worker.package\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0.0 **Type :**\ Boolean\ **Default :** false\ **See Also :** pegasus.data.configuration                           By default, Pegasus relies on the worker package to be installed in a directory accessible to the worker nodes on the remote sites . Pegasus uses the value of PEGASUS_HOME environment profile in the site catalog for the remote sites, to then construct paths to pegasus auxillary executables like kickstart, pegasus-transfer, seqexec etc.
-
-                                                                                                                                                                                                                                     If the Pegasus worker package is not installed on the remote sites users can set this property to true to get Pegasus to deploy worker package on the nodes.
-
-                                                                                                                                                                                                                                     In the case of sharedfs setup, the worker package is deployed on the shared scratch directory for the workflow , that is accessible to all the compute nodes of the remote sites.
-
-                                                                                                                                                                                                                                     When running in nonsharefs environments, the worker package is first brought to the submit directory and then transferred to the worker node filesystem using Condor file IO.
-   **Property Key:**\ pegasus.transfer.worker.package.autodownload\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.6.1 **Type :**\ Boolean\ **Default :** true\ **See Also :** pegasus.transfer.worker.package          If PegasusLite does not find a worker package install matching the pegasus lite job on the worker node, it automatically downloads the correct worker package from the Pegasus website. However, this can mask user errors in configuration. This property can be set to false to disable auto downloads.
-   **Property Key:**\ pegasus.transfer.worker.package.strict\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.6.1 **Type :**\ Boolean\ **Default :** true\ **See Also :** pegasus.transfer.worker.package                In PegasusLite mode, the pegasus worker package for the jobs is shipped along with the jobs. This property controls whether PegasusLite will do a strict match against the architecture and os on the local worker node, along with pegasus version. If the strict match fails, then PegasusLite will revert to the pegasus website to download the correct worker package.
-   **Property Key:**\ pegasus.transfer.links\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0.0 **Type :**\ Boolean\ **Default :** false                                                                               If this is set, and the transfer implementation is set to Transfer i.e. using the transfer executable distributed with the PEGASUS. On setting this property, if Pegasus while fetching data from the Replica Catalog sees a "site" attribute associated with the PFN that matches the execution site on which the data has to be transferred to, Pegasus instead of the URL returned by the Replica Catalog replaces it with a file based URL. This is based on the assumption that the if the "site" attributes match, the filesystems are visible to the remote execution directory where input data resides. On seeing both the source and destination urls as file based URLs the transfer executable spawns a job that creates a symbolic link by calling ln -s on the remote site.
-   **Property Key:**\ pegasus.transfer.*.remote.sites\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0.0 **Type :**\ comma separated list of sites\ **Default :** (no default)                                         By default Pegasus looks at the source and destination URL's for to determine whether the associated transfer job runs on the submit host or the head node of a remote site, with preference set to run a transfer job to run on submit host.
-
-                                                                                                                                                                                                                                     Pegasus will run transfer jobs on the remote sites
-
-                                                                                                                                                                                                                                     ::
-
-                                                                                                                                                                                                                                        -  if the file server for the compute site is a file server i.e url prefix file://
-                                                                                                                                                                                                                                        -  symlink jobs need to be added that require the symlink transfer jobs to
-                                                                                                                                                                                                                                        be run remotely.
-
-                                                                                                                                                                                                                                     This property can be used to change the default behaviour of Pegasus and force pegasus to run different types of transfer jobs for the sites specified on the remote site.
-
-                                                                                                                                                                                                                                     The table below illustrates all the possible variations of the property.
-
-                                                                                                                                                                                                                                     ====================================== ===============================
-                                                                                                                                                                                                                                     Property Name                          Applies to
-                                                                                                                                                                                                                                     pegasus.transfer.stagein.remote.sites  the stage in transfer jobs
-                                                                                                                                                                                                                                     pegasus.transfer.stageout.remote.sites the stage out transfer jobs
-                                                                                                                                                                                                                                     pegasus.transfer.inter.remote.sites    the inter site transfer jobs
-                                                                                                                                                                                                                                     pegasus.transfer.*.remote.sites        apply to types of transfer jobs
-                                                                                                                                                                                                                                     \
-                                                                                                                                                                                                                                     ====================================== ===============================
-
-                                                                                                                                                                                                                                     In addition \* can be specified as a property value, to designate that it applies to all sites.
-   **Property Key:**\ pegasus.transfer.staging.delimiter\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0.0 **Type :**\ String\ **Default :** :                                                                        Pegasus supports executable staging as part of the workflow. Currently staging of statically linked executables is supported only. An executable is normally staged to the work directory for the workflow/partition on the remote site. The basename of the staged executable is derived from the namespace,name and version of the transformation in the transformation catalog. This property sets the delimiter that is used for the construction of the name of the staged executable.
-   **Property Key:**\ pegasus.transfer.disable.chmod.sites\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0.0 **Type :**\ comma separated list of sites\ **Default :** (no default)                                    During staging of executables to remote sites, chmod jobs are added to the workflow. These jobs run on the remote sites and do a chmod on the staged executable. For some sites, this maynot be required. The permissions might be preserved, or there maybe an automatic mechanism that does it.
-
-                                                                                                                                                                                                                                     This property allows you to specify the list of sites, where you do not want the chmod jobs to be executed. For those sites, the chmod jobs are replaced by NoOP jobs. The NoOP jobs are executed by Condor, and instead will immediately have a terminate event written to the job log file and removed from the queue.
-   **Property Key:**\ pegasus.transfer.setup.source.base.url\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0.0 **Type :**\ URL **Default :** (no default)                                                             This property specifies the base URL to the directory containing the Pegasus worker package builds. During Staging of Executable, the Pegasus Worker Package is also staged to the remote site. The worker packages are by default pulled from the http server at pegasus.isi.edu. This property can be used to override the location from where the worker package are staged. This maybe required if the remote computes sites don't allows files transfers from a http server.
-   ================================================================================================================================================================================================================================= =========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | Key Attributes                                   | Description                                                                  |
+    +==================================================+==============================================================================+
+    | | Property Key: pegasus.transfer.*.impl          | | Each compute job usually has data products that are                        |
+    | | Profile Key: N/A                               | | required to be staged in to the execution site,                            |
+    | | Scope : Properties                             | | materialized data products staged out to a final resting                   |
+    | | Since : 2.0.0                                  | | place, or staged to another job running at a different                     |
+    | | Values : Transfer|GUC                          | | site. This property determines the underlying grid                         |
+    | | Default : Transfer                             | | transfer tool that is used to manage the transfers.                        |
+    | | See Also : pegasus.transfer.refiner            | |                                                                            |
+    |                                                  | | The * in the property name can be replaced to achieve                      |
+    |                                                  | | finer grained control to dictate what type of transfer                     |
+    |                                                  | | jobs need to be managed with which grid transfer tool.                     |
+    |                                                  | | Usually,the arguments with which the client is invoked                     |
+    |                                                  | | can be specified by                                                        |
+    |                                                  |                                                                              |
+    |                                                  | - the property pegasus.transfer.arguments                                    |
+    |                                                  |                                                                              |
+    |                                                  | - associating the PEGASUS profile key transfer.arguments                     |
+    |                                                  |                                                                              |
+    |                                                  | | The table below illustrates all the possible variations                    |
+    |                                                  | | of the property.                                                           |
+    |                                                  |                                                                              |
+    |                                                  | +--------------------------------+---------------------------------+         |
+    |                                                  | | Property Name                  | Applies to                      |         |
+    |                                                  | +================================+=================================+         |
+    |                                                  | | pegasus.transfer.stagein.impl  | the stage in transfer jobs      |         |
+    |                                                  | +--------------------------------+---------------------------------+         |
+    |                                                  | | pegasus.transfer.stageout.impl | the stage out transfer jobs     |         |
+    |                                                  | +--------------------------------+---------------------------------+         |
+    |                                                  | | pegasus.transfer.inter.impl    | the inter site transfer jobs    |         |
+    |                                                  | +--------------------------------+---------------------------------+         |
+    |                                                  | | pegasus.transfer.setup.impl    | the setup transfer job          |         |
+    |                                                  | +--------------------------------+---------------------------------+         |
+    |                                                  | | pegasus.transfer.*.impl        | apply to types of transfer jobs |         |
+    |                                                  | +--------------------------------+---------------------------------+         |
+    |                                                  |                                                                              |
+    |                                                  | | **Note:** Since version 2.2.0 the worker package is staged                 |
+    |                                                  | | automatically during staging of executables to the remote                  |
+    |                                                  | | site. This is achieved by adding a setup transfer job to                   |
+    |                                                  | | the workflow. The setup transfer job by default uses                       |
+    |                                                  | | *pegasus-transfer* to stage the data. The implementation                   |
+    |                                                  | | to use can be configured by setting the property                           |
+    |                                                  |                                                                              |
+    |                                                  | ::                                                                           |
+    |                                                  |                                                                              |
+    |                                                  |    pegasus.transfer.setup.impl                                               |
+    |                                                  |                                                                              |
+    |                                                  | | The various grid transfer tools that can be used to                        |
+    |                                                  | | manage data transfers are explained below                                  |
+    |                                                  | |                                                                            |
+    |                                                  |                                                                              |
+    |                                                  | - **Transfer**: This results in pegasus-transfer to be used                  |
+    |                                                  | | for transferring of files. It is a python based wrapper                    |
+    |                                                  | | around various transfer clients like globus-url-copy,                      |
+    |                                                  | | lcg-copy, wget, cp, ln . pegasus-transfer looks at source                  |
+    |                                                  | | and destination url and figures out automatically which                    |
+    |                                                  | | underlying client to use. pegasus-transfer is distributed                  |
+    |                                                  | | with the PEGASUS and can be found at                                       |
+    |                                                  | | $PEGASUS_HOME/bin/pegasus-transfer.                                        |
+    |                                                  | | For remote sites, Pegasus constructs the default path to                   |
+    |                                                  | | pegasus-transfer on the basis of PEGASUS_HOME env profile                  |
+    |                                                  | | specified in the site catalog. To specify a different                      |
+    |                                                  | | path to the pegasus-transfer client , users can add an                     |
+    |                                                  | | entry into the transformation catalog with fully qualified                 |
+    |                                                  | | logical name as pegasus::pegasus-transfer                                  |
+    |                                                  |                                                                              |
+    |                                                  | - **GUC**: This refers to the new guc client that does                       |
+    |                                                  | | multiple file transfers per invocation. The                                |
+    |                                                  | | globus-url-copy client distributed with Globus 4.x                         |
+    |                                                  | | is compatible with this mode.                                              |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key: pegasus.transfer.arguments       | | This determines the extra arguments with which the transfer                |
+    | | Profile Key:transfer.arguments                 | | implementation is invoked. The transfer executable that                    |
+    | | Scope : Properties                             | | is invoked is dependant upon the transfer mode that has                    |
+    | | Since : 2.0.0                                  | | been selected. The property can be overloaded by                           |
+    | | Type :String                                   | | associated the pegasus profile key transfer.arguments                      |
+    | | Default : (no default)                         | | either with the site in the site catalog or the                            |
+    | | See Also : pegasus.transfer.lite.arguments     | | corresponding transfer executable in the transformation                    |
+    |                                                  | | catalog.                                                                   |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key: pegasus.transfer.threads         | | This property set the number of threads pegasus-transfer                   |
+    | | Profile Key: transfer.threads                  | | uses to transfer the files. This property to applies to                    |
+    | | Scope : Properties                             | | the separate data transfer nodes that are added by Pegasus                 |
+    | | Since : 4.4.0                                  | | to the executable workflow. The property can be overloaded                 |
+    | | Type :Integer                                  | | by associated the pegasus profile key transfer.threads                     |
+    | | Default : 2                                    | | either with the site in the site catalog or the                            |
+    |                                                  | | corresponding transfer executable in the transformation                    |
+    |                                                  | | catalog.                                                                   |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key: pegasus.transfer.lite.arguments  | | This determines the extra arguments with which the                         |
+    | | Profile Key: transfer.lite.arguments           | | PegasusLite transfer implementation is invoked. The                        |
+    | | Scope : Properties                             | | transfer executable that is invoked is dependant upon the                  |
+    | | Since : 4.4.0                                  | | PegasusLite transfer implementation that has been                          |
+    | | Type :String                                   | | selected.                                                                  |
+    | | Default : (no default)                         |                                                                              |
+    | | See Also : pegasus.transfer.arguments          |                                                                              |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key: pegasus.transfer.worker.package  | | By default, Pegasus relies on the worker package to be                     |
+    | | Profile Key: N/A                               | | installed in a directory accessible to the worker nodes                    |
+    | | Scope : Properties                             | | on the remote sites . Pegasus uses the value of                            |
+    | | Since : 2.0.0                                  | | PEGASUS_HOME environment profile in the site catalog                       |
+    | | Type :Boolean                                  | | for the remote sites, to then construct paths to pegasus                   |
+    | | Default : false                                | | auxillary executables like kickstart, pegasus-transfer,                    |
+    | | See Also : pegasus.data.configuration          | | seqexec etc.                                                               |
+    |                                                  | | If the Pegasus worker package is not installed on the                      |
+    |                                                  | | remote sites users can set this property to true to                        |
+    |                                                  | | get Pegasus to deploy worker package on the nodes.                         |
+    |                                                  | | In the case of sharedfs setup, the worker package is                       |
+    |                                                  | | deployed on the shared scratch directory for the workflow,                 |
+    |                                                  | | that is accessible to all the compute nodes of the                         |
+    |                                                  | | remote sites.                                                              |
+    |                                                  | | When running in nonsharefs environments, the worker                        |
+    |                                                  | | package is first brought to the submit directory and then                  |
+    |                                                  | | transferred to the worker node filesystem using Condor                     |
+    |                                                  | | file IO.                                                                   |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key:                                  | | If PegasusLite does not find a worker package install                      |
+    | |   pegasus.transfer.worker.package.autodownload | | matching the pegasus lite job on the worker node, it                       |
+    | | Profile Key:N/A                                | | automatically downloads the correct worker package                         |
+    | | Scope : Properties                             | | from the Pegasus website. However, this can mask user                      |
+    | | Since : 4.6.1                                  | | errors in configuration. This property can be set to                       |
+    | | Type :Boolean                                  | | false to disable auto downloads.                                           |
+    | | Default : true                                 |                                                                              |
+    | | See Also : pegasus.transfer.worker.package     |                                                                              |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key:                                  | | In PegasusLite mode, the pegasus worker package for                        |
+    | |  pegasus.transfer.worker.package.strict        | | the jobs is shipped along with the jobs. This property                     |
+    | | Profile Key: N/A                               | | controls whether PegasusLite will do a strict match                        |
+    | | Scope : Properties                             | | against the architecture and os on the local worker                        |
+    | | Since : 4.6.1                                  | | node, along with pegasus version. If the strict match                      |
+    | | Type :Boolean                                  | | fails, then PegasusLite will revert to the pegasus                         |
+    | | Default : true                                 | | website to download the correct worker package.                            |
+    | | See Also : pegasus.transfer.worker.package     |                                                                              |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key:pegasus.transfer.links            | | If this is set, and the transfer implementation is                         |
+    | | Profile Key: N/A                               | | set to Transfer i.e. using the transfer executable                         |
+    | | Scope : Properties                             | | distributed with the PEGASUS. On setting this property,                    |
+    | | Since : 2.0.0                                  | | if Pegasus while fetching data from the Replica Catalog                    |
+    | | Type :Boolean                                  | | sees a “site” attribute associated with the PFN that                       |
+    | | Default : false                                | | matches the execution site on which the data has to                        |
+    |                                                  | | be transferred to, Pegasus instead of the URL                              |
+    |                                                  | | returned by the Replica Catalog replaces it with a                         |
+    |                                                  | | file based URL. This is based on the assumption that                       |
+    |                                                  | | the if the “site” attributes match, the filesystems                        |
+    |                                                  | | are visible to the remote execution directory where                        |
+    |                                                  | | input data resides. On seeing both the source and                          |
+    |                                                  | | destination urls as file based URLs the transfer                           |
+    |                                                  | | executable spawns a job that creates a symbolic                            |
+    |                                                  | | link by calling ln -s on the remote site.                                  |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key:                                  | | By default Pegasus looks at the source and destination                     |
+    | |      pegasus.transfer.*.remote.sites           | | URL’s for to determine whether the associated transfer                     |
+    | | Profile Key:N/A                                | | job runs on the submit host or the head node of a                          |
+    | | Scope : Properties                             | | remote site, with preference set to run a transfer job                     |
+    | | Since : 2.0.0                                  | | to run on submit host.                                                     |
+    | | Type :comma separated list of sites            | | Pegasus will run transfer jobs on the remote sites                         |
+    | | Default : (no default)                         |                                                                              |
+    |                                                  | -  if the file server for the compute site is a file                         |
+    |                                                  |    server i.e url prefix file://                                             |
+    |                                                  | -  symlink jobs need to be added that require the                            |
+    |                                                  |    symlink transfer jobs to be run remotely.                                 |
+    |                                                  |                                                                              |
+    |                                                  | | This property can be used to change the default behaviour                  |
+    |                                                  | | of Pegasus and force pegasus to run different types of                     |
+    |                                                  | | transfer jobs for the sites specified on the remote site.                  |
+    |                                                  | | The table below illustrates all the possible variations                    |
+    |                                                  | | of the property.                                                           |
+    |                                                  |                                                                              |
+    |                                                  | +----------------------------------------+---------------------------------+ |
+    |                                                  | | Property Name                          | Applies to                      | |
+    |                                                  | +========================================+=================================+ |
+    |                                                  | | pegasus.transfer.stagein.remote.sites  | the stage in transfer jobs      | |
+    |                                                  | +----------------------------------------+---------------------------------+ |
+    |                                                  | | pegasus.transfer.stageout.remote.sites | the stage out transfer jobs     | |
+    |                                                  | +----------------------------------------+---------------------------------+ |
+    |                                                  | | pegasus.transfer.inter.remote.sites    | the inter site transfer jobs    | |
+    |                                                  | +----------------------------------------+---------------------------------+ |
+    |                                                  | | pegasus.transfer.*.remote.sites        | apply to types of transfer jobs | |
+    |                                                  | +----------------------------------------+---------------------------------+ |
+    |                                                  |                                                                              |
+    |                                                  | | In addition * can be specified as a property value, to                     |
+    |                                                  | | designate that it applies to all sites.                                    |
+    |                                                  |                                                                              |
+    |                                                  |                                                                              |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key:                                  | | Pegasus supports executable staging as part of the                         |
+    | |      pegasus.transfer.staging.delimiter        | | workflow. Currently staging of statically linked                           |
+    | | Profile Key: N/A                               | | executables is supported only. An executable is                            |
+    | | Scope : Properties                             | | normally staged to the work directory for the                              |
+    | | Since : 2.0.0                                  | | workflow/partition on the remote site. The basename                        |
+    | |  Type :String                                  | | of the staged executable is derived from the                               |
+    | | Default : :                                    | | namespace,name and version of the transformation                           |
+    |                                                  | | in the transformation catalog. This property sets                          |
+    |                                                  | | the delimiter that is used for the construction                            |
+    |                                                  | | of the name of the staged executable.                                      |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key:                                  | | During staging of executables to remote sites, chmod                       |
+    | |     pegasus.transfer.disable.chmod.sites       | | jobs are added to the workflow. These jobs run on                          |
+    | | Profile Key: N/A                               | | the remote sites and do a chmod on the staged                              |
+    | | Scope : Properties                             | | executable. For some sites, this maynot be required.                       |
+    | | Since : 2.0.0                                  | | The permissions might be preserved, or there maybe                         |
+    | | Type :comma separated list of sites            | | an automatic mechanism that does it.                                       |
+    | | Default : (no default)                         | | This property allows you to specify the list of                            |
+    |                                                  | | sites, where you do not want the chmod jobs to                             |
+    |                                                  | | be executed. For those sites, the chmod jobs are                           |
+    |                                                  | | replaced by NoOP jobs. The NoOP jobs are executed                          |
+    |                                                  | | by Condor, and instead will immediately have a                             |
+    |                                                  | | terminate event written to the job log file and                            |
+    |                                                  | | removed from the queue.                                                    |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
+    | | Property Key:                                  | | This property specifies the base URL to the                                |
+    | |    pegasus.transfer.setup.source.base.url      | | directory containing the Pegasus worker package                            |
+    | | Profile Key: N/A                               | | builds. During Staging of Executable, the Pegasus                          |
+    | | Scope : Properties                             | | Worker Package is also staged to the remote site.                          |
+    | | Since : 2.0.0                                  | | The worker packages are by default pulled from                             |
+    | | Type :URL                                      | | the http server at pegasus.isi.edu. This property                          |
+    | | Default : (no default)                         | | can be used to override the location from where                            |
+    |                                                  | | the worker package are staged. This maybe                                  |
+    |                                                  | | required if the remote computes sites don’t allow                          |
+    |                                                  | | files transfers from a http server.                                        |
+    +--------------------------------------------------+------------------------------------------------------------------------------+
 
 .. _monitoring-props:
 
