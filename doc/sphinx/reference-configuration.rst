@@ -2225,29 +2225,124 @@ Data Staging Configuration Properties
 
 .. table:: Data Configuration Properties
 
-   =================================================================================================================================================================================================================================================================== ===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                                                                                                  **Description**
-   **Property Key:**\ pegasus.data.configuration\ **Profile Key:**\ data.configuration\ **Scope :** Properties, Site Catalog **Since :** 4.0.0 **Values** : sharedfs|nonsharedfs|condorio **Default :** sharedfs\ **See Also :** pegasus.transfer.bypass.input.staging This property sets up Pegasus to run in different environments. For Pegasus 4.5.0 and above, users can set the pegasus profile data.configuration with the sites in their site catalog, to run multisite workflows with each site having a different data configuration.
-
-                                                                                                                                                                                                                                                                       sharedfs
-                                                                                                                                                                                                                                                                          If this is set, Pegasus will be setup to execute jobs on the shared filesystem on the execution site. This assumes, that the head node of a cluster and the worker nodes share a filesystem. The staging site in this case is the same as the execution site. Pegasus adds a create dir job to the executable workflow that creates a workflow specific directory on the shared filesystem . The data transfer jobs in the executable workflow ( stage_in\_ , stage_inter\_ , stage_out\_ ) transfer the data to this directory.The compute jobs in the executable workflow are launched in the directory on the shared filesystem.
-                                                                                                                                                                                                                                                                       condorio
-                                                                                                                                                                                                                                                                          If this is set, Pegasus will be setup to run jobs in a pure condor pool, with the nodes not sharing a filesystem. Data is staged to the compute nodes from the submit host using Condor File IO. The planner is automatically setup to use the submit host ( site local ) as the staging site. All the auxillary jobs added by the planner to the executable workflow ( create dir, data stagein and stage-out, cleanup ) jobs refer to the workflow specific directory on the local site. The data transfer jobs in the executable workflow ( stage_in\_ , stage_inter\_ , stage_out\_ ) transfer the data to this directory. When the compute jobs start, the input data for each job is shipped from the workflow specific directory on the submit host to compute/worker node using Condor file IO. The output data for each job is similarly shipped back to the submit host from the compute/worker node. This setup is particularly helpful when running workflows in the cloud environment where setting up a shared filesystem across the VM's may be tricky.
-                                                                                                                                                                                                                                                                          ::
-
-                                                                                                                                                                                                                                                                             pegasus.gridstart                    PegasusLite
-                                                                                                                                                                                                                                                                             pegasus.transfer.worker.package      true
-
-                                                                                                                                                                                                                                                                       nonsharedfs
-                                                                                                                                                                                                                                                                          If this is set, Pegasus will be setup to execute jobs on an execution site without relying on a shared filesystem between the head node and the worker nodes. You can specify staging site ( using --staging-site option to pegasus-plan) to indicate the site to use as a central storage location for a workflow. The staging site is independant of the execution sites on which a workflow executes. All the auxillary jobs added by the planner to the executable workflow ( create dir, data stagein and stage-out, cleanup ) jobs refer to the workflow specific directory on the staging site. The data transfer jobs in the executable workflow ( stage_in\_ , stage_inter\_ , stage_out\_ ) transfer the data to this directory. When the compute jobs start, the input data for each job is shipped from the workflow specific directory on the submit host to compute/worker node using pegasus-transfer. The output data for each job is similarly shipped back to the submit host from the compute/worker node. The protocols supported are at this time SRM, GridFTP, iRods, S3. This setup is particularly helpful when running workflows on OSG where most of the execution sites don't have enough data storage. Only a few sites have large amounts of data storage exposed that can be used to place data during a workflow run. This setup is also helpful when running workflows in the cloud environment where setting up a shared filesystem across the VM's may be tricky. On loading this property, internally the following properies are set
-                                                                                                                                                                                                                                                                          ::
-
-                                                                                                                                                                                                                                                                             pegasus.gridstart                    PegasusLite
-                                                                                                                                                                                                                                                                             pegasus.transfer.worker.package      true
-   **Property Key:**\ pegasus.transfer.bypass.input.staging\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.3.0 **Type :**\ Boolean **Default :** false\ **See Also :** pegasus.data.configuration                                                        When executiing in a non shared filesystem setup i.e data configuration set to nonsharedfs or condorio, Pegasus always stages the input files through the staging site i.e the stage-in job stages in data from the input site to the staging site. The PegasusLite jobs that start up on the worker nodes, then pull the input data from the staging site for each job.
-
-                                                                                                                                                                                                                                                                       This property can be used to setup the PegasusLite jobs to pull input data directly from the input site without going through the staging server. This is based on the assumption that the worker nodes can access the input site. If users set this to true, they should be aware that the access to the input site is no longer throttled ( as in case of stage in jobs). If large number of compute jobs start at the same time in a workflow, the input server will see a connection from each job.
-   =================================================================================================================================================================================================================================================================== ===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +-------------------------------------------------------+--------------------------------------------------------+
+    | Key Attributes                                        | Description                                            |
+    +=======================================================+========================================================+
+    | | Property Key: pegasus.data.configuration            | | This property sets up Pegasus to run in different    |
+    | | Profile Key:data.configuration                      | | environments. For Pegasus 4.5.0 and above, users     |
+    | | Scope : Properties, Site Catalog                    | | can set the pegasus profile data.configuration with  |
+    | | Since : 4.0.0                                       | | the sites in their site catalog, to run multisite    |
+    | | Values : sharedfs|nonsharedfs|condorio              | | workflows with each site having a different data     |
+    | | Default : condorio                                  | | configuration.                                       |
+    | | See Also : pegasus.transfer.bypass.input.staging    |                                                        |
+    |                                                       | - **sharedfs**                                         |
+    |                                                       | | If this is set, Pegasus will be setup to execute     |
+    |                                                       | | jobs on the shared filesystem on the execution site. |
+    |                                                       | | This assumes, that the head node of a cluster and    |
+    |                                                       | | the worker nodes share a filesystem. The staging     |
+    |                                                       | | site in this case is the same as the execution site. |
+    |                                                       | | Pegasus adds a create dir job to the executable      |
+    |                                                       | |  workflow that creates a workflow specific           |
+    |                                                       | | directory on the shared filesystem . The data        |
+    |                                                       | | transfer jobs in the executable workflow             |
+    |                                                       | | ( stage_in_ , stage_inter_ , stage_out_ )            |
+    |                                                       | | transfer the data to this directory.The compute      |
+    |                                                       | |  jobs in the executable workflow are launched in     |
+    |                                                       | | the directory on the shared filesystem.              |
+    |                                                       |                                                        |
+    |                                                       | - **condorio**                                         |
+    |                                                       | | If this is set, Pegasus will be setup to run jobs    |
+    |                                                       | | in a pure condor pool, with the nodes not sharing    |
+    |                                                       | | a filesystem. Data is staged to the compute nodes    |
+    |                                                       | | from the submit host using Condor File IO. The       |
+    |                                                       | | planner is automatically setup to use the submit     |
+    |                                                       | | host ( site local ) as the staging site. All the     |
+    |                                                       | | auxillary jobs added by the planner to the           |
+    |                                                       | | executable workflow ( create dir, data stagein       |
+    |                                                       | | and stage-out, cleanup ) jobs refer to the workflow  |
+    |                                                       | | specific directory on the local site. The data       |
+    |                                                       | | transfer jobs in the executable workflow             |
+    |                                                       | | ( stage_in_ , stage_inter_ , stage_out_ )            |
+    |                                                       | | transfer the data to this directory. When the        |
+    |                                                       | | compute jobs start, the input data for each job is   |
+    |                                                       | | shipped from the workflow specific directory on      |
+    |                                                       | | the submit host to compute/worker node using         |
+    |                                                       | | Condor file IO. The output data for each job is      |
+    |                                                       | | similarly shipped back to the submit host from the   |
+    |                                                       | |  compute/worker node. This setup is particularly     |
+    |                                                       | | helpful when running workflows in the cloud          |
+    |                                                       | | environment where setting up a shared filesystem     |
+    |                                                       | | across the VM’s may be tricky.                       |
+    |                                                       |                                                        |
+    |                                                       | ::                                                     |
+    |                                                       |                                                        |
+    |                                                       |    pegasus.gridstart                    PegasusLite    |
+    |                                                       |    pegasus.transfer.worker.package      true           |
+    |                                                       |                                                        |
+    |                                                       |                                                        |
+    |                                                       | - **nonsharedfs**                                      |
+    |                                                       | | If this is set, Pegasus will be setup to execute     |
+    |                                                       | | jobs on an execution site without relying on a       |
+    |                                                       | | shared filesystem between the head node and the      |
+    |                                                       | | worker nodes. You can specify staging site           |
+    |                                                       | | ( using –staging-site option to pegasus-plan)        |
+    |                                                       | | to indicate the site to use as a central             |
+    |                                                       | | storage location for a workflow. The staging         |
+    |                                                       | | site is independant of the execution sites on        |
+    |                                                       | |  which a workflow executes. All the auxillary        |
+    |                                                       | | jobs added by the planner to the executable          |
+    |                                                       | | workflow ( create dir, data stagein and              |
+    |                                                       | | stage-out, cleanup ) jobs refer to the workflow      |
+    |                                                       | | specific directory on the staging site. The          |
+    |                                                       | | data transfer jobs in the executable workflow        |
+    |                                                       | | ( stage_in_ , stage_inter_ , stage_out_ )            |
+    |                                                       | | transfer the data to this directory. When the        |
+    |                                                       | | compute jobs start, the input data for each          |
+    |                                                       | | job is shipped from the workflow specific            |
+    |                                                       | | directory on the submit host to compute/worker       |
+    |                                                       | | node using pegasus-transfer. The output data         |
+    |                                                       | | for each job is similarly shipped back to the        |
+    |                                                       | | submit host from the compute/worker node. The        |
+    |                                                       | | protocols supported are at this time SRM,            |
+    |                                                       | | GridFTP, iRods, S3. This setup is particularly       |
+    |                                                       | | helpful when running workflows on OSG where          |
+    |                                                       | | most of the execution sites don’t have enough        |
+    |                                                       | | data storage. Only a few sites have large            |
+    |                                                       | | amounts of data storage exposed that can be used     |
+    |                                                       | | to place data during a workflow run. This setup      |
+    |                                                       | | is also helpful when running workflows in the        |
+    |                                                       | | cloud environment where setting up a                 |
+    |                                                       | | shared filesystem across the VM’s may be tricky.     |
+    |                                                       | | On loading this property, internally the             |
+    |                                                       | | following properies are set                          |
+    |                                                       |                                                        |
+    |                                                       |                                                        |
+    |                                                       | ::                                                     |
+    |                                                       |                                                        |
+    |                                                       |    pegasus.gridstart  PegasusLite                      |
+    |                                                       |    pegasus.transfer.worker.package      true           |
+    |                                                       |                                                        |
+    +-------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.transfer.bypass.input.staging | | When executiing in a non shared filesystem setup     |
+    | | Profile Key:N/A                                     | | i.e data configuration set to nonsharedfs or         |
+    | | Scope : Properties                                  | | condorio, Pegasus always stages the input files      |
+    | | Since : 4.3.0                                       | | through the staging site i.e the stage-in job        |
+    | | Type :Boolean                                       | | stages in data from the input site to the staging    |
+    | | Default : false                                     | | site. The PegasusLite jobs that start up on the      |
+    | | See Also : pegasus.data.configuration               | | worker nodes, then pull the input data from the      |
+    |                                                       | | staging site for each job.                           |
+    |                                                       | | This property can be used to setup the               |
+    |                                                       | | PegasusLite jobs to pull input data directly         |
+    |                                                       | | from the input site without going through the        |
+    |                                                       | | staging server. This is based on the assumption      |
+    |                                                       | | that the worker nodes can access the input site.     |
+    |                                                       | | If users set this to true, they should be aware      |
+    |                                                       | | that the access to the input site is no longer       |
+    |                                                       | | throttled ( as in case of stage in jobs). If         |
+    |                                                       | | large number of compute jobs start at the same       |
+    |                                                       | | time in a workflow, the input server will see        |
+    |                                                       | | a connection from each job.                          |
+    +-------------------------------------------------------+--------------------------------------------------------+
 
 .. _transfer-props:
 
