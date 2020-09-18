@@ -1890,17 +1890,23 @@ Catalog Related Properties
 
 .. table:: Site Catalog Properties
 
-   ========================================================================================================================================= ====================================================================================================================
-   **Key Attributes**                                                                                                                        **Description**
-   **Property Key:**\ pegasus.catalog.site\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** XML                  Pegasus supports two different types of site catalogs in XML format conforming
-
-                                                                                                                                             -  sc-3.0.xsd http://pegasus.isi.edu/schema/sc-3.0.xsd
-
-                                                                                                                                             -  sc-4.0.xsd http://pegasus.isi.edu/schema/sc-4.0.xsd
-
-                                                                                                                                             Pegasus is able to auto-detect what schema a user site catalog refers to. Hence, this property may no longer be set.
-   **Property Key:**\ pegasus.catalog.site.file\ **Profile Key :**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** $PWD/sites.xml The path to the site catalog file, that describes the various sites and their layouts to Pegasus.
-   ========================================================================================================================================= ====================================================================================================================
+    +---------------------------------------------+------------------------------------------------------------------+
+    | Key Attributes                              | Description                                                      |
+    +=============================================+==================================================================+
+    | | Property Key: pegasus.catalog.site        | | Pegasus supports two different types of site catalogs in       |
+    | | Profile Key: N/A                          |  :ref:`YAML <sc-YAML>` or :ref:`XML <sc-XML>`  formats           |
+    | | Scope : Properties                        |                                                                  |
+    | | Type : Enumeration                        |                                                                  |
+    | | Values : YAML|XML                         | | Pegasus is able to auto-detect what schema a user site         |
+    | | Since : 2.0                               | | catalog refers to. Hence, this property may no longer be set.  |
+    | | Default : YAML                            |                                                                  |
+    +---------------------------------------------+------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.site.file   | | The path to the site catalog file, that describes the various  |
+    | | Profile Key : N/A                         | | sites and their layouts to Pegasus.                            |
+    | | Scope : Properties                        |                                                                  |
+    | | Since : 2.0                               |                                                                  |
+    | | Default : $PWD/sites.yml | $PWD/sites.xml |                                                                  |
+    +---------------------------------------------+------------------------------------------------------------------+
 
 .. table:: Transformation Catalog Properties
 
