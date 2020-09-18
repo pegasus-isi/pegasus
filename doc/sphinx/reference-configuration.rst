@@ -2930,35 +2930,106 @@ Cleanup Properties
 ------------------
 
 .. table:: Cleanup Properties
-
-   ============================================================================================================================================================================================== ===================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                             **Description**
-   **Property Key:**\ pegasus.file.cleanup.strategy **Profile Key:**\ N/A **Scope :**\ Properties **Since :**\ 2.2- **Type :**\ String **Default :**\ InPlace                                     This property is used to select the strategy of how the cleanup nodes are added to the executable workflow.
-
-                                                                                                                                                                                                  InPlace
-                                                                                                                                                                                                     The default cleanup strategy. Adds cleanup nodes per level of the workflow.
-                                                                                                                                                                                                  Constraint
-                                                                                                                                                                                                     Adds cleanup nodes to constraint the amount of storage space used by a workflow.
-
-                                                                                                                                                                                                  Note that this property is overridden by the --cleanup option used in pegasus-plan.
-   **Property Key:**\ pegasus.file.cleanup.impl\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.2 **Type :**\ String **Default :** Cleanup                                           This property is used to select the executable that is used to create the working directory on the compute sites.
-
-                                                                                                                                                                                                  Cleanup
-                                                                                                                                                                                                     The default executable that is used to delete files is the "pegasus-transfer" executable shipped with Pegasus. It is found at $PEGASUS_HOME/bin/pegasus-transfer in the Pegasus distribution. An entry for transformation pegasus::dirmanager needs to exist in the Transformation Catalog or the PEGASUS_HOME environment variable should be specified in the site catalog for the sites for this mode to work.
-                                                                                                                                                                                                  RM
-                                                                                                                                                                                                     This mode results in the rm executable to be used to delete files from remote directories. The rm executable is standard on \*nix systems and is usually found at /bin/rm location.
-   **Property Key:**\ pegasus.file.cleanup.clusters.num\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.2.0 **Type :**\ Integer                                                      In case of the InPlace strategy for adding the cleanup nodes to the workflow, this property specifies the maximum number of cleanup jobs that are added to the executable workflow on each level.
-   **Property Key:**\ pegasus.file.cleanup.clusters.size\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.2.0 **Type :**\ Integer **Default :** 2                                     In case of the InPlace strategy this property sets the number of cleanup jobs that get clustered into a bigger cleanup job. This parameter is only used if pegasus.file.cleanup.clusters.num is not set.
-   **Property Key:**\ pegasus.file.cleanup.scope\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.3.0 **Type :**\ Enumeration **Value :**\ fullahead|deferred **Default :** fullahead By default in case of deferred planning InPlace file cleanup is turned OFF. This is because the cleanup algorithm does not work across partitions. This property can be used to turn on the cleanup in case of deferred planning.
-
-                                                                                                                                                                                                  fullahead
-                                                                                                                                                                                                     This is the default scope. The pegasus cleanup algorithm does not work across partitions in deferred planning. Hence the cleanup is always turned OFF , when deferred planning occurs and cleanup scope is set to full ahead.
-                                                                                                                                                                                                  deferred
-                                                                                                                                                                                                     If the scope is set to deferred, then Pegasus will not disable file cleanup in case of deferred planning. This is useful for scenarios where the partitions themselves are independant ( i.e. dont share files ). Even if the scope is set to deferred, users can turn off cleanup by specifying --nocleanup option to pegasus-plan.
-   **Property Key:**\ pegasus.file.cleanup.constraint.*.maxspace **Profile Key:**\ N/A **Scope :**\ Properties **Since :**\ 4.6.0 **Type :**\ String **Default :**\ 10737418240                   This property is used to set the maximum avaialble space (i.e., constraint) per site in Bytes. The \* in the property name denotes the name of the compute site. A \* in the property key is taken to mean all sites.
-   **Property Key:**\ pegasus.file.cleanup.constraint.deferstageins **Profile Key:**\ N/A **Scope :**\ Properties **Since :**\ 4.6.0 **Type :**\ Boolean **Default :**\ False                     This property is used to determine whether stage in jobs may be deferred. If this property is set to False (default), all stage in jobs will be marked as executing on the current compute site and will be executed before any task. This property has no effect when running in a multi site case.
-   **Property Key:**\ pegasus.file.cleanup.constraint.csv **Profile Key:**\ N/A **Scope :**\ Properties **Since :**\ 4.6.1 **Type :**\ String **Default :**\ (no default)                         This property is used to specify a CSV file with a list of LFNs and their respective sizes in Bytes. The CSV file must be composed of two columns: **filename** and **length**.
-   ============================================================================================================================================================================================== ===================================================================================================================================================================================================================================================================================================================================================================================================================
+    
+    +------------------------------------------------------+----------------------------------------------------------+
+    | Key Attributes                                       | Description                                              |
+    +======================================================+==========================================================+
+    | | Property Key: pegasus.file.cleanup.strategy        | | This property is used to select the strategy of how    |
+    | | Profile Key: N/A                                   | | the cleanup nodes are added to the executable          |
+    | | Scope :Properties                                  | | workflow.                                              |
+    | | Since :2.2                                         |                                                          |
+    | | Type :String                                       | - **InPlace**                                            |
+    | | Default :InPlace                                   | | The default cleanup strategy. Adds cleanup nodes per   |
+    |                                                      | | level of the workflow.                                 |
+    |                                                      |                                                          |
+    |                                                      | - **Constraint**                                         |
+    |                                                      | | Adds cleanup nodes to constraint the amount of storage |
+    |                                                      | | space used by a workflow.                              |
+    |                                                      |                                                          |
+    |                                                      | | **Note:**                                              |
+    |                                                      | | This property is overridden by the –cleanup option     |
+    |                                                      | | used in pegasus-plan.                                  |
+    +------------------------------------------------------+----------------------------------------------------------+
+    | | Property Key:pegasus.file.cleanup.impl             | | This property is used to select the executable that    |
+    | | Profile Key: N/A                                   | | is used to create the working directory on the         |
+    | | Scope : Properties                                 | | compute sites.                                         |
+    | | Since : 2.2                                        |                                                          |
+    | | Type :String                                       | - **Cleanup**                                            |
+    | | Default : Cleanup                                  | | The default executable that is used to delete files    |
+    |                                                      | | is the “pegasus-transfer” executable shipped with      |
+    |                                                      | | Pegasus. It is found at                                |
+    |                                                      | | $PEGASUS_HOME/bin/pegasus-transfer in the Pegasus      |
+    |                                                      | | distribution. An entry for transformation              |
+    |                                                      | | pegasus::dirmanager needs to exist in the              |
+    |                                                      | | Transformation Catalog or the PEGASUS_HOME             |
+    |                                                      | | environment variable should be specified in the        |
+    |                                                      | | site catalog for the sites for this mode to work.      |
+    |                                                      |                                                          |
+    |                                                      | - **RM**                                                 |
+    |                                                      | | This mode results in the rm executable to be used      |
+    |                                                      | | to delete files from remote directories. The rm        |
+    |                                                      | | executable is standard on *nix systems and is usually  |
+    |                                                      | | found at /bin/rm location.                             |
+    +------------------------------------------------------+----------------------------------------------------------+
+    | | Property Key: pegasus.file.cleanup.clusters.num    | | In case of the InPlace strategy for adding the         |
+    | | Profile Key: N/A                                   | | cleanup nodes to the workflow, this property           |
+    | | Scope : Properties                                 | | specifies the maximum number of cleanup jobs           |
+    | | Since : 4.2.0                                      | | that are added to the executable workflow on each      |
+    | | Type :Integer                                      | | level.                                                 |
+    +------------------------------------------------------+----------------------------------------------------------+
+    | | Property Key: pegasus.file.cleanup.clusters.size   | | In case of the InPlace strategy this property sets     |
+    | | Profile Key: N/A                                   | | the number of cleanup jobs that get clustered into     |
+    | | Scope : Properties                                 | | a bigger cleanup job. This parameter is only used      |
+    | | Since : 4.2.0                                      | | if pegasus.file.cleanup.clusters.num is not set.       |
+    | | Type :Integer                                      |                                                          |
+    | | Default : 2                                        |                                                          |
+    +------------------------------------------------------+----------------------------------------------------------+
+    | | Property Key: pegasus.file.cleanup.scope           | | By default in case of deferred planning InPlace file   |
+    | | Profile Key: N/A                                   | | cleanup is turned OFF. This is because the cleanup     |
+    | | Scope : Properties                                 | | algorithm does not work across partitions. This        |
+    | | Since : 2.3.0                                      | | property can be used to turn on the cleanup in case    |
+    | | Type :Enumeration                                  | | of deferred planning.                                  |
+    | | Value :fullahead|deferred                          |                                                          |
+    | | Default : fullahead                                | - **fullahead**:                                         |
+    |                                                      | | This is the default scope. The pegasus cleanup         |
+    |                                                      | | algorithm does not work across partitions in           |
+    |                                                      | | deferred planning. Hence the cleanup is always         |
+    |                                                      | |  turned OFF , when deferred planning occurs and        |
+    |                                                      | | cleanup scope is set to full ahead.                    |
+    |                                                      |                                                          |
+    |                                                      |                                                          |
+    |                                                      | - **deferred**:                                          |
+    |                                                      | | If the scope is set to deferred, then Pegasus          |
+    |                                                      | | will not disable file cleanup in case of deferred      |
+    |                                                      | | planning. This is useful for scenarios where the       |
+    |                                                      | | partitions themselves are independant                  |
+    |                                                      | | ( i.e. dont share files ). Even if the scope is        |
+    |                                                      | | set to deferred, users can turn off cleanup by         |
+    |                                                      | | specifying –nocleanup option to pegasus-plan.          |
+    +------------------------------------------------------+----------------------------------------------------------+
+    | | Property Key:                                      | | This property is used to set the maximum available     |
+    | |     pegasus.file.cleanup.constraint.*.maxspace     | | space (i.e., constraint) per site in Bytes. The        |
+    | | Profile Key: N/A                                   | | * in the property name denotes the name of the         |
+    | | Scope :Properties                                  | | compute site. A * in the property key is taken to      |
+    | | Since :4.6.0                                       | | mean all sites.                                        |
+    | | Type :String                                       |                                                          |
+    | | Default :10737418240                               |                                                          |
+    +------------------------------------------------------+----------------------------------------------------------+
+    | | Property Key:                                      | | This property is used to determine whether stage       |
+    | |  pegasus.file.cleanup.constraint.deferstageins     | | in jobs may be deferred. If this property is set       |
+    | | Profile Key: N/A                                   | | to False (default), all stage in jobs will be marked   |
+    | | Scope :Properties                                  | | as executing on the current compute site and will be   |
+    | | Since :4.6.0                                       | | executed before any task. This property has no         |
+    | | Type :Boolean                                      | | effect when running in a multi site case.              |
+    | | Default :False                                     |                                                          |
+    +------------------------------------------------------+----------------------------------------------------------+
+    | | Property Key: pegasus.file.cleanup.constraint.csv  | | This property is used to specify a CSV file            |
+    | | Profile Key: N/A                                   | | with a list of LFNs and their respective sizes         |
+    | | Scope : Properties                                 | | in Bytes. The CSV file must be composed of two         |
+    | | Since : 4.6.1                                      | | columns: filename and length.                          |
+    | | Type : String                                      |                                                          |
+    | | Default: (no default)                              |                                                          |
+    +------------------------------------------------------+----------------------------------------------------------+
 
 .. _aws-batch-props:
 
