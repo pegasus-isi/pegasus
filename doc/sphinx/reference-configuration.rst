@@ -1935,77 +1935,133 @@ Replica Selection Properties
 
 .. table:: Replica Selection Properties
 
-   ================================================================================================================================================================================================================================================================================== =====================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                                                                                                                 **Description**
-   **Property Key:**\ pegasus.selector.replica\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ String **Default :** Default **See Also :** pegasus.selector.replica.*.ignore.stagein.sites\ **See Also :** pegasus.selector.replica.*.prefer.stagein.sites Each job in the DAX maybe associated with input LFN's denoting the files that are required for the job to run. To determine the physical replica (PFN) for a LFN, Pegasus queries the replica catalog to get all the PFN's (replicas) associated with a LFN. Pegasus then calls out to a replica selector to select a replica amongst the various replicas returned. This property determines the replica selector to use for selecting the replicas.
-
-                                                                                                                                                                                                                                                                                      Default
-                                                                                                                                                                                                                                                                                         The selector orders the various candidate replica's according to the following rules
-
-                                                                                                                                                                                                                                                                                         1. valid file URL's . That is URL's that have the site attribute matching the site where the executable *pegasus-transfer* is executed.
-
-                                                                                                                                                                                                                                                                                         2. all URL's from preferred site (usually the compute site)
-
-                                                                                                                                                                                                                                                                                         3. all other remotely accessible ( non file) URL's
-
-                                                                                                                                                                                                                                                                                      Regex
-                                                                                                                                                                                                                                                                                         This replica selector allows the user allows the user to specific regular expressions that can be used to rank various PFN's returned from the Replica Catalog for a particular LFN. This replica selector orders the replicas based on the rank. Lower the rank higher the preference.
-
-                                                                                                                                                                                                                                                                                         The regular expressions are assigned different rank, that determine the order in which the expressions are employed. The rank values for the regex can expressed in user properties using the property.
-
-                                                                                                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                                                                                                            pegasus.selector.replica.regex.rank.[value]   regex-expression
-
-                                                                                                                                                                                                                                                                                         The value is an integer value that denotes the rank of an expression with a rank value of 1 being the highest rank.
-
-                                                                                                                                                                                                                                                                                         Please note that before applying any regular expressions on the PFN's, the file URL's that dont match the preferred site are explicitly filtered out.
-
-                                                                                                                                                                                                                                                                                      Restricted
-                                                                                                                                                                                                                                                                                         This replica selector, allows the user to specify good sites and bad sites for staging in data to a particular compute site. A good site for a compute site X, is a preferred site from which replicas should be staged to site X. If there are more than one good sites having a particular replica, then a random site is selected amongst these preferred sites.
-
-                                                                                                                                                                                                                                                                                         A bad site for a compute site X, is a site from which replica's should not be staged. The reason of not accessing replica from a bad site can vary from the link being down, to the user not having permissions on that site's data.
-
-                                                                                                                                                                                                                                                                                         The good \| bad sites are specified by the properties
-
-                                                                                                                                                                                                                                                                                         ::
-
-                                                                                                                                                                                                                                                                                            pegasus.replica.*.prefer.stagein.sites
-                                                                                                                                                                                                                                                                                            pegasus.replica.*.ignore.stagein.sites
-
-                                                                                                                                                                                                                                                                                         where the \* in the property name denotes the name of the compute site. A \* in the property key is taken to mean all sites.
-
-                                                                                                                                                                                                                                                                                         The pegasus.replica.*.prefer.stagein.sites property takes precedence over pegasus.replica.*.ignore.stagein.sites property i.e. if for a site X, a site Y is specified both in the ignored and the preferred set, then site Y is taken to mean as only a preferred site for a site X.
-
-                                                                                                                                                                                                                                                                                      Local
-                                                                                                                                                                                                                                                                                         This replica selector prefers replicas from the local host and that start with a file: URL scheme. It is useful, when users want to stagin files to a remote site from your submit host using the Condor file transfer mechanism.
-   **Property Key:**\ pegasus.selector.replica.*.ignore.stagein.sites\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** (no default)\ **See Also :** pegasus.selector.replica\ **See Also :** pegasus.selector.replica.*.prefer.stagein.sites              A comma separated list of storage sites from which to never stage in data to a compute site. The property can apply to all or a single compute site, depending on how the \* in the property name is expanded.
-
-                                                                                                                                                                                                                                                                                      The \* in the property name means all compute sites unless replaced by a site name.
-
-                                                                                                                                                                                                                                                                                      For e.g setting pegasus.selector.replica.*.ignore.stagein.sites to usc means that ignore all replicas from site usc for staging in to any compute site. Setting pegasus.replica.isi.ignore.stagein.sites to usc means that ignore all replicas from site usc for staging in data to site isi.
-   **Property Key:**\ pegasus.selector.replica.*.prefer.stagein.sites\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** (no default)\ **See Also :** pegasus.selector.replica\ **See Also :** pegasus.selector.replica.*.ignore.stagein.sites              A comma separated list of preferred storage sites from which to stage in data to a compute site. The property can apply to all or a single compute site, depending on how the \* in the property name is expanded.
-
-                                                                                                                                                                                                                                                                                      The \* in the property name means all compute sites unless replaced by a site name.
-
-                                                                                                                                                                                                                                                                                      For e.g setting pegasus.selector.replica.*.prefer.stagein.sites to usc means that prefer all replicas from site usc for staging in to any compute site. Setting pegasus.replica.isi.prefer.stagein.sites to usc means that prefer all replicas from site usc for staging in data to site isi.
-   **Property Key:**\ pegasus.selector.replica.regex.rank.[value]\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.3.0 **Default :** (no default)\ **See Also :** pegasus.selector.replica                                                                                Specifies the regex expressions to be applied on the PFNs returned for a particular LFN. Refer to
-
-                                                                                                                                                                                                                                                                                      ::
-
-                                                                                                                                                                                                                                                                                         http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html
-
-                                                                                                                                                                                                                                                                                      on information of how to construct a regex expression.
-
-                                                                                                                                                                                                                                                                                      The [value] in the property key is to be replaced by an int value that designates the rank value for the regex expression to be applied in the Regex replica selector.
-
-                                                                                                                                                                                                                                                                                      The example below indicates preference for file URL's over URL's referring to gridftp server at example.isi.edu
-
-                                                                                                                                                                                                                                                                                      ::
-
-                                                                                                                                                                                                                                                                                         pegasus.selector.replica.regex.rank.1 file://.*
-                                                                                                                                                                                                                                                                                         pegasus.selector.replica.regex.rank.2 gsiftp://example\.isi\.edu.*
-   ================================================================================================================================================================================================================================================================================== =====================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +-----------------------------------------------------+-----------------------------------------------------------------------+
+    | Key Attributes                                      | Description                                                           |
+    +=====================================================+=======================================================================+
+    | | Property Key: pegasus.selector.replica            | | Each job in the DAX maybe associated with input LFN’s               |
+    | | Profile Key: N/A                                  | | denoting the files that are required for the job to                 |
+    | | Scope : Properties                                | | run. To determine the physical replica (PFN) for a LFN,             |
+    | | Since : 2.0                                       | | Pegasus queries the replica catalog to get all the                  |
+    | | Type :String                                      | | PFN’s (replicas) associated with a LFN. Pegasus then                |
+    | | Default : Default                                 | | calls out to a replica selector to select a replica                 |
+    | | See Also :                                        | | amongst the various replicas returned. This property                |
+    | |  pegasus.selector.replica.*.ignore.stagein.sites  | | determines the replica selector to use for selecting                |
+    | | See Also :                                        | | the replicas.                                                       |
+    | |  pegasus.selector.replica.*.prefer.stagein.sites  |                                                                       |
+    |                                                     |  - **Default**                                                        |
+    |                                                     | |  The selector orders the various candidate replica’s                |
+    |                                                     | |  according to the following rules                                   |
+    |                                                     |                                                                       |
+    |                                                     | |  1. valid file URL’s . That is URL’s that have the site             |
+    |                                                     | |  attribute matching the site where the executable                   |
+    |                                                     | | pegasus-transfer is executed.                                       |
+    |                                                     | |  2. all URL’s from preferred site (usually the compute site)        |
+    |                                                     | |  3. all other remotely accessible ( non file) URL’s                 |
+    |                                                     |                                                                       |
+    |                                                     |  - **Regex**                                                          |
+    |                                                     | | This replica selector allows the user allows the user to            |
+    |                                                     | | specific regular expressions that can be used to rank               |
+    |                                                     | | various PFN’s returned from the Replica Catalog for a               |
+    |                                                     | | particular LFN. This replica selector orders the                    |
+    |                                                     | | replicas based on the rank. Lower the rank higher the               |
+    |                                                     | | preference.                                                         |
+    |                                                     | | The regular expressions are assigned different rank,                |
+    |                                                     | | that determine the order in which the expressions are               |
+    |                                                     | | employed. The rank values for the regex can expressed               |
+    |                                                     | | in user properties using the property.                              |
+    |                                                     |                                                                       |
+    |                                                     | ::                                                                    |
+    |                                                     |                                                                       |
+    |                                                     |     pegasus.selector.replica.regex.rank.[value]   regex-expression    |
+    |                                                     |                                                                       |
+    |                                                     | | The value is an integer value that denotes the rank of              |
+    |                                                     | | an expression with a rank value of 1 being the highest              |
+    |                                                     | | rank.                                                               |
+    |                                                     | | Please note that before applying any regular expressions            |
+    |                                                     | | on the PFN’s, the file URL’s that dont match the preferred          |
+    |                                                     | | site are explicitly filtered out.                                   |
+    |                                                     |                                                                       |
+    |                                                     | - **Restricted**                                                      |
+    |                                                     | | This replica selector, allows the user to specify good sites        |
+    |                                                     | | and bad sites for staging in data to a particular compute site.     |
+    |                                                     | | A good site for a compute site X, is a preferred site from          |
+    |                                                     | | which replicas should be staged to site X. If there are more        |
+    |                                                     | | than one good sites having a particular replica, then a             |
+    |                                                     | | random site is selected amongst these preferred sites.              |
+    |                                                     | | A bad site for a compute site X, is a site from which               |
+    |                                                     | | replica’s should not be staged. The reason of not accessing         |
+    |                                                     | | replica from a bad site can vary from the link being down,          |
+    |                                                     | | to the user not having permissions on that site’s data.             |
+    |                                                     | | The good | bad sites are specified by the properties                |
+    |                                                     |                                                                       |
+    |                                                     | ::                                                                    |
+    |                                                     |                                                                       |
+    |                                                     |    pegasus.replica.*.prefer.stagein.sites                             |
+    |                                                     |    pegasus.replica.*.ignore.stagein.sites                             |
+    |                                                     |                                                                       |
+    |                                                     | | where the * in the property name denotes the name of the            |
+    |                                                     | | compute site. A * in the property key is taken to mean all sites.   |
+    |                                                     | |                                                                     |
+    |                                                     | | The **pegasus.replica.*.prefer.stagein.sites** property takes       |
+    |                                                     | | precedence over **pegasus.replica.*.ignore.stagein.sites** property |
+    |                                                     | | i.e. if for a site X, a site Y is specified both in the ignored     |
+    |                                                     | | and the preferred set, then site Y is taken to mean as only a       |
+    |                                                     | | preferred site for a site X.                                        |
+    |                                                     |                                                                       |
+    |                                                     | - **Local**                                                           |
+    |                                                     | | This replica selector prefers replicas from the local host          |
+    |                                                     | | and that start with a file: URL scheme. It is useful, when          |
+    |                                                     | | users want to stagin files to a remote site from your submit        |
+    |                                                     | | host using the Condor file transfer mechanism.                      |
+    +-----------------------------------------------------+-----------------------------------------------------------------------+
+    | | Property Key:                                     | | A comma separated list of storage sites from which to never         |
+    | |   pegasus.selector.replica.*.ignore.stagein.sites | | stage in data to a compute site. The property can apply to          |
+    | | Profile Key: N/A                                  | | all or a single compute site, depending on how the * in the         |
+    | | Scope : Properties                                | | property name is expanded.                                          |
+    | | Since : 2.0                                       | | The * in the property name means all compute sites unless           |
+    | | Default : (no default)                            | | replaced by a site name.                                            |
+    | | See Also : pegasus.selector.replica               | | For e.g setting                                                     |
+    | | See Also :                                        | | pegasus.selector.replica.*.ignore.stagein.sites to usc              |
+    | |   pegasus.selector.replica.*.prefer.stagein.sites | | means that ignore all replicas from site usc for staging in         |
+    |                                                     | | to any compute site.                                                |
+    |                                                     | | Setting pegasus.replica.isi.ignore.stagein.sites to usc             |
+    |                                                     | | means that ignore all replicas from site usc for staging            |
+    |                                                     | | in data to site isi.                                                |
+    +-----------------------------------------------------+-----------------------------------------------------------------------+
+    | | Property Key:                                     | | A comma separated list of preferred storage sites from which        |
+    | |   pegasus.selector.replica.*.prefer.stagein.sites | | to stage in data to a compute site. The property can apply to       |
+    | | Profile Key: N/A                                  | | all or a single compute site, depending on how the * in the         |
+    | | Scope : Properties                                | | property name is expanded.                                          |
+    | | Since : 2.0                                       | | The * in the property name means all compute sites unless           |
+    | | Default : (no default)                            | | replaced by a site name.                                            |
+    | | See Also : pegasus.selector.replica               | | For e.g setting                                                     |
+    | | See Also :                                        | | pegasus.selector.replica.*.prefer.stagein.sites to usc              |
+    | |   pegasus.selector.replica.*.ignore.stagein.sites | | means that prefer all replicas from site usc for staging            |
+    |                                                     | | in to any compute site.                                             |
+    |                                                     | | Setting pegasus.replica.isi.prefer.stagein.sites to usc             |
+    |                                                     | | means that prefer all replicas from site usc for staging            |
+    |                                                     | | in data to site isi.                                                |
+    +-----------------------------------------------------+-----------------------------------------------------------------------+
+    | | Property Key:                                     | | Specifies the regex expressions to be applied on the                |
+    | |  pegasus.selector.replica.regex.rank.[value]      | | PFNs returned for a particular LFN. Refer to                        |
+    | | Profile Key:N/A                                   |                                                                       |
+    | | Scope : Properties                                | ..                                                                    |
+    | | Since : 2.3.0                                     |   http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html  |
+    | | Default : (no default)                            |                                                                       |
+    | | See Also : pegasus.selector.replica               | | on information of how to construct a regex expression.              |
+    |                                                     | | The [value] in the property key is to be replaced by an             |
+    |                                                     | | int value that designates the rank value for the regex              |
+    |                                                     | | expression to be applied in the Regex replica selector.             |
+    |                                                     | | The example below indicates preference for file URL’s               |
+    |                                                     | | over URL’s referring to gridftp server at example.isi.edu           |
+    |                                                     | |                                                                     |
+    |                                                     |                                                                       |
+    |                                                     | ..                                                                    |
+    |                                                     |    pegasus.selector.replica.regex.rank.1 file://.*                    |
+    |                                                     |    pegasus.selector.replica.regex.rank.2 gsiftp://example\.isi\.edu.* |
+    |                                                     |                                                                       |
+    |                                                     |                                                                       |
+    +-----------------------------------------------------+-----------------------------------------------------------------------+
 
 .. _site-sel-props:
 
