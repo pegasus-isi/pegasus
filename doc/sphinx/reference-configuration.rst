@@ -1894,7 +1894,7 @@ Catalog Related Properties
     | Key Attributes                              | Description                                                      |
     +=============================================+==================================================================+
     | | Property Key: pegasus.catalog.site        | | Pegasus supports two different types of site catalogs in       |
-    | | Profile Key: N/A                          |  :ref:`YAML <sc-YAML>` or :ref:`XML <sc-XML>`  formats           |
+    | | Profile Key: N/A                          | | :ref:`YAML <sc-YAML>` or :ref:`XML <sc-XML4>` formats          |
     | | Scope : Properties                        |                                                                  |
     | | Type : Enumeration                        |                                                                  |
     | | Values : YAML|XML                         | | Pegasus is able to auto-detect what schema a user site         |
@@ -1910,45 +1910,23 @@ Catalog Related Properties
 
 .. table:: Transformation Catalog Properties
 
-   =========================================================================================================================================== =======================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                          **Description**
-   **Property Key:**\ pegasus.catalog.transformation\ **Profile Key:**\ N/A\ **Scope :**\ Properties **Since :** 2.0 **Default :** Text        The only recommended and supported version of Transformation Catalog for Pegasus is Text. For the old File based formats, users should use pegasus-tc-converter to convert File format to Text Format.
-
-                                                                                                                                               Text
-                                                                                                                                                  In this mode, a multiline file based format is understood. The file is read and cached in memory. Any modifications, as adding or deleting, causes an update of the memory and hence to the file underneath. All queries are done against the memory representation.
-
-                                                                                                                                                  The file sample.tc.text in the etc directory contains an example
-
-                                                                                                                                                  Here is a sample textual format for transfomation catalog containing one transformation on two sites
-
-                                                                                                                                                  ::
-
-                                                                                                                                                     tr example::keg:1.0 {
-                                                                                                                                                     #specify profiles that apply for all the sites for the transformation
-                                                                                                                                                     #in each site entry the profile can be overriden
-                                                                                                                                                     profile env "APP_HOME" "/tmp/karan"
-                                                                                                                                                     profile env "JAVA_HOME" "/bin/app"
-                                                                                                                                                     site isi {
-                                                                                                                                                     profile env "me" "with"
-                                                                                                                                                     profile condor "more" "test"
-                                                                                                                                                     profile env "JAVA_HOME" "/bin/java.1.6"
-                                                                                                                                                     pfn "/path/to/keg"
-                                                                                                                                                     arch  "x86"
-                                                                                                                                                     os    "linux"
-                                                                                                                                                     osrelease "fc"
-                                                                                                                                                     osversion "4"
-                                                                                                                                                     type "INSTALLED"
-                                                                                                                                                     site wind {
-                                                                                                                                                     profile env "me" "with"
-                                                                                                                                                     profile condor "more" "test"
-                                                                                                                                                     pfn "/path/to/keg"
-                                                                                                                                                     arch  "x86"
-                                                                                                                                                     os    "linux"
-                                                                                                                                                     osrelease "fc"
-                                                                                                                                                     osversion "4"
-                                                                                                                                                     type "STAGEABLE"
-   **Property Key:**\ pegasus.catalog.transformation\ **Profile Key :**\ N/A\ **Scope :** Properties **Since :** 2.0 **Default :** $PWD/tc.txt The path to the transformation catalog file, that describes the locations of the executables.
-   =========================================================================================================================================== =======================================================================================================================================================================================================================================================================
+    +--------------------------------------------------+------------------------------------------------------------+
+    | Key Attributes                                   | Description                                                |
+    +==================================================+============================================================+
+    | | Property Key: pegasus.catalog.transformation   | | Pegasus supports two different types of site catalogs in |
+    | | Profile Key: N/A                               | | :ref:`YAML <tc-YAML>` or :ref:`Text <tc-Text>` formats   |
+    | | Scope : Properties                             | | Pegasus is able to auto-detect what schema a user site   |
+    | | Since : 2.0                                    | | catalog refers to. Hence, this property may no longer be |
+    | | Type : Enumeration                             | | set.                                                     |
+    | | Values : YAML|Text                             |                                                            |
+    | | Default : YAML                                 |                                                            |
+    +--------------------------------------------------+------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.transformation   | | The path to the transformation catalog file, that        |
+    | | Profile Key : N/A                              | | describes the locations of the executables.              |
+    | | Scope : Properties                             |                                                            |
+    | | Since : 2.0                                    |                                                            |
+    | | Default : $PWD/transformations.yml|$PWD/tc.txt |                                                            |
+    +--------------------------------------------------+------------------------------------------------------------+
 
 .. _replica-sel-props:
 
