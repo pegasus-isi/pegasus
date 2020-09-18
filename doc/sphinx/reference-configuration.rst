@@ -2580,7 +2580,7 @@ Monitoring Properties
 ---------------------
 
 .. table:: Monitoring Properties
-    
+
     +---------------------------------------------------------+--------------------------------------------------------------------------+
     | Key Attributes                                          | Description                                                              |
     +=========================================================+==========================================================================+
@@ -2738,28 +2738,98 @@ Job Clustering Properties
 
 .. table:: Job Clustering Properties
 
-   =========================================================================================================================================================================================================================================================================================== =========================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                                                                                                                          **Description**
-   **Property Key:**\ pegasus.clusterer.job.aggregator\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type** : String **Values** : seqexec|mpiexec|AWSBatch **Default :** seqexec                                                                                            A large number of workflows executed through the Virtual Data System, are composed of several jobs that run for only a few seconds or so. The overhead of running any job on the grid is usually 60 seconds or more. Hence, it makes sense to collapse small independent jobs into a larger job. This property determines, the executable that will be used for running the larger job on the remote site.
-
-                                                                                                                                                                                                                                                                                               seqexec
-                                                                                                                                                                                                                                                                                                  In this mode, the executable used to run the merged job is "pegasus-cluster" that runs each of the smaller jobs sequentially on the same node. The executable "pegasus-cluster" is a PEGASUS tool distributed in the PEGASUS worker package, and can be usually found at {pegasus.home}/bin/seqexec.
-                                                                                                                                                                                                                                                                                               mpiexec
-                                                                                                                                                                                                                                                                                                  In this mode, the executable used to run the merged job is "pegasus-mpi-cluster" (PMC) that runs the smaller jobs via mpi on n nodes where n is the nodecount associated with the merged job. The executable "pegasus-mpi-cluster" is a PEGASUS tool distributed in the PEGASUS distribution and is built only if mpi compiler is available.
-                                                                                                                                                                                                                                                                                               AWSBatch
-                                                                                                                                                                                                                                                                                                  In this mode, the executable used to run the merged job is "pegasus-aws-batch" that runs in local universe on the submit and runs the jobs making up the cluster on AWS Batch.
-   **Property Key:**\ pegasus.clusterer.job.aggregator.seqexec.log\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.3 **Type :**\ Boolean **Default :** false\ **See Also :** pegasus.clusterer.job.aggregator\ **See Also :** pegasus.clusterer.job.aggregator.seqexec.log.global The tool pegasus-cluster logs the progress of the jobs that are being run by it in a progress file on the remote cluster where it is executed.
-
-                                                                                                                                                                                                                                                                                               This property sets the Boolean flag, that indicates whether to turn on the logging or not.
-   **Property Key:**\ pegasus.clusterer.job.aggregator.seqexec.log\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.3 **Type :**\ Boolean **Default :** false\ **See Also :** pegasus.clusterer.job.aggregator\ **See Also :** pegasus.clusterer.job.aggregator.seqexec.log.global The tool pegasus-cluster logs the progress of the jobs that are being run by it in a progress file on the remote cluster where it is executed. The progress log is useful for you to track the progress of your computations and remote grid debugging. The progress log file can be shared by multiple pegasus-cluster jobs that are running on a particular cluster as part of the same workflow. Or it can be per job.
-
-                                                                                                                                                                                                                                                                                               This property sets the Boolean flag, that indicates whether to have a single global log for all the pegasus-cluster jobs on a particular cluster or progress log per job.
-   **Property Key:**\ pegasus.clusterer.job.aggregator.seqexec.firstjobfail\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.2 **Type :**\ Boolean **Default :** true\ **See Also :** pegasus.clusterer.job.aggregator                                                             By default "pegasus-cluster" does not stop execution even if one of the clustered jobs it is executing fails. This is because "pegasus-cluster" tries to get as much work done as possible.
-
-                                                                                                                                                                                                                                                                                               This property sets the Boolean flag, that indicates whether to make "pegasus-cluster" stop on the first job failure it detects.
-   **Property Key:**\ pegasus.clusterer.allow.single\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.9 **Type** : Boolean **Default :** False
-   **Property Key:**\ pegasus.clusterer.label.key\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type** : String **Default :** label
-   =========================================================================================================================================================================================================================================================================================== =========================================================================================================================================================================================================================================================================================================================================================================================================================
+    +--------------------------------------------------------------+--------------------------------------------------------+
+    | Key Attributes                                               | Description                                            |
+    +==============================================================+========================================================+
+    | | Property Key: pegasus.clusterer.job.aggregator             | | A large number of workflows executed through         |
+    | | Profile Key: N/A                                           | | Pegasus, are composed of several jobs that run       |
+    | | Scope : Properties                                         | | for only a few seconds or so. The overhead of        |
+    | | Since : 2.0                                                | | running any job on the grid is usually 60            |
+    | | Type : String                                              | | seconds or more. Hence, it makes sense to            |
+    | | Values : seqexec|mpiexec|AWSBatch                          | | cluster small independent jobs into a larger         |
+    | | Default : seqexec                                          | | job. This property determines, the executable        |
+    |                                                              | | that will be used for running the larger job         |
+    |                                                              | | on the remote site.                                  |
+    |                                                              |                                                        |
+    |                                                              | - **seqexec**: In this mode, the executable            |
+    |                                                              | | used to run the merged job is “pegasus-cluster”      |
+    |                                                              | | that runs each of the smaller jobs sequentially      |
+    |                                                              | | on the same node. The executable                     |
+    |                                                              | | “pegasus-cluster” is a PEGASUS tool                  |
+    |                                                              | | distributed in the PEGASUS worker package, and       |
+    |                                                              | | can be usually found at                              |
+    |                                                              | | {pegasus.home}/bin/pegasus-cluster.                  |
+    |                                                              |                                                        |
+    |                                                              | - **mpiexec**: In this mode, the executable used       |
+    |                                                              | | to run the clustered job is “pegasus-mpi-cluster”    |
+    |                                                              | | (PMC) that runs the smaller jobs via mpi on n nodes  |
+    |                                                              | | where n is the nodecount associated with the merged  |
+    |                                                              | | job. The executable “pegasus-mpi-cluster” is a       |
+    |                                                              | | PEGASUS tool distributed in the PEGASUS distribution |
+    |                                                              | | and is built only if mpi compiler is available.      |
+    |                                                              | |                                                      |
+    |                                                              | - **AWSBatch**: In this mode, the executable used to   |
+    |                                                              | | run the merged job is “pegasus-aws-batch” that runs  |
+    |                                                              | | in local universe on the submit and runs the jobs    |
+    |                                                              | | making up the cluster on AWS Batch.                  |
+    +--------------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.clusterer.job.aggregator.seqexec.log | | The tool pegasus-cluster logs the progress of the    |
+    | | Profile Key: N/A                                           | | jobs that are being run by it in a progress file     |
+    | | Scope : Properties                                         | | on the remote cluster where it is executed.          |
+    | | Since : 2.3                                                | | This property sets the Boolean flag, that indicates  |
+    | | Type :Boolean                                              | | whether to turn on the logging or not.               |
+    | | Default : false                                            |                                                        |
+    | | See Also :                                                 |                                                        |
+    | |    pegasus.clusterer.job.aggregator                        |                                                        |
+    | |See Also :                                                  |                                                        |
+    | | pegasus.clusterer.job.aggregator.seqexec.log.global        |                                                        |
+    +--------------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key:                                              | | The tool pegasus-cluster logs the progress of        |
+    | |  pegasus.clusterer.job.aggregator.seqexec.log              | | the jobs that are being run by it in a               |
+    | | Profile Key: N/A                                           | | progress file on the remote cluster where it         |
+    | | Scope : Properties                                         | | is executed. The progress log is useful for          |
+    | | Since : 2.3                                                | | you to track the progress of your computations       |
+    | | Type :Boolean                                              | | and remote grid debugging. The progress log          |
+    | | Default : false                                            | | file can be shared by multiple pegasus-cluster       |
+    | | See Also : pegasus.clusterer.job.aggregator                | | jobs that are running on a particular cluster        |
+    | | See Also :                                                 | | as part of the same workflow. Or it can be           |
+    | |    pegasus.clusterer.job.aggregator.seqexec.log.global     | | per job.                                             |
+    |                                                              | | This property sets the Boolean flag, that            |
+    |                                                              | | indicates whether to have a single global log        |
+    |                                                              | | for all the pegasus-cluster jobs on a                |
+    |                                                              | | particular cluster or progress log per job.          |
+    +--------------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key:                                              | | By default “pegasus-cluster” does not stop           |
+    | |  pegasus.clusterer.job.aggregator.seqexec.firstjobfail     | | execution even if one of the clustered jobs          |
+    | | Profile Key: N/A                                           | | it is executing fails. This is because               |
+    | | Scope : Properties                                         | | “pegasus-cluster” tries to get as much work          |
+    | | Since : 2.2                                                | | done as possible.                                    |
+    | | Type :Boolean                                              | | This property sets the Boolean flag, that            |
+    | | Default : true                                             | | indicates whether to make “pegasus-cluster”          |
+    | | See Also : pegasus.clusterer.job.aggregator                | | stop on the first job failure it detects.            |
+    +--------------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key :pegasus.clusterer.allow.single               | | By default, Pegasus does not launch clusters         |
+    | | Profile Key: N/A                                           | | that contain a single job using the                  |
+    | | Scope : Properties                                         | | clustering/job aggregator executable. This           |
+    | | Since : 4.9                                                | | property allows you to override this behaviour       |
+    | | Type : Boolean                                             | | and have single job clusters to be created.          |
+    | | Default : False                                            | | Applies to both horizontal and label based           |
+    |                                                              | | clustering.                                          |
+    +--------------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.clusterer.label.key                  | | While clustering jobs in the workflow into           |
+    | | Profile Key: N/A                                           | | larger jobs, you can optionally label your           |
+    | | Scope : Properties                                         | | graph to control which jobs are clustered            |
+    | | Since : 2.0                                                | | and to which clustered job they belong. This         |
+    | | Type : String                                              | | done using a label based clustering scheme           |
+    | | Default : label                                            | | and is done by associating a profile/label           |
+    |                                                              | | key in the PEGASUS namespace with the jobs           |
+    |                                                              | | in the DAX. Each job that has the same               |
+    |                                                              | | value/label value for this profile key,              |
+    |                                                              | | is put in the same clustered job.                    |
+    |                                                              | | This property allows you to specify the              |
+    |                                                              | | PEGASUS profile key that you want to use             |
+    |                                                              | | for label based clustering.                          |
+    +--------------------------------------------------------------+--------------------------------------------------------+
 
 .. _logging-props:
 
