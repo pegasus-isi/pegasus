@@ -2580,51 +2580,156 @@ Monitoring Properties
 ---------------------
 
 .. table:: Monitoring Properties
-
-   ==================================================================================================================================================================================================================================================================== =================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                                                                                                   **Description**
-   **Property Key:**\ pegasus.monitord.events\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 3.0.2 **Type** : String **Default :** true\ **See Also :**\ pegasus.catalog.workflow.url                                                                       This property determines whether pegasus-monitord generates log events. If log events are disabled using this property, no bp file, or database will be created, even if the pegasus.monitord.output property is specified.
-   **Property Key:**\ pegasus.catalog.workflow.url\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.5 **Type** : String **Default :** SQlite database in submit directory. **See Also :** pegasus.monitord.events                                           This property specifies the destination for generated log events in pegasus-monitord. By default, events are stored in a sqlite database in the workflow directory, which will be created with the workflow's name, and a ".stampede.db" extension. Users can specify an alternative database by using a SQLAlchemy connection string. Details are available at:
-
-                                                                                                                                                                                                                                                                        ::
-
-                                                                                                                                                                                                                                                                           http://www.sqlalchemy.org/docs/05/reference/dialects/index.html
-
-                                                                                                                                                                                                                                                                        It is important to note that users will need to have the appropriate db interface library installed. Which is to say, SQLAlchemy is a wrapper around the mysql interface library (for instance), it does not provide a MySQL driver itself. The Pegasus distribution includes both SQLAlchemy and the SQLite Python driver. As a final note, it is important to mention that unlike when using SQLite databases, using SQLAlchemy with other database servers, e.g. MySQL or Postgres , the target database needs to exist. Users can also specify a file name using this property in order to create a file with the log events.
-
-                                                                                                                                                                                                                                                                        Example values for the SQLAlchemy connection string for various end points are listed below
-
-                                                                                                                                                                                                                                                                        ===================== ============================================
-                                                                                                                                                                                                                                                                        SQL Alchemy End Point Example Value
-                                                                                                                                                                                                                                                                        Netlogger BP File     file:///submit/dir/myworkflow.bp
-                                                                                                                                                                                                                                                                        SQL Lite Database     sqlite:///submit/dir/myworkflow.db
-                                                                                                                                                                                                                                                                        MySQL Database        mysql://user:password@host:port/databasename
-                                                                                                                                                                                                                                                                        \
-                                                                                                                                                                                                                                                                        ===================== ============================================
-   **Property Key:**\ pegasus.catalog.master.url\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.2 **Type** : String **Default :** sqlite database in $HOME/.pegasus/workflow.db\ **See Also :** pegasus.catalog.workflow.url                              This property specifies the destination for the workflow dashboard database. By default, the workflow dashboard datbase defaults to a sqlite database named workflow.db in the $HOME/.pegasus directory. This is database is shared for all workflows run as a particular user. Users can specify an alternative database by using a SQLAlchemy connection string. Details are available at:
-
-                                                                                                                                                                                                                                                                        ::
-
-                                                                                                                                                                                                                                                                           http://www.sqlalchemy.org/docs/05/reference/dialects/index.html
-
-                                                                                                                                                                                                                                                                        It is important to note that users will need to have the appropriate db interface library installed. Which is to say, SQLAlchemy is a wrapper around the mysql interface library (for instance), it does not provide a MySQL driver itself. The Pegasus distribution includes both SQLAlchemy and the SQLite Python driver. As a final note, it is important to mention that unlike when using SQLite databases, using SQLAlchemy with other database servers, e.g. MySQL or Postgres , the target database needs to exist. Users can also specify a file name using this property in order to create a file with the log events.
-
-                                                                                                                                                                                                                                                                        Example values for the SQLAlchemy connection string for various end points are listed below
-
-                                                                                                                                                                                                                                                                        ===================== ============================================
-                                                                                                                                                                                                                                                                        SQL Alchemy End Point Example Value
-                                                                                                                                                                                                                                                                        SQL Lite Database     sqlite:///shared/myworkflow.db
-                                                                                                                                                                                                                                                                        MySQL Database        mysql://user:password@host:port/databasename
-                                                                                                                                                                                                                                                                        \
-                                                                                                                                                                                                                                                                        ===================== ============================================
-   **Property Key:**\ pegasus.monitord.output\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 3.0.2 **Type** : String **Default :** SQlite database in submit directory. **See Also :** pegasus.monitord.events                                              This property has been deprecated in favore of pegasus.catalog.workflow.url that introduced in 4.5 release. Support for this property will be dropped in future releases.
-   **Property Key:**\ pegasus.dashboard.output\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.2 **Type** : String **Default :** sqlite database in $HOME/.pegasus/workflow.db\ **See Also :** pegasus.monitord.output                                     This property has been deprecated in favore of pegasus.catalog.master.url that introduced in 4.5 release. Support for this property will be dropped in future releases.
-   **Property Key:**\ pegasus.monitord.notifications\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 3.1.0 **Type :**\ Boolean **Default :** true\ **See Also :** pegasus.monitord.notifications.max\ **See Also :** pegasus.monitord.notifications.timeout  This property determines how many notification scripts pegasus-monitord will call concurrently. Upon reaching this limit, pegasus-monitord will wait for one notification script to finish before issuing another one. This is a way to keep the number of processes under control at the submit host. Setting this property to 0 will disable notifications completely.
-   **Property Key:**\ pegasus.monitord.notifications.max\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 3.1.0 **Type :**\ Integer **Default :** 10\ **See Also :** pegasus.monitord.notifications **See Also :** pegasus.monitord.notifications.timeout     This property determines whether pegasus-monitord processes notifications. When notifications are enabled, pegasus-monitord will parse the .notify file generated by pegasus-plan and will invoke notification scripts whenever conditions matches one of the notifications.
-   **Property Key:**\ pegasus.monitord.notifications.timeout\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 3.1.0 **Type :**\ Integer **Default :** true\ **See Also :** pegasus.monitord.notifications.\ **See Also :** pegasus.monitord.notifications.max This property determines how long will pegasus-monitord let notification scripts run before terminating them. When this property is set to 0 (default), pegasus-monitord will not terminate any notification scripts, letting them run indefinitely. If some notification scripts missbehave, this has the potential problem of starving pegasus-monitord's notification slots (see the pegasus.monitord.notifications.max property), and block further notifications. In addition, users should be aware that pegasus-monitord will not exit until all notification scripts are finished.
-   **Property Key:**\ pegasus.monitord.stdout.disable.parsing\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 3.1.1 **Type :**\ Boolean **Default :** false                                                                                                  By default, pegasus-monitord parses the stdout/stderr section of the kickstart to populate the applications captured stdout and stderr in the job instance table for the stampede schema. For large workflows, this may slow down monitord especially if the application is generating a lot of output to it's stdout and stderr. This property, can be used to turn of the database population.
-   **Property Key:**\ pegasus.monitord.arguments\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.6 **Type :**\ String **Default :** N/A                                                                                                                    This property specifies additional command-line arguments that should be passed to pegasus-monitord at startup. These additional arguments are appended to the arguments given to pegasus-monitord.
-   ==================================================================================================================================================================================================================================================================== =================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | Key Attributes                                          | Description                                                              |
+    +=========================================================+==========================================================================+
+    | | Property Key: pegasus.monitord.events                 | | This property determines whether pegasus-monitord                      |
+    | | Profile Key: N/A                                      | | generates log events. If log events are disabled using                 |
+    | | Scope : Properties                                    | | this property, no bp file, or database will be created,                |
+    | | Since : 3.0.2                                         | | even if the pegasus.monitord.output property is                        |
+    | | Type : String                                         | | specified.                                                             |
+    | | Default : true                                        |                                                                          |
+    | | See Also :pegasus.catalog.workflow.url                |                                                                          |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.workflow.url            | | This property specifies the destination for generated                  |
+    | | Profile Key: N/A                                      | | log events in pegasus-monitord. By default, events are                 |
+    | | Scope : Properties                                    | | stored in a sqlite database in the workflow directory,                 |
+    | | Since : 4.5                                           | | which will be created with the workflow’s name, and a                  |
+    | | Type : String                                         | | “.stampede.db” extension. Users can specify an                         |
+    | | Default : SQlite database in submit directory.        | | alternative database by using a SQLAlchemy                             |
+    | | See Also : pegasus.monitord.events                    | | connection string. Details are available at:                           |
+    |                                                         |                                                                          |
+    |                                                         | ::                                                                       |
+    |                                                         |                                                                          |
+    |                                                         |    http://www.sqlalchemy.org/docs/05/reference/dialects/index.html       |
+    |                                                         |                                                                          |
+    |                                                         | | It is important to note that users will need to have                   |
+    |                                                         | | the appropriate db interface library installed. Which is               |
+    |                                                         | | to say, SQLAlchemy is a wrapper around the mysql interface             |
+    |                                                         | | library (for instance), it does not provide a MySQL                    |
+    |                                                         | | driver itself. The Pegasus distribution includes                       |
+    |                                                         | | both SQLAlchemy and the SQLite Python driver. As a                     |
+    |                                                         | | final note, it is important to mention that unlike                     |
+    |                                                         | | when using SQLite databases, using SQLAlchemy with                     |
+    |                                                         | | other database servers, e.g. MySQL or Postgres ,                       |
+    |                                                         | | the target database needs to exist. Users can also                     |
+    |                                                         | | specify a file name using this property in order                       |
+    |                                                         | | to create a file with the log events.                                  |
+    |                                                         | | Example values for the SQLAlchemy connection string for                |
+    |                                                         | | various end points are listed below                                    |
+    |                                                         |                                                                          |
+    |                                                         | +-----------------------+----------------------------------------------+ |
+    |                                                         | | SQL Alchemy End Point | Example Value                                | |
+    |                                                         | +=======================+==============================================+ |
+    |                                                         | | Netlogger BP File     | file:///submit/dir/myworkflow.bp             | |
+    |                                                         | +-----------------------+----------------------------------------------+ |
+    |                                                         | | SQL Lite Database     | sqlite:///submit/dir/myworkflow.db           | |
+    |                                                         | +-----------------------+----------------------------------------------+ |
+    |                                                         | | MySQL Database        | mysql://user:password@host:port/databasename | |
+    |                                                         | +-----------------------+----------------------------------------------+ |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.master.url              | | This property specifies the destination for the workflow               |
+    | | Profile Key: N/A                                      | | dashboard database. By default, the workflow dashboard                 |
+    | | Scope : Properties                                    | | datbase defaults to a sqlite database named workflow.db                |
+    | | Since : 4.2                                           | | in the $HOME/.pegasus directory. This is database is                   |
+    | | Type: String                                          | | shared for all workflows run as a particular user. Users               |
+    | | Default :                                             | | can specify an alternative database by using a SQLAlchemy              |
+    | | sqlite database in $HOME/.pegasus/workflow.db         | | connection string. Details are available at:                           |
+    | | See Also : pegasus.catalog.workflow.url               |                                                                          |
+    |                                                         | ::                                                                       |
+    |                                                         |                                                                          |
+    |                                                         |   http://www.sqlalchemy.org/docs/05/reference/dialects/index.html        |
+    |                                                         |                                                                          |
+    |                                                         | | It is important to note that users will need to have the               |
+    |                                                         | | appropriate db interface library installed. Which is to                |
+    |                                                         | | say, SQLAlchemy is a wrapper around the mysql interface                |
+    |                                                         | | library (for instance), it does not provide a MySQL                    |
+    |                                                         | | driver itself. The Pegasus distribution includes both                  |
+    |                                                         | | SQLAlchemy and the SQLite Python driver. As a final                    |
+    |                                                         | | note, it is important to mention that unlike when using                |
+    |                                                         | | SQLite databases, using SQLAlchemy with other database                 |
+    |                                                         | | servers, e.g. MySQL or Postgres , the target database                  |
+    |                                                         | | needs to exist. Users can also specify a file name                     |
+    |                                                         | | using this property in order to create a file with                     |
+    |                                                         | | the log events.                                                        |
+    |                                                         | | Example values for the SQLAlchemy connection string                    |
+    |                                                         | | for various end points are listed below                                |
+    |                                                         | |                                                                        |
+    |                                                         | +-----------------------+----------------------------------------------+ |
+    |                                                         | | SQL Alchemy End Point | Example Value                                | |
+    |                                                         | +=======================+==============================================+ |
+    |                                                         | | SQL Lite Database     | sqlite:///shared/myworkflow.db               | |
+    |                                                         | +-----------------------+----------------------------------------------+ |
+    |                                                         | | MySQL Database        | mysql://user:password@host:port/databasename | |
+    |                                                         | +-----------------------+----------------------------------------------+ |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.monitord.output                 | | This property has been deprecated in favor of                          |
+    | | Profile Key: N/A                                      | | pegasus.catalog.workflow.url that introduced in                        |
+    | | Scope : Properties                                    | | 4.5 release. Support for this property will be                         |
+    | | Since : 3.0.2                                         | | dropped in future releases.                                            |
+    | | Type : String                                         |                                                                          |
+    | | Default : SQlite database in submit directory.        |                                                                          |
+    | | See Also : pegasus.monitord.events                    |                                                                          |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.dashboard.output                | | This property has been deprecated in favore of                         |
+    | | Profile Key: N/A                                      | | pegasus.catalog.master.url that was introduced                         |
+    | | Scope : Properties                                    | | in 4.5 release. Support for this property will                         |
+    | | Since : 4.2                                           | | be dropped in future releases.                                         |
+    | | Type : String                                         |                                                                          |
+    | | Default :                                             |                                                                          |
+    | | sqlite database in $HOME/.pegasus/workflow.db         |                                                                          |
+    | | See Also : pegasus.monitord.output                    |                                                                          |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.monitord.notifications          | | This property determines how many notification                         |
+    | | Profile Key: N/A                                      | | scripts pegasus-monitord will call concurrently.                       |
+    | | Scope : Properties                                    | | Upon reaching this limit, pegasus-monitord will                        |
+    | | Since : 3.1.0                                         | | wait for one notification script to finish before                      |
+    | | Type :Boolean                                         | | issuing another one. This is a way to keep the                         |
+    | | Default : true                                        | | number of processes under control at the submit                        |
+    | | See Also : pegasus.monitord.notifications.max         | | host. Setting this property to 0 will disable                          |
+    | | See Also : pegasus.monitord.notifications.timeout     | | notifications completely.                                              |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.monitord.notifications.max      | | This property determines whether pegasus-monitord                      |
+    | | Profile Key: N/A                                      | | processes notifications. When notifications are                        |
+    | | Scope : Properties                                    | | enabled, pegasus-monitord will parse the .notify                       |
+    | | Since : 3.1.0                                         | | file generated by pegasus-plan and will invoke                         |
+    | | Type :Integer                                         | | notification scripts whenever conditions matches                       |
+    | | Default : 10                                          | | one of the notifications.                                              |
+    | | See Also : pegasus.monitord.notifications             |                                                                          |
+    | | See Also : pegasus.monitord.notifications.timeout     |                                                                          |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.monitord.notifications.timeout  | | This property determines how long will                                 |
+    | | Profile Key: N/A                                      | | pegasus-monitord let notification scripts run                          |
+    | | Scope : Properties                                    | | before terminating them. When this property is set                     |
+    | | Since : 3.1.0                                         | | to 0 (default), pegasus-monitord will not terminate                    |
+    | | Type :Integer                                         | | any notification scripts, letting them run                             |
+    | | Default : true                                        | | indefinitely. If some notification scripts                             |
+    | | See Also : pegasus.monitord.notifications             | | missbehave, this has the potential problem of                          |
+    | | See Also : pegasus.monitord.notifications.max         | | starving pegasus-monitord’s notification slots                         |
+    |                                                         | | (see the pegasus.monitord.notifications.max                            |
+    |                                                         | | property), and block further notifications. In                         |
+    |                                                         | | addition, users should be aware that                                   |
+    |                                                         | | pegasus-monitord will not exit until all                               |
+    |                                                         | | notification scripts are finished.                                     |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.monitord.stdout.disable.parsing | | By default, pegasus-monitord parses the                                |
+    | | Profile Key:N/A                                       | | stdout/stderr section of the kickstart to populate                     |
+    | | Scope : Properties                                    | | the applications captured stdout and stderr in the                     |
+    | | Since : 3.1.1                                         | | job instance table for the stampede schema. For                        |
+    | | Type :Boolean                                         | | large workflows, this may slow down monitord                           |
+    | | Default : false                                       | | especially if the application is generating a                          |
+    |                                                         | | lot of output to it’s stdout and stderr. This                          |
+    |                                                         | | property, can be used to turn of the database                          |
+    |                                                         | | population.                                                            |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.monitord.arguments              | | This property specifies additional command-line                        |
+    | | Profile Key: N/A                                      | | arguments that should be passed to pegasus-monitord                    |
+    | | Scope : Properties                                    | | at startup. These additional arguments are appended                    |
+    | | Since : 4.6                                           | | to the arguments given to pegasus-monitord.                            |
+    | | Type :String                                          |                                                                          |
+    | | Default : N/A                                         |                                                                          |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
 
 .. _job-clustering-props:
 
