@@ -1,3 +1,4 @@
+import logging
 import os
 import unittest
 from configparser import ConfigParser
@@ -405,6 +406,31 @@ class TestMkdir:
         resp = s3_client.list_buckets()
         expected_buckets = {b["Name"] for b in resp["Buckets"]}
         assert BUCKET in expected_buckets
+
+        # cleanup test-bucket
+        s3_client.delete_bucket(Bucket=BUCKET)
+
+    @pytest.mark.skipif(is_missing_credentials(), reason="missing credentials")
+    def test_mkdir_bucket_already_owned_by_user(self, s3_client, caplog):
+        BUCKET = "test-bucket"
+
+        # create test bucket before calling mkdir on same bucket
+        s3_client.create_bucket(Bucket=BUCKET)
+
+        # pegasus-s3 mkdir s3://rynge@osgconnect/test-bucket
+        parser, args = s3.parse_args(
+            ["mkdir", "s3://rynge@osgconnect/{}".format(BUCKET)]
+        )
+        s3.mkdir(args)
+
+        # check that log message printed
+        assert caplog.record_tuples == [
+            (
+                "root",
+                logging.WARNING,
+                "Bucket: test-bucket exists and is already owned by user: rynge@osgconnect",
+            )
+        ]
 
         # cleanup test-bucket
         s3_client.delete_bucket(Bucket=BUCKET)
