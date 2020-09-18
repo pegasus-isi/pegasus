@@ -2838,30 +2838,91 @@ Logging Properties
 
 .. table:: Logging Properties
 
-   =========================================================================================================================================================================================================================== =========================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                                                          **Description**
-   **Property Key:**\ pegasus.log.manager\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.2.0 **Type** : String **Values** : Default|Log4J **Default :** Default\ **See Also :**\ pegasus.log.manager.formatter   This property sets the logging implementation to use for logging.
+    +-----------------------------------------------+-----------------------------------------------------------------------------+
+    | Key Attributes                                | Description                                                                 |
+    +===============================================+=============================================================================+
+    | | Property Key: pegasus.log.manager           | | This property sets the logging implementation to use for                  |
+    | | Profile Key: N/A                            | | logging.                                                                  |
+    | | Scope : Properties                          |                                                                             |
+    | | Since : 2.2.0                               | - **Default**:                                                              |
+    | | Type : String                               | | This implementation refers to the legacy                                  |
+    | | Values : Default|Log4J                      | | Pegasus logger, that logs directly to stdout and stderr.                  |
+    | | Default : Default                           | |  It however, does have the concept of levels similar to                   |
+    | | See Also :pegasus.log.manager.formatter     | | log4j or syslog.                                                          |
+    |                                               |                                                                             |
+    |                                               | - **Log4j**:                                                                |
+    |                                               | | This implementation, uses Log4j to log                                    |
+    |                                               | |  messages. The log4j properties can be specified in                       |
+    |                                               | |  a properties file, the location of which is specified                    |
+    |                                               | |  by the property pegasus.log.manager.log4j.conf .                         |
+    +-----------------------------------------------+-----------------------------------------------------------------------------+
+    | | Property Key: pegasus.log.manager.formatter | | This property sets the formatter to use for formatting                    |
+    | | Profile Key: N/A                            | | the log messages while logging.                                           |
+    | | Scope : Properties                          |                                                                             |
+    | | Since : 2.2.0                               | - **Simple**                                                                |
+    | | Type : String                               | | This formats the messages in a simple format. The                         |
+    | | Values : Simple|Netlogger                   | | messages are logged as is with minimal formatting.                        |
+    | | Default : Simple                            | | Below are sample log messages in this format while                        |
+    | | See Also :pegasus.log.manager               | | ranking an abstract workflow according to performance.                    |
+    |                                               |                                                                             |
+    |                                               | ::                                                                          |
+    |                                               |                                                                             |
+    |                                               |    event.pegasus.ranking dax.id se18-gda.dax  - STARTED                     |
+    |                                               |    event.pegasus.parsing.dax dax.id se18-gda-nested.dax  - STARTED          |
+    |                                               |    event.pegasus.parsing.dax dax.id se18-gda-nested.dax  - FINISHED         |
+    |                                               |    job.id jobGDA                                                            |
+    |                                               |    job.id jobGDA query.name getpredicted performace time 10.00              |
+    |                                               |    event.pegasus.ranking dax.id se18-gda.dax  - FINISHED                    |
+    |                                               |                                                                             |
+    |                                               |                                                                             |
+    |                                               | - **Netlogger**                                                             |
+    |                                               | | This formats the messages in the Netlogger format , that                  |
+    |                                               | | is based on key value pairs. The netlogger format is useful               |
+    |                                               | | for loading the logs into a database to do some meaningful                |
+    |                                               | | analysis. Below are sample log messages in this format while              |
+    |                                               | | ranking an abstract workflow                                              |
+    |                                               |                                                                             |
+    |                                               | ::                                                                          |
+    |                                               |                                                                             |
+    |                                               |   ts=2008-09-06T12:26:20.100502Z event=event.pegasus.ranking.start          |
+    |                                               |     msgid=6bc49c1f-112e-4cdb-af54-3e0afb5d593c                              |
+    |                                               |   eventId=event.pegasus.ranking_8d7c0a3c-9271-4c9c-a0f2-1fb57c6394d5        |
+    |                                               |     dax.id=se18-gda.dax prog=Pegasus                                        |
+    |                                               |   ts=2008-09-06T12:26:20.100750Z event=event.pegasus.parsing.dax.start      |
+    |                                               |     msgid=fed3ebdf-68e6-4711-8224-a16bb1ad2969                              |
+    |                                               |     eventId=event.pegasus.parsing.dax_887134a8-39cb-40f1-b11c-b49def0c5232\ |
+    |                                               |      dax.id=se18-gda-nested.dax prog=Pegasus                                |
+    |                                               |                                                                             |
+    +-----------------------------------------------+-----------------------------------------------------------------------------+
+    | | Property Key: pegasus.log.*                 | | This property sets the path to the file where all the                     |
+    | | Profile Key: N/A                            | | logging for Pegasus can be redirected to. Both stdout                     |
+    | | Scope : Properties                          | | and stderr are logged to the file specified.                              |
+    | | Since : 2.0                                 |                                                                             |
+    | | Type :file path                             |                                                                             |
+    | | Default : no default                        |                                                                             |
+    +-----------------------------------------------+-----------------------------------------------------------------------------+
+    | | Property Key: pegasus.log.memory.usage      | | This property if set to true, will result in the                          |
+    | | Profile Key: N/A                            | | planner writing out JVM heap memory statistics at                         |
+    | | Scope : Properties                          | | the end of the planning process at the INFO level.                        |
+    | | Since : 4.3.4                               | | This is useful, if users want to fine tune their                          |
+    | | Type :Boolean                               | | java memory settings by setting JAVA_HEAPMAX and                          |
+    | | Default : false                             | | JAVA_HEAPMIN for large workflows.                                         |
+    +-----------------------------------------------+-----------------------------------------------------------------------------+
+    | | Property Key: pegasus.metrics.app           | | This property namespace allows users to pass                              |
+    | | Profile Key:N/A                             | | application level metrics to the metrics server.                          |
+    | | Scope : Properties                          | | The value of this property is the name of the                             |
+    | | Since : 4.3.0                               | | application.                                                              |
+    | | Type :String Default : (no default)         | | Additional application specific attributes can                            |
+    |                                               | | be passed by using the prefix pegasus.metrics.app                         |
+    |                                               |                                                                             |
+    |                                               | ::                                                                          |
+    |                                               |                                                                             |
+    |                                               |   pegasus.metrics.app.[arribute-name]       attribute-value                 |
+    |                                               |                                                                             |
+    |                                               | | Note: the attribute cannot be named name. This attribute                  |
+    |                                               | | is automatically assigned the value from pegasus.metrics.app              |
+    +-----------------------------------------------+-----------------------------------------------------------------------------+
 
-                                                                                                                                                                                                                               Default
-                                                                                                                                                                                                                                  This implementation refers to the legacy Pegasus logger, that logs directly to stdout and stderr. It however, does have the concept of levels similar to log4j or syslog.
-                                                                                                                                                                                                                               Log4j
-                                                                                                                                                                                                                                  This implementation, uses Log4j to log messages. The log4j properties can be specified in a properties file, the location of which is specified by the property
-                                                                                                                                                                                                                                  ::
-
-                                                                                                                                                                                                                                     pegasus.log.manager.log4j.conf
-   **Property Key:**\ pegasus.log.manager.formatter\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.2.0 **Type** : String **Values** : Simple|Netlogger **Default :** Simple\ **See Also :**\ pegasus.log.manager
-   **Property Key:**\ pegasus.log.\*\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ file path **Default :** no default                                                                             This property sets the path to the file where all the logging for Pegasus can be redirected to. Both stdout and stderr are logged to the file specified.
-   **Property Key:**\ pegasus.log.memory.usage\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.3.4 **Type :**\ Boolean **Default :** false                                                                        This property if set to true, will result in the planner writing out JVM heap memory statistics at the end of the planning process at the INFO level. This is useful, if users want to fine tune their java memory settings by setting JAVA_HEAPMAX and JAVA_HEAPMIN for large workflows.
-   **Property Key:**\ pegasus.metrics.app\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.3.0 **Type :**\ String **Default :** (no default)                                                                       This property namespace allows users to pass application level metrics to the metrics server. The value of this property is the name of the application.
-
-                                                                                                                                                                                                                               Additional application specific attributes can be passed by using the prefix pegasus.metrics.app
-
-                                                                                                                                                                                                                               ::
-
-                                                                                                                                                                                                                                  pegasus.metrics.app.[arribute-name]       attribute-value
-
-                                                                                                                                                                                                                               Note: the attribute cannot be named name. This attribute is automatically assigned the value from pegasus.metrics.app
-   =========================================================================================================================================================================================================================== =========================================================================================================================================================================================================================================================================================
 
 .. _cleanup-props:
 
