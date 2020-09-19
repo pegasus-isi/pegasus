@@ -3037,7 +3037,7 @@ AWS Batch Properties
 --------------------
 
 .. table:: AWS Batch Properties
-    
+
     +-------------------------------------------------------+--------------------------------------------------------+
     | Key Attributes                                        | Description                                            |
     +=======================================================+========================================================+
@@ -3097,72 +3097,220 @@ Miscellaneous Properties
 
 .. table:: Miscellaneous Properties
 
-   =========================================================================================================================================================================================================================== ===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **Key Attributes**                                                                                                                                                                                                          **Description**
-   **Property Key:**\ pegasus.code.generator\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 3.0 **Type** : String **Values** : Condor|Shell|PMC **Default :** Condor\ **See Also :** pegasus.log.manager.formatter This property is used to load the appropriate Code Generator to use for writing out the executable workflow.
 
-                                                                                                                                                                                                                               Condor
-                                                                                                                                                                                                                                  This is the default code generator for Pegasus . This generator generates the executable workflow as a Condor DAG file and associated job submit files. The Condor DAG file is passed as input to Condor DAGMan for job execution.
-                                                                                                                                                                                                                               Shell
-                                                                                                                                                                                                                                  This Code Generator generates the executable workflow as a shell script that can be executed on the submit host. While using this code generator, all the jobs should be mapped to site local i.e specify --sites local to pegasus-plan.
-                                                                                                                                                                                                                               PMC
-                                                                                                                                                                                                                                  This Code Generator generates the executable workflow as a PMC task workflow. This is useful to run on platforms where it not feasible to run Condor such as the new XSEDE machines such as Blue Waters. In this mode, Pegasus will generate the executable workflow as a PMC task workflow and a sample PBS submit script that submits this workflow.
-   **Property Key:**\ pegasus.condor.concurrency.limits\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.5.3 **Type :**\ Boolean\ **Default :**\ False                                                             This Boolean property is used to determine whether Pegasus associates default HTCondor concurrency limits with jobs or not. Setting this property to true, allows you to `throttle <#job_throttling_across_workflows>`__ jobs across workflows, if the workflow are set to run in pure condor environment.
-   **Property Key:**\ pegasus.register\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.1.- **Type** : Boolean **Default :** true                                                                                  Pegasus creates registration jobs to register the output files in the replica catalog. An output file is registered only if
-
-                                                                                                                                                                                                                               1) a user has configured a replica catalog in the properties 2) the register flags for the output files in the DAX are set to true
-
-                                                                                                                                                                                                                               This property can be used to turn off the creation of the registration jobs even though the files maybe marked to be registered in the replica catalog.
-   **Property Key:**\ pegasus.register.deep\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.5.3.- **Type** : Boolean **Default :** true                                                                           By default, Pegasus always registers the complete LFN that is associated with the output files in the DAX i.e if the LFN has / in it, then lfn registered in the replica catalog has the whole part. For example, if in your DAX you have rupture/0001.rx as the name attribute for the uses tag, then in the Replica Catalog the LFN is registered as rupture/0001.rx
-
-                                                                                                                                                                                                                               On setting this property to false, only the basename is considered while registering in the replica catalog. In the above case, 0001.rx will be registered instead of rupture/0001.rx
-   **Property Key:**\ pegasus.data.reuse.scope\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.5.0 **Type :**\ Enumeration **Value :**\ none|partial|full **Default :** full                                      This property is used to control the behavior of the data reuse algorithm in Pegasus
-
-                                                                                                                                                                                                                               none
-                                                                                                                                                                                                                                  This is same as disabling data reuse. It is equivalent to passing the --force option to pegasus-plan on the command line.
-                                                                                                                                                                                                                               partial
-                                                                                                                                                                                                                                  In this case, only certain jobs ( those that have pegasus profile key enable_for_data_reuse set to true ) are checked for presence of output files in the replica catalog. This gives users control over what jobs are deleted as part of the data reuse algorithm.
-                                                                                                                                                                                                                               full
-                                                                                                                                                                                                                                  This is the default behavior, where all the jobs output files are looked up in the replica catalog.
-   **Property Key:**\ pegasus.catalog.transformation.mapper\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ Enumeration **Value :**\ All|Installed|Staged|Submit **Default :** All                  Pegasus supports transfer of statically linked executables as part of the executable workflow. At present, there is only support for staging of executables referred to by the compute jobs specified in the DAX file. Pegasus determines the source locations of the binaries from the transformation catalog, where it searches for entries of type STATIC_BINARY for a particular architecture type. The PFN for these entries should refer to a globus-url-copy valid and accessible remote URL. For transfer of executables, Pegasus constructs a soft state map that resides on top of the transformation catalog, that helps in determining the locations from where an executable can be staged to the remote site.
-
-                                                                                                                                                                                                                               This property determines, how that map is created.
-
-                                                                                                                                                                                                                               All
-                                                                                                                                                                                                                                  In this mode, all sources with entries of type STATIC_BINARY for a particular transformation are considered valid sources for the transfer of executables. This the most general mode, and results in the constructing the map as a result of the cartesian product of the matches.
-                                                                                                                                                                                                                               Installed
-                                                                                                                                                                                                                                  In this mode, only entries that are of type INSTALLED are used while constructing the soft state map. This results in Pegasus never doing any transfer of executables as part of the workflow. It always prefers the installed executables at the remote sites.
-                                                                                                                                                                                                                               Staged
-                                                                                                                                                                                                                                  In this mode, only entries that are of type STATIC_BINARY are used while constructing the soft state map. This results in the concrete workflow referring only to the staged executables, irrespective of the fact that the executables are already installed at the remote end.
-                                                                                                                                                                                                                               Submit
-                                                                                                                                                                                                                                  In this mode, only entries that are of type STATIC_BINARY and reside at the submit host ("site" local), are used while constructing the soft state map. This is especially helpful, when the user wants to use the latest compute code for his computations on the grid and that relies on his submit host.
-   **Property Key:**\ pegasus.selector.transformation\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.0 **Type :**\ Enumeration **Value :**\ Random|Installed|Staged|Submit **Default :** Random                  In case of transfer of executables, Pegasus could have various transformations to select from when it schedules to run a particular compute job at a remote site. For e.g it can have the choice of staging an executable from a particular remote site, from the local (submit host) only, use the one that is installed on the remote site only.
-
-                                                                                                                                                                                                                               This property determines, how a transformation amongst the various candidate transformations is selected, and is applied after the property pegasus.tc has been applied. For e.g specifying pegasus.tc as Staged and then pegasus.transformation.selector as INSTALLED does not work, as by the time this property is applied, the soft state map only has entries of type STAGED.
-
-                                                                                                                                                                                                                               Random
-                                                                                                                                                                                                                                  In this mode, a random matching candidate transformation is selected to be staged to the remote execution site.
-                                                                                                                                                                                                                               Installed
-                                                                                                                                                                                                                                  In this mode, only entries that are of type INSTALLED are selected. This means that the concrete workflow only refers to the transformations already pre installed on the remote sites.
-                                                                                                                                                                                                                               Staged
-                                                                                                                                                                                                                                  In this mode, only entries that are of type STATIC_BINARY are selected, ignoring the ones that are installed at the remote site.
-                                                                                                                                                                                                                               Submit
-                                                                                                                                                                                                                                  In this mode, only entries that are of type STATIC_BINARY and reside at the submit host ("site" local), are selected as sources for staging the executables to the remote execution sites.
-   **Property Key:**\ pegasus.parser.dax.preserver.linebreaks\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 2.2.0 **Type :**\ Boolean **Default :** false                                                         The DAX Parser normally does not preserve line breaks while parsing the CDATA section that appears in the arguments section of the job element in the DAX. On setting this to true, the DAX Parser preserves any line line breaks that appear in the CDATA section.
-   **Property Key:**\ pegasus.parser.dax.data.dependencies\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.4.0 **Type :**\ Boolean **Default :** true                                                             If this property is set to true, then the planner will automatically add edges between jobs in the DAX on the basis of exisitng data dependencies between jobs. For example, if a JobA generates an output file that is listed as input for JobB, then the planner will automatically add an edge between JobA and JobB.
-   **Property Key:**\ pegasus.integrity.checking\ **Profile Key:**\ N/A\ **Scope :** Properties **Since :** 4.9.0 **Type :**\ none|full **Default :** full                                                                     This property determines the dial for pegasus integrity checking. Currently the following dials are supported
-
-                                                                                                                                                                                                                               full
-                                                                                                                                                                                                                                  In this mode, integrity checking happens at 3 levels
-
-                                                                                                                                                                                                                                  1. after the input data has been staged to staging server - pegasus-transfer verifies integrity of the staged files.
-
-                                                                                                                                                                                                                                  2. before a compute task starts on a remote compute node - This ensures that checksums of the data staged in match the checksums specified in the input replica catalog or the ones computed when that piece of data was generated as part of previous task in the workflow.
-
-                                                                                                                                                                                                                                  3. after the workflow output data has been transferred to user servers - This ensures that output data staged to the final location was not corrupted in transit.
-
-                                                                                                                                                                                                                               nosymlink
-                                                                                                                                                                                                                                  No integrity checking is performed on input files that are symlinked. You should consider turning this on, if you think that your input files at rest are at a low risk of data corruption, and want to save on the checksum computation overheads against the shared filesystem.
-                                                                                                                                                                                                                               none
-                                                                                                                                                                                                                                  No integrity checking is performed.
-   =========================================================================================================================================================================================================================== ===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | Key Attributes                                    | Description                                                 |
+    +===================================================+=============================================================+
+    | | Property Key: pegasus.code.generator            | | This property is used to load the appropriate Code        |
+    | | Profile Key: N/A                                | | Generator to use for writing out the executable           |
+    | | Scope : Properties                              | |  workflow.                                                |
+    | | Since : 3.0                                     |                                                             |
+    | | Type : String                                   | - **Condor**                                                |
+    | | Values : Condor|Shell|PMC                       | | This is the default code generator for Pegasus .          |
+    | | Default : Condor                                | | This generator generates the executable workflow as a     |
+    | | See Also : pegasus.log.manager.formatter        | | Condor DAG file and associated job submit files. The      |
+    |                                                   | | Condor DAG file is passed as input to Condor DAGMan       |
+    |                                                   | | for job execution.                                        |
+    |                                                   |                                                             |
+    |                                                   | - **Shell**                                                 |
+    |                                                   | | This Code Generator generates the executable workflow     |
+    |                                                   | | as a shell script that can be executed on the submit      |
+    |                                                   | | host. While using this code generator, all the jobs       |
+    |                                                   | | should be mapped to site local i.e specify –sites         |
+    |                                                   | | local to pegasus-plan.                                    |
+    |                                                   |                                                             |
+    |                                                   | - **PMC**                                                   |
+    |                                                   | | This Code Generator generates the executable workflow     |
+    |                                                   | | as a PMC task workflow. This is useful to run on          |
+    |                                                   | | platforms where it not feasible to run Condor such        |
+    |                                                   | | as the new XSEDE machines such as Blue Waters. In         |
+    |                                                   | | this mode, Pegasus will generate the executable           |
+    |                                                   | | workflow as a PMC task workflow and a sample PBS          |
+    |                                                   | | submit script that submits this workflow.                 |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.condor.concurrency.limits | | This Boolean property is used to determine whether        |
+    | | Profile Key: N/A                                | | Pegasus associates default HTCondor concurrency           |
+    | | Scope : Properties                              | | limits with jobs or not. Setting this property to         |
+    | | Since : 4.5.3                                   | | true, allows you to throttle jobs across workflows,       |
+    | | Type : Boolean                                  | | if the workflow are set to run in pure condor             |
+    | | Default :False                                  | | environment.                                              |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.register                  | | Pegasus creates registration jobs to register the         |
+    | | Profile Key: N/A                                | | output files in the replica catalog. An output            |
+    | | Scope : Properties                              | | file is registered only                                   |
+    | | Since : 4.1.-                                   |                                                             |
+    | | Type : Boolean                                  | - if a user has configured a replica catalog in the         |
+    | | Default : true                                  | | properties                                                |
+    |                                                   |                                                             |
+    |                                                   | - the register flags for the output files in the            |
+    |                                                   | | abstract workflow are set to true                         |
+    |                                                   |                                                             |
+    |                                                   | | This property can be used to turn off the creation        |
+    |                                                   | | of the registration jobs even though the files            |
+    |                                                   | | maybe marked to be registered in the replica catalog.     |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.register.deep             | | By default, Pegasus always registers the complete LFN     |
+    | | Profile Key: N/A                                | | that is associated with the output files in the DAX       |
+    | | Scope : Properties                              | | i.e if the LFN has / in it, then lfn registered in        |
+    | | Since : 4.5.3                                   | | the replica catalog has the whole part. For example,      |
+    | | Type : Boolean                                  | | if in your Abstract Workflow you have rupture/0001.rx     |
+    | | Default : true                                  | | as the name attribute for the uses tag, then in the       |
+    |                                                   | | Replica Catalog the LFN is registered as                  |
+    |                                                   | |  rupture/0001.rx                                          |
+    |                                                   | | On setting this property to false, only the basename      |
+    |                                                   | | is considered while registering in the replica catalog.   |
+    |                                                   | | In the above case, 0001.rx will be registered instead     |
+    |                                                   | | of rupture/0001.rx                                        |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.data.reuse.scope          | | This property is used to control the behavior of the      |
+    | | Profile Key: N/A                                | | data reuse algorithm in Pegasus                           |
+    | | Scope : Properties                              |                                                             |
+    | | Since : 4.5.0                                   | - **none**                                                  |
+    | | Type :Enumeration                               | | This is same as disabling data reuse. It is equivalent    |
+    | | Value :none|partial|full                        | | to passing the –force option to pegasus-plan on the       |
+    | | Default : full                                  | | command line.                                             |
+    |                                                   |                                                             |
+    |                                                   | - **partial**                                               |
+    |                                                   | | In this case, only certain jobs ( those that have pegasus |
+    |                                                   | | profile key enable_for_data_reuse set to true ) are       |
+    |                                                   | | checked for presence of output files in the replica       |
+    |                                                   | | catalog. This gives users control over what jobs are      |
+    |                                                   | | deleted as part of the data reuse algorithm.              |
+    |                                                   |                                                             |
+    |                                                   | - **full**                                                  |
+    |                                                   | | This is the default behavior, where all the jobs output   |
+    |                                                   | |  files are looked up in the replica catalog.              |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key:                                   | | Pegasus supports transfer of statically linked            |
+    | |    pegasus.catalog.transformation.mapper        | | executables as part of the executable workflow.           |
+    | | Profile Key:N/A                                 | | At present, there is only support for staging of          |
+    | | Scope : Properties                              | | executables referred to by the compute jobs specified     |
+    | | Since : 2.0 Type :Enumeration                   | | in the DAX file. Pegasus determines the source locations  |
+    | | Value :All|Installed|Staged|Submit              | | of the binaries from the transformation catalog, where    |
+    | | Default : All                                   | | it searches for entries of type STATIC_BINARY for a       |
+    |                                                   | | particular architecture type. The PFN for these entries   |
+    |                                                   | | should refer to a globus-url-copy valid and accessible    |
+    |                                                   | | remote URL. For transfer of executables, Pegasus          |
+    |                                                   | | constructs a soft state map that resides on top of the    |
+    |                                                   | | transformation catalog, that helps in determining the     |
+    |                                                   | | locations from where an executable can be staged to the   |
+    |                                                   | | remote site.                                              |
+    |                                                   | |                                                           |
+    |                                                   | | This property determines, how that map is created.        |
+    |                                                   |                                                             |
+    |                                                   | - **All**                                                   |
+    |                                                   | | In this mode, all sources with entries of type            |
+    |                                                   | | STATIC_BINARY for a particular transformation are         |
+    |                                                   | |  considered valid sources for the transfer of             |
+    |                                                   | |  executables. This the most general mode, and             |
+    |                                                   | | results in the constructing the map as a result           |
+    |                                                   | | of the cartesian product of the matches.                  |
+    |                                                   |                                                             |
+    |                                                   | - **Installed**                                             |
+    |                                                   | | In this mode, only entries that are of type INSTALLED     |
+    |                                                   | | are used while constructing the soft state map.           |
+    |                                                   | | This results in Pegasus never doing any transfer          |
+    |                                                   | | of executables as part of the workflow. It always         |
+    |                                                   | | prefers the installed executables at the remote sites.    |
+    |                                                   |                                                             |
+    |                                                   | - **Staged**                                                |
+    |                                                   | | In this mode, only entries that are of type               |
+    |                                                   | | STATIC_BINARY are used while constructing the soft state  |
+    |                                                   | | map. This results in the concrete workflow referring      |
+    |                                                   | | only to the staged executables, irrespective of the       |
+    |                                                   | | fact that the executables are already installed at the    |
+    |                                                   | | remote end.                                               |
+    |                                                   |                                                             |
+    |                                                   |                                                             |
+    |                                                   | - **Submit**                                                |
+    |                                                   | | In this mode, only entries that are of type               |
+    |                                                   | | STATIC_BINARY and reside at the submit host               |
+    |                                                   | | (“site” local), are used while constructing the soft      |
+    |                                                   | | state map. This is especially helpful, when the user      |
+    |                                                   | | wants to use the latest compute code for his computations |
+    |                                                   | | on the grid and that relies on his submit host.           |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.selector.transformation   | | In case of transfer of executables, Pegasus could have    |
+    | | Profile Key: N/A                                | | various transformations to select from when it schedules  |
+    | | Scope : Properties                              | | to run a particular compute job at a remote site.         |
+    | | Since : 2.0                                     | |  For e.g it can have the choice of staging an executable  |
+    | |  Type : Enumeration                             | | from a particular remote site, from the local             |
+    | | Value :Random|Installed|Staged|Submit           | | (submit host) only, use the one that is installed on the  |
+    | | Default : Random                                | | remote site only.                                         |
+    |                                                   | | This property determines, how a transformation amongst    |
+    |                                                   | | the various candidate transformations is selected, and    |
+    |                                                   | | is applied after the property for transformation mapper   |
+    |                                                   | | has been applied. For e.g specifying                      |
+    |                                                   | | pegasus.catalog.transformation.mapper as Staged and       |
+    |                                                   | | then pegasus.transformation.selector as INSTALLED         |
+    |                                                   | | does not work, as by the time this property is            |
+    |                                                   | | applied, the soft state map only has entries of type      |
+    |                                                   | | STAGEABLE.                                                |
+    |                                                   |                                                             |
+    |                                                   | - **Random**                                                |
+    |                                                   | | In this mode, a random matching candidate transformation  |
+    |                                                   | |  is selected to be staged to the remote execution site.   |
+    |                                                   |                                                             |
+    |                                                   | - **Installed**                                             |
+    |                                                   | | In this mode, only entries that are of type INSTALLED     |
+    |                                                   | | are selected. This means that the executable workflow     |
+    |                                                   | | only refers to the transformations already pre installed  |
+    |                                                   | | on the remote sites.                                      |
+    |                                                   |                                                             |
+    |                                                   | - **Staged**                                                |
+    |                                                   | | In this mode, only entries that are of type STATIC_BINARY |
+    |                                                   | | are selected, ignoring the ones that are installed at     |
+    |                                                   | | the remote site.                                          |
+    |                                                   |                                                             |
+    |                                                   | - **Submit**                                                |
+    |                                                   | | In this mode, only entries that are of type STATIC_BINARY |
+    |                                                   | | and reside at the submit host (“site” local), are         |
+    |                                                   | | selected as sources for staging the executables to the    |
+    |                                                   | | remote execution sites.                                   |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key:                                   | | The DAX Parser normally does not preserve line breaks     |
+    | |   pegasus.parser.dax.preserver.linebreaks       | | while parsing the CDATA section that appears in the       |
+    | | Profile Key:N/A                                 | | arguments section of the job element in the DAX.          |
+    | | Scope : Properties                              | | On setting this to true, the DAX Parser preserves any     |
+    | | Since : 2.2.0                                   | | line line breaks that appear in the CDATA section.        |
+    | | Type :Boolean                                   |                                                             |
+    | | Default : false                                 |                                                             |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key:                                   | | If this property is set to true, then the planner         |
+    | |     pegasus.parser.dax.data.dependencies        | | will automatically add edges between jobs in the          |
+    | | Profile Key: N/A                                | | DAX on the basis of exisitng data dependencies            |
+    | | Scope : Properties                              | | between jobs. For example, if a JobA generates an         |
+    | | Since : 4.4.0                                   | | output file that is listed as input for JobB, then        |
+    | | Type :Boolean                                   | | the planner will automatically add an edge between        |
+    | | Default : true                                  | | JobA and JobB.                                            |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.integrity.checking        | | This property determines the dial for pegasus             |
+    | | Profile Key: N/A                                | | integrity checking. Currently the following dials are     |
+    | | Scope : Properties                              | | supported                                                 |
+    | | Since : 4.9.0                                   |                                                             |
+    | | Type :none|full|nosymlink                       | - **none**                                                  |
+    | | Default : full                                  | | no integrity checking occurs.                             |
+    |                                                   |                                                             |
+    |                                                   | - **full**                                                  |
+    |                                                   | | In this mode, integrity checking happens at 3 levels      |
+    |                                                   | |                                                           |
+    |                                                   | | 1. after the input data has been staged to staging server |
+    |                                                   | | pegasus-transfer verifies integrity of the staged files.  |
+    |                                                   | | 2. before a compute task starts on a remote compute node  |
+    |                                                   | | This ensures that checksums of the data staged in match   |
+    |                                                   | | the checksums specified in the input replica catalog      |
+    |                                                   | | or the ones computed when that piece of data was          |
+    |                                                   | | generated as part of previous task in the workflow.       |
+    |                                                   | | 3. After the workflow output data has been transferred    |
+    |                                                   | | to user servers - This ensures that output data staged    |
+    |                                                   | | to the final location was not corrupted in transit.       |
+    |                                                   |                                                             |
+    |                                                   | - **nosymlink**                                             |
+    |                                                   | | No integrity checking is performed on input files         |
+    |                                                   | | that are symlinked. You should consider turning           |
+    |                                                   | | this on, if you think that your input files at rest       |
+    |                                                   | | are at a low risk of data corruption, and want to         |
+    |                                                   | | save on the checksum computation overheads against        |
+    |                                                   | | the shared filesystem.noneNo integrity checking           |
+    |                                                   | | is performed.                                             |
+    +---------------------------------------------------+-------------------------------------------------------------+
