@@ -13,7 +13,10 @@
  */
 package edu.isi.pegasus.planner.code.generator;
 
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SequenceWriter;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import edu.isi.pegasus.common.credential.CredentialHandler;
@@ -33,6 +36,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -196,6 +200,19 @@ public class Braindump {
         }
 
         return usesPMC;
+    }
+
+    public static Map<String, String> loadFrom(File dir) throws IOException {
+        File bd = new File(dir, Braindump.BRAINDUMP_FILE);
+        Map<String, String> result = new HashMap();
+        if (!bd.exists() || !bd.canRead()) {
+            return result;
+        }
+
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        result = mapper.readValue(bd, Map.class);
+        return result;
     }
 
     /**

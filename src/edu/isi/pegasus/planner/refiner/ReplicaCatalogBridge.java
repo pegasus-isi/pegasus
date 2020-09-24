@@ -32,11 +32,13 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.code.generator.Braindump;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -139,6 +141,12 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      */
     private ReplicaStore mDirectoryReplicaStore;
 
+    /**
+     * The replica store where we store all the results that are queried from the output replica
+     * catalogs of previous runs.
+     */
+    private ReplicaStore mPreviousRunsReplicaStore;
+
     /** The DAX Replica Store. */
     private ReplicaStore mDAXReplicaStore;
 
@@ -219,6 +227,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
         mCacheStore = new ReplicaStore();
         mInheritedReplicaStore = new ReplicaStore();
         mDirectoryReplicaStore = new ReplicaStore();
+        mPreviousRunsReplicaStore = new ReplicaStore();
         mTreatCacheAsRC = mProps.treatCacheAsRC();
         mDAXLocationsAsRC = mProps.treatDAXLocationsAsRC();
         mDefaultTCRCCreated = false;
@@ -318,9 +327,15 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
         }
 
         // incorporate all mappings from input directory if specified
-        Set<String> inputDirs = options.getInputDirectories();
-        if (!inputDirs.isEmpty()) {
-            mDirectoryReplicaStore = getReplicaStoreFromDirectories(inputDirs);
+        Set<String> dirs = options.getInputDirectories();
+        if (!dirs.isEmpty()) {
+            mDirectoryReplicaStore = getReplicaStoreFromDirectories(dirs);
+        }
+
+        // PM-1681 look at if any data reuse submit directories were specified
+        dirs = options.getDataReuseSubmitDirectories();
+        if (!dirs.isEmpty()) {
+            mPreviousRunsReplicaStore = getReplicaStoreFromSubmitDirectories(dirs);
         }
 
         // incorporate the caching if any
@@ -368,15 +383,24 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
     public Set getFilesInReplica() {
 
         // check if any exist in the cache
-        Set lfnsFound = mCacheStore.getLFNs(mSearchFiles);
+        Set result = mCacheStore.getLFNs(mSearchFiles);
         mLogger.log(
-                lfnsFound.size() + " entries found in cache of total " + mSearchFiles.size(),
+                result.size() + " entries found in cache of total " + mSearchFiles.size(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
 
-        // check if any exist in input directory
-        lfnsFound.addAll(this.mDirectoryReplicaStore.getLFNs(mSearchFiles));
+        // PM-1681 check in the previous runs
+        Set lfns = mPreviousRunsReplicaStore.getLFNs(mSearchFiles);
         mLogger.log(
-                lfnsFound.size() + " entries found in cache of total " + mSearchFiles.size(),
+                lfns.size()
+                        + " entries found in previous submit dirs of total "
+                        + mSearchFiles.size(),
+                LogManager.DEBUG_MESSAGE_LEVEL);
+        result.addAll(lfns);
+
+        // check if any exist in input directory
+        result.addAll(this.mDirectoryReplicaStore.getLFNs(mSearchFiles));
+        mLogger.log(
+                result.size() + " entries found in cache of total " + mSearchFiles.size(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
 
         // check in the main replica catalog
@@ -385,25 +409,25 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
             mLogger.log(
                     "Replica Catalog is either down or connection to it was never opened ",
                     LogManager.WARNING_MESSAGE_LEVEL);
-            return lfnsFound;
+            return result;
         }
 
         // lookup from the DAX Replica Store
-        lfnsFound.addAll(this.mDAXReplicaStore.getLFNs());
+        result.addAll(this.mDAXReplicaStore.getLFNs());
 
         // lookup from the inherited Replica Store
-        lfnsFound.addAll(this.mInheritedReplicaStore.getLFNs(mSearchFiles));
+        result.addAll(this.mInheritedReplicaStore.getLFNs(mSearchFiles));
 
         // look up from the the main replica catalog
-        lfnsFound.addAll(mReplicaStore.getLFNs());
+        result.addAll(mReplicaStore.getLFNs());
 
         mLogger.log(
-                lfnsFound.size()
+                result.size()
                         + " entries found in all replica sources of total "
                         + mSearchFiles.size(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
 
-        return lfnsFound;
+        return result;
     }
 
     /**
@@ -1010,6 +1034,84 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
             } catch (Exception e) {
                 mLogger.log(
                         "Unable to load from directory  " + directory,
+                        e,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            } finally {
+                if (catalog != null) {
+                    catalog.close();
+                }
+            }
+            mLogger.logEventCompletion();
+        }
+        return store;
+    }
+
+    /**
+     * Loads the mappings from output replica catalogs in the submit directories of previous runs
+     *
+     * @param directories set of directories to load from
+     */
+    private ReplicaStore getReplicaStoreFromSubmitDirectories(Set<String> directories) {
+        ReplicaStore store = new ReplicaStore();
+
+        for (String directory : directories) {
+            mLogger.logEventStart(
+                    LoggingKeys.EVENT_PEGASUS_LOAD_DIRECTORY_CACHE,
+                    LoggingKeys.DAX_ID,
+                    mDag.getAbstractWorkflowName());
+
+            ReplicaCatalog catalog = null;
+            Map<String, String> braindump = new HashMap();
+            try {
+                braindump = Braindump.loadFrom(new File(directory));
+            } catch (IOException ex) {
+                mLogger.log(
+                        "Unable to access braindump from dir " + directory,
+                        ex,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+                continue;
+            }
+
+            // pick up the properties file from braindump to get hold of output
+            // replica catalog
+            String pfile = braindump.get(Braindump.PROPERTIES_KEY);
+            if (pfile == null || !new File(directory, pfile).exists()) {
+                mLogger.log(
+                        "Skipping. Unable to access properties file "
+                                + pfile
+                                + " in directory "
+                                + directory,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+                continue;
+            }
+            PegasusProperties props =
+                    PegasusProperties.getInstance(new File(directory, pfile).getPath());
+            String implementor =
+                    props.getProperty(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX);
+            if (implementor == null) {
+                mLogger.log(
+                        "Skipping. Unable to determine output replica catalog from properties file "
+                                + pfile
+                                + " in directory "
+                                + directory,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+                continue;
+            }
+            Properties connectProps =
+                    props.matchingSubset(ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, false);
+
+            mLogger.log(
+                    "Loading from output replica catalog of type "
+                            + implementor
+                            + " with connection props: "
+                            + connectProps,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+            try {
+                catalog = ReplicaFactory.loadInstance(implementor, this.mBag, connectProps);
+                store.add(catalog.lookup(mSearchFiles));
+            } catch (Exception e) {
+                mLogger.log(
+                        "Unable to load from submit directory of previous run  " + directory,
                         e,
                         LogManager.ERROR_MESSAGE_LEVEL);
             } finally {

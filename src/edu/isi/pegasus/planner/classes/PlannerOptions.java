@@ -180,6 +180,9 @@ public class PlannerOptions extends Data implements Cloneable {
     /** the input directory */
     private Set<String> mInputDirs;
 
+    /** Set of paths to data reuse submit dirs */
+    private Set<String> mDataReuseSubmitDirs;
+
     /** the output directory */
     private String mOutputDir;
 
@@ -224,6 +227,7 @@ public class PlannerOptions extends Data implements Cloneable {
         mOriginalArgumentString = null;
         mStagingSitesMap = new HashMap<String, String>();
         mInputDirs = new LinkedHashSet<String>();
+        mDataReuseSubmitDirs = new LinkedHashSet<String>();
         mOutputDir = null;
         mOutputMap = null;
         mConfFile = null;
@@ -370,6 +374,15 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public int getLoggingLevel() {
         return mLoggingLevel;
+    }
+
+    /**
+     * Returns set of data reuse submit directories to use
+     *
+     * @return
+     */
+    public Set<String> getDataReuseSubmitDirectories() {
+        return this.mDataReuseSubmitDirs;
     }
 
     /**
@@ -842,7 +855,7 @@ public class PlannerOptions extends Data implements Cloneable {
     /**
      * Set the input directory.
      *
-     * @param input the input directory for the workflow
+     * @param input a comma separated list of the input directory for the workflow
      */
     public void setInputDirectories(String input) {
         Set<String> dirs = new HashSet();
@@ -861,6 +874,18 @@ public class PlannerOptions extends Data implements Cloneable {
         this.mInputDirs = new HashSet();
         for (String dir : inputs) {
             this.mInputDirs.add(sanitizePath(dir));
+        }
+    }
+
+    /**
+     * Sets the input directory.
+     *
+     * @param input a comma separated list of data reuse submit dirs to us
+     */
+    public void setDataReuseSubmitDirs(String input) {
+        this.mDataReuseSubmitDirs = new HashSet();
+        for (String dir : input.split(",")) {
+            mDataReuseSubmitDirs.add(sanitizePath(dir));
         }
     }
 
@@ -1165,7 +1190,9 @@ public class PlannerOptions extends Data implements Cloneable {
                         + this.setToString(mCacheFiles, ",")
                         + "\n Inherited RC Files   "
                         + this.setToString(mInheritedRCFiles, ",")
-                        + "\n Input Directory      "
+                        + "\n Data Reuse Submit Directories "
+                        + this.setToString(mDataReuseSubmitDirs, ",")
+                        + "\n Input Directories      "
                         + this.setToString(mInputDirs, ",")
                         + "\n Output Directory     "
                         + this.mOutputDir
@@ -1271,6 +1298,11 @@ public class PlannerOptions extends Data implements Cloneable {
         // specify the input directory
         if (!this.mInputDirs.isEmpty()) {
             sb.append(" --input-dir ").append(setToString(this.mInputDirs, ","));
+        }
+
+        // specify the data reuse submit dirs directory
+        if (!this.mDataReuseSubmitDirs.isEmpty()) {
+            sb.append(" --rescue ").append(setToString(this.mDataReuseSubmitDirs, ","));
         }
 
         // specify the output directory
@@ -1444,6 +1476,7 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mInheritedRCFiles = cloneSet(this.mInheritedRCFiles);
         pOpt.mNonStandardJavaOptions = cloneSet(this.mNonStandardJavaOptions);
         pOpt.mInputDirs = cloneSet(this.mInputDirs);
+        pOpt.mDataReuseSubmitDirs = cloneSet(this.mDataReuseSubmitDirs);
         pOpt.mOutputDir = this.mOutputDir;
         pOpt.mOutputMap = this.mOutputMap;
         pOpt.mOutputSites = cloneSet(this.mOutputSites);

@@ -757,7 +757,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSzVr::D:d:s:o:O:m:c:C:b:2:j:3:F:X:4:5:6:78:9:1:",
+                        "vqhfSzVr::D:d:s:o:O:m:c:C:b:2:j:3:F:X:4:5:6:78:9:1:R:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -883,6 +883,10 @@ public class CPlanner extends Executable {
 
                 case 'r': // randomdir
                     options.setRandomDir(g.getOptarg());
+                    break;
+
+                case 'R': // reuse
+                    options.setDataReuseSubmitDirs(g.getOptarg());
                     break;
 
                 case 'S': // submit option
@@ -1034,7 +1038,7 @@ public class CPlanner extends Executable {
      * @return array of <code>LongOpt</code> objects , corresponding to the valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[30];
+        LongOpt[] longopts = new LongOpt[31];
 
         longopts[0] = new LongOpt("dir", LongOpt.REQUIRED_ARGUMENT, null, '8');
         longopts[1] = new LongOpt("dax", LongOpt.REQUIRED_ARGUMENT, null, 'd');
@@ -1068,6 +1072,7 @@ public class CPlanner extends Executable {
         longopts[27] = new LongOpt("output-sites", LongOpt.REQUIRED_ARGUMENT, null, 'o');
         longopts[28] = new LongOpt("output-map", LongOpt.REQUIRED_ARGUMENT, null, 'm');
         longopts[29] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
+        longopts[29] = new LongOpt("reuse", LongOpt.REQUIRED_ARGUMENT, null, 'R');
         return longopts;
     }
 
@@ -1169,7 +1174,11 @@ public class CPlanner extends Executable {
                         "\n                       If the basename option is set, then instead of the workflow label, the basename is used for")
                 .append(
                         "\n                       generating the random directory name along with the workflow uuid.")
-                // "\n --rescue           the number of times rescue dag should be submitted for sub
+                .append(
+                        "\n -R |--reuse           comma separated list of submit directories of previous runs from which to pick up")
+                .append("\n                       output replica catalogs for data reuse.")
+                // .append(// "\n --rescue           the number of times rescue dag should be
+                // submitted for sub
                 // workflows before triggering re-planning" +
                 .append("\n -S |--submit          submit the executable workflow generated")
                 .append(
