@@ -380,7 +380,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      *     physical mapping exists.
      * @see #mSearchFiles
      */
-    public Set getFilesInReplica() {
+    public Set<String> getFilesInReplica() {
 
         // check if any exist in the cache
         Set result = mCacheStore.getLFNs(mSearchFiles);
@@ -398,10 +398,11 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
         result.addAll(lfns);
 
         // check if any exist in input directory
-        result.addAll(this.mDirectoryReplicaStore.getLFNs(mSearchFiles));
+        lfns = this.mDirectoryReplicaStore.getLFNs(mSearchFiles);
         mLogger.log(
-                result.size() + " entries found in cache of total " + mSearchFiles.size(),
+                lfns.size() + " entries found in input directories of total " + mSearchFiles.size(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
+        result.addAll(lfns);
 
         // check in the main replica catalog
         if ((this.mDAXReplicaStore.isEmpty() && mDirectoryReplicaStore.isEmpty())
@@ -413,13 +414,31 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
         }
 
         // lookup from the DAX Replica Store
-        result.addAll(this.mDAXReplicaStore.getLFNs());
+        lfns = this.mDAXReplicaStore.getLFNs();
+        mLogger.log(
+                lfns.size()
+                        + " entries found in abstract workflow replica store of total "
+                        + mSearchFiles.size(),
+                LogManager.DEBUG_MESSAGE_LEVEL);
+        result.addAll(lfns);
 
         // lookup from the inherited Replica Store
-        result.addAll(this.mInheritedReplicaStore.getLFNs(mSearchFiles));
+        lfns = this.mInheritedReplicaStore.getLFNs(mSearchFiles);
+        mLogger.log(
+                lfns.size()
+                        + " entries found in inherited replica store of total "
+                        + mSearchFiles.size(),
+                LogManager.DEBUG_MESSAGE_LEVEL);
+        result.addAll(lfns);
 
         // look up from the the main replica catalog
-        result.addAll(mReplicaStore.getLFNs());
+        lfns = mReplicaStore.getLFNs();
+        mLogger.log(
+                lfns.size()
+                        + " entries found in input replica catalog of total "
+                        + mSearchFiles.size(),
+                LogManager.DEBUG_MESSAGE_LEVEL);
+        result.addAll(lfns);
 
         mLogger.log(
                 result.size()
@@ -462,6 +481,11 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
                 (cacheEntry == null)
                         ? cacheEntry
                         : new ReplicaLocation(cacheEntry); // result can be null
+
+        // PM-1681 check in the previous runs if specified
+        if (this.mPreviousRunsReplicaStore.containsLFN(lfn)) {
+            return this.mPreviousRunsReplicaStore.getReplicaLocation(lfn);
+        }
 
         // we prefer location in Directory over the DAX entries
         if (this.mDirectoryReplicaStore.containsLFN(lfn)) {
