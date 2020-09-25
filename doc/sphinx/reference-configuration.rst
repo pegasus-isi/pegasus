@@ -85,7 +85,7 @@ can be associated at
 
 -  as user property settings.
 
--  dax level
+-  workflow level
 
 -  in the site catalog
 
@@ -93,8 +93,8 @@ can be associated at
 
 Unfortunately, a different syntax applies to each level and context.
 This section shows the different profile sources and syntaxes. However,
-at the foundation of each profile lies the triple of namespace, key and
-value.
+at the foundation of each profile lies the triple of **namespace**, **key** and
+**value**.
 
 User Profiles in Properties
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -106,7 +106,7 @@ the value of the profile.
 Namespace can be env|condor|globus|dagman|pegasus
 
 Any profile specified as a property applies to the whole workflow i.e
-(all jobs in the workflow) unless overridden at the DAX level , Site
+(all jobs in the workflow) unless overridden at the job level , Site
 Catalog , Transformation Catalog Level.
 
 Some profiles that they can be set in the properties file are listed
@@ -142,131 +142,108 @@ below
 
    pegasus.stagein.clusters 3
 
-Profiles in DAX
-~~~~~~~~~~~~~~~
+Profiles in the Workflow
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-The user can associate profiles with logical transformations in DAX.
-Environment settings required by a job's application, or a maximum
-estimate on the run-time are examples for profiles at this stage.
+Examples of profiles used here include the maximum exected runtime of the
+job and its maximum required amount of disk space in MB. For example, these can
+be added to a job as follows:
 
-::
+.. code-block:: python
+    :emphasize-lines: 3,4
 
-   <job id="ID000001" namespace="asdf" name="preprocess" version="1.0"
-    level="3" dv-namespace="voeckler" dv-name="top" dv-version="1.0">
-     <argument>-a top -T10  -i <filename file="voeckler.f.a"/>
-    -o <filename file="voeckler.f.b1"/>
-    <filename file="voeckler.f.b2"/></argument>
-     <profile namespace="pegasus" key="walltime">2</profile>
-     <profile namespace="pegasus" key="diskspace">1</profile>
-     &mldr;
-   </job>
+    # Python API
+    job = Job("abc")
+    job.add_profiles(Namespace.PEGASUS, key="walltime", value=2)
+    job.add_profiles(Namespace.PEGASUS, key="diskspace", value=1)
+
 
 Profiles in Site Catalog
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 If it becomes necessary to limit the scope of a profile to a single
 site, these profiles should go into the site catalog. A profile in the
-site catalog applies to all jobs and all application run at the site.
+site catalog applies to all jobs and all application that run at the site.
 Commonly, site catalog profiles set environment settings like the
-LD_LIBRARY_PATH, or globus rsl parameters like queue and project names.
+``LD_LIBRARY_PATH``, or globus rsl parameters like queue and project names.
+The following example illustrates the creation of a site called ``CCG``, which
+has two profiles added to it at the end. 
 
-Currently, there is no tool to manipulate the site catalog, e.g. by
-adding profiles. Modifying the site catalog requires that you load it
-into your editor.
+.. code-block:: python
+    :emphasize-lines: 17,18
 
-The XML version of the site catalog uses the following syntax:
-
-::
-
-   <profile namespace="namespace" key="key">value</profile>
-
-::
-
-   <site  handle="CCG" arch="x86_64" os="LINUX">
-        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-
-        <directory type="shared-scratch" path="/shared-scratch">
-               <file-server operation="all" url="gsiftp://headnode.isi.edu/shared-scratch"/>
-        </directory>
-        <directory type="local-storage" path="/local-storage">
-               <file-server operation="all" url="gsiftp://headnode.isi.edu/local-storage"/>
-        </directory>
-        <profile namespace="pegasus" key="clusters.num">1</profile>
-        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
-   </site>
+    # Python API
+    ccg_site = Site(name="CCG", arch=Arch.X86_64, os_type=OS.LINUX)\
+                .add_grids(
+                    Grid(
+                        grid_type=Grid.GT5, 
+                        contact="obelix.isi.edu/jobmanager-fork", 
+                        scheduler_type=Scheduler.FORK, 
+                        job_type=SupportedJobs.AUXILLARY
+                    )
+                )\
+                .add_directories(
+                    Directory(directory_type=Directory.SHARED_SCRATCH, path="/shared-scratch")
+                        .add_file_servers(FileServer(url="gsiftp://headnode.isi.edu/shared-scratch", operation_type=Operation.ALL)),
+                    Directory(directory_type=Directory.LOCAL_STORAGE, path="/local-storage")
+                        .add_file_servers(FileServer(url="gsiftp://headnode.isi.edu/local-storage", operation_type=Operation.ALL))
+                )\
+                .add_profiles(Namespace.PEGASUS, key="clusters.num", value=1)\
+                .add_profiles(Namespace.ENV, key="PEGASUS_HOME", value="/usr")
 
 Profiles in Transformation Catalog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some profiles require a narrower scope than the site catalog offers.
-Some profiles only apply to certain applications on certain sites, or
-change with each application and site. Transformation-specific and
-CPU-specific environment variables, or job clustering profiles are good
-candidates. Such profiles are best specified in the transformation
-catalog.
+Some profiles require a narrower scope than that of what the site catalog offers
+as they may only apply to certain applications on certain sites.
+Examples of this would be transformation specific profiles such as CPU related 
+variables or job clustering options. Such profiles are best specified in the \
+transformation catalog.
 
-Profiles associate with a physical transformation and site in the
-transformation catalog. The Database version of the transformation
-catalog also permits the convenience of connecting a transformation with
-a profile.
+Profiles can be associated to a specific transformation site or the transformation
+itself (which would then be applied to all of its transformation sites).
 
-The Pegasus tc-client tool is a convenient helper to associate profiles
-with transformation catalog entries. As benefit, the user does not have
-to worry about formats of profiles in the various transformation catalog
-instances.
+In the following example, the transformation ``keg`` resides on two sites 
+(represented as TransformationSite objects). Profiles have been added to each
+site specificly as well as to ``keg`` itself. The environment variable, ``APP_HOME``
+would be applied to ``keg`` for both the ``isi`` and ``wind`` sites.  
 
-::
+.. code-block:: python
+    :emphasize-lines: 3,12,24
 
-   tc-client -a -P -E -p /home/shared/executables/analyze -t INSTALLED -r isi_condor -e env::GLOBUS_LOCATION=&rdquor;/home/shared/globus&rdquor;
+    # Python API
+    keg = Transformation(name="keg")
+    keg.add_profiles(Namespace.ENV, key="APP_HOME", value="/tmp/scratch")
+    keg.add_sites(
+            TransformationSite(
+                name="isi",
+                pfn="/path/to/keg",
+                is_stageable=False,
+                arch=Arch.X86_64,
+                os_type=OS.LINUX
+            )
+            .add_profiles(Namespace.ENV, key="HELLO", value="WORLD")
+        )
 
-The above example adds an environment variable GLOBUS_LOCATION to the
-application /home/shared/executables/analyze on site isi_condor. The
-transformation catalog guide has more details on the usage of the
-tc-client.
+    keg.add_sites(
+            TransformationSite(
+                name="wind",
+                pfn="/path/to/keg",
+                is_stageable=False,
+                arch=Arch.X86_64,
+                os_type=OS.LINUX,
+                is_stageable=True
+            )
+            .add_profiles(Namespace.ENV, key="CPATH", value="/usr/cpath")
+        )
 
-::
-
-   tr example::keg:1.0 {
-
-   #specify profiles that apply for all the sites for the transformation
-   #in each site entry the profile can be overriden
-
-     profile env "APP_HOME" "/tmp/myscratch"
-     profile env "JAVA_HOME" "/opt/java/1.6"
-
-     site isi {
-       profile env "HELLo" "WORLD"
-       profile condor "FOO" "bar"
-       profile env "JAVA_HOME" "/bin/java.1.6"
-       pfn "/path/to/keg"
-       arch "x86"
-       os "linux"
-       osrelease "fc"
-       osversion "4"
-       type "INSTALLED"
-     }
-
-     site wind {
-       profile env "CPATH" "/usr/cpath"
-       profile condor "universe" "condor"
-       pfn "file:///path/to/keg"
-       arch "x86"
-       os "linux"
-       osrelease "fc"
-       osversion "4"
-       type "STAGEABLE"
-     }
-   }
-
-Most of the users prefer to edit the transformation catalog file
-directly in the editor.
 
 Profiles Conflict Resolution
 ----------------------------
 
 Irrespective of where the profiles are specified, eventually the
 profiles are associated with jobs. Multiple sources may specify the same
-profile for the same job. For instance, DAX may specify an environment
+profile for the same job. For instance, a job may specify an environment
 variable X. The site catalog may also specify an environment variable X
 for the chosen site. The transformation catalog may specify an
 environment variable X for the chosen site and application. When the job
@@ -279,7 +256,7 @@ takes precedence (overwrites) a profile of a lower priority.
 
 2. Site Catalog Profiles
 
-3. DAX Profiles
+3. Job Profiles (defined in the Workflow)
 
 4. Profiles in Properties
 
