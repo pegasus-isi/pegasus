@@ -22,6 +22,7 @@ runs Pegasus to generate the executable workflow
                    [--randomdir[=dirname]]
                    [--relative-dir dir]
                    [--relative-submit-dir dir]
+                   [--rescue submit-dir1[,submit-dir2…]]
                    [-X[non standard jvm option]]
                    [abstract-workflow]
 
@@ -296,7 +297,7 @@ Any option will be displayed with its long options synonym(s).
    workflow DAX, passed to the sub workflows (corresponding) to the DAX
    jobs.
 
-**-I**; \ **--input-dir**
+**-I**; \ **--input-dir** *dir1*\[,*dir2*,…]
    A comma separated list of input directories on the submit host where
    the input files reside. This internally loads a Directory based
    Replica Catalog backend, that constructs does a directory listing to
@@ -382,6 +383,14 @@ Any option will be displayed with its long options synonym(s).
    **--relative-submit-dir** you can have a different relative execution
    directory on the remote site and a different relative submit
    directory on the submit host.
+
+**-R**\ *dir1*\[,*dir2*,…]; \ **--rescue**\ *dir1*\[,*dir2*,…]
+   By default, the Pegasus Workflow Planner registers outputs marked for
+   registration in the abstract workflow, in an output replica catalog
+   in the workflow submit directory. Using this option, you can specify
+   previous submit directories of your workflow runs, and use the outputs
+   registered in those output catalogs for data reuse for your current
+   workflow run.
 
 **-s** *site*\ [,*site*,…]; \ **--sites** *site*\[,*site*,…]
    A comma separated list of execution sites on which the workflow is to

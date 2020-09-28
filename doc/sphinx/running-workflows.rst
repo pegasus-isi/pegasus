@@ -165,12 +165,20 @@ up.
           )
     )
 
-..
+By default, the Pegasus Workflow Planner registers outputs marked for
+registration in the abstract workflow, in an output replica catalog
+in the workflow submit directory. You can use **--reuse** option to
+pegasus-plan to pass a list of submit directories, whose output replica
+catalogs you want to use for data reuse for your current run.
 
 .. tip::
 
    The Data Reuse Algorithm can be disabled by passing the **--force**
    option to pegasus-plan.
+
+   You can pass **--reuse** option to pegasus-plan to pass a list of
+   submit directories of your previous runs to automatically pick up
+   locations of outputs registered in those runs.
 
 .. figure:: ./images/refinement-data-reuse.png
    :alt: Workflow Data Reuse
