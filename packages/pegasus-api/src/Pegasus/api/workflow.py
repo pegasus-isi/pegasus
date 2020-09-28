@@ -772,13 +772,14 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         relative_dir: Optional[str] = None,
         random_dir: Union[bool, str, Path] = False,
         cleanup: str = "inplace",
+        reuse: Optional[List[Union[str, Path]]] = None,
         verbose: int = 0,
         force: bool = False,
         submit: bool = False,
         **kwargs
     ):
         """
-        plan(self, conf: Optional[str] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, random_dir: Union[bool, str, Path] = False, cleanup: str = "inplace", verbose: int = 0, force: bool = False, submit: bool = False, **kwargs)
+        plan(self, conf: Optional[str] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, random_dir: Union[bool, str, Path] = False, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, force: bool = False, submit: bool = False, **kwargs)
         Plan the workflow.
 
         .. code-block:: python
@@ -808,6 +809,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type random_dir: Union[bool, str, Path], optional
         :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
         :type cleanup: str, optional
+        :param reuse: list of submit directories of previous runs from which to pick up for reuse (e.g. :code:`["/workflows/submit_dir1", "/workflows/submit_dir2"]`), defaults to None
+        :type reuse: Optional[List[Union[str,Path]]]
         :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
         :param force: skip reduction of the workflow, resulting in build style dag, defaults to False
@@ -835,6 +838,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             relative_dir=relative_dir,
             random_dir=random_dir if isinstance(random_dir, bool) else str(random_dir),
             cleanup=cleanup,
+            reuse=[str(submit_dir) for submit_dir in reuse] if reuse else None,
             verbose=verbose,
             force=force,
             submit=submit,

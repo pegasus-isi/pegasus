@@ -1227,6 +1227,7 @@ class TestWorkflow:
         Pegasus.client._client.Client.plan.assert_called_once_with(
             abstract_workflow=path,
             cleanup="inplace",
+            reuse=None,
             conf=None,
             dir=None,
             force=False,
@@ -1253,6 +1254,7 @@ class TestWorkflow:
             output_dir=Path("/output_dir"),
             relative_dir="run1",
             dir=Path("/dir"),
+            reuse=["/submit_dir1", Path("/submit_dir2")],
         )
 
         assert wf._path == path
@@ -1267,6 +1269,7 @@ class TestWorkflow:
             output_dir="/output_dir",
             output_sites=["local"],
             relative_dir="run1",
+            reuse=["/submit_dir1", "/submit_dir2"],
             random_dir=False,
             sites=None,
             staging_sites=None,
@@ -1294,6 +1297,7 @@ class TestWorkflow:
                     "random_dir": True,
                     "sites": None,
                     "staging_sites": None,
+                    "reuse": None,
                     "submit": False,
                     "verbose": 0,
                 },
@@ -1313,6 +1317,7 @@ class TestWorkflow:
                     "random_dir": "/path/to/dir",
                     "sites": None,
                     "staging_sites": None,
+                    "reuse": None,
                     "submit": False,
                     "verbose": 0,
                 },
@@ -1332,6 +1337,7 @@ class TestWorkflow:
                     "random_dir": "/path/to/dir",
                     "sites": None,
                     "staging_sites": None,
+                    "reuse": None,
                     "submit": False,
                     "verbose": 0,
                 },
@@ -1377,6 +1383,7 @@ class TestWorkflow:
             output_sites=["local"],
             relative_dir="run1",
             random_dir=False,
+            reuse=None,
             sites=None,
             staging_sites=None,
             submit=False,
