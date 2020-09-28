@@ -4,14 +4,29 @@
 Data Management
 ===============
 
+One of the key features of Pegasus is it's end to end data management
+of datasets tracked in your workflow. Pegasus is responsible for selecting
+the best replica for your inputs, transferring them to a location where
+jobs in your workflow can access them, cleaning up datasets no longer
+required as the workflow runs, to staging out and registering the
+generated outputs to locations of your choosing. Majority of the
+data management optimizations occur during the
+`mapping phase <#mapping-refinement-steps>`__ , where the input Abstract
+Workflow in converted to an Executable Workflow that can be executed
+on your target infrastructure.
+
+This chapter provides details of all data management capabilities
+in Pegasus.
+
+
 .. _replica-selection:
 
 Replica Selection
 =================
 
-Each job in the DAX maybe associated with input LFN's denoting the files
-that are required for the job to run. To determine the physical replica
-(PFN) for a LFN, Pegasus queries the Replica catalog to get all the
+Each job in the Abstract Workflow maybe associated with input LFN's denoting
+the files that are required for the job to run. To determine the physical
+replica (PFN) for a LFN, Pegasus queries the Replica catalog to get all the
 PFN's (replicas) associated with a LFN. The Replica Catalog may return
 multiple PFN's for each of the LFN's queried. Hence, Pegasus needs to
 select a single PFN amongst the various PFN's returned for each LFN.
