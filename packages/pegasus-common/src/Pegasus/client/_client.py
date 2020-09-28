@@ -77,6 +77,7 @@ class Client:
         relative_dir: str = None,
         random_dir: Union[bool, str] = False,
         cleanup: str = "none",
+        reuse: List[str] = None,
         verbose: int = 0,
         force: bool = False,
         submit: bool = False,
@@ -149,6 +150,9 @@ class Client:
 
         if cleanup:
             cmd.extend(("--cleanup", cleanup))
+
+        if reuse:
+            cmd.extend(("--reuse", ",".join(reuse)))
 
         if verbose:
             cmd.append("-" + "v" * verbose)
