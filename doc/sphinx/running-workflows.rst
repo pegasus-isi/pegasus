@@ -10,14 +10,16 @@ Executable Workflows (DAG)
 ==========================
 
 The DAG is an executable (concrete) workflow that can be executed over a
-variety of resources. When the workflow tasks are mapped to multiple
-resources that do not share a file system, explicit nodes are added to
-the workflow for orchestrating data transfer between the tasks.
+variety of resources. When the workflow tasks are mapped to your
+target resources, explicit nodes are added to the workflow for
+orchestrating data transfer between the tasks; performing data cleanups
+and registration of outputs.
 
 When you take the Abstract Workflow created in
 :ref:`Creating Workflows <creating-workflows>`, and plan it for a
-single remote grid execution, here a site with handle **hpcc**, and plan the workflow
-without clean-up nodes, the following concrete workflow is built:
+single remote grid execution, in this case for a site with handle **hpcc**,
+and plan the workflow without clean-up nodes, the following executable
+workflow is built:
 
 Planning augments the original abstract workflow with ancillary tasks to
 facilitate the proper execution of the workflow. These tasks include:
@@ -35,33 +37,34 @@ facilitate the proper execution of the workflow. These tasks include:
    advanced options permit to control the size and number of these jobs,
    and whether multiple compute tasks can share stage-in jobs.
 
--  the original DAX job is concretized into a compute task in the DAG.
+-  the original compute task is concretized into a compute job in the DAG.
    Compute jobs are a concatination of the job's **name** and **id**
-   attribute from the DAX file.
+   attribute from the input Abstract Workflow file.
 
--  the stage-out of data products to a collecting site. Data products
-   with their **transfer** flag set to ``false`` will not be staged to
-   the output site. However, they may still be eligible for staging to
-   other, dependent tasks. Stage-out tasks use a job prefix of
-   ``stage_out``.
+-  the stage-out of data products to one or more output sites. Data
+   products with their **stageOut** flag set to ``false`` will not
+   be staged to the output sites. However, they may still be eligible
+   for staging to other, dependent tasks. Stage-out tasks use a
+   job prefix of ``stage_out``.
 
 -  If compute jobs run at different sites, an intermediary staging task
    with prefix ``stage_inter`` is inserted between the compute jobs in
    the workflow, ensuring that the data products of the parent are
    available to the child job.
 
--  the registration of data products in a replica catalog. Data products
-   with their **register** flag set to ``false`` will not be registered.
+-  the registration of data products in an output replica catalog. Data
+   products with their **register** flag set to ``false`` will not
+   be registered.
 
 -  the clean-up of transient files and working directories. These steps
    can be omitted with the ``--no-cleanup`` option to the planner.
 
-The `Data Management <#data_management>`__ chapter details more about
+The :ref:`Data Management <data-management>` chapter details more about
 when and how staging nodes are inserted into the workflow.
 
 The DAG will be found in file ``diamond-0.dag``, constructed from the
-**name** and **index** attributes found in the root element of the DAX
-file.
+**name** and **index** attributes found in the root element of the
+Abstract Workflow file.
 
 ::
 
@@ -114,9 +117,9 @@ a number of additional helper files.
 
 The various instructions that can be put into a DAG file are described
 in `Condor's DAGMAN
-documentation <http://www.cs.wisc.edu/condor/manual/v7.5/2_10DAGMan_Applications.html>`__.The
-constituents of the submit directory are described in the\ `"Submit
-Directory Details" <#submit_directory>`__\ chapter
+documentation <https://htcondor.readthedocs.io/en/latest/users-manual/dagman-workflows.html>`__.
+The constituents of the submit directory are described in the \ `"Submit
+Directory Details" <#submit-directory>`__\ section
 
 .. _mapping-refinement-steps:
 
@@ -326,11 +329,11 @@ for a job is the execution site if running in a sharedfs mode, else it
 is the one specified by **--staging-site** option to the planner. In
 case, multiple locations are specified for the same input file, the
 location from where to stage the data is selected using a **Replica
-Selector** . Replica Selection is described in detail in the `Replica
-Selection <#replica_selection>`__ section of the `Data
-Management <#data_management>`__ chapter. More details about staging
-site can be found in the `data staging
-configuration <#data_staging_configuration>`__ chapter.
+Selector** . Replica Selection is described in detail in the
+:ref:`Replica Selection <replica-selection>` section of the
+:ref:`Data Management <data-management>` chapter. More details
+about staging site can be found in the `data staging
+configuration <#data-staging-configuration>`__ section.
 
 The process of adding the data stage-in and data stage-out nodes is
 handled by Transfer Refiners. All data transfer jobs in Pegasus are
@@ -465,6 +468,8 @@ following code generators
 
       To use the Shell code Generator set the property
       **pegasus.code.generator** PMC
+
+.. _fig-abstract-to-executable:
 
 .. figure:: ./images/refinement-final-executable-wf.png
    :alt: Final Executable Workflow
