@@ -1302,7 +1302,7 @@ public class PlannerOptions extends Data implements Cloneable {
 
         // specify the data reuse submit dirs directory
         if (!this.mDataReuseSubmitDirs.isEmpty()) {
-            sb.append(" --rescue ").append(setToString(this.mDataReuseSubmitDirs, ","));
+            sb.append(" --reuse ").append(setToString(this.mDataReuseSubmitDirs, ","));
         }
 
         // specify the output directory
