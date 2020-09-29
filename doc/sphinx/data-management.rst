@@ -74,7 +74,7 @@ explained below.
 .. note::
 
    Starting 4.6.0 release the Default and Regex Replica Selectors return
-   an ordered list with priorities set. pegasus-transfer at runtime will
+   an ordered list with priorities set. *pegasus-transfer* at runtime will
    failover to alternate url's specified, if a higher priority source
    URL is inaccessible.
 
@@ -256,23 +256,66 @@ and executables are managed in Pegasus.
 
 Pegasus picks up files for data transfers based on the transfer
 attribute associated with the input and output files for the job. These
-are designated in the DAX as uses elements in the job element. If not
-specified, the transfer flag defaults to true. So if you don't want all
+are designated in the Abstract Workflow as uses elements in the job element.
+If not specified, the transfer flag defaults to true. So if you don't want all
 the generated files to be transferred to the output site, you need to
-explicitly set the transfer flag to false for the file.
+explicitly set the stage_out flag to false for the file.
 
-::
+.. tabs::
 
-     <!-- snippet of job description -->
-     <job id="ID000001" namespace="example" name="mDiffFit" version="1.0"
-          node-label="preprocess" >
-       <argument>-a top -T 6  -i <file name="f.a"/>  -o <file name="f.b1"/></argument>
+    .. code-tab:: python Pegasus.api
 
-        <uses name="f.a" link="input" transfer="true" register="true"/>
-        <!-- tells Pegasus to not transfer the output file f.b to the output site -->
-        <uses name="f.b" link="output" transfer="false" register="false"  />
-        ...
-     </job>
+      #! /usr/bin/env python3
+      import logging
+
+      from pathlib import Path
+
+      from Pegasus.api import *
+      ..
+
+      # --- Raw input file -----------------------------------------------------------------
+
+      fa = File("f.a").add_metadata(creator="ryan")
+      fb1 = File("f.b1")
+      fb2 = File("f.b2")
+      # fb2 output is explicitly disabled by setting the stage_out flag
+      job_preprocess = Job("preprocess")\
+                              .add_args("-a", "preprocess", "-T", "3", "-i", fa, "-o", fb1, fb2)\
+                              .add_inputs(fa)\
+                              .add_outputs(fb1)\
+                              .add_outputs(fb1, stage_out=False)
+
+    .. code-tab:: yaml YAML
+
+        - type: job
+             name: preprocess
+             id: ID0000001
+             arguments: [-a, preprocess, -T, "3", -i, f.a, -o, f.b1, f.b2]
+             uses:
+                - lfn: f.a
+                  type: input
+                - lfn: f.b1
+                  type: output
+                  stageOut: true
+                  registerReplica: true
+                - lfn: f.b2
+                  type: output
+                  stageOut: false
+                  registerReplica: true
+
+    .. code-tab:: xml XML
+
+         <!-- snippet of job description -->
+         <job id="ID000001" namespace="example" name="mDiffFit" version="1.0"
+              node-label="preprocess" >
+           <argument>-a top -T 3  -i <file name="f.a"/>  -o <file name="f.b1"/> -o <file name="f.b12"/></argument>
+
+            <uses name="f.a" link="input" transfer="true" register="true"/>
+            <uses name="f.b2" link="output" transfer="false" register="true" />
+            <!-- tells Pegasus to not transfer the output file f.b to the output site -->
+            <uses name="f.b2" link="output" transfer="false" register="false"  />
+            ...
+         </job>
 
 .. _ref-data-staging-configuration:
 
