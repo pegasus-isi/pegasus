@@ -1026,7 +1026,7 @@ catalog with:
           sites:
           - name: isi
             pfn: https://download.pegasus.isi.edu/pegasus/4.8.0dev/pegasus-worker-4.8.0dev-x86_64_macos_10.tar.gz
-            type: installed
+            type: stageable
 
     .. code-tab:: shell Text
 
@@ -1235,6 +1235,7 @@ clients
    htar            to retrieve input files from HPSS tape storage
    docker          to pull images from Docker hub
    singularity     to pull images from Singularity hub and Singularity library (Sylabs Cloud)
+   curl            staging files from a Webdav server
    =============== ====================================================================================
 
 For remote sites, Pegasus constructs the default path to
@@ -2448,15 +2449,17 @@ Currently we support following dials for integrity checking.
 
 -  **none** - no integrity checking
 
--  **full**- full integrity checking for non shared filesystem
+-  **full** - full integrity checking for non shared filesystem
    deployments at the 3 levels described in this section.
+
+- **nosymlink** - symlinked files will not be integrity checked
 
 By default integrity checking dial is set to full . To change this you
 can set the following property
 
 ::
 
-   pegasus.integrity.checking    none|full
+   pegasus.integrity.checking    none|full|nosymlink
 
 .. _integrity-checking-rc:
 
@@ -2480,7 +2483,30 @@ additonal attributes with your LFN -> PFN mapping.
 For example here is how you would specify the checksum for a file in a
 file based replica catalog
 
-::
+.. tabs::
 
-   # file-based replica catalog: 2018-10-25T02:10:02.293-07:00
-   f.a file:///lfs1/input-data/f.a checksum.type="sha256" checksum.value="ca8ed5988cb4ca0b67c45fd80fd17423aba2a066ca8a63a4e1c6adab067a3e92" site="condorpool"
+    .. code-tab:: python generate_rc.py
+
+        from Pegasus.api import *
+
+        infile = File('input.txt')
+        rc = ReplicaCatalog()\
+              .add_replica('local', infile, "http://example.com/pegasus/input/" + infile.lfn,\
+                            checksum = {'sha256':'66a42b4be204c824a7533d2c677ff7cc5c44526300ecd6b450602e06128063f9'})\
+               .write()
+
+        # the Replica Catalog will be written to the default path "./replicas.yml"
+
+    .. code-tab:: yaml YAML RC
+
+        pegasus: '5.0'
+        replicas:
+          - lfn: input.txt
+            pfns:
+              - {site: local, pfn: 'http://example.com/pegasus/input/input.txt'}
+            checksum: {sha256: 66a42b4be204c824a7533d2c677ff7cc5c44526300ecd6b450602e06128063f9}
+
+    .. code-tab:: shell File RC
+
+        # file-based replica catalog: 2018-10-25T02:10:02.293-07:00
+        input.txt http://example.com/pegasus/input/input.txt checksum.type="sha256" checksum.value="66a42b4be204c824a7533d2c677ff7cc5c44526300ecd6b450602e06128063f9" site="condorpool"
