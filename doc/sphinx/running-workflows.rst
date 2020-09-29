@@ -14,9 +14,9 @@ variety of resources. When the workflow tasks are mapped to multiple
 resources that do not share a file system, explicit nodes are added to
 the workflow for orchestrating data transfer between the tasks.
 
-When you take the DAX workflow created in `Creating
-Workflows <#creating_workflows>`__, and plan it for a single remote grid
-execution, here a site with handle **hpcc**, and plan the workflow
+When you take the Abstract Workflow created in
+:ref:`Creating Workflows <creating-workflows>`, and plan it for a
+single remote grid execution, here a site with handle **hpcc**, and plan the workflow
 without clean-up nodes, the following concrete workflow is built:
 
 Planning augments the original abstract workflow with ancillary tasks to

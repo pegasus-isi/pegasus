@@ -897,7 +897,7 @@ public class CPlanner extends Executable {
                     options.setExecutionSites(g.getOptarg());
                     break;
 
-                case '9': // staging-sites
+                case '9': // staging-site
                     options.addToStagingSitesMappings(g.getOptarg());
                     break;
 
@@ -1072,7 +1072,7 @@ public class CPlanner extends Executable {
         longopts[27] = new LongOpt("output-sites", LongOpt.REQUIRED_ARGUMENT, null, 'o');
         longopts[28] = new LongOpt("output-map", LongOpt.REQUIRED_ARGUMENT, null, 'm');
         longopts[29] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
-        longopts[29] = new LongOpt("reuse", LongOpt.REQUIRED_ARGUMENT, null, 'R');
+        longopts[30] = new LongOpt("reuse", LongOpt.REQUIRED_ARGUMENT, null, 'R');
         return longopts;
     }
 
