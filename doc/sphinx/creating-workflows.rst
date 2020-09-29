@@ -186,13 +186,13 @@ can look like the following:
                creator: ryan
             type: input
             - lfn: f.b1
-            type: output
-            stageOut: true
-            registerReplica: true
+              type: output
+              stageOut: true
+              registerReplica: true
             - lfn: f.b2
-            type: output
-            stageOut: true
-            registerReplica: true
+              type: output
+              stageOut: true
+              registerReplica: true
          metadata:
             time: "60"
          hooks:
