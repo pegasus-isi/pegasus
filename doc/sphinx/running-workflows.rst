@@ -12,7 +12,7 @@ Executable Workflows (DAG)
 The DAG is an executable (concrete) workflow that can be executed over a
 variety of resources. When the workflow tasks are mapped to multiple
 resources that do not share a file system, explicit nodes are added to
-the workflow for orchestrating data. transfer between the tasks.
+the workflow for orchestrating data transfer between the tasks.
 
 When you take the DAX workflow created in `Creating
 Workflows <#creating_workflows>`__, and plan it for a single remote grid
@@ -558,6 +558,8 @@ You can specifiy the data configuration to use either in
    profile key named data.configuration and associate that with your
    compute sites in the site catalog.
 
+.. _shared-fs:
+
 Shared File System
 ------------------
 
@@ -659,6 +661,8 @@ nodes. Running in that mode is explained in detail
    this configuration. The staging site can be specified using the
    **--staging-site** option to pegasus-plan.
 
+.. _condorio:
+
 Condor Pool Without a Shared Filesystem
 ---------------------------------------
 
@@ -723,6 +727,8 @@ nodes. Running in that mode is explained in detail
    Set p\ **egasus.data.configuration** to **condorio** to run in this
    configuration. In this mode, the staging site is automatically set to
    site **local**
+
+.. _pegasuslite:
 
 PegasusLite
 ===========

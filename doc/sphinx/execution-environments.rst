@@ -1106,9 +1106,7 @@ The submit machine runs Pegasus and a HTCondor master (collector,
 schedd, negotiator). The workers run a HTCondor startd. And the file
 server node exports an NFS file system. The startd on the workers is
 configured to connect to the master running outside the cloud, and the
-workers also mount the NFS file system. More information on setting up
-HTCondor for this environment can be found at
-`http://www.isi.edu/~gideon/condor-ec2 <http://www.isi.edu/~gideon/condor-ec2/>`__.
+workers also mount the NFS file system.
 
 The site catalog entry for this configuration is similar to what you
 would create for running on a local `Condor pool <#condor_pool>`__ with

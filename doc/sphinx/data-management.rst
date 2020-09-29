@@ -11,7 +11,7 @@ jobs in your workflow can access them, cleaning up datasets no longer
 required as the workflow runs, to staging out and registering the
 generated outputs to locations of your choosing. Majority of the
 data management optimizations occur during the
-`mapping phase <#mapping-refinement-steps>`__ , where the input Abstract
+:ref:`mapping phase <mapping-refinement-steps>` , where the input Abstract
 Workflow in converted to an Executable Workflow that can be executed
 on your target infrastructure.
 
@@ -450,12 +450,12 @@ The data flow is as follows in this case
    to a directory on the final output site.
 
 In this case, the compute jobs are wrapped as
-`PegasusLite <#pegasuslite>`__ instances.
+:ref:`PegasusLite <pegasuslite>` instances.
 
 This mode is especially useful for running in the cloud environments
 where you don't want to setup a shared filesystem between the worker
 nodes. Running in that mode is explained in detail
-`here. <#amazon_aws>`__
+:ref:`here. <amazon-aws>`
 
 .. tip::
 
@@ -476,10 +476,9 @@ locally accessible input locations ( file URL's with "*site*" attribute
 set to local) specified in the replica catalog. More details can be
 found at :ref:`bypass-input-staging`.
 
- In some
-cases, it might be useful to setup the PegasusLite jobs to pull input
-data directly from the input site without going through the staging
-server.
+In some cases, it might be useful to setup the PegasusLite jobs to
+pull input data directly from the input site without going through the
+staging server.
 
 
 .. _ref-data-staging-nonsharedfs:
@@ -533,12 +532,12 @@ The data flow is as follows in this case
    to a directory on the final output site.
 
 In this case, the compute jobs are wrapped as
-`PegasusLite <#pegasuslite>`__ instances.
+:ref:`PegasusLite <pegasuslite>` instances.
 
 This mode is especially useful for running in the cloud environments
 where you don't want to setup a shared filesystem between the worker
 nodes. Running in that mode is explained in detail
-`here. <#amazon_aws>`__
+:ref:`here. <amazon-aws>`
 
 .. tip::
 
@@ -705,14 +704,14 @@ pegasus-transfer job can spawn. Cleanup jobs are similarly constructed
 with an internal ratio of 5.
 
 Information on how to control the number of stagein and stageout jobs
-can be found in the `Data Movement Nodes <#data_movement_nodes>`__
+can be found in the `Data Movement Nodes <#data-movement-nodes>`__
 section.
 
 How to control the number of threads pegasus-transfer can use depends on
 if you want to control standard transfer jobs, or PegasusLite. For the
-former, see the `pegasus.transfer.threads <#transfer_props>`__ property,
+former, see the :ref:`pegasus.transfer.threads <transfer-props>` property,
 and for the latter the
-`pegasus.transfer.lite.threads <#transfer_props>`__ property.
+:ref:`pegasus.transfer.lite.threads <transfer-props>` property.
 
 .. _transfer-symlink:
 
@@ -877,9 +876,9 @@ PFN and the type of executable needs to be set to **STAGEABLE** .
 The location of a transformation can be specified either in
 
 -  Abstract Workflow in the executable section. More details
-   `here <#dax_transformation_catalog>`__ .
+   :ref:`here <dax-transformation-catalog>` .
 
--  Transformation Catalog. More details `here <#transformation>`__ .
+-  Transformation Catalog. More details :ref:`here <transformation>` .
 
 A particular transformation catalog entry of type STAGEABLE is
 compatible with a compute site only if all the System Information
@@ -979,9 +978,9 @@ Which worker package is used is determined in the following order:
    runtime check fails, a worker package matching the Pegasus version,
    OS and architecture will be downloaded from the Pegasus download
    site. This behavior can be controlled with the
-   `pegasus.transfer.worker.package.autodownload <#_transfer-props>`__
+   :ref:`pegasus.transfer.worker.package.autodownload <transfer-props>`
    and
-   `pegasus.transfer.worker.package.strict <#_transfer-props>`__
+   :ref:`pegasus.transfer.worker.package.strict <transfer-props>`
    properties.
 
 If you want to specify a particular worker package to use, you can
@@ -1257,12 +1256,12 @@ the worker node back to S3. When the jobs are complete, Pegasus
 transfers the output data from S3 to the output site.
 
 In order to use S3, it is necessary to create a config file for the S3
-transfer client, `pegasus-s3 <#cli-pegasus-s3>`__. See the `man
-page <#cli-pegasus-s3>`__ for details on how to create the config file.
-You also need to specify `S3 as a staging site <#non_shared_fs>`__.
+transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`. See the :ref:`man
+page <cli-pegasus-s3>`for details on how to create the config file.
+You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
 
 Next, you need to modify your site catalog to tell the location of your
-s3cfg file. See `the section on credential staging <#cred_staging>`__.
+s3cfg file. See `the section on credential staging <#cred-staging>`__.
 
 The following site catalog shows how to specify the location of the
 s3cfg file on the local site and how to specify an Amazon S3 staging
