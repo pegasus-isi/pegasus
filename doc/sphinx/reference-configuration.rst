@@ -807,13 +807,13 @@ understands.
     | Property Key                               | Description                                                         |
     +============================================+=====================================================================+
     | | Property Key: pegasus.clusters.num       | | Please refer to the                                               |
-    | | Profile Key: clusters.num                | | `Pegasus Clustering Guide <#horizontal_clustering>`__             |
+    | | Profile Key: clusters.num                | | :ref:`Pegasus Clustering Guide <horizontal-clustering>`           |
     | | Scope : TC, SC, Abstract WF, Properties  | | for detailed description. This option determines the              |
     | | Since : 3.0                              | | total number of clusters per level. Jobs are evenly spread        |
     | | Type :Integer                            | | across clusters.                                                  |
     +--------------------------------------------+---------------------------------------------------------------------+
     | | Property Key: pegasus.clusters.size      | | Please refer to the                                               |
-    | | Profile Key:clusters.size                | | `Pegasus Clustering Guide <#horizontal_clustering>`__             |
+    | | Profile Key:clusters.size                | | :ref:`Pegasus Clustering Guide <horizontal-clustering>`           |
     | | Scope : TC, SC, Abstract WF, Properties  | | for detailed description. This profile determines the number of   |
     | | Since : 3.0                              | | jobs in each cluster. The number of clusters depends on the total |
     | | Type : Integer                           | | number of jobs on the level.                                      |
@@ -877,7 +877,7 @@ understands.
     | | Property Key: pegasus.stagein.clusters   | | This key determines the maximum number of stage-in jobs that      |
     | | Profile Key: stagein.clusters            | | are can executed locally or remotely per compute site per         |
     | | Scope : TC, SC, Abstract WF, Properties  | | workflow. This is used to configure the                           |
-    | | Since : 4.0                              | | `BalancedCluster <#transfer-refiner-balanced-cluster>`__          |
+    | | Since : 4.0                              | | :ref:`BalancedCluster <transfer-refiner-balanced-cluster>`        |
     | | Type :Integer                            | | Transfer Refiner, which is the Default Refiner used in Pegasus.   |
     |                                            | | This profile is best set in the Site Catalog or in the            |
     |                                            | | Properties file                                                   |
@@ -899,7 +899,7 @@ understands.
     | | Property Key: pegasus.stageout.clusters  | | This key determines the maximum number of stage-out jobs          |
     | | Profile Key: stageout.clusters           | | that are can executed locally or remotely per compute site        |
     | | Scope : TC, SC, Abstract WF, Properties  | | per workflow. This is used to configure the                       |
-    | | Since : 4.0                              | | `BalancedCluster <#transfer-refiner-balanced-cluster>`__          |
+    | | Since : 4.0                              | | :ref:`BalancedCluster <transfer-refiner-balanced-cluster>`        |
     | | Type : Integer                           | | Transfer Refiner, which is the Default Refiner used               |
     |                                            | | in Pegasus.                                                       |
     +--------------------------------------------+---------------------------------------------------------------------+
@@ -1051,12 +1051,12 @@ by the local attributes.sh. The profiles are described below.
     +=============================================+==================================================================+
     | | Property Key: pegasus.runtime             | | This profile specifies the expected runtime of a job           |
     | | Profile Key: runtime                      | | in seconds. Refer to the                                       |
-    | | Scope : TC, SC, Abstract WF, Properties   | | `Pegasus Clustering Guide <#runtime_clustering>`__             |
+    | | Scope : TC, SC, Abstract WF, Properties   | | :ref:`Pegasus Clustering Guide <runtime-clustering>`           |
     | | Since : 2.0                               | | for description on using it for runtime clustering.            |
     | | Type : Long                               |                                                                  |
     +---------------------------------------------+------------------------------------------------------------------+
     | | Property Key: pegasus.clusters.maxruntime | | Please refer to the                                            |
-    | | Profile Key: clusters.maxruntime          | | `Pegasus Clustering Guide <#runtime_clustering>`__             |
+    | | Profile Key: clusters.maxruntime          | | :ref:`Pegasus Clustering Guide <runtime-clustering>`           |
     | | Scope : TC, SC, Abstract WF, Properties   | | for detailed description. This profile specifies the           |
     | | Since : 4.0                               | | maximum runtime of a job in seconds.                           |
     | | Type : Integer                            |                                                                  |
@@ -1065,7 +1065,7 @@ by the local attributes.sh. The profiles are described below.
     | | Profile Key:cores                         | | used for accounting purposes in the database while             |
     | | Scope : TC, SC, Abstract WF, Properties   | | generating statistics. It corresponds to the multiplier_factor |
     | | Since : 4.0                               | | in the job_instance table described                            |
-    | | Type : Integer                            | | `here <#stampede_schema_overview>`__ .                         |
+    | | Type : Integer                            | | :ref:`here <stampede-schema-overview>` .                       |
     +---------------------------------------------+------------------------------------------------------------------+
     | | Property Key: pegasus.nodes               | Indicates the the number of nodes a job requires.                |
     | | Profile Key: nodes                        |                                                                  |
