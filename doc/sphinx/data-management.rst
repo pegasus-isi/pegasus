@@ -2122,7 +2122,7 @@ workflow, task and file level.
 Workflow Level Metadata
 -----------------------
 
-Workflow level metadata can be associated only in the DAX under the root
+Workflow level metadata can be associated only in the Abstract Workflow under the root
 element adag. Below is a snippet that illustrates this
 
 ::
@@ -2148,15 +2148,15 @@ Task Level Metadata
 
 Metadata for the tasks is picked up from
 
--  metadata associated with the job element in the DAX
+-  metadata associated with the job element in the Abstract Workflow
 
 -  metadata associated with the corresponding transformation. The
    transformation for a task is picked up from either a matching
-   executable entry in the DAX ( if exists ) or the Transformation
+   executable entry in the Abstract Workflow ( if exists ) or the Transformation
    Catalog.
 
 Below is a snippet that illustrates metadata for a task specified in the
-job element in the DAX
+job element in the Abstract Workflow
 
 ::
 
@@ -2180,7 +2180,7 @@ job element in the DAX
    </adag>
 
 Below is a snippet that illustrates metadata for a task specified in the
-executable element in the DAX
+executable element in the Abstract Workflow
 
 ::
 
@@ -2231,17 +2231,17 @@ File Level Metadata
 
 Metadata for the files is picked up from
 
--  metadata associated with the file element in the DAX. File elements
-   are optionally used to record the locations of input files for the
-   workflow in the DAX.
+-  metadata associated with the file element in the Abstract Workflow. File
+   elements are optionally used to record the locations of input files for the
+   workflow in the Abstract Workflow.
 
 -  metadata associated with the files in the uses section of the job
-   element in the DAX
+   element in the Abstract Workflow
 
 -  metadata associated with the file in the Replica Catalog.
 
 Below is a snippet that illustrates metadata for a file specified in the
-file element in the DAX
+file element in the Abstract Workflow
 
 ::
 
@@ -2278,7 +2278,7 @@ section of the job element
          <argument>-a preprocess -T 60 -i  <file name="f.a"/> -o  <file name="f.b1"/>   <file name="f.b2"/></argument>
          <uses name="f.a" link="input">
             <metadata key="size">1024</metadata>
-            <metadata key="source">DAX</metadata>
+            <metadata key="source">Abstract Workflow</metadata>
          </uses>
          <uses name="f.b1" link="output" transfer="true" register="true"/>
          <uses name="f.b2" link="output" transfer="true" register="true"/>
