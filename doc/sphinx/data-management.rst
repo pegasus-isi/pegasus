@@ -331,7 +331,8 @@ configurations
    a condor pool don't share a filesystem. All data IO is achieved using
    Condor File IO. This is a special case of the non shared filesystem
    setup, where instead of using pegasus-transfer to transfer input and
-   output data, Condor File IO is used.
+   output data, Condor File IO is used. This is the **default** data
+   staging configuration in Pegasus.
 
 -  **NonShared FileSystem**
 
@@ -345,6 +346,11 @@ configurations
    cluster share a filesystem. Compute jobs in the workflow run in a
    directory on the shared filesystem.
 
+.. note::
+
+   The default data staging configuration was changed from **sharedfs**
+   (Shared File System) to **condorio** (Condor Pool Without a shared
+   filesystem) starting with **Pegasus 5.0 release**.
 
 For the purposes of data configuration various sites, and directories
 are defined below.
