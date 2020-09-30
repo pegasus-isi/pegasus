@@ -159,7 +159,7 @@ the one in the DAX. The two parameters are described below.
               }
       }
 
-   .. figure:: images/advanced-clustering-1.png
+   .. figure:: ../images/advanced-clustering-1.png
       :alt: Clustering by clusters.size
 
       Clustering by clusters.size
@@ -221,7 +221,7 @@ the one in the DAX. The two parameters are described below.
    value. Hence, if there are 4 jobs referring to logical transformation
    B scheduled to siteX, then 3 clustered jobs will be created.
 
-   .. figure:: images/advanced-clustering-2.png
+   .. figure:: ../images/advanced-clustering-2.png
       :alt: Clustering by clusters.num
 
       Clustering by clusters.num
@@ -360,7 +360,7 @@ in the DAX. The two parameters are described below.
            }
    }
 
-.. figure:: images/advanced-clustering-5.png
+.. figure:: ../images/advanced-clustering-5.png
    :alt: Clustering by runtime
 
    Clustering by runtime
@@ -449,7 +449,7 @@ For example
 
    $ pegasus-plan --dax example.dax --dir ./dags --cluster label,horizontal -s siteX --output local --verbose
 
-.. figure:: images/advanced-clustering-4.png
+.. figure:: ../images/advanced-clustering-4.png
    :alt: Recursive clustering
 
    Recursive clustering
@@ -670,7 +670,7 @@ Users can embed two types of workflow jobs in the DAX
    that have pegasus plan invocation on the dax ( referred to in the DAX
    job ) as the prescript.
 
-   .. figure:: ./images/daxjob-mapping.png
+   .. figure:: ../images/daxjob-mapping.png
       :alt: Planning of a DAX Job
       :width: 100.0%
 
@@ -680,7 +680,7 @@ Users can embed two types of workflow jobs in the DAX
    planning of a workflow, the DAG jobs are mapped to condor dagman and
    refer to the DAG file mentioned in the DAG job.
 
-   .. figure:: ./images/dagjob-mapping.png
+   .. figure:: ../images/dagjob-mapping.png
       :alt: Planning of a DAG Job
       :width: 100.0%
 
@@ -878,7 +878,7 @@ are running (each level of nesting produces another DAGMan process) .
 
 The figure below illustrates an example with recursion 2 levels deep.
 
-.. figure:: ./images/recursion_in_hierarchal_workflows.png
+.. figure:: ../images/recursion_in_hierarchal_workflows.png
    :alt: Recursion in Hierarchal Workflows
 
    Recursion in Hierarchal Workflows
@@ -886,7 +886,7 @@ The figure below illustrates an example with recursion 2 levels deep.
 The execution time-line of the various jobs in the above figure is
 illustrated below.
 
-.. figure:: ./images/hierarchal_workflows_execution_timeline.png
+.. figure:: ../images/hierarchal_workflows_execution_timeline.png
    :alt: Execution Time-line for Hierarchal Workflows
 
    Execution Time-line for Hierarchal Workflows

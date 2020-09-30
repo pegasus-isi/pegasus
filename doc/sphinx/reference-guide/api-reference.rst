@@ -13,7 +13,7 @@ The Python API is the most powerful way of creating Pegasus workflows.
 
 .. toctree::
 
-    python/Pegasus.api.rst
+    ../python/Pegasus.api.rst
 
 Example workflow generator using the Python API:
 
@@ -756,7 +756,7 @@ failure**.
 
 All endpoints return status code **403** for\ **Authorization failure**.
 
-.. openapi:: ../../packages/pegasus-python/src/Pegasus/service/monitoring/swagger.yml
+.. openapi:: ../../../packages/pegasus-python/src/Pegasus/service/monitoring/swagger.yml
 
 Querying
 --------

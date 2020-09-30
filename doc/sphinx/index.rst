@@ -7,46 +7,47 @@ Welcome to Pegasus WMS's documentation!
 =======================================
 
 .. toctree::
-    :caption: Getting Started
-    :maxdepth: 2
-
-    introduction.rst
-    quickstart.rst
-    tutorial.rst
-
-.. toctree::
     :caption: User Guide
     :numbered:
     :maxdepth: 2
 
-    installation.rst
-    creating-workflows.rst
-    running-workflows.rst
-    monitoring-debugging-stats.rst
-    execution-environments.rst
-    containers.rst
-    data-management.rst
-    pegasus-service.rst
-    reference-configuration.rst
-    optimization.rst
-    glossary.rst
+    user-guide/introduction.rst
+    user-guide/installation.rst
+    user-guide/tutorial.rst
+    user-guide/creating-workflows.rst
+    user-guide/running-workflows.rst
+    user-guide/submit-directory.rst
+    user-guide/monitoring-debugging-stats.rst
+    user-guide/execution-environments.rst
+    user-guide/containers.rst
+    user-guide/data-transfers.rst
+    user-guide/optimization.rst
+    user-guide/best-practices-code.rst
+    user-guide/migration.rst
+    user-guide/glossary.rst
 
 .. toctree::
-    :caption: References
+    :caption: Reference Guide
+    :numbered:
     :maxdepth: 2
 
-    api-reference.rst
-    cli.rst
-    funding-citing-usage-stats.rst
-    tutorial-vm.rst
-    migration.rst
+    reference-guide/api-reference.rst
+    reference-guide/configuration.rst
+    reference-guide/catalogs.rst
+    reference-guide/mapping.rst
+    reference-guide/data-management.rst
+    reference-guide/monitoring.rst
+    reference-guide/pegasus-lite.rst
+    reference-guide/pegasus-service.rst
+    reference-guide/variable-expansion.rst
+    reference-guide/cli.rst
 
 .. toctree::
     :caption: Pegasus Development
     :maxdepth: 2
     
-    code-documentation.rst
-    schemas.rst
+    development/code-documentation.rst
+    development/schemas.rst
 
 
 Indices and tables

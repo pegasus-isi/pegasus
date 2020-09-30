@@ -57,7 +57,7 @@ management. A HTCondor pool can be a cluster of dedicated machines or a
 set of distributively owned machines. Pegasus can generate concrete
 workflows that can be executed on a HTCondor pool.
 
-.. figure:: images/condor_layout.png
+.. figure:: ../images/condor_layout.png
    :alt: The distributed resources appear to be part of a HTCondor pool.
    :width: 100.0%
 

@@ -8,7 +8,7 @@ Code Documentation
     :caption: Python
     :name: Python
 
-    python/Pegasus.api.rst
+    ../python/Pegasus.api.rst
 
 Java
 ====

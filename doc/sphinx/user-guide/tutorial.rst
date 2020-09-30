@@ -115,7 +115,7 @@ task dependencies.
 It consists of a single task that runs the ``ls`` command and generates
 a listing of the files in the \`/\` directory.
 
-.. figure:: images/tutorial-single-job-wf.jpg
+.. figure:: ../images/tutorial-single-job-wf.jpg
    :alt: Process Workflow
 
    Process Workflow
@@ -146,7 +146,7 @@ sweep over arguments.
 The diamond workflow runs combines the split and merge workflow patterns
 to create a more complex workflow.
 
-.. figure:: images/tutorial-diamond-wf.jpg
+.. figure:: ../images/tutorial-diamond-wf.jpg
    :alt: Diamond Workflow
 
    Diamond Workflow
@@ -204,7 +204,7 @@ be using the split workflow, which can be created like this:
 
 The split workflow looks like this:
 
-.. figure:: images/tutorial-split-wf.jpg
+.. figure:: ../images/tutorial-split-wf.jpg
    :alt: Split Workflow
 
    Split Workflow
@@ -299,7 +299,7 @@ To plan the split workflow invoke the pegasus-plan command using the
 This is what the split workflow looks like after Pegasus has finished
 planning the DAX:
 
-.. figure:: images/tutorial-split-dag.jpg
+.. figure:: ../images/tutorial-split-dag.jpg
    :alt: Split DAG
 
    Split DAG
@@ -354,7 +354,7 @@ within a workflow). The rows in the table are color coded
 
 -  **Gray**: indicates a workflow that was archived.
 
-.. figure:: images/dashboard_home.png
+.. figure:: ../images/dashboard_home.png
    :alt: Dashboard Home Page
    :width: 100.0%
 
@@ -374,7 +374,7 @@ The information displayed for a job depends on it's status. For example,
 the failed jobs tab displays the job name, exit code, links to available
 standard output, and standard error contents.
 
-.. figure:: images/dashboard_workflow_details.png
+.. figure:: ../images/dashboard_workflow_details.png
    :alt: Dashboard Workflow Page
    :width: 100.0%
 
@@ -394,7 +394,7 @@ The job details page also shows tab's for failed, and successful task
 invocations (Pegasus allows users to group multiple smaller task's into
 a single job i.e. a job may consist of one or more tasks)
 
-.. figure:: images/dashboard_job_details.png
+.. figure:: ../images/dashboard_job_details.png
    :alt: Dashboard Job Description Page
    :width: 100.0%
 
@@ -404,7 +404,7 @@ The task invocation details page provides task specific information like
 task name, exit code, duration etc. Task details differ from job
 details, as they are more granular in nature.
 
-.. figure:: images/dashboard_invocation_details.png
+.. figure:: ../images/dashboard_invocation_details.png
    :alt: Dashboard Invocation Page
    :width: 100.0%
 
@@ -422,7 +422,7 @@ The Statistics page shows the following statistics.
 
 3. Job specific statistics
 
-.. figure:: images/dashboard_statistics.png
+.. figure:: ../images/dashboard_statistics.png
    :alt: Dashboard Statistics Page
    :width: 100.0%
 
@@ -944,7 +944,7 @@ is an XML file format that has syntax for expressing jobs, arguments,
 files, and dependencies. We now will be creating the split workflow that
 we just ran using the Pegasus provided DAX API:
 
-.. figure:: images/tutorial-split-wf.jpg
+.. figure:: ../images/tutorial-split-wf.jpg
    :alt: Split Workflow
 
    Split Workflow
@@ -1041,7 +1041,7 @@ and usually does not contain any locations to physical input files,
 executables or cluster end points where jobs are executed. Pegasus uses
 three information catalogs during the planning process.
 
-.. figure:: images/tutorial-pegasus-catalogs.png
+.. figure:: ../images/tutorial-pegasus-catalogs.png
    :alt: Information Catalogs used by Pegasus
 
    Information Catalogs used by Pegasus
@@ -1139,7 +1139,7 @@ The site catalog, captures for each cluster (site)
 
 -  headnode of the cluster to which jobs can be submitted.
 
-.. figure:: images/tutorial-hpc-cluster.png
+.. figure:: ../images/tutorial-hpc-cluster.png
    :alt: Sample HPC Cluster Setup
 
    Sample HPC Cluster Setup
