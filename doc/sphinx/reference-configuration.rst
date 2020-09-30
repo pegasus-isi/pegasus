@@ -1229,8 +1229,6 @@ introduced by a -D argument. Note that these arguments are parsed by the
 shell wrapper, and thus the -D arguments must be the first arguments to
 any command. Commandline properties are useful for debugging purposes.
 
-
-
 From Pegasus 3.1 release onwards, support has been dropped for the
 following properties that were used to signify the location of the
 properties file
@@ -1238,17 +1236,18 @@ properties file
 -  pegasus.properties
 -  pegasus.user.properties
 
-The following example provides a sensible set of properties to be set by
-the user property file. These properties use mostly non-default
-settings. It is an example only, and will not work for you:
+The basic properties that you may need to be set if using non default
+   types and locations are for various catalogs are listed below:
 
-::
+   .. table:: Basic Properties that you may need to set
 
-   pegasus.catalog.replica              File
-   pegasus.catalog.replica.file         ${pegasus.home}/etc/sample.rc.data
-   pegasus.catalog.transformation       Text
-   pegasus.catalog.transformation.file  ${pegasus.home}/etc/sample.tc.text
-   pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
+      ====================================== ===============================
+      pegasus.catalog.replica                type of replica catalog backend
+      pegasus.catalog.replica.file           path to replica catalog file
+      pegasus.catalog.transformation         type of transformation catalog
+      pegasus.catalog.transformation.file    path to transformation file
+      pegasus.catalog.site.file              path to site catalog file
+      ====================================== ===============================
 
 If you are in doubt which properties are actually visible, pegasus
 during the planning of the workflow dumps all properties after reading

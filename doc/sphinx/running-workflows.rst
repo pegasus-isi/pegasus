@@ -871,13 +871,13 @@ Before users can run pegasus plan the following needs to be done:
 
    .. table:: Basic Properties that you may need to set
 
-      ========================================================== =
-      pegasus.catalog.replica
-      pegasus.catalog.replica.file / pegasus.catalog.replica.url
-      pegasus.catalog.transformation
-      pegasus.catalog.transformation.file
-      pegasus.catalog.site.file
-      ========================================================== =
+      ====================================== ===============================
+      pegasus.catalog.replica                type of replica catalog backend
+      pegasus.catalog.replica.file           path to replica catalog file
+      pegasus.catalog.transformation         type of transformation catalog
+      pegasus.catalog.transformation.file    path to transformation file
+      pegasus.catalog.site.file              path to site catalog file
+      ====================================== ===============================
 
 
 To execute pegasus-plan user usually requires to specify the following
