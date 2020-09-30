@@ -1247,6 +1247,8 @@ The basic properties that you may need to be set if using non default
       pegasus.catalog.transformation         type of transformation catalog
       pegasus.catalog.transformation.file    path to transformation file
       pegasus.catalog.site.file              path to site catalog file
+      pegasus.data.configuration             the data configuration mode for
+                                             data staging.
       ====================================== ===============================
 
 If you are in doubt which properties are actually visible, pegasus

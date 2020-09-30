@@ -877,6 +877,8 @@ Before users can run pegasus plan the following needs to be done:
       pegasus.catalog.transformation         type of transformation catalog
       pegasus.catalog.transformation.file    path to transformation file
       pegasus.catalog.site.file              path to site catalog file
+      pegasus.data.configuration             the data configuration mode for
+                                             data staging.
       ====================================== ===============================
 
 
