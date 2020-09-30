@@ -158,6 +158,15 @@ function test_missing_args {
     done
 }
 
+function test_quoted_args {
+    # https://jira.isi.edu/browse/PM-1680
+    kickstart echo \
+        "'None'" \
+        "{\"password\": \"xxxxx\"}"
+    RC=$?
+    return $RC
+}
+
 function test_quoting {
     TEST_LC_ALL=""
     for CANDIDATE in \
@@ -589,6 +598,7 @@ run_test test_toolongarg_file
 run_test test_quiet
 run_test test_quiet_fail
 run_test test_missing_args
+run_test test_quoted_args
 run_test test_quoting
 run_test test_truncate
 run_test test_all_stdio
