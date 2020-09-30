@@ -10,7 +10,7 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 Source:         pegasus-%{version}.tar.gz
 
 BuildRequires:  ant-apache-regexp, gcc, gcc-c++, jpackage-utils, make, openssl-devel, ant, R-devel
-Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz
+Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, perl-Getopt-Long
 
 %if 0%{?rhel} <= 7
 # Jinja2 v2.11 has async code, which uses py36 syntax, and is never imported in < py36, but
@@ -21,12 +21,12 @@ Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz
 %global __python %{python3}
 
 BuildRequires:  java-devel = 1:1.8.0, python36-pyOpenSSL, python36-PyYAML, python3-devel, python3-setuptools
-Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, python36-pika, python36-PyYAML
+Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, python36-pika, python36-PyYAML, perl-Getopt-Long
 %endif
 
 %if 0%{?rhel} >= 8
 BuildRequires:  java-11-openjdk-devel, python3-pyOpenSSL, python3-PyYAML, python3-devel, python3-setuptools
-Requires:       jre-11-openjdk-headless, python3, condor >= 8.8, graphviz, python3-pyOpenSSL, python3-pika, python3-PyYAML
+Requires:       jre-11-openjdk-headless, python3, condor >= 8.8, graphviz, python3-pyOpenSSL, python3-pika, python3-PyYAML, perl-Getopt-Long
 %endif
 
 %define sourcedir %{name}-%{version}
