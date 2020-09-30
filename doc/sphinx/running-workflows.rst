@@ -795,12 +795,24 @@ it performs the following actions:
 3. Use pegasus-transfer to stage in the input data to the runtime
    directory (created in step 1) on the remote worker node.
 
-4. Launch the compute job.
+4. If enabled, do integrity checking on the input files transferred
+   to the remote worker node. This is done by computing a new
+   checksum on the file staged and matching it with the one in the
+   job description.
 
-5. Use pegasus-transfer to stage out the output data to the data
+5. Launch the compute job.
+
+6. Use pegasus-transfer to stage out the output data to the data
    coordination site.
 
-6. Remove the directory created in Step 1.
+7. Remove the directory created in Step 1.
+
+.. note::
+
+   If you are using containers for your workflow, then Steps 3-6
+   will occur inside the container.
+
+
 
 Pegasus-Plan
 ============
@@ -816,23 +828,35 @@ Before users can run pegasus plan the following needs to be done:
 
       The Replica Catalog needs to be catalogued with the locations of
       the input files required by the workflows. This can be done by
-      using pegasus-rc-client (See the Replica section of `Creating
-      Workflows <#creating_workflows>`__).
+      using pegasus-rc-client (See the Replica section of :ref:`Creating
+      Workflows <replica>`).
+
+      By default Pegasus picks up a file named **replicas.yml** in the
+      current working directory ( from where pegasus-plan is invoked) as
+      the Replica Catalog for planning.
 
    2. **Transformation Catalog**
 
       The Transformation Catalog needs to be catalogued with the
       locations of the executables that the workflows will use. This can
       be done by using pegasus-tc-client (See the Transformation section
-      of `Creating Workflows <#creating_workflows>`__).
+      of :ref:`Creating Workflows <transformation>`).
+
+      By default Pegasus picks up a file named **transformations.yml** in the
+      current working directory ( from where pegasus-plan is invoked) as
+      the Transformation Catalog for planning.
 
    3. **Site Catalog**
 
       The Site Catalog needs to be catalogued with the site layout of
       the various sites that the workflows can execute on. A site
       catalog can be generated for OSG by using the client
-      pegasus-sc-client (See the Site section of the `Creating
-      Workflows <#creating_workflows>`__).
+      pegasus-sc-client (See the Site section of the :ref:`Creating
+      Workflows <site>`).
+
+      By default Pegasus picks up a file named **sites.yml** in the
+      current working directory ( from where pegasus-plan is invoked) as
+      the Site Catalog for planning.
 
 2. Configure Properties
 
@@ -840,11 +864,12 @@ Before users can run pegasus plan the following needs to be done:
    need to be updated with the types and locations of the catalogs to
    use. These properties are described in the **basic.properties** files
    in the **etc** sub directory (see the Properties section of
-   the\ `Configuration <#configuration>`__ chapter.
+   the :ref:`Configuration <props>` chapter.
 
-   The basic properties that need to be set usually are listed below:
+   The basic properties that you may need to be set if using non default
+   types and locations are for various catalogs are listed below:
 
-   .. table:: Basic Properties that need to be set
+   .. table:: Basic Properties that you may need to set
 
       ========================================================== =
       pegasus.catalog.replica
@@ -858,18 +883,22 @@ Before users can run pegasus plan the following needs to be done:
 To execute pegasus-plan user usually requires to specify the following
 options:
 
-1. **--dax** the path to the DAX file that needs to be mapped.
 
-2. **--dir** the base directory where the executable workflow is
+1. **--dir** the base directory where the executable workflow is
    generated
 
-3. **--sites** comma separated list of execution sites.
+2. **--sites** comma separated list of execution sites. By default,
+   Pegasus assumes a site named **condorpool** as your execution
+   site.
 
-4. **--output** the output site where to transfer the materialized
+3. **--output** the output site where to transfer the materialized
    output files.
 
-5. **--submit** boolean value whether to submit the planned workflow for
+4. **--submit** boolean value whether to submit the planned workflow for
    execution after planning is done.
+
+5. the path to the DAX file that needs to be mapped.
+
 
 
 .. _submit-directory:
