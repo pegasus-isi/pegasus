@@ -7,6 +7,7 @@ pegasus-statistics
 1
 pegasus-statistics
 A tool to generate statistics about the workflow run.
+
    ::
 
       pegasus-statistics [-h|--help]

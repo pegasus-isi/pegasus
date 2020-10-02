@@ -7,6 +7,7 @@ pegasus-run
 1
 pegasus-run
 executes a workflow that has been planned using \*pegasus-plan*.
+
    ::
 
       pegasus-run [-Dproperty=value…][-c propsfile][-d level]

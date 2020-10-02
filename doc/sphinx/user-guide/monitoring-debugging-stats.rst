@@ -660,7 +660,7 @@ sample file is shown below.
    with a given logical transformation name times the multiplier_factor.
 
 -  **Min (memory)** - the minimum of the max. resident set size (RSS) value corresponding
-  to the transformation. In MB.
+   to the transformation. In MB.
 
 -  **Max (memory)** - the maximum of the max. resident set size (RSS) value corresponding
    to the transformation. In MB.

@@ -447,7 +447,7 @@ before ``$bls_opt_tmp_req_file >> $bls_tmp_file 2> /dev/null`` line.
 .. _titan:
 
 ORNL Summit Using Glite
-----------------------
+-----------------------
 
 `Summit <https://www.olcf.ornl.gov/olcf-resources/compute-systems/summit/>`__
 is part of Oak Ridge Leadership Computing Facilities (OLCF) and offers
@@ -918,7 +918,7 @@ on the demand of the user jobs in the pool.
 
 As your regular user, on the host you want to use as a workflow submit
 host, download the latest version of HTCondor from the `HTCondor
-Download page <https://research.cs.wisc.edu/htcondor/downloads/>>`__. At
+Download page <https://research.cs.wisc.edu/htcondor/downloads/>`__. At
 this point the latest version was 8.5.2 and we downloaded
 condor-8.5.2-x86_64_RedHat6-stripped.tar.gz. Untar, and run the
 installer:

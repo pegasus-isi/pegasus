@@ -7,6 +7,7 @@ pegasus-service
 1
 pegasus-service
 Runs the Pegasus Service server
+
    ::
 
       pegasus-service [options]

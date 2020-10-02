@@ -48,10 +48,6 @@ Because some of the outputs are long, we don’t always include
 everything. Where the output is truncated we will add an ellipsis '...'
 to indicate the omitted output.
 
-**If you are having trouble with this tutorial, or anything else related
-to Pegasus, you can contact the Pegasus Users mailing list
-at **\ pegasus-users@isi.edu\ ** to get help.
-
 .. _tutorial-started:
 
 Getting Started
@@ -75,7 +71,7 @@ using SSH as shown below.
 
 We have provided several virtual machines that contain all of the
 software required for this tutorial. Virtual machine images are provided
-for :ref:`vm-virtualbox` and :ref:`vm-amazon`.
+for
 
 **OR**
 

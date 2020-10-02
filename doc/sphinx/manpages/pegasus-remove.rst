@@ -8,6 +8,7 @@ pegasus-remove
 pegasus-remove
 removes a workflow that has been planned and submitted using
 pegasus-plan and pegasus-run
+
    ::
 
       pegasus-remove [-d dagid] [-v] [rundir]

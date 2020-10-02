@@ -41,6 +41,7 @@ Welcome to Pegasus WMS's documentation!
     reference-guide/pegasus-service.rst
     reference-guide/variable-expansion.rst
     reference-guide/cli.rst
+    reference-guide/funding-citing-usage-stats.rst
 
 .. toctree::
     :caption: Pegasus Development

@@ -113,8 +113,9 @@ Some examples of variable expansion are illustrated below:
               - {site: local, pfn: 'http://${HOSTNAME}/pegasus/input/input.txt'}
 
     .. code-tab:: text File Snippet
-      # File Based Replica Catalog
-      production_200.conf file://${PWD}/production_200.conf site="local"
+
+        # File Based Replica Catalog
+        production_200.conf file://${PWD}/production_200.conf site="local"
 
    ..
 

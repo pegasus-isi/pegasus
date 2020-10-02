@@ -131,7 +131,7 @@ subsequent sections.
     The :doc:`/python/Pegasus.api` requires **Python3.5+**.
 
 Properties
---------
+----------
 
 The ``pegasus.properies`` file format remains the same in this release however
 you can now programatically generate this file with :py:class:`~Pegasus.api.properties.Properties`.
@@ -158,6 +158,7 @@ format has changed from XML to YAML, the overall structure of this catalog remai
 To convert an existing Site Catalog from XML to YAML use :doc:`/manpages/pegasus-sc-converter`.
 For example, to convert a Site Catalog file, ``sites.xml``, to YAML, use the following
 command::   
+
     pegasus-sc-converter -i sites.xml -o sites.yml
 
 The following illustrates how :py:class:`Pegasus.api.site_catalog.SiteCatalog` can
@@ -259,12 +260,13 @@ be used to generate a new Site Catalog programatically based on an existing XML 
 
 
 Replica Catalog
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 The Replica Catalog has been moved from a text based file format to YAML. To convert
 an existing Replica Catalog from the text based File format to YAML use :doc:`/manpages/pegasus-rc-converter`.
 For example, to convert a Replica Catalog file, ``rc.txt``, to YAML, use the following
 command::
+
     pegasus-rc-converter -I File -O YAML -i rc.txt -o replicas.yml
 
 The following illustrates how :py:class:`Pegasus.api.replica_catalog.ReplicaCatalog` can be
@@ -296,12 +298,13 @@ Replica Catalog.
 
 
 Transformation Catalog
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 The Transformation Catalog has been moved from a text based format to YAML. To convert
 an existing Transformation Catalog from the text based file format to YAML, use 
 :doc:`/manpages/pegasus-tc-converter`. For example, to convert a Transformation Catalog
 file, ``tc.txt``, to YAML, use the following command::
+
     pegasus-tc-converter -i tc.txt -I Text -O YAML -o transformations.yml
 
 The following illustrates how :py:class:`Pegasus.api.transformation_catalog.TransformationCatalog` can
@@ -1233,11 +1236,9 @@ pegasus executables from the bin directory.
 
    $ export PATH=/some/install/pegasus-3.0.0/bin:$PATH
 
-Changes to Schemas and Catalog Formats
---------------------------------------
 
 DAX Schema
-~~~~~~~~~~
+----------
 
 Pegasus 3.0 by default now parses DAX documents conforming to the DAX
 Schema 3.2 available `here <schemas/dax-3.2/dax-3.2.xsd>`__ and is
@@ -1256,8 +1257,9 @@ properties and point it to dax-3.0 xsd of the installation.
 
    pegasus.schema.dax  /some/install/pegasus-3.0/etc/dax-3.0.xsd
 
+
 Site Catalog Format
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 Pegasus 3.0 by default now parses Site Catalog format conforming to the
 SC schema 3.0 ( XML3 ) available `here <schemas/dax-3.2/dax-3.2.xsd>`__
@@ -1279,8 +1281,9 @@ To use the converted site catalog, in the properties do the following
 
 2. point pegasus.catalog.site.file to the converted site catalog
 
+
 Transformation Catalog Format
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 Pegasus 3.0 by default now parses a file based multiline textual format
 of a Transformation Catalog. The new Text format is explained in detail
@@ -1341,8 +1344,9 @@ below lists the properties removed and the new profile based names.
    pegasus.remote.scheduler.queues          globus.queue
    ======================================== =======================================================================
 
+
 Profile Keys for Clustering
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 The pegasus profile keys for job clustering were **renamed**. The
 following table lists the old and the new names for the profile keys.
@@ -1381,8 +1385,9 @@ the Profiles Chapter.
    bundle.stageout             stageout.clusters \| stageout.local.clusters \| stageout.remote.clusters
    =========================== ========================================================================
 
+
 Worker Package Staging
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Starting Pegasus 3.0 there is a separate boolean property
 **pegasus.transfer.worker.package** to enable worker package staging to
