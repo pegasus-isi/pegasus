@@ -61,7 +61,7 @@ catalogs, such as
 * :ref:`replica catalog (RC) <replica>`  to resolve the input file ``f.a``.
 
 * :ref:`transformation catalog (TC) <transformation>` to resolve the logical job
-names (such as diamond::preprocess:2.0) and
+  names (such as diamond::preprocess:2.0) and
 
 * :ref:`site catalog (SC) <site>` to resolve on what compute resources will
   the jobs execute on.
@@ -74,6 +74,7 @@ Only the final result file ``f.d`` is staged out.
 
 There are two main ways of generating the abstract workfow
 1. Using a Workflow generating API in
+
    * :ref:`Python <api-python>`,
    * :ref:`Java <api-java>`, or
    * :ref:`R <api-r>`.

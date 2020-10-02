@@ -239,7 +239,7 @@ They can also be updated using the config command:
 
 
 File Pattern, Timed Interval, Based Workflow Trigger
----------------------------------------------------
+----------------------------------------------------
 
 Workflows can be dynamically triggered for submission to the ensemble manager
 using the ``pegasus-em trigger`` command. This will start up a thread that, at

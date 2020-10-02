@@ -270,8 +270,7 @@ the worker node back to S3. When the jobs are complete, Pegasus
 transfers the output data from S3 to the output site.
 
 In order to use S3, it is necessary to create a config file for the S3
-transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`. See the :ref:`man
-page <cli-pegasus-s3>`for details on how to create the config file.
+transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`.
 You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
 
 Next, you need to modify your site catalog to tell the location of your

@@ -7,6 +7,7 @@ pegasus-version
 1
 pegasus-version
 print or match the version of the toolkit.
+
    ::
 
       pegasus-version [-Dproperty=value] [-m [-q]] [-V] [-f] [-l]

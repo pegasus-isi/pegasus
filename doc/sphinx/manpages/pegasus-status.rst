@@ -7,6 +7,7 @@ pegasus-status
 1
 pegasus-status
 Pegasus workflow- and run-time status
+
    ::
 
       pegasus-status [-h|--help]

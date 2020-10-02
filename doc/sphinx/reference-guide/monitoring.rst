@@ -248,8 +248,6 @@ Pegasus generates are described in Yang schema file that can be found in
 the share/pegasus/schema/ directory. The stampede yang schema is
 described below.
 
-::
-
 Typedefs
 --------
 
@@ -447,10 +445,10 @@ refer to. The following groupings are defined.
 
 -  **base-event** - Common components in all events
 
-   -  ts - Timestamp, ISO8601 or numeric seconds since 1/1/1970"
+   -  ts - Timestamp, ISO8601 or numeric seconds since 1/1/1970
 
    -  level - Severity level of event. Subset of NetLogger BP levels.
-      For '*.end' events, if status is non-zero then level should be
+      For '\*.end' events, if status is non-zero then level should be
       Error."
 
    -  xwf.id - DAG workflow UUID

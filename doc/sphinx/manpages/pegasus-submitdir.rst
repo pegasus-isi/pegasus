@@ -7,6 +7,7 @@ pegasus-submitdir
 1
 pegasus-submitdir
 Manage a workflow submit directory.
+
    ::
 
       pegasus-submitdir COMMAND [options] SUBMITDIR

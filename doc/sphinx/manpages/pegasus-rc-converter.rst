@@ -6,6 +6,7 @@ pegasus-rc-converter
 
 pegasus-rc-converter
 A client to convert replica catalog from one format to another format.
+
    ::
 
       pegasus-rc-converter [-Dprop  [..]]
