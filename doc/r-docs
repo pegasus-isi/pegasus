@@ -24,9 +24,9 @@ fi
 LOG_DIR_STR=`cat $LOG_FILE | grep "log directory" | awk '{print $5}'`
 LOG_DIR=$(remove_quotes $LOG_DIR_STR)
 
-#DOC_FILE_STR=`cat $LOG_FILE | grep "this is package" | awk '{print $5}'`
-#DOC_FILE=$(remove_quotes $DOC_FILE_STR)-manual.pdf
-#mv $LOG_DIR/$DOC_FILE $2/
+DOC_FILE_STR=`cat $LOG_FILE | grep "this is package" | awk '{print $5}'`
+DOC_FILE=$(remove_quotes $DOC_FILE_STR)-manual.pdf
+mv $LOG_DIR/$DOC_FILE $2/
 
 rm -rf $LOG_FILE
 rm -rf $LOG_DIR
