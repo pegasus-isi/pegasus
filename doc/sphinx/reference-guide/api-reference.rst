@@ -118,13 +118,9 @@ Java
 ====
 
 The Java DAX API provided with the Pegasus distribution allows easy
-creation of complex and huge workflows. This API is used by several
-applications to generate their abstract DAX. SCEC, which is Southern
-California Earthquake Center, uses this API in their CyberShake workflow
-generator to generate huge DAX containing 10RSQUORs of thousands of
-tasks with 100RSQUORs of thousands of input and output files. The `Java
-API <javadoc/index.html>`__ is well documented using `Javadoc for
-ADAGs <javadoc/edu/isi/pegasus/planner/dax/ADAG.html>`__ .
+creation of complex and huge workflows. The `Java
+API <../javadoc/index.html>`__ is documented using `Javadoc for
+ADAGs <../javadoc/edu/isi/pegasus/planner/dax/ADAG.html>`__ .
 
 The steps involved in creating a DAX using the API are
 
