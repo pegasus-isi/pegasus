@@ -2246,7 +2246,7 @@ Data Staging Configuration Properties
     |                                                       | |  workflow that creates a workflow specific           |
     |                                                       | | directory on the shared filesystem . The data        |
     |                                                       | | transfer jobs in the executable workflow             |
-    |                                                       | | ( stage_in_ , stage_inter_ , stage_out_ )            |
+    |                                                       | | ( stage\_in_ , stage\_inter\_ , stage\_out\_ )       |
     |                                                       | | transfer the data to this directory.The compute      |
     |                                                       | |  jobs in the executable workflow are launched in     |
     |                                                       | | the directory on the shared filesystem.              |
@@ -2264,7 +2264,7 @@ Data Staging Configuration Properties
     |                                                       | | and stage-out, cleanup ) jobs refer to the workflow  |
     |                                                       | | specific directory on the local site. The data       |
     |                                                       | | transfer jobs in the executable workflow             |
-    |                                                       | | ( stage_in_ , stage_inter_ , stage_out_ )            |
+    |                                                       | | ( stage\_in\_ , stage\_inter\_ , stage\_out\_ )      |
     |                                                       | | transfer the data to this directory. When the        |
     |                                                       | | compute jobs start, the input data for each job is   |
     |                                                       | | shipped from the workflow specific directory on      |
@@ -2298,7 +2298,7 @@ Data Staging Configuration Properties
     |                                                       | | stage-out, cleanup ) jobs refer to the workflow      |
     |                                                       | | specific directory on the staging site. The          |
     |                                                       | | data transfer jobs in the executable workflow        |
-    |                                                       | | ( stage_in_ , stage_inter_ , stage_out_ )            |
+    |                                                       | | ( stage\_in\_ , stage\_inter\_ , stage\_out\_        |
     |                                                       | | transfer the data to this directory. When the        |
     |                                                       | | compute jobs start, the input data for each          |
     |                                                       | | job is shipped from the workflow specific            |
