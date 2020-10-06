@@ -1628,9 +1628,9 @@ Catalog Related Properties
     |                                                    | |   based replica catalog that is accessed via JDBC.                             |
     |                                                    | |   To use JDBCRC, the user additionally needs to set                            |
     |                                                    | |   the following properties                                                     |
-    |                                                    | |   pegasus.catalog.replica.db.driver = mysql | postgres |sqlite                 |
+    |                                                    | |   pegasus.catalog.replica.db.driver = mysql \| postgres\|sqlite                |
     |                                                    | |   pegasus.catalog.replica.db.url = <jdbc url to the database>                  |
-    |                                                    | |     e.g jdbc:mysql://database-host.isi.edu/database-name |                     |
+    |                                                    | |     e.g jdbc:mysql://database-host.isi.edu/database-name \|                    |
     |                                                    | |     jdbc:sqlite:/shared/jdbcrc.db                                              |
     |                                                    | |   pegasus.catalog.replica.db.user = database-user                              |
     |                                                    | |   pegasus.catalog.replica.db.password = database-password                      |
@@ -2107,7 +2107,7 @@ Site Selection Properties
     |                                                | | pair being on a new line and separated by a =.                       |
     |                                                | | The following pairs are currently generated for the site             |
     |                                                | | selector temporary file that is generated in the NonJavaCallout.     |
-    |                                                | |                                                                      |
+    |                                                |                                                                        |
     |                                                | +----------------+---------------------------------------------------+ |
     |                                                | | Key            | Description                                       | |
     |                                                | +================+===================================================+ |
@@ -2621,7 +2621,7 @@ Monitoring Properties
     |                                                         | | to create a file with the log events.                                  |
     |                                                         | | Example values for the SQLAlchemy connection string for                |
     |                                                         | | various end points are listed below                                    |
-    |                                                         |                                                                          |
+    |                                                         | |                                                                        |
     |                                                         | +-----------------------+----------------------------------------------+ |
     |                                                         | | SQL Alchemy End Point | Example Value                                | |
     |                                                         | +=======================+==============================================+ |
@@ -2638,7 +2638,7 @@ Monitoring Properties
     | | Since : 4.2                                           | | in the $HOME/.pegasus directory. This is database is                   |
     | | Type: String                                          | | shared for all workflows run as a particular user. Users               |
     | | Default :                                             | | can specify an alternative database by using a SQLAlchemy              |
-    | | sqlite database in $HOME/.pegasus/workflow.db         | | connection string. Details are available at:                           |
+    | | sqlite database in $HOME/.pegasus/workflow.db         | | connection string. Details are available at                            |
     | | See Also : pegasus.catalog.workflow.url               |                                                                          |
     |                                                         | ::                                                                       |
     |                                                         |                                                                          |
@@ -2656,6 +2656,7 @@ Monitoring Properties
     |                                                         | | needs to exist. Users can also specify a file name                     |
     |                                                         | | using this property in order to create a file with                     |
     |                                                         | | the log events.                                                        |
+    |                                                         | |                                                                        |
     |                                                         | | Example values for the SQLAlchemy connection string                    |
     |                                                         | | for various end points are listed below                                |
     |                                                         | |                                                                        |
@@ -2753,7 +2754,7 @@ Job Clustering Properties
     | | Default : seqexec                                          | | job. This property determines, the executable        |
     |                                                              | | that will be used for running the larger job         |
     |                                                              | | on the remote site.                                  |
-    |                                                              |                                                        |
+    |                                                              | |                                                      |
     |                                                              | | **seqexec**: In this mode, the executable            |
     |                                                              | | used to run the merged job is “pegasus-cluster”      |
     |                                                              | | that runs each of the smaller jobs sequentially      |
@@ -2762,7 +2763,7 @@ Job Clustering Properties
     |                                                              | | distributed in the PEGASUS worker package, and       |
     |                                                              | | can be usually found at                              |
     |                                                              | | {pegasus.home}/bin/pegasus-cluster.                  |
-    |                                                              |                                                        |
+    |                                                              | |                                                      |
     |                                                              | | **mpiexec**: In this mode, the executable used       |
     |                                                              | | to run the clustered job is “pegasus-mpi-cluster”    |
     |                                                              | | (PMC) that runs the smaller jobs via mpi on n nodes  |
@@ -2784,7 +2785,7 @@ Job Clustering Properties
     | | Default : false                                            |                                                        |
     | | See Also :                                                 |                                                        |
     | |    pegasus.clusterer.job.aggregator                        |                                                        |
-    | |See Also :                                                  |                                                        |
+    | | See Also :                                                 |                                                        |
     | | pegasus.clusterer.job.aggregator.seqexec.log.global        |                                                        |
     +--------------------------------------------------------------+--------------------------------------------------------+
     | | Property Key:                                              | | The tool pegasus-cluster logs the progress of        |
@@ -2956,7 +2957,7 @@ Cleanup Properties
     | | Property Key:pegasus.file.cleanup.impl             | | This property is used to select the executable that    |
     | | Profile Key: N/A                                   | | is used to create the working directory on the         |
     | | Scope : Properties                                 | | compute sites.                                         |
-    | | Since : 2.2                                        |                                                          |
+    | | Since : 2.2                                        | |                                                        |
     | | Type :String                                       | | **Cleanup**                                            |
     | | Default : Cleanup                                  | | The default executable that is used to delete files    |
     |                                                      | | is the “pegasus-transfer” executable shipped with      |
@@ -2967,12 +2968,12 @@ Cleanup Properties
     |                                                      | | Transformation Catalog or the PEGASUS_HOME             |
     |                                                      | | environment variable should be specified in the        |
     |                                                      | | site catalog for the sites for this mode to work.      |
-    |                                                      |                                                          |
+    |                                                      | |                                                        |
     |                                                      | | **RM**                                                 |
     |                                                      | | This mode results in the rm executable to be used      |
     |                                                      | | to delete files from remote directories. The rm        |
     |                                                      | | executable is standard on *nix systems and is usually  |
-    |                                                      | | found at /bin/rm location.                             |
+    |                                                      | | found at /bin/rm  location.                            |
     +------------------------------------------------------+----------------------------------------------------------+
     | | Property Key: pegasus.file.cleanup.clusters.num    | | In case of the InPlace strategy for adding the         |
     | | Profile Key: N/A                                   | | cleanup nodes to the workflow, this property           |
