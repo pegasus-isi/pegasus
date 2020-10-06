@@ -9,7 +9,7 @@ pegasus-analyzer - debugs a workflow.
    ::
 
       pegasus-analyzer [--help|-h] [--quiet|-q] [--strict|-s]
-                       [--monitord|-m|-t] [--verbose|-v]
+                       [--summary|-S] [--monitord|-m|-t] [--verbose|-v]
                        [--output-dir|-o output_dir]
                        [--dag dag_filename] [--dir|-d|-i input_dir]
                        [--print|-p print_options] [--type workflow_type]
@@ -17,6 +17,7 @@ pegasus-analyzer - debugs a workflow.
                        [--local-executable local user executable]
                        [--conf|-c property_file] [--files]
                        [--top-dir dir_name] [--recurse|-r]
+                       [--indent|-I indent_length]
                        [workflow_directory]
 
 
@@ -47,6 +48,9 @@ Options
 
 **-s**; \ **--strict**
    Get jobs' output and error filenames from the job’s submit file.
+
+**-S**; \ **--summary**
+   Just print the summary about the jobs breakdown status and exit.
 
 **-m**; \ **-t**; \ **--monitord**
    Invoke **pegasus-monitord** before analyzing the *jobstate.log* file.
@@ -160,6 +164,11 @@ Options
    automatically issues the command invocation and in addition displays
    the failed jobs in the sub workflow.
 
+**-I**; \ **--indent**
+   This option sets **indent** length to use when walking displaying
+   results from invoking the command on a hierarchical workflow using the
+   **-r|--recurse** option. This option dictates the number of white spaces
+   to use when indenting the output of pegasus-analyzer of a sub workflow.
 
 
 Environment Variables
