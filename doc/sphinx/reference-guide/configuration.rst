@@ -2621,7 +2621,7 @@ Monitoring Properties
     |                                                         | | to create a file with the log events.                                  |
     |                                                         | | Example values for the SQLAlchemy connection string for                |
     |                                                         | | various end points are listed below                                    |
-    |                                                         | |                                                                        |
+    |                                                         |                                                                          |
     |                                                         | +-----------------------+----------------------------------------------+ |
     |                                                         | | SQL Alchemy End Point | Example Value                                | |
     |                                                         | +=======================+==============================================+ |
@@ -2656,10 +2656,10 @@ Monitoring Properties
     |                                                         | | needs to exist. Users can also specify a file name                     |
     |                                                         | | using this property in order to create a file with                     |
     |                                                         | | the log events.                                                        |
-    |                                                         | |                                                                        |
+    |                                                         |                                                                          |
     |                                                         | | Example values for the SQLAlchemy connection string                    |
     |                                                         | | for various end points are listed below                                |
-    |                                                         | |                                                                        |
+    |                                                         |                                                                          |
     |                                                         | +-----------------------+----------------------------------------------+ |
     |                                                         | | SQL Alchemy End Point | Example Value                                | |
     |                                                         | +=======================+==============================================+ |
@@ -2968,11 +2968,11 @@ Cleanup Properties
     |                                                      | | Transformation Catalog or the PEGASUS_HOME             |
     |                                                      | | environment variable should be specified in the        |
     |                                                      | | site catalog for the sites for this mode to work.      |
-    |                                                      | |                                                        |
+    |                                                      |                                                          |
     |                                                      | | **RM**                                                 |
     |                                                      | | This mode results in the rm executable to be used      |
     |                                                      | | to delete files from remote directories. The rm        |
-    |                                                      | | executable is standard on *nix systems and is usually  |
+    |                                                      | | executable is standard on \*nix systems and is usually |
     |                                                      | | found at /bin/rm  location.                            |
     +------------------------------------------------------+----------------------------------------------------------+
     | | Property Key: pegasus.file.cleanup.clusters.num    | | In case of the InPlace strategy for adding the         |
