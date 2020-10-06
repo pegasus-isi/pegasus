@@ -1623,7 +1623,8 @@ Catalog Related Properties
     | | Default : File                                   | | specifies which type of Replica Catalog to use during                          |
     |                                                    | | the planning process.                                                          |
     |                                                    | |                                                                                |
-    |                                                    | | - **JDBCRC**: In this mode, Pegasus queries a SQL                              |
+    |                                                    | | **JDBCRC**                                                                     |
+    |                                                    | |   In this mode, Pegasus queries a SQL                                          |
     |                                                    | |   based replica catalog that is accessed via JDBC.                             |
     |                                                    | |   To use JDBCRC, the user additionally needs to set                            |
     |                                                    | |   the following properties                                                     |
@@ -1633,7 +1634,9 @@ Catalog Related Properties
     |                                                    | |     jdbc:sqlite:/shared/jdbcrc.db                                              |
     |                                                    | |   pegasus.catalog.replica.db.user = database-user                              |
     |                                                    | |   pegasus.catalog.replica.db.password = database-password                      |
-    |                                                    | | - **File**: In this mode, Pegasus queries a file based                         |
+    |                                                    | |                                                                                |
+    |                                                    | | **File**                                                                       |
+    |                                                    | |   In this mode, Pegasus queries a file based                                   |
     |                                                    | |   replica catalog. It is neither transactionally safe,                         |
     |                                                    | |   nor advised to use for production purposes in any way.                       |
     |                                                    | |   Multiple concurrent instances will clobber each other!.                      |
@@ -1658,7 +1661,9 @@ Catalog Related Properties
     |                                                    | |   **pegasus.catalog.replica.file** property to                                 |
     |                                                    | |   specify the path to the file based RC. IF not                                |
     |                                                    | |   specified , defaults to $PWD/rc.txt file.                                    |
-    |                                                    | | - **YAML**: This is the new YAML based file format                             |
+    |                                                    | |                                                                                |
+    |                                                    | | **YAML**                                                                       |
+    |                                                    | |   This is the new YAML based file format                                       |
     |                                                    | |   introduced in Pegasus 5.0. The format does support                           |
     |                                                    | |   regular expressions similar to Regex catalog type.                           |
     |                                                    | |   To specify regular expressions you need to associate                         |
@@ -1667,7 +1672,9 @@ Catalog Related Properties
     |                                                    | |   **pegasus.catalog.replica.file** property to                                 |
     |                                                    | |   specify the path to the file based RC. IF not                                |
     |                                                    | |   specified , defaults to $PWD/replicas.yml file.                              |
-    |                                                    | | - **Regex**: In this mode, Pegasus queries a file                              |
+    |                                                    | |                                                                                |
+    |                                                    | | **Regex**                                                                      |
+    |                                                    | |   In this mode, Pegasus queries a file                                         |
     |                                                    | |   based replica catalog. It is neither transactionally                         |
     |                                                    | |   safe, nor advised to use for production purposes in any                      |
     |                                                    | |   way. Multiple concurrent access to the File will end                         |
@@ -1727,7 +1734,9 @@ Catalog Related Properties
     |                                                    | |   To use File, the user additionally needs to specify                          |
     |                                                    | |   pegasus.catalog.replica.file property to specify the                         |
     |                                                    | |   path to the file based RC.                                                   |
-    |                                                    | | - **Directory**: In this mode, Pegasus does a directory                        |
+    |                                                    | |                                                                                |
+    |                                                    | | **Directory**                                                                  |
+    |                                                    | |   In this mode, Pegasus does a directory                                       |
     |                                                    | |   listing on an input directory to create the LFN to PFN                       |
     |                                                    | |   mappings. The directory listing is performed                                 |
     |                                                    | |   recursively, resulting in deep LFN mappings.                                 |
@@ -1774,7 +1783,9 @@ Catalog Related Properties
     |                                                    | |   - **pegasus.catalog.replica.directory.url.prefix**                           |
     |                                                    | |      to associate a URL prefix for the PFN’s constructed.                      |
     |                                                    | |      If not specified, the URL defaults to file://                             |
-    |                                                    | | - **MRC**: In this mode, Pegasus queries multiple                              |
+    |                                                    | |                                                                                |
+    |                                                    | | **MRC**                                                                        |
+    |                                                    | |   In this mode, Pegasus queries multiple                                       |
     |                                                    | |   replica catalogs to discover the file locations on the                       |
     |                                                    | |   grid. To use it set                                                          |
     |                                                    | |   pegasus.catalog.replica MRC                                                  |
@@ -1928,7 +1939,8 @@ Replica Selection Properties
     | |  pegasus.selector.replica.*.ignore.stagein.sites  | | determines the replica selector to use for selecting                |
     | | See Also :                                        | | the replicas.                                                       |
     | |  pegasus.selector.replica.*.prefer.stagein.sites  |                                                                       |
-    |                                                     |  - **Default**                                                        |
+    |                                                     |   **Default**                                                         |
+    |                                                     |                                                                       |
     |                                                     | |  The selector orders the various candidate replica’s                |
     |                                                     | |  according to the following rules                                   |
     |                                                     |                                                                       |
@@ -1938,7 +1950,8 @@ Replica Selection Properties
     |                                                     | |  2. all URL’s from preferred site (usually the compute site)        |
     |                                                     | |  3. all other remotely accessible ( non file) URL’s                 |
     |                                                     |                                                                       |
-    |                                                     |  - **Regex**                                                          |
+    |                                                     |   **Regex**                                                           |
+    |                                                     |                                                                       |
     |                                                     | | This replica selector allows the user allows the user to            |
     |                                                     | | specific regular expressions that can be used to rank               |
     |                                                     | | various PFN’s returned from the Replica Catalog for a               |
@@ -1961,7 +1974,8 @@ Replica Selection Properties
     |                                                     | | on the PFN’s, the file URL’s that dont match the preferred          |
     |                                                     | | site are explicitly filtered out.                                   |
     |                                                     |                                                                       |
-    |                                                     | - **Restricted**                                                      |
+    |                                                     |   **Restricted**                                                      |
+    |                                                     |                                                                       |
     |                                                     | | This replica selector, allows the user to specify good sites        |
     |                                                     | | and bad sites for staging in data to a particular compute site.     |
     |                                                     | | A good site for a compute site X, is a preferred site from          |
@@ -1988,7 +2002,8 @@ Replica Selection Properties
     |                                                     | | and the preferred set, then site Y is taken to mean as only a       |
     |                                                     | | preferred site for a site X.                                        |
     |                                                     |                                                                       |
-    |                                                     | - **Local**                                                           |
+    |                                                     |   **Local**                                                           |
+    |                                                     |                                                                       |
     |                                                     | | This replica selector prefers replicas from the local host          |
     |                                                     | | and that start with a file: URL scheme. It is useful, when          |
     |                                                     | | users want to stagin files to a remote site from your submit        |
@@ -2056,11 +2071,13 @@ Site Selection Properties
     | | Property Key: pegasus.selector.site          | | The site selection in Pegasus can be on basis of any of the          |
     | | Profile Key: N/A                             | | following strategies.                                                |
     | | Scope : Properties                           |                                                                        |
-    | | Since : 2.0                                  | - **Random**                                                           |
+    | | Since : 2.0                                  |   **Random**                                                           |
+    |                                                |                                                                        |
     | | Type  : String                               | | In this mode, the jobs will be randomly distributed among            |
     | | Default : Random                             | | the sites that can execute them.                                     |
     | | See Also :                                   |                                                                        |
-    | |   pegasus.selector.site.path                 | - **RoundRobin**                                                       |
+    | |   pegasus.selector.site.path                 |   **RoundRobin**                                                       |
+    |                                                |                                                                        |
     | | See Also :                                   | | In this mode. the jobs will be assigned in a round robin             |
     | |   pegasus.selector.site.timeout              | | manner amongst the sites that can execute them. Since                |
     | | See Also :                                   | | each site cannot execute everytype of job, the round                 |
@@ -2074,7 +2091,8 @@ Site Selection Properties
     |                                                | | to classic round robin in the case where all the jobs                |
     |                                                | | in the workflow can run on all the sites.                            |
     |                                                |                                                                        |
-    |                                                | - **NonJavaCallout**                                                   |
+    |                                                |   **NonJavaCallout**                                                   |
+    |                                                |                                                                        |
     |                                                | | In this mode, Pegasus will callout to an external site               |
     |                                                | | selector.In this mode a temporary file is prepared                   |
     |                                                | | containing the job information that is passed to the                 |
@@ -2138,7 +2156,8 @@ Site Selection Properties
     |                                                | | vo.group       | unused at present and is set to NONE.             | |
     |                                                | +----------------+---------------------------------------------------+ |
     |                                                |                                                                        |
-    |                                                | - **Group**                                                            |
+    |                                                |   **Group**                                                            |
+    |                                                |                                                                        |
     |                                                | | In this mode, a group of jobs will be assigned to the same site      |
     |                                                | | that can execute them. The use of the PEGASUS profile key            |
     |                                                | | group in the abstract workflow, associates a job with a              |
@@ -2147,7 +2166,8 @@ Site Selection Properties
     |                                                | | The jobs in the default group are handed over to the “Random”        |
     |                                                | | Site Selector for scheduling.                                        |
     |                                                |                                                                        |
-    |                                                | - **Heft**                                                             |
+    |                                                |   **Heft**                                                             |
+    |                                                |                                                                        |
     |                                                | | In this mode, a version of the HEFT processor scheduling             |
     |                                                | | algorithm is used to schedule jobs in the workflow to multiple       |
     |                                                | | grid sites. The implementation assumes default data communication    |
@@ -2215,7 +2235,8 @@ Data Staging Configuration Properties
     | | Values : sharedfs|nonsharedfs|condorio              | | workflows with each site having a different data     |
     | | Default : condorio                                  | | configuration.                                       |
     | | See Also : pegasus.transfer.bypass.input.staging    |                                                        |
-    |                                                       | - **sharedfs**                                         |
+    |                                                       |   **sharedfs**                                         |
+    |                                                       |                                                        |
     |                                                       | | If this is set, Pegasus will be setup to execute     |
     |                                                       | | jobs on the shared filesystem on the execution site. |
     |                                                       | | This assumes, that the head node of a cluster and    |
@@ -2230,7 +2251,8 @@ Data Staging Configuration Properties
     |                                                       | |  jobs in the executable workflow are launched in     |
     |                                                       | | the directory on the shared filesystem.              |
     |                                                       |                                                        |
-    |                                                       | - **condorio**                                         |
+    |                                                       |   **condorio**                                         |
+    |                                                       |                                                        |
     |                                                       | | If this is set, Pegasus will be setup to run jobs    |
     |                                                       | | in a pure condor pool, with the nodes not sharing    |
     |                                                       | | a filesystem. Data is staged to the compute nodes    |
@@ -2260,7 +2282,8 @@ Data Staging Configuration Properties
     |                                                       |    pegasus.transfer.worker.package      true           |
     |                                                       |                                                        |
     |                                                       |                                                        |
-    |                                                       | - **nonsharedfs**                                      |
+    |                                                       |   **nonsharedfs**                                      |
+    |                                                       |                                                        |
     |                                                       | | If this is set, Pegasus will be setup to execute     |
     |                                                       | | jobs on an execution site without relying on a       |
     |                                                       | | shared filesystem between the head node and the      |
@@ -2383,7 +2406,7 @@ Transfer Configuration Properties
     |                                                  | | manage data transfers are explained below                                  |
     |                                                  | |                                                                            |
     |                                                  |                                                                              |
-    |                                                  | - **Transfer**: This results in pegasus-transfer to be used                  |
+    |                                                  | | **Transfer**: This results in pegasus-transfer to be used                  |
     |                                                  | | for transferring of files. It is a python based wrapper                    |
     |                                                  | | around various transfer clients like globus-url-copy,                      |
     |                                                  | | lcg-copy, wget, cp, ln . pegasus-transfer looks at source                  |
@@ -2398,7 +2421,7 @@ Transfer Configuration Properties
     |                                                  | | entry into the transformation catalog with fully qualified                 |
     |                                                  | | logical name as pegasus::pegasus-transfer                                  |
     |                                                  |                                                                              |
-    |                                                  | - **GUC**: This refers to the new guc client that does                       |
+    |                                                  | | **GUC**: This refers to the new guc client that does                       |
     |                                                  | | multiple file transfers per invocation. The                                |
     |                                                  | | globus-url-copy client distributed with Globus 4.x                         |
     |                                                  | | is compatible with this mode.                                              |
@@ -2731,7 +2754,7 @@ Job Clustering Properties
     |                                                              | | that will be used for running the larger job         |
     |                                                              | | on the remote site.                                  |
     |                                                              |                                                        |
-    |                                                              | - **seqexec**: In this mode, the executable            |
+    |                                                              | | **seqexec**: In this mode, the executable            |
     |                                                              | | used to run the merged job is “pegasus-cluster”      |
     |                                                              | | that runs each of the smaller jobs sequentially      |
     |                                                              | | on the same node. The executable                     |
@@ -2740,7 +2763,7 @@ Job Clustering Properties
     |                                                              | | can be usually found at                              |
     |                                                              | | {pegasus.home}/bin/pegasus-cluster.                  |
     |                                                              |                                                        |
-    |                                                              | - **mpiexec**: In this mode, the executable used       |
+    |                                                              | | **mpiexec**: In this mode, the executable used       |
     |                                                              | | to run the clustered job is “pegasus-mpi-cluster”    |
     |                                                              | | (PMC) that runs the smaller jobs via mpi on n nodes  |
     |                                                              | | where n is the nodecount associated with the merged  |
@@ -2748,7 +2771,7 @@ Job Clustering Properties
     |                                                              | | PEGASUS tool distributed in the PEGASUS distribution |
     |                                                              | | and is built only if mpi compiler is available.      |
     |                                                              | |                                                      |
-    |                                                              | - **AWSBatch**: In this mode, the executable used to   |
+    |                                                              | | **AWSBatch**: In this mode, the executable used to   |
     |                                                              | | run the merged job is “pegasus-aws-batch” that runs  |
     |                                                              | | in local universe on the submit and runs the jobs    |
     |                                                              | | making up the cluster on AWS Batch.                  |
@@ -2824,13 +2847,13 @@ Logging Properties
     | | Property Key: pegasus.log.manager           | | This property sets the logging implementation to use for                  |
     | | Profile Key: N/A                            | | logging.                                                                  |
     | | Scope : Properties                          |                                                                             |
-    | | Since : 2.2.0                               | - **Default**:                                                              |
+    | | Since : 2.2.0                               | | **Default**:                                                              |
     | | Type : String                               | | This implementation refers to the legacy                                  |
     | | Values : Default|Log4J                      | | Pegasus logger, that logs directly to stdout and stderr.                  |
     | | Default : Default                           | |  It however, does have the concept of levels similar to                   |
     | | See Also :pegasus.log.manager.formatter     | | log4j or syslog.                                                          |
     |                                               |                                                                             |
-    |                                               | - **Log4j**:                                                                |
+    |                                               | | **Log4j**:                                                                |
     |                                               | | This implementation, uses Log4j to log                                    |
     |                                               | |  messages. The log4j properties can be specified in                       |
     |                                               | |  a properties file, the location of which is specified                    |
@@ -2839,7 +2862,7 @@ Logging Properties
     | | Property Key: pegasus.log.manager.formatter | | This property sets the formatter to use for formatting                    |
     | | Profile Key: N/A                            | | the log messages while logging.                                           |
     | | Scope : Properties                          |                                                                             |
-    | | Since : 2.2.0                               | - **Simple**                                                                |
+    | | Since : 2.2.0                               | | **Simple**                                                                |
     | | Type : String                               | | This formats the messages in a simple format. The                         |
     | | Values : Simple|Netlogger                   | | messages are logged as is with minimal formatting.                        |
     | | Default : Simple                            | | Below are sample log messages in this format while                        |
@@ -2855,7 +2878,7 @@ Logging Properties
     |                                               |    event.pegasus.ranking dax.id se18-gda.dax  - FINISHED                    |
     |                                               |                                                                             |
     |                                               |                                                                             |
-    |                                               | - **Netlogger**                                                             |
+    |                                               | | **Netlogger**                                                             |
     |                                               | | This formats the messages in the Netlogger format , that                  |
     |                                               | | is based on key value pairs. The netlogger format is useful               |
     |                                               | | for loading the logs into a database to do some meaningful                |
@@ -2918,11 +2941,11 @@ Cleanup Properties
     | | Profile Key: N/A                                   | | the cleanup nodes are added to the executable          |
     | | Scope :Properties                                  | | workflow.                                              |
     | | Since :2.2                                         |                                                          |
-    | | Type :String                                       | - **InPlace**                                            |
+    | | Type :String                                       | | **InPlace**                                            |
     | | Default :InPlace                                   | | The default cleanup strategy. Adds cleanup nodes per   |
     |                                                      | | level of the workflow.                                 |
     |                                                      |                                                          |
-    |                                                      | - **Constraint**                                         |
+    |                                                      | | **Constraint**                                         |
     |                                                      | | Adds cleanup nodes to constraint the amount of storage |
     |                                                      | | space used by a workflow.                              |
     |                                                      |                                                          |
@@ -2934,7 +2957,7 @@ Cleanup Properties
     | | Profile Key: N/A                                   | | is used to create the working directory on the         |
     | | Scope : Properties                                 | | compute sites.                                         |
     | | Since : 2.2                                        |                                                          |
-    | | Type :String                                       | - **Cleanup**                                            |
+    | | Type :String                                       | | **Cleanup**                                            |
     | | Default : Cleanup                                  | | The default executable that is used to delete files    |
     |                                                      | | is the “pegasus-transfer” executable shipped with      |
     |                                                      | | Pegasus. It is found at                                |
@@ -2945,7 +2968,7 @@ Cleanup Properties
     |                                                      | | environment variable should be specified in the        |
     |                                                      | | site catalog for the sites for this mode to work.      |
     |                                                      |                                                          |
-    |                                                      | - **RM**                                                 |
+    |                                                      | | **RM**                                                 |
     |                                                      | | This mode results in the rm executable to be used      |
     |                                                      | | to delete files from remote directories. The rm        |
     |                                                      | | executable is standard on *nix systems and is usually  |
@@ -2970,7 +2993,7 @@ Cleanup Properties
     | | Since : 2.3.0                                      | | property can be used to turn on the cleanup in case    |
     | | Type :Enumeration                                  | | of deferred planning.                                  |
     | | Value :fullahead|deferred                          |                                                          |
-    | | Default : fullahead                                | - **fullahead**:                                         |
+    | | Default : fullahead                                | | **fullahead**:                                         |
     |                                                      | | This is the default scope. The pegasus cleanup         |
     |                                                      | | algorithm does not work across partitions in           |
     |                                                      | | deferred planning. Hence the cleanup is always         |
@@ -2978,7 +3001,7 @@ Cleanup Properties
     |                                                      | | cleanup scope is set to full ahead.                    |
     |                                                      |                                                          |
     |                                                      |                                                          |
-    |                                                      | - **deferred**:                                          |
+    |                                                      | | **deferred**:                                          |
     |                                                      | | If the scope is set to deferred, then Pegasus          |
     |                                                      | | will not disable file cleanup in case of deferred      |
     |                                                      | | planning. This is useful for scenarios where the       |
@@ -3037,30 +3060,30 @@ AWS Batch Properties
     +-------------------------------------------------------+--------------------------------------------------------+
     | | Property Key: pegasus.aws.batch.job_definition      | | This property is used to specify                     |
     | | Profile Key: N/A                                    |                                                        |
-    | | Scope : Properties                                  | - the JSON file containing job definition to register  |
+    | | Scope : Properties                                  | | - the JSON file containing job definition to register|
     | | Since : 4.9.0                                       | | for executing jobs OR                                |
-    | | Type :String                                        |                                                        |
-    | | Default : (no default)                              | - the ARN of existing job definition OR                |
-    |                                                       |                                                        |
-    |                                                       | - basename of an existing job definition               |
+    | | Type :String                                        | |                                                      |
+    | | Default : (no default)                              | | - the ARN of existing job definition OR              |
+    |                                                       | |                                                      |
+    |                                                       | | - basename of an existing job definition             |
     +-------------------------------------------------------+--------------------------------------------------------+
     | | Property Key: pegasus.aws.batch.compute_environment | | This property is used to specify                     |
     | | Profile Key:N/A                                     |                                                        |
-    | | Scope : Properties                                  | - the JSON file containing compute environment to      |
-    | | Since : 4.9.0                                       | | register for executing jobs OR                       |
-    | | Type :String                                        |                                                        |
-    | | Default : (no default)                              | - the ARN of existing compute environment OR           |
-    |                                                       |                                                        |
-    |                                                       | - basename of an existing compute environment          |
+    | | Scope : Properties                                  | | - the JSON file containing compute environment to    |
+    | | Since : 4.9.0                                       | |   register for executing jobs OR                     |
+    | | Type :String                                        | |                                                      |
+    | | Default : (no default)                              | | - the ARN of existing compute environment OR         |
+    |                                                       | |                                                      |
+    |                                                       | | - basename of an existing compute environment        |
     +-------------------------------------------------------+--------------------------------------------------------+
     | | Property Key: pegasus.aws.batch.job_queue           | | This property is used to specify                     |
     | | Profile Key: N/A                                    |                                                        |
-    | | Scope : Properties                                  | - the JSON file containing Job Queue to use for        |
+    | | Scope : Properties                                  | | - the JSON file containing Job Queue to use for      |
     | | Since : 4.9.0                                       | | executing jobs OR                                    |
-    | | Type :String                                        |                                                        |
-    | | Default : (no default)                              | - the ARN of existing job queue OR                     |
-    |                                                       |                                                        |
-    |                                                       | - basename of an existing job queue                    |
+    | | Type :String                                        | |                                                      |
+    | | Default : (no default)                              | | - the ARN of existing job queue OR                   |
+    |                                                       | |                                                      |
+    |                                                       | | - basename of an existing job queue                  |
     +-------------------------------------------------------+--------------------------------------------------------+
     | | Property Key: pegasus.aws.batch.s3_bucket           | | This property is used to specify the S3 Bucket       |
     | | Profile Key: N/A                                    | | URL to use for data transfers while executing        |
@@ -3085,21 +3108,21 @@ Miscellaneous Properties
     | | Profile Key: N/A                                | | Generator to use for writing out the executable           |
     | | Scope : Properties                              | |  workflow.                                                |
     | | Since : 3.0                                     |                                                             |
-    | | Type : String                                   | - **Condor**                                                |
+    | | Type : String                                   | | **Condor**                                                |
     | | Values : Condor|Shell|PMC                       | | This is the default code generator for Pegasus .          |
     | | Default : Condor                                | | This generator generates the executable workflow as a     |
     | | See Also : pegasus.log.manager.formatter        | | Condor DAG file and associated job submit files. The      |
     |                                                   | | Condor DAG file is passed as input to Condor DAGMan       |
     |                                                   | | for job execution.                                        |
     |                                                   |                                                             |
-    |                                                   | - **Shell**                                                 |
+    |                                                   | | **Shell**                                                 |
     |                                                   | | This Code Generator generates the executable workflow     |
     |                                                   | | as a shell script that can be executed on the submit      |
     |                                                   | | host. While using this code generator, all the jobs       |
     |                                                   | | should be mapped to site local i.e specify –sites         |
     |                                                   | | local to pegasus-plan.                                    |
     |                                                   |                                                             |
-    |                                                   | - **PMC**                                                   |
+    |                                                   | | **PMC**                                                   |
     |                                                   | | This Code Generator generates the executable workflow     |
     |                                                   | | as a PMC task workflow. This is useful to run on          |
     |                                                   | | platforms where it not feasible to run Condor such        |
@@ -3119,12 +3142,12 @@ Miscellaneous Properties
     | | Profile Key: N/A                                | | output files in the replica catalog. An output            |
     | | Scope : Properties                              | | file is registered only                                   |
     | | Since : 4.1.-                                   |                                                             |
-    | | Type : Boolean                                  | - if a user has configured a replica catalog in the         |
+    | | Type : Boolean                                  | | - if a user has configured a replica catalog in the       |
     | | Default : true                                  | | properties                                                |
-    |                                                   |                                                             |
-    |                                                   | - the register flags for the output files in the            |
+    |                                                   | |                                                           |
+    |                                                   | | - the register flags for the output files in the          |
     |                                                   | | abstract workflow are set to true                         |
-    |                                                   |                                                             |
+    |                                                   | |                                                           |
     |                                                   | | This property can be used to turn off the creation        |
     |                                                   | | of the registration jobs even though the files            |
     |                                                   | | maybe marked to be registered in the replica catalog.     |
@@ -3145,19 +3168,19 @@ Miscellaneous Properties
     | | Property Key: pegasus.data.reuse.scope          | | This property is used to control the behavior of the      |
     | | Profile Key: N/A                                | | data reuse algorithm in Pegasus                           |
     | | Scope : Properties                              |                                                             |
-    | | Since : 4.5.0                                   | - **none**                                                  |
+    | | Since : 4.5.0                                   | | **none**                                                  |
     | | Type :Enumeration                               | | This is same as disabling data reuse. It is equivalent    |
     | | Value :none|partial|full                        | | to passing the –force option to pegasus-plan on the       |
     | | Default : full                                  | | command line.                                             |
     |                                                   |                                                             |
-    |                                                   | - **partial**                                               |
+    |                                                   | | **partial**                                               |
     |                                                   | | In this case, only certain jobs ( those that have pegasus |
     |                                                   | | profile key enable_for_data_reuse set to true ) are       |
     |                                                   | | checked for presence of output files in the replica       |
     |                                                   | | catalog. This gives users control over what jobs are      |
     |                                                   | | deleted as part of the data reuse algorithm.              |
     |                                                   |                                                             |
-    |                                                   | - **full**                                                  |
+    |                                                   | | **full**                                                  |
     |                                                   | | This is the default behavior, where all the jobs output   |
     |                                                   | |  files are looked up in the replica catalog.              |
     +---------------------------------------------------+-------------------------------------------------------------+
@@ -3178,7 +3201,7 @@ Miscellaneous Properties
     |                                                   | |                                                           |
     |                                                   | | This property determines, how that map is created.        |
     |                                                   |                                                             |
-    |                                                   | - **All**                                                   |
+    |                                                   | | **All**                                                   |
     |                                                   | | In this mode, all sources with entries of type            |
     |                                                   | | STATIC_BINARY for a particular transformation are         |
     |                                                   | |  considered valid sources for the transfer of             |
@@ -3186,14 +3209,14 @@ Miscellaneous Properties
     |                                                   | | results in the constructing the map as a result           |
     |                                                   | | of the cartesian product of the matches.                  |
     |                                                   |                                                             |
-    |                                                   | - **Installed**                                             |
+    |                                                   | | **Installed**                                             |
     |                                                   | | In this mode, only entries that are of type INSTALLED     |
     |                                                   | | are used while constructing the soft state map.           |
     |                                                   | | This results in Pegasus never doing any transfer          |
     |                                                   | | of executables as part of the workflow. It always         |
     |                                                   | | prefers the installed executables at the remote sites.    |
     |                                                   |                                                             |
-    |                                                   | - **Staged**                                                |
+    |                                                   | | **Staged**                                                |
     |                                                   | | In this mode, only entries that are of type               |
     |                                                   | | STATIC_BINARY are used while constructing the soft state  |
     |                                                   | | map. This results in the concrete workflow referring      |
@@ -3202,7 +3225,7 @@ Miscellaneous Properties
     |                                                   | | remote end.                                               |
     |                                                   |                                                             |
     |                                                   |                                                             |
-    |                                                   | - **Submit**                                                |
+    |                                                   | | **Submit**                                                |
     |                                                   | | In this mode, only entries that are of type               |
     |                                                   | | STATIC_BINARY and reside at the submit host               |
     |                                                   | | (“site” local), are used while constructing the soft      |
@@ -3227,22 +3250,22 @@ Miscellaneous Properties
     |                                                   | | applied, the soft state map only has entries of type      |
     |                                                   | | STAGEABLE.                                                |
     |                                                   |                                                             |
-    |                                                   | - **Random**                                                |
+    |                                                   | | **Random**                                                |
     |                                                   | | In this mode, a random matching candidate transformation  |
     |                                                   | |  is selected to be staged to the remote execution site.   |
     |                                                   |                                                             |
-    |                                                   | - **Installed**                                             |
+    |                                                   | | **Installed**                                             |
     |                                                   | | In this mode, only entries that are of type INSTALLED     |
     |                                                   | | are selected. This means that the executable workflow     |
     |                                                   | | only refers to the transformations already pre installed  |
     |                                                   | | on the remote sites.                                      |
     |                                                   |                                                             |
-    |                                                   | - **Staged**                                                |
+    |                                                   | | **Staged**                                                |
     |                                                   | | In this mode, only entries that are of type STATIC_BINARY |
     |                                                   | | are selected, ignoring the ones that are installed at     |
     |                                                   | | the remote site.                                          |
     |                                                   |                                                             |
-    |                                                   | - **Submit**                                                |
+    |                                                   | | **Submit**                                                |
     |                                                   | | In this mode, only entries that are of type STATIC_BINARY |
     |                                                   | | and reside at the submit host (“site” local), are         |
     |                                                   | | selected as sources for staging the executables to the    |
@@ -3268,10 +3291,10 @@ Miscellaneous Properties
     | | Profile Key: N/A                                | | integrity checking. Currently the following dials are     |
     | | Scope : Properties                              | | supported                                                 |
     | | Since : 4.9.0                                   |                                                             |
-    | | Type :none|full|nosymlink                       | - **none**                                                  |
+    | | Type :none|full|nosymlink                       | | **none**                                                  |
     | | Default : full                                  | | no integrity checking occurs.                             |
     |                                                   |                                                             |
-    |                                                   | - **full**                                                  |
+    |                                                   | | **full**                                                  |
     |                                                   | | In this mode, integrity checking happens at 3 levels      |
     |                                                   | |                                                           |
     |                                                   | | 1. after the input data has been staged to staging server |
@@ -3285,7 +3308,7 @@ Miscellaneous Properties
     |                                                   | | to user servers - This ensures that output data staged    |
     |                                                   | | to the final location was not corrupted in transit.       |
     |                                                   |                                                             |
-    |                                                   | - **nosymlink**                                             |
+    |                                                   | | **nosymlink**                                             |
     |                                                   | | No integrity checking is performed on input files         |
     |                                                   | | that are symlinked. You should consider turning           |
     |                                                   | | this on, if you think that your input files at rest       |
