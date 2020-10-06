@@ -1818,6 +1818,12 @@ Catalog Related Properties
     |                                                    | |   valid identifier names and url is the property key that                      |
     |                                                    | |   needed to be specified.                                                      |
     +----------------------------------------------------+----------------------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.replica.file.      | | The path to a file based replica catalog backend                               |
+    | | Profile Key: N/A                                 | |                                                                                |
+    | | Scope : Properties                               | |                                                                                |
+    | | Since : 2.0                                      | |                                                                                |
+    | | Default : 1000                                   | |                                                                                |
+    +----------------------------------------------------+----------------------------------------------------------------------------------+
     | | Property Key: pegasus.catalog.replica.chunk.size | | The pegasus-rc-client takes in an input file containing the                    |
     | | Profile Key: N/A                                 | | mappings upon which to work. This property determines, the                     |
     | | Scope : Properties                               | | number of lines that are read in at a time, and worked upon                    |

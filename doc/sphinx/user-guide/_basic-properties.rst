@@ -101,6 +101,7 @@ Catalog Related Properties
 
 .. table:: Replica Catalog Properties
 
+
     +----------------------------------------------------+----------------------------------------------------------------------------------+
     | Key Attributes                                     | Description                                                                      |
     +====================================================+==================================================================================+
@@ -111,17 +112,20 @@ Catalog Related Properties
     | | Default : File                                   | | specifies which type of Replica Catalog to use during                          |
     |                                                    | | the planning process.                                                          |
     |                                                    | |                                                                                |
-    |                                                    | | - **JDBCRC**: In this mode, Pegasus queries a SQL                              |
+    |                                                    | | **JDBCRC**                                                                     |
+    |                                                    | |   In this mode, Pegasus queries a SQL                                          |
     |                                                    | |   based replica catalog that is accessed via JDBC.                             |
     |                                                    | |   To use JDBCRC, the user additionally needs to set                            |
     |                                                    | |   the following properties                                                     |
-    |                                                    | |   pegasus.catalog.replica.db.driver = mysql | postgres |sqlite                 |
+    |                                                    | |   pegasus.catalog.replica.db.driver = mysql \| postgres\|sqlite                |
     |                                                    | |   pegasus.catalog.replica.db.url = <jdbc url to the database>                  |
-    |                                                    | |     e.g jdbc:mysql://database-host.isi.edu/database-name |                     |
+    |                                                    | |     e.g jdbc:mysql://database-host.isi.edu/database-name \|                    |
     |                                                    | |     jdbc:sqlite:/shared/jdbcrc.db                                              |
     |                                                    | |   pegasus.catalog.replica.db.user = database-user                              |
     |                                                    | |   pegasus.catalog.replica.db.password = database-password                      |
-    |                                                    | | - **File**: In this mode, Pegasus queries a file based                         |
+    |                                                    | |                                                                                |
+    |                                                    | | **File**                                                                       |
+    |                                                    | |   In this mode, Pegasus queries a file based                                   |
     |                                                    | |   replica catalog. It is neither transactionally safe,                         |
     |                                                    | |   nor advised to use for production purposes in any way.                       |
     |                                                    | |   Multiple concurrent instances will clobber each other!.                      |
@@ -146,7 +150,9 @@ Catalog Related Properties
     |                                                    | |   **pegasus.catalog.replica.file** property to                                 |
     |                                                    | |   specify the path to the file based RC. IF not                                |
     |                                                    | |   specified , defaults to $PWD/rc.txt file.                                    |
-    |                                                    | | - **YAML**: This is the new YAML based file format                             |
+    |                                                    | |                                                                                |
+    |                                                    | | **YAML**                                                                       |
+    |                                                    | |   This is the new YAML based file format                                       |
     |                                                    | |   introduced in Pegasus 5.0. The format does support                           |
     |                                                    | |   regular expressions similar to Regex catalog type.                           |
     |                                                    | |   To specify regular expressions you need to associate                         |
@@ -155,7 +161,9 @@ Catalog Related Properties
     |                                                    | |   **pegasus.catalog.replica.file** property to                                 |
     |                                                    | |   specify the path to the file based RC. IF not                                |
     |                                                    | |   specified , defaults to $PWD/replicas.yml file.                              |
-    |                                                    | | - **Regex**: In this mode, Pegasus queries a file                              |
+    |                                                    | |                                                                                |
+    |                                                    | | **Regex**                                                                      |
+    |                                                    | |   In this mode, Pegasus queries a file                                         |
     |                                                    | |   based replica catalog. It is neither transactionally                         |
     |                                                    | |   safe, nor advised to use for production purposes in any                      |
     |                                                    | |   way. Multiple concurrent access to the File will end                         |
@@ -215,7 +223,9 @@ Catalog Related Properties
     |                                                    | |   To use File, the user additionally needs to specify                          |
     |                                                    | |   pegasus.catalog.replica.file property to specify the                         |
     |                                                    | |   path to the file based RC.                                                   |
-    |                                                    | | - **Directory**: In this mode, Pegasus does a directory                        |
+    |                                                    | |                                                                                |
+    |                                                    | | **Directory**                                                                  |
+    |                                                    | |   In this mode, Pegasus does a directory                                       |
     |                                                    | |   listing on an input directory to create the LFN to PFN                       |
     |                                                    | |   mappings. The directory listing is performed                                 |
     |                                                    | |   recursively, resulting in deep LFN mappings.                                 |
@@ -262,7 +272,9 @@ Catalog Related Properties
     |                                                    | |   - **pegasus.catalog.replica.directory.url.prefix**                           |
     |                                                    | |      to associate a URL prefix for the PFN’s constructed.                      |
     |                                                    | |      If not specified, the URL defaults to file://                             |
-    |                                                    | | - **MRC**: In this mode, Pegasus queries multiple                              |
+    |                                                    | |                                                                                |
+    |                                                    | | **MRC**                                                                        |
+    |                                                    | |   In this mode, Pegasus queries multiple                                       |
     |                                                    | |   replica catalogs to discover the file locations on the                       |
     |                                                    | |   grid. To use it set                                                          |
     |                                                    | |   pegasus.catalog.replica MRC                                                  |
@@ -361,7 +373,8 @@ Data Staging Configuration Properties
     | | Values : sharedfs|nonsharedfs|condorio              | | workflows with each site having a different data     |
     | | Default : condorio                                  | | configuration.                                       |
     | | See Also : pegasus.transfer.bypass.input.staging    |                                                        |
-    |                                                       | - **sharedfs**                                         |
+    |                                                       |   **sharedfs**                                         |
+    |                                                       |                                                        |
     |                                                       | | If this is set, Pegasus will be setup to execute     |
     |                                                       | | jobs on the shared filesystem on the execution site. |
     |                                                       | | This assumes, that the head node of a cluster and    |
@@ -371,12 +384,13 @@ Data Staging Configuration Properties
     |                                                       | |  workflow that creates a workflow specific           |
     |                                                       | | directory on the shared filesystem . The data        |
     |                                                       | | transfer jobs in the executable workflow             |
-    |                                                       | | ( stage_in_ , stage_inter_ , stage_out_ )            |
+    |                                                       | | ( stage\_in_ , stage\_inter\_ , stage\_out\_ )       |
     |                                                       | | transfer the data to this directory.The compute      |
     |                                                       | |  jobs in the executable workflow are launched in     |
     |                                                       | | the directory on the shared filesystem.              |
     |                                                       |                                                        |
-    |                                                       | - **condorio**                                         |
+    |                                                       |   **condorio**                                         |
+    |                                                       |                                                        |
     |                                                       | | If this is set, Pegasus will be setup to run jobs    |
     |                                                       | | in a pure condor pool, with the nodes not sharing    |
     |                                                       | | a filesystem. Data is staged to the compute nodes    |
@@ -388,7 +402,7 @@ Data Staging Configuration Properties
     |                                                       | | and stage-out, cleanup ) jobs refer to the workflow  |
     |                                                       | | specific directory on the local site. The data       |
     |                                                       | | transfer jobs in the executable workflow             |
-    |                                                       | | ( stage_in_ , stage_inter_ , stage_out_ )            |
+    |                                                       | | ( stage\_in\_ , stage\_inter\_ , stage\_out\_ )      |
     |                                                       | | transfer the data to this directory. When the        |
     |                                                       | | compute jobs start, the input data for each job is   |
     |                                                       | | shipped from the workflow specific directory on      |
@@ -406,7 +420,8 @@ Data Staging Configuration Properties
     |                                                       |    pegasus.transfer.worker.package      true           |
     |                                                       |                                                        |
     |                                                       |                                                        |
-    |                                                       | - **nonsharedfs**                                      |
+    |                                                       |   **nonsharedfs**                                      |
+    |                                                       |                                                        |
     |                                                       | | If this is set, Pegasus will be setup to execute     |
     |                                                       | | jobs on an execution site without relying on a       |
     |                                                       | | shared filesystem between the head node and the      |
@@ -421,7 +436,7 @@ Data Staging Configuration Properties
     |                                                       | | stage-out, cleanup ) jobs refer to the workflow      |
     |                                                       | | specific directory on the staging site. The          |
     |                                                       | | data transfer jobs in the executable workflow        |
-    |                                                       | | ( stage_in_ , stage_inter_ , stage_out_ )            |
+    |                                                       | | ( stage\_in\_ , stage\_inter\_ , stage\_out\_        |
     |                                                       | | transfer the data to this directory. When the        |
     |                                                       | | compute jobs start, the input data for each          |
     |                                                       | | job is shipped from the workflow specific            |
