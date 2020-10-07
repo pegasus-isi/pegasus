@@ -97,8 +97,10 @@ public class JobDefinition {
      * Parses and reads in a Register Job Definition request from a JSON documentation containing
      * the request in the same format as expected by AWS Batch HTTP specification.
      *
-     * @param f
-     * @return
+     * @param f the file
+     * @param name  the name
+     * 
+     * @return RegisterJobDefinitionRequest
      */
     public RegisterJobDefinitionRequest createRegisterJobDefinitionRequestFromHTTPSpec(
             File f, String name) {

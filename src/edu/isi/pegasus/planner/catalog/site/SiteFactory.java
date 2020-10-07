@@ -59,7 +59,7 @@ public class SiteFactory {
     public static final String DEFAULT_XML_SITE_CATALOG_BASENAME = "sites.xml";
 
     /**
-     * @param sites
+     * @param sites list of sites
      * @param bag the bag of pegasus objects
      * @return SiteStore object containing the information about the sites.
      */

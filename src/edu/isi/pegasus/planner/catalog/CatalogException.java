@@ -115,7 +115,7 @@ public class CatalogException
     }
 
     /**
-     * Adds an <code>CatalogException<code> object to the end of
+     * Adds an <code>CatalogException</code> object to the end of
      * the chain.
      *
      * @param ex the new exception that will be added to the end of the

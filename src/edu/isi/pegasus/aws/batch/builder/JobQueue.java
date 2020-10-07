@@ -39,7 +39,7 @@ public class JobQueue {
      * @param f the json filel
      * @param ceARN compute environment ARN
      * @param name the name to assign if doels not exist already
-     * @return
+     * @return CreateJobQueueRequest
      */
     public CreateJobQueueRequest createJobQueueRequestFromHTTPSpec(
             File f, String ceARN, String name) {
