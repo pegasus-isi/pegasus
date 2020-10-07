@@ -39,9 +39,12 @@ public class LockHelper {
         this.m_retries = 10;
     }
 
-    /** ctor.
+    /**
+     * ctor.
+     *
      * @param timeout long
-     * @param retries int*/
+     * @param retries int
+     */
     public LockHelper(long timeout, int retries) {
         this.m_timeout = timeout;
         this.m_retries = retries;

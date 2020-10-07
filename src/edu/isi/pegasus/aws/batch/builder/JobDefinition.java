@@ -98,8 +98,7 @@ public class JobDefinition {
      * the request in the same format as expected by AWS Batch HTTP specification.
      *
      * @param f the file
-     * @param name  the name
-     * 
+     * @param name the name
      * @return RegisterJobDefinitionRequest
      */
     public RegisterJobDefinitionRequest createRegisterJobDefinitionRequestFromHTTPSpec(

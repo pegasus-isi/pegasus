@@ -42,8 +42,11 @@ public class Search extends Directive {
 
     private DatabaseSchema m_dbschema = null;
 
-    /** Constructor
-     * @throws java.io.IOException exception*/
+    /**
+     * Constructor
+     *
+     * @throws java.io.IOException exception
+     */
     public Search() throws IOException, MissingResourceException {
         super();
     }
@@ -69,7 +72,7 @@ public class Search extends Directive {
 
     /**
      * Search for definitions that contain LFN of specific name and link type.This method does not
- allow jokers.
+     * allow jokers.
      *
      * @param filename the LFN name
      * @param link the linkage type of the LFN
@@ -87,7 +90,7 @@ public class Search extends Directive {
     /**
      * Search the database for definitions by ns::name:version triple and by type (either
      * Transformation or Derivation).This version of the search allows for jokers expressed as null
- value
+     * value
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
@@ -142,7 +145,7 @@ public class Search extends Directive {
     /**
      * Search the database for definitions by ns::name:version triple and by type (either
      * Transformation or Derivation).This version of the search allows for jokers expressed as null
- value, or special characters '%' and '_'.
+     * value, or special characters '%' and '_'.
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name

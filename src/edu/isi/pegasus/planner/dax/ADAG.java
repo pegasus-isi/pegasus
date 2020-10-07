@@ -53,6 +53,8 @@ import java.util.Set;
 import org.apache.log4j.Level;
 
 /**
+ *
+ *
  * <pre>
  * <b>This class provides the Java API to create Abstract Workflow files.</b>
  * Starting 5.0 Release, this class by default writes out YAML formatted abstract
@@ -66,20 +68,24 @@ import org.apache.log4j.Level;
  *
  *
  * The Abstract Workflow consists of 6 parts the first 4 are optional and the last is optional.
- * </pre> <ol> <li><b>file:</b>Used as "In Abstract Workflow" Replica Catalog
- * (Optional)</li> <li><b>executable:</b> Used as "In Abstract Workflow" Transformation
- * Catalog (Optional)</li> <li><b>transformation:</b> Used to describe
- * compound executables. i.e. Executable depending on other executables
- * (Optional)</li> <li><b>job|dax|dag:</b> Used to describe a single job or
- * sub dax or sub dax. Atleast 1 required.</li> <li><b>child:</b> The
- * dependency section to describe dependencies between job|dax|dag elements.
- * </ol>
- * 
- * To generate an example DIAMOND Abstract Workflow run the ADAG Class as shown below
- * <b>java ADAG filename</b>
- * <b>NOTE: This is an illustrative example only. Please see examples directory for a working example</b>
+ * </pre>
  *
- * Here is sample java code that illustrates how to use the Java Abstract Workflow API
+ * <ol>
+ *   <li><b>file:</b>Used as "In Abstract Workflow" Replica Catalog (Optional)
+ *   <li><b>executable:</b> Used as "In Abstract Workflow" Transformation Catalog (Optional)
+ *   <li><b>transformation:</b> Used to describe compound executables. i.e. Executable depending on
+ *       other executables (Optional)
+ *   <li><b>job|dax|dag:</b> Used to describe a single job or sub dax or sub dax. Atleast 1
+ *       required.
+ *   <li><b>child:</b> The dependency section to describe dependencies between job|dax|dag elements.
+ * </ol>
+ *
+ * To generate an example DIAMOND Abstract Workflow run the ADAG Class as shown below <b>java ADAG
+ * filename</b> <b>NOTE: This is an illustrative example only. Please see examples directory for a
+ * working example</b>
+ *
+ * <p>Here is sample java code that illustrates how to use the Java Abstract Workflow API
+ *
  * <pre>
  *      java.io.File cwdFile = new java.io.File (".");
  * String cwd = cwdFile.getCanonicalPath();

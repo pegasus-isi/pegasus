@@ -48,7 +48,7 @@ public interface WF extends Catalog {
 
     /**
      * Returns a set of all workflows that are younger than a cut-off time.The result may be empty,
- if no matching workflows exist yet.
+     * if no matching workflows exist yet.
      *
      * @param mtime is the oldest permissable last modification time
      * @return a map of workflows, indexed by their primary key

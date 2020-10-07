@@ -46,8 +46,6 @@ import org.griphyn.vdl.util.Logging;
  * <p>Usage of the class is divided into typically three steps. The first step is to obtain an
  * instance of the the parser, and configure it to fit your needs.
  *
- * </p>
- *
  * <pre>
  * ParseKickstart pks = new ParseKickstart();
  * ... // set flags
@@ -56,7 +54,6 @@ import org.griphyn.vdl.util.Logging;
  *
  * The next step can be executed multiple times, and parse one or more kickstart output files.
  *
- * 
  * <pre>
  * List result = null;
  * try {
@@ -69,7 +66,6 @@ import org.griphyn.vdl.util.Logging;
  * Once you are definitely done, it is recommend to dis-associate yourself from the active database
  * connection.
  *
- * 
  * <pre>
  * pks.close();
  * pks = null;
@@ -78,7 +74,6 @@ import org.griphyn.vdl.util.Logging;
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- * 
  */
 public class ParseKickstart extends Directive {
     /**
@@ -112,8 +107,11 @@ public class ParseKickstart extends Directive {
     /** Attaches a workflow mtime to all workflows passing thru. */
     private Date m_wf_mtime = null;
 
-    /** Default c'tor.
-     * @throws java.io.IOException exception*/
+    /**
+     * Default c'tor.
+     *
+     * @throws java.io.IOException exception
+     */
     public ParseKickstart() throws IOException, MissingResourceException {
         super();
     }
@@ -152,8 +150,11 @@ public class ParseKickstart extends Directive {
         m_dbschema = dbschema;
     }
 
-    /** Closes the associated database backend and invalidates the schema.
-     * @throws java.sql.SQLException exception*/
+    /**
+     * Closes the associated database backend and invalidates the schema.
+     *
+     * @throws java.sql.SQLException exception
+     */
     public void close() throws SQLException {
         if (m_dbschema != null) m_dbschema.close();
         m_dbschema = null;

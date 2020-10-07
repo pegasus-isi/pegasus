@@ -124,6 +124,7 @@ public interface HasPass {
     /**
      * Accessor: Obtains the name of the logical {@link Transformation} that this derivation refers
      * to.
+     *
      * @return String
      */
     public java.lang.String getUses();
@@ -131,6 +132,7 @@ public interface HasPass {
     /**
      * Accessor: Obtains the namespace of the logical {@link Transformation} that this derivation
      * refers to.
+     *
      * @return String
      */
     public java.lang.String getUsesspace();
@@ -151,8 +153,10 @@ public interface HasPass {
      */
     public String getMinIncludeVersion();
 
-    /** Identify the transformation or derivation by its name.
-     * @return  String
+    /**
+     * Identify the transformation or derivation by its name.
+     *
+     * @return String
      */
     public String identify();
 

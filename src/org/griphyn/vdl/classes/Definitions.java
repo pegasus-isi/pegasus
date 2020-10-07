@@ -358,7 +358,7 @@ public class Definitions extends VDL implements Serializable {
 
     /**
      * Obtains a vector of all definition instances that share the same instance type.Please note
- that the definitions below may change after the vector is obtained.
+     * that the definitions below may change after the vector is obtained.
      *
      * @param type the type
      * @return a vector with all {@link Transformation} or {@link Derivation} objects. The vector
@@ -519,7 +519,7 @@ public class Definitions extends VDL implements Serializable {
     /**
      * Accessor: Sets the component at the specified index of this vector to be the specified
      * object.The previous component at that position is discarded. The index must be a value
- greater than or equal to 0 and less than the current size of the vector.
+     * greater than or equal to 0 and less than the current size of the vector.
      *
      * @param index is the postion at which to replace a {@link Definition}.
      * @param d is either a {@link Transformation} or {@link Derivation} to use for replacement.

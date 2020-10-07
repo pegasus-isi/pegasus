@@ -36,13 +36,11 @@ public class WorkFactory {
 
     /**
      * Connects the interface with the work catalog implementation.The choice of backend is
- configured through properties.This class is useful for non-singleton instances that may
- require changing properties.
+     * configured through properties.This class is useful for non-singleton instances that may
+     * require changing properties.
      *
      * @param props is an instance of properties to use.
      * @return WorkCatalog
-     * 
-     * 
      */
     public static WorkCatalog loadInstance(PegasusProperties props) throws WorkFactoryException {
 

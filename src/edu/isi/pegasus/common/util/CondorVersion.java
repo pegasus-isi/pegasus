@@ -317,7 +317,7 @@ public class CondorVersion {
     /**
      * The main program to test.
      *
-     * @param args  main args
+     * @param args main args
      */
     public static void main(String[] args) {
         LogManager logger = LogManagerFactory.loadSingletonInstance();

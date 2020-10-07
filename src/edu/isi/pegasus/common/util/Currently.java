@@ -193,7 +193,6 @@ public class Currently {
      * Ignores any internal date format, and tries to show a complete date/timp stamp in extended
      * ISO 8601 format. UTC time (Zulu time) or a local timezone will be used.
      *
-     *
      * <table border=1 summary="">
      * <tr><th>zone</th><th>format</th><th>fraction</th><th>example</th></tr>
      * <tr><td>local</td><td>basic</td><td>integral</td><td>20020523T140427-0500</td></tr>
@@ -205,7 +204,6 @@ public class Currently {
      * <tr><td>local</td><td>extd.</td><td>millis</td><td>2002-05-23T14:04:27.166-05:00</td></tr>
      * <tr><td>UTC</td><td>extd.</td><td>millis</td><td>2002-05-23T19:04:27.166Z</td></tr>
      * </table>
-     *
      *
      * @param zuluTime returns a UTC formatted stamp, if true. Otherwise the time will be formatted
      *     according to the local zone. Local time should be prefixed with the 'T'.

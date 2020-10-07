@@ -99,7 +99,9 @@ public class NXDSchema extends DatabaseSchema implements XDC {
         return this.m_parser;
     }
 
-    /** Default constructor for the NXD schema.
+    /**
+     * Default constructor for the NXD schema.
+     *
      * @param dbDriver dbdriver
      * @throws java.lang.ClassNotFoundException Exception
      * @throws java.lang.NoSuchMethodException Exception
@@ -1211,9 +1213,11 @@ public class NXDSchema extends DatabaseSchema implements XDC {
         }
     }
 
-    /** get the annotation from a XML resource
+    /**
+     * get the annotation from a XML resource
+     *
      * @param res XMLResource
-     * @return  Tuple
+     * @return Tuple
      * @throws java.sql.SQLException exception
      */
     protected Tuple loadAnnotationResource(XMLResource res) throws SQLException {

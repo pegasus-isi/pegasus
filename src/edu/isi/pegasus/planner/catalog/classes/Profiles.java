@@ -169,7 +169,7 @@ public class Profiles {
      * Add a profile. Convenience method
      *
      * @param namespace namespace
-     * @param key String 
+     * @param key String
      * @param value String
      */
     public void addProfileDirectly(NAMESPACES namespace, String key, String value) {
@@ -468,7 +468,7 @@ public class Profiles {
         return u.ordinal();
     }
 
-    /** @param args args*/
+    /** @param args args */
     public static void main(String[] args) {
         try {
             Profiles p = new Profiles();

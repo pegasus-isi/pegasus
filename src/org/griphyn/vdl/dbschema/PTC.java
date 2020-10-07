@@ -36,8 +36,8 @@ public interface PTC extends Catalog {
 
     /**
      * Checks the existence of an invocation record in the database.The information is based on the
- (start,host,pid) tuple, although with private networks, cases may arise that have this tuple
- identical, yet are different.
+     * (start,host,pid) tuple, although with private networks, cases may arise that have this tuple
+     * identical, yet are different.
      *
      * @param start is the start time of the grid launcher
      * @param host is the address of the host it ran upon

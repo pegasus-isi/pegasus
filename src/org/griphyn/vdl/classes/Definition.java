@@ -373,8 +373,11 @@ public abstract class Definition extends VDL implements Comparable, Serializable
         this.m_version = version;
     }
 
-    /** Identify the transformation or derivation by its name.
-     * @return String  */
+    /**
+     * Identify the transformation or derivation by its name.
+     *
+     * @return String
+     */
     public abstract String identify();
 
     /**

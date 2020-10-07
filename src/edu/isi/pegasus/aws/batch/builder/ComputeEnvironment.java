@@ -44,9 +44,8 @@ public class ComputeEnvironment {
      * Parses and reads in a create compute environment request from a JSON documentation containing
      * the request in the same format as expected by AWS Batch HTTP specification.
      *
-     * @param f    file
+     * @param f file
      * @param name name to assign
-     * 
      * @return Compute Environment Request
      */
     public CreateComputeEnvironmentRequest createComputeEnvironmentRequestFromHTTPSpec(

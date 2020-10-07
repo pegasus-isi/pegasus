@@ -34,7 +34,7 @@ public interface Advanced extends VDC {
 
     /**
      * Delete one or more definitions from the backend database.The key triple parameters may be
- wildcards. Wildcards are expressed as <code>null</code> value, or have special characters '%'
+     * wildcards. Wildcards are expressed as <code>null</code> value, or have special characters '%'
      * and '_'.
      *
      * @param namespace namespace
@@ -52,7 +52,7 @@ public interface Advanced extends VDC {
     /**
      * Searches the database for definitions by ns::name:version triple and by type (either
      * Transformation or Derivation).This version of the search allows for jokers expressed as null
- value
+     * value
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
@@ -69,7 +69,7 @@ public interface Advanced extends VDC {
 
     /**
      * Searches the database for all LFNs that match a certain pattern.The linkage is an additional
- constraint. This method allows joker characters such as '%' and '_'.
+     * constraint. This method allows joker characters such as '%' and '_'.
      *
      * @param lfn the LFN name
      * @param link the linkage type of the LFN

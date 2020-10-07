@@ -17,7 +17,7 @@ import java.io.LineNumberReader;
 
 /**
  * This class is used to signal errors while scanning or parsing.
- * 
+ *
  * @author Jens Voeckler
  * @author Karan Vahi
  * @author Gaurang Mehta

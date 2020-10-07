@@ -18,15 +18,11 @@ package edu.isi.pegasus.common.util;
  *
  * <p>The quoting algorithm is safe to only itself. Thus,
  *
- * </p>
- *
  * <pre>
  * unescape( escape( s ) ) === s
  * </pre>
  *
  * <p>holds true, but
- *
- * </p>
  *
  * <pre>
  * escape( unescape( s ) ) =?= s

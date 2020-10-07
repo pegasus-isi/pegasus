@@ -78,7 +78,8 @@ public interface Refiner
      * the properties file. The properties object passed should not be null.
      *
      * @param bag the bag of initialization objects.
-     * @throws edu.isi.pegasus.planner.transfer.implementation.TransferImplementationFactoryException
+     * @throws
+     *     edu.isi.pegasus.planner.transfer.implementation.TransferImplementationFactoryException
      */
     public void loadImplementations(PegasusBag bag) throws TransferImplementationFactoryException;
 

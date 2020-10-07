@@ -58,7 +58,8 @@ public class Version {
 
     /**
      * @return Version
-     * @deprecated Just create a new instance */
+     * @deprecated Just create a new instance
+     */
     public static Version instance() {
         return new Version();
     }

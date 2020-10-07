@@ -54,8 +54,11 @@ public class Define extends Directive implements DefinitionHandler {
     /** If enabled, collapses the names of DVs that were processed. */
     private java.util.Set m_derivations = null;
 
-    /** Constructor
-     * @throws java.io.IOException exception*/
+    /**
+     * Constructor
+     *
+     * @throws java.io.IOException exception
+     */
     public Define() throws IOException, MissingResourceException {
         super();
     }
@@ -79,8 +82,11 @@ public class Define extends Directive implements DefinitionHandler {
         m_dbschema = dbs;
     }
 
-    /** Closes the associated database backend and invalidates the schema.
-     * @throws java.sql.SQLException exception*/
+    /**
+     * Closes the associated database backend and invalidates the schema.
+     *
+     * @throws java.sql.SQLException exception
+     */
     public void close() throws SQLException {
         if (m_dbschema != null) m_dbschema.close();
         m_dbschema = null;
@@ -237,14 +243,20 @@ public class Define extends Directive implements DefinitionHandler {
         return result;
     }
 
-    /** return the number of successfully saved definitions
-     * @return  int*/
+    /**
+     * return the number of successfully saved definitions
+     *
+     * @return int
+     */
     public int getNumberSaved() {
         return m_count;
     }
 
-    /** return the number of rejected definitions
-     * @return int */
+    /**
+     * return the number of rejected definitions
+     *
+     * @return int
+     */
     public int getNumberRejected() {
         return m_rejected;
     }

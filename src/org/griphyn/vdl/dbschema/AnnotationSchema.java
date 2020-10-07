@@ -93,7 +93,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
      *
      * @param dbDriverName is the database driver name
      * @throws java.lang.ClassNotFoundException Exception
-     * @throws java.lang.NoSuchMethodException  Exception
+     * @throws java.lang.NoSuchMethodException Exception
      * @throws java.lang.InstantiationException Exception
      * @throws java.lang.IllegalAccessException Exception
      * @throws java.lang.reflect.InvocationTargetException Exception
@@ -658,7 +658,8 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
     //
 
     /**
-     * Obtains the primary key id for a given definition."Fake" definitions are NOT permissable. This is an internal helper function.
+     * Obtains the primary key id for a given definition."Fake" definitions are NOT permissable.
+     * This is an internal helper function.
      *
      * @param namespace is the specific namespace, null will be mapped to ""
      * @param name is the specific name, null will be mapped to ""
@@ -693,8 +694,8 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
     }
 
     /**
-     * Obtains the primary key id for a given definition."Fake" definitions are permissable. This
- is an internal helper function.
+     * Obtains the primary key id for a given definition."Fake" definitions are permissable. This is
+     * an internal helper function.
      *
      * @param d is a definition specification.
      * @return the id of the definition, or null if not found.
@@ -708,9 +709,9 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
 
     /**
      * Obtains the list of primary key ids for a matching definitions.This method allows for
- wildcards in the usual fashion. Use null for strings as wildcards, and -1 for the type
- wildcard. This method may return an empty list, but it will not return null. This is an
- internal helper function.
+     * wildcards in the usual fashion. Use null for strings as wildcards, and -1 for the type
+     * wildcard. This method may return an empty list, but it will not return null. This is an
+     * internal helper function.
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
@@ -746,9 +747,9 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
 
     /**
      * Obtains the list of primary key ids for a matching definitions.This method allows for
- wildcards in the usual fashion. Use null for strings as wildcards, and -1 for the type
- wildcard. It also allows special characters '%' and '_' in strings. This method may return an
- empty list, but it will not return null. This is an internal helper function.
+     * wildcards in the usual fashion. Use null for strings as wildcards, and -1 for the type
+     * wildcard. It also allows special characters '%' and '_' in strings. This method may return an
+     * empty list, but it will not return null. This is an internal helper function.
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name

@@ -44,8 +44,11 @@ public class Explain extends Directive {
     /** Helpful object for routing requests. */
     private BookKeeper m_state = null;
 
-    /** Constructor
-     * @throws java.io.IOException exception */
+    /**
+     * Constructor
+     *
+     * @throws java.io.IOException exception
+     */
     public Explain() throws IOException, MissingResourceException {
         super();
     }
@@ -89,7 +92,7 @@ public class Explain extends Directive {
 
     /**
      * Requests a data product logical filename.As a result, the complete build-style DAG for
- producing the requested filename will be constructed.
+     * producing the requested filename will be constructed.
      *
      * @param filename is the name of the requested LFN.
      * @return true if the request is successful
@@ -105,7 +108,7 @@ public class Explain extends Directive {
 
     /**
      * Requests a set of logical filenames.As a result, the complete build-style DAG for producing
- the requested LFNs will be constructed.
+     * the requested LFNs will be constructed.
      *
      * @param filenames is the list or set of logical filenames requested.
      * @return true if the request is successful

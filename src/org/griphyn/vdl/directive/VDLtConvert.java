@@ -30,8 +30,11 @@ import org.griphyn.vdl.parser.*;
  * @see org.griphyn.vdl.parser.VDLtParser
  */
 public class VDLtConvert extends Directive {
-    /** Constructor
-     * @throws java.io.IOException exception*/
+    /**
+     * Constructor
+     *
+     * @throws java.io.IOException exception
+     */
     public VDLtConvert() throws IOException, MissingResourceException {
         super();
     }

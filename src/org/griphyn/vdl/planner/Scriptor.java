@@ -31,7 +31,6 @@ import org.griphyn.vdl.util.Logging;
  * <p>The scripts are assembled mostly from template files and substitutions. The template files
  * reside in <code>$PEGASUS_HOME/share</code>:
  *
- * 
  * <table border="1" summary="">
  * <tr><th>template</th><th>purpose</th></tr>
  * <tr><td>sp-job-1.tmpl</td><td>start of job script</td></tr>
@@ -45,7 +44,6 @@ import org.griphyn.vdl.util.Logging;
  *
  * The following substitutions are available by default. Some substitutions are only available
  * during job generation:
- *
  *
  * <table border="1" summary="">
  * <tr><th>variable</th><th>purpose</th></tr>

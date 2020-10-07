@@ -36,7 +36,7 @@ public class RCWrapper implements Wrapper {
 
     /**
      * Connects the interface with the replica catalog implementation.The choice of backend is
- configured through properties.
+     * configured through properties.
      *
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
@@ -59,7 +59,7 @@ public class RCWrapper implements Wrapper {
 
     /**
      * Connects the interface with the replica catalog implementation.The choice of backend is
- configured through properties.
+     * configured through properties.
      *
      * @param props is an already instantiated version of the properties.
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might

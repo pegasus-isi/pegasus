@@ -367,7 +367,6 @@ public class Derivation extends Definition // thus implements VDL
      * inclusive matches. Special interpretation will be applied to <code>null</code> values,
      * internally as well as an external null value.
      *
-     *
      * <pre>
      *   vers.   min    max     result
      *   -----   ----   -----   ------

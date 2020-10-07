@@ -75,7 +75,7 @@ public class SLSFactory {
     /**
      * This method loads the appropriate implementing code generator as specified by the user at
      * runtime.If the megadag mode is specified in the options, then that is used to load the
- implementing class, overriding the submit mode specified in the properties file.
+     * implementing class, overriding the submit mode specified in the properties file.
      *
      * @param job Job
      * @return the instance of the class implementing this interface.

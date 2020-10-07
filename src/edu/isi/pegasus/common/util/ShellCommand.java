@@ -69,9 +69,8 @@ public class ShellCommand {
     /**
      * Executes a command with the arguments passed
      *
-     * @param command  the command
-     * @param args     the args
-     * 
+     * @param command the command
+     * @param args the args
      * @return the exitcode
      */
     public int execute(String command, String args) {

@@ -464,9 +464,12 @@ public class HashedFileFactory extends FlatFileFactory {
         reset();
     }
 
-    /** test function
+    /**
+     * test function
+     *
      * @param arg main args
-     * @throws java.lang.Exception exception*/
+     * @throws java.lang.Exception exception
+     */
     public static void main(String arg[]) throws Exception {
         if (arg.length == 0) {
             // no arguments, spit out at which point levels change

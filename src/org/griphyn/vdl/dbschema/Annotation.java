@@ -46,8 +46,8 @@ public interface Annotation extends Catalog {
     public static final int CLASS_FILENAME = 4;
 
     /**
-     * Annotates any of the annotatable classes with the specified tuple.This is an interface
- method to the various class-specific methods.
+     * Annotates any of the annotatable classes with the specified tuple.This is an interface method
+     * to the various class-specific methods.
      *
      * @param primary is the primary object specifier for the class. According to the type, this is
      *     either the FQDI, or the filename.
@@ -132,14 +132,14 @@ public interface Annotation extends Catalog {
      * @param overwrite is a predicate on replace or maintain.
      * @return the insertion id, or -1, if the database was untouched
      * @throws java.sql.SQLException SQLException
-     * @see org.griphyn.vdl.classes.LFN 
+     * @see org.griphyn.vdl.classes.LFN
      */
     public long saveAnnotationFilename(String filename, Tuple annotation, boolean overwrite)
             throws SQLException, IllegalArgumentException;
 
     /**
      * Retrieves a specific annotation from an annotatable classes with the specified tuple.This is
- an interface method to the various class-specific methods.
+     * an interface method to the various class-specific methods.
      *
      * @param primary is the primary object specifier for the class. According to the type, this is
      *     either the FQDI, or the filename.
@@ -223,7 +223,7 @@ public interface Annotation extends Catalog {
 
     /**
      * Retrieves all annotations from an annotatable classes with the specified tuple.This is an
- interface method to the various class-specific methods.
+     * interface method to the various class-specific methods.
      *
      * @param primary is the primary object specifier for the class. According to the type, this is
      *     either the FQDI, or the filename.
@@ -324,7 +324,7 @@ public interface Annotation extends Catalog {
      * @param kind defines the kind/class of object to annotate.
      * @param key is the annotation key.
      * @return true, if the database was modified, false otherwise.
-     * @exception SQLException  if something went wrong during database access.
+     * @exception SQLException if something went wrong during database access.
      */
     public boolean deleteAnnotation(String primary, Object secondary, int kind, String key)
             throws SQLException, IllegalArgumentException;
@@ -386,7 +386,7 @@ public interface Annotation extends Catalog {
      * @param key is the key to search for
      * @return true, if the database was modified, false otherwise.
      * @throws java.sql.SQLException if something went wrong during database access.
-     * @see org.griphyn.vdl.classes.LFN 
+     * @see org.griphyn.vdl.classes.LFN
      */
     public boolean deleteAnnotationFilename(String filename, String key)
             throws SQLException, IllegalArgumentException;

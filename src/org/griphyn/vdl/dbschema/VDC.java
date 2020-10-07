@@ -38,7 +38,7 @@ public interface VDC extends Catalog {
 
     /**
      * Loads a single Definition from the backend database into an Java object.This method does not
- allow wildcarding!
+     * allow wildcarding!
      *
      * @param namespace namespace, null will be converted into empty string
      * @param name name, null will be converted into empty string
@@ -88,7 +88,8 @@ public interface VDC extends Catalog {
     public abstract boolean containsDefinition(Definition definition) throws SQLException;
 
     /**
-     * Delete a specific Definition objects from the database.No wildcard matching will be done. "Fake" definitions are permissable, meaning it just has the secondary key triple.
+     * Delete a specific Definition objects from the database.No wildcard matching will be done.
+     * "Fake" definitions are permissable, meaning it just has the secondary key triple.
      *
      * @param definition is the definition specification to delete
      * @return true is something was deleted, false if non existent.
@@ -100,7 +101,7 @@ public interface VDC extends Catalog {
 
     /**
      * Delete one or more definitions from the backend database.The key triple parameters may be
- wildcards. Wildcards are expressed as <code>null</code> value.
+     * wildcards. Wildcards are expressed as <code>null</code> value.
      *
      * @param namespace namespace
      * @param name name
@@ -117,7 +118,7 @@ public interface VDC extends Catalog {
     /**
      * Search the database for definitions by ns::name:version triple and by type (either
      * Transformation or Derivation).This version of the search allows for jokers expressed as null
- value
+     * value
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
@@ -134,7 +135,7 @@ public interface VDC extends Catalog {
 
     /**
      * Searches the database for all derivations that contain a certain LFN.The linkage is an
- additional constraint. This method does not allow jokers.
+     * additional constraint. This method does not allow jokers.
      *
      * @param lfn the LFN name
      * @param link the linkage type of the LFN

@@ -34,8 +34,11 @@ import org.griphyn.vdl.dbschema.*;
 public class Delete extends Directive {
     private DatabaseSchema m_dbschema = null;
 
-    /** Constructor
-     * @throws java.io.IOException exception*/
+    /**
+     * Constructor
+     *
+     * @throws java.io.IOException exception
+     */
     public Delete() throws IOException, MissingResourceException {
         super();
     }
@@ -61,7 +64,7 @@ public class Delete extends Directive {
 
     /**
      * Delete one or more definitions from the backend database.The key triple parameters may be
- wildcards. Wildcards are expressed as <code>null</code> value.
+     * wildcards. Wildcards are expressed as <code>null</code> value.
      *
      * @param namespace namespace
      * @param name name
@@ -80,7 +83,7 @@ public class Delete extends Directive {
 
     /**
      * Delete one or more definitions from the backend database.The key triple parameters may be
- wildcards.Wildcards are expressed as <code>null</code> value. Output the deleted ones.
+     * wildcards.Wildcards are expressed as <code>null</code> value. Output the deleted ones.
      *
      * @param namespace namespace
      * @param name name
@@ -110,8 +113,8 @@ public class Delete extends Directive {
 
     /**
      * Delete one or more definitions from the backend database.The key triple parameters may be
- wildcards in force mode.Wildcards are expressed as <code>null</code> value. Output the
- deleted ones.
+     * wildcards in force mode.Wildcards are expressed as <code>null</code> value. Output the
+     * deleted ones.
      *
      * @param namespace namespace
      * @param name name

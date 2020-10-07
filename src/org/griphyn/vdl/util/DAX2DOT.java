@@ -355,8 +355,10 @@ public class DAX2DOT {
         writer.flush();
     }
 
-    /** Simple test
-     * @param args  main args
+    /**
+     * Simple test
+     *
+     * @param args main args
      * @throws java.io.IOException exception
      */
     public static void main(String[] args) throws IOException {

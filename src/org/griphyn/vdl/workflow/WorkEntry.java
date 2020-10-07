@@ -197,7 +197,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
-     * @return  String
+     * @return String
      * @see #setRunDirectory(String)
      */
     public String getRunDirectory() {
@@ -226,7 +226,7 @@ public class WorkEntry implements Workflow, Cloneable {
 
     /**
      * Accessor.
-     * 
+     *
      * @param creator String
      * @see #getCreator()
      */

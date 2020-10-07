@@ -63,8 +63,11 @@ public class Logging {
      */
     private int m_verbose = -1;
 
-    /** implement the Singleton pattern
-     * @return  Logging*/
+    /**
+     * implement the Singleton pattern
+     *
+     * @return Logging
+     */
     public static Logging instance() {
         if (m_instance == null) m_instance = new Logging();
         return m_instance;

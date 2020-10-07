@@ -90,7 +90,7 @@ public class AbstractJob {
     /**
      * Copy Constructor
      *
-     * @param id  the string id
+     * @param id the string id
      */
     protected static void checkID(String id) {
         if (!Patterns.isNodeIdValid(id)) {
@@ -308,8 +308,8 @@ public class AbstractJob {
      * The argkey and argvalue are separated space.<br>
      * The files are separated by a space <br>
      * Example:<br>
-     * <pre>
-     * {@code
+     *
+     * <pre>{@code
      * List<File> files = new LinkedList<File>();
      * files.add(new File("f.a1"));
      * files.add(new File("f.a2"));
@@ -318,6 +318,7 @@ public class AbstractJob {
      * will result in the argument being added as <b>-i &lt;file name="f.a1"&gt; &lt;file
      * name="f.a2"&gt;</b><br>
      * </pre>
+     *
      * Multiple calls to addArgument results in the arguments being separated by space.
      *
      * @param argkey String
@@ -370,14 +371,9 @@ public class AbstractJob {
      * The argkey and argvalue are separated by the argdelimiter.<br>
      * The files are separated by a filedelimter <br>
      * Example:<br>
-     * {@code
-     * List<File> files = new LinkedList<File>();
-     * files.add(new File("f.a1"));
-     * files.add(new File("f.a2"));
-     * job.addArgument("-i",files,"=",",")
-     * }
-     * will result in the argument being added as <b>-i=&lt;file name="f.a1"&gt;,&lt;file
-     * name="f.a2"&gt;</b><br>
+     * {@code List<File> files = new LinkedList<File>(); files.add(new File("f.a1")); files.add(new
+     * File("f.a2")); job.addArgument("-i",files,"=",",") } will result in the argument being added
+     * as <b>-i=&lt;file name="f.a1"&gt;,&lt;file name="f.a2"&gt;</b><br>
      * Multiple calls to addArgument results in the arguments being separated by space.
      *
      * @param argkey String

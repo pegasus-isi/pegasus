@@ -58,9 +58,7 @@ public class DynamicLoader {
     /** Stores the fully qualified class name to dynamically instantiate. */
     private String m_classname;
 
-    /**
-     * @param classname the classname
-     */
+    /** @param classname the classname */
     public DynamicLoader(String classname) {
         if ((this.m_classname = classname) == null)
             throw new NullPointerException("You must specify a fully-qualified class name");
@@ -89,8 +87,8 @@ public class DynamicLoader {
 
     /**
      * Dynamically instantiates a class from a contructor.You must have set the class name before
- invoking this method. Please note that any exceptions thrown by the constructor will be
- wrapped into a <code>InvocationTargetException</code>.
+     * invoking this method. Please note that any exceptions thrown by the constructor will be
+     * wrapped into a <code>InvocationTargetException</code>.
      *
      * @param arguments are arguments to the constructor of the class to load. Please use "new
      *     Object[0]" for the argumentless default constructor.
@@ -120,8 +118,8 @@ public class DynamicLoader {
 
     /**
      * Dynamically instantiates a class from a contructor.You must have set the class name before
- invoking this method. Please note that any exceptions thrown by the constructor will be
- wrapped into a <code>InvocationTargetException</code>.
+     * invoking this method. Please note that any exceptions thrown by the constructor will be
+     * wrapped into a <code>InvocationTargetException</code>.
      *
      * <p>This method should be invoked, if the constructor declares interface types as formal
      * arguments, but the actual arguments are implementation classes.
@@ -158,9 +156,10 @@ public class DynamicLoader {
     }
 
     /**
-     * Dynamically instantiates a class from a static method which constructs the resulting object.You must have set the class name before invoking this method.
-     * Please note that any exceptions
- thrown by the constructor will be wrapped into a <code>InvocationTargetException</code>.
+     * Dynamically instantiates a class from a static method which constructs the resulting
+     * object.You must have set the class name before invoking this method. Please note that any
+     * exceptions thrown by the constructor will be wrapped into a <code>InvocationTargetException
+     * </code>.
      *
      * @param method is the name of the static method to call.
      * @param arguments are arguments to the constructor of the class to load. Please use "new

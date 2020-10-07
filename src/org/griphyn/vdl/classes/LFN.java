@@ -66,8 +66,8 @@ public class LFN extends Leaf implements Cloneable, Serializable {
      * Predicate to determine, if an integer is within the valid range for linkage types.
      *
      * @param x is the integer to test for in-intervall.
-     * @return true, if the integer satisfies {@link LFN#NONE} &gt; x &lt; {@link LFN#INOUT},
-     *     false otherwise.
+     * @return true, if the integer satisfies {@link LFN#NONE} &gt; x &lt; {@link LFN#INOUT}, false
+     *     otherwise.
      */
     public static boolean isInRange(int x) {
         return ((x >= LFN.NONE) && (x <= LFN.INOUT));

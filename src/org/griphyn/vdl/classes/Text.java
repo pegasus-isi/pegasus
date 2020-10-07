@@ -51,8 +51,9 @@ public class Text extends Leaf implements Cloneable, Serializable {
         super();
     }
 
-    /** 
+    /**
      * Ctor to initialize the content while constructing the class.This is a convenience ctor.
+     *
      * @param content String
      */
     public Text(String content) {

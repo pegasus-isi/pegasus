@@ -115,11 +115,10 @@ public class CatalogException
     }
 
     /**
-     * Adds an <code>CatalogException</code> object to the end of
-     * the chain.
+     * Adds an <code>CatalogException</code> object to the end of the chain.
      *
-     * @param ex the new exception that will be added to the end of the
-     * <code>CatalogException</code> chain.
+     * @param ex the new exception that will be added to the end of the <code>CatalogException
+     *     </code> chain.
      * @see #getNextException()
      */
     public void setNextException(CatalogException ex) {

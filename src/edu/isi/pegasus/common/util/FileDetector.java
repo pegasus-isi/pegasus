@@ -65,14 +65,10 @@ public class FileDetector {
 
     /**
      * Returns whether type of file is XML or not only by inspecting first line and looking for XML
-     * prefix 
-     * 
-     * {@code
-     * <xml>
-     * <?xml version="1.0" encoding="UTF-8"?>
-     * </xml>
-     * }
-     * 
+     * prefix
+     *
+     * <p>{@code <xml> <?xml version="1.0" encoding="UTF-8"?> </xml> }
+     *
      * @param file filename
      * @return boolean
      */
@@ -82,16 +78,11 @@ public class FileDetector {
 
     /**
      * Returns whether type of file is XML or not only by inspecting first line and looking for XML
-     * prefix 
-     * 
-     * {@code
-     * <xml>
-     * <?xml version="1.0" encoding="UTF-8"?>
-     * </xml>
-     * }
-     * 
+     * prefix
+     *
+     * <p>{@code <xml> <?xml version="1.0" encoding="UTF-8"?> </xml> }
+     *
      * @param file File
-     * 
      * @return boolean
      */
     public static boolean isTypeXML(File file) {
@@ -122,7 +113,6 @@ public class FileDetector {
      * Returns whether type of file is type YAML or not
      *
      * @param file path to the file
-     * 
      * @return boolean indicating whether file is yaml formatted or not.
      */
     public static boolean isTypeYAML(String file) {
@@ -132,7 +122,7 @@ public class FileDetector {
     /**
      * Returns whether type of file is type YAML or not
      *
-     * @param file     the file
+     * @param file the file
      * @return boolean indicating whether file is yaml formatted or not.
      */
     public static boolean isTypeYAML(File file) {

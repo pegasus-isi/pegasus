@@ -27,15 +27,18 @@ import org.griphyn.vdl.parser.*;
  * @see org.griphyn.vdl.dbschema.DatabaseSchema
  */
 public class Connect extends Directive {
-    /** Constructor
-     * @throws java.io.IOException exception*/
+    /**
+     * Constructor
+     *
+     * @throws java.io.IOException exception
+     */
     public Connect() throws IOException, MissingResourceException {
         super();
     }
 
     /**
      * Connects the database backend.This is not done in the c'tor, because some apps don't need
- this heavyweight instructions.
+     * this heavyweight instructions.
      *
      * @param schemaName is the name of the schema class to load. This better be the fully-qualified
      *     name in-sync with properties.
@@ -64,7 +67,7 @@ public class Connect extends Directive {
 
     /**
      * Connects the database backend.This is not done in the c'tor, because some apps don't need
- this heavyweight instructions.
+     * this heavyweight instructions.
      *
      * @param schemaName is the name of the schema class to load. This better be the fully-qualified
      *     name in-sync with properties.
