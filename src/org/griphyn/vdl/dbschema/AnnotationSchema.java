@@ -92,6 +92,12 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
      * Default constructor for the "chunk" schema.
      *
      * @param dbDriverName is the database driver name
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.lang.NoSuchMethodException  Exception
+     * @throws java.lang.InstantiationException Exception
+     * @throws java.lang.IllegalAccessException Exception
+     * @throws java.lang.reflect.InvocationTargetException Exception
+     * @throws java.sql.SQLException
      */
     public AnnotationSchema(String dbDriverName)
             throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
@@ -651,14 +657,14 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
     //
 
     /**
-     * Obtains the primary key id for a given definition. "Fake" definitions are NOT permissable.
-     * This is an internal helper function.
+     * Obtains the primary key id for a given definition."Fake" definitions are NOT permissable. This is an internal helper function.
      *
      * @param namespace is the specific namespace, null will be mapped to ""
      * @param name is the specific name, null will be mapped to ""
      * @param version is the specific version, null will be mapped to ""
      * @param type is the type identifier, -1 is not allowed.
      * @return the id of the definition, or null if not found.
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see #getDefinitionId( String, String, String, int )
      */
     protected Long getSpecificDefinitionId(String namespace, String name, String version, int type)
@@ -686,11 +692,12 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
     }
 
     /**
-     * Obtains the primary key id for a given definition. "Fake" definitions are permissable. This
-     * is an internal helper function.
+     * Obtains the primary key id for a given definition."Fake" definitions are permissable. This
+ is an internal helper function.
      *
      * @param d is a definition specification.
      * @return the id of the definition, or null if not found.
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see #getSpecificDefinitionId( String, String, String, int )
      * @see #getDefinitionId( String, String, String, int )
      */
@@ -699,16 +706,17 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
     }
 
     /**
-     * Obtains the list of primary key ids for a matching definitions. This method allows for
-     * wildcards in the usual fashion. Use null for strings as wildcards, and -1 for the type
-     * wildcard. This method may return an empty list, but it will not return null. This is an
-     * internal helper function.
+     * Obtains the list of primary key ids for a matching definitions.This method allows for
+ wildcards in the usual fashion. Use null for strings as wildcards, and -1 for the type
+ wildcard. This method may return an empty list, but it will not return null. This is an
+ internal helper function.
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
      * @param version version, null to match any version
      * @param type definition type (TR or DV)
      * @return a possibly empty list containing all matching definition ids as Longs.
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      * @see #getDefinitionId( Definition )
@@ -736,16 +744,17 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
     }
 
     /**
-     * Obtains the list of primary key ids for a matching definitions. This method allows for
-     * wildcards in the usual fashion. Use null for strings as wildcards, and -1 for the type
-     * wildcard. It also allows special characters '%' and '_' in strings. This method may return an
-     * empty list, but it will not return null. This is an internal helper function.
+     * Obtains the list of primary key ids for a matching definitions.This method allows for
+ wildcards in the usual fashion. Use null for strings as wildcards, and -1 for the type
+ wildcard. It also allows special characters '%' and '_' in strings. This method may return an
+ empty list, but it will not return null. This is an internal helper function.
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
      * @param version version, null to match any version
      * @param type definition type (TR or DV)
      * @return a possibly empty list containing all matching definition ids as Longs.
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      * @see #getDefinitionId( Definition )
@@ -1290,8 +1299,9 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
      * @param kind defines the kind/class of object to annotate.
      * @param key is the annotation key.
      * @return true, if the database was modified, false otherwise.
-     * @exception SQLException, if something went wrong during database access.
+     * @exception SQLException if something went wrong during database access.
      */
+    @Override
     public boolean deleteAnnotation(String primary, Object secondary, int kind, String key)
             throws SQLException, IllegalArgumentException {
         boolean result = true;

@@ -73,7 +73,7 @@ public class VariableExpander {
     /**
      * Expands the value passed with variable substitution
      *
-     * @param text
+     * @param text the test
      * @return expanded value
      */
     public String expand(String text) {

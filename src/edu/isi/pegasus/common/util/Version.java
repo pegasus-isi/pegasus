@@ -56,7 +56,9 @@ public class Version {
         }
     }
 
-    /** @deprecated Just create a new instance */
+    /**
+     * @return Version
+     * @deprecated Just create a new instance */
     public static Version instance() {
         return new Version();
     }
@@ -120,7 +122,7 @@ public class Version {
     /**
      * Return the architecture
      *
-     * @return
+     * @return SysInfo.Architecture
      */
     public SysInfo.Architecture getArchitecture() {
         String platform = this.getPlatform();
@@ -137,7 +139,7 @@ public class Version {
     /**
      * Return the OS
      *
-     * @return
+     * @return SysInfo.OS
      */
     public SysInfo.OS getOS() {
         return SysInfo.computeOS(this.getOSRelease());
@@ -146,7 +148,7 @@ public class Version {
     /**
      * Return the OS Release
      *
-     * @return
+     * @return SysInfo.OS_RELEASE
      */
     public SysInfo.OS_RELEASE getOSRelease() {
         String platform = this.getPlatform();

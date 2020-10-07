@@ -33,8 +33,8 @@ public interface Advanced extends VDC {
     //
 
     /**
-     * Delete one or more definitions from the backend database. The key triple parameters may be
-     * wildcards. Wildcards are expressed as <code>null</code> value, or have special characters '%'
+     * Delete one or more definitions from the backend database.The key triple parameters may be
+ wildcards. Wildcards are expressed as <code>null</code> value, or have special characters '%'
      * and '_'.
      *
      * @param namespace namespace
@@ -42,6 +42,7 @@ public interface Advanced extends VDC {
      * @param version version
      * @param type definition type (TR or DV)
      * @return a list of definitions that were deleted.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */
@@ -50,14 +51,15 @@ public interface Advanced extends VDC {
 
     /**
      * Searches the database for definitions by ns::name:version triple and by type (either
-     * Transformation or Derivation). This version of the search allows for jokers expressed as null
-     * value
+     * Transformation or Derivation).This version of the search allows for jokers expressed as null
+ value
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
      * @param version version, null to match any version
      * @param type type of definition, see below, or -1 as wildcard
      * @return a list of Definition items, which may be empty
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      * @see #loadDefinition( String, String, String, int )
@@ -66,12 +68,13 @@ public interface Advanced extends VDC {
             String namespace, String name, String version, int type) throws SQLException;
 
     /**
-     * Searches the database for all LFNs that match a certain pattern. The linkage is an additional
-     * constraint. This method allows joker characters such as '%' and '_'.
+     * Searches the database for all LFNs that match a certain pattern.The linkage is an additional
+ constraint. This method allows joker characters such as '%' and '_'.
      *
      * @param lfn the LFN name
      * @param link the linkage type of the LFN
      * @return a list of filenames that match the criterion.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.LFN#NONE
      * @see org.griphyn.vdl.classes.LFN#INPUT
      * @see org.griphyn.vdl.classes.LFN#OUTPUT
@@ -84,6 +87,7 @@ public interface Advanced extends VDC {
      *
      * @param type type of definition, see below, or -1 for both
      * @return a list of namespaces
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */
@@ -95,6 +99,7 @@ public interface Advanced extends VDC {
      *
      * @param type type of definition, see below, or -1 for both.
      * @return a list of FQDNs
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */

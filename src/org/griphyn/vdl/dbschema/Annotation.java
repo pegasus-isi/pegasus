@@ -46,8 +46,8 @@ public interface Annotation extends Catalog {
     public static final int CLASS_FILENAME = 4;
 
     /**
-     * Annotates any of the annotatable classes with the specified tuple. This is an interface
-     * method to the various class-specific methods.
+     * Annotates any of the annotatable classes with the specified tuple.This is an interface
+ method to the various class-specific methods.
      *
      * @param primary is the primary object specifier for the class. According to the type, this is
      *     either the FQDI, or the filename.
@@ -58,6 +58,7 @@ public interface Annotation extends Catalog {
      * @param annotation is the value to place into the class.
      * @param overwrite is a predicate on replace or maintain.
      * @return the insertion id, or -1, if the database was untouched
+     * @throws java.sql.SQLException SQLException
      * @see #saveAnnotationTransformation( String, Tuple, boolean )
      * @see #saveAnnotationDerivation( String, Tuple, boolean )
      * @see #saveAnnotationCall( String, int, Tuple, boolean )
@@ -75,6 +76,7 @@ public interface Annotation extends Catalog {
      * @param annotation is the value to place
      * @param overwrite is a predicate on replace or maintain.
      * @return the insertion id, or -1, if the database was untouched
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Transformation
      */
     public long saveAnnotationTransformation(String fqdi, Tuple annotation, boolean overwrite)
@@ -87,6 +89,7 @@ public interface Annotation extends Catalog {
      * @param annotation is the value to place
      * @param overwrite is a predicate on replace or maintain.
      * @return the insertion id, or -1, if the database was untouched
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Derivation
      */
     public long saveAnnotationDerivation(String fqdi, Tuple annotation, boolean overwrite)
@@ -100,6 +103,7 @@ public interface Annotation extends Catalog {
      * @param annotation is the value to place
      * @param overwrite is a predicate on replace or maintain.
      * @return the insertion id, or -1, if the database was untouched
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see org.griphyn.vdl.classes.Declare
      */
     public long saveAnnotationDeclare(
@@ -114,6 +118,7 @@ public interface Annotation extends Catalog {
      * @param annotation is the value to place
      * @param overwrite is a predicate on replace or maintain.
      * @return the insertion id, or -1, if the database was untouched
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Call
      */
     public long saveAnnotationCall(String fqdi, int index, Tuple annotation, boolean overwrite)
@@ -126,14 +131,15 @@ public interface Annotation extends Catalog {
      * @param annotation is the value to place
      * @param overwrite is a predicate on replace or maintain.
      * @return the insertion id, or -1, if the database was untouched
-     * @see org.griphyn.vdl.classes.LFN
+     * @throws java.sql.SQLException SQLException
+     * @see org.griphyn.vdl.classes.LFN 
      */
     public long saveAnnotationFilename(String filename, Tuple annotation, boolean overwrite)
             throws SQLException, IllegalArgumentException;
 
     /**
-     * Retrieves a specific annotation from an annotatable classes with the specified tuple. This is
-     * an interface method to the various class-specific methods.
+     * Retrieves a specific annotation from an annotatable classes with the specified tuple.This is
+ an interface method to the various class-specific methods.
      *
      * @param primary is the primary object specifier for the class. According to the type, this is
      *     either the FQDI, or the filename.
@@ -143,6 +149,7 @@ public interface Annotation extends Catalog {
      * @param kind defines the kind/class of object to annotate.
      * @param key is the key to look for.
      * @return null if not found, otherwise the annotation tuple.
+     * @throws java.sql.SQLException SQLException
      * @see #loadAnnotationTransformation( String, String )
      * @see #loadAnnotationDerivation( String, String )
      * @see #loadAnnotationCall( String, int, String )
@@ -158,6 +165,7 @@ public interface Annotation extends Catalog {
      * @param fqdi is the FQDI of the transformation
      * @param key is the key to search for
      * @return the annotated value, or null if not found.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Transformation
      */
     public Tuple loadAnnotationTransformation(String fqdi, String key)
@@ -169,6 +177,7 @@ public interface Annotation extends Catalog {
      * @param fqdi is the FQDI of the derivation
      * @param key is the key to search for
      * @return the annotated value, or null if not found.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Derivation
      */
     public Tuple loadAnnotationDerivation(String fqdi, String key)
@@ -181,6 +190,7 @@ public interface Annotation extends Catalog {
      * @param farg is the name of the formal argument
      * @param key is the key to search for
      * @return the annotated value, or null if not found
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Declare
      */
     public Tuple loadAnnotationDeclare(String fqdi, String farg, String key)
@@ -193,6 +203,7 @@ public interface Annotation extends Catalog {
      * @param index is the number of the call to annotate.
      * @param key is the key to search for
      * @return the annotated value, or null if not found
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see org.griphyn.vdl.classes.Call
      */
     public Tuple loadAnnotationCall(String fqdi, int index, String key)
@@ -204,14 +215,15 @@ public interface Annotation extends Catalog {
      * @param filename is the name of the file that was annotated.
      * @param key is the key to search for
      * @return the annotated value, or null if not found.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.LFN
      */
     public Tuple loadAnnotationFilename(String filename, String key)
             throws SQLException, IllegalArgumentException;
 
     /**
-     * Retrieves all annotations from an annotatable classes with the specified tuple. This is an
-     * interface method to the various class-specific methods.
+     * Retrieves all annotations from an annotatable classes with the specified tuple.This is an
+ interface method to the various class-specific methods.
      *
      * @param primary is the primary object specifier for the class. According to the type, this is
      *     either the FQDI, or the filename.
@@ -220,6 +232,7 @@ public interface Annotation extends Catalog {
      *     java.lang.Integer}.
      * @param kind defines the kind/class of object to annotate.
      * @return null if not found, otherwise the annotation tuple.
+     * @throws java.sql.SQLException SQLException
      * @see #loadAnnotationTransformation( String )
      * @see #loadAnnotationDerivation( String )
      * @see #loadAnnotationCall( String, int )
@@ -234,6 +247,7 @@ public interface Annotation extends Catalog {
      *
      * @param fqdi is the FQDI of the transformation
      * @return a list of tuples, which may be empty.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Transformation
      */
     public java.util.List loadAnnotationTransformation(String fqdi)
@@ -244,6 +258,7 @@ public interface Annotation extends Catalog {
      *
      * @param fqdi is the FQDI of the derivation
      * @return a list of tuples, which may be empty.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Derivation
      */
     public java.util.List loadAnnotationDerivation(String fqdi)
@@ -255,6 +270,7 @@ public interface Annotation extends Catalog {
      * @param fqdi is the FQDI of the transformation
      * @param farg is the name of the formal argument
      * @return a list of tuples, which may be empty.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Declare
      */
     public java.util.List loadAnnotationDeclare(String fqdi, String farg)
@@ -266,6 +282,7 @@ public interface Annotation extends Catalog {
      * @param fqdi is the FQDI of the transformation
      * @param index is the number of the call to annotate.
      * @return a list of tuples, which may be empty.
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see org.griphyn.vdl.classes.Call
      */
     public java.util.List loadAnnotationCall(String fqdi, int index)
@@ -276,6 +293,7 @@ public interface Annotation extends Catalog {
      *
      * @param filename is the logical filename.
      * @return a list of tuples, which may be empty.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.LFN
      */
     public java.util.List loadAnnotationFilename(String filename)
@@ -306,7 +324,7 @@ public interface Annotation extends Catalog {
      * @param kind defines the kind/class of object to annotate.
      * @param key is the annotation key.
      * @return true, if the database was modified, false otherwise.
-     * @exception SQLException, if something went wrong during database access.
+     * @exception SQLException  if something went wrong during database access.
      */
     public boolean deleteAnnotation(String primary, Object secondary, int kind, String key)
             throws SQLException, IllegalArgumentException;
@@ -317,6 +335,7 @@ public interface Annotation extends Catalog {
      * @param fqdi is the FQDI of the transformation
      * @param key is the key to search for
      * @return true, if the database was modified, false otherwise.
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see org.griphyn.vdl.classes.Transformation
      */
     public boolean deleteAnnotationTransformation(String fqdi, String key)
@@ -328,6 +347,7 @@ public interface Annotation extends Catalog {
      * @param fqdi is the FQDI of the derivation
      * @param key is the key to search for
      * @return true, if the database was modified, false otherwise.
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see org.griphyn.vdl.classes.Derivation
      */
     public boolean deleteAnnotationDerivation(String fqdi, String key)
@@ -340,6 +360,7 @@ public interface Annotation extends Catalog {
      * @param farg is the name of the formal argument
      * @param key is the key to search for
      * @return true, if the database was modified, false otherwise.
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see org.griphyn.vdl.classes.Declare
      */
     public boolean deleteAnnotationDeclare(String fqdi, String farg, String key)
@@ -352,6 +373,7 @@ public interface Annotation extends Catalog {
      * @param index is the number of the call to annotate.
      * @param key is the key to search for
      * @return true, if the database was modified, false otherwise.
+     * @throws java.sql.SQLException if something went wrong during database access.
      * @see org.griphyn.vdl.classes.Call
      */
     public boolean deleteAnnotationCall(String fqdi, int index, String key)
@@ -363,7 +385,8 @@ public interface Annotation extends Catalog {
      * @param filename is the name of the file that was annotated.
      * @param key is the key to search for
      * @return true, if the database was modified, false otherwise.
-     * @see org.griphyn.vdl.classes.LFN
+     * @throws java.sql.SQLException if something went wrong during database access.
+     * @see org.griphyn.vdl.classes.LFN 
      */
     public boolean deleteAnnotationFilename(String filename, String key)
             throws SQLException, IllegalArgumentException;

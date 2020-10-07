@@ -37,14 +37,15 @@ public interface VDC extends Catalog {
     //
 
     /**
-     * Loads a single Definition from the backend database into an Java object. This method does not
-     * allow wildcarding!
+     * Loads a single Definition from the backend database into an Java object.This method does not
+ allow wildcarding!
      *
      * @param namespace namespace, null will be converted into empty string
      * @param name name, null will be converted into empty string
      * @param version version, null will be converted into empty string
      * @param type type of the definition (TR or DV), must not be -1.
      * @return the Definition as specified, or null if not found.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      * @see #saveDefinition( Definition, boolean )
@@ -63,6 +64,7 @@ public interface VDC extends Catalog {
      *     matches.
      * @return true, if the backend database was changed, or false, if the definition was not
      *     accepted into the backend.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Definition
      * @see org.griphyn.vdl.classes.Transformation
      * @see org.griphyn.vdl.classes.Derivation
@@ -81,29 +83,31 @@ public interface VDC extends Catalog {
      *
      * @param definition is a Definition object to search for
      * @return true, if the Definition exists, false if not found
+     * @throws java.sql.SQLException SQLException
      */
     public abstract boolean containsDefinition(Definition definition) throws SQLException;
 
     /**
-     * Delete a specific Definition objects from the database. No wildcard matching will be done.
-     * "Fake" definitions are permissable, meaning it just has the secondary key triple.
+     * Delete a specific Definition objects from the database.No wildcard matching will be done. "Fake" definitions are permissable, meaning it just has the secondary key triple.
      *
      * @param definition is the definition specification to delete
      * @return true is something was deleted, false if non existent.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */
     public abstract boolean deleteDefinition(Definition definition) throws SQLException;
 
     /**
-     * Delete one or more definitions from the backend database. The key triple parameters may be
-     * wildcards. Wildcards are expressed as <code>null</code> value.
+     * Delete one or more definitions from the backend database.The key triple parameters may be
+ wildcards. Wildcards are expressed as <code>null</code> value.
      *
      * @param namespace namespace
      * @param name name
      * @param version version
      * @param type definition type (TR or DV)
      * @return a list of definitions that were deleted.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */
@@ -112,14 +116,15 @@ public interface VDC extends Catalog {
 
     /**
      * Search the database for definitions by ns::name:version triple and by type (either
-     * Transformation or Derivation). This version of the search allows for jokers expressed as null
-     * value
+     * Transformation or Derivation).This version of the search allows for jokers expressed as null
+ value
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
      * @param version version, null to match any version
      * @param type type of definition, see below, or -1 as wildcard
      * @return a list of Definition items, which may be empty
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      * @see #loadDefinition( String, String, String, int )
@@ -128,12 +133,13 @@ public interface VDC extends Catalog {
             String namespace, String name, String version, int type) throws SQLException;
 
     /**
-     * Searches the database for all derivations that contain a certain LFN. The linkage is an
-     * additional constraint. This method does not allow jokers.
+     * Searches the database for all derivations that contain a certain LFN.The linkage is an
+ additional constraint. This method does not allow jokers.
      *
      * @param lfn the LFN name
      * @param link the linkage type of the LFN
      * @return a list of Definition items that match the criterion.
+     * @throws java.sql.SQLException SQLException
      * @see org.griphyn.vdl.classes.LFN#NONE
      * @see org.griphyn.vdl.classes.LFN#INPUT
      * @see org.griphyn.vdl.classes.LFN#OUTPUT

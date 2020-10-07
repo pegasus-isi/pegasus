@@ -48,8 +48,8 @@ public abstract class DatabaseSchema implements Catalog {
     //
 
     /**
-     * Instantiates the appropriate leaf schema according to property values. This method is a
-     * factory.
+     * Instantiates the appropriate leaf schema according to property values.This method is a
+ factory.
      *
      * @param dbSchemaName is the name of the class that conforms to the DatabaseSchema API. This
      *     class will be dynamically loaded. If the passed value is <code>null</code>, which should
@@ -57,6 +57,7 @@ public abstract class DatabaseSchema implements Catalog {
      * @param propertyPrefix is the property prefix string to use.
      * @param arguments are arguments to the constructor of the driver to load. Please use "new
      *     Object[0]" for the default constructor.
+     * @return DatabaseSchema
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
      * @exception NoSuchMethodException if the schema's constructor interface does not comply with
@@ -66,7 +67,8 @@ public abstract class DatabaseSchema implements Catalog {
      * @exception IllegalAccessException if the constructor for the schema class it not publicly
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the schema throws an exception
-     *     while being dynamically loaded.
+     *     while being dynamically loaded. 
+     * @throws java.io.IOException  IOException
      * @see org.griphyn.vdl.util.ChimeraProperties
      */
     public static DatabaseSchema loadSchema(
@@ -110,14 +112,12 @@ public abstract class DatabaseSchema implements Catalog {
     }
 
     /**
-     * Convenience method instantiates the appropriate child according to property values.
-     * Effectively, the following is being called:
-     *
-     * <pre>
+     * Convenience method instantiates the appropriate child according to property values.Effectively, the following is being called:<pre>
      * loadSchema( null, propertyPrefix, new Object[0] );
      * </pre>
      *
      * @param propertyPrefix is the property prefix string to use.
+     * @return  DatabaseSchema
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
      * @exception NoSuchMethodException if the schema's constructor interface does not comply with
@@ -128,6 +128,7 @@ public abstract class DatabaseSchema implements Catalog {
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the schema throws an exception
      *     while being dynamically loaded.
+     * @throws java.io.IOException IOException
      * @see #loadSchema( String, String, Object[] )
      * @see org.griphyn.vdl.util.ChimeraProperties
      */
@@ -356,8 +357,9 @@ public abstract class DatabaseSchema implements Catalog {
     }
 
     /**
-     * Disassociate from the database driver before finishing. Mind that performing this action may
-     * throw NullPointerException in later stages!
+     * Disassociate from the database driver before finishing.Mind that performing this action may
+ throw NullPointerException in later stages!
+     * @throws java.sql.SQLException if something went wrong during database access.
      */
     public void close() throws SQLException {
         if (this.m_dbdriver != null) {
@@ -367,6 +369,7 @@ public abstract class DatabaseSchema implements Catalog {
     }
 
     /** Disassociate the database driver cleanly. */
+    @Override
     protected void finalize() throws Throwable {
         this.close();
         super.finalize();
@@ -383,6 +386,7 @@ public abstract class DatabaseSchema implements Catalog {
      * @param ps is the prepared statement to extend
      * @param pos is the position at which to insert the value
      * @param s is the String to use, which may be null.
+     * @throws java.sql.SQLException if something went wrong during database access.
      */
     protected void stringOrNull(PreparedStatement ps, int pos, String s) throws SQLException {
         if (s == null) ps.setNull(pos, Types.VARCHAR);
@@ -391,11 +395,13 @@ public abstract class DatabaseSchema implements Catalog {
 
     /**
      * Adds a BIGINT or a SQL-NULL at the current prepared statement position, depending if the
-     * value is -1 or not. A value of -1 will lead to SQL-NULL.
+     * value is -1 or not.A value of -1 will lead to SQL-NULL.
      *
      * @param ps is the prepared statement to extend
      * @param pos is the position at which to insert the value
      * @param l is the long to use, which may be null.
+     * 
+     * @throws java.sql.SQLException if something went wrong during database access.
      */
     protected void longOrNull(PreparedStatement ps, int pos, long l) throws SQLException {
         if (l == -1) ps.setNull(pos, Types.BIGINT);
