@@ -61,12 +61,6 @@ public class ADAGTest {
 
         wf.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
 
-        // does nothing
-        Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
-        diamond.uses(preprocess).uses(findrange).uses(analyze);
-        diamond.uses(new File("config", File.LINK.INPUT));
-        wf.addTransformation(diamond);
-
         Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");
         j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1).addArgument(fb2);
@@ -368,5 +362,35 @@ public class ADAGTest {
         System.err.println("Validation of file: " + parser.validate("/tmp/diamond.yml"));
 
         assertEquals(isValid, true);
+    }
+
+    @Test
+    public void testCompoundTransformationUnsupported() {
+        ADAG wf = new ADAG("test");
+
+        // add executables
+        Executable preprocess = new Executable("pegasus", "preprocess", "1.0");
+        Executable findrange = new Executable("pegasus", "findrange", "1.0");
+        Executable analyze = new Executable("pegasus", "analyze", "1.0");
+
+        wf.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
+
+        // add compound transformation instead of using Executable.addRequirement()
+        Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
+        diamond.uses(preprocess).uses(findrange).uses(analyze);
+        wf.addTransformation(diamond);
+
+        Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");
+        wf.addJob(j1);
+
+        // try to serialize when a compound transformation has been added
+        Exception e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> {
+                            wf.toYAML();
+                        });
+
+        assertTrue(e.getMessage().contains("Use Executable.addRequirement()"));
     }
 }
