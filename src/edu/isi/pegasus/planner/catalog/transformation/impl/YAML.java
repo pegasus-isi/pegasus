@@ -494,7 +494,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @return List Returns a list of Profile Objects containing profiles assocaited with the
      *     transformation. Returns <B>NULL</B> if no profiles found.
      * @throws Exception NotImplementedException if not implemented.
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      */
     public List<Profile> lookupLFNProfiles(String namespace, String name, String version)
             throws Exception {
@@ -511,7 +511,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @throws Exception NotImplementedException if not implemented.
      * @return List Returns a list of Profile Objects containing profiles assocaited with the
      *     transformation. Returns <B>NULL</B> if no profiless found.
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      */
     public List<Profile> lookupPFNProfiles(String pfn, String resourceid, TCType type)
             throws Exception {
@@ -640,7 +640,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @throws Exception
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      */
     public int insert(
             String namespace,
@@ -693,7 +693,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @throws Exception
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      */
     public int insert(
             String namespace,
@@ -746,7 +746,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @throws Exception
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      */
     protected boolean addTCEntry(
             String namespace,
@@ -824,7 +824,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @param profiles List The List of Profile objects that are to be added to the transformation.
      * @return number of insertions. On failure, throw an exception, don't use zero.
      * @throws Exception
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      */
     public int addLFNProfile(String namespace, String name, String version, List profiles)
             throws Exception {
@@ -840,7 +840,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @param profiles The List of Profile objects that are to be added to the transformation.
      * @return number of insertions. On failure, throw an exception, don't use zero.
      * @throws Exception
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      */
     public int addPFNProfile(String pfn, TCType type, String resourcename, List profiles)
             throws Exception {
@@ -957,7 +957,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @param profiles List The list of profiles to be deleted. If <B>NULL</B> then all profiles for
      *     that pfn+resource+type are deleted.
      * @return the number of removed entries.
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      * @throws Exception
      */
     public int deletePFNProfiles(String physicalname, TCType type, String resourceid, List profiles)
@@ -974,7 +974,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @param profiles List The List of profiles to be deleted. If <B>NULL</B> then all profiles for
      *     the logical transformation are deleted.
      * @return the number of removed entries.
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      * @throws Exception
      */
     public int deleteLFNProfiles(String namespace, String name, String version, List profiles)

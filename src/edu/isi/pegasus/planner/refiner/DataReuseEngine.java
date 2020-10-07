@@ -216,7 +216,7 @@ public class DataReuseEngine extends Engine implements Refiner {
      * @param filesInRC Set of <code>String</code> objects corresponding to the logical filenames of
      *     files that are found to be in the Replica Catalog.
      * @return a List of GraphNodes with their Boolean bag value set to true.
-     * @see org.griphyn.cPlanner.classes.Job
+     * @see edu.isi.pegasus.planner.classes.Job
      */
     private List<GraphNode> getJobsInRC(Graph workflow, Set filesInRC) {
         List<GraphNode> jobsInReplica = new LinkedList();

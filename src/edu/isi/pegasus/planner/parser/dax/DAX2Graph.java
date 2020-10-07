@@ -106,7 +106,7 @@ public class DAX2Graph implements Callback {
      * @param attributes is a map of attribute key to attribute value
      */
     public void cbDocument(Map attributes) {
-        /** @todo Implement this org.griphyn.cPlanner.parser.Callback method */
+        /** @todo Implement this edu.isi.pegasus.planner.parser.Callback method */
         if (attributes == null || (mLabel = (String) attributes.get("name")) == null) {
             mLabel = "test";
         }

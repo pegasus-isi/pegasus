@@ -270,7 +270,7 @@ public class Job extends Data implements GraphNodeContent {
      * Contains the input files for the submit file. They are vector of PegasusFile Objects which
      * store the transiency information of each logical file.
      *
-     * @see org.griphyn.cPlanner.classes.PegasusFile
+     * @see edu.isi.pegasus.planner.classes.PegasusFile
      */
     public Set inputFiles;
 
@@ -278,7 +278,7 @@ public class Job extends Data implements GraphNodeContent {
      * Contains the output files for the submit file. They are vector of PegasusFile Objects which
      * store the transiency information of each logical file.
      *
-     * @see org.griphyn.cPlanner.classes.PegasusFile
+     * @see edu.isi.pegasus.planner.classes.PegasusFile
      */
     public Set outputFiles;
 
@@ -574,7 +574,7 @@ public class Job extends Data implements GraphNodeContent {
      * that using setRuntime( String ) function.
      *
      * @return the expected runtime.
-     * @see org.griphyn.cPlanner.namespace.Pegasus#RUNTIME_KEY
+     * @see edu.isi.pegasus.planner.namespace.Pegasus#RUNTIME_KEY
      */
     public double computeRuntime() {
         if (mRuntime < 0) {

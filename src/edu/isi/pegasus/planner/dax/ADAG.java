@@ -58,7 +58,7 @@ import org.apache.log4j.Level;
  * Starting 5.0 Release, this class by default writes out YAML formatted abstract
  * workflow file. The information included in the generated abstract workflow is a
  * subset of the Pegasus Workflow YAML schema that is available at
- * <http://pegasus.isi.edu/schema/wf-5.0.yml">http://pegasus.isi.edu/schema/wf-5.0.yml</a>
+ * <a href="http://pegasus.isi.edu/schema/wf-5.0.yml">http://pegasus.isi.edu/schema/wf-5.0.yml</a>
  *
  * In particular, it is missing options to create a Site Catalog, and associate
  * Containers with user executables. If you need this information, we recommend you
@@ -67,15 +67,14 @@ import org.apache.log4j.Level;
  *
  * The Abstract Workflow consists of 6 parts the first 4 are optional and the last is optional.
  * </pre> <ol> <li><b>file:</b>Used as "In Abstract Workflow" Replica Catalog
- * (Optional)</li><br> <li><b>executable:</b> Used as "In Abstract Workflow" Transformation
- * Catalog (Optional)</li><br> <li><b>transformation:</b> Used to describe
+ * (Optional)</li> <li><b>executable:</b> Used as "In Abstract Workflow" Transformation
+ * Catalog (Optional)</li> <li><b>transformation:</b> Used to describe
  * compound executables. i.e. Executable depending on other executables
- * (Optional)</li><br> <li><b>job|dax|dag:</b> Used to describe a single job or
- * sub dax or sub dax. Atleast 1 required.</li><br> <li><b>child:</b> The
+ * (Optional)</li> <li><b>job|dax|dag:</b> Used to describe a single job or
+ * sub dax or sub dax. Atleast 1 required.</li> <li><b>child:</b> The
  * dependency section to describe dependencies between job|dax|dag elements.
- * (Optional)</li><br> </ol> <center><img
- * src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6_p1.png"/></center>
- * <pre>
+ * </ol>
+ * 
  * To generate an example DIAMOND Abstract Workflow run the ADAG Class as shown below
  * <b>java ADAG filename</b>
  * <b>NOTE: This is an illustrative example only. Please see examples directory for a working example</b>
@@ -467,7 +466,7 @@ public class ADAG {
     /**
      * Add Files to the RC Section on top of the DAX
      *
-     * @param files List<File> List of file objects to be added to the RC Section
+     * @param files List of File objects to be added to the RC Section
      * @return ADAG
      * @see File
      */
@@ -994,9 +993,8 @@ public class ADAG {
     }
 
     /**
-     * Returns a Set of all the Edge objects for the DAX. Returns empty if no dependencies.
+     * Returns a Set of all the Edge objects for the DAX.Returns empty if no dependencies.
      *
-     * @param child
      * @return
      */
     public Set<Edge> getEdges() {
@@ -1128,7 +1126,7 @@ public class ADAG {
     /**
      * Generates a DAX representation.
      *
-     * @param writer @
+     * @param writer the xml writer
      */
     public void toXML(XMLWriter writer) {
         int indent = 0;

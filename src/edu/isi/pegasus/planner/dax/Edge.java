@@ -63,7 +63,7 @@ public class Edge {
         return mChild;
     }
 
-    /** @param parent the child of the edge to set */
+    /** @param child the child of the edge to set */
     public void setChild(String child) {
         mChild = child;
     }

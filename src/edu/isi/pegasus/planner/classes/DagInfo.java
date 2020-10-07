@@ -373,8 +373,8 @@ public class DagInfo extends Data {
      * computationally intensive. The complexity if of order n^2.
      *
      * @return Vector of <code>String</code> corresponding to the job names of the leaf nodes.
-     * @see org.griphyn.cPlanner.classes.PCRelation
-     * @see org.griphyn.cPlanner.classes.DagInfo#relations
+     * @see edu.isi.pegasus.planner.classes.PCRelation
+     * @see edu.isi.pegasus.planner.classes.DagInfo#relations
      */
     /*    public Vector getLeafNodes() {
             Vector leafJobs = new Vector();
@@ -421,8 +421,8 @@ public class DagInfo extends Data {
      * n^2.
      *
      * @return the root jobs of the Adag
-     * @see org.griphyn.cPlanner.classes.PCRelation
-     * @see org.griphyn.cPlanner.classes.DagInfo#relations
+     * @see edu.isi.pegasus.planner.classes.PCRelation
+     * @see edu.isi.pegasus.planner.classes.DagInfo#relations
      */
     /*
         public Vector getRootNodes() {

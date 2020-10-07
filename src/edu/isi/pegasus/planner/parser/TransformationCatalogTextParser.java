@@ -132,7 +132,7 @@ public class TransformationCatalogTextParser {
      * @throws IOException
      * @throws ScannerException
      * @throws Exception
-     * @see org.griphyn.cPlanner.classes.PoolConfig
+     * @see edu.isi.pegasus.planner.classes.PoolConfig
      */
     public TransformationStore parse(boolean modifyFileURL) throws IOException, ScannerException {
         // to check more

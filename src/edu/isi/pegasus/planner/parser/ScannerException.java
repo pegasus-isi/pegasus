@@ -17,9 +17,7 @@ import java.io.LineNumberReader;
 
 /**
  * This class is used to signal errors while scanning or parsing.
- *
- * @see org.griphyn.cPlanner.classes.PoolConfigScanner
- * @see org.griphyn.cPlanner.classes.PoolConfigParser2
+ * 
  * @author Jens Voeckler
  * @author Karan Vahi
  * @author Gaurang Mehta

@@ -107,7 +107,7 @@ public class CatalogType {
     /**
      * Returns a List of PFN objects associated with this Catalog entry
      *
-     * @return List<PFN>
+     * @return List of PFN objects
      * @see PFN
      */
     public List<PFN> getPhysicalFiles() {
@@ -154,7 +154,7 @@ public class CatalogType {
     /**
      * Returns the List of MetaData objects associated with this Catalog entry object
      *
-     * @return Set<MetaData>
+     * @return Set of MetaData objects
      * @see MetaData
      */
     public Set<MetaData> getMetaData() {
@@ -217,7 +217,7 @@ public class CatalogType {
     /**
      * Return the List of {@link Profile} objects associated with this Catalog entry
      *
-     * @return List<Profile>
+     * @return List of Profile
      * @see Profile
      */
     public List<Profile> getProfiles() {
@@ -247,7 +247,7 @@ public class CatalogType {
      *
      * @param writer
      * @param indent
-     * @see XMLwriter
+     * @see XMLWriter
      */
     public void toXML(XMLWriter writer, int indent) {
         for (Profile p : mProfiles) {

@@ -39,7 +39,7 @@ public abstract class DAXWriter {
     public static final String PARTITION_PREFIX = "partition_";
 
     /** The name of the package in which the writers are implemented. */
-    public static final String PACKAGE_NAME = "org.griphyn.cPlanner.partitioner";
+    public static final String PACKAGE_NAME = "edu.isi.pegasus.planner.partitioner";
 
     /**
      * The dax file that is being partitioned. The dax file is the repository for all the jobs in

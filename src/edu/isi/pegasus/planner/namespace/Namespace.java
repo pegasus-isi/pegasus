@@ -186,7 +186,7 @@ public abstract class Namespace /*extends Data*/ {
      * @param profile the <code>Profile</code> object containing the key and value.
      * @exception IllegalArgumentException if the namespace in the profile is not the same as the
      *     profile namepsace in which the profile is being incorporated.
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      */
     public void checkKeyInNS(Profile profile) throws IllegalArgumentException {
         if (profile.getProfileNamespace().equals(this.namespaceName())) {
@@ -204,7 +204,7 @@ public abstract class Namespace /*extends Data*/ {
      *
      * @param vars List of <code>Profile</code> objects, each referring to a key value for the
      *     profile.
-     * @see org.griphyn.cPlanner.classes.Profile
+     * @see edu.isi.pegasus.planner.classes.Profile
      */
     public void checkKeyInNS(List vars) {
         if (vars == null || vars.isEmpty()) {

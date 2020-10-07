@@ -157,7 +157,7 @@ public class Dagman extends Namespace {
     /**
      * The name of the job (jobname) to which the profiles for this namespace belong.
      *
-     * @see org.griphyn.cPlanner.classes.SubInfo#jobName
+     * @see edu.isi.pegasus.planner.classes.SubInfo#jobName
      */
     private String mJobName;
 

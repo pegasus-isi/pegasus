@@ -93,7 +93,7 @@ public class PartitionerFactory {
             Object argList[] = new Object[3];
             Class classList[] = new Class[3];
             argList[0] = root;
-            // classList[0] = Class.forName( "org.griphyn.cPlanner.partitioner.GraphNode" );
+            // classList[0] = Class.forName( "edu.isi.pegasus.planner.partitioner.GraphNode" );
             classList[0] = new GraphNode().getClass(); // to circumvent root being null
             argList[1] = graph;
             classList[1] = Class.forName("java.util.Map");

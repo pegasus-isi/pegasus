@@ -188,8 +188,8 @@ public class GridStartFactory {
      * @param job the job for which we want the gridstart handle.
      * @param gridStartPath the path to the gridstart from the site catalog.
      * @return a handle to appropriate GridStart implementation.
-     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
-     * @see org.griphyn.cPlanner.common.PegasusProperties#getGridStart()
+     * @see edu.isi.pegasus.planner.namespace.Pegasus#GRIDSTART_KEY
+     * @see edu.isi.pegasus.planner.common.PegasusProperties#getGridStart()
      * @throws GridStartFactoryException that nests any error that might occur during the
      *     instantiation of the implementation.
      */
@@ -241,9 +241,9 @@ public class GridStartFactory {
      * @param gridStart the <code>GridStart</code> for which we want to load the POSTSCRIPT
      *     implementation.
      * @return a handle to appropriate POSTScript implementation.
-     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
-     * @see org.griphyn.cPlanner.namespace.Dagman#POST_SCRIPT_KEY
-     * @see org.griphyn.cPlanner.common.PegasusProperties#getGridStart()
+     * @see edu.isi.pegasus.planner.namespace.Pegasus#GRIDSTART_KEY
+     * @see edu.isi.pegasus.planner.namespace.Dagman#POST_SCRIPT_KEY
+     * @see edu.isi.pegasus.planner.common.PegasusProperties#getGridStart()
      * @throws GridStartFactoryException that nests any error that might occur during the
      *     instantiation of the implementation.
      */

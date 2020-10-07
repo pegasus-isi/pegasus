@@ -39,7 +39,7 @@ import java.util.List;
  * @see Algorithm#RUNTIME_PROFILE_KEY
  * @see Algorithm#DEFAULT_NUMBER_OF_FREE_NODES
  * @see Algorithm#AVERAGE_DATA_SIZE_BETWEEN_JOBS
- * @see org.griphyn.cPlanner.classes.JobManager#IDLE_NODES
+ * @see edu.isi.pegasus.planner.catalog.site.classes.GridGateway#mIdleNodes
  */
 public class Heft extends Abstract {
 

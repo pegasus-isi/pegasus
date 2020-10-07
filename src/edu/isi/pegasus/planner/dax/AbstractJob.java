@@ -69,7 +69,7 @@ public class AbstractJob {
     /**
      * Copy constructor
      *
-     * @param a
+     * @param a the job
      */
     protected AbstractJob(AbstractJob a) {
         this.mArguments = new LinkedList(a.mArguments);
@@ -90,7 +90,7 @@ public class AbstractJob {
     /**
      * Copy Constructor
      *
-     * @param a
+     * @param id  the string id
      */
     protected static void checkID(String id) {
         if (!Patterns.isNodeIdValid(id)) {
@@ -161,7 +161,7 @@ public class AbstractJob {
      * Add a List of {@link File} objects to the argument list. The files will be separated by space
      * when rendered on the command line
      *
-     * @param files List<File>
+     * @param files List of File objects
      * @return AbstractJob
      * @see File
      */
@@ -201,7 +201,7 @@ public class AbstractJob {
      * Add a List of {@link File} objects to the argument list. The files will be separated by the
      * filedelimiter(default is space) when rendered on the command line.
      *
-     * @param files List<File> Array of file objects
+     * @param files List of File objects
      * @param filedelimiter String delimiter for the files. Default is space
      * @return AbstractJob
      * @see File
@@ -308,16 +308,20 @@ public class AbstractJob {
      * The argkey and argvalue are separated space.<br>
      * The files are separated by a space <br>
      * Example:<br>
-     * <i>List<File> files = new LinkedList<File>();<br>
-     * files.add(new File("f.a1"));<br>
-     * files.add(new File("f.a2"));<br>
-     * job.addArgument("-i",files)</i><br>
+     * <pre>
+     * {@code
+     * List<File> files = new LinkedList<File>();
+     * files.add(new File("f.a1"));
+     * files.add(new File("f.a2"));
+     * job.addArgument("-i",files)
+     * }
      * will result in the argument being added as <b>-i &lt;file name="f.a1"&gt; &lt;file
      * name="f.a2"&gt;</b><br>
+     * </pre>
      * Multiple calls to addArgument results in the arguments being separated by space.
      *
      * @param argkey String
-     * @param argvalue List<File>
+     * @param argvalue list of files to be passed as arguments
      * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, List<File> argvalue) {
@@ -366,10 +370,12 @@ public class AbstractJob {
      * The argkey and argvalue are separated by the argdelimiter.<br>
      * The files are separated by a filedelimter <br>
      * Example:<br>
-     * <i>List<File> files = new LinkedList<File>();<br>
-     * files.add(new File("f.a1"));<br>
-     * files.add(new File("f.a2"));<br>
-     * job.addArgument("-i",files,"=",",")</i><br>
+     * {@code
+     * List<File> files = new LinkedList<File>();
+     * files.add(new File("f.a1"));
+     * files.add(new File("f.a2"));
+     * job.addArgument("-i",files,"=",",")
+     * }
      * will result in the argument being added as <b>-i=&lt;file name="f.a1"&gt;,&lt;file
      * name="f.a2"&gt;</b><br>
      * Multiple calls to addArgument results in the arguments being separated by space.
@@ -855,7 +861,7 @@ public class AbstractJob {
         return this;
     }
 
-    /** @return Set<File> */
+    /** @return Set of File objects */
     public Set<File> getUses() {
         return mUses;
     }
@@ -1418,7 +1424,7 @@ public class AbstractJob {
     /**
      * Returns list of Invoke objects
      *
-     * @return List<Invoke>
+     * @return List of invoke objects
      */
     public List<Invoke> getInvoke() {
         return mInvokes;
@@ -1427,7 +1433,7 @@ public class AbstractJob {
     /**
      * Same as getInvoke(). Returns list of Invoke objects
      *
-     * @return List<Invoke>
+     * @return List of invoke objects containing the notifications
      */
     public List<Invoke> getNotification() {
         return getInvoke();

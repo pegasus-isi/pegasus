@@ -36,7 +36,7 @@ public class ClassADSGenerator {
     /**
      * The class ad key for the version id.
      *
-     * @see org.griphyn.cPlanner.classes.DagInfo#releaseVersion
+     * @see edu.isi.pegasus.planner.classes.DagInfo#releaseVersion
      */
     public static final String VERSION_AD_KEY = "pegasus_version";
 
@@ -52,7 +52,7 @@ public class ClassADSGenerator {
     /**
      * The classad for the flow id.
      *
-     * @see org.griphyn.cPlanner.classes.DagInfo#flowIDName
+     * @see edu.isi.pegasus.planner.classes.DagInfo#flowIDName
      */
     public static final String WF_NAME_AD_KEY = "pegasus_wf_name";
 
@@ -62,7 +62,7 @@ public class ClassADSGenerator {
     /**
      * The classad for the timestamp.
      *
-     * @see org.griphyn.cPlanner.classes.DagInfo#mFlowTimestamp
+     * @see edu.isi.pegasus.planner.classes.DagInfo#mFlowTimestamp
      */
     public static final String WF_TIME_AD_KEY = "pegasus_wf_time";
 
@@ -75,14 +75,14 @@ public class ClassADSGenerator {
     /**
      * The class ad for job Class.
      *
-     * @see org.griphyn.cPlanner.classes.Job#jobClass
+     * @see edu.isi.pegasus.planner.classes.Job#jobClass
      */
     public static final String JOB_CLASS_AD_KEY = "pegasus_job_class";
 
     /**
      * The class ad for the jobId.
      *
-     * @see org.griphyn.cPlanner.classes.Job#jobID
+     * @see edu.isi.pegasus.planner.classes.Job#jobID
      */
     public static final String DAG_JOB_ID_KEY = "pegasus_wf_dag_job_id";
 

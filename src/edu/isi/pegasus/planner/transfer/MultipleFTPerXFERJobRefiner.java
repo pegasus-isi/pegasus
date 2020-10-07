@@ -92,7 +92,7 @@ public abstract class MultipleFTPerXFERJobRefiner extends AbstractRefiner {
         boolean condition1 =
                 !this.getClass()
                         .getName()
-                        .equalsIgnoreCase("org.griphyn.cPlanner.transfer.refiner.Chain");
+                        .equalsIgnoreCase("edu.isi.pegasus.planner.transfer.refiner.Chain");
 
         // check if implementation loaded is of right type
         if (condition1 && !(implementation instanceof MultipleFTPerXFERJob)) {

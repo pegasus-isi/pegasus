@@ -778,8 +778,8 @@ public class ADag extends Data implements Graph {
      * n^2.
      *
      * @return the root jobs of the Adag
-     * @see org.griphyn.cPlanner.classes.PCRelation
-     * @see org.griphyn.cPlanner.classes.DagInfo#relations
+     * @see edu.isi.pegasus.planner.classes.PCRelation
+     * @see edu.isi.pegasus.planner.classes.DagInfo#relations
      */
     /*    public Vector getRootNodes(){
             return this.mDAGInfo.getRootNodes();

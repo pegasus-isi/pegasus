@@ -128,7 +128,7 @@ public class Braindump {
     /**
      * The Key for the version id.
      *
-     * @see org.griphyn.cPlanner.classes.DagInfo#releaseVersion
+     * @see edu.isi.pegasus.planner.classes.DagInfo#releaseVersion
      */
     public static final String VERSION_KEY = "pegasus_version";
 
@@ -141,21 +141,21 @@ public class Braindump {
     /**
      * The Key for the flow id.
      *
-     * @see org.griphyn.cPlanner.classes.DagInfo#flowIDName
+     * @see edu.isi.pegasus.planner.classes.DagInfo#flowIDName
      */
     public static final String WF_NAME_KEY = "pegasus_wf_name";
 
     /**
      * The Key for the timestamp.
      *
-     * @see org.griphyn.cPlanner.classes.DagInfo#mFlowTimestamp
+     * @see edu.isi.pegasus.planner.classes.DagInfo#mFlowTimestamp
      */
     public static final String WF_TIME_KEY = "pegasus_wf_time";
 
     /**
      * The Key for the timestamp.
      *
-     * @see org.griphyn.cPlanner.classes.DagInfo#mFlowTimestamp
+     * @see edu.isi.pegasus.planner.classes.DagInfo#mFlowTimestamp
      */
     public static final String WF_TIMESTAMP_KEY = "timestamp";
 

@@ -164,7 +164,7 @@ public class Executable extends CatalogType {
     /**
      * Return the list of Notification objects
      *
-     * @return List<Invoke>
+     * @return List of Invoke objects
      */
     public List<Invoke> getInvoke() {
         return mInvokes;
@@ -173,7 +173,7 @@ public class Executable extends CatalogType {
     /**
      * Return the list of Notification objects (same as getInvoke)
      *
-     * @return List<Invoke>
+     * @return List of Invoke objects
      */
     public List<Invoke> getNotification() {
         return getInvoke();

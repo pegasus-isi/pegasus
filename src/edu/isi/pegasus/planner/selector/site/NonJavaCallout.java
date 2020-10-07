@@ -289,7 +289,7 @@ public class NonJavaCallout extends AbstractPerJob {
      *     can be used.
      *     <p>FIXME: Some site selector return an empty string on failures. Also: NONE could be a
      *     valid site name.
-     * @see org.griphyn.cPlanner.classes.Job
+     * @see edu.isi.pegasus.planner.classes.Job
      */
     public void mapJob(Job job, List sites) {
         Runtime rt = Runtime.getRuntime();

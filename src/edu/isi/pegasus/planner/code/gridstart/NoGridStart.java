@@ -472,7 +472,7 @@ public class NoGridStart implements GridStart {
      * class without the package name.
      *
      * @return the value of the profile key.
-     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
+     * @see edu.isi.pegasus.planner.namespace.Pegasus#GRIDSTART_KEY
      */
     public String getVDSKeyValue() {
         return this.CLASSNAME;

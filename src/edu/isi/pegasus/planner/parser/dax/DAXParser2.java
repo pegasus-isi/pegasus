@@ -56,10 +56,10 @@ import org.xml.sax.SAXException;
  * @author Karan Vahi
  * @author Gaurang Mehta
  * @version $Revision$
- * @see org.griphyn.cPlanner.classes.Job
- * @see org.griphyn.cPlanner.classes.DagInfo
- * @see org.griphyn.cPlanner.classes.ADag
- * @see org.griphyn.cPlanner.classes.PCRelation
+ * @see edu.isi.pegasus.planner.classes.Job
+ * @see edu.isi.pegasus.planner.classes.DagInfo
+ * @see edu.isi.pegasus.planner.classes.ADag
+ * @see edu.isi.pegasus.planner.classes.PCRelation
  */
 public class DAXParser2 extends XMLParser implements DAXParser {
 
@@ -143,7 +143,7 @@ public class DAXParser2 extends XMLParser implements DAXParser {
      * Holds the input files for a particular job making the aDag. They are Vector of PegasusFile
      * Objects which store the transiency information of each logical file.
      *
-     * @see org.griphyn.cPlanner.classes.PegasusFile
+     * @see edu.isi.pegasus.planner.classes.PegasusFile
      */
     private Set mVJobInpFiles = new HashSet();
 
@@ -151,7 +151,7 @@ public class DAXParser2 extends XMLParser implements DAXParser {
      * Holds the output files for a particular job making the aDag. They are vector of PegasusFile
      * Objects which store the transiency information of each logical file.
      *
-     * @see org.griphyn.cPlanner.classes.PegasusFile
+     * @see edu.isi.pegasus.planner.classes.PegasusFile
      */
     private Set mVJobOutFiles = new HashSet();
 

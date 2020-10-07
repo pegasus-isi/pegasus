@@ -27,7 +27,7 @@ import org.griphyn.vdl.util.*;
  * @author Yong Zhao
  * @version $Revision$
  * @see InvocationParser
- * @see org.griphyn.vdl.invocation.Invocation
+ * @see Invocation
  */
 public class IVPTest {
     public static void main(String[] args) throws IOException {

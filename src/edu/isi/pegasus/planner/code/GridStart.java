@@ -128,7 +128,7 @@ public interface GridStart {
      * without the package name.
      *
      * @return the value of the profile key.
-     * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
+     * @see edu.isi.pegasus.planner.namespace.VDS#GRIDSTART_KEY
      */
     public String getVDSKeyValue();
 

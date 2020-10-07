@@ -242,7 +242,7 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      * @param stagingSite the site where the data will be populated by first level staging jobs.
      * @param jobClass the job Class for the newly added job. Can be one of the following: stage-in
      *     stage-out inter-pool transfer
-     * @see org.griphyn.cPlanner.classes.FileTransfer#toString()
+     * @see edu.isi.pegasus.planner.classes.FileTransfer#toString()
      * @throws java.lang.Exception
      */
     protected void writeStdInAndAssociateCredentials(

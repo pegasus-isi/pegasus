@@ -28,7 +28,7 @@ public class DAX extends AbstractJob {
      * Create a DAX job object
      *
      * @param id The unique id of the DAX job object. Must be of type [A-Za-z][-A-Za-z0-9_]*
-     * @param dagname The DAX file to plan and submit
+     * @param daxname The DAX file to plan and submit
      */
     public DAX(String id, String daxname) {
         this(id, daxname, null);
@@ -47,7 +47,7 @@ public class DAX extends AbstractJob {
      * Create a DAX job object
      *
      * @param id The unique id of the DAX job object. Must be of type [A-Za-z][-A-Za-z0-9_]*
-     * @param dagname The DAX file to plan and submit
+     * @param daxname The DAX file to plan and submit
      * @param label
      */
     public DAX(String id, String daxname, String label) {
