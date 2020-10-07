@@ -35,7 +35,7 @@ import org.apache.log4j.Level;
  *
  * <p>
  *
- * <table border="1">
+ * <table border="1" summary="">
  * <tr align="left"><th>Logging Level</th><th>Description</th></tr>
  * <tr align="left"><th>FATAL</th>
  *  <td>all fatal error messages are logged in this level.</td>

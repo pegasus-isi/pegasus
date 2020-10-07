@@ -35,7 +35,7 @@ public interface Arbiter {
      *
      * <p>The environmental description currently contains the following entries:
      *
-     * <table border="0">
+     * <table border="0" summary="">
      * <tr><th>key</th><th>type</th><th>meaning</th></tr>
      * <tr><td>lfn</td><td>String</td><td>Output filename produced by all.</td></tr>
      * <tr><td>cwns</td><td>String</td><td>Current working namespace,

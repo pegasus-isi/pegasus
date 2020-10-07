@@ -32,7 +32,7 @@ import org.griphyn.vdl.util.Logging;
  * reside in <code>$PEGASUS_HOME/share</code>:
  *
  * 
- * <table border="1">
+ * <table border="1" summary="">
  * <tr><th>template</th><th>purpose</th></tr>
  * <tr><td>sp-job-1.tmpl</td><td>start of job script</td></tr>
  * <tr><td>sp-job-2.tmpl</td><td>unused</td></tr>
@@ -47,7 +47,7 @@ import org.griphyn.vdl.util.Logging;
  * during job generation:
  *
  *
- * <table border="1">
+ * <table border="1" summary="">
  * <tr><th>variable</th><th>purpose</th></tr>
  * <tr><td>DAXLABEL</td><td>user-given label of the workflow</td></tr>
  * <tr><td>DV</td><td>Job: fully-qualified DV of job</td></tr>

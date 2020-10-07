@@ -63,7 +63,7 @@ import java.util.Map;
  * @see #RUNTIME_PROFILE_KEY
  * @see #DEFAULT_NUMBER_OF_FREE_NODES
  * @see #AVERAGE_DATA_SIZE_BETWEEN_JOBS
- * @see edu.isi.pegasus.planner.catalog.site.classes.GridGateway#IDLE_NODES
+ * @see edu.isi.pegasus.planner.catalog.site.classes.GridGateway#mIdleNodes
  */
 public class Algorithm {
 

@@ -265,7 +265,7 @@ public class ADAG {
      * Map of Dependencies between Job,DAX,DAG objects. Map key is a string that holds the child
      * element reference, the value is a List of Parent objects
      *
-     * @see Parent
+     * @see Edge
      */
     private Map<String, Set<Edge>> mDependencies;
     /** List of Notification objects */

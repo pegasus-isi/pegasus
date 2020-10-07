@@ -194,7 +194,7 @@ public class Currently {
      * ISO 8601 format. UTC time (Zulu time) or a local timezone will be used.
      *
      *
-     * <table border=1>
+     * <table border=1 summary="">
      * <tr><th>zone</th><th>format</th><th>fraction</th><th>example</th></tr>
      * <tr><td>local</td><td>basic</td><td>integral</td><td>20020523T140427-0500</td></tr>
      * <tr><td>UTC</td><td>basic</td><td>integral</td><td>20020523190427Z</td></tr>

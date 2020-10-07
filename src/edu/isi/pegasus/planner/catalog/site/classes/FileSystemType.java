@@ -21,7 +21,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
  *
  * <p>
  *
- * <table border="1">
+ * <table border="1"  summary="">
  * <tr align="left"><th>Attribute Name</th><th>Attribute Description</th></tr>
  * <tr align="left"><th>mount-point</th>
  *  <td>the mount point for the filesystem</td>

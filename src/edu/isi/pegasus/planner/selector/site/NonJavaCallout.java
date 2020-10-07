@@ -61,7 +61,7 @@ import java.util.StringTokenizer;
  *
  * <p>
  *
- * <table border="1">
+ * <table border="1" summary="">
  * <tr align="left"><th>key</th><th>value</th></tr>
  * <tr align="left"><th>PEGASUS_HOME</th>
  *  <td>As set by the system</td></tr>
@@ -121,7 +121,7 @@ import java.util.StringTokenizer;
  *
  * <p>
  *
- * <table border="1">
+ * <table border="1" summary="">
  * <tr align="left"><th>#</th><th>key</th><th>value</th></tr>
  * <tr align="left"><th>1</th><th>version</th>
  *  <td>The version of the site selector API, currently 2.0</td></tr>

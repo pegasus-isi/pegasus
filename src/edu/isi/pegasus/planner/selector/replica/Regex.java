@@ -274,7 +274,7 @@ public class Regex extends Default {
      *
      * @param properties with the key being an integer specifying the rank and value as regex
      *     expression to be applied.
-     * @return Sorted<Rank>
+     * @return SortedSet of Rank objects
      */
     private SortedSet<Rank> getRegexSet(Properties properties) {
         SortedSet<Rank> result = new TreeSet<Rank>();

@@ -166,7 +166,7 @@ public class Separator {
      * user input, the following convention is supported, where * stands in for wild-card matches,
      * and (-) for a match of an empty element:
      *
-     * <table>
+     * <table summary="">
      *  <tr><th>INPUT</th> <th>NS</th>  <th>ID</th> <th>VS</th></tr>
      *  <tr><td>id</td>    <td>*</td>   <td>id</td> <td>*</td></tr>
      *  <tr><td>::id</td>  <td>(-)</td> <td>id</td> <td>*</td></tr>

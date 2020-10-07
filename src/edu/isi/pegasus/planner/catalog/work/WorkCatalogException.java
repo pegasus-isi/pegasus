@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.catalog.CatalogException;
  * <p>
  *
  * @author Jens-S. Vöckler, Karan Vahi
- * @see org.griphyn.common.catalog.ReplicaCatalog
+ * @see edu.isi.pegasus.planner.catalog.ReplicaCatalog
  */
 public class WorkCatalogException extends CatalogException {
     /*

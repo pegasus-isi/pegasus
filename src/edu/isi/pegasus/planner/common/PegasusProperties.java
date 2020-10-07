@@ -43,7 +43,7 @@ import java.util.Set;
  * @author Karan Vahi
  * @author Gaurang Mehta
  * @version $Revision$
- * @see org.griphyn.common.util.CommonProperties
+ * @see edu.isi.pegasus.common.util.CommonProperties
  */
 public class PegasusProperties implements Cloneable {
 
@@ -277,7 +277,6 @@ public class PegasusProperties implements Cloneable {
     /**
      * Retrieves profiles from the properties
      *
-     * @param properties the common properties so far
      * @return profiles object.
      */
     public Profiles retrieveProfilesFromProperties() {
