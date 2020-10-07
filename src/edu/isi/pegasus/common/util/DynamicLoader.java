@@ -58,7 +58,9 @@ public class DynamicLoader {
     /** Stores the fully qualified class name to dynamically instantiate. */
     private String m_classname;
 
-    /** */
+    /**
+     * @param classname the classname
+     */
     public DynamicLoader(String classname) {
         if ((this.m_classname = classname) == null)
             throw new NullPointerException("You must specify a fully-qualified class name");
@@ -86,9 +88,9 @@ public class DynamicLoader {
     }
 
     /**
-     * Dynamically instantiates a class from a contructor. You must have set the class name before
-     * invoking this method. Please note that any exceptions thrown by the constructor will be
-     * wrapped into a <code>InvocationTargetException</code>.
+     * Dynamically instantiates a class from a contructor.You must have set the class name before
+ invoking this method. Please note that any exceptions thrown by the constructor will be
+ wrapped into a <code>InvocationTargetException</code>.
      *
      * @param arguments are arguments to the constructor of the class to load. Please use "new
      *     Object[0]" for the argumentless default constructor.
@@ -103,8 +105,6 @@ public class DynamicLoader {
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the driver throws an exception
      *     while being dynamically loaded.
-     * @exception SQLException if the driver for the database can be loaded, but faults when
-     *     initially accessing the database
      * @see #setClassName( String )
      */
     public Object instantiate(Object[] arguments)
@@ -119,9 +119,9 @@ public class DynamicLoader {
     }
 
     /**
-     * Dynamically instantiates a class from a contructor. You must have set the class name before
-     * invoking this method. Please note that any exceptions thrown by the constructor will be
-     * wrapped into a <code>InvocationTargetException</code>.
+     * Dynamically instantiates a class from a contructor.You must have set the class name before
+ invoking this method. Please note that any exceptions thrown by the constructor will be
+ wrapped into a <code>InvocationTargetException</code>.
      *
      * <p>This method should be invoked, if the constructor declares interface types as formal
      * arguments, but the actual arguments are implementation classes.
@@ -144,8 +144,6 @@ public class DynamicLoader {
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the driver throws an exception
      *     while being dynamically loaded.
-     * @exception SQLException if the driver for the database can be loaded, but faults when
-     *     initially accessing the database
      * @see #setClassName( String )
      */
     public Object instantiate(Class[] classes, Object[] arguments)
@@ -160,9 +158,9 @@ public class DynamicLoader {
     }
 
     /**
-     * Dynamically instantiates a class from a static method which constructs the resulting object.
-     * You must have set the class name before invoking this method. Please note that any exceptions
-     * thrown by the constructor will be wrapped into a <code>InvocationTargetException</code>.
+     * Dynamically instantiates a class from a static method which constructs the resulting object.You must have set the class name before invoking this method.
+     * Please note that any exceptions
+ thrown by the constructor will be wrapped into a <code>InvocationTargetException</code>.
      *
      * @param method is the name of the static method to call.
      * @param arguments are arguments to the constructor of the class to load. Please use "new
@@ -178,8 +176,6 @@ public class DynamicLoader {
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the driver throws an exception
      *     while being dynamically loaded.
-     * @exception SQLException if the driver for the database can be loaded, but faults when
-     *     initially accessing the database
      * @exception SecurityException if you are not permitted to invoke the method, or even list the
      *     methods provided by the class.
      * @exception NullPointerException if the method name is <code>null</code>.

@@ -479,10 +479,11 @@ public class CommonProperties implements Cloneable {
     }
 
     /**
-     * Extracts a specific property key subset from the properties passed. The prefix may be removed
-     * from the keys in the resulting dictionary, or it may be kept. In the latter case, exact
-     * matches on the prefix will also be copied into the resulting dictionary.
+     * Extracts a specific property key subset from the properties passed.The prefix may be removed
+ from the keys in the resulting dictionary, or it may be kept. In the latter case, exact
+ matches on the prefix will also be copied into the resulting dictionary.
      *
+     * @param properties the input properties
      * @param prefix is the key prefix to filter the properties by.
      * @param keepPrefix if true, the key prefix is kept in the resulting dictionary. As
      *     side-effect, a key that matches the prefix exactly will also be copied. If false, the

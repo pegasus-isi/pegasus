@@ -69,6 +69,9 @@ public class ShellCommand {
     /**
      * Executes a command with the arguments passed
      *
+     * @param command  the command
+     * @param args     the args
+     * 
      * @return the exitcode
      */
     public int execute(String command, String args) {
@@ -117,7 +120,7 @@ public class ShellCommand {
     /**
      * Returns the stdout of the last command executed.
      *
-     * @return
+     * @return String
      */
     public String getSTDOut() {
         return mOutputBuffer;
@@ -126,7 +129,7 @@ public class ShellCommand {
     /**
      * Returns the stderr of the last command executed.
      *
-     * @return
+     * @return String
      */
     public String getSTDErr() {
         return mErrorBuffer;
@@ -169,7 +172,7 @@ public class ShellCommand {
     /**
      * The main program to test.
      *
-     * @param args
+     * @param args main args
      */
     public static void main(String[] args) {
         LogManager logger = LogManagerFactory.loadSingletonInstance();

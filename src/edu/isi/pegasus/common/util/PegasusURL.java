@@ -92,7 +92,7 @@ public class PegasusURL {
      * Parses the url and populates the internal member variables that can be accessed via the
      * appropriate accessor methods
      *
-     * @param url
+     * @param url the url
      */
     public void parse(String url) {
         // reset internal variables
@@ -164,7 +164,7 @@ public class PegasusURL {
     /**
      * Returns the full URL denoted by this object
      *
-     * @return
+     * @return String
      */
     public String getURL() {
         return mURL;
@@ -242,7 +242,7 @@ public class PegasusURL {
     /**
      * The contents represented as a string
      *
-     * @return
+     * @return String
      */
     public String toString() {
         StringBuffer sb = new StringBuffer();
@@ -266,7 +266,7 @@ public class PegasusURL {
     /**
      * Test program
      *
-     * @param args
+     * @param args main args
      */
     public static void main(String[] args) {
         // should print

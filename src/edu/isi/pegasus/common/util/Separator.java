@@ -307,7 +307,7 @@ public class Separator {
      *       <li>maximum version for 4arg, may be null
      *     </ol>
      *
-     * @exception IllegalArgumentException, if the identifier cannot be parsed correctly.
+     * @exception IllegalArgumentException if the identifier cannot be parsed correctly.
      */
     public static String[] split(String fqdn) throws IllegalArgumentException {
         String namespace = null;

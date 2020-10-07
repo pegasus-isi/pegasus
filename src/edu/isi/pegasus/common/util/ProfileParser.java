@@ -215,7 +215,7 @@ public class ProfileParser {
     /**
      * * Creates a profile string from the internal representation.
      *
-     * @param l is a list of profiles
+     * @param p  profiles
      * @return a string containing the representation. The string can be empty (FIXME: should it be
      *     "null" or null?) for an empty list.
      * @see #parse( String s )

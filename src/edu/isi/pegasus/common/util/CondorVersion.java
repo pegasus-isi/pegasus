@@ -71,7 +71,7 @@ public class CondorVersion {
     /**
      * Converts a string into the corresponding integer value.
      *
-     * @param version
+     * @param version the version
      * @return int value of the version, else -1 in case of null version or incorrect formatted
      *     string
      * @deprecated
@@ -317,7 +317,7 @@ public class CondorVersion {
     /**
      * The main program to test.
      *
-     * @param args
+     * @param args  main args
      */
     public static void main(String[] args) {
         LogManager logger = LogManagerFactory.loadSingletonInstance();

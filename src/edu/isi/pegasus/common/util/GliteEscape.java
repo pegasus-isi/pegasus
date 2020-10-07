@@ -18,7 +18,7 @@ package edu.isi.pegasus.common.util;
  *
  * <p>The quoting algorithm is safe to only itself. Thus,
  *
- * <p>
+ * </p>
  *
  * <pre>
  * unescape( escape( s ) ) === s
@@ -26,7 +26,7 @@ package edu.isi.pegasus.common.util;
  *
  * <p>holds true, but
  *
- * <p>
+ * </p>
  *
  * <pre>
  * escape( unescape( s ) ) =?= s
