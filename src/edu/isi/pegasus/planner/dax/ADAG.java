@@ -1077,7 +1077,8 @@ public class ADAG {
             }
         } catch (IOException ioe) {
             throw new RuntimeException(
-                    "Error encountered while writting out the abstract workflow to writer "
+                    "Error encountered while writing out the abstract workflow to writer "
+                            + ioe.getMessage()
                             + writer
                             + " in format "
                             + format,
@@ -1213,7 +1214,7 @@ public class ADAG {
          * @throws IOException
          */
         public void serialize(ADAG adag, JsonGenerator gen, SerializerProvider sp)
-                throws IOException {
+                throws IOException, UnsupportedOperationException {
             gen.writeStartObject();
             // pegasus
             gen.writeStringField("pegasus", "5.0");
@@ -1276,6 +1277,12 @@ public class ADAG {
                 }
                 gen.writeFieldName("transformationCatalog");
                 gen.writeObject(store);
+            }
+
+            // compound transformations must be added by using executable.addRequirement()
+            if (!adag.mTransformations.isEmpty()) {
+                throw new UnsupportedOperationException(
+                        "Compound transformations not supported when converting to YAML. Use Executable.addRequirement() instead.");
             }
 
             // jobs
