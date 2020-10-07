@@ -59,12 +59,19 @@ public class InMemorySchema extends DatabaseSchema implements VDC {
     }
 
     /**
-     * Fakes a connect to the database. This class never uses any database, but instead applies all
-     * data to the provided reference to the in-memory structure. Subclasses may refine this view to
-     * work with files or URLs.
+     * Fakes a connect to the database.This class never uses any database, but instead applies all
+ data to the provided reference to the in-memory structure.Subclasses may refine this view to
+ work with files or URLs.
      *
      * @param memory is a reference to an existing in-memory Java object holding all our necessary
      *     definitions.
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.lang.NoSuchMethodException Exception
+     * @throws java.lang.InstantiationException Exception
+     * @throws java.lang.IllegalAccessException Exception
+     * @throws java.lang.reflect.InvocationTargetException Exception
+     * @throws java.sql.SQLException Exception
+     * @throws java.io.IOException Exception
      */
     public InMemorySchema(Definitions memory)
             throws ClassNotFoundException, NoSuchMethodException, InstantiationException,

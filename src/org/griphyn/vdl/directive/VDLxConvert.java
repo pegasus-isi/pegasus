@@ -35,7 +35,8 @@ public class VDLxConvert extends Directive implements DefinitionHandler {
 
     private Writer m_writer;
 
-    /** Constructor */
+    /** Constructor
+     * @throws java.io.IOException exception*/
     public VDLxConvert() throws IOException, MissingResourceException {
         super();
     }

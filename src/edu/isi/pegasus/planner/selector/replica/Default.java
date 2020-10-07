@@ -323,9 +323,9 @@ public class Default implements ReplicaSelector {
     /**
      * * Warn for file URL not being selected because of mismatch in site attributes
      *
-     * @param rce
-     * @param destinationSite
-     * @param allowLocalFileURLs
+     * @param rce  ReplicaCatalogEntry
+     * @param destinationSite destinationSite 
+     * @param allowLocalFileURLs boolean
      */
     protected void warnForFileURL(
             ReplicaCatalogEntry rce, String destinationSite, boolean allowLocalFileURLs) {

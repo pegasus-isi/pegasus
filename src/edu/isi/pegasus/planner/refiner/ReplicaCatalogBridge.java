@@ -463,7 +463,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      *
      * @param lfn The name of the logical file whose PFN mappings are required.
      * @return ReplicaLocation containing all the locations for that LFN
-     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     * @see edu.isi.pegasus.planner.classes.ReplicaLocation
      */
     public ReplicaLocation getFileLocs(String lfn) {
 

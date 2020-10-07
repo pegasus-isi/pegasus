@@ -188,7 +188,7 @@ public class Declare extends VDL implements Serializable {
      * Accessor: Sets a new linkage type for the formal argument.
      *
      * @param link is the new linkage type from {@link LFN}.
-     * @throws IllegalArgumentException, if the argument is outside the valid range.
+     * @throws IllegalArgumentException if the argument is outside the valid range.
      * @see #getLink()
      */
     public void setLink(int link) throws IllegalArgumentException {

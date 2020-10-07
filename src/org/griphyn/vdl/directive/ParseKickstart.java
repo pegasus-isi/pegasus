@@ -46,7 +46,7 @@ import org.griphyn.vdl.util.Logging;
  * <p>Usage of the class is divided into typically three steps. The first step is to obtain an
  * instance of the the parser, and configure it to fit your needs.
  *
- * <p>
+ * </p>
  *
  * <pre>
  * ParseKickstart pks = new ParseKickstart();
@@ -56,8 +56,7 @@ import org.griphyn.vdl.util.Logging;
  *
  * The next step can be executed multiple times, and parse one or more kickstart output files.
  *
- * <p>
- *
+ * 
  * <pre>
  * List result = null;
  * try {
@@ -70,8 +69,7 @@ import org.griphyn.vdl.util.Logging;
  * Once you are definitely done, it is recommend to dis-associate yourself from the active database
  * connection.
  *
- * <p>
- *
+ * 
  * <pre>
  * pks.close();
  * pks = null;
@@ -80,8 +78,7 @@ import org.griphyn.vdl.util.Logging;
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- * @see org.griphyn.vdl.toolkit.ExitCode
- * @see org.griphyn.vdl.parser.InvocationParser
+ * 
  */
 public class ParseKickstart extends Directive {
     /**
@@ -115,7 +112,8 @@ public class ParseKickstart extends Directive {
     /** Attaches a workflow mtime to all workflows passing thru. */
     private Date m_wf_mtime = null;
 
-    /** Default c'tor. */
+    /** Default c'tor.
+     * @throws java.io.IOException exception*/
     public ParseKickstart() throws IOException, MissingResourceException {
         super();
     }
@@ -124,6 +122,7 @@ public class ParseKickstart extends Directive {
      * C'tor which permits the setting of a PTC connection.
      *
      * @param dbschema is the database schema to use for the PTC.
+     * @throws java.io.IOException exception
      */
     public ParseKickstart(DatabaseSchema dbschema) throws IOException, MissingResourceException {
         super();
@@ -135,6 +134,7 @@ public class ParseKickstart extends Directive {
      *
      * @param dbschema is the database schema to use for the PTC.
      * @param emptyFail determines, if empty input files are error or OK.
+     * @throws java.io.IOException exception
      */
     public ParseKickstart(DatabaseSchema dbschema, boolean emptyFail)
             throws IOException, MissingResourceException {
@@ -152,7 +152,8 @@ public class ParseKickstart extends Directive {
         m_dbschema = dbschema;
     }
 
-    /** Closes the associated database backend and invalidates the schema. */
+    /** Closes the associated database backend and invalidates the schema.
+     * @throws java.sql.SQLException exception*/
     public void close() throws SQLException {
         if (m_dbschema != null) m_dbschema.close();
         m_dbschema = null;
@@ -267,7 +268,7 @@ public class ParseKickstart extends Directive {
      * @return the status code as exit code to signal failure etc.
      *     <pre>
      *   0   regular exit with exit code 0
-     *   1   regular exit with exit code > 0
+     *   1   regular exit with exit code &gt; 0
      *   2   failure to run program from kickstart
      *   3   application had died on signal
      *   4   application was suspended (should not happen)
@@ -325,7 +326,7 @@ public class ParseKickstart extends Directive {
      * @param input is the name of the file that contains the records
      * @return a list of strings, each representing one invocation record. The result should not be
      *     empty (exception will be thrown).
-     * @throws FriendlyNudge, if the input format was invalid. The caller has to assume failure to
+     * @throws FriendlyNudge if the input format was invalid. The caller has to assume failure to
      *     parse the record provided.
      */
     public List extractToMemory(java.io.File input) throws FriendlyNudge {
@@ -403,7 +404,7 @@ public class ParseKickstart extends Directive {
      *
      * @param arg0 is the name of the file to read
      * @return a list with one or more exit code, one for each record.
-     * @throws FriendlyNudge, if parsing of the file goes hay-wire.
+     * @throws FriendlyNudge if parsing of the file goes hay-wire.
      * @throws IOException if something happens while reading properties to instantiate the XML
      *     parser.
      * @throws SQLException if accessing the database fails.

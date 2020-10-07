@@ -183,6 +183,7 @@ public class JobStateEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return String
      * @see #setSite(String)
      */
     public String getSite() {
@@ -205,6 +206,7 @@ public class JobStateEntry implements Workflow, Cloneable {
      *
      * @return a line containing all internal data.
      */
+    @Override
     public String toString() {
         StringBuffer result = new StringBuffer(80);
 

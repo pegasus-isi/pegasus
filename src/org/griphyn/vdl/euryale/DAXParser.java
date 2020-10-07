@@ -735,8 +735,9 @@ public class DAXParser extends DefaultHandler {
 
     /**
      * This method sets the relations between the current java object and its parent object
-     * according to the element hierarchy. Usually it involves adding the object to the parent's
-     * child object list.
+     * according to the element hierarchy.Usually it involves adding the object to the parent's
+ child object list.
+     * @param elementName element name
      */
     public void setElementRelation(String elementName) {
         switch (elementName.charAt(0)) {
@@ -779,6 +780,7 @@ public class DAXParser extends DefaultHandler {
      * This method sets the content of the java object corresponding to the element "text", which
      * has mixed content.
      *
+     * @param elementChars element chars
      * @see org.griphyn.vdl.classes.Text
      */
     public void elementCharacters(String elementChars) {

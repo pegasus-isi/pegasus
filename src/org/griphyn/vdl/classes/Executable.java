@@ -44,7 +44,7 @@ public class Executable {
      * Predicate to determine, if an integer is within the valid range for Condor universes.
      *
      * @param x is the integer to test for in-intervall.
-     * @return true, if the integer satisfies {@link Executable#CONDOR_VANILLA} &leq; x &leq; {@link
+     * @return true, if the integer satisfies {@link Executable#CONDOR_VANILLA} {@link
      *     Executable#CONDOR_MPI}, false otherwise.
      */
     public static boolean isInRange(int x) {

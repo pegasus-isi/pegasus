@@ -64,7 +64,7 @@ public class SequenceGenerator {
      * Creates the next sequence number as textual string.
      *
      * @return the next sequence number string.
-     * @exception RuntimeException, if the maximum permissable value was reached.
+     * @exception RuntimeException if the maximum permissable value was reached.
      */
     public String generate() throws RuntimeException {
         if (this.m_count == Long.MAX_VALUE) throw new RuntimeException("Reached end of sequence");

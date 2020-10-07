@@ -30,7 +30,8 @@ import org.griphyn.vdl.parser.*;
  * @see org.griphyn.vdl.parser.VDLtParser
  */
 public class VDLtConvert extends Directive {
-    /** Constructor */
+    /** Constructor
+     * @throws java.io.IOException exception*/
     public VDLtConvert() throws IOException, MissingResourceException {
         super();
     }
@@ -40,6 +41,7 @@ public class VDLtConvert extends Directive {
      *
      * @param reader the vdlt source reader
      * @param writer the vdlx taget writer
+     * @throws java.io.IOException exception
      */
     public void VDLt2VDLx(Reader reader, Writer writer)
             throws VDLtParserException, VDLtScannerException, IOException {
@@ -53,6 +55,7 @@ public class VDLtConvert extends Directive {
      * @param writer the vdlx taget writer
      * @param namespace the common vdl namespace for all the definitions included
      * @param version the common version number for all the definitions included
+     * @throws java.io.IOException exception
      */
     public void VDLt2VDLx(Reader reader, Writer writer, String namespace, String version)
             throws VDLtParserException, VDLtScannerException, IOException {

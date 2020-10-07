@@ -140,7 +140,7 @@ public class Transformation extends Definition // thus implements VDL
      * Accessor: Adds an argument to the list of arguments
      *
      * @param vArgument is the argument to append to the command line arguments.
-     * @exception IndexOutOfBounds if the argument does not fit into the list.
+     * @exception IndexOutOfBoundsException if the argument does not fit into the list.
      * @see Argument
      */
     public void addArgument(Argument vArgument) throws IndexOutOfBoundsException {
@@ -154,7 +154,7 @@ public class Transformation extends Definition // thus implements VDL
      *
      * @param index is the position to insert an argument
      * @param vArgument is the argument to append to the command line arguments.
-     * @exception IndexOutOfBounds if the argument does not fit into the list.
+     * @exception IndexOutOfBoundsException if the argument does not fit into the list.
      * @see #getArgument( int )
      * @see #setArgument( int, Argument )
      * @see Argument
@@ -167,7 +167,7 @@ public class Transformation extends Definition // thus implements VDL
      * Accessor: Adds an invocation to the list of calls.
      *
      * @param vCall is the invocation to append to the list of calls.
-     * @exception IndexOutOfBounds if the argument does not fit into the list.
+     * @exception IndexOutOfBoundsException if the argument does not fit into the list.
      * @see Call
      */
     public void addCall(Call vCall) throws IndexOutOfBoundsException {
@@ -181,7 +181,7 @@ public class Transformation extends Definition // thus implements VDL
      *
      * @param index is the position to insert an invocation
      * @param vCall is the invocation to append to the list of calls.
-     * @exception IndexOutOfBounds if the argument does not fit into the list.
+     * @exception IndexOutOfBoundsException if the argument does not fit into the list.
      * @see #setCall( int, Call )
      * @see #getCall( int )
      * @see Call
@@ -218,7 +218,7 @@ public class Transformation extends Definition // thus implements VDL
      * Accessor: Appends a profile definition to the list of profiles.
      *
      * @param vProfile is the profile to append to remembered profiles.
-     * @exception IndexOutOfBounds if the argument does not fit into the list.
+     * @exception IndexOutOfBoundsException if the argument does not fit into the list.
      * @see Profile
      */
     public void addProfile(Profile vProfile) throws IndexOutOfBoundsException {
@@ -232,7 +232,7 @@ public class Transformation extends Definition // thus implements VDL
      *
      * @param index is the position to insert the definitions into.
      * @param vProfile is the profile to append to remembered profiles.
-     * @exception IndexOutOfBounds if the argument does not fit into the list.
+     * @exception IndexOutOfBoundsException if the argument does not fit into the list.
      * @see #getProfile( int )
      * @see #setProfile( int, Profile )
      * @see Profile
@@ -561,6 +561,7 @@ public class Transformation extends Definition // thus implements VDL
      * Accessor: Obtains an <code>Profile</code> at an arbitrary position.
      *
      * @param index is the place to look up the element at.
+     * @return Profile
      * @exception IndexOutOfBoundsException if the referenced position does not exist.
      * @see #addProfile( int, Profile )
      * @see #setProfile( int, Profile )

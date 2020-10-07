@@ -32,7 +32,7 @@ public abstract class CatalogEntryJsonDeserializer<T> extends PegasusJsonDeseria
      * The exception to be thrown while deserializing on error
      *
      * @param message the error message
-     * @return
+     * @return RuntimeException
      */
     @Override
     public RuntimeException getException(String message) {

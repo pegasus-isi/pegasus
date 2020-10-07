@@ -34,6 +34,13 @@ public class WorkflowSchema extends DatabaseSchema implements WF {
      * Default constructor for access to the WF set of tables.
      *
      * @param dbDriverName is the database driver name
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.lang.NoSuchMethodException Exception
+     * @throws java.lang.InstantiationException Exception
+     * @throws java.lang.IllegalAccessException Exception
+     * @throws java.lang.reflect.InvocationTargetException Exception
+     * @throws java.sql.SQLException Exception
+     * @throws java.io.IOException Exception
      */
     public WorkflowSchema(String dbDriverName)
             throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
@@ -115,6 +122,7 @@ public class WorkflowSchema extends DatabaseSchema implements WF {
      * @param rs is the result set of a query, which is better valid.
      * @param withJobs if true, also add the jobs, if false, no jobs.
      * @return a workflow instance created from the result set.
+     * @throws java.sql.SQLException exception
      */
     protected WorkEntry convertResultSet(ResultSet rs, boolean withJobs) throws SQLException {
         WorkEntry result =

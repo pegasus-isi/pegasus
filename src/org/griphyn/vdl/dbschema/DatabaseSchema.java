@@ -173,6 +173,7 @@ public abstract class DatabaseSchema implements Catalog {
      *     while being dynamically loaded.
      * @exception SQLException if the driver for the database can be loaded, but faults when
      *     initially accessing the database
+     * @throws java.io.IOException Exception
      */
     public DatabaseSchema(
             String dbDriverName,
@@ -240,7 +241,7 @@ public abstract class DatabaseSchema implements Catalog {
 
     /**
      * Connects to the database as specified by the properties, and checks the schema
-     * implementation. Makes heavy use of global property values.
+     * implementation.Makes heavy use of global property values.
      *
      * @param dbDriverName is the name of the class that conforms to the DatabaseDriver API. This
      *     class will be dynamically loaded. If the passed value is <code>null</code>, which should
@@ -258,6 +259,7 @@ public abstract class DatabaseSchema implements Catalog {
      *     while being dynamically loaded.
      * @exception SQLException if the driver for the database can be loaded, but faults when
      *     initially accessing the database
+     * @throws java.io.IOException Exception
      */
     public DatabaseSchema(String dbDriverName, String propertyPrefix)
             throws ClassNotFoundException, IOException, NoSuchMethodException,
@@ -315,6 +317,8 @@ public abstract class DatabaseSchema implements Catalog {
      * @param propertyPrefix is the property prefix string to use.
      * @exception SQLException if the driver for the database can be loaded, but faults when
      *     initially accessing the database
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.io.IOException Exception
      */
     public DatabaseSchema(DatabaseDriver driver, String propertyPrefix)
             throws SQLException, ClassNotFoundException, IOException {

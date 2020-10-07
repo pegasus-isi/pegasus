@@ -122,7 +122,7 @@ public class AWSBatch extends Abstract {
      * Writes out the input file for the aggregated job
      *
      * @param job the aggregated job
-     * @param stdin the name of input file for batch to be generated
+     * @param stdIn the name of input file for batch to be generated
      * @param isClustered a boolean indicating whether the graph belongs to a clustered job or not.
      * @return shareSHDirectoryPath to the input file
      */

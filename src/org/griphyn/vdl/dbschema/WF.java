@@ -41,16 +41,18 @@ public interface WF extends Catalog {
      * @param label is the workflow label
      * @param run is the workflow run directory
      * @return the workflow identifier, or -1 if not found.
+     * @throws java.sql.SQLException exception
      */
     public abstract WorkEntry getWorkflow(String basedir, String vogroup, String label, String run)
             throws SQLException;
 
     /**
-     * Returns a set of all workflows that are younger than a cut-off time. The result may be empty,
-     * if no matching workflows exist yet.
+     * Returns a set of all workflows that are younger than a cut-off time.The result may be empty,
+ if no matching workflows exist yet.
      *
      * @param mtime is the oldest permissable last modification time
      * @return a map of workflows, indexed by their primary key
+     * @throws java.sql.SQLException exception
      */
     public abstract java.util.Map getWorkflows(java.util.Date mtime) throws SQLException;
 }

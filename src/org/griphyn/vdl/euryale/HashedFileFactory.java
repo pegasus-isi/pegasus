@@ -23,9 +23,9 @@ import java.util.*;
  * accomodate about 500k files.
  *
  * <pre>
- * mult=16, offset=30, fpd=254: nr=15 => l=1
- * mult=16, offset=30, fpd=254: nr=4047 => l=2
- * mult=16, offset=30, fpd=254: nr=1028222 => l=3
+ * mult=16, offset=30, fpd=254: nr=15 =&gt; l=1
+ * mult=16, offset=30, fpd=254: nr=4047 =&gt; l=2
+ * mult=16, offset=30, fpd=254: nr=1028222 =&gt; l=3
  * </pre>
  *
  * With the given multiplicator, offset and files per directory, nr is smallest number of jobs at
@@ -222,7 +222,7 @@ public class HashedFileFactory extends FlatFileFactory {
      * @param basename is the filename to create. Don't specify dirs here.
      * @return a relative File structure (relative to the base directory) which points to the new
      *     file.
-     * @throws java.io.IOException
+     * @throws java.io.IOException exception
      * @see #getCount()
      */
     @Override
@@ -464,7 +464,9 @@ public class HashedFileFactory extends FlatFileFactory {
         reset();
     }
 
-    /** test function */
+    /** test function
+     * @param arg main args
+     * @throws java.lang.Exception exception*/
     public static void main(String arg[]) throws Exception {
         if (arg.length == 0) {
             // no arguments, spit out at which point levels change

@@ -37,7 +37,8 @@ public abstract class Directive {
     /** properties instance */
     protected ChimeraProperties m_props;
 
-    /** Constructor, initialize logging and properties instance */
+    /** Constructor, initialize logging and properties instance
+     * @throws java.io.IOException exception */
     public Directive() throws IOException, MissingResourceException {
         m_logger = Logging.instance();
         m_verbose = false;
@@ -53,7 +54,8 @@ public abstract class Directive {
         m_verbose = v;
     }
 
-    /** get verbose mode */
+    /** get verbose mode
+     * @return boolean */
     public boolean getVerbose() {
         return m_verbose;
     }
@@ -67,12 +69,14 @@ public abstract class Directive {
         if (logger != null) m_logger = logger;
     }
 
-    /** get logging instance */
+    /** get logging instance
+     * @return  Logging*/
     public Logging getLogger() {
         return m_logger;
     }
 
-    /** get properties instance */
+    /** get properties instance
+     * @return  properties*/
     public ChimeraProperties getProperties() {
         return m_props;
     }

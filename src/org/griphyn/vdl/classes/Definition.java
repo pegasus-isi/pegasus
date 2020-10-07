@@ -306,7 +306,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
     /**
      * Accessor: Sets the description.
      *
-     * @param description
+     * @param description description
      * @see #getDescription()
      */
     public void setDescription(String description) {
@@ -316,7 +316,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
     /**
      * Accessor: Sets or overwrites the keyword list.
      *
-     * @param keyword
+     * @param keyword keyword
      * @see #getKeyword()
      */
     public void setKeyword(String keyword) {
@@ -326,7 +326,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
     /**
      * Accessor: Sets or overwrite the currently given name.
      *
-     * @param name
+     * @param name String
      * @see #getName()
      */
     public void setName(String name) {
@@ -336,7 +336,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
     /**
      * Accessor: Sets or overwrites the namespace identifier.
      *
-     * @param namespace
+     * @param namespace String
      * @see #getNamespace()
      */
     public void setNamespace(String namespace) {
@@ -346,7 +346,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
     /**
      * Accessor: Sets the current title for the definition.
      *
-     * @param title
+     * @param title String
      * @see #getTitle()
      */
     public void setTitle(String title) {
@@ -356,7 +356,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
     /**
      * Accessor: Sets the project reference.
      *
-     * @param url
+     * @param url String
      * @see #getUrl()
      */
     public void setUrl(String url) {
@@ -366,14 +366,15 @@ public abstract class Definition extends VDL implements Comparable, Serializable
     /**
      * Accessor: Sets the version of the definition.
      *
-     * @param version
+     * @param version String
      * @see #getVersion()
      */
     public void setVersion(String version) {
         this.m_version = version;
     }
 
-    /** Identify the transformation or derivation by its name. */
+    /** Identify the transformation or derivation by its name.
+     * @return String  */
     public abstract String identify();
 
     /**
@@ -384,7 +385,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
      * @param name is the name to produce the id for, should not be null.
      * @param version is a version string, may be null.
      * @return A string which textually identifies a Definition.
-     * @exception RuntimeException, if the name and definition are both null.
+     * @exception RuntimeException if the name and definition are both null.
      */
     public static String shortID(Definition d, String namespace, String name, String version) {
         if (name != null) return Separator.combine(namespace, name, version);

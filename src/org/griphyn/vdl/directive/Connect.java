@@ -27,14 +27,15 @@ import org.griphyn.vdl.parser.*;
  * @see org.griphyn.vdl.dbschema.DatabaseSchema
  */
 public class Connect extends Directive {
-    /** Constructor */
+    /** Constructor
+     * @throws java.io.IOException exception*/
     public Connect() throws IOException, MissingResourceException {
         super();
     }
 
     /**
-     * Connects the database backend. This is not done in the c'tor, because some apps don't need
-     * this heavyweight instructions.
+     * Connects the database backend.This is not done in the c'tor, because some apps don't need
+ this heavyweight instructions.
      *
      * @param schemaName is the name of the schema class to load. This better be the fully-qualified
      *     name in-sync with properties.
@@ -42,6 +43,12 @@ public class Connect extends Directive {
      *     cast to appropriate catalog classes.
      * @see org.griphyn.vdl.util.ChimeraProperties#getVDCSchemaName()
      * @see org.griphyn.vdl.util.ChimeraProperties#getPTCSchemaName()
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.lang.NoSuchMethodException Exception
+     * @throws java.lang.InstantiationException Exception
+     * @throws java.lang.IllegalAccessException Exception
+     * @throws java.lang.reflect.InvocationTargetException Exception
+     * @throws java.io.IOException Exception
      */
     public DatabaseSchema connectDatabase(String schemaName)
             throws ClassNotFoundException, IOException, NoSuchMethodException,
@@ -56,8 +63,8 @@ public class Connect extends Directive {
     }
 
     /**
-     * Connects the database backend. This is not done in the c'tor, because some apps don't need
-     * this heavyweight instructions.
+     * Connects the database backend.This is not done in the c'tor, because some apps don't need
+ this heavyweight instructions.
      *
      * @param schemaName is the name of the schema class to load. This better be the fully-qualified
      *     name in-sync with properties.
@@ -66,6 +73,12 @@ public class Connect extends Directive {
      *     cast to appropriate catalog classes.
      * @see org.griphyn.vdl.util.ChimeraProperties#getVDCSchemaName()
      * @see org.griphyn.vdl.util.ChimeraProperties#getPTCSchemaName()
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.lang.NoSuchMethodException Exception
+     * @throws java.lang.InstantiationException Exception
+     * @throws java.lang.IllegalAccessException Exception
+     * @throws java.lang.reflect.InvocationTargetException Exception
+     * @throws java.io.IOException Exception
      */
     public DatabaseSchema connectDatabase(String schemaName, String dbDriverName)
             throws ClassNotFoundException, IOException, NoSuchMethodException,

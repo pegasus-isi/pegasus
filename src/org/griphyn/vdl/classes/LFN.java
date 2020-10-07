@@ -66,7 +66,7 @@ public class LFN extends Leaf implements Cloneable, Serializable {
      * Predicate to determine, if an integer is within the valid range for linkage types.
      *
      * @param x is the integer to test for in-intervall.
-     * @return true, if the integer satisfies {@link LFN#NONE} &leq; x &leq; {@link LFN#INOUT},
+     * @return true, if the integer satisfies {@link LFN#NONE} &gt; x &lt; {@link LFN#INOUT},
      *     false otherwise.
      */
     public static boolean isInRange(int x) {
@@ -123,7 +123,7 @@ public class LFN extends Leaf implements Cloneable, Serializable {
      * Predicate to determine, if an integer is within the valid range for transfer modes.
      *
      * @param x is the integer to test for in-intervall.
-     * @return true, if the integer satisfies {@link LFN#XFER_MANDATORY} &leq; x &leq; {@link
+     * @return true, if the integer satisfies {@link LFN#XFER_MANDATORY} &gt; x &lt; {@link
      *     LFN#XFER_NOT}, false otherwise.
      */
     public static boolean transferInRange(int x) {
@@ -165,7 +165,7 @@ public class LFN extends Leaf implements Cloneable, Serializable {
      * Predicate to determine, if an integer is within the valid range for type
      *
      * @param x is the integer to test for in-intervall.
-     * @return true, if the integer satisfies {@link LFN#TYPE_DATA} &leq; x &leq; {@link
+     * @return true, if the integer satisfies {@link LFN#TYPE_DATA} &gt; x &lt; {@link
      *     LFN#TYPE_PATTERN}, false otherwise.
      */
     public static boolean typeInRange(int x) {

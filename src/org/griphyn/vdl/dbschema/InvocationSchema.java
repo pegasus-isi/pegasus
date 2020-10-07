@@ -47,6 +47,13 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
      * Default constructor for the provenance tracking.
      *
      * @param dbDriverName is the database driver name
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.lang.NoSuchMethodException Exception
+     * @throws java.lang.InstantiationException Exception
+     * @throws java.lang.IllegalAccessException Exception
+     * @throws java.lang.reflect.InvocationTargetException Exception
+     * @throws java.sql.SQLException Exception
+     * @throws java.io.IOException Exception
      */
     public InvocationSchema(String dbDriverName)
             throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
@@ -137,6 +144,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
      *
      * @param arch is the architecture description
      * @return the id of the architecture, either new or existing.
+     * @throws java.sql.SQLException Exception
      */
     public long saveArchitecture(Architecture arch) throws SQLException {
         long result = -1;

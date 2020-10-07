@@ -175,6 +175,7 @@ public class Graph implements Cloneable {
      *
      * @param v is the source node
      * @param w is the destination node
+     * @return boolean
      */
     public boolean isArc(String v, String w) {
         return ((List) m_adj.get(v)).contains(w);

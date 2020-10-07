@@ -28,7 +28,7 @@ import java.util.*;
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- * @see org.griphyn.common.util.CommonProperties
+ * @see edu.isi.pegasus.common.util.CommonProperties
  */
 public class ChimeraProperties {
     /** Default values for schema locations. */
@@ -51,7 +51,9 @@ public class ChimeraProperties {
     /** The object holding all the properties pertaining to the VDS system. */
     private CommonProperties m_props;
 
-    /** To get a reference to the the object. */
+    /** To get a reference to the the object.
+     * @return ChimeraProperties
+     * @throws java.io.IOException Exception */
     public static ChimeraProperties instance() throws IOException, MissingResourceException {
         if (m_instance == null) {
             m_instance = new ChimeraProperties();
@@ -71,7 +73,9 @@ public class ChimeraProperties {
         return CommonProperties.instance();
     }
 
-    /** Set up logging */
+    /** Set up logging
+     * @param logger logger
+     */
     public void setupLogging(Logging logger) {
         for (Enumeration e = m_props.propertyNames(); e.hasMoreElements(); ) {
             String key = (String) e.nextElement();
@@ -220,7 +224,7 @@ public class ChimeraProperties {
      *
      * @return a location pointing to a definition document of the XML schema that can read DAX.
      *     Result may be null, if such a document is unknown or unspecified.
-     * @see org.griphyn.vdl.parser.InvocationParser#InvocationParser( String )
+     * 
      */
     public String getPTCSchemaLocation() {
         // treat URI as File, yes, I know - I need the basename
@@ -232,13 +236,15 @@ public class ChimeraProperties {
         return m_props.getProperty("pegasus.catalog.provenance", ptc.getAbsolutePath());
     }
 
-    /** Get the rc.data file location, which is used by shell planner */
+    /** Get the rc.data file location, which is used by shell planner
+     * @return  String*/
     public String getRCLocation() {
         File rcFile = new File(m_props.getSysConfDir(), "rc.data");
         return m_props.getProperty("pegasus.db.rc", rcFile.getAbsolutePath());
     }
 
-    /** Get the tc.data file location, which is used by shell planner */
+    /** Get the tc.data file location, which is used by shell planner
+     * @return String */
     public String getTCLocation() {
         File tcFile = new File(m_props.getSysConfDir(), "tc.data");
         return m_props.getProperty("pegasus.db.tc", tcFile.getAbsolutePath());

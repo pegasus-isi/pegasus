@@ -124,7 +124,7 @@ public class Restricted extends Default {
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
-     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     * @see edu.isi.pegasus.planner.classes.ReplicaLocation
      */
     public ReplicaCatalogEntry selectReplica(
             ReplicaLocation rl, String preferredSite, boolean allowLocalFileURLs) {

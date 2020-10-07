@@ -97,7 +97,8 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
      * @throws java.lang.InstantiationException Exception
      * @throws java.lang.IllegalAccessException Exception
      * @throws java.lang.reflect.InvocationTargetException Exception
-     * @throws java.sql.SQLException
+     * @throws java.sql.SQLException Exception
+     * @throws java.io.IOException Exception
      */
     public AnnotationSchema(String dbDriverName)
             throws ClassNotFoundException, NoSuchMethodException, InstantiationException,

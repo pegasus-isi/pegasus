@@ -44,7 +44,8 @@ public class Explain extends Directive {
     /** Helpful object for routing requests. */
     private BookKeeper m_state = null;
 
-    /** Constructor */
+    /** Constructor
+     * @throws java.io.IOException exception */
     public Explain() throws IOException, MissingResourceException {
         super();
     }
@@ -54,6 +55,7 @@ public class Explain extends Directive {
      * </code> accordingly.
      *
      * @param dbs the database schema instance
+     * @throws java.io.IOException exception
      * @see org.griphyn.vdl.router.Route
      * @see org.griphyn.vdl.router.BookKeeper
      */
@@ -86,11 +88,12 @@ public class Explain extends Directive {
     }
 
     /**
-     * Requests a data product logical filename. As a result, the complete build-style DAG for
-     * producing the requested filename will be constructed.
+     * Requests a data product logical filename.As a result, the complete build-style DAG for
+ producing the requested filename will be constructed.
      *
      * @param filename is the name of the requested LFN.
      * @return true if the request is successful
+     * @throws java.sql.SQLException exception
      * @see #requestLFN( java.util.Collection )
      * @see org.griphyn.vdl.router.BookKeeper
      */
@@ -101,11 +104,12 @@ public class Explain extends Directive {
     }
 
     /**
-     * Requests a set of logical filenames. As a result, the complete build-style DAG for producing
-     * the requested LFNs will be constructed.
+     * Requests a set of logical filenames.As a result, the complete build-style DAG for producing
+ the requested LFNs will be constructed.
      *
      * @param filenames is the list or set of logical filenames requested.
      * @return true if the request is successful
+     * @throws java.sql.SQLException exception
      * @see org.griphyn.vdl.router.Route#requestLfn( Collection, BookKeeper )
      * @see org.griphyn.vdl.router.BookKeeper
      */
@@ -136,7 +140,7 @@ public class Explain extends Directive {
      *
      * @param fqdn is the fully qualified name of the derivation.
      * @return true if the request is successful
-     * @see org.griphyn.common.util.Separator#splitFQDI( String )
+     * @see edu.isi.pegasus.common.util.Separator#splitFQDI( String )
      * @see org.griphyn.vdl.router.Route#requestDerivation( String, String, String, BookKeeper )
      * @see org.griphyn.vdl.router.BookKeeper
      */
@@ -151,7 +155,7 @@ public class Explain extends Directive {
      *
      * @param symbolicList is a collecting of symbolic FQDN derivation triples.
      * @return true if the request is successful
-     * @see org.griphyn.common.util.Separator#splitFQDI( String )
+     * @see edu.isi.pegasus.common.util.Separator#splitFQDI( String )
      * @see org.griphyn.vdl.router.Route#requestDerivation( Collection, BookKeeper )
      * @see org.griphyn.vdl.router.BookKeeper
      */
@@ -165,6 +169,7 @@ public class Explain extends Directive {
      *
      * @param writer the output writer
      * @param label the label of the dax
+     * @throws java.io.IOException exception
      * @see org.griphyn.vdl.router.BookKeeper#getDAX
      */
     public void writeDAX(Writer writer, String label) throws IOException {
@@ -177,6 +182,7 @@ public class Explain extends Directive {
      * @param writer the output writer
      * @param label the label of the dax
      * @param xmlns the xml namespace prefix
+     * @throws java.io.IOException exception
      * @see org.griphyn.vdl.router.BookKeeper#getDAX
      */
     public void writeDAX(Writer writer, String label, String xmlns) throws IOException {

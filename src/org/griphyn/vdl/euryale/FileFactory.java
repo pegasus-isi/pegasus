@@ -32,6 +32,7 @@ public interface FileFactory {
      *
      * @param basename is the filename to create. Don't specify dirs here.
      * @return a File structure which points to the new file.
+     * @throws java.io.IOException exception
      * @see #getCount()
      */
     public File createFile(String basename) throws IOException;
@@ -42,6 +43,7 @@ public interface FileFactory {
      * @param basename is the filename to create. Don't specify dirs here.
      * @return a relative File structure (relative to the base directory) which points to the new
      *     file.
+     * @throws java.io.IOException exception
      * @see #getCount()
      */
     public File createRelativeFile(String basename) throws IOException;
@@ -62,6 +64,7 @@ public interface FileFactory {
      *
      * @param basename is the filename to create. Don't specify dirs here.
      * @return a File structure which points to the new file.
+     * @throws java.io.IOException exception
      * @see #getFlatCount()
      */
     public File createFlatFile(String basename) throws IOException;

@@ -155,7 +155,8 @@ public class FlatFileFactory implements FileFactory {
      * Checks the destination location for existence, if it can be created, if it is writable etc.
      *
      * @param dir is the new base directory to optionally create
-     */
+     * @throws java.io.IOException exception
+     */ 
     protected void sanityCheck(File dir) throws IOException {
         if (dir.exists()) {
             // location exists

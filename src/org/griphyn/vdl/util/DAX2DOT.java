@@ -165,6 +165,7 @@ public class DAX2DOT {
      *
      * @param adag is the ADAG instance
      * @return a string representing .dot format
+     * @throws java.io.IOException exception
      */
     public String toDOT(ADAG adag) throws IOException {
         // do not show files in the graph by default
@@ -179,6 +180,7 @@ public class DAX2DOT {
      * @param adag is the ADAG instance
      * @param showFiles if set to true, then display files in the graph
      * @return a string representing .dot format
+     * @throws java.io.IOException exception
      * @see #toDOT( ADAG, Writer, boolean )
      * @see #toDOT( ADAG, Writer, boolean, String, String )
      */
@@ -194,6 +196,7 @@ public class DAX2DOT {
      * @param adag is the ADAG instance
      * @param writer is the target to output the dot specification
      * @param showFiles if set to true, then display files in the graph
+     * @throws java.io.IOException exception
      * @see #toDOT( ADAG, Writer, boolean, String, String )
      */
     public void toDOT(ADAG adag, Writer writer, boolean showFiles) throws IOException {
@@ -210,7 +213,7 @@ public class DAX2DOT {
      * @return the identifier for the job to connect the graph.
      */
     private String showJob(Writer w, Job j, String url) throws IOException {
-        StringBuffer label = new StringBuffer(48);
+        StringBuilder label = new StringBuilder(48);
         String id = j.getID();
         String tr = Separator.combine(j.getNamespace(), j.getName(), j.getVersion());
 
@@ -293,6 +296,7 @@ public class DAX2DOT {
      * @param showFiles if set to true, then display files in the graph
      * @param jobURL is the base URL for jobs
      * @param fileURL is the base URL for files
+     * @throws java.io.IOException exception
      */
     public void toDOT(ADAG adag, Writer writer, boolean showFiles, String jobURL, String fileURL)
             throws IOException {
@@ -351,7 +355,10 @@ public class DAX2DOT {
         writer.flush();
     }
 
-    /** Simple test */
+    /** Simple test
+     * @param args  main args
+     * @throws java.io.IOException exception
+     */
     public static void main(String[] args) throws IOException {
         ADAG adag = new ADAG();
         Job A = new Job("ns1", "trA", null, "ID000001");

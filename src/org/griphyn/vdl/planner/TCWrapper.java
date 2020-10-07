@@ -64,7 +64,7 @@ public class TCWrapper implements Wrapper {
      * @param id is the TR identifier
      * @param vs is the TR version
      * @param site is the site handle, should be "local".
-     * @return a possibly empty list of {@link org.griphyn.common.catalog.TransformationCatalogEntry
+     * @return a possibly empty list of {@link edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
      *     TransformationCatalogEntry} with all matches.
      */
     public List lookup(String ns, String id, String vs, String site) {

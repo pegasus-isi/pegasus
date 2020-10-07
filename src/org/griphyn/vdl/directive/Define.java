@@ -54,7 +54,8 @@ public class Define extends Directive implements DefinitionHandler {
     /** If enabled, collapses the names of DVs that were processed. */
     private java.util.Set m_derivations = null;
 
-    /** Constructor */
+    /** Constructor
+     * @throws java.io.IOException exception*/
     public Define() throws IOException, MissingResourceException {
         super();
     }
@@ -63,6 +64,7 @@ public class Define extends Directive implements DefinitionHandler {
      * Constructor, set database schema instance
      *
      * @param dbs the database schema instance
+     * @throws java.io.IOException exception
      */
     public Define(DatabaseSchema dbs) throws IOException, MissingResourceException {
         m_dbschema = dbs;
@@ -77,7 +79,8 @@ public class Define extends Directive implements DefinitionHandler {
         m_dbschema = dbs;
     }
 
-    /** Closes the associated database backend and invalidates the schema. */
+    /** Closes the associated database backend and invalidates the schema.
+     * @throws java.sql.SQLException exception*/
     public void close() throws SQLException {
         if (m_dbschema != null) m_dbschema.close();
         m_dbschema = null;
@@ -162,6 +165,7 @@ public class Define extends Directive implements DefinitionHandler {
      *
      * @param reader the reader to vdlx source
      * @param writer writer to output the overwritten/rejected definitions
+     * @param overwrite boolean
      * @return true if update is successful
      */
     public boolean updateVDC(Reader reader, Writer writer, boolean overwrite) {
@@ -233,12 +237,14 @@ public class Define extends Directive implements DefinitionHandler {
         return result;
     }
 
-    /** return the number of successfully saved definitions */
+    /** return the number of successfully saved definitions
+     * @return  int*/
     public int getNumberSaved() {
         return m_count;
     }
 
-    /** return the number of rejected definitions */
+    /** return the number of rejected definitions
+     * @return int */
     public int getNumberRejected() {
         return m_rejected;
     }

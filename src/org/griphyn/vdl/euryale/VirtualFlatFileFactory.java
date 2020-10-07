@@ -54,7 +54,7 @@ public class VirtualFlatFileFactory extends FlatFileFactory {
      * Does no check as it is virtual.
      *
      * @param dir is the new base directory to optionally create
-     * @throws IOException
+     * @throws IOException exception
      */
     protected void sanityCheck(File dir) throws IOException {}
 }

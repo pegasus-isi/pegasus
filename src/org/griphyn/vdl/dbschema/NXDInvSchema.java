@@ -60,6 +60,14 @@ public class NXDInvSchema extends DatabaseSchema implements PTC {
      * Default constructor for the provenance tracking.
      *
      * @param dbDriverName is the database driver name
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.lang.NoSuchMethodException Exception
+     * @throws java.lang.InstantiationException Exception
+     * @throws java.lang.IllegalAccessException Exception
+     * @throws java.lang.reflect.InvocationTargetException Exception
+     * @throws java.sql.SQLException Exception
+     * @throws java.io.IOException Exception
+     * @throws javax.xml.parsers.ParserConfigurationException Exception
      */
     public NXDInvSchema(String dbDriverName)
             throws ClassNotFoundException, NoSuchMethodException, InstantiationException,

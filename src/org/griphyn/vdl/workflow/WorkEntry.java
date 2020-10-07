@@ -117,6 +117,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return long
      * @see #setID(long)
      */
     public long getID() {
@@ -126,7 +127,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor.
      *
-     * @param id
+     * @param id id
      * @see #getID()
      */
     public void setID(long id) {
@@ -136,6 +137,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return String
      * @see #setBaseDirectory(String)
      */
     public String getBaseDirectory() {
@@ -145,7 +147,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor.
      *
-     * @param basedir
+     * @param basedir String
      * @see #getBaseDirectory()
      */
     public void setBaseDirectory(String basedir) {
@@ -155,6 +157,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return String
      * @see #setVOGroup(String)
      */
     public String getVOGroup() {
@@ -164,7 +167,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor.
      *
-     * @param vogroup
+     * @param vogroup String
      * @see #getVOGroup()
      */
     public void setVOGroup(String vogroup) {
@@ -174,6 +177,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return String
      * @see #setWorkflowLabel(String)
      */
     public String getWorkflowLabel() {
@@ -183,7 +187,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor.
      *
-     * @param label
+     * @param label String
      * @see #getWorkflowLabel()
      */
     public void setWorkflowLabel(String label) {
@@ -193,6 +197,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return  String
      * @see #setRunDirectory(String)
      */
     public String getRunDirectory() {
@@ -202,7 +207,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor.
      *
-     * @param run
+     * @param run String
      * @see #getRunDirectory()
      */
     public void setRunDirectory(String run) {
@@ -212,6 +217,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return String
      * @see #setCreator(String)
      */
     public String getCreator() {
@@ -220,8 +226,8 @@ public class WorkEntry implements Workflow, Cloneable {
 
     /**
      * Accessor.
-     *
-     * @param creator
+     * 
+     * @param creator String
      * @see #getCreator()
      */
     public void setCreator(String creator) {
@@ -231,6 +237,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return Date
      * @see #setCreationTime(Date)
      */
     public Date getCreationTime() {
@@ -240,7 +247,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor.
      *
-     * @param ctime
+     * @param ctime String
      * @see #getCreationTime()
      */
     public void setCreationTime(Date ctime) {
@@ -250,6 +257,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return Date
      * @see #setState(int)
      */
     public int getState() {
@@ -259,7 +267,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor.
      *
-     * @param state
+     * @param state String
      * @see #getState()
      */
     public void setState(int state) {
@@ -269,6 +277,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor
      *
+     * @return Date
      * @see #setModificationTime(Date)
      */
     public Date getModificationTime() {
@@ -278,7 +287,7 @@ public class WorkEntry implements Workflow, Cloneable {
     /**
      * Accessor.
      *
-     * @param mtime
+     * @param mtime String
      * @see #getModificationTime()
      */
     public void setModificationTime(Date mtime) {

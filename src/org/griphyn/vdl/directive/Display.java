@@ -36,8 +36,8 @@ public class Display extends Directive {
     /**
      * Constructor.
      *
-     * @throws IOException
-     * @throws MissingResourceException
+     * @throws IOException exception
+     * @throws MissingResourceException exception
      */
     public Display() throws IOException, MissingResourceException {
         super();

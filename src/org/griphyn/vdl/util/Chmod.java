@@ -144,6 +144,8 @@ public class Chmod {
      * @param filename is the name of the file to change permissions, it allows wildcard.
      * @param dir is the directory where the file is located.
      * @return 0 if successful
+     * @throws java.io.IOException exception
+     * @throws java.lang.InterruptedException exception
      */
     public static int changePermission(String filename, String dir)
             throws IOException, InterruptedException {

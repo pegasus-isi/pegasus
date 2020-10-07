@@ -77,7 +77,6 @@ public class DAX2CoG {
      *
      * @param dag is a File pointing to the DAG file
      * @return a Pseudo DAX, or null in case of error.
-     * @throws IOException if reading the DAGMan file fails.
      */
     public static ADAG DAGMan2DAX(File dag) {
         // sanity check

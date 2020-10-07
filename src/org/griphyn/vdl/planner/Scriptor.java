@@ -31,8 +31,7 @@ import org.griphyn.vdl.util.Logging;
  * <p>The scripts are assembled mostly from template files and substitutions. The template files
  * reside in <code>$PEGASUS_HOME/share</code>:
  *
- * <p>
- *
+ * 
  * <table border="1">
  * <tr><th>template</th><th>purpose</th></tr>
  * <tr><td>sp-job-1.tmpl</td><td>start of job script</td></tr>
@@ -47,7 +46,6 @@ import org.griphyn.vdl.util.Logging;
  * The following substitutions are available by default. Some substitutions are only available
  * during job generation:
  *
- * <p>
  *
  * <table border="1">
  * <tr><th>variable</th><th>purpose</th></tr>
@@ -60,7 +58,7 @@ import org.griphyn.vdl.util.Logging;
  * <tr><td>JOBSCRIPT</td><td>Job: name of script file for job</td></tr>
  * <tr><td>KICKSTART</td><td>if set, path to local kickstart</td><tr>
  * <tr><td>LOGFILE</td><td>Name of master log file</td></tr>
- * <tr><td>NOW</td><tr>Start time stamp of processing (compile time)</td></tr>
+ * <tr><td>NOW</td><td>Start time stamp of processing (compile time)</td></tr>
  * <tr><td>REGISTER</td><td>0 or 1 for replica registration</td></tr>
  * <tr><td>TR</td><td>Job: fully-qualified TR of job</td></tr>
  * <tr><td>USER</td><td>JRE system property user.name</td></tr>

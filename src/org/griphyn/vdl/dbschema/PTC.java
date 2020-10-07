@@ -35,14 +35,15 @@ public interface PTC extends Catalog {
     public static final String PROPERTY_PREFIX = "pegasus.catalog.provenance.db.schema";
 
     /**
-     * Checks the existence of an invocation record in the database. The information is based on the
-     * (start,host,pid) tuple, although with private networks, cases may arise that have this tuple
-     * identical, yet are different.
+     * Checks the existence of an invocation record in the database.The information is based on the
+ (start,host,pid) tuple, although with private networks, cases may arise that have this tuple
+ identical, yet are different.
      *
      * @param start is the start time of the grid launcher
      * @param host is the address of the host it ran upon
      * @param pid is the process id of the grid launcher itself.
      * @return the id of the existing record, or -1
+     * @throws java.sql.SQLException Exception
      */
     public long getInvocationID(Date start, InetAddress host, int pid) throws SQLException;
 
@@ -51,6 +52,7 @@ public interface PTC extends Catalog {
      *
      * @param ivr is the invocation record to store.
      * @return true, if insertion was successful, false otherwise.
+     * @throws java.sql.SQLException Exception
      */
     public boolean saveInvocation(InvocationRecord ivr) throws SQLException;
 }

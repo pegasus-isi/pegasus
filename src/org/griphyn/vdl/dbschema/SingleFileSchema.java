@@ -58,6 +58,13 @@ public class SingleFileSchema extends InMemorySchema {
      * from the specified file.
      *
      * @param hyphen_d is the CLI argument being passed, and ignored for now.
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.lang.NoSuchMethodException Exception
+     * @throws java.lang.InstantiationException Exception
+     * @throws java.lang.IllegalAccessException Exception
+     * @throws java.lang.reflect.InvocationTargetException Exception
+     * @throws java.sql.SQLException Exception
+     * @throws java.io.IOException Exception
      */
     public SingleFileSchema(String hyphen_d)
             throws ClassNotFoundException, NoSuchMethodException, InstantiationException,

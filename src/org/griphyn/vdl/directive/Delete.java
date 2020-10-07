@@ -34,7 +34,8 @@ import org.griphyn.vdl.dbschema.*;
 public class Delete extends Directive {
     private DatabaseSchema m_dbschema = null;
 
-    /** Constructor */
+    /** Constructor
+     * @throws java.io.IOException exception*/
     public Delete() throws IOException, MissingResourceException {
         super();
     }
@@ -43,6 +44,7 @@ public class Delete extends Directive {
      * Constructor, set database schema instance
      *
      * @param dbs the database schema instance
+     * @throws java.io.IOException exception
      */
     public Delete(DatabaseSchema dbs) throws IOException, MissingResourceException {
         m_dbschema = dbs;
@@ -58,14 +60,15 @@ public class Delete extends Directive {
     }
 
     /**
-     * Delete one or more definitions from the backend database. The key triple parameters may be
-     * wildcards. Wildcards are expressed as <code>null</code> value.
+     * Delete one or more definitions from the backend database.The key triple parameters may be
+ wildcards. Wildcards are expressed as <code>null</code> value.
      *
      * @param namespace namespace
      * @param name name
      * @param version version
      * @param clsType definition type (TR or DV)
      * @return a list of definitions that were deleted.
+     * @throws java.sql.SQLException exception
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */
@@ -76,8 +79,8 @@ public class Delete extends Directive {
     }
 
     /**
-     * Delete one or more definitions from the backend database. The key triple parameters may be
-     * wildcards. Wildcards are expressed as <code>null</code> value. Output the deleted ones.
+     * Delete one or more definitions from the backend database.The key triple parameters may be
+ wildcards.Wildcards are expressed as <code>null</code> value. Output the deleted ones.
      *
      * @param namespace namespace
      * @param name name
@@ -85,6 +88,8 @@ public class Delete extends Directive {
      * @param clsType definition type (TR or DV)
      * @param writer writer to output deleted definitions
      * @return a list of definitions that were deleted.
+     * @throws java.sql.SQLException exception
+     * @throws java.io.IOException exception
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */
@@ -104,9 +109,9 @@ public class Delete extends Directive {
     }
 
     /**
-     * Delete one or more definitions from the backend database. The key triple parameters may be
-     * wildcards in force mode. Wildcards are expressed as <code>null</code> value. Output the
-     * deleted ones.
+     * Delete one or more definitions from the backend database.The key triple parameters may be
+ wildcards in force mode.Wildcards are expressed as <code>null</code> value. Output the
+ deleted ones.
      *
      * @param namespace namespace
      * @param name name
@@ -115,6 +120,8 @@ public class Delete extends Directive {
      * @param writer writer to output deleted definitions
      * @param force force wildcard matching
      * @return a list of definitions that were deleted.
+     * @throws java.sql.SQLException exception
+     * @throws java.io.IOException exception
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */

@@ -99,7 +99,17 @@ public class NXDSchema extends DatabaseSchema implements XDC {
         return this.m_parser;
     }
 
-    /** Default constructor for the NXD schema. */
+    /** Default constructor for the NXD schema.
+     * @param dbDriver dbdriver
+     * @throws java.lang.ClassNotFoundException Exception
+     * @throws java.lang.NoSuchMethodException Exception
+     * @throws java.lang.InstantiationException Exception
+     * @throws java.lang.IllegalAccessException Exception
+     * @throws java.lang.reflect.InvocationTargetException Exception
+     * @throws java.sql.SQLException Exception
+     * @throws java.io.IOException Exception
+     * @throws javax.xml.parsers.ParserConfigurationException Exception
+     */
     public NXDSchema(String dbDriver)
             throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
                     IllegalAccessException, InvocationTargetException, SQLException, IOException,
@@ -477,6 +487,7 @@ public class NXDSchema extends DatabaseSchema implements XDC {
      *
      * @param xquery the query statement
      * @return true if found, false otherwise
+     * @throws java.sql.SQLException Exception
      */
     public XMLResource findAnnotation(String xquery) throws SQLException {
         if (xquery == null) return null;
@@ -495,6 +506,7 @@ public class NXDSchema extends DatabaseSchema implements XDC {
         }
     }
 
+    @Override
     public java.util.List searchFilename(String lfn, int link) throws SQLException {
         if (lfn == null) throw new NullPointerException("You must query for a filename");
 
@@ -656,8 +668,9 @@ public class NXDSchema extends DatabaseSchema implements XDC {
      * @param kind defines the kind/class of object to annotate.
      * @param key is the annotation key.
      * @return true, if the database was modified, false otherwise.
-     * @exception SQLException, if something went wrong during database access.
+     * @exception SQLException if something went wrong during database access.
      */
+    @Override
     public boolean deleteAnnotation(String primary, Object secondary, int kind, String key)
             throws SQLException, IllegalArgumentException {
         String subject = "";
@@ -1198,7 +1211,11 @@ public class NXDSchema extends DatabaseSchema implements XDC {
         }
     }
 
-    /** get the annotation from a XML resource */
+    /** get the annotation from a XML resource
+     * @param res XMLResource
+     * @return  Tuple
+     * @throws java.sql.SQLException exception
+     */
     protected Tuple loadAnnotationResource(XMLResource res) throws SQLException {
         Tuple result = null;
 

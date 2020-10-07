@@ -35,7 +35,6 @@ import java.util.Iterator;
  *        - the property pegasus.selector.replica must be set to value Local
  * </pre>
  *
- * @see org.griphyn.cPlanner.transfer.implementation.Condor
  * @author Karan Vahi
  * @version $Revision$
  */
@@ -75,7 +74,7 @@ public class Local implements ReplicaSelector {
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
-     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     * @see edu.isi.pegasus.planner.classes.ReplicaLocation
      */
     public ReplicaCatalogEntry selectReplica(
             ReplicaLocation rl, String preferredSite, boolean allowLocalFileURLs) {
@@ -156,7 +155,7 @@ public class Local implements ReplicaSelector {
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaLocation</code> corresponding to the replicas selected.
-     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     * @see edu.isi.pegasus.planner.classes.ReplicaLocation
      */
     public ReplicaLocation selectAndOrderReplicas(
             ReplicaLocation rl, String preferredSite, boolean allowLocalFileURLs) {

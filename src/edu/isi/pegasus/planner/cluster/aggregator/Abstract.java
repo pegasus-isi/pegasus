@@ -371,7 +371,7 @@ public abstract class Abstract implements JobAggregator {
      * transformation derivation.
      *
      * @param taskid the task id to put in.
-     * @param transformationName
+     * @param transformationName transformation name
      * @param daxID the id of the job from the DAX
      * @return the comment invocation
      */
@@ -585,6 +585,7 @@ public abstract class Abstract implements JobAggregator {
      * Writes out the input file for the aggregated job
      *
      * @param job the aggregated job
+     * @param taskid the task id
      * @return path to the input file
      */
     protected File writeOutInputFileForJobAggregator(AggregatedJob job, Integer taskid) {

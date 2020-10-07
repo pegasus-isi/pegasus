@@ -151,6 +151,7 @@ public class Definitions extends VDL implements Serializable {
      * Clean-up definition and perform abstract type checks before submitting them into the
      * document.
      *
+     * @param d definition
      * @exception IllegalArgumentException will be thrown if the <code>Definition</code> is neither
      *     a <code>Derivation</code> nor a <code>Transformation</code>. This should not happen.
      * @exception UndeclaredVariableException will be thrown, if a <code>Transformation</code> uses
@@ -356,9 +357,10 @@ public class Definitions extends VDL implements Serializable {
     }
 
     /**
-     * Obtains a vector of all definition instances that share the same instance type. Please note
-     * that the definitions below may change after the vector is obtained.
+     * Obtains a vector of all definition instances that share the same instance type.Please note
+ that the definitions below may change after the vector is obtained.
      *
+     * @param type the type
      * @return a vector with all {@link Transformation} or {@link Derivation} objects. The vector
      *     may have zero size, if no such instances exist.
      */
@@ -516,11 +518,12 @@ public class Definitions extends VDL implements Serializable {
 
     /**
      * Accessor: Sets the component at the specified index of this vector to be the specified
-     * object. The previous component at that position is discarded. The index must be a value
-     * greater than or equal to 0 and less than the current size of the vector.
+     * object.The previous component at that position is discarded. The index must be a value
+ greater than or equal to 0 and less than the current size of the vector.
      *
      * @param index is the postion at which to replace a {@link Definition}.
      * @param d is either a {@link Transformation} or {@link Derivation} to use for replacement.
+     * @return Definition
      * @throws IndexOutOfBoundsException if the index was invalid.
      */
     public Definition setDefinition(int index, Definition d) throws IndexOutOfBoundsException {

@@ -36,15 +36,18 @@ public class Derive extends Directive {
     }
 
     /**
-     * Generates shell scripts for the workflow described by the dax. For each derivation, there is
-     * a shell script generated, and there is a control script to control the execution sequence of
-     * these shell scripts according to their dependencies.
+     * Generates shell scripts for the workflow described by the dax.For each derivation, there is
+ a shell script generated, and there is a control script to control the execution sequence of
+ these shell scripts according to their dependencies.
      *
      * @param dax is the InputStream for the dax representation
      * @param dir is the directory name in which to generate these scripts
      * @param build specifies whether to force build mode
      * @param register specifies whether to register output files
      * @return true if successful, false otherwise
+     * @throws java.sql.SQLException exception
+     * @throws java.io.IOException exception
+     * @throws java.lang.InterruptedException exception
      */
     public boolean genShellScripts(InputStream dax, String dir, boolean build, boolean register)
             throws java.sql.SQLException, IOException, InterruptedException {
@@ -52,9 +55,9 @@ public class Derive extends Directive {
     }
 
     /**
-     * Generates shell scripts for the workflow described by the dax. For each derivation, there is
-     * a shell script generated, and there is a control script to control the execution sequence of
-     * these shell scripts according to their dependencies.
+     * Generates shell scripts for the workflow described by the dax.For each derivation, there is
+ a shell script generated, and there is a control script to control the execution sequence of
+ these shell scripts according to their dependencies.
      *
      * @param dax is the InputStream for the dax representation
      * @param dir is the directory name in which to generate these scripts
@@ -63,6 +66,9 @@ public class Derive extends Directive {
      * @param kickstart_path specifies the location of kickstart. If null, kickstart will not be
      *     used.
      * @return true if successful, false otherwise
+     * @throws java.sql.SQLException  exception
+     * @throws java.io.IOException    exception
+     * @throws java.lang.InterruptedException exception
      */
     public boolean genShellScripts(
             InputStream dax, String dir, boolean build, boolean register, String kickstart_path)
@@ -335,7 +341,12 @@ public class Derive extends Directive {
         return true;
     }
 
-    /** Helper method to change the permissions of shell scripts to be executable. */
+    /** Helper method to change the permissions of shell scripts to be executable.
+     * @param dir String
+     * @return int
+     * @throws java.io.IOException exception
+     * @throws java.lang.InterruptedException  exception
+     */
     protected static int changePermission(String dir) throws IOException, InterruptedException {
         if (System.getProperty("line.separator").equals("\n")
                 && System.getProperty("file.separator").equals("/")

@@ -42,7 +42,8 @@ public class Search extends Directive {
 
     private DatabaseSchema m_dbschema = null;
 
-    /** Constructor */
+    /** Constructor
+     * @throws java.io.IOException exception*/
     public Search() throws IOException, MissingResourceException {
         super();
     }
@@ -51,6 +52,7 @@ public class Search extends Directive {
      * Constructor
      *
      * @param dbs is the database schema instance
+     * @throws java.io.IOException exception
      */
     public Search(DatabaseSchema dbs) throws IOException, MissingResourceException {
         m_dbschema = dbs;
@@ -66,12 +68,13 @@ public class Search extends Directive {
     }
 
     /**
-     * Search for definitions that contain LFN of specific name and link type. This method does not
-     * allow jokers.
+     * Search for definitions that contain LFN of specific name and link type.This method does not
+ allow jokers.
      *
      * @param filename the LFN name
      * @param link the linkage type of the LFN
      * @return a list of Definition items that match the criterion.
+     * @throws java.sql.SQLException exception
      * @see org.griphyn.vdl.classes.LFN#NONE
      * @see org.griphyn.vdl.classes.LFN#INPUT
      * @see org.griphyn.vdl.classes.LFN#OUTPUT
@@ -83,14 +86,15 @@ public class Search extends Directive {
 
     /**
      * Search the database for definitions by ns::name:version triple and by type (either
-     * Transformation or Derivation). This version of the search allows for jokers expressed as null
-     * value
+     * Transformation or Derivation).This version of the search allows for jokers expressed as null
+ value
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
      * @param version version, null to match any version
      * @param clsType type of definition, see below, or -1 as wildcard
      * @return a list of Definition items, which may be empty
+     * @throws java.sql.SQLException exception
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */
@@ -137,14 +141,15 @@ public class Search extends Directive {
 
     /**
      * Search the database for definitions by ns::name:version triple and by type (either
-     * Transformation or Derivation). This version of the search allows for jokers expressed as null
-     * value, or special characters '%' and '_'.
+     * Transformation or Derivation).This version of the search allows for jokers expressed as null
+ value, or special characters '%' and '_'.
      *
      * @param namespace namespace, null to match any namespace
      * @param name name, null to match any name
      * @param version version, null to match any version
      * @param clsType type of definition, see below, or -1 as wildcard
      * @return a list of Definition items, which may be empty
+     * @throws java.sql.SQLException exception
      * @see org.griphyn.vdl.classes.Definition#TRANSFORMATION
      * @see org.griphyn.vdl.classes.Definition#DERIVATION
      */
@@ -187,6 +192,7 @@ public class Search extends Directive {
      * @param writer the target to output the list
      * @param defList a list of definitions
      * @param format the output format
+     * @throws java.io.IOException exception
      * @see #FORMAT_FQDN
      * @see #FORMAT_VDLT
      * @see #FORMAT_VDLX NOTE: might be better to move into another module?

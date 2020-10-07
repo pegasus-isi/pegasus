@@ -35,8 +35,8 @@ public class RCWrapper implements Wrapper {
     private ReplicaCatalog m_rc;
 
     /**
-     * Connects the interface with the replica catalog implementation. The choice of backend is
-     * configured through properties.
+     * Connects the interface with the replica catalog implementation.The choice of backend is
+ configured through properties.
      *
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
      *     want to check your CLASSPATH, too.
@@ -48,6 +48,7 @@ public class RCWrapper implements Wrapper {
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the schema throws an exception
      *     while being dynamically loaded.
+     * @throws java.io.IOException exception
      */
     public RCWrapper()
             throws ClassNotFoundException, IOException, NoSuchMethodException,
@@ -57,8 +58,8 @@ public class RCWrapper implements Wrapper {
     }
 
     /**
-     * Connects the interface with the replica catalog implementation. The choice of backend is
-     * configured through properties.
+     * Connects the interface with the replica catalog implementation.The choice of backend is
+ configured through properties.
      *
      * @param props is an already instantiated version of the properties.
      * @exception ClassNotFoundException if the schema for the database cannot be loaded. You might
@@ -71,6 +72,7 @@ public class RCWrapper implements Wrapper {
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the schema throws an exception
      *     while being dynamically loaded.
+     * @throws java.io.IOException exception
      */
     public RCWrapper(CommonProperties props)
             throws ClassNotFoundException, IOException, NoSuchMethodException,

@@ -53,7 +53,8 @@ public class DAX2Graph {
         return result;
     }
 
-    /** Simple test program. */
+    /** Simple test program.
+     * @param args main args*/
     public static void main(String[] args) {
         // construct a fake diamond DAG as DAX w/o any real transformations.
         ADAG adag = new ADAG();

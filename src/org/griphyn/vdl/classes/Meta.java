@@ -37,7 +37,9 @@ public class Meta extends VDL implements Serializable {
         this.m_content = new String();
     }
 
-    /** Ctor to initialize the content while constructing the class. This is a convenience ctor. */
+    /** *  Ctor to initialize the content while constructing the class.This is a convenience ctor.
+     * @param content String
+     */
     public Meta(String content) {
         super();
         this.m_content = content;

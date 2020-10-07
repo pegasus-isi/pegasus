@@ -29,7 +29,7 @@ import java.util.*;
  *   <dt>vds
  *   <dd>Virtual Data System specific material, currently empty.
  *   <dt>condor
- *   <dd>If the job runs in using the <a href="http://www.cs.wisc.edu/condor/">Condor</a/>
+ *   <dd>If the job runs in using the <a href="http://www.cs.wisc.edu/condor/">Condor</a>
  *       scheduler, certain items like the "universe" or "requirments" can be set. Please note that
  *       currently the universe is provided as a hint to the {@link Transformation} itself.
  *   <dt>dagman
