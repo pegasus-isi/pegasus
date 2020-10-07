@@ -91,7 +91,7 @@ public class Flat implements SubmitMapper {
     /**
      * Returns a short description of the mapper.
      *
-     * @return
+     * @return String
      */
     public String description() {
         return Flat.DESCRIPTION;

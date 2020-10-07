@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
  * Abstract Class for Deserializers for parsing Catalog Data Objects
  *
  * @author Karan Vahi
- * @param <T>
+ * @param <T> class
  */
 public abstract class CatalogEntryJsonDeserializer<T> extends PegasusJsonDeserializer<T> {
 

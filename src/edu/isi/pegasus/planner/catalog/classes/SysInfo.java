@@ -64,8 +64,8 @@ public class SysInfo implements Cloneable {
     /**
      * Computes OS from a release
      *
-     * @param release
-     * @return
+     * @param release release
+     * @return OS
      */
     public static OS computeOS(OS_RELEASE release) {
         OS os = OS.linux;

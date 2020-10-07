@@ -43,9 +43,9 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
     /**
      * Throw an exception for Illegal Key
      *
-     * @param element
-     * @param node
-     * @param key
+     * @param element String
+     * @param node String
+     * @param key String
      */
     public void complainForIllegalKey(String element, String key, JsonNode node)
             throws CatalogException {
@@ -55,10 +55,9 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
     /**
      * Throw an exception for Illegal Key
      *
-     * @param prefix
-     * @param element
-     * @param key
-     * @param node
+     * @param element String
+     * @param key String
+     * @param node JsonNode
      */
     public void complainForUnsupportedKey(String element, String key, JsonNode node)
             throws CatalogException {
@@ -68,10 +67,10 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
     /**
      * Throw an exception
      *
-     * @param prefix
-     * @param element
-     * @param key
-     * @param node
+     * @param prefix String
+     * @param element String
+     * @param key String
+     * @param node JsonNode
      */
     public void complain(String prefix, String element, String key, JsonNode node)
             throws RuntimeException {
@@ -91,9 +90,9 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
     /**
      * Parses checksum information and returns as a metadata object.
      *
-     * @param node
-     * @param enclosingKeyword
-     * @return
+     * @param node JsonNode
+     * @param enclosingKeyword String
+     * @return Metadata
      */
     public Metadata createChecksum(JsonNode node, String enclosingKeyword) {
         Metadata m = new Metadata();
@@ -137,8 +136,7 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
      * JAVA_HOME: "/opt/java/1.6"
      * </pre>
      *
-     * @param namespace
-     * @param node
+     * @param node JsonNode
      * @return Profiles
      */
     protected List<Profile> createMetadata(JsonNode node) {
@@ -153,8 +151,8 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
      * JAVA_HOME: "/opt/java/1.6"
      * </pre>
      *
-     * @param namespace
-     * @param node
+     * @param namespace String
+     * @param node JsonNode
      * @return Profiles
      */
     protected List<Profile> createProfiles(String namespace, JsonNode node) {
@@ -224,7 +222,7 @@ public abstract class PegasusJsonDeserializer<T> extends JsonDeserializer<T> {
      * The exception to be thrown while deserializing on error
      *
      * @param message the error message
-     * @return
+     * @return runtimeException
      */
     public abstract RuntimeException getException(String message);
 }

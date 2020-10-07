@@ -168,9 +168,9 @@ public class Profiles {
     /**
      * Add a profile. Convenience method
      *
-     * @param namespace
-     * @param key
-     * @param value
+     * @param namespace namespace
+     * @param key String 
+     * @param value String
      */
     public void addProfileDirectly(NAMESPACES namespace, String key, String value) {
         // retrieve the appropriate namespace and then add
@@ -181,9 +181,9 @@ public class Profiles {
     /**
      * Add a profile. Convenience method
      *
-     * @param namespace
-     * @param key
-     * @param value
+     * @param namespace String
+     * @param key String
+     * @param value String
      */
     public void addProfileDirectly(String namespace, String key, String value) {
         // retrieve the appropriate namespace and then add
@@ -194,9 +194,9 @@ public class Profiles {
     /**
      * Add a profile. Convenience method
      *
-     * @param namespace
-     * @param key
-     * @param value
+     * @param namespace String
+     * @param key String
+     * @param value String
      */
     public void addProfile(NAMESPACES namespace, String key, String value) {
         // retrieve the appropriate namespace and then add
@@ -207,9 +207,9 @@ public class Profiles {
     /**
      * Add a profile. Convenience method
      *
-     * @param namespace
-     * @param key
-     * @param value
+     * @param namespace String
+     * @param key String
+     * @param value String
      */
     public void addProfile(String namespace, String key, String value) {
         // retrieve the appropriate namespace and then add
@@ -321,7 +321,7 @@ public class Profiles {
      *
      * <p>The object is empty if all the underlying profile maps are empty.
      *
-     * @return
+     * @return boolean
      */
     public boolean isEmpty() {
         boolean result = true;
@@ -445,9 +445,9 @@ public class Profiles {
     /**
      * Writes an attribute to the stream. Wraps the value in quotes as required by XML.
      *
-     * @param writer
-     * @param key
-     * @param value
+     * @param writer Writer
+     * @param key String
+     * @param value String
      * @exception IOException if something fishy happens to the stream.
      */
     public void writeAttribute(Writer writer, String key, String value) throws IOException {
@@ -468,7 +468,7 @@ public class Profiles {
         return u.ordinal();
     }
 
-    /** @param args */
+    /** @param args args*/
     public static void main(String[] args) {
         try {
             Profiles p = new Profiles();

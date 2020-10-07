@@ -24,7 +24,7 @@ public interface Mapper {
     /**
      * Returns a short description of the mapper.
      *
-     * @return
+     * @return String
      */
     public String description();
 }

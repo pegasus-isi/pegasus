@@ -74,15 +74,15 @@ public class SLSFactory {
 
     /**
      * This method loads the appropriate implementing code generator as specified by the user at
-     * runtime. If the megadag mode is specified in the options, then that is used to load the
-     * implementing class, overriding the submit mode specified in the properties file.
+     * runtime.If the megadag mode is specified in the options, then that is used to load the
+ implementing class, overriding the submit mode specified in the properties file.
      *
-     * @param bag the bag of initialization objects.
+     * @param job Job
      * @return the instance of the class implementing this interface.
      * @exception SLSFactoryException that nests any error that might occur during the instantiation
      *     of the implementation.
      * @see #DEFAULT_PACKAGE_NAME
-     * @throws SLSFactoryException
+     * @throws SLSFactoryException exception
      */
     public SLS loadInstance(Job job) throws SLSFactoryException {
 

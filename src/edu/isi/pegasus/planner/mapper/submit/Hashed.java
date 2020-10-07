@@ -133,7 +133,7 @@ public class Hashed implements SubmitMapper {
     /**
      * Returns a short description of the mapper.
      *
-     * @return
+     * @return String
      */
     public String description() {
         StringBuilder sb = new StringBuilder();
