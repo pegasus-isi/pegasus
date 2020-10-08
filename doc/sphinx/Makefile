@@ -26,6 +26,7 @@ help:
 		| grep -i warn \
 		| grep -v "Not copying tabs assets" \
 		| grep -v "build succeeded" \
+		| grep -v "The app.add_javascript() is deprecated" \
 		| grep -v "Pegasus.api.mixins" \
 		| grep -v "HTTP status code must be an integer" \
 		| grep -v "reference-guide/configuration.rst" \
