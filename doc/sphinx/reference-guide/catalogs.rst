@@ -761,7 +761,8 @@ To override this you have to set the following properties
 
 1.  **pegasus.catalog.transformation.file=<path to the transformation catalog file>**
 
-We recommend that users use the Python API to generate the site catalog
+We recommend that users use the Python API to generate the transformation
+catalog
 
 The following illustrates how
 :py:class:`Pegasus.api.transformation_catalog.TransformationCatalog`
