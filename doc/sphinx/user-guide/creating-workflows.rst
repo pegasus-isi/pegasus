@@ -378,6 +378,13 @@ and usually does not contain any locations to physical input files, executables
 or cluster end points where jobs are executed. Pegasus uses three information
 catalogs during the planning process.
 
+.. figure:: ../images/pegasus-catalogs.png
+   :alt: Various Catalog used by Pegasus
+   :name: pegasus_catalogs
+
+   Information Catalogs used by Pegasus
+
+
 1.  **Replica Catalog**
 
     To discover locations of files referred to in the workflow. At a minimum,
