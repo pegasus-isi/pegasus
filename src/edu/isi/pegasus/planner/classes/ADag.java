@@ -133,8 +133,8 @@ public class ADag extends Data implements Graph {
     /**
      * Add metadata to the object.
      *
-     * @param key
-     * @param value
+     * @param key   the metadata key
+     * @param value the metadata value
      */
     public void addMetadata(String key, String value) {
         this.mProfiles.addProfile(Profiles.NAMESPACES.metadata, key, value);
@@ -143,7 +143,7 @@ public class ADag extends Data implements Graph {
     /**
      * Returns metadata attribute for a particular key
      *
-     * @param key
+     * @param key   the metadata key
      * @return value returned else null if not found
      */
     public String getMetadata(String key) {
@@ -163,7 +163,7 @@ public class ADag extends Data implements Graph {
      * Returns a collection of all the notifications that need to be done for a particular condition
      *
      * @param when the condition
-     * @return
+     * @return Collection of Invoke objects
      */
     public Collection<Invoke> getNotifications(Invoke.WHEN when) {
         return this.mNotifications.getNotifications(when);
@@ -639,7 +639,7 @@ public class ADag extends Data implements Graph {
     /**
      * Returns the DAGInfo that stores the metadata about the DAX
      *
-     * @return
+     * @return DagInfo
      */
     public DagInfo getDAGInfo() {
         return this.mDAGInfo;
@@ -658,7 +658,7 @@ public class ADag extends Data implements Graph {
     /**
      * Returns the flow ID for the workflow.
      *
-     * @return
+     * @return the flow ID
      */
     public String getFlowID() {
         return mDAGInfo.getFlowID();
@@ -672,7 +672,10 @@ public class ADag extends Data implements Graph {
         this.mDAGInfo.generateFlowName();
     }
 
-    /** Returns the flow name */
+    /** 
+     * Returns the flow name 
+     * @return the flow name
+     */
     public String getFlowName() {
         return this.mDAGInfo.getFlowName();
     }
@@ -698,7 +701,10 @@ public class ADag extends Data implements Graph {
         this.mDAGInfo.setDAXMTime(f);
     }
 
-    /** Return the release version */
+    /** 
+     * Return the release version 
+     * @return the release version
+     */
     public String getReleaseVersion() {
         return mDAGInfo.getReleaseVersion();
     }
@@ -733,7 +739,7 @@ public class ADag extends Data implements Graph {
      * <p>The basename of the .dag file is dependant on whether the basename prefix has been
      * specified at runtime or not by command line options.
      *
-     * @param options
+     * @param options   the planner options
      * @param suffix the suffix to be applied at the end.
      * @return the name of the dagfile.
      */
@@ -1103,13 +1109,17 @@ public class ADag extends Data implements Graph {
     /**
      * Returns the detected cyclic edge if , hasCycles returns true
      *
-     * @return
+     * @return the NameValue object
      */
+    @Override
     public NameValue getCyclicEdge() {
         return this.mGraphImplementor.getCyclicEdge();
     }
 
-    /** @param node */
+    /** 
+     * @param node the GraphNode
+     */
+    @Override
     public void setGraphNodeReference(GraphNode node) {
         throw new UnsupportedOperationException("GraphNode reference not set for ADag");
     }

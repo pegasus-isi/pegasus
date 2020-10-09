@@ -40,11 +40,13 @@ public interface Bag {
     public boolean add(Object key, Object value);
 
     /**
-     * Returns true if the namespace contains a mapping for the specified key. More formally,
-     * returns true if and only if this map contains at a mapping for a key k such that (key==null ?
-     * k==null : key.equals(k)). (There can be at most one such mapping.)
+     * Returns true if the namespace contains a mapping for the specified
+     * key.More formally, returns true if and only if this map contains at a
+     * mapping for a key k such that (key==null ? k==null : key.equals(k)).
+     * (There can be at most one such mapping.)
      *
      * @param key The key that you want to search for in the bag.
+     * @return boolean
      */
     public boolean containsKey(Object key);
 }

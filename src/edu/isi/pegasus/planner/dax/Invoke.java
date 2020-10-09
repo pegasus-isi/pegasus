@@ -50,7 +50,7 @@ public class Invoke {
     /**
      * Copy Constructor
      *
-     * @param i
+     * @param i the invoke object
      */
     public Invoke(Invoke i) {
         this(WHEN.valueOf(i.getWhen()), i.getWhat());
@@ -58,7 +58,7 @@ public class Invoke {
     /**
      * Crete a new Invoke object
      *
-     * @param when
+     * @param when when to invoke
      */
     public Invoke(WHEN when) {
         setWhen(when);
@@ -67,8 +67,8 @@ public class Invoke {
     /**
      * Create a new Invoke object
      *
-     * @param when
-     * @param what
+     * @param when  when to invoke
+     * @param what  the executable with the arguments to invoke
      */
     public Invoke(WHEN when, String what) {
         setWhen(when);
@@ -78,7 +78,7 @@ public class Invoke {
     /**
      * Get when to Invoke
      *
-     * @return
+     * @return when the notification occurs
      */
     public String getWhen() {
         return mWhen.toString();
@@ -87,8 +87,8 @@ public class Invoke {
     /**
      * Set when to invoke
      *
-     * @param when
-     * @return
+     * @param when when the notification occurs
+     * @return Invoke
      */
     public final Invoke setWhen(WHEN when) {
         if (when.equals(WHEN.at_end)) {
@@ -106,7 +106,7 @@ public class Invoke {
     /**
      * Get what to invoke
      *
-     * @return
+     * @return the executable with arguments that are invoked
      */
     public String getWhat() {
         return mWhat;
@@ -115,8 +115,8 @@ public class Invoke {
     /**
      * Set what executable to invoke and how
      *
-     * @param what
-     * @return
+     * @param what executable with the arguments
+     * @return the Invoke
      */
     public Invoke setWhat(String what) {
         mWhat = what;
@@ -126,16 +126,29 @@ public class Invoke {
     /**
      * Create a copy of this Invoke object
      *
-     * @return
+     * @return Invoke
      */
     public Invoke clone() {
         return new Invoke(this.mWhen, this.mWhat);
     }
 
+    /**
+     * Writes out XML representation using the writer
+     * 
+     * @param writer  the writer 
+     * 
+     */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
 
+    
+    /**
+     * Writes out XML representation using the writer
+     * 
+     * @param writer  the writer 
+     * @param indent  number pf indent spaces
+     */
     public void toXML(XMLWriter writer, int indent) {
         writer.startElement("invoke", indent);
         writer.writeAttribute("when", mWhen.toString().toLowerCase());
@@ -162,6 +175,8 @@ public class Invoke {
     /**
      * Matches two Invoke objects
      *
+     * @param obj  object to being compared against
+     * 
      * @return true if the pfn and all the attributes match, false otherwise.
      */
     @Override
@@ -192,10 +207,10 @@ public class Invoke {
         /**
          * Serializes an Invoke into YAML representation.
          *
-         * @param iv
-         * @param gen
-         * @param sp
-         * @throws IOException
+         * @param iv   the invoke object
+         * @param gen  the json generator
+         * @param sp   serialization provider
+         * @throws IOException IOException
          */
         public void serialize(Invoke iv, JsonGenerator gen, SerializerProvider sp)
                 throws IOException {

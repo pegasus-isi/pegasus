@@ -124,9 +124,9 @@ public class File extends CatalogType {
     /**
      * Create new File object
      *
-     * @param namespace
-     * @param name
-     * @param version
+     * @param namespace namespace
+     * @param name      the name
+     * @param version   the version
      */
     public File(String namespace, String name, String version) {
         this(namespace, name, version, null);
@@ -187,7 +187,7 @@ public class File extends CatalogType {
     /**
      * Set the file linkage
      *
-     * @param link
+     * @param link  the linkage
      * @return File
      * @see LINK
      */
@@ -260,7 +260,7 @@ public class File extends CatalogType {
     /**
      * Mark the file as executable. Default is false
      *
-     * @param executable
+     * @param executable set the file to be an executable
      * @return File
      */
     public File setExecutable(boolean executable) {
@@ -312,7 +312,7 @@ public class File extends CatalogType {
     /**
      * Boolean indicating whether is of type file
      * 
-     * @return 
+     * @return boolean
      */
     public boolean isFile() {
         return true;
@@ -507,8 +507,8 @@ public class File extends CatalogType {
          * @param f     File object
          * @param gen   json generator
          * @param sp    serialization provider
-         * @throws IOException
-         * @throws UnsupportedOperationException
+         * @throws IOException exception
+         * @throws UnsupportedOperationException exception
          */
         public void serialize(File f, JsonGenerator gen, SerializerProvider sp)
                 throws IOException, UnsupportedOperationException {

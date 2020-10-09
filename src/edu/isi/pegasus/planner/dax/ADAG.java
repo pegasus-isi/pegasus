@@ -206,7 +206,7 @@ public class ADAG {
     /**
      * Returns pegasus vendor extensions that we encode in each workflow
      *
-     * @return
+     * @return Map
      */
     private Map<String, String> getPegasusVendorExtensions() {
         Map m = new HashMap();
@@ -325,7 +325,7 @@ public class ADAG {
     /**
      * Return the name/label of the dax
      *
-     * @return
+     * @return the name
      */
     public String getName() {
         return mName;
@@ -350,8 +350,8 @@ public class ADAG {
     /**
      * Add a Notification for this Workflow
      *
-     * @param when
-     * @param what
+     * @param when  when to do the notification
+     * @param what  executable and arguments to invoke
      * @return ADAG
      */
     public ADAG addInvoke(Invoke.WHEN when, String what) {
@@ -363,8 +363,8 @@ public class ADAG {
     /**
      * Add a Notification for this Workflow
      *
-     * @param when
-     * @param what
+     * @param when  when to do the notification
+     * @param what  executable and arguments to invoke
      * @return ADAG
      */
     public ADAG addNotification(Invoke.WHEN when, String what) {
@@ -374,7 +374,7 @@ public class ADAG {
     /**
      * Add a Notification for this Workflow
      *
-     * @param invoke
+     * @param invoke    the invoke object
      * @return ADAG
      */
     public ADAG addInvoke(Invoke invoke) {
@@ -385,7 +385,7 @@ public class ADAG {
     /**
      * Add a Notification for this Workflow
      *
-     * @param invoke
+     * @param invoke the invoke object
      * @return ADAG
      */
     public ADAG addNotification(Invoke invoke) {
@@ -395,7 +395,7 @@ public class ADAG {
     /**
      * Add a List of Notifications for this Workflow
      *
-     * @param invokes
+     * @param invokes  List of Invoke objects
      * @return ADAG
      */
     public ADAG addInvokes(List<Invoke> invokes) {
@@ -408,7 +408,7 @@ public class ADAG {
     /**
      * Add a List of Notifications for this Workflow
      *
-     * @param invokes
+     * @param invokes List of Invoke objects
      * @return ADAG
      */
     public ADAG addNotifications(List<Invoke> invokes) {
@@ -418,7 +418,7 @@ public class ADAG {
     /**
      * Returns a list of Invoke objects associated with the workflow
      *
-     * @return
+     * @return list of notifications
      */
     public List<Invoke> getInvoke() {
         return mInvokes;
@@ -427,7 +427,7 @@ public class ADAG {
     /**
      * Returns a list of Invoke objects associated with the workflow. Same as getInvoke()
      *
-     * @return
+     * @return list of notifications
      */
     public List<Invoke> getNotification() {
         return getInvoke();
@@ -438,7 +438,7 @@ public class ADAG {
      *
      * @param key key name for metadata
      * @param value value
-     * @return
+     * @return ADAG
      */
     public ADAG addMetaData(String key, String value) {
         this.mMetaDataAttributes.add(new MetaData(key, value));
@@ -448,8 +448,8 @@ public class ADAG {
     /**
      * Returns the metadata associated for a key if exists, else null
      *
-     * @param key
-     * @return
+     * @param key   the key
+     * @return String
      */
     public String getMetaData(String key) {
         return this.mMetaDataAttributes.contains(key)
@@ -484,7 +484,7 @@ public class ADAG {
     /**
      * Returns a list of File objects defined as the inDax Replica Catalog
      *
-     * @return
+     * @return List of Files
      */
     public List<File> getFiles() {
         return mFiles;
@@ -535,7 +535,7 @@ public class ADAG {
     /**
      * Returns a set of Executable Objects stored as part of the inDAX Transformation Catalog;
      *
-     * @return
+     * @return Set of executables stored in TC
      */
     public Set<Executable> getExecutables() {
         return mExecutables;
@@ -544,7 +544,7 @@ public class ADAG {
     /**
      * Checks if a given executable exists in the DAX based Transformation Catalog
      *
-     * @param executable
+     * @param executable the executable
      * @return boolean
      */
     public boolean containsExecutable(Executable executable) {
@@ -607,7 +607,7 @@ public class ADAG {
      * Returns a set of Transformation Objects (complex executables) stored in the DAX based
      * Transformation Catalog
      *
-     * @return
+     * @return Set of Transformation stored in the DAX
      */
     public Set<Transformation> getTransformations() {
         return mTransformations;
@@ -664,8 +664,8 @@ public class ADAG {
     /**
      * Returns an abstract Job with id ajobid if present otherwise null.
      *
-     * @param ajobid
-     * @return
+     * @param ajobid abstract job id
+     * @return AbstractJob
      */
     private AbstractJob getAbstractJob(String ajobid) {
         if (ajobid != null) {
@@ -683,8 +683,8 @@ public class ADAG {
     /**
      * Check if an abstractjob exists in the DAX
      *
-     * @param ajob
-     * @return
+     * @param ajob the abstract job
+     * @return boolean
      */
     private boolean containsAbstractJob(AbstractJob ajob) {
         return containsAbstractJobId(ajob.mId);
@@ -693,8 +693,8 @@ public class ADAG {
     /**
      * Check if a jobid exists in the DAX
      *
-     * @param ajobid
-     * @return
+     * @param ajobid the job id
+     * @return boolean
      */
     private boolean containsAbstractJobId(String ajobid) {
         return mJobs.containsKey(ajobid);
@@ -703,7 +703,7 @@ public class ADAG {
     /**
      * Add Job to the DAX
      *
-     * @param job
+     * @param job the job
      * @return ADAG
      * @see Job
      * @see AbstractJob
@@ -715,7 +715,7 @@ public class ADAG {
     /**
      * Add multiple Jobs to the DAX
      *
-     * @param jobs
+     * @param jobs  List of jobs to add
      * @return ADAG
      * @see Job
      * @see AbstractJob
@@ -730,8 +730,8 @@ public class ADAG {
     /**
      * Check if a job exists in the DAX
      *
-     * @param job
-     * @return
+     * @param job  the job to check
+     * @return boolean
      */
     public boolean containsJob(Job job) {
         return containsAbstractJob(job);
@@ -740,8 +740,8 @@ public class ADAG {
     /**
      * Check if a jobid exists in the DAX
      *
-     * @param jobid
-     * @return
+     * @param jobid  the job id
+     * @return boolean
      */
     public boolean containsJobId(String jobid) {
         return containsAbstractJobId(jobid);
@@ -750,8 +750,8 @@ public class ADAG {
     /**
      * Returns a Job object with id jobid if present otherwise null.
      *
-     * @param jobid
-     * @return
+     * @param jobid  the job id
+     * @return the Job
      */
     public Job getJob(String jobid) {
         AbstractJob j = getAbstractJob(jobid);
@@ -770,7 +770,7 @@ public class ADAG {
     /**
      * Get a list of all the DAG jobs.
      *
-     * @return
+     * @return List of Job
      */
     public List<Job> getJobs() {
         return mLJobs;
@@ -779,7 +779,7 @@ public class ADAG {
     /**
      * Get a list of all the DAX jobs.
      *
-     * @return
+     * @return List of DAX jobs
      */
     public List<DAX> getDAXs() {
         return mLDAXs;
@@ -788,8 +788,8 @@ public class ADAG {
     /**
      * Returns a DAX object with id daxid if present otherwise null.
      *
-     * @param daxid
-     * @return
+     * @param daxid the dax id
+     * @return DAX
      */
     public DAX getDAX(String daxid) {
 
@@ -809,7 +809,7 @@ public class ADAG {
     /**
      * Get a list of all the DAG jobs.
      *
-     * @return
+     * @return List of DAG objects
      */
     public List<DAG> getDAGs() {
         return mLDAGs;
@@ -818,8 +818,8 @@ public class ADAG {
     /**
      * Returns a DAG object with id dagid if present otherwise null.
      *
-     * @param dagid
-     * @return
+     * @param dagid the dagid
+     * @return the DAG
      */
     public DAG getDAG(String dagid) {
         AbstractJob j = getAbstractJob(dagid);
@@ -865,8 +865,8 @@ public class ADAG {
     /**
      * Check if a DAG job exists in the DAX
      *
-     * @param dag
-     * @return
+     * @param dag  the dag
+     * @return boolean
      */
     public boolean containsDAG(DAG dag) {
         return containsAbstractJob(dag);
@@ -875,8 +875,8 @@ public class ADAG {
     /**
      * Check if a DAG job id exists in the DAX
      *
-     * @param dagid
-     * @return
+     * @param dagid the dagid
+     * @return boolean
      */
     public boolean containsDAGId(String dagid) {
         return containsAbstractJobId(dagid);
@@ -912,8 +912,8 @@ public class ADAG {
     /**
      * Check if a DAX job exists in the DAX
      *
-     * @param dax
-     * @return
+     * @param dax   the dax
+     * @return boolean
      */
     public boolean containsDAX(DAX dax) {
         return containsAbstractJob(dax);
@@ -922,8 +922,8 @@ public class ADAG {
     /**
      * Check if a DAX job id exists in the DAX
      *
-     * @param daxid
-     * @return
+     * @param daxid the dax id
+     * @return boolean
      */
     public boolean containsDAXId(String daxid) {
         return containsAbstractJobId(daxid);
@@ -946,7 +946,7 @@ public class ADAG {
      *
      * @param parent Job|DAX|DAG object
      * @param child Job|DAX|DAG object
-     * @return
+     * @return ADAG
      */
     public ADAG addDependency(AbstractJob parent, AbstractJob child) {
         addDependency(parent.getId(), child.getId(), null);
@@ -986,8 +986,8 @@ public class ADAG {
      * Returns a list of Edge objects for a child job/dax/dag id. Returns an empty set if the child
      * does not have any parents Returns null if the child is not a valid job/dax/dag id
      *
-     * @param child
-     * @return
+     * @param child the child
+     * @return Set of Edges 
      */
     public Set<Edge> getEdges(String child) {
         if (child != null && mJobs.containsKey(child)) {
@@ -1001,7 +1001,7 @@ public class ADAG {
     /**
      * Returns a Set of all the Edge objects for the DAX.Returns empty if no dependencies.
      *
-     * @return
+     * @return set of all edges
      */
     public Set<Edge> getEdges() {
         Set<Edge> edges = new LinkedHashSet<Edge>();
@@ -1212,10 +1212,10 @@ public class ADAG {
         /**
          * Serializes ADAG into YAML representation
          *
-         * @param adag
-         * @param gen
-         * @param sp
-         * @throws IOException
+         * @param adag  the adag being serialized
+         * @param gen   the json generator
+         * @param sp    the serialization provider
+         * @throws IOException exception
          */
         public void serialize(ADAG adag, JsonGenerator gen, SerializerProvider sp)
                 throws IOException, UnsupportedOperationException {
@@ -1343,7 +1343,7 @@ public class ADAG {
     /**
      * Create an example DIAMOND DAX
      *
-     * @param args
+     * @param args main args
      */
     public static void main(String[] args) {
         String dax = "diamond.dax";

@@ -457,7 +457,7 @@ public class Executable extends CatalogType {
             return false;
         }
         if ((this.mOsVersion == null)
-                ? (oth-er.mOsVersion != null)
+                ? (other.mOsVersion != null)
                 : !this.mOsVersion.equals(other.mOsVersion)) {
             return false;
         }

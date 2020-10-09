@@ -389,13 +389,17 @@ public class Regex extends Default {
         /**
          * Computes priority based on the max rank passed
          *
-         * @param maxRank
+         * @param maxRank  the maximum rank
          */
         public void computePriority(int maxRank) {
             mPriority = (maxRank * 100) - (mRank * 100);
         }
 
-        /** Returns the priority */
+        /** 
+         * Returns the priority
+         * 
+         * @return priority
+         */
         public int getPriority() {
             return mPriority;
         }
