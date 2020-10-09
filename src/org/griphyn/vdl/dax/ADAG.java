@@ -22,9 +22,7 @@ import java.util.*;
 import org.griphyn.vdl.classes.LFN;
 
 /**
- * This class is the container for an abstract DAG description. It consists of three parts.
- *
- * <p>
+ * This class is the container for an abstract DAG description. It consists of three parts. <br>
  *
  * <ol>
  *   <li>{@link Filename} deals with the filenames that are used in the picture of the DAG - does a
@@ -296,7 +294,13 @@ public class ADAG extends DAX implements Cloneable {
         }
     }
 
-    /** Registers a job node collapsion as a replacement. */
+    /**
+     * Registers a job node collapsing as a replacement.
+     *
+     * @param oldid old id
+     * @param newid new id
+     * @return the oldid that is replaced
+     */
     public String replaceParent(String oldid, String newid) {
         String old = (String) this.m_replace.put(oldid, newid);
         this.m_dirty = true;
@@ -391,6 +395,7 @@ public class ADAG extends DAX implements Cloneable {
     /**
      * Accessor: Obtains a job by its id from the job list.
      *
+     * @param jobID the id of the job
      * @return a job or null, if not found.
      * @see #addJob( Job )
      */

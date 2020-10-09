@@ -114,7 +114,7 @@ public class AbstractJob {
      * Add a string argument to the argument List. Each call to argument adds a space in between
      * entries
      *
-     * @param argument
+     * @param argument argument to the job
      * @return AbstractJob
      */
     public AbstractJob addArgument(String argument) {
@@ -130,7 +130,7 @@ public class AbstractJob {
     /**
      * Add a file object to the argument List. Each call to argument adds a space between entries.
      *
-     * @param file
+     * @param file the file
      * @return AbstractJob
      * @see File
      */
@@ -271,7 +271,7 @@ public class AbstractJob {
      *
      * @param argkey String
      * @param argvalue File
-     * @param argdelimiter
+     * @param argdelimiter argumenet delimiter
      * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, File argvalue, String argdelimiter) {
@@ -419,7 +419,7 @@ public class AbstractJob {
     /**
      * Add a Profile object
      *
-     * @param profile
+     * @param profile the profile to add
      * @return AbstractJob
      * @see Profile
      */
@@ -432,7 +432,7 @@ public class AbstractJob {
      * Add a list of Profile objects
      *
      * @param profiles List&lt;Profile&gt;
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob addProfiles(List<Profile> profiles) {
         mProfiles.addAll(profiles);
@@ -458,7 +458,7 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
+     * @param stdin file object corresponding to the stdin of the file
      * @return AbstractJob
      */
     public AbstractJob setStdin(File stdin) {
@@ -468,8 +468,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
-     * @param transfer
+     * @param stdin file object corresponding to the stdin of the file
+     * @param transfer the transfer flag to associate with stdin.
      * @return AbstractJob
      */
     public AbstractJob setStdin(File stdin, File.TRANSFER transfer) {
@@ -480,8 +480,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
-     * @param register
+     * @param stdin File object corresponding to the stdin of the file
+     * @param register the register flag
      * @return AbstractJob
      */
     public AbstractJob setStdin(File stdin, boolean register) {
@@ -492,9 +492,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
-     * @param transfer
-     * @param register
+     * @param stdin File object corresponding to the stdin of the file
+     * @param transfer the transfer flag for stdin
+     * @param register the register flag for the stdin
      * @return AbstractJob
      */
     public AbstractJob setStdin(File stdin, File.TRANSFER transfer, boolean register) {
@@ -506,9 +506,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
-     * @param transfer
-     * @param register
+     * @param stdin File object corresponding to the stdin of the file
+     * @param transfer the transfer flag for stdin
+     * @param register the register flag for the stdin
+     * @param optional boolean indicating file is optional
      * @return AbstractJob
      */
     public AbstractJob setStdin(
@@ -522,7 +523,7 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
+     * @param stdin File object corresponding to the stdin of the file
      * @return AbstractJob
      */
     public AbstractJob setStdin(String stdin) {
@@ -532,8 +533,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
-     * @param transfer
+     * @param stdin File object corresponding to the stdin of the file
+     * @param transfer transfer flag associated with the stdin
      * @return AbstractJob
      */
     public AbstractJob setStdin(String stdin, File.TRANSFER transfer) {
@@ -544,8 +545,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
-     * @param register
+     * @param stdin File object corresponding to the stdin of the file
+     * @param register the register flag
      * @return AbstractJob
      */
     public AbstractJob setStdin(String stdin, boolean register) {
@@ -556,9 +557,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
-     * @param transfer
-     * @param register
+     * @param stdin File object corresponding to the stdin of the file
+     * @param transfer the transfer flag for stdin
+     * @param register boolean register flag for the stdin
      * @return AbstractJob
      */
     public AbstractJob setStdin(String stdin, File.TRANSFER transfer, boolean register) {
@@ -570,10 +571,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdin
-     * @param transfer
-     * @param register
-     * @param optional
+     * @param stdin File object corresponding to the stdin of the file
+     * @param transfer the transfer flag for stdin
+     * @param register boolean register flag for the stdin
+     * @param optional boolean indicating whether file is optional or not.
      * @return AbstractJob
      */
     public AbstractJob setStdin(
@@ -592,7 +593,7 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
+     * @param stdout File object corresponding to the stdout of the job
      * @return AbstractJob
      */
     public AbstractJob setStdout(File stdout) {
@@ -602,8 +603,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
-     * @param transfer
+     * @param stdout File object corresponding to the stdout of the job
+     * @param transfer transfer flag
      * @return AbstractJob
      */
     public AbstractJob setStdout(File stdout, File.TRANSFER transfer) {
@@ -614,8 +615,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
-     * @param register
+     * @param stdout File object corresponding to the stdout of the job
+     * @param register boolean to indicate whether to register stdout or not
      * @return AbstractJob
      */
     public AbstractJob setStdout(File stdout, boolean register) {
@@ -626,9 +627,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
-     * @param transfer
-     * @param register
+     * @param stdout File object corresponding to the stdout of the job
+     * @param transfer transfer flag for stdout
+     * @param register boolean to indicate whether to register stdout or not
      * @return AbstractJob
      */
     public AbstractJob setStdout(File stdout, File.TRANSFER transfer, boolean register) {
@@ -640,10 +641,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
-     * @param transfer
-     * @param register
-     * @param optional
+     * @param stdout File object corresponding to the stdout of the job
+     * @param transfer transfer flag for stdout
+     * @param register boolean to indicate whether to register stdout or not
+     * @param optional boolean to indicate whether file is optional or not.
      * @return AbstractJob
      */
     public AbstractJob setStdout(
@@ -657,7 +658,7 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
+     * @param stdout name of the file to which stdout should be redirected to
      * @return AbstractJob
      */
     public AbstractJob setStdout(String stdout) {
@@ -667,8 +668,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
-     * @param transfer
+     * @param stdout File object corresponding to the stdout of the job
+     * @param transfer transfer flag for stdout
      * @return AbstractJob
      */
     public AbstractJob setStdout(String stdout, File.TRANSFER transfer) {
@@ -679,8 +680,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
-     * @param register
+     * @param stdout File object corresponding to the stdout of the job
+     * @param register boolean to indicate whether to register stdout or not
      * @return AbstractJob
      */
     public AbstractJob setStdout(String stdout, boolean register) {
@@ -691,9 +692,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
-     * @param transfer
-     * @param register
+     * @param stdout File object corresponding to the stdout of the job
+     * @param transfer transfer flag for stdout
+     * @param register boolean to indicate whether to register stdout or not
      * @return AbstractJob
      */
     public AbstractJob setStdout(String stdout, File.TRANSFER transfer, boolean register) {
@@ -706,10 +707,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param stdout
-     * @param transfer
-     * @param register
-     * @param optional
+     * @param stdout File object corresponding to the stdout of the job
+     * @param transfer transfer flag for stdout
+     * @param register boolean to indicate whether to register stdout or not
+     * @param optional indicate whether file is optional or not.
      * @return AbstractJob
      */
     public AbstractJob setStdout(
@@ -728,7 +729,7 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
+     * @param stderr File object corresponding to the stderr of the job
      * @return AbstractJob
      */
     public AbstractJob setStderr(File stderr) {
@@ -738,8 +739,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
-     * @param transfer
+     * @param stderr File object corresponding to the stderr of the job
+     * @param transfer transfer flag for stderr
      * @return AbstractJob
      */
     public AbstractJob setStderr(File stderr, File.TRANSFER transfer) {
@@ -750,8 +751,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
-     * @param register
+     * @param stderr File object corresponding to the stderr of the job
+     * @param register boolean to indicate whether to register stederr or not
      * @return AbstractJob
      */
     public AbstractJob setStderr(File stderr, boolean register) {
@@ -762,9 +763,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
-     * @param transfer
-     * @param register
+     * @param stderr File object corresponding to the stderr of the job
+     * @param transfer transfer flag for stderr
+     * @param register boolean to indicate whether to register stederr or not
      * @return AbstractJob
      */
     public AbstractJob setStderr(File stderr, File.TRANSFER transfer, boolean register) {
@@ -776,10 +777,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
-     * @param transfer
-     * @param register
-     * @param optional
+     * @param stderr File object corresponding to the stderr of the job
+     * @param transfer transfer flag for stderr
+     * @param register boolean to indicate whether to register stederr or not
+     * @param optional boolean to indicate whether file is optional or not
      * @return AbstractJob
      */
     public AbstractJob setStderr(
@@ -793,7 +794,7 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
+     * @param stderr name of file to which stderr of the job should be redirected to
      * @return AbstractJob
      */
     public AbstractJob setStderr(String stderr) {
@@ -803,8 +804,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
-     * @param transfer
+     * @param stderr name of the file to which stderr should be redirected to
+     * @param transfer transfer flag for stderr
      * @return AbstractJob
      */
     public AbstractJob setStderr(String stderr, File.TRANSFER transfer) {
@@ -815,8 +816,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
-     * @param register
+     * @param stderr name of the file to which stderr should be redirected to
+     * @param register boolean to indicate whether to register stederr or not
      * @return AbstractJob
      */
     public AbstractJob setStderr(String stderr, boolean register) {
@@ -827,9 +828,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
-     * @param transfer
-     * @param register
+     * @param stderr name of the file to which stderr should be redirected to
+     * @param transfer transfer flag for stderr
+     * @param register boolean to indicate whether to register stederr or not
      * @return AbstractJob
      */
     public AbstractJob setStderr(String stderr, File.TRANSFER transfer, boolean register) {
@@ -841,10 +842,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param stderr
-     * @param transfer
-     * @param register
-     * @param optional
+     * @param stderr name of the file to which stderr should be redirected to
+     * @param transfer transfer flag for stderr
+     * @param register boolean to indicate whether to register stederr or not
+     * @param optional boolean indicating whether file is optional or not
      * @return AbstractJob
      */
     public AbstractJob setStderr(
@@ -863,8 +864,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
      * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link) {
@@ -884,9 +885,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param register
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param register boolean indicating whether file should be registered or not
      * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, boolean register) {
@@ -907,10 +908,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param register
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param register boolean indicating whether file should be registered or not
+     * @param size size of the file
      * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, boolean register, String size) {
@@ -932,9 +933,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param size size of the file
      * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, String size) {
@@ -955,9 +956,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
      * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer) {
@@ -978,10 +979,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param size size of the file
      * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer, String size) {
@@ -1003,10 +1004,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param register
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register the file or not
      * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer, boolean register) {
@@ -1028,11 +1029,11 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param register
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register file or not
+     * @param size size of the file
      * @return AbstractJob
      */
     public AbstractJob uses(
@@ -1056,12 +1057,12 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param register
-     * @param optional
-     * @param executable
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register the file
+     * @param optional whether file is optional or not
+     * @param executable whether file being transferred is an executable or not
      * @return AbstractJob
      */
     public AbstractJob uses(
@@ -1091,13 +1092,13 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param register
-     * @param optional
-     * @param executable
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register the file
+     * @param optional whether file is optional or not
+     * @param executable whether file being transferred is an executable or not
+     * @param size size
      * @return AbstractJob
      */
     public AbstractJob uses(
@@ -1129,8 +1130,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
      * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link) {
@@ -1150,9 +1151,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
      * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer) {
@@ -1173,10 +1174,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param size size of the file
      * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer, String size) {
@@ -1198,9 +1199,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param register
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param register whether to register the file
      * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, boolean register) {
@@ -1221,10 +1222,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param register
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param register register flag
+     * @param size size
      * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, boolean register, String size) {
@@ -1246,9 +1247,9 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param size size
      * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, String size) {
@@ -1269,10 +1270,10 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param register
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register the file
      * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer, boolean register) {
@@ -1294,11 +1295,11 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param register
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register the file
+     * @param size size of the file
      * @return AbstractJob
      */
     public AbstractJob uses(
@@ -1322,12 +1323,12 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param register
-     * @param optional
-     * @param executable
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register the file
+     * @param optional whether file is optional or not
+     * @param executable whether file being transferred is an executable or not
      * @return AbstractJob
      */
     public AbstractJob uses(
@@ -1357,13 +1358,13 @@ public class AbstractJob {
     }
 
     /**
-     * @param file
-     * @param link
-     * @param transfer
-     * @param register
-     * @param optional
-     * @param executable
-     * @param size
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register the file
+     * @param optional whether file is optional or not
+     * @param executable whether file being transferred is an executable or not
+     * @param size size of the file
      * @return AbstractJob
      */
     public AbstractJob uses(
@@ -1395,8 +1396,8 @@ public class AbstractJob {
     }
 
     /**
-     * @param files
-     * @param link
+     * @param files list of files to use
+     * @param link linkage for the file
      * @return AbstractJob
      */
     public AbstractJob uses(List<File> files, File.LINK link) {
@@ -1438,8 +1439,8 @@ public class AbstractJob {
     /**
      * Add Notification to the job
      *
-     * @param when
-     * @param what
+     * @param when when to invoke
+     * @param what what executable to invoke including the arguments
      * @return AbstractJob
      */
     public AbstractJob addInvoke(Invoke.WHEN when, String what) {
@@ -1451,8 +1452,8 @@ public class AbstractJob {
     /**
      * Add Notification to the job
      *
-     * @param when
-     * @param what
+     * @param when when to invoke
+     * @param what what executable to invoke including the arguments
      * @return AbstractJob
      */
     public AbstractJob addNotification(Invoke.WHEN when, String what) {
@@ -1462,7 +1463,7 @@ public class AbstractJob {
     /**
      * Add notification to the job
      *
-     * @param invoke
+     * @param invoke the Invoke object
      * @return AbstractJob
      */
     public AbstractJob addInvoke(Invoke invoke) {
@@ -1473,7 +1474,7 @@ public class AbstractJob {
     /**
      * Add notification to the job
      *
-     * @param invoke
+     * @param invoke the Invoke object
      * @return AbstractJob
      */
     public AbstractJob addNotification(Invoke invoke) {
@@ -1483,7 +1484,7 @@ public class AbstractJob {
     /**
      * Add Notifications to the job
      *
-     * @param invokes
+     * @param invokes list of invoke objects
      * @return AbstractJob
      */
     public AbstractJob addInvokes(List<Invoke> invokes) {
@@ -1496,7 +1497,7 @@ public class AbstractJob {
     /**
      * Add Notifications to the job
      *
-     * @param invokes
+     * @param invokes list of Invoke objects
      * @return AbstractJob
      */
     public AbstractJob addNotifications(List<Invoke> invokes) {
@@ -1518,8 +1519,8 @@ public class AbstractJob {
     /**
      * Returns the metadata associated for a key if exists, else null
      *
-     * @param key
-     * @return
+     * @param key the metadata key
+     * @return metadata key
      */
     public String getMetaData(String key) {
         return this.mMetaDataAttributes.contains(key)
@@ -1530,7 +1531,7 @@ public class AbstractJob {
     /**
      * Is this Object a Job
      *
-     * @return
+     * @return boolean
      */
     public boolean isJob() {
         return false;
@@ -1539,7 +1540,7 @@ public class AbstractJob {
     /**
      * Is this Object a DAX
      *
-     * @return
+     * @return boolean
      */
     public boolean isDAX() {
         return false;
@@ -1548,7 +1549,7 @@ public class AbstractJob {
     /**
      * Is this Object a DAG
      *
-     * @return
+     * @return boolean
      */
     public boolean isDAG() {
         return false;
@@ -1569,7 +1570,7 @@ public class AbstractJob {
         return mNodeLabel;
     }
 
-    /** @param label */
+    /** @param label node lable */
     public void setNodeLabel(String label) {
         this.mNodeLabel = label;
     }
@@ -1596,14 +1597,14 @@ public class AbstractJob {
         return hash;
     }
 
-    /** @param writer */
+    /** @param writer the XMLWriter */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
 
     /**
-     * @param writer
-     * @param indent
+     * @param writer the XMLWriter
+     * @param indent indentation
      */
     public void toXML(XMLWriter writer, int indent) {
 

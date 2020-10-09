@@ -137,7 +137,7 @@ public class Executable extends CatalogType {
     /**
      * Get the name of the executable
      *
-     * @return
+     * @return String
      */
     public String getName() {
         return mName;
@@ -146,7 +146,7 @@ public class Executable extends CatalogType {
     /**
      * Get the namespace of the executable
      *
-     * @return
+     * @return namespace
      */
     public String getNamespace() {
         return mNamespace;
@@ -155,7 +155,7 @@ public class Executable extends CatalogType {
     /**
      * Get the version of the executable
      *
-     * @return
+     * @return version
      */
     public String getVersion() {
         return mVersion;
@@ -182,8 +182,8 @@ public class Executable extends CatalogType {
     /**
      * Add a Notification for this Executable same as addNotification
      *
-     * @param when
-     * @param what
+     * @param when when to invoke
+     * @param what what executable to invoke including the arguments
      * @return Executable
      */
     public Executable addInvoke(Invoke.WHEN when, String what) {
@@ -195,8 +195,8 @@ public class Executable extends CatalogType {
     /**
      * Add a Notification for this Executable same as addInvoke
      *
-     * @param when
-     * @param what
+     * @param when when to invoke
+     * @param what what executable to invoke including the arguments
      * @return Executable
      */
     public Executable addNotification(Invoke.WHEN when, String what) {
@@ -206,7 +206,7 @@ public class Executable extends CatalogType {
     /**
      * Add a Notification for this Executable Same as add Notification
      *
-     * @param invoke
+     * @param invoke the invoke object containing the notification
      * @return Executable
      */
     public Executable addInvoke(Invoke invoke) {
@@ -217,7 +217,7 @@ public class Executable extends CatalogType {
     /**
      * Add a Notification for this Executable Same as addInvoke
      *
-     * @param invoke
+     * @param invoke the invoke object containing the notification
      * @return Executable
      */
     public Executable addNotification(Invoke invoke) {
@@ -227,7 +227,7 @@ public class Executable extends CatalogType {
     /**
      * Add a List of Notifications for this Executable Same as addNotifications
      *
-     * @param invokes
+     * @param invokes list of notification objects
      * @return Executable
      */
     public Executable addInvokes(List<Invoke> invokes) {
@@ -240,7 +240,7 @@ public class Executable extends CatalogType {
     /**
      * Add a List of Notifications for this Executable. Same as addInvokes
      *
-     * @param invokes
+     * @param invokes list of notification objects
      * @return Executable
      */
     public Executable addNotifications(List<Invoke> invokes) {
@@ -250,7 +250,7 @@ public class Executable extends CatalogType {
     /**
      * Set the architecture the executable is compiled for
      *
-     * @param arch
+     * @param arch the architecture
      * @return Executable
      */
     public Executable setArchitecture(ARCH arch) {
@@ -261,8 +261,8 @@ public class Executable extends CatalogType {
     /**
      * Set the OS the executable is compiled for
      *
-     * @param os
-     * @return
+     * @param os the OS
+     * @return Executable
      */
     public Executable setOS(OS os) {
         mOs = os;

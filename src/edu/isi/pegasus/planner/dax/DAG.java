@@ -37,7 +37,7 @@ public class DAG extends AbstractJob {
     /**
      * Copy Constructor
      *
-     * @param dag
+     * @param dag dag
      */
     public DAG(DAG dag) {
         super(dag);
@@ -62,12 +62,16 @@ public class DAG extends AbstractJob {
     /**
      * Is this Object a DAG
      *
-     * @return
+     * @return boolean
      */
     public boolean isDAG() {
         return true;
     }
 
+    /**
+     * @param writer the xml writer
+     * @param indent indentation
+     */
     public void toXML(XMLWriter writer, int indent) {
 
         writer.startElement("dag", indent);

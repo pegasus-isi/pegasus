@@ -132,7 +132,7 @@ public class Diamond {
     /**
      * Create an example DIAMOND DAX
      *
-     * @param args
+     * @param args main args
      */
     public static void main(String[] args) {
         if (args.length != 1) {

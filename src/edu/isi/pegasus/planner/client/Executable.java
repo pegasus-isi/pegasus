@@ -74,7 +74,7 @@ public abstract class Executable {
      *
      * @param opts command line arguments passed to the executable
      * @param confChar the short option corresponding to the conf property
-     * @return
+     * @return String
      */
     protected String lookupConfProperty(String[] opts, char confChar) {
         LongOpt[] longOptions = new LongOpt[1];
