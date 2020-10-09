@@ -151,7 +151,7 @@ public class File extends CatalogType {
     /**
      * Get the name of the file
      *
-     * @return
+     * @return the name 
      */
     public String getName() {
         return mName;
@@ -160,7 +160,7 @@ public class File extends CatalogType {
     /**
      * Get the namespace of the file
      *
-     * @return
+     * @return the namespace
      */
     public String getNamespace() {
         return mNamespace;
@@ -169,7 +169,7 @@ public class File extends CatalogType {
     /**
      * Get the version of the file
      *
-     * @return
+     * @return version
      */
     public String getVersion() {
         return mVersion;
@@ -178,7 +178,7 @@ public class File extends CatalogType {
     /**
      * Get the linkage of the file.
      *
-     * @return
+     * @return linkage
      */
     public LINK getLink() {
         return mLink;
@@ -188,7 +188,7 @@ public class File extends CatalogType {
      * Set the file linkage
      *
      * @param link
-     * @return
+     * @return File
      * @see LINK
      */
     public File setLink(LINK link) {
@@ -199,8 +199,8 @@ public class File extends CatalogType {
     /**
      * Set the optional flag on the file. Default is false
      *
-     * @param optionalflag
-     * @return
+     * @param optionalflag boolean to indicate if file is optional
+     * @return File
      */
     public File setOptional(boolean optionalflag) {
         mOptional = optionalflag;
@@ -210,7 +210,7 @@ public class File extends CatalogType {
     /**
      * Check the optional flag of the file
      *
-     * @return
+     * @return boolean
      */
     public boolean getOptional() {
         return mOptional;
@@ -219,8 +219,8 @@ public class File extends CatalogType {
     /**
      * Set the register flag of the file. Default is true
      *
-     * @param registerflag
-     * @return
+     * @param registerflag  register flag
+     * @return File
      */
     public File setRegister(boolean registerflag) {
         mRegister = registerflag;
@@ -230,7 +230,7 @@ public class File extends CatalogType {
     /**
      * Get the register flag of this file.
      *
-     * @return
+     * @return boolean
      */
     public boolean getRegister() {
         return mRegister;
@@ -239,8 +239,8 @@ public class File extends CatalogType {
     /**
      * Set the transfer type of the file
      *
-     * @param transferflag
-     * @return
+     * @param transferflag  the transfer flag for the file
+     * @return File
      * @see TRANSFER
      */
     public File setTransfer(TRANSFER transferflag) {
@@ -251,7 +251,7 @@ public class File extends CatalogType {
     /**
      * Get the transfer type of the file
      *
-     * @return
+     * @return the transfer flag
      */
     public TRANSFER getTransfer() {
         return mTransfer;
@@ -261,7 +261,7 @@ public class File extends CatalogType {
      * Mark the file as executable. Default is false
      *
      * @param executable
-     * @return
+     * @return File
      */
     public File setExecutable(boolean executable) {
         mExecutable = executable;
@@ -271,7 +271,7 @@ public class File extends CatalogType {
     /**
      * Mark the file as executable. Default is false
      *
-     * @return
+     * @return File
      */
     public File setExecutable() {
         mExecutable = true;
@@ -281,7 +281,7 @@ public class File extends CatalogType {
     /**
      * Check if the file is an executable
      *
-     * @return
+     * @return boolean
      */
     public boolean getExecutable() {
         return mExecutable;
@@ -290,8 +290,8 @@ public class File extends CatalogType {
     /**
      * Set the size of the file.
      *
-     * @param size
-     * @return
+     * @param size size of the file
+     * @return File 
      */
     public File setSize(String size) {
         if (size != null) {
@@ -309,6 +309,11 @@ public class File extends CatalogType {
         return mSize;
     }
 
+    /**
+     * Boolean indicating whether is of type file
+     * 
+     * @return 
+     */
     public boolean isFile() {
         return true;
     }
@@ -316,8 +321,8 @@ public class File extends CatalogType {
     /**
      * Check if this File is equal to Object o
      *
-     * @param o
-     * @return
+     * @param o object being compared
+     * @return boolean 
      */
     public boolean equals(Object o) {
         if (o instanceof File) {
@@ -331,7 +336,7 @@ public class File extends CatalogType {
     /**
      * HashCode of this File
      *
-     * @return
+     * @return int hashcode
      */
     public int hashCode() {
         return Separator.combine(mNamespace, mName, mVersion).hashCode();
@@ -340,7 +345,7 @@ public class File extends CatalogType {
     /**
      * Return a clone of this File
      *
-     * @return
+     * @return cloned File
      */
     public File clone() {
         File f = new File(mNamespace, mName, mVersion, mLink);
@@ -356,7 +361,7 @@ public class File extends CatalogType {
     /**
      * Write the file object
      *
-     * @param writer
+     * @param writer  the xml writer
      */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0, "file");
@@ -365,8 +370,8 @@ public class File extends CatalogType {
     /**
      * Write the file object, with indent level N
      *
-     * @param writer
-     * @param indent
+     * @param writer xml writer
+     * @param indent number of indent spaces
      */
     public void toXML(XMLWriter writer, int indent) {
         toXML(writer, indent, "file");
@@ -375,9 +380,9 @@ public class File extends CatalogType {
     /**
      * Write the file object as XML but render it as the elementname
      *
-     * @param writer
-     * @param indent
-     * @param elementname
+     * @param writer xml writer
+     * @param indent number of indent spaces
+     * @param elementname name of the element
      */
     public void toXML(XMLWriter writer, int indent, String elementname) {
         if (elementname.equalsIgnoreCase("stdin")) {
@@ -464,7 +469,7 @@ public class File extends CatalogType {
      * Adapter function to convert File object to Replica Location object so that we can serialize
      * to YAML using existing interface.
      *
-     * @return
+     * @return ReplicaLocation object
      */
     public ReplicaLocation toReplicaLocation() {
         ReplicaLocation rl = new ReplicaLocation();
@@ -499,9 +504,9 @@ public class File extends CatalogType {
         /**
          * Serialize a File into YAML representation
          *
-         * @param f
-         * @param gen
-         * @param sp
+         * @param f     File object
+         * @param gen   json generator
+         * @param sp    serialization provider
          * @throws IOException
          * @throws UnsupportedOperationException
          */

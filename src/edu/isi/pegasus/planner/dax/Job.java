@@ -61,7 +61,7 @@ public class Job extends AbstractJob {
     /**
      * Is this Object a Job
      *
-     * @return
+     * @return boolean
      */
     public boolean isJob() {
         return true;
@@ -70,8 +70,8 @@ public class Job extends AbstractJob {
     /**
      * Overrides Base TOXML method.
      *
-     * @param writer
-     * @param indent
+     * @param writer  the xml writer
+     * @param indent  the number of indent spaces
      */
     @Override
     public void toXML(XMLWriter writer, int indent) {

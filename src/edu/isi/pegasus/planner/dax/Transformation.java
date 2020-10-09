@@ -40,7 +40,7 @@ public class Transformation {
     /**
      * Create a new Transformation object
      *
-     * @param name
+     * @param name the name of transformation
      */
     public Transformation(String name) {
         this("", name, "");
@@ -49,7 +49,7 @@ public class Transformation {
     /**
      * Copy Constructor
      *
-     * @param t
+     * @param t  Transformation to copy from
      */
     public Transformation(Transformation t) {
         this(t.mNamespace, t.mName, t.mVersion);
@@ -60,9 +60,9 @@ public class Transformation {
     /**
      * Create a new Transformation Object
      *
-     * @param namespace
-     * @param name
-     * @param version
+     * @param namespace the namespace
+     * @param name      the name
+     * @param version   the version
      */
     public Transformation(String namespace, String name, String version) {
         mNamespace = (namespace == null) ? "" : namespace;
@@ -76,7 +76,7 @@ public class Transformation {
     /**
      * Get the name of the transformation
      *
-     * @return
+     * @return the name
      */
     public String getName() {
         return mName;
@@ -85,7 +85,7 @@ public class Transformation {
     /**
      * Get the namespace of the transformation
      *
-     * @return
+     * @return the namespace
      */
     public String getNamespace() {
         return mNamespace;
@@ -94,7 +94,7 @@ public class Transformation {
     /**
      * Get the version of the transformation
      *
-     * @return
+     * @return the version
      */
     public String getVersion() {
         return mVersion;
@@ -121,8 +121,8 @@ public class Transformation {
     /**
      * Add a Notification for this Transformation
      *
-     * @param when
-     * @param what
+     * @param when   when to invoke the notification
+     * @param what   the executable to invoke with the arg string
      * @return Transformation
      */
     public Transformation addInvoke(Invoke.WHEN when, String what) {
@@ -134,8 +134,8 @@ public class Transformation {
     /**
      * Add a Notification for this Transformation same as addInvoke()
      *
-     * @param when
-     * @param what
+     * @param when   when to invoke the notification
+     * @param what   the executable to invoke with the arg string
      * @return Transformation
      */
     public Transformation addNotification(Invoke.WHEN when, String what) {
@@ -145,7 +145,7 @@ public class Transformation {
     /**
      * Add a Notification for this Transformation
      *
-     * @param invoke
+     * @param invoke  the invoke object containing the invocation to invoke
      * @return Transformation
      */
     public Transformation addInvoke(Invoke invoke) {
@@ -156,7 +156,7 @@ public class Transformation {
     /**
      * Add a List of Notifications for this Transformation
      *
-     * @param invokes
+     * @param invokes    list of notifications to associate with
      * @return Transformation
      */
     public Transformation addInvokes(List<Invoke> invokes) {
@@ -169,7 +169,7 @@ public class Transformation {
     /**
      * Add a List of Notifications for this Transformation. Same as addInvokes()
      *
-     * @param invokes
+     * @param invokes list of notifications to associate with
      * @return Transformation
      */
     public Transformation addNotifications(List<Invoke> invokes) {
@@ -179,8 +179,8 @@ public class Transformation {
     /**
      * Set the file or executable being used by the transformation
      *
-     * @param fileorexecutable
-     * @return
+     * @param fileorexecutable  file used by executable
+     * @return Transformation
      */
     public Transformation uses(CatalogType fileorexecutable) {
         mUses.add(fileorexecutable);
@@ -190,8 +190,8 @@ public class Transformation {
     /**
      * Set the List of files and/or executables being used by the transformation
      *
-     * @param filesorexecutables
-     * @return
+     * @param filesorexecutables list of files or executables used by the transformation
+     * @return Transformation
      */
     public Transformation uses(List<CatalogType> filesorexecutables) {
         mUses.addAll(filesorexecutables);
@@ -201,12 +201,20 @@ public class Transformation {
     /**
      * Get the List of files and/or executables being used by the transformation
      *
-     * @return
+     * @return List of Files and Executables used
      */
     public List<CatalogType> getUses() {
         return mUses;
     }
 
+    /**
+     * Returns boolean indicating whether this instance of object is equal to the
+     * object being passed
+     * 
+     * @param obj object being compared
+     * 
+     * @return  boolean 
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -232,6 +240,11 @@ public class Transformation {
         return true;
     }
 
+    /**
+     * Return the hashcode
+     * 
+     * @return int 
+     */
     @Override
     public int hashCode() {
         int hash = 7;
@@ -241,15 +254,31 @@ public class Transformation {
         return hash;
     }
 
+    /**
+     * Return the String version
+     * 
+     * @return String 
+     */
     @Override
     public String toString() {
         return mNamespace + "::" + mName + ":" + mVersion;
     }
 
+    /**
+     * Writes out XML representation using the writer
+     * 
+     * @param writer  the writer 
+     */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
 
+    /**
+     * Writes out XML representation using the writer
+     * 
+     * @param writer  the writer 
+     * @param indent  number pf indent spaces
+     */
     public void toXML(XMLWriter writer, int indent) {
         if (!mUses.isEmpty()) {
             writer.startElement("transformation", indent);

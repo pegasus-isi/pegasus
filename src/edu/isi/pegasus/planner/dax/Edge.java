@@ -28,7 +28,10 @@ public class Edge {
     /** The edge label for the parent child relationship. Optional. */
     private String mLabel;
 
-    /** @param parent */
+    /** 
+     * @param parent parent id
+     * @param child  child id
+     */
     public Edge(String parent, String child) {
         mParent = parent;
         mChild = child;
@@ -39,8 +42,9 @@ public class Edge {
     }
 
     /**
-     * @param parent
-     * @param label
+     * @param parent parent id
+     * @param child  child id
+     * @param label  the edge label
      */
     public Edge(String parent, String child, String label) {
         mParent = parent;

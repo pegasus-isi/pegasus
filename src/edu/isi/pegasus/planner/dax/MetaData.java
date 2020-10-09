@@ -39,7 +39,7 @@ public class MetaData {
     /**
      * Copy constructor
      *
-     * @param m
+     * @param m the MetaData object being copied from
      */
     public MetaData(MetaData m) {
         // create a copy
@@ -49,8 +49,8 @@ public class MetaData {
     /**
      * Create a new Metadata object
      *
-     * @param key
-     * @param value
+     * @param key   the key 
+     * @param value the value
      */
     public MetaData(String key, String value) {
         this(null, key, value);
@@ -59,9 +59,9 @@ public class MetaData {
     /**
      * Create a new Metadata object
      *
-     * @param type
-     * @param key
-     * @param value
+     * @param type  type of metadata
+     * @param key   the key 
+     * @param value the value
      */
     private MetaData(String type, String key, String value) {
         mType = type;
@@ -72,7 +72,7 @@ public class MetaData {
     /**
      * Create a copy of this Metdata Object
      *
-     * @return
+     * @return clone of the object
      */
     public MetaData clone() {
         return new MetaData(this.mType, this.mKey, this.mValue);
@@ -81,8 +81,8 @@ public class MetaData {
     /**
      * Set the value of the metadata
      *
-     * @param value
-     * @return
+     * @param value  value to be set for metadata attribute
+     * @return MetaData
      */
     public MetaData setValue(String value) {
         mValue = value;
@@ -92,7 +92,7 @@ public class MetaData {
     /**
      * Get the key of this metadata object
      *
-     * @return
+     * @return the key
      */
     public String getKey() {
         return mKey;
@@ -101,7 +101,7 @@ public class MetaData {
     /**
      * Get the type of the metdata object
      *
-     * @return
+     * @return the type
      */
     private String getType() {
         return mType;
@@ -110,7 +110,7 @@ public class MetaData {
     /**
      * Get the value of the metdata object
      *
-     * @return
+     * @return the value
      */
     public String getValue() {
         return mValue;
@@ -137,10 +137,10 @@ public class MetaData {
         /**
          * Serializes a MetaData object in to YAML representation
          *
-         * @param md
-         * @param gen
-         * @param sp
-         * @throws IOException
+         * @param md medata object being serialized
+         * @param gen the json generator
+         * @param sp  the serialization provider
+         * @throws IOException IoException
          */
         public void serialize(MetaData md, JsonGenerator gen, SerializerProvider sp)
                 throws IOException {

@@ -52,8 +52,8 @@ public class Profile {
     /**
      * Create a new Profile object
      *
-     * @param namespace
-     * @param key
+     * @param namespace  the namespace
+     * @param key        the key
      */
     public Profile(String namespace, String key) {
         mNamespace = namespace;
@@ -63,9 +63,9 @@ public class Profile {
     /**
      * Create a new Profile object
      *
-     * @param namespace
-     * @param key
-     * @param value
+     * @param namespace   the namespace 
+     * @param key         the key
+     * @param value       the value
      */
     public Profile(String namespace, String key, String value) {
         mNamespace = namespace;
@@ -74,9 +74,11 @@ public class Profile {
     }
 
     /**
-     * @param namespace
-     * @param key
-     * @param value
+     * Create a new Profile object
+     * 
+     * @param namespace   the namespace object 
+     * @param key         the key
+     * @param value       the value
      */
     public Profile(NAMESPACE namespace, String key, String value) {
         mNamespace = namespace.toString();
@@ -87,7 +89,7 @@ public class Profile {
     /**
      * Copy constructor
      *
-     * @param p
+     * @param p Profile t copy from
      */
     public Profile(Profile p) {
         this(p.getNameSpace(), p.getKey(), p.getValue());
@@ -96,7 +98,7 @@ public class Profile {
     /**
      * Get the key of this Profile
      *
-     * @return
+     * @return the key
      */
     public String getKey() {
         return mKey;
@@ -105,7 +107,7 @@ public class Profile {
     /**
      * Get the namespace of this profile
      *
-     * @return
+     * @return the namespace
      */
     public String getNameSpace() {
         return mNamespace;
@@ -114,7 +116,7 @@ public class Profile {
     /**
      * Get the value of this profile
      *
-     * @return
+     * @return the value
      */
     public String getValue() {
         return mValue;
@@ -123,8 +125,8 @@ public class Profile {
     /**
      * Set the value of this Profile
      *
-     * @param value
-     * @return
+     * @param value  value to be set for the profile
+     * @return Profile
      */
     public Profile setValue(String value) {
         mValue = value;
@@ -134,7 +136,7 @@ public class Profile {
     /**
      * Create a copy of this Profile
      *
-     * @return
+     * @return copy of the object
      */
     @Override
     public Profile clone() {
