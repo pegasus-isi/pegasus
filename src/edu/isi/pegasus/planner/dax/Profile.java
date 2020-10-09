@@ -52,8 +52,8 @@ public class Profile {
     /**
      * Create a new Profile object
      *
-     * @param namespace  the namespace
-     * @param key        the key
+     * @param namespace the namespace
+     * @param key the key
      */
     public Profile(String namespace, String key) {
         mNamespace = namespace;
@@ -63,9 +63,9 @@ public class Profile {
     /**
      * Create a new Profile object
      *
-     * @param namespace   the namespace 
-     * @param key         the key
-     * @param value       the value
+     * @param namespace the namespace
+     * @param key the key
+     * @param value the value
      */
     public Profile(String namespace, String key, String value) {
         mNamespace = namespace;
@@ -75,10 +75,10 @@ public class Profile {
 
     /**
      * Create a new Profile object
-     * 
-     * @param namespace   the namespace object 
-     * @param key         the key
-     * @param value       the value
+     *
+     * @param namespace the namespace object
+     * @param key the key
+     * @param value the value
      */
     public Profile(NAMESPACE namespace, String key, String value) {
         mNamespace = namespace.toString();
@@ -125,7 +125,7 @@ public class Profile {
     /**
      * Set the value of this Profile
      *
-     * @param value  value to be set for the profile
+     * @param value value to be set for the profile
      * @return Profile
      */
     public Profile setValue(String value) {

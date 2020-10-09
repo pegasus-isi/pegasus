@@ -70,8 +70,8 @@ public class Job extends AbstractJob {
     /**
      * Overrides Base TOXML method.
      *
-     * @param writer  the xml writer
-     * @param indent  the number of indent spaces
+     * @param writer the xml writer
+     * @param indent the number of indent spaces
      */
     @Override
     public void toXML(XMLWriter writer, int indent) {

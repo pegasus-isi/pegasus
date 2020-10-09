@@ -125,8 +125,8 @@ public class File extends CatalogType {
      * Create new File object
      *
      * @param namespace namespace
-     * @param name      the name
-     * @param version   the version
+     * @param name the name
+     * @param version the version
      */
     public File(String namespace, String name, String version) {
         this(namespace, name, version, null);
@@ -151,7 +151,7 @@ public class File extends CatalogType {
     /**
      * Get the name of the file
      *
-     * @return the name 
+     * @return the name
      */
     public String getName() {
         return mName;
@@ -187,7 +187,7 @@ public class File extends CatalogType {
     /**
      * Set the file linkage
      *
-     * @param link  the linkage
+     * @param link the linkage
      * @return File
      * @see LINK
      */
@@ -219,7 +219,7 @@ public class File extends CatalogType {
     /**
      * Set the register flag of the file. Default is true
      *
-     * @param registerflag  register flag
+     * @param registerflag register flag
      * @return File
      */
     public File setRegister(boolean registerflag) {
@@ -239,7 +239,7 @@ public class File extends CatalogType {
     /**
      * Set the transfer type of the file
      *
-     * @param transferflag  the transfer flag for the file
+     * @param transferflag the transfer flag for the file
      * @return File
      * @see TRANSFER
      */
@@ -291,7 +291,7 @@ public class File extends CatalogType {
      * Set the size of the file.
      *
      * @param size size of the file
-     * @return File 
+     * @return File
      */
     public File setSize(String size) {
         if (size != null) {
@@ -311,7 +311,7 @@ public class File extends CatalogType {
 
     /**
      * Boolean indicating whether is of type file
-     * 
+     *
      * @return boolean
      */
     public boolean isFile() {
@@ -322,7 +322,7 @@ public class File extends CatalogType {
      * Check if this File is equal to Object o
      *
      * @param o object being compared
-     * @return boolean 
+     * @return boolean
      */
     public boolean equals(Object o) {
         if (o instanceof File) {
@@ -361,7 +361,7 @@ public class File extends CatalogType {
     /**
      * Write the file object
      *
-     * @param writer  the xml writer
+     * @param writer the xml writer
      */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0, "file");
@@ -504,9 +504,9 @@ public class File extends CatalogType {
         /**
          * Serialize a File into YAML representation
          *
-         * @param f     File object
-         * @param gen   json generator
-         * @param sp    serialization provider
+         * @param f File object
+         * @param gen json generator
+         * @param sp serialization provider
          * @throws IOException exception
          * @throws UnsupportedOperationException exception
          */

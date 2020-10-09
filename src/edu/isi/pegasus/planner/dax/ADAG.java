@@ -350,8 +350,8 @@ public class ADAG {
     /**
      * Add a Notification for this Workflow
      *
-     * @param when  when to do the notification
-     * @param what  executable and arguments to invoke
+     * @param when when to do the notification
+     * @param what executable and arguments to invoke
      * @return ADAG
      */
     public ADAG addInvoke(Invoke.WHEN when, String what) {
@@ -363,8 +363,8 @@ public class ADAG {
     /**
      * Add a Notification for this Workflow
      *
-     * @param when  when to do the notification
-     * @param what  executable and arguments to invoke
+     * @param when when to do the notification
+     * @param what executable and arguments to invoke
      * @return ADAG
      */
     public ADAG addNotification(Invoke.WHEN when, String what) {
@@ -374,7 +374,7 @@ public class ADAG {
     /**
      * Add a Notification for this Workflow
      *
-     * @param invoke    the invoke object
+     * @param invoke the invoke object
      * @return ADAG
      */
     public ADAG addInvoke(Invoke invoke) {
@@ -395,7 +395,7 @@ public class ADAG {
     /**
      * Add a List of Notifications for this Workflow
      *
-     * @param invokes  List of Invoke objects
+     * @param invokes List of Invoke objects
      * @return ADAG
      */
     public ADAG addInvokes(List<Invoke> invokes) {
@@ -448,7 +448,7 @@ public class ADAG {
     /**
      * Returns the metadata associated for a key if exists, else null
      *
-     * @param key   the key
+     * @param key the key
      * @return String
      */
     public String getMetaData(String key) {
@@ -715,7 +715,7 @@ public class ADAG {
     /**
      * Add multiple Jobs to the DAX
      *
-     * @param jobs  List of jobs to add
+     * @param jobs List of jobs to add
      * @return ADAG
      * @see Job
      * @see AbstractJob
@@ -730,7 +730,7 @@ public class ADAG {
     /**
      * Check if a job exists in the DAX
      *
-     * @param job  the job to check
+     * @param job the job to check
      * @return boolean
      */
     public boolean containsJob(Job job) {
@@ -740,7 +740,7 @@ public class ADAG {
     /**
      * Check if a jobid exists in the DAX
      *
-     * @param jobid  the job id
+     * @param jobid the job id
      * @return boolean
      */
     public boolean containsJobId(String jobid) {
@@ -750,7 +750,7 @@ public class ADAG {
     /**
      * Returns a Job object with id jobid if present otherwise null.
      *
-     * @param jobid  the job id
+     * @param jobid the job id
      * @return the Job
      */
     public Job getJob(String jobid) {
@@ -865,7 +865,7 @@ public class ADAG {
     /**
      * Check if a DAG job exists in the DAX
      *
-     * @param dag  the dag
+     * @param dag the dag
      * @return boolean
      */
     public boolean containsDAG(DAG dag) {
@@ -912,7 +912,7 @@ public class ADAG {
     /**
      * Check if a DAX job exists in the DAX
      *
-     * @param dax   the dax
+     * @param dax the dax
      * @return boolean
      */
     public boolean containsDAX(DAX dax) {
@@ -987,7 +987,7 @@ public class ADAG {
      * does not have any parents Returns null if the child is not a valid job/dax/dag id
      *
      * @param child the child
-     * @return Set of Edges 
+     * @return Set of Edges
      */
     public Set<Edge> getEdges(String child) {
         if (child != null && mJobs.containsKey(child)) {
@@ -1212,9 +1212,9 @@ public class ADAG {
         /**
          * Serializes ADAG into YAML representation
          *
-         * @param adag  the adag being serialized
-         * @param gen   the json generator
-         * @param sp    the serialization provider
+         * @param adag the adag being serialized
+         * @param gen the json generator
+         * @param sp the serialization provider
          * @throws IOException exception
          */
         public void serialize(ADAG adag, JsonGenerator gen, SerializerProvider sp)

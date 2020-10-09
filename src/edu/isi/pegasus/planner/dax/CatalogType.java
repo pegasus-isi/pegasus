@@ -46,7 +46,7 @@ public class CatalogType {
     /**
      * Copy Constructor
      *
-     * @param c  object copied from
+     * @param c object copied from
      */
     protected CatalogType(CatalogType c) {
         this.mProfiles = new LinkedList<Profile>(c.mProfiles);
@@ -58,7 +58,7 @@ public class CatalogType {
     /**
      * Add a pfn url to the Catalog
      *
-     * @param url           the PFN
+     * @param url the PFN
      * @return CatalogType CatalogType
      */
     public CatalogType addPhysicalFile(String url) {
@@ -70,8 +70,8 @@ public class CatalogType {
     /**
      * Add a PFN url and a site id to the Catalog
      *
-     * @param url   the pfn
-     * @param site  the site at which file resides
+     * @param url the pfn
+     * @param site the site at which file resides
      * @return CatalogType
      */
     public CatalogType addPhysicalFile(String url, String site) {
@@ -83,7 +83,7 @@ public class CatalogType {
     /**
      * Add a PFN object to the Catalog
      *
-     * @param pfn   the pfn
+     * @param pfn the pfn
      * @return CatalogType
      * @see PFN
      */
@@ -130,7 +130,7 @@ public class CatalogType {
     /**
      * Add a {@link MetaData} object for the Catalog object
      *
-     * @param metadata      the MetaData
+     * @param metadata the MetaData
      * @return CatalogType
      * @see MetaData
      */
@@ -142,7 +142,7 @@ public class CatalogType {
     /**
      * Add a List of {@link MetaData} objects to the Catalog entry object
      *
-     * @param metadata  List of MetaData objects
+     * @param metadata List of MetaData objects
      * @return CatalogType
      * @see MetaData
      */
@@ -205,7 +205,7 @@ public class CatalogType {
     /**
      * Add a Profile object to this Catalog entry
      *
-     * @param profile  the profile to add
+     * @param profile the profile to add
      * @return CatalogType
      * @see Profile
      */
@@ -235,7 +235,7 @@ public class CatalogType {
     /**
      * Write the XML representation of this object
      *
-     * @param writer    the xml writer
+     * @param writer the xml writer
      * @see XMLWriter
      */
     public void toXML(XMLWriter writer) {
@@ -245,8 +245,8 @@ public class CatalogType {
     /**
      * Write the XML representation of this object
      *
-     * @param writer    the xml writer
-     * @param indent    the number of indent spaces
+     * @param writer the xml writer
+     * @param indent the number of indent spaces
      * @see XMLWriter
      */
     public void toXML(XMLWriter writer, int indent) {

@@ -121,9 +121,9 @@ public class Executable extends CatalogType {
     /**
      * Create a new Executable
      *
-     * @param namespace  the namespace
-     * @param name       the name
-     * @param version    the version
+     * @param namespace the namespace
+     * @param name the name
+     * @param version the version
      */
     public Executable(String namespace, String name, String version) {
         super();
@@ -251,7 +251,7 @@ public class Executable extends CatalogType {
      * Set the architecture the executable is compiled for
      *
      * @param arch the architecture
-     * @return  the Executable object that was modified
+     * @return the Executable object that was modified
      */
     public Executable setArchitecture(ARCH arch) {
         mArch = arch;
@@ -262,7 +262,7 @@ public class Executable extends CatalogType {
      * Set the OS the executable is compiled for
      *
      * @param os the OS
-     * @return  the Executable object that was modified
+     * @return the Executable object that was modified
      */
     public Executable setOS(OS os) {
         mOs = os;
@@ -273,7 +273,7 @@ public class Executable extends CatalogType {
      * Set the osrelease the executable is compiled for
      *
      * @param osrelease the os release
-     * @return  the Executable object that was modified
+     * @return the Executable object that was modified
      */
     public Executable setOSRelease(String osrelease) {
         mOsRelease = osrelease;
@@ -284,7 +284,7 @@ public class Executable extends CatalogType {
      * Set the osversion the executable is compiled for
      *
      * @param osversion os version
-     * @return  the Executable object that was modified
+     * @return the Executable object that was modified
      */
     public Executable setOSVersion(String osversion) {
         mOsVersion = osversion;
@@ -295,7 +295,7 @@ public class Executable extends CatalogType {
      * Set the glibc this executable is compiled for
      *
      * @param glibc glibc version
-     * @return  the Executable object that was modified
+     * @return the Executable object that was modified
      */
     public Executable setGlibc(String glibc) {
         mGlibc = glibc;
@@ -305,7 +305,7 @@ public class Executable extends CatalogType {
     /**
      * set the installed flag on the executable. Default is installed
      *
-     * @return  the Executable object that was modified
+     * @return the Executable object that was modified
      */
     public Executable setInstalled() {
         mInstalled = true;
@@ -315,19 +315,18 @@ public class Executable extends CatalogType {
     /**
      * Unset the installed flag on the executable. Default is installed.
      *
-     * @return  the Executable object that was modified
+     * @return the Executable object that was modified
      */
     public Executable unsetInstalled() {
         mInstalled = false;
         return this;
     }
 
-    /** 
-     * Set the installed flag on the executable.Default is installed 
-     * 
-     * @param installed  the installed flag
-     * 
-     * @return  the Executable object that was modified
+    /**
+     * Set the installed flag on the executable.Default is installed
+     *
+     * @param installed the installed flag
+     * @return the Executable object that was modified
      */
     public Executable setInstalled(boolean installed) {
         mInstalled = installed;
@@ -390,6 +389,7 @@ public class Executable extends CatalogType {
 
     /**
      * Return boolean indicating whether executable or not
+     *
      * @return boolean
      */
     public boolean isExecutable() {
@@ -408,7 +408,7 @@ public class Executable extends CatalogType {
     /**
      * Add another executable as a requirement to this executable
      *
-     * @param e   dependent executable
+     * @param e dependent executable
      * @return instance to the Executable that was modified
      */
     public Executable addRequirement(Executable e) {
@@ -419,8 +419,8 @@ public class Executable extends CatalogType {
 
     /**
      * Compares whether an object is equal to this instance of Executable or not
-     * 
-     * @param obj  object to compare against
+     *
+     * @param obj object to compare against
      * @return boolean
      */
     @Override

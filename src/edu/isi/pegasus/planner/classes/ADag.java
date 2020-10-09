@@ -133,7 +133,7 @@ public class ADag extends Data implements Graph {
     /**
      * Add metadata to the object.
      *
-     * @param key   the metadata key
+     * @param key the metadata key
      * @param value the metadata value
      */
     public void addMetadata(String key, String value) {
@@ -143,7 +143,7 @@ public class ADag extends Data implements Graph {
     /**
      * Returns metadata attribute for a particular key
      *
-     * @param key   the metadata key
+     * @param key the metadata key
      * @return value returned else null if not found
      */
     public String getMetadata(String key) {
@@ -672,8 +672,9 @@ public class ADag extends Data implements Graph {
         this.mDAGInfo.generateFlowName();
     }
 
-    /** 
-     * Returns the flow name 
+    /**
+     * Returns the flow name
+     *
      * @return the flow name
      */
     public String getFlowName() {
@@ -701,8 +702,9 @@ public class ADag extends Data implements Graph {
         this.mDAGInfo.setDAXMTime(f);
     }
 
-    /** 
-     * Return the release version 
+    /**
+     * Return the release version
+     *
      * @return the release version
      */
     public String getReleaseVersion() {
@@ -739,7 +741,7 @@ public class ADag extends Data implements Graph {
      * <p>The basename of the .dag file is dependant on whether the basename prefix has been
      * specified at runtime or not by command line options.
      *
-     * @param options   the planner options
+     * @param options the planner options
      * @param suffix the suffix to be applied at the end.
      * @return the name of the dagfile.
      */
@@ -1116,9 +1118,7 @@ public class ADag extends Data implements Graph {
         return this.mGraphImplementor.getCyclicEdge();
     }
 
-    /** 
-     * @param node the GraphNode
-     */
+    /** @param node the GraphNode */
     @Override
     public void setGraphNodeReference(GraphNode node) {
         throw new UnsupportedOperationException("GraphNode reference not set for ADag");

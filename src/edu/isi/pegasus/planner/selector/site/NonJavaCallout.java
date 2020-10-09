@@ -49,7 +49,6 @@ import java.util.StringTokenizer;
  * these can be specified in the property files, using the prefix <code>pegasus.selector.site.env
  * </code>. The name of the environment variable is obtained by stripping the prefix. For example,
  * to set the variable PATH to a certain value, use the following entry in your user property file:
- *
  * <br>
  *
  * <pre>
@@ -57,9 +56,7 @@ import java.util.StringTokenizer;
  * </pre>
  *
  * The site selector populates the environment of the external application with the following
- * default properties, which can be overwritten by user-specified properties:
- *
- * <br>
+ * default properties, which can be overwritten by user-specified properties: <br>
  *
  * <table border="1" summary="">
  * <tr align="left"><th>key</th><th>value</th></tr>
@@ -102,8 +99,6 @@ import java.util.StringTokenizer;
  * colon, the name of a jobmanager for the site can be provided by the site selector. Two examples
  * for successful site selections are:
  *
- * </p>
- *
  * <pre>
  *   SOLUTION:mysite:my.job.mgr/jobmanager-batch
  *   SOLUTION:siteY
@@ -117,9 +112,7 @@ import java.util.StringTokenizer;
  * and the external site selector. It is a collection of key-value pairs. Each pair is separated by
  * an equals (=) sign, and stands on a line of its own. There are no multi-line values permitted.
  *
- * <p>The following pairs are generated for the siteselector temporary file:
- *
- * <br>
+ * <p>The following pairs are generated for the siteselector temporary file: <br>
  *
  * <table border="1" summary="">
  * <tr align="left"><th>#</th><th>key</th><th>value</th></tr>

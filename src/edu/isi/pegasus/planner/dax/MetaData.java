@@ -49,7 +49,7 @@ public class MetaData {
     /**
      * Create a new Metadata object
      *
-     * @param key   the key 
+     * @param key the key
      * @param value the value
      */
     public MetaData(String key, String value) {
@@ -59,8 +59,8 @@ public class MetaData {
     /**
      * Create a new Metadata object
      *
-     * @param type  type of metadata
-     * @param key   the key 
+     * @param type type of metadata
+     * @param key the key
      * @param value the value
      */
     private MetaData(String type, String key, String value) {
@@ -81,7 +81,7 @@ public class MetaData {
     /**
      * Set the value of the metadata
      *
-     * @param value  value to be set for metadata attribute
+     * @param value value to be set for metadata attribute
      * @return MetaData
      */
     public MetaData setValue(String value) {
@@ -139,7 +139,7 @@ public class MetaData {
          *
          * @param md medata object being serialized
          * @param gen the json generator
-         * @param sp  the serialization provider
+         * @param sp the serialization provider
          * @throws IOException IoException
          */
         public void serialize(MetaData md, JsonGenerator gen, SerializerProvider sp)

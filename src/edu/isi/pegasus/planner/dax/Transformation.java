@@ -49,7 +49,7 @@ public class Transformation {
     /**
      * Copy Constructor
      *
-     * @param t  Transformation to copy from
+     * @param t Transformation to copy from
      */
     public Transformation(Transformation t) {
         this(t.mNamespace, t.mName, t.mVersion);
@@ -61,8 +61,8 @@ public class Transformation {
      * Create a new Transformation Object
      *
      * @param namespace the namespace
-     * @param name      the name
-     * @param version   the version
+     * @param name the name
+     * @param version the version
      */
     public Transformation(String namespace, String name, String version) {
         mNamespace = (namespace == null) ? "" : namespace;
@@ -121,8 +121,8 @@ public class Transformation {
     /**
      * Add a Notification for this Transformation
      *
-     * @param when   when to invoke the notification
-     * @param what   the executable to invoke with the arg string
+     * @param when when to invoke the notification
+     * @param what the executable to invoke with the arg string
      * @return Transformation
      */
     public Transformation addInvoke(Invoke.WHEN when, String what) {
@@ -134,8 +134,8 @@ public class Transformation {
     /**
      * Add a Notification for this Transformation same as addInvoke()
      *
-     * @param when   when to invoke the notification
-     * @param what   the executable to invoke with the arg string
+     * @param when when to invoke the notification
+     * @param what the executable to invoke with the arg string
      * @return Transformation
      */
     public Transformation addNotification(Invoke.WHEN when, String what) {
@@ -145,7 +145,7 @@ public class Transformation {
     /**
      * Add a Notification for this Transformation
      *
-     * @param invoke  the invoke object containing the invocation to invoke
+     * @param invoke the invoke object containing the invocation to invoke
      * @return Transformation
      */
     public Transformation addInvoke(Invoke invoke) {
@@ -156,7 +156,7 @@ public class Transformation {
     /**
      * Add a List of Notifications for this Transformation
      *
-     * @param invokes    list of notifications to associate with
+     * @param invokes list of notifications to associate with
      * @return Transformation
      */
     public Transformation addInvokes(List<Invoke> invokes) {
@@ -179,7 +179,7 @@ public class Transformation {
     /**
      * Set the file or executable being used by the transformation
      *
-     * @param fileorexecutable  file used by executable
+     * @param fileorexecutable file used by executable
      * @return Transformation
      */
     public Transformation uses(CatalogType fileorexecutable) {
@@ -208,12 +208,11 @@ public class Transformation {
     }
 
     /**
-     * Returns boolean indicating whether this instance of object is equal to the
-     * object being passed
-     * 
+     * Returns boolean indicating whether this instance of object is equal to the object being
+     * passed
+     *
      * @param obj object being compared
-     * 
-     * @return  boolean 
+     * @return boolean
      */
     @Override
     public boolean equals(Object obj) {
@@ -242,8 +241,8 @@ public class Transformation {
 
     /**
      * Return the hashcode
-     * 
-     * @return int 
+     *
+     * @return int
      */
     @Override
     public int hashCode() {
@@ -256,8 +255,8 @@ public class Transformation {
 
     /**
      * Return the String version
-     * 
-     * @return String 
+     *
+     * @return String
      */
     @Override
     public String toString() {
@@ -266,8 +265,8 @@ public class Transformation {
 
     /**
      * Writes out XML representation using the writer
-     * 
-     * @param writer  the writer 
+     *
+     * @param writer the writer
      */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
@@ -275,9 +274,9 @@ public class Transformation {
 
     /**
      * Writes out XML representation using the writer
-     * 
-     * @param writer  the writer 
-     * @param indent  number pf indent spaces
+     *
+     * @param writer the writer
+     * @param indent number pf indent spaces
      */
     public void toXML(XMLWriter writer, int indent) {
         if (!mUses.isEmpty()) {

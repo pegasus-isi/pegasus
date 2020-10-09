@@ -67,8 +67,8 @@ public class Invoke {
     /**
      * Create a new Invoke object
      *
-     * @param when  when to invoke
-     * @param what  the executable with the arguments to invoke
+     * @param when when to invoke
+     * @param what the executable with the arguments to invoke
      */
     public Invoke(WHEN when, String what) {
         setWhen(when);
@@ -134,20 +134,18 @@ public class Invoke {
 
     /**
      * Writes out XML representation using the writer
-     * 
-     * @param writer  the writer 
-     * 
+     *
+     * @param writer the writer
      */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
 
-    
     /**
      * Writes out XML representation using the writer
-     * 
-     * @param writer  the writer 
-     * @param indent  number pf indent spaces
+     *
+     * @param writer the writer
+     * @param indent number pf indent spaces
      */
     public void toXML(XMLWriter writer, int indent) {
         writer.startElement("invoke", indent);
@@ -175,8 +173,7 @@ public class Invoke {
     /**
      * Matches two Invoke objects
      *
-     * @param obj  object to being compared against
-     * 
+     * @param obj object to being compared against
      * @return true if the pfn and all the attributes match, false otherwise.
      */
     @Override
@@ -207,9 +204,9 @@ public class Invoke {
         /**
          * Serializes an Invoke into YAML representation.
          *
-         * @param iv   the invoke object
-         * @param gen  the json generator
-         * @param sp   serialization provider
+         * @param iv the invoke object
+         * @param gen the json generator
+         * @param sp serialization provider
          * @throws IOException IOException
          */
         public void serialize(Invoke iv, JsonGenerator gen, SerializerProvider sp)

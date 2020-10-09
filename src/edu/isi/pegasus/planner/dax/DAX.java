@@ -37,7 +37,7 @@ public class DAX extends AbstractJob {
     /**
      * Copy Constructor
      *
-     * @param dax  the DAX job
+     * @param dax the DAX job
      */
     public DAX(DAX dax) {
         super(dax);
@@ -48,7 +48,7 @@ public class DAX extends AbstractJob {
      *
      * @param id The unique id of the DAX job object. Must be of type [A-Za-z][-A-Za-z0-9_]*
      * @param daxname The DAX file to plan and submit
-     * @param label   the label for the job
+     * @param label the label for the job
      */
     public DAX(String id, String daxname, String label) {
         super();
@@ -69,8 +69,8 @@ public class DAX extends AbstractJob {
     }
 
     /**
-     * @param writer  the XML Writer
-     * @param indent  number of indent spaces
+     * @param writer the XML Writer
+     * @param indent number of indent spaces
      */
     public void toXML(XMLWriter writer, int indent) {
 
