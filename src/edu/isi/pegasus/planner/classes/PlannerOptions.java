@@ -192,6 +192,9 @@ public class PlannerOptions extends Data implements Cloneable {
     /** output map file of where outputs are required * */
     private String mOutputMap;
 
+    /** whether to log final output as json or not */
+    private boolean mIsFinalOutputToJson;
+
     /** Default Constructor. */
     public PlannerOptions() {
         //        mSubmitFileDir    = ".";
@@ -231,6 +234,7 @@ public class PlannerOptions extends Data implements Cloneable {
         mOutputDir = null;
         mOutputMap = null;
         mConfFile = null;
+        mIsFinalOutputToJson = false;
     }
 
     /**
@@ -624,6 +628,25 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public boolean optionalArgSet() {
         return this.mOptArg;
+    }
+
+    /**
+     * Sets the flag to denote that the final output should be a JSON message. If true, then all log
+     * messages are set to goto stderr. The sdout only has the final output message logged as JSON.
+     *
+     * @param isJSON the value
+     */
+    public void setFinalOutputAsJSON(boolean isJSON) {
+        mIsFinalOutputToJson = isJSON;
+    }
+
+    /**
+     * Returns boolean indicating whether final output should be written out as JSON or not.
+     *
+     * @return
+     */
+    public boolean logFinalOutputAsJSON() {
+        return mIsFinalOutputToJson;
     }
 
     /**
@@ -1180,6 +1203,8 @@ public class PlannerOptions extends Data implements Cloneable {
                         + mBasenamePrefix
                         + "\n Jobname Prefix       "
                         + mJobPrefix
+                        + "\n Final Output as JSON "
+                        + mIsFinalOutputToJson
                         + "\n Abstract Dag File    "
                         + mDAXFile
                         + "\n Execution Sites      "
@@ -1267,6 +1292,11 @@ public class PlannerOptions extends Data implements Cloneable {
         // the jobname prefix
         if (mJobPrefix != null) {
             sb.append(" --job-prefix ").append(mJobPrefix);
+        }
+
+        // the json option
+        if (this.logFinalOutputAsJSON()) {
+            sb.append(" --json ");
         }
 
         if (!mExecSites.isEmpty()) {
@@ -1498,6 +1528,7 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mNumOfRescueTries = this.mNumOfRescueTries;
         pOpt.mOriginalArgumentString = this.mOriginalArgumentString;
         pOpt.mConfFile = this.mConfFile;
+        pOpt.mIsFinalOutputToJson = this.logFinalOutputAsJSON();
 
         // a shallow clone for forward options
         pOpt.mForwardOptions = this.mForwardOptions;

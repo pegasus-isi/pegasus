@@ -336,6 +336,11 @@ public class CPlanner extends Executable {
 
         Collection result = null;
 
+        // PM-1475 output redirection to stderr
+        if (mPOptions.logFinalOutputAsJSON()) {
+            mLogger.setWriters("stderr");
+        }
+
         // print help if asked for
         if (mPOptions.getHelp()) {
             // PM-816 disable metrics logging
@@ -757,7 +762,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSzVr::D:d:s:o:O:m:c:C:b:2:j:3:F:X:4:5:6:78:9:1:R:",
+                        "vqhfSzVJr::D:d:s:o:O:m:c:C:b:2:j:3:F:X:4:5:6:78:9:1:R:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -863,6 +868,10 @@ public class CPlanner extends Executable {
 
                 case 'j': // job-prefix
                     options.setJobnamePrefix(g.getOptarg());
+                    break;
+
+                case 'J': // json
+                    options.setFinalOutputAsJSON(true);
                     break;
 
                 case 'o': // output-site
@@ -1038,7 +1047,7 @@ public class CPlanner extends Executable {
      * @return array of <code>LongOpt</code> objects , corresponding to the valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[31];
+        LongOpt[] longopts = new LongOpt[32];
 
         longopts[0] = new LongOpt("dir", LongOpt.REQUIRED_ARGUMENT, null, '8');
         longopts[1] = new LongOpt("dax", LongOpt.REQUIRED_ARGUMENT, null, 'd');
@@ -1073,6 +1082,7 @@ public class CPlanner extends Executable {
         longopts[28] = new LongOpt("output-map", LongOpt.REQUIRED_ARGUMENT, null, 'm');
         longopts[29] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
         longopts[30] = new LongOpt("reuse", LongOpt.REQUIRED_ARGUMENT, null, 'R');
+        longopts[31] = new LongOpt("json", LongOpt.NO_ARGUMENT, null, 'J');
         return longopts;
     }
 
@@ -1085,10 +1095,10 @@ public class CPlanner extends Executable {
                         + "                     [-v] [-q] [-V] [-h]\n"
                         + "                     [--conf propsfile] [-c cachefile[,cachefile…]] [--cleanup cleanup strategy ]\n"
                         + "                     [-C style[,style…]] [--dir dir] [--force] [--force-replan]\n"
-                        + "                     [--inherited-rc-files file1[,file2…]] [-j prefix] [-n][-I input-dir1[,input-dir2…]]\n"
-                        + "                     [-O output-dir] [-o site1[,site2…]] [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]]\n"
-                        + "                     [--randomdir[=dirname]] [--relative-dir dir] [--relative-submit-dir dir]\n"
-                        + "                     [-X[non standard jvm option]]\n"
+                        + "                     [--inherited-rc-files file1[,file2…]] [-j prefix] [--json] [-n]\n"
+                        + "                     [-I input-dir1[,input-dir2…]] [-O output-dir] [-o site1[,site2…]]\n"
+                        + "                     [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]][--randomdir[=dirname]]\n"
+                        + "                     [--relative-dir dir] [--relative-submit-dir dir] [-X[non standard jvm option]]\n"
                         + "                     abstract-workflow]";
 
         System.out.println(text);
@@ -1152,6 +1162,9 @@ public class CPlanner extends Executable {
                 .append("\n                       can be repeated multiple times.")
                 .append(
                         "\n -j |--job-prefix      the prefix to be applied while construction job submit filenames ")
+                .append(
+                        "\n -J |--json            boolean option to log the final planner output in json format to the stdout.")
+                .append("\n                       All other log messages get logged to the stderr.")
                 .append(
                         "\n -I |--input-dir       comma separated list of optional input directories where the input files reside on submit host")
                 .append(
