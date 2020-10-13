@@ -613,7 +613,7 @@ public class CommonProperties implements Cloneable {
         for (Map.Entry<String, String> entry : envs.entrySet()) {
             String key = entry.getKey();
             if (!key.startsWith(CommonProperties.ENV_PEGASUS_PROPERTY_PREFIX)) {
-                // continue
+                continue;
             }
 
             // strip leading _
