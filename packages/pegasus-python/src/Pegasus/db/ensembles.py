@@ -393,7 +393,7 @@ class Trigger:
         """List all triggers"""
         return self.session.query(Trigger).all()
 
-    def list_triggers_by_ensemble(self, username: str, ensemble: str) -> List[Trigger]:
+    def list_triggers_by_ensemble(self, username: str, ensemble: str):
         """List all triggers belonging to a specific ensemble
 
         :param username: name of user making request
