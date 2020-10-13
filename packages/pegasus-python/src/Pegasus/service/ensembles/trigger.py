@@ -1,13 +1,12 @@
 import datetime
-import os
 import json
+import logging
+import os
+import subprocess
 import threading
 import time
-import logging
-import subprocess
-
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 from Pegasus import user
 from Pegasus.db import connection
@@ -18,9 +17,7 @@ _TRIGGER_DIR = Path().home() / ".pegasus/triggers"
 
 # --- manager ------------------------------------------------------------------
 class TriggerManager(threading.Thread):
-    def __init__(
-        self,
-    ):
+    def __init__(self,):
         threading.Thread.__init__(self, daemon=True)
 
         self.log = logging.getLogger("trigger.manager")
@@ -92,9 +89,7 @@ class TriggerManager(threading.Thread):
         # update state
         self.log.debug(
             "changing {name} state: {old_state} -> {new_state}".format(
-                name=trigger_name,
-                old_state=trigger.state,
-                new_state="RUNNING",
+                name=trigger_name, old_state=trigger.state, new_state="RUNNING",
             )
         )
         self.trigger_dao.update_state(
@@ -193,7 +188,7 @@ class ChronTrigger(TriggerThread):
                     self.log.debug("timed out")
                     break
 
-        except Exception as e:
+        except Exception:
             self.log.exception("error")
         finally:
             self.log.debug("exited")

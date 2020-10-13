@@ -1,12 +1,9 @@
 import argparse
 import logging
 import os
-import pickle
 import re
 import sys
 import time
-from multiprocessing.connection import Client
-from pathlib import Path
 from urllib import parse as urlparse
 
 import requests
@@ -593,10 +590,7 @@ class ChronTriggerCommand(EnsembleClientCommand):
         )
 
         self.parser.add_argument(
-            "-a",
-            "--args",
-            nargs="+",
-            help="CLI args to be passed to WORKFLOW_SCRIPT",
+            "-a", "--args", nargs="+", help="CLI args to be passed to WORKFLOW_SCRIPT",
         )
 
     def parse(self, args):

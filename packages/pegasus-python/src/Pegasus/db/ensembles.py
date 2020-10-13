@@ -1,8 +1,8 @@
+import json
 import os
 import re
-import json
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 
 from flask import url_for
 from sqlalchemy import sql

@@ -46,8 +46,7 @@ from Pegasus.db.ensembles import EnsembleStates
 from Pegasus.db.ensembles import EnsembleWorkflow as _EnsembleWorkflow
 from Pegasus.db.ensembles import EnsembleWorkflowStates
 from Pegasus.db.ensembles import Trigger as _Trigger
-from Pegasus.db.ensembles import TriggerStates
-from Pegasus.db.ensembles import TriggerType
+from Pegasus.db.ensembles import TriggerStates, TriggerType
 
 __all__ = (
     "DBVersion",
@@ -256,9 +255,7 @@ class Workflow(Base):
     dax_file = Column("dax_file", String(255))
     db_url = Column("db_url", Text)
     parent_wf_id = Column(
-        "parent_wf_id",
-        KeyInteger,
-        ForeignKey(wf_id, ondelete="CASCADE"),
+        "parent_wf_id", KeyInteger, ForeignKey(wf_id, ondelete="CASCADE"),
     )
     # not marked as FK to not screw up the cascade.
     root_wf_id = Column("root_wf_id", KeyInteger)
@@ -378,10 +375,7 @@ class Workflowstate(Base):
         primary_key=True,
     )
     timestamp = Column(
-        "timestamp",
-        TimestampType,
-        primary_key=True,
-        default=time.time(),
+        "timestamp", TimestampType, primary_key=True, default=time.time(),
     )
     restart_count = Column("restart_count", Integer, nullable=False)
     status = Column("status", Integer)
@@ -497,10 +491,7 @@ class Job(Base):
         ),
     )
     tasks = relation(
-        lambda: Task,
-        backref="job",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
+        lambda: Task, backref="job", cascade="all, delete-orphan", passive_deletes=True,
     )
     job_instances = relation(
         lambda: JobInstance,
@@ -547,9 +538,7 @@ class JobInstance(Base):
         nullable=False,
     )
     host_id = Column(
-        "host_id",
-        KeyInteger,
-        ForeignKey(Host.host_id, ondelete="SET NULL"),
+        "host_id", KeyInteger, ForeignKey(Host.host_id, ondelete="SET NULL"),
     )
     job_submit_seq = Column("job_submit_seq", Integer, nullable=False)
     sched_id = Column("sched_id", String(255))
@@ -560,9 +549,7 @@ class JobInstance(Base):
     cluster_duration = Column("cluster_duration", DurationType)
     local_duration = Column("local_duration", DurationType)
     subwf_id = Column(
-        "subwf_id",
-        KeyInteger,
-        ForeignKey(Workflow.wf_id, ondelete="SET NULL"),
+        "subwf_id", KeyInteger, ForeignKey(Workflow.wf_id, ondelete="SET NULL"),
     )
     stdout_file = Column("stdout_file", String(255))
     stdout_text = Column("stdout_text", Text)
@@ -648,10 +635,7 @@ class Jobstate(Base):
     )
     state = Column("state", String(255), primary_key=True)
     timestamp = Column(
-        "timestamp",
-        TimestampType,
-        primary_key=True,
-        default=time.time(),
+        "timestamp", TimestampType, primary_key=True, default=time.time(),
     )
     jobstate_submit_seq = Column(
         "jobstate_submit_seq", Integer, nullable=False, primary_key=True
@@ -702,11 +686,7 @@ class Task(Base):
         ForeignKey(Workflow.wf_id, ondelete="CASCADE"),
         nullable=False,
     )
-    job_id = Column(
-        "job_id",
-        KeyInteger,
-        ForeignKey(Job.job_id, ondelete="SET NULL"),
-    )
+    job_id = Column("job_id", KeyInteger, ForeignKey(Job.job_id, ondelete="SET NULL"),)
     abs_task_id = Column("abs_task_id", String(255), nullable=False)
     transformation = Column("transformation", Text, nullable=False)
     argv = Column("argv", Text)
@@ -1139,6 +1119,5 @@ Trigger.__table_args__ = (
 )
 
 mapper(
-    _Trigger,
-    Trigger.__table__,
+    _Trigger, Trigger.__table__,
 )
