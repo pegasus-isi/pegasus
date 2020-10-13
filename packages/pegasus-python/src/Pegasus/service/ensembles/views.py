@@ -5,7 +5,7 @@ import subprocess
 from flask import g, make_response, request, url_for
 
 from Pegasus.db import connection
-from Pegasus.db.ensembles import EMError, Ensembles, EnsembleWorkflowStates
+from Pegasus.db.ensembles import EMError, Ensembles, EnsembleWorkflowStates, Trigger
 from Pegasus.service.ensembles import api, emapp
 from Pegasus.service.lifecycle import authenticate
 
@@ -220,3 +220,48 @@ def analyze(workflow):
         yield "pegasus-run failure detected\n"
     elif w.state == EnsembleWorkflowStates.FAILED:
         yield "Workflow failure detected\n"
+
+
+# --- trigger related routes ---------------------------------------------------
+@emapp.route("/ensembles/<string:ensemble>/triggers", methods=["GET"])
+def route_list_triggers(ensemble):
+    dao = Trigger(g.session)
+    triggers = dao.list_triggers_by_ensemble(g.user.username, ensemble)
+    return api.json_response([Trigger.get_object(t) for t in triggers])
+
+
+@emapp.route("/ensembles/<string:ensemble>/triggers/<string:trigger>", methods=["GET"])
+def route_get_trigger(ensemble, trigger):
+    raise NotImplementedError("TODO")
+
+
+@emapp.route("/ensembles/<string:ensemble>/triggers/<string:trigger>", methods=["POST"])
+def route_create_trigger(ensemble, trigger):
+    # verify that ensemble exists for user
+    e_dao = Ensembles(g.session)
+
+    # raises EMError code 404 if does not exist
+    ensemble_id = e_dao.get_ensemble(g.user.username, ensemble).id
+
+    # create trigger entry in db
+    t_dao = Trigger(g.session)
+    t_dao.insert_trigger(
+        ensemble=ensemble,
+        ensemble_id=ensemble_id,
+        trigger=trigger,
+        trigger_type=request.form.get("type"),
+        workflow_script=request.form.get("workflow_script"),
+        workflow_args=request.form.get("workflow_args"),
+        interval=request.form.get("interval"),
+        timeout=request.form.get("timeout"),
+    )
+
+    # TODO: what to return here
+    return "hello world!"
+
+
+@emapp.route(
+    "/ensembles/<string:ensemble>/triggers/<string:trigger>", methods=["DELETE"]
+)
+def route_delete_trigger(ensemble, trigger):
+    raise NotImplementedError("TODO")

@@ -1,20 +1,17 @@
 import argparse
 import logging
 import os
-import pickle
 import re
 import sys
 import time
-from multiprocessing.connection import Client
-from pathlib import Path
 from urllib import parse as urlparse
 
 import requests
 
 from Pegasus.command import Command, CompoundCommand, LoggingCommand
-from Pegasus.db.ensembles import EnsembleStates, EnsembleWorkflowStates
+from Pegasus.db.ensembles import EnsembleStates, EnsembleWorkflowStates, TriggerType
 from Pegasus.service.ensembles import emapp, manager
-from Pegasus.service.ensembles.trigger import TriggerManager, TriggerManagerMessage
+from Pegasus.service.ensembles.trigger import TriggerManager
 
 log = logging.getLogger(__name__)
 
@@ -520,251 +517,84 @@ class PriorityCommand(EnsembleClientCommand):
 
 
 # --- Trigger Commands ---------------------------------------------------------
+def to_seconds(value: str) -> int:
+    """Convert time unit given as '<int> <s|m|h|d>` to seconds.
+    :param value: input str
+    :type value: str
+    :raises ValueError: value must be given as '<int> <s|m|h|d>
+    :raises ValueError: value must be > 0s
+    :return: value given in seconds
+    :rtype: int
+    """
+
+    value = value.strip()
+    pattern = re.compile(r"\d+ *[sSmMhHdD]")
+    if not pattern.fullmatch(value):
+        raise ValueError(
+            "invalid interval: {}, interval must be given as '<int> <s|m|h|d>".format(
+                value
+            )
+        )
+
+    num = int(value[0 : len(value) - 1])
+    unit = value[-1].lower()
+
+    as_seconds = {"s": 1, "m": 60, "h": 60 * 60, "d": 60 * 60 * 24}
+
+    result = as_seconds[unit] * num
+
+    if result <= 0:
+        raise ValueError(
+            "invalid interval: {}, interval must be greater than 0 seconds".format(
+                result
+            )
+        )
+
+    return result
 
 
-class TriggerCommand:
-    """Base class for any Trigger related commands"""
-
-    description = None
-    usage = None
+class ChronTriggerCommand(EnsembleClientCommand):
+    description = "Create a time based workflow trigger"
+    usage = "Usage: pegasus-em chron-trigger ENSEMBLE TRIGGER INTERVAL WORKFLOW_SCRIPT [--timeout TIMEOUT] [--args ARG1 [ARG2 ...]]"
 
     def __init__(self):
+        EnsembleClientCommand.__init__(self)
         self.parser = argparse.ArgumentParser(
             usage=self.usage, description=self.description
         )
 
-        # authentication
-        self.endpoint = "http://127.0.0.1:%d/" % EM_PORT
-        self.username = emapp.config["USERNAME"]
-        if not self.username:
-            raise Exception("Specify USERNAME in configuration")
-        self.password = emapp.config["PASSWORD"]
-        if not self.password:
-            raise Exception("Specify PASSWORD in configuration")
-
-        # TriggerManager state (read only)
-        self._running_triggers_file = Path().home() / ".pegasus/triggers/running.p"
-
-    def _request(self, method: str, path: str, **kwargs):
-        """Handle http requests to ensemble manager flask app"""
-
-        headers = {"accept": "application/json"}
-        defaults = {"auth": (self.username, self.password), "headers": headers}
-        defaults.update(kwargs)
-        url = urlparse.urljoin(self.endpoint, path)
-        response = requests.request(method, url, **defaults)
-
-        if 200 <= response.status_code < 300:
-            return response
-
-        try:
-            result = response.json()
-            print("ERROR:", result["message"])
-        except Exception:
-            print("ERROR:", response.text)
-
-        exit(1)
-
-    def get(self, path: str, **kwargs):
-        """Make a GET req to the given path"""
-
-        return self._request("get", path, **kwargs)
-
-    def run(self):
-        """Command logic. To be overwritten in derived class"""
-        raise NotImplementedError
-
-    def main(self, args=None):
-        self.args = self.parser.parse_args(args)
-        self.run()
-
-    def send_msg(self, msg: TriggerManagerMessage):
-        """Send a TriggerManagerMessage to the TriggerManager
-
-        :param msg: message to be sent
-        :type msg: TriggerManagerMessage
-        :raises ConnectionRefusedError: unable to connect to TriggerManager daemon
-        """
-
-        try:
-            address = ("localhost", 3000)
-            conn = Client(address, authkey=b"123")
-            conn.send(msg)
-            conn.close()
-        except ConnectionRefusedError:
-            print(
-                "Unable to connect to TriggerManager. Has the Ensemble Manager been started?"
-            )
-
-
-class StopTriggerCommand(TriggerCommand):
-    """Command to stop a given trigger"""
-
-    description = "Stop a specific trigger"
-    usage = "Usage: pegasus-em stop-trigger ENSEMBLE TRIGGER_NAME"
-
-    def __init__(self):
-        TriggerCommand.__init__(self)
         self.parser.add_argument(
-            "ensemble", type=str, help="The ensemble that this trigger belongs to"
+            "ensemble", type=str, help="the ensemble to which this trigger belongs"
         )
 
         self.parser.add_argument(
-            "trigger_name", type=str, help="The name of the trigger to stop"
+            "trigger", type=str, help="the name of the trigger to be added"
         )
 
-    def run(self):
-        try:
-            with self._running_triggers_file.open("rb") as f:
-                running = pickle.load(f)
-
-            trigger = "::".join([self.args.ensemble, self.args.trigger_name])
-            if trigger not in running:
-                print("Invalid trigger: {} is not running".format(trigger))
-            else:
-                self.send_msg(
-                    TriggerManagerMessage(
-                        TriggerManagerMessage.STOP_TRIGGER, **vars(self.args)
-                    )
-                )
-        except FileNotFoundError:
-            print(
-                "Unable to locate TriggerManager file, has the ensemble manager been started?"
-            )
-
-
-class StartPatternIntervalTriggerCommand(TriggerCommand):
-    """Command to start a timed interval and file pattern based trigger"""
-
-    description = "Start a timed, pattern, based trigger"
-    usage = "pegasus-em trigger -e ENSEMBLE -t TRIGGER_NAME -p PREFIX -f FILE_PATTERN -w WORKFLOW_SCRIPT -i INTERVAL [-k TIMEOUT] [-a 'ADDITIONAL_ARGS']"
-
-    def __init__(self):
-        TriggerCommand.__init__(self)
-
-        # setup arg parser a little differently here so we can get required,
-        # and optional args to show up correctly in help
-        self.parser = argparse.ArgumentParser(
-            usage=self.usage, description=self.description, add_help=False
-        )
-        required = self.parser.add_argument_group("required arguments")
-        optional = self.parser.add_argument_group("optional arguments")
-
-        optional.add_argument(
-            "-h",
-            "--help",
-            action="help",
-            default=argparse.SUPPRESS,
-            help="show this help message and exit",
-        )
-
-        # using required named args instead of positional args to avoid misordering of positional args
-        required.add_argument(
-            "-e",
-            "--ensemble",
-            required=True,
-            type=str,
-            help="The name of the ensemble to which workflows started by this trigger will be added",
-        )
-
-        required.add_argument(
-            "-t",
-            "--trigger-name",
-            required=True,
-            type=str,
-            help="The a unique name that this trigger can be refferred by",
-        )
-
-        required.add_argument(
-            "-p",
-            "--workflow-name-prefix",
-            required=True,
-            type=str,
-            help="A prefix that will be attached to workflow names",
-        )
-
-        required.add_argument(
-            "-f",
-            "--file-pattern",
-            nargs="+",
-            required=True,
-            dest="file_patterns",
-            help="File pattern(s) that will be passed to glob.Glob to collect files",
-        )
-
-        required.add_argument(
-            "-w",
-            "--workflow-script",
-            required=True,
-            type=str,
-            help="The workflow script to be executed",
-        )
-
-        required.add_argument(
-            "-i",
-            "--interval",
-            required=True,
+        self.parser.add_argument(
+            "interval",
             type=str,
             help="Duration of each trigger interval. Must be given as '<int> <s|m|h|d>' "
             "and be greater than 0 seconds",
         )
 
-        optional.add_argument(
-            "-k",
+        self.parser.add_argument(
+            "-t",
             "--timeout",
-            required=False,
-            default=None,
             type=str,
-            help="Trigger timeout. Must be given as `<int> <s|m|h|d>` and be greater than 0 seconds."
-            "If not set, the trigger will cease on the next interval for "
-            "which no new input files have been detected",
+            help="Trigger timeout. Must be given as `<int> <s|m|h|d>` and be greater than 0 seconds.",
         )
 
-        optional.add_argument(
-            "-a",
-            "--additional-args",
-            required=False,
-            default=None,
-            type=str,
-            help="Additional args to be passed to the workflow script",
+        self.parser.add_argument(
+            "workflow_script", type=str, help="path to workflow script"
         )
 
-    @staticmethod
-    def to_seconds(value: str) -> int:
-        """Convert time unit given as '<int> <s|m|h|d>` to seconds.
+        self.parser.add_argument(
+            "-a", "--args", nargs="+", help="CLI args to be passed to WORKFLOW_SCRIPT",
+        )
 
-        :param value: input str
-        :type value: str
-        :raises ValueError: value must be given as '<int> <s|m|h|d>
-        :raises ValueError: value must be > 0s
-        :return: value given in seconds
-        :rtype: int
-        """
-
-        value = value.strip()
-        pattern = re.compile(r"\d+ *[sSmMhHdD]")
-        if not pattern.fullmatch(value):
-            raise ValueError(
-                "invalid interval: {}, interval must be given as '<int> <s|m|h|d>".format(
-                    value
-                )
-            )
-
-        num = int(value[0 : len(value) - 1])
-        unit = value[-1].lower()
-
-        as_seconds = {"s": 1, "m": 60, "h": 60 * 60, "d": 60 * 60 * 24}
-
-        result = as_seconds[unit] * num
-
-        if result <= 0:
-            raise ValueError(
-                "invalid interval: {}, interval must be greater than 0 seconds".format(
-                    result
-                )
-            )
-
-        return result
+    def parse(self, args):
+        self.args = self.parser.parse_args(args)
 
     def run(self):
         # ensure given ensemble is valid
@@ -784,18 +614,8 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
             )
             sys.exit(1)
 
-        # ensure that file patterns given as abspath
-        for fp in self.args.file_patterns:
-            if fp[0] != "/":
-                print(
-                    "Invalid file pattern: {}, must be an absolute path such as /home/scitech/*.txt".format(
-                        fp
-                    )
-                )
-                sys.exit(1)
-
         # get interval as seconds
-        interval = StartPatternIntervalTriggerCommand.to_seconds(self.args.interval)
+        interval = to_seconds(self.args.interval)
 
         if interval <= 0:
             print(
@@ -806,7 +626,7 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
         # get timeout as seconds
         timeout = None
         if self.args.timeout:
-            timeout = StartPatternIntervalTriggerCommand.to_seconds(self.args.timeout)
+            timeout = to_seconds(self.args.timeout)
 
             if timeout <= 0:
                 print(
@@ -815,40 +635,28 @@ class StartPatternIntervalTriggerCommand(TriggerCommand):
                     )
                 )
 
-        kwargs = vars(self.args)
-        # replace str interval with interval in seconds as int
-        kwargs["interval"] = interval
+        request = {
+            "workflow_script": self.args.workflow_script,
+            "workflow_args": self.args.args,
+            "interval": interval,
+            "timeout": timeout,
+            "type": TriggerType.CHRON.value,
+        }
 
-        # replace str timeout with timeout in seconds as int
-        kwargs["timeout"] = timeout
+        response = self.post(
+            "/ensembles/{e}/triggers/{t}".format(
+                e=self.args.ensemble, t=self.args.trigger
+            ),
+            data=request,
+        )
 
-        # set abspath for workflow script
-        kwargs["workflow_script"] = str(Path(self.args.workflow_script).resolve())
-
-        # send req to trigger manager
-        try:
-            # first ensure trigger doesn't already exist in this ensemble
-            with self._running_triggers_file.open("rb") as f:
-                running = pickle.load(f)
-
-            trigger = "::".join([self.args.ensemble, self.args.trigger_name])
-            if trigger in running:
-                print("Invalid trigger: {} is already running".format(trigger))
-            else:
-                self.send_msg(
-                    TriggerManagerMessage(
-                        TriggerManagerMessage.START_PATTERN_INTERVAL_TRIGGER, **kwargs
-                    )
-                )
-        except FileNotFoundError:
-            print(
-                "Unable to locate TriggerManager file, has the ensemble manager been started?"
-            )
+        print("this is the response I got: {}".format(response))
 
 
-# TODO: implement
-class TriggerStatusCommand(TriggerCommand):
-    pass
+# TODO: FilePatternTriggerCommand
+# TODO: StopTriggerCommand
+
+# TODO: TriggersCommand
 
 
 # ------------------------------------------------------------------------------
@@ -870,8 +678,7 @@ class EnsembleCommand(CompoundCommand):
         ("replan", ReplanCommand),
         ("rerun", RerunCommand),
         ("priority", PriorityCommand),
-        ("trigger", StartPatternIntervalTriggerCommand),
-        ("stop-trigger", StopTriggerCommand),
+        ("chron-trigger", ChronTriggerCommand),
     ]
     aliases = {
         "c": "create",

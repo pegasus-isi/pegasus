@@ -45,6 +45,8 @@ from Pegasus.db.ensembles import Ensemble as _Ensemble
 from Pegasus.db.ensembles import EnsembleStates
 from Pegasus.db.ensembles import EnsembleWorkflow as _EnsembleWorkflow
 from Pegasus.db.ensembles import EnsembleWorkflowStates
+from Pegasus.db.ensembles import Trigger as _Trigger
+from Pegasus.db.ensembles import TriggerStates, TriggerType
 
 __all__ = (
     "DBVersion",
@@ -67,6 +69,7 @@ __all__ = (
     "MasterWorkflowstate",
     "Ensemble",
     "EnsembleWorkflow",
+    "Trigger",
     "RCLFN",
     "RCPFN",
     "RCMeta",
@@ -1093,4 +1096,28 @@ mapper(
     _EnsembleWorkflow,
     EnsembleWorkflow.__table__,
     properties={"ensemble": relation(_Ensemble)},
+)
+
+
+class Trigger(Base):
+    """."""
+
+    __tablename__ = "trigger"
+    _id = Column("id", KeyInteger, primary_key=True)
+    ensemble_id = Column(
+        "ensemble_id", KeyInteger, ForeignKey(Ensemble.id), nullable=False
+    )
+    name = Column("name", String(100), nullable=False)
+    state = Column("state", Enum(*TriggerStates, name="trigger_state"), nullable=False)
+    args = Column("args", Text())
+    _type = Column("type", Enum(*[t.value for t in list(TriggerType)]), nullable=False)
+
+
+Trigger.__table_args__ = (
+    UniqueConstraint(Trigger.ensemble_id, Trigger.name, name="UNIQUE_TRIGGER"),
+    table_keywords,
+)
+
+mapper(
+    _Trigger, Trigger.__table__,
 )

@@ -1,6 +1,8 @@
+import json
 import os
 import re
 from datetime import datetime
+from enum import Enum
 
 from flask import url_for
 from sqlalchemy import sql
@@ -368,3 +370,140 @@ class Ensembles:
         f.write("--input-dir %s \n" % bundledir)
 
         f.write("exit $?")
+
+
+# --- workflow trigger ---------------------------------------------------------
+TriggerStates = States(["READY", "RUNNING", "FAILED", "STOPPED"])
+
+
+class TriggerType(Enum):
+    """Supported trigger types"""
+
+    CHRON = "CHRON"
+    FILE_PATTERN = "FILE_PATTERN"
+
+
+class Trigger:
+    """Trigger table object"""
+
+    def __init__(self, session):
+        self.session = session
+
+    def list_triggers(self):
+        """List all triggers"""
+        return self.session.query(Trigger).all()
+
+    def list_triggers_by_ensemble(self, username: str, ensemble: str) -> List[Trigger]:
+        """List all triggers belonging to a specific ensemble
+
+        :param username: name of user making request
+        :type username: str
+        :param ensemble: ensemble name
+        :type ensemble: str
+        :return: list of Triggers
+        :rtype: List[Trigger]
+        """
+        q = self.session.query(Trigger).filter(
+            Ensemble.username == username,
+            Ensemble.name == ensemble,
+            Ensemble.id == Trigger.ensemble_id,
+        )
+
+        return q.all()
+
+    def insert_trigger(
+        self,
+        ensemble: str,
+        ensemble_id: int,
+        trigger: str,
+        trigger_type: str,
+        workflow_script: str,
+        workflow_args: str,
+        **trigger_kwargs
+    ):
+        """Insert a trigger
+
+        :param ensemble: name of the ensemble this trigger belongs to
+        :type ensemble: str
+        :param ensemble_id: the id of the ensemble this trigger belongs to
+        :type ensemble_id: int
+        :param trigger: name of the trigger
+        :type trigger: str
+        :param trigger_type: the type of the trigger (e.g. CHRON, FILE_PATTERN, etc.)
+        :type trigger_type: str
+        :param workflow_script: the workflow generator & planning script
+        :type workflow_script: str
+        :param workflow_args: any command line args to be pass to the workflow_script
+        :type workflow_args: str
+        :param trigger_kwargs: any arguments specific to the trigger (e.g. interval=10s)
+        """
+
+        args = {
+            "workflow_script": workflow_script,
+            "workflow_args": workflow_args,
+            "trigger": trigger,
+            "ensemble": ensemble,
+        }
+        args.update(trigger_kwargs)
+        args = json.dumps(args)
+
+        # TODO: replace vanilla sql
+        stmt = """
+        INSERT INTO trigger (ensemble_id, name, state, args, type) 
+        VALUES(:ensemble_id, :name, :state, :args, :type);
+        """
+
+        self.session.execute(
+            stmt,
+            {
+                "ensemble_id": ensemble_id,
+                "name": trigger,
+                "state": "READY",
+                "args": args,
+                "type": trigger_type,
+            },
+        )
+        self.session.commit()
+
+    def update_state(self, ensemble_id: int, trigger_id: int, new_state: str):
+        """Update the state of a trigger
+
+        :param ensemble_id: id of the ensemble to which the trigger belongs
+        :type ensemble_id: int
+        :param trigger_id: id of the trigger
+        :type trigger_id: int
+        :param new_state: the new state the trigger will be updated to
+        :type new_state: str
+        """
+        # TODO: replace vanilla sql (don't use str format too!)
+        stmt = """
+        UPDATE trigger
+        SET state = "{state}"
+        WHERE ensemble_id = {ensemble_id} AND id = {trigger_id}
+        """.format(
+            state=new_state, ensemble_id=ensemble_id, trigger_id=trigger_id
+        )
+
+        self.session.execute(stmt)
+        self.session.commit()
+
+    def delete_trigger(self, ensemble_id: int, trigger: str):
+        """Delete a trigger from the database
+
+        :param ensemble_id: id of the ensemble to which the trigger belongs
+        :type ensemble: int
+        :param trigger: name of the trigger
+        :type trigger: str
+        """
+        raise NotImplementedError("TODO")
+
+    @staticmethod
+    def get_object(trigger):
+        return {
+            "id": trigger.id,
+            "ensemble_id": trigger.ensemble_id,
+            "name": trigger.name,
+            "state": trigger.state,
+            "args": trigger.args,
+            "type": trigger.type,
+        }
