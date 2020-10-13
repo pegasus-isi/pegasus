@@ -50,7 +50,7 @@ def test_get_name():
 def test_load_wf_inputs():
     with NamedTemporaryFile("w+") as f:
         yaml.dump({"s1": "abc123"}, f)
-
+        f.seek(0)
         assert load_wf_inputs(f.name) == {"s1": "abc123"}
 
 
@@ -69,6 +69,7 @@ def test_load_tr_specs():
 
     with NamedTemporaryFile(mode="w+") as f:
         yaml.dump(tr_specs, f)
+        f.seek(0)
         assert load_tr_specs(f.name) == tr_specs
 
 
@@ -1061,16 +1062,19 @@ def test_main(mocker):
             },
             cwl_wf_file,
         )
+        cwl_wf_file.seek(0)
 
         # write wf_input_spec_file
         yaml.dump(
             {"if": {"class": "File", "path": "/path/to/file.txt"}}, wf_input_spec_file
         )
+        wf_input_spec_file.seek(0)
 
         # write tr_spec_file
         yaml.dump(
             {"command": {"site": "condorpool", "is_stageable": False}}, tr_spec_file
         )
+        tr_spec_file.seek(0)
 
         mocker.patch("Pegasus.cli.pegasus-cwl-converter.parse_args", return_value=args)
 
