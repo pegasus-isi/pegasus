@@ -16,7 +16,7 @@ just a few computational tasks up to 1 million.
 Pegasus WMS bridges the scientific domain and the execution environment
 by automatically mapping high-level workflow descriptions onto
 distributed resources. It automatically locates the necessary input data
-and computational resources necessary for workflow execution. Pegasus
+and computational resources for workflow execution. Pegasus
 enables scientists to construct workflows in abstract terms without
 worrying about the details of the underlying execution environment or
 the particulars of the low-level specifications required by the
@@ -27,7 +27,7 @@ abstract workflow in a YAML format.
 
 Pegasus allows researchers to translate complex computational tasks into
 workflows that link and manage ensembles of dependent tasks and related
-data files. Pegasus automatically chains dependent tasks together, so
+data files. Pegasus automatically chains dependent tasks together so
 that a single scientist can complete complex computations that once
 required many different people. New users are encouraged to explore the
 :ref:`tutorial` to become familiar with how to operate
@@ -52,7 +52,7 @@ effectiveness.
 
 -  **Scalability**
 
-   Pegasus can easily scale both the size of the workflow, and the
+   Pegasus can easily scale both the size of the workflow and the
    resources that the workflow is distributed over. Pegasus runs
    workflows ranging from just a few computational tasks up to 1
    million. The number of resources involved in executing a workflow can
@@ -68,7 +68,7 @@ effectiveness.
 
 -  **Data Management**
 
-   Pegasus handles replica selection, data transfers and output
+   Pegasus handles replica selection, data transfers, and output
    registrations in data catalogs. These tasks are added to a workflow
    as auxiliary jobs by the Pegasus planner.
 
@@ -128,7 +128,7 @@ effectiveness.
 What are scientific workflows?
 ==============================
 
-A scientific workflow, or just workflow, is an abstraction used by scientists to
+A scientific workflow, or workflow, is an abstraction used by scientists to
 express an ensemble of complex, computational operations. In this context, 
 an operation refers to a computational act such as retrieving data from remote 
 storage services, executing applications, and transferring data products to 
@@ -189,7 +189,7 @@ the execution of such workflows. It provides guarantees that jobs comprising the
 workflow will be executed in a sequence that is a valid 
 `topological ordering <https://en.wikipedia.org/wiki/Topological_sorting>`_ of 
 the workflow. Furthermore, Pegasus provides a number of additional functionalities 
-such as the handling the movement of data products used/produced during the workflow 
+such as the handling of the movement of data products used/produced during the workflow 
 execution, fault tolerance, and monitoring.
 
 How to Convert Existing Applications Into a Workflow
@@ -252,7 +252,7 @@ outline what must be done to accomplish this translation:
    independent functions found in the previous step. In our example, we will have 
    three scripts, one with the function “preprocess”, one with the function 
    “findrange” and one with the function “analyze”;
-3. If the function which was into a script has arguments, the script must be 
+3. If the function which was converted into a script has arguments, the script must be 
    modified to read those arguments from a file(s).
 4. If the function which was converted into a script returns data, the script 
    must be modified to write that data to a file(s).
