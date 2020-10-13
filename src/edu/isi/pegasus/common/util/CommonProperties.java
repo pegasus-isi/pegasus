@@ -218,12 +218,12 @@ public class CommonProperties implements Cloneable {
         }
 
         // PM-1391 pick any properties from the environment
-        // and add/override them from those picked up from 
+        // and add/override them from those picked up from
         // file based property
         Properties envProperties = retrievePropertiesFromEnvironment();
-        // below does not work 
-        //this.m_props = addProperties(this.m_props, envProperties);
-        for(String key: envProperties.stringPropertyNames()){
+        // below does not work
+        // this.m_props = addProperties(this.m_props, envProperties);
+        for (String key : envProperties.stringPropertyNames()) {
             this.m_props.setProperty(key, envProperties.getProperty(key));
         }
 
