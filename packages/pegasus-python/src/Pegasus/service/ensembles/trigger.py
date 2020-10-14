@@ -5,19 +5,24 @@ import os
 import subprocess
 import threading
 import time
-from pathlib import Path
+import queue
 from typing import List, Optional
 
 from Pegasus import user
 from Pegasus.db import connection
 from Pegasus.db.ensembles import Trigger, TriggerType
 
-# --- setup dir for trigger related log files ----------------------------------
-_TRIGGER_DIR = Path().home() / ".pegasus/triggers"
 
 # --- manager ------------------------------------------------------------------
 class TriggerManager(threading.Thread):
-    def __init__(self,):
+    """
+    Manages workflow triggers. Work is done based on the contents of the
+    "trigger" table, and the state of each trigger in that table.
+    """
+
+    def __init__(
+        self,
+    ):
         threading.Thread.__init__(self, daemon=True)
 
         self.log = logging.getLogger("trigger.manager")
@@ -26,12 +31,15 @@ class TriggerManager(threading.Thread):
         # database to see if there is work to do (start, stop, restart) triggers
         self.polling_rate = 15
 
+        # references to currently running trigger threads
         # key: (<ensenble_id>, <trigger_name>), value: handle to trigger thread
         self.running = dict()
 
         self.trigger_dao = None
 
     def run(self):
+        """Trigger manager main loop."""
+
         self.log.info("trigger manager starting")
 
         while True:
@@ -47,49 +55,67 @@ class TriggerManager(threading.Thread):
                 self.log.info("processing {} triggers".format(len(triggers)))
 
                 for t in triggers:
+                    t_name = TriggerManager.get_tname(t)
                     if t.state == "READY":
-                        # self.start_trigger(t)
-                        print("see trigger in ready state")
-                    elif (
-                        t.state == "RUNNING"
-                        and TriggerManager.get_tname(t) not in self.running
-                    ):
-                        # restart
-                        """
-                        self.log.debug(
-                            "{} not in memory, restarting it".format(
-                                TriggerManager.get_tname(t)
-                            )
-                        )
                         self.start_trigger(t)
-                        """
-                        print("see trigger in RUNNING state, but not in memory")
+                    elif t.state == "RUNNING" and t_name not in self.running:
+                        # restart
+                        self.log.debug("{} not in memory, restarting it".format(t_name))
+                        self.start_trigger(t)
+                    elif t.state == "RUNNING" and not self.running[t_name].is_alive():
+                        # exited
+                        self.log.debug(
+                            "{} exited, removing references to it".format(t_name)
+                        )
+                        self.stop_trigger(t)
                     elif t.state == "STOPPED":
-                        # self.stop_trigger(t)
-                        print("see trigger in stopped state")
+                        self.stop_trigger(t)
             finally:
                 session.close()
 
             time.sleep(self.polling_rate)
 
     def start_trigger(self, trigger: Trigger):
+        """Given a trigger, start the appropriate trigger thread.
+
+        :param trigger: the trigger to be started
+        :type trigger: Trigger
+        """
+
         trigger_name = TriggerManager.get_tname(trigger)
         self.log.debug("starting {}".format(trigger_name))
-        kwargs = json.loads(trigger.args)
+
+        workflow = json.loads(trigger.workflow)
+        required_args = {
+            "ensemble_id": trigger.ensemble_id,
+            "trigger": trigger.name,
+            "workflow_script": workflow["script"],
+            "workflow_args": workflow["args"].split() if workflow["args"] else [],
+        }
+        trigger_specific_kwargs = json.loads(trigger.args)
 
         # create trigger thread
-        if trigger.type == TriggerType.CHRON:
-            t = ChronTrigger(**kwargs)
-        elif trigger.type == TriggerType.FILE_PATTERN:
-            t = FilePatternTrigger(**kwargs)
+        if trigger.type == TriggerType.CHRON.value:
+            t = ChronTrigger(**required_args, **trigger_specific_kwargs)
+
+        elif trigger.type == TriggerType.FILE_PATTERN.value:
+            t = FilePatternTrigger(**required_args, **trigger_specific_kwargs)
+
+        else:
+            raise NotImplementedError(
+                "unsupported trigger type: {}".format(trigger.type)
+            )
 
         # keep ref to trigger thread
         self.running[trigger_name] = t
+        t.start()
 
         # update state
         self.log.debug(
             "changing {name} state: {old_state} -> {new_state}".format(
-                name=trigger_name, old_state=trigger.state, new_state="RUNNING",
+                name=trigger_name,
+                old_state=trigger.state,
+                new_state="RUNNING",
             )
         )
         self.trigger_dao.update_state(
@@ -97,74 +123,98 @@ class TriggerManager(threading.Thread):
         )
 
     def stop_trigger(self, trigger: Trigger):
+        """Stop a trigger thread.
+
+        :param trigger: the trigger to be stopped
+        :type trigger: Trigger
+        """
         # using reference to trigger, tell trigger to shutdown
+        target_trigger = TriggerManager.get_tname(trigger)
+        self.log.debug("stopping {}".format(target_trigger))
+        self.running[target_trigger].shutdown()
+        del self.running[target_trigger]
 
         # remove entry from database
-        pass
+        self.trigger_dao.delete_trigger(trigger.ensemble_id, trigger.name)
 
     @staticmethod
     def get_tname(trigger: Trigger) -> tuple:
+        """Given a trigger object, get its name as a pair (<ensemble_id>, <trigger_name>)
+
+        :param trigger: the trigger
+        :type trigger: Trigger
+        :return: pair (<ensemble_id>, <trigger_name>)
+        :rtype: tuple
+        """
         return (trigger.ensemble_id, trigger.name)
 
 
 # trigger threads --------------------------------------------------------------
 class TriggerThread(threading.Thread):
+    """Base class for trigger thread implementations."""
+
     def __init__(
         self,
-        ensemble: str,
+        ensemble_id: int,
         trigger: str,
         workflow_script: str,
         workflow_args: List[str] = [],
     ):
 
-        threading.Thread.__init__(self, name="::".join(ensemble, trigger))
+        threading.Thread.__init__(self, name=(ensemble_id, trigger))
 
-        self.log = logging.getLogger("trigger.{}".format(self.name))
-        self.ensemble = ensemble
+        self.log = logging.getLogger("trigger.{}::{}".format(ensemble_id, trigger))
+        self.ensemble_id = ensemble_id
         self.trigger = trigger
-        self.workflow_cmd = [wf]
-        self.workflow_cmd.extend(workflow_args)
+        self.workflow_cmd = [workflow_script]
+        if workflow_args:
+            self.workflow_cmd.extend(workflow_args)
 
         # thread stopping condition
         self.stop_event = threading.Event()
 
     def shutdown(self):
-        """Gracefully shutdown this thread."""
+        """Gracefully shutdown this thread by setting the stop_event."""
         self.log.info("shutting down".format(self.name))
         self.stop_event.set()
 
 
 class ChronTrigger(TriggerThread):
+    """Submits a workflow to the ensemble manager at a specified interval."""
+
     def __init__(
         self,
-        ensemble: str,
+        ensemble_id: int,
         trigger: str,
         interval: int,
         timeout: int,
         workflow_script: str,
         workflow_args: Optional[List[str]] = None,
+        **kwargs
     ):
 
         TriggerThread.__init__(
             self,
-            ensemble=ensemble,
+            ensemble_id=ensemble_id,
             trigger=trigger,
             workflow_script=workflow_script,
             workflow_args=workflow_args,
         )
 
-        self.timeout = timeout
-        self.interval = interval
+        self.timeout = int(timeout)
+        self.interval = int(interval)
         self.elapsed = 0
 
     def __repr__(self):
         return "<ChronTrigger {} interval={}s>".format(self.name, self.interval)
 
     def run(self):
+        """ChronTrigger main loop."""
         try:
             self.log.debug("starting")
 
-            while not self.stop_even.isSet():
+            while not self.stop_event.isSet():
+                """
                 cmd = [
                     "pegasus-em",
                     "submit",
@@ -180,6 +230,8 @@ class ChronTrigger(TriggerThread):
                 else:
                     self.log.error("encountered an error executing: {}".format(cmd))
                     raise RuntimeError(cp.stderr.decode())
+                """
+                self.log.info("doing some work!!!!")
 
                 time.sleep(self.interval)
                 self.elapsed += self.interval
