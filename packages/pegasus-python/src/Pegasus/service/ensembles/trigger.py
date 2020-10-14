@@ -1,11 +1,8 @@
-import datetime
 import json
 import logging
 import os
-import subprocess
 import threading
 import time
-import queue
 from typing import List, Optional
 
 from Pegasus import user
@@ -20,9 +17,7 @@ class TriggerManager(threading.Thread):
     "trigger" table, and the state of each trigger in that table.
     """
 
-    def __init__(
-        self,
-    ):
+    def __init__(self,):
         threading.Thread.__init__(self, daemon=True)
 
         self.log = logging.getLogger("trigger.manager")
@@ -113,9 +108,7 @@ class TriggerManager(threading.Thread):
         # update state
         self.log.debug(
             "changing {name} state: {old_state} -> {new_state}".format(
-                name=trigger_name,
-                old_state=trigger.state,
-                new_state="RUNNING",
+                name=trigger_name, old_state=trigger.state, new_state="RUNNING",
             )
         )
         self.trigger_dao.update_state(

@@ -462,10 +462,7 @@ class Trigger:
                 "name": trigger,
                 "state": "READY",
                 "workflow": json.dumps(
-                    {
-                        "script": workflow_script,
-                        "args": workflow_args,
-                    }
+                    {"script": workflow_script, "args": workflow_args,}
                 ),
                 "args": json.dumps(trigger_kwargs),
                 "type": trigger_type,
