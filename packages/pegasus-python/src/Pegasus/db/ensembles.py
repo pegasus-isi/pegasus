@@ -389,6 +389,20 @@ class Trigger:
     def __init__(self, session):
         self.session = session
 
+    def get_trigger(self, ensemble_id: int, trigger_name: str):
+        """Get a specific trigger
+
+        :param ensemble_id: id of the nsemble that the trigger belongs to
+        :type ensemble_id: int
+        :param trigger_name: name of the trigger
+        :type trigger_name: str
+        """
+        return (
+            self.session.query(Trigger)
+            .filter_by(ensemble_id=ensemble_id, name=trigger_name)
+            .first()
+        )
+
     def list_triggers(self):
         """List all triggers"""
         return self.session.query(Trigger).all()
@@ -413,7 +427,6 @@ class Trigger:
 
     def insert_trigger(
         self,
-        ensemble: str,
         ensemble_id: int,
         trigger: str,
         trigger_type: str,
@@ -423,8 +436,6 @@ class Trigger:
     ):
         """Insert a trigger
 
-        :param ensemble: name of the ensemble this trigger belongs to
-        :type ensemble: str
         :param ensemble_id: the id of the ensemble this trigger belongs to
         :type ensemble_id: int
         :param trigger: name of the trigger
@@ -438,19 +449,10 @@ class Trigger:
         :param trigger_kwargs: any arguments specific to the trigger (e.g. interval=10s)
         """
 
-        args = {
-            "workflow_script": workflow_script,
-            "workflow_args": workflow_args,
-            "trigger": trigger,
-            "ensemble": ensemble,
-        }
-        args.update(trigger_kwargs)
-        args = json.dumps(args)
-
         # TODO: replace vanilla sql
         stmt = """
-        INSERT INTO trigger (ensemble_id, name, state, args, type) 
-        VALUES(:ensemble_id, :name, :state, :args, :type);
+        INSERT INTO trigger (ensemble_id, name, state, workflow, args, type) 
+        VALUES(:ensemble_id, :name, :state, :workflow, :args, :type);
         """
 
         self.session.execute(
@@ -459,7 +461,13 @@ class Trigger:
                 "ensemble_id": ensemble_id,
                 "name": trigger,
                 "state": "READY",
-                "args": args,
+                "workflow": json.dumps(
+                    {
+                        "script": workflow_script,
+                        "args": workflow_args,
+                    }
+                ),
+                "args": json.dumps(trigger_kwargs),
                 "type": trigger_type,
             },
         )
@@ -478,13 +486,14 @@ class Trigger:
         # TODO: replace vanilla sql (don't use str format too!)
         stmt = """
         UPDATE trigger
-        SET state = "{state}"
-        WHERE ensemble_id = {ensemble_id} AND id = {trigger_id}
-        """.format(
-            state=new_state, ensemble_id=ensemble_id, trigger_id=trigger_id
-        )
+        SET state = :state
+        WHERE ensemble_id = :ensemble_id AND id = :trigger_id
+        """
 
-        self.session.execute(stmt)
+        self.session.execute(
+            stmt,
+            {"state": new_state, "ensemble_id": ensemble_id, "trigger_id": trigger_id},
+        )
         self.session.commit()
 
     def delete_trigger(self, ensemble_id: int, trigger: str):
@@ -495,15 +504,31 @@ class Trigger:
         :param trigger: name of the trigger
         :type trigger: str
         """
-        raise NotImplementedError("TODO")
+
+        # TODO: replace vanilla sql
+        stmt = """
+        DELETE FROM trigger
+        WHERE ensemble_id = :ensemble_id AND name = :trigger
+        """
+
+        self.session.execute(stmt, {"ensemble_id": ensemble_id, "trigger": trigger})
+        self.session.commit()
 
     @staticmethod
     def get_object(trigger):
+        """Get trigger as dict
+
+        :param trigger: trigger object
+        :type trigger: Trigger
+        :return: trigger object as dict
+        :rtype: dict
+        """
         return {
             "id": trigger.id,
             "ensemble_id": trigger.ensemble_id,
             "name": trigger.name,
             "state": trigger.state,
-            "args": trigger.args,
+            "workflow": json.loads(trigger.workflow),
+            "args": json.loads(trigger.args),
             "type": trigger.type,
         }
