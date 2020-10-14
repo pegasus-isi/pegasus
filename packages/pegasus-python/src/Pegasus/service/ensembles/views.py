@@ -5,7 +5,13 @@ import subprocess
 from flask import g, make_response, request, url_for
 
 from Pegasus.db import connection
-from Pegasus.db.ensembles import EMError, Ensembles, EnsembleWorkflowStates, Trigger
+from Pegasus.db.ensembles import (
+    EMError,
+    Ensembles,
+    EnsembleWorkflowStates,
+    Trigger,
+    TriggerType,
+)
 from Pegasus.service.ensembles import api, emapp
 from Pegasus.service.lifecycle import authenticate
 
@@ -245,23 +251,49 @@ def route_create_trigger(ensemble, trigger):
 
     # create trigger entry in db
     t_dao = Trigger(g.session)
-    t_dao.insert_trigger(
-        ensemble=ensemble,
-        ensemble_id=ensemble_id,
-        trigger=trigger,
-        trigger_type=request.form.get("type"),
-        workflow_script=request.form.get("workflow_script"),
-        workflow_args=request.form.get("workflow_args"),
-        interval=request.form.get("interval"),
-        timeout=request.form.get("timeout"),
-    )
+
+    trigger_type = request.form.get("type")
+    kwargs = {
+        "ensemble_id": ensemble_id,
+        "trigger": trigger,
+        "trigger_type": trigger_type,
+        "workflow_script": request.form.get("workflow_script"),
+        "workflow_args": request.form.get("workflow_args"),
+    }
+
+    if trigger_type == TriggerType.CHRON.value:
+        # add chron trigger specific parameters
+        kwargs["interval"] = request.form.get("interval")
+        kwargs["timeout"] = request.form.get("timeout")
+    elif trigger_type == TriggerType.FILE_PATTERN.value:
+        # add file pattern specific parameters
+        pass
+    else:
+        raise NotImplementedError(
+            "encountered unsupported trigger type: {}".format(trigger_type)
+        )
+
+    t_dao.insert_trigger(**kwargs)
 
     # TODO: what to return here
-    return "hello world!"
+    return "hello world from create_trigger!"
 
 
 @emapp.route(
     "/ensembles/<string:ensemble>/triggers/<string:trigger>", methods=["DELETE"]
 )
 def route_delete_trigger(ensemble, trigger):
-    raise NotImplementedError("TODO")
+    # verify that ensemble exists for user
+    e_dao = Ensembles(g.session)
+
+    # raises EMError code 404 if does not exist
+    ensemble_id = e_dao.get_ensemble(g.user.username, ensemble).id
+
+    # update trigger state to be STOPPED so that the TriggerManager can
+    # handle it appropriately
+    t_dao = Trigger(g.session)
+    trigger_id = t_dao.get_trigger(ensemble_id, trigger).id
+    t_dao.update_state(ensemble_id, trigger_id)
+
+    # TODO: what to return here
+    return "hello world from delete_trigger!"
