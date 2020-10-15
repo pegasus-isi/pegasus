@@ -1709,7 +1709,14 @@ public class CPlanner extends Executable {
                 braindump.put("pegasus-run", pegasusRunInvocation);
                 ObjectMapper mapper = new ObjectMapper();
                 String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(braindump);
+
+                // only the following message has to be logged to stdout
+                // in json mode the logger has setup both stderr and stdout
+                // to go to stderr. so change it to stdout and then revert
+                // it after printing
+                mLogger.setWriters("stdout");
                 System.out.println(json);
+                mLogger.setWriters("stderr");
             } catch (IOException ex) {
                 mLogger.log(
                         "Unable to access braindump from dir " + options.getSubmitDirectory(),
