@@ -645,7 +645,7 @@ public class CPlanner extends Executable {
             invocation
                     .append(mProps.getBinDir())
                     .append(File.separator)
-                    .append(getPegasusRunInvocation());
+                    .append(getPegasusRunInvocation(this.mPOptions));
 
             boolean submit = submitWorkflow(invocation.toString());
             if (!submit) {
@@ -653,7 +653,7 @@ public class CPlanner extends Executable {
             }
         } else {
             // log the success message
-            this.logSuccessfulCompletion(emptyWorkflow);
+            this.logSuccessfulCompletion(options, emptyWorkflow);
         }
 
         // log some memory usage
@@ -1687,16 +1687,17 @@ public class CPlanner extends Executable {
     /**
      * Logs the successful completion message.
      *
+     * @param options options passed to the planner
      * @param emptyWorkflow indicates whether the workflow created was empty or not.
      */
-    private void logSuccessfulCompletion(boolean emptyWorkflow) {
+    private void logSuccessfulCompletion(PlannerOptions options, boolean emptyWorkflow) {
         StringBuffer message = new StringBuffer();
         message.append(
                         emptyWorkflow
                                 ? CPlanner.EMPTY_FINAL_WORKFLOW_MESSAGE
                                 : CPlanner.SUCCESS_MESSAGE)
                 .append("")
-                .append(getPegasusRunInvocation())
+                .append(getPegasusRunInvocation(options))
                 .append("\n\n");
         mLogger.log(message.toString(), LogManager.CONSOLE_MESSAGE_LEVEL);
     }
@@ -1704,23 +1705,29 @@ public class CPlanner extends Executable {
     /**
      * Returns the pegasus-run command on the workflow planned.
      *
+     * @param options options passed to the planner
      * @return the pegasus-run command
      */
-    private String getPegasusRunInvocation() {
-        StringBuffer result = new StringBuffer();
+    private String getPegasusRunInvocation(PlannerOptions options) {
+        StringBuilder result = new StringBuilder();
 
-        result.append("pegasus-run ");
+        result.append("pegasus-run").append(" ");
+
+        if (options.logFinalOutputAsJSON()) {
+            // PM-1475 forward the --json option to pegasus-run
+            result.append("--json").append(" ");
+        }
 
         // check if we need to add any other options to pegasus-run
-        for (Iterator<NameValue> it = mPOptions.getForwardOptions().iterator(); it.hasNext(); ) {
+        for (Iterator<NameValue> it = options.getForwardOptions().iterator(); it.hasNext(); ) {
             NameValue nv = it.next();
-            result.append(" --").append(nv.getKey());
+            result.append(" ").append("--").append(nv.getKey());
             if (nv.getValue() != null) {
                 result.append(" ").append(nv.getValue());
             }
         }
 
-        result.append(" ").append(mPOptions.getSubmitDirectory());
+        result.append(" ").append(options.getSubmitDirectory());
 
         return result.toString();
     }
