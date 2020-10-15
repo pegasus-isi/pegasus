@@ -1703,20 +1703,19 @@ public class CPlanner extends Executable {
             // read in the braindump file from the submit directory
             // log it on the stdout
             Map<String, String> braindump = new HashMap();
-            StringWriter sw = new StringWriter();
             try {
                 braindump = Braindump.loadFrom(new File(options.getSubmitDirectory()));
                 braindump.put("message", preamble);
                 braindump.put("pegasus-run", pegasusRunInvocation);
                 ObjectMapper mapper = new ObjectMapper();
-                mapper.writeValue(sw, braindump);
+                String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(braindump);
+                System.out.println(json);
             } catch (IOException ex) {
                 mLogger.log(
                         "Unable to access braindump from dir " + options.getSubmitDirectory(),
                         ex,
                         LogManager.ERROR_MESSAGE_LEVEL);
             }
-            System.out.println(sw.getBuffer());
         } else {
             StringBuffer message = new StringBuffer();
             message.append(preamble).append("").append(pegasusRunInvocation).append("\n\n");
