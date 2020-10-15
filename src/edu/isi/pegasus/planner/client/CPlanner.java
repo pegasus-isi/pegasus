@@ -13,6 +13,7 @@
  */
 package edu.isi.pegasus.planner.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.Boolean;
@@ -74,10 +75,12 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -1691,15 +1694,34 @@ public class CPlanner extends Executable {
      * @param emptyWorkflow indicates whether the workflow created was empty or not.
      */
     private void logSuccessfulCompletion(PlannerOptions options, boolean emptyWorkflow) {
-        StringBuffer message = new StringBuffer();
-        message.append(
-                        emptyWorkflow
-                                ? CPlanner.EMPTY_FINAL_WORKFLOW_MESSAGE
-                                : CPlanner.SUCCESS_MESSAGE)
-                .append("")
-                .append(getPegasusRunInvocation(options))
-                .append("\n\n");
-        mLogger.log(message.toString(), LogManager.CONSOLE_MESSAGE_LEVEL);
+        String pegasusRunInvocation = getPegasusRunInvocation(options);
+        String preamble =
+                emptyWorkflow ? CPlanner.EMPTY_FINAL_WORKFLOW_MESSAGE : CPlanner.SUCCESS_MESSAGE;
+
+        if (options.logFinalOutputAsJSON()) {
+            // PM-1475 log message as json on stdout
+            // read in the braindump file from the submit directory
+            // log it on the stdout
+            Map<String, String> braindump = new HashMap();
+            StringWriter sw = new StringWriter();
+            try {
+                braindump = Braindump.loadFrom(new File(options.getSubmitDirectory()));
+                braindump.put("message", preamble);
+                braindump.put("pegasus-run", pegasusRunInvocation);
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.writeValue(sw, braindump);
+            } catch (IOException ex) {
+                mLogger.log(
+                        "Unable to access braindump from dir " + options.getSubmitDirectory(),
+                        ex,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            }
+            System.out.println(sw.getBuffer());
+        } else {
+            StringBuffer message = new StringBuffer();
+            message.append(preamble).append("").append(pegasusRunInvocation).append("\n\n");
+            mLogger.log(message.toString(), LogManager.CONSOLE_MESSAGE_LEVEL);
+        }
     }
 
     /**
