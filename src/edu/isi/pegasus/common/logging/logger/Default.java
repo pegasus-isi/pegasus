@@ -109,6 +109,12 @@ public class Default extends LogManager {
 
     /** This is used to format the time stamp. */
     private static Currently mFormatter;
+    
+    /**
+     * The original system out and system err when the class is loaded
+     */
+    private static final PrintStream ORIGINAL_SYSTEM_OUT = System.out;
+    private static final PrintStream ORIGINAL_SYSTEM_ERR = System.err;
 
     /** The constructor. */
     public Default() {
@@ -486,9 +492,9 @@ public class Default extends LogManager {
         // check if value refers to any of the predefined streams
         OutputStream stream;
         if (out.equalsIgnoreCase("stdout")) {
-            stream = System.out;
+            stream = Default.ORIGINAL_SYSTEM_OUT;
         } else if (out.equalsIgnoreCase("stderr")) {
-            stream = System.err;
+            stream = Default.ORIGINAL_SYSTEM_ERR;
         } else {
             // try to create an output stream to file specified
             File f = new File(out);
