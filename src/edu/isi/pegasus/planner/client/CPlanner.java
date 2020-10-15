@@ -604,11 +604,11 @@ public class CPlanner extends Executable {
 
         // before generating the codes for the workflow check
         // for emtpy workflows
-        boolean emptyWorkflow = false;
+        boolean isWorkflowEmpty = false;
         if (finalDag.isEmpty()) {
             mLogger.log("Adding a noop job to the empty workflow ", LogManager.DEBUG_MESSAGE_LEVEL);
             finalDag.add(this.createNoOPJob(getNOOPJobName(finalDag)));
-            emptyWorkflow = true;
+            isWorkflowEmpty = true;
         }
 
         message = "Generating codes for the executable workflow";
@@ -653,7 +653,7 @@ public class CPlanner extends Executable {
             }
         } else {
             // log the success message
-            this.logSuccessfulCompletion(options, emptyWorkflow);
+            this.logSuccessfulCompletion(options, isWorkflowEmpty);
         }
 
         // log some memory usage
