@@ -65,6 +65,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
@@ -978,11 +979,20 @@ public class CPlanner extends Executable {
     public boolean submitWorkflow(PlannerOptions options, String invocation) {
 
         boolean result = false;
+        PrintStream currentOutStream = null;
         try {
             // set the callback and run the pegasus-run command
             Runtime r = Runtime.getRuntime();
 
             mLogger.log("Executing  " + invocation, LogManager.DEBUG_MESSAGE_LEVEL);
+            
+            if(options.logFinalOutputAsJSON()){
+                // we need to make sure logger stdout goes stdout now, 
+                currentOutStream = mLogger.getWriter(LogManager.STREAM_TYPE.stdout);
+                // set the stdout back tot the original stdout that was 
+                // when planner was invoked
+                mLogger.setWriter(LogManager.STREAM_TYPE.stdout, LogManager.ORIGINAL_SYSTEM_OUT);
+            }
             Process p = r.exec(invocation);
 
             // spawn off the gobblers with the already initialized default callback
@@ -1006,6 +1016,11 @@ public class CPlanner extends Executable {
 
             // get the status
             int status = p.waitFor();
+            
+            // PM-1475 set back to current output stream
+            if (currentOutStream != null && options.logFinalOutputAsJSON()){
+                mLogger.setWriter(LogManager.STREAM_TYPE.stdout, currentOutStream);
+            }
 
             mLogger.log(
                     "Submission of workflow exited with status " + status,
@@ -1020,6 +1035,7 @@ public class CPlanner extends Executable {
         } catch (InterruptedException ie) {
             // ignore
         }
+        
         return result;
     }
 
