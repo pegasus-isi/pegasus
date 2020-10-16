@@ -341,7 +341,12 @@ public class CPlanner extends Executable {
 
         // PM-1475 output redirection to stderr
         if (mPOptions.logFinalOutputAsJSON()) {
-            mLogger.setWriters("stderr");
+            // mLogger.setWriters("stderr");
+            try {
+                mLogger.setWriter(LogManager.STREAM_TYPE.stdout, System.err);
+            } catch (Exception e) {
+                mLogger.log("Unable to set logger stream ", e, LogManager.ERROR_MESSAGE_LEVEL);
+            }
         }
 
         // print help if asked for
@@ -966,12 +971,12 @@ public class CPlanner extends Executable {
     /**
      * Submits the workflow for execution using pegasus-run, a wrapper around pegasus-submit-dag.
      *
-     * @param options    the planner options
+     * @param options the planner options
      * @param invocation the pegasus run command
      * @return boolean indicating whether could successfully submit the workflow or not.
      */
     public boolean submitWorkflow(PlannerOptions options, String invocation) {
-        
+
         boolean result = false;
         try {
             // set the callback and run the pegasus-run command
@@ -1711,14 +1716,16 @@ public class CPlanner extends Executable {
                 braindump.put("pegasus-run", pegasusRunInvocation);
                 ObjectMapper mapper = new ObjectMapper();
                 String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(braindump);
-
+                System.out.println(json);
                 // only the following message has to be logged to stdout
                 // in json mode the logger has setup both stderr and stdout
                 // to go to stderr. so change it to stdout and then revert
                 // it after printing
+                /*
                 mLogger.setWriters("stdout");
                 System.out.println(json);
                 mLogger.setWriters("stderr");
+                */
             } catch (IOException ex) {
                 mLogger.log(
                         "Unable to access braindump from dir " + options.getSubmitDirectory(),
