@@ -95,6 +95,15 @@ public class Log4j extends LogManager {
     }
 
     /**
+     * Boolean indicating whether a timestamp should be logged when logging a message
+     *
+     * @param logTimestamp boolean
+     */
+    public void configure(boolean logTimestamp) {
+        // empty implementation for timebeing.
+    }
+
+    /**
      * Log a message that connects the parent entities with the children. For e.g. can we use to
      * create the log messages connecting the jobs with the workflow they are part of. They are by
      * default logged to INFO level

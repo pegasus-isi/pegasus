@@ -110,6 +110,9 @@ public class Default extends LogManager {
     /** This is used to format the time stamp. */
     private static Currently mFormatter;
 
+    /** tracks whether to log timestamp or not */
+    private boolean mPrefixTimestamp;
+
     /** The constructor. */
     public Default() {
         mDebugLevel = 0;
@@ -119,6 +122,7 @@ public class Default extends LogManager {
         // by default we are logging only CONSOLE
         // and all message less than WARN
         mMask = generateMask(WARNING_MESSAGE_LEVEL, false);
+        mPrefixTimestamp = true;
     }
 
     /**
@@ -129,6 +133,15 @@ public class Default extends LogManager {
      */
     public void initialize(LogFormatter formatter, Properties properties) {
         mLogFormatter = formatter;
+    }
+
+    /**
+     * Boolean indicating whether a timestamp should be logged when logging a message
+     *
+     * @param prefixTimestamp boolean
+     */
+    public void configure(boolean prefixTimestamp) {
+        mPrefixTimestamp = prefixTimestamp;
     }
 
     /**
@@ -378,7 +391,9 @@ public class Default extends LogManager {
             // we need to log the message
             // get hold of the writer to be used to logging the message.
             PrintStream writer = getPrintStream(level);
-            writer.print(Default.mFormatter.now());
+            if (mPrefixTimestamp) {
+                writer.print(Default.mFormatter.now());
+            }
             String prefix = getPrefix(type);
             message = prefix + " " + message;
             /*

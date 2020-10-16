@@ -166,6 +166,13 @@ public abstract class LogManager {
     public abstract void initialize(LogFormatter formatter, Properties properties);
 
     /**
+     * Boolean indicating whether a timestamp should be logged when logging a message
+     *
+     * @param prefixTimestamp boolean
+     */
+    public abstract void configure(boolean prefixTimestamp);
+
+    /**
      * Checks the destination location for existence, if it can be created, if it is writable etc.
      *
      * @param file is the file to write out to.
