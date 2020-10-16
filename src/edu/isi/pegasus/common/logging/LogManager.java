@@ -16,6 +16,7 @@ package edu.isi.pegasus.common.logging;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
@@ -60,13 +61,20 @@ import org.apache.log4j.Level;
  */
 public abstract class LogManager {
 
+    
+    /**
+     * The original system out and system err when the class is loaded
+     */
+    public static final PrintStream ORIGINAL_SYSTEM_OUT = System.out;
+    public static final PrintStream ORIGINAL_SYSTEM_ERR = System.err;
+    
     /** The version of the Logging API */
     public static final String VERSION = "2.1";
 
     /** Prefix for the property subset to use with the LogManager */
     public static final String PROPERTIES_PREFIX = "pegasus.log.manager";
 
-    /** Suffx for an event completion message. */
+    /** Suffix for an event completion message. */
     public static final String MESSAGE_DONE_PREFIX = " -DONE";
 
     // level  constants that loosely match Log4J and are used

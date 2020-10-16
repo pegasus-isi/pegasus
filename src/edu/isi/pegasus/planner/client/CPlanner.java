@@ -966,10 +966,12 @@ public class CPlanner extends Executable {
     /**
      * Submits the workflow for execution using pegasus-run, a wrapper around pegasus-submit-dag.
      *
+     * @param options    the planner options
      * @param invocation the pegasus run command
      * @return boolean indicating whether could successfully submit the workflow or not.
      */
-    public boolean submitWorkflow(String invocation) {
+    public boolean submitWorkflow(PlannerOptions options, String invocation) {
+        
         boolean result = false;
         try {
             // set the callback and run the pegasus-run command
