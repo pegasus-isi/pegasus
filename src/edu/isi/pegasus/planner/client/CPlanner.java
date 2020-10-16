@@ -985,13 +985,14 @@ public class CPlanner extends Executable {
             Runtime r = Runtime.getRuntime();
 
             mLogger.log("Executing  " + invocation, LogManager.DEBUG_MESSAGE_LEVEL);
-            
-            if(options.logFinalOutputAsJSON()){
-                // we need to make sure logger stdout goes stdout now, 
+
+            if (options.logFinalOutputAsJSON()) {
+                // we need to make sure logger stdout goes stdout now,
                 currentOutStream = mLogger.getWriter(LogManager.STREAM_TYPE.stdout);
-                // set the stdout back tot the original stdout that was 
-                // when planner was invoked
+                // set the stdout back tot the original stdout that was
+                // when planner was invoked. and also not prefix timestamps
                 mLogger.setWriter(LogManager.STREAM_TYPE.stdout, LogManager.ORIGINAL_SYSTEM_OUT);
+                mLogger.configure(false);
             }
             Process p = r.exec(invocation);
 
@@ -1016,10 +1017,11 @@ public class CPlanner extends Executable {
 
             // get the status
             int status = p.waitFor();
-            
+
             // PM-1475 set back to current output stream
-            if (currentOutStream != null && options.logFinalOutputAsJSON()){
+            if (currentOutStream != null && options.logFinalOutputAsJSON()) {
                 mLogger.setWriter(LogManager.STREAM_TYPE.stdout, currentOutStream);
+                mLogger.configure(true);
             }
 
             mLogger.log(
@@ -1035,7 +1037,7 @@ public class CPlanner extends Executable {
         } catch (InterruptedException ie) {
             // ignore
         }
-        
+
         return result;
     }
 
