@@ -62,9 +62,9 @@ import org.apache.log4j.Level;
 public abstract class LogManager {
 
     /** The original system out and system err when the class is loaded */
-    public static final PrintStream ORIGINAL_SYSTEM_OUT = System.out;
+    protected static final PrintStream ORIGINAL_SYSTEM_OUT = System.out;
 
-    public static final PrintStream ORIGINAL_SYSTEM_ERR = System.err;
+    protected static final PrintStream ORIGINAL_SYSTEM_ERR = System.err;
 
     /** The version of the Logging API */
     public static final String VERSION = "2.1";
