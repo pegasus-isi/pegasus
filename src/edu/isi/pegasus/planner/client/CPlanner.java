@@ -650,7 +650,7 @@ public class CPlanner extends Executable {
                     .append(File.separator)
                     .append(getPegasusRunInvocation(this.mPOptions));
 
-            boolean submit = submitWorkflow(invocation.toString());
+            boolean submit = submitWorkflow(options, invocation.toString());
             if (!submit) {
                 throw new RuntimeException("Unable to submit the workflow using pegasus-run");
             }
