@@ -109,7 +109,6 @@ public class Default extends LogManager {
 
     /** This is used to format the time stamp. */
     private static Currently mFormatter;
-    
 
     /** The constructor. */
     public Default() {
@@ -196,7 +195,8 @@ public class Default extends LogManager {
     }
 
     /**
-     * Sets both the output writer and the error writer to the same underlying writer.
+     * Sets both the output writer and the error writer to the same underlying writer identified by
+     * the filename passed.
      *
      * @param out is the name of a file to append to. Special names are <code>stdout</code> and
      *     <code>stderr</code>, which map to the system's respective streams.
@@ -207,6 +207,8 @@ public class Default extends LogManager {
             //            mOutStream    = (PrintStream)getPrintStream(out);
             //            mErrStream = mOutStream;
             PrintStream ps = (PrintStream) getPrintStream(out);
+            // we need to do this to get all stdout and stderr in a
+            // prescript invocation to the file
             System.setOut(ps);
             System.setErr(ps);
             mOutStream = System.out;
@@ -214,6 +216,48 @@ public class Default extends LogManager {
         } catch (IOException e) {
             // log on the existing streams !!!
             log("Unable to set streams for logging ", e, this.WARNING_MESSAGE_LEVEL);
+        }
+    }
+
+    /**
+     * Sets the passed printstream for a particular stream type.
+     *
+     * @param type the stream type to which the print stream should be set
+     * @param ps the print stream
+     */
+    @Override
+    public void setWriter(STREAM_TYPE type, PrintStream ps) {
+        switch (type) {
+            case stdout:
+                mOutStream = ps;
+                break;
+
+            case stderr:
+                mErrStream = ps;
+                break;
+
+            default:
+                throw new RuntimeException("Unsupported stream type " + type);
+        }
+    }
+
+    /**
+     * Return the print stream corresponding to a particular type
+     *
+     * @param type the stream type
+     * @return the print stream
+     */
+    @Override
+    public PrintStream getWriter(STREAM_TYPE type) {
+        switch (type) {
+            case stdout:
+                return mOutStream;
+
+            case stderr:
+                return mErrStream;
+
+            default:
+                throw new RuntimeException("Unsupported stream type " + type);
         }
     }
 

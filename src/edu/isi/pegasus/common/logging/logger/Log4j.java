@@ -15,6 +15,7 @@ package edu.isi.pegasus.common.logging.logger;
 
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -195,6 +196,31 @@ public class Log4j extends LogManager {
      */
     public void setWriters(String out) {
         throw new UnsupportedOperationException("Log4jLogger does not support setWriters(out)");
+    }
+
+    /**
+     * Sets the passed printstream for a particular stream type. Not Supported for Log4j
+     *
+     * @param type the stream type to which the print stream should be set
+     * @param ps the print stream
+     */
+    public void setWriter(STREAM_TYPE type, PrintStream ps) {
+        throw new UnsupportedOperationException(
+                "Not supported yet."); // To change body of generated methods, choose Tools |
+        // Templates.
+    }
+
+    /**
+     * Return the print stream corresponding to a particular type Not Supported for Log4j
+     *
+     * @param type the stream type
+     * @return the print stream
+     */
+    @Override
+    public PrintStream getWriter(STREAM_TYPE type) {
+        throw new UnsupportedOperationException(
+                "Not supported yet."); // To change body of generated methods, choose Tools |
+        // Templates.
     }
 
     /**

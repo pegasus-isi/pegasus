@@ -61,13 +61,11 @@ import org.apache.log4j.Level;
  */
 public abstract class LogManager {
 
-    
-    /**
-     * The original system out and system err when the class is loaded
-     */
+    /** The original system out and system err when the class is loaded */
     public static final PrintStream ORIGINAL_SYSTEM_OUT = System.out;
+
     public static final PrintStream ORIGINAL_SYSTEM_ERR = System.err;
-    
+
     /** The version of the Logging API */
     public static final String VERSION = "2.1";
 
@@ -112,6 +110,12 @@ public abstract class LogManager {
 
     /** The Log4j logger. */
     public static final String LOG4J_LOGGER = "Log4j";
+
+    /** the type of stream types to which log messages can be directed to */
+    public static enum STREAM_TYPE {
+        stdout,
+        stderr
+    };
 
     /**
      * The debug level. Higher the level the more the detail is logged. At present can be 0 or 1.
@@ -288,12 +292,29 @@ public abstract class LogManager {
     public abstract int getLevel();
 
     /**
-     * Sets both the output writer and the error writer to the same underlying writer.
+     * Sets both the output writer and the error writer to the same underlying writer identified by
+     * the filename passed.
      *
      * @param out is the name of a file to append to. Special names are <code>stdout</code> and
      *     <code>stderr</code>, which map to the system's respective streams.
      */
     public abstract void setWriters(String out);
+
+    /**
+     * Sets the passed printstream for a particular stream type.
+     *
+     * @param type the stream type to which the print stream should be set
+     * @param ps the print stream
+     */
+    public abstract void setWriter(STREAM_TYPE type, PrintStream ps);
+
+    /**
+     * Return the print stream corresponding to a particular type
+     *
+     * @param type the stream type
+     * @return the print stream
+     */
+    public abstract PrintStream getWriter(STREAM_TYPE type);
 
     /**
      * Log the message represented by the internal log buffer. The log buffer is populated via the
