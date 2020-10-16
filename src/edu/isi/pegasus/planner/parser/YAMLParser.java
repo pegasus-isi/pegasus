@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.networknt.schema.JsonMetaSchema;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -31,6 +32,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * An abstract base class for YAML Parser invoked from catalog implementations
@@ -44,6 +47,21 @@ public abstract class YAMLParser {
 
     /** Holder for various Pegasus properties.. */
     protected final PegasusProperties mProps;
+
+    /** Keeps track of log4j's root logger as singleton. */
+    private static final Logger SCHEMA_LOGGER;
+
+    /** configure log4j to only log error messages for schema validation. */
+    static {
+        if ((SCHEMA_LOGGER = Logger.getLogger(JsonMetaSchema.class)) != null) {
+            // PM-1687 only log error, as otherwise warnings are logged that
+            // can be ignored. for example
+            // [main] WARN schema.JsonMetaSchema - Unknown keyword $defs - you should define your
+            // own Meta Schema. If the keyword is irrelevant for validation, just use a
+            // NonValidationKeyword
+            SCHEMA_LOGGER.setLevel(Level.ERROR);
+        }
+    }
 
     public YAMLParser(PegasusBag bag) {
         mLogger = bag.getLogger();
