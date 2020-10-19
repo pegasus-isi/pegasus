@@ -404,7 +404,7 @@ The labels for the jobs in the workflow are specified by associated
 **pegasus** profile keys with the jobs during the DAX generation
 process. The user can choose which profile key to use for labeling the
 workflow. By default, it is assumed that the user is using the PEGASUS
-profile key label to associate the labels. To use another key, in the
+profile key ``label`` to associate the labels. To use another key, in the
 **pegasus** namespace the user needs to set the following property
 
 -  pegasus.clusterer.label.key

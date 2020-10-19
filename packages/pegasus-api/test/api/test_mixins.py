@@ -328,6 +328,7 @@ class TestProfileMixin:
                 project="-A project_name",
                 boto_config="/home/myuser/.boto",
                 container_arguments="--shm-size",
+                label="nodeLabel",
             )
         ) == id(obj)
 
@@ -373,6 +374,7 @@ class TestProfileMixin:
                 "project": "-A project_name",
                 "BOTO_CONFIG": "/home/myuser/.boto",
                 "container.arguments": "--shm-size",
+                "label": "nodeLabel",
             }
         }
 
