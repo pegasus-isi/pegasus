@@ -1004,9 +1004,19 @@ public class CPlanner extends Executable {
             // error stream is also logged to console, as 5.0 pegasus-run always
             // logs to stderr and reserves stdout for it's --json option
             StreamGobbler eps =
-                    new StreamGobbler(
-                            p.getErrorStream(),
-                            new DefaultStreamGobblerCallback(LogManager.CONSOLE_MESSAGE_LEVEL));
+                    (options.logFinalOutputAsJSON())
+                            ?
+                            // PM-1475  -json option we need to log error stream to stderr
+                            // with pegasus logger it has to go as warning level then, as
+                            // console is always logged to stdout
+                            new StreamGobbler(
+                                    p.getErrorStream(),
+                                    new DefaultStreamGobblerCallback(
+                                            LogManager.WARNING_MESSAGE_LEVEL))
+                            : new StreamGobbler(
+                                    p.getErrorStream(),
+                                    new DefaultStreamGobblerCallback(
+                                            LogManager.CONSOLE_MESSAGE_LEVEL));
 
             ips.start();
             eps.start();
