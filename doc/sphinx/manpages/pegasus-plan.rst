@@ -14,7 +14,8 @@ runs Pegasus to generate the executable workflow
                    [-C style[,style…]]
                    [--dir dir]
                    [--force] [--force-replan]
-                   [--inherited-rc-files file1[,file2…]] [-j prefix]
+                   [--inherited-rc-files file1[,file2…]]
+                   [-j prefix] [--json]
                    [-n][-I input-dir1[,input-dir2…]][-O output-dir]
                    [-o site1[,site2…]]
                    [-s site1[,site2…]]
@@ -315,6 +316,13 @@ Any option will be displayed with its long options synonym(s).
 **-j** *prefix*; \ **--job-prefix** *prefix*
    The job prefix to be applied for constructing the filenames for the
    job submit files.
+
+**-J**; \ **--json**
+   With this option enabled, all logs are directed to stderr. On successful
+   planning, a json formatted message containing the contents of the
+   braindump file for the planned workflow, is written out to the stdout.
+   Also, if both --json and --submit are set, then pegasus-run is invoked
+   by pegasus-plan with the corresponding --json option.
 
 **-n**; \ **--nocleanup**
    This option is deprecated. Use --cleanup none instead.
