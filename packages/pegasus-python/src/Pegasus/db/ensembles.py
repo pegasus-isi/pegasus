@@ -389,6 +389,16 @@ class Trigger:
     def __init__(self, session):
         self.session = session
 
+    def get_ensemble_name(self, ensemble_id: int):
+        """Given an ensemble id, get its name
+
+        :param ensemble_id: id of target ensemble
+        :type ensemble_id: int
+        :return: name of target ensemble
+        :rtype: str
+        """
+        return self.session.query(Ensemble).filter_by(id=ensemble_id).first().name
+
     def get_trigger(self, ensemble_id: int, trigger_name: str):
         """Get a specific trigger
 
