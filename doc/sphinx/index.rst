@@ -22,7 +22,6 @@ Welcome to Pegasus WMS's documentation!
     user-guide/containers.rst
     user-guide/data-transfers.rst
     user-guide/optimization.rst
-    user-guide/best-practices-code.rst
     user-guide/migration.rst
     user-guide/glossary.rst
 
