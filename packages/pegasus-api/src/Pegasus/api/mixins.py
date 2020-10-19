@@ -455,6 +455,7 @@ class ProfileMixin:
         project="project",
         boto_config="BOTO_CONFIG",
         container_arguments="container.arguments",
+        label="label",
     )
     def add_pegasus_profile(
         self,
@@ -500,7 +501,8 @@ class ProfileMixin:
         queue: str = None,
         project: str = None,
         boto_config: str = None,
-        container_arguments: str = None
+        container_arguments: str = None,
+        label: str = None
     ):
         """Add Pegasus profile(s).
 
@@ -588,6 +590,8 @@ class ProfileMixin:
         :type boto_config: str, optional
         :param container_arguments: additional cli arguments that will be added to the :code:`docker container run` or :code:`singularity exec` command
         :type container_arguments: str, optional
+        :param label: associate a label to a job; used for label based clustering
+        :type label: str, optional
         """
         ...
 
