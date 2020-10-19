@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import subprocess
@@ -267,7 +268,9 @@ def route_create_trigger(ensemble, trigger):
         kwargs["timeout"] = request.form.get("timeout")
     elif trigger_type == TriggerType.FILE_PATTERN.value:
         # add file pattern specific parameters
-        pass
+        kwargs["interval"] = request.form.get("interval")
+        kwargs["timeout"] = request.form.get("timeout")
+        kwargs["file_patterns"] = json.loads(request.form.get("file_patterns"))
     else:
         raise NotImplementedError(
             "encountered unsupported trigger type: {}".format(trigger_type)
