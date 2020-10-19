@@ -1,8 +1,13 @@
+import datetime
 import json
 import logging
 import os
+import shutil
+import subprocess
 import threading
 import time
+from glob import glob
+from pathlib import Path
 from typing import List, Optional
 
 from Pegasus import user
@@ -83,6 +88,7 @@ class TriggerManager(threading.Thread):
         workflow = json.loads(trigger.workflow)
         required_args = {
             "ensemble_id": trigger.ensemble_id,
+            "ensemble": self.trigger_dao.get_ensemble_name(trigger.ensemble_id),
             "trigger": trigger.name,
             "workflow_script": workflow["script"],
             "workflow_args": workflow["args"].split() if workflow["args"] else [],
@@ -149,6 +155,7 @@ class TriggerThread(threading.Thread):
     def __init__(
         self,
         ensemble_id: int,
+        ensemble: str,
         trigger: str,
         workflow_script: str,
         workflow_args: List[str] = [],
@@ -158,6 +165,7 @@ class TriggerThread(threading.Thread):
 
         self.log = logging.getLogger("trigger.{}::{}".format(ensemble_id, trigger))
         self.ensemble_id = ensemble_id
+        self.ensemble = ensemble
         self.trigger = trigger
         self.workflow_cmd = [workflow_script]
         if workflow_args:
@@ -178,6 +186,7 @@ class ChronTrigger(TriggerThread):
     def __init__(
         self,
         ensemble_id: int,
+        ensemble: str,
         trigger: str,
         interval: int,
         timeout: int,
@@ -189,12 +198,13 @@ class ChronTrigger(TriggerThread):
         TriggerThread.__init__(
             self,
             ensemble_id=ensemble_id,
+            ensemble=ensemble,
             trigger=trigger,
             workflow_script=workflow_script,
             workflow_args=workflow_args,
         )
 
-        self.timeout = int(timeout)
+        self.timeout = int(timeout) if timeout else None
         self.interval = int(interval)
         self.elapsed = 0
 
@@ -207,31 +217,34 @@ class ChronTrigger(TriggerThread):
             self.log.debug("starting")
 
             while not self.stop_event.isSet():
-                """
                 cmd = [
                     "pegasus-em",
                     "submit",
-                    self.ensemble,
-                    "{}_{}".format(self.trigger, datetime.datetime.now().timestamp()),
-                    self.workflow_cmd,
+                    "{ens}.{tr}_{ts}".format(
+                        ens=self.ensemble,
+                        tr=self.trigger,
+                        ts=int(datetime.datetime.now().timestamp()),
+                    ),
                 ]
+                cmd.extend(self.workflow_cmd)
 
                 cp = subprocess.run(cmd, stderr=subprocess.PIPE)
 
                 if cp.returncode == 0:
                     self.log.info("executed cmd: {}".format(cmd))
                 else:
-                    self.log.error("encountered an error executing: {}".format(cmd))
+                    self.log.error("encountered an error executing cmd: {}".format(cmd))
                     raise RuntimeError(cp.stderr.decode())
-                """
+
                 self.log.info("doing some work!!!!")
 
                 time.sleep(self.interval)
-                self.elapsed += self.interval
+                if self.timeout:
+                    self.elapsed += self.interval
 
-                if self.elapsed >= self.timeout:
-                    self.log.debug("timed out")
-                    break
+                    if self.elapsed >= self.timeout:
+                        self.log.debug("timed out")
+                        break
 
         except Exception:
             self.log.exception("error")
@@ -239,5 +252,118 @@ class ChronTrigger(TriggerThread):
             self.log.debug("exited")
 
 
-class FilePatternTrigger(threading.Thread):
-    pass
+class FilePatternTrigger(TriggerThread):
+    """
+    Collects files based on the given filepatterns and submits workflow to the
+    ensemble manager at a specified interval.
+    """
+
+    def __init__(
+        self,
+        ensemble_id: str,
+        ensemble: str,
+        trigger: str,
+        interval: int,
+        timeout: int,
+        file_patterns: List[str],
+        workflow_script: str,
+        workflow_args: Optional[List[str]] = None,
+        **kwargs
+    ):
+        TriggerThread.__init__(
+            self,
+            ensemble_id=ensemble_id,
+            ensemble=ensemble,
+            trigger=trigger,
+            workflow_script=workflow_script,
+            workflow_args=workflow_args,
+        )
+
+        self.timeout = int(timeout) if timeout else None
+        self.interval = int(interval)
+        self.elapsed = 0
+        self.file_patterns = file_patterns
+
+    def __repr__(self):
+        return "<FilePatternTrigger {} interval={}s patterns={}>".format(
+            self.name, self.interval, self.file_patterns
+        )
+
+    def run(self):
+        """FilePatternTrigger main loop."""
+        try:
+            self.log.debug("starting")
+
+            while not self.stop_event.isSet():
+
+                files = self.collect_and_move_files()
+
+                if len(files) > 0:
+                    cmd = [
+                        "pegasus-em",
+                        "submit",
+                        "{ens}.{tr}_{ts}".format(
+                            ens=self.ensemble,
+                            tr=self.trigger,
+                            ts=int(datetime.datetime.now().timestamp()),
+                        ),
+                    ]
+                    cmd.extend(self.workflow_cmd)
+                    cmd.append("--inputs")
+                    cmd.extend(files)
+
+                    cp = subprocess.run(cmd, stderr=subprocess.PIPE)
+
+                    if cp.returncode == 0:
+                        self.log.info("executed cmd: {}".format(cmd))
+                    else:
+                        self.log.error(
+                            "encountered error executing cmd: {}".format(cmd)
+                        )
+                        raise RuntimeError(cp.stderr.decode())
+
+                self.log.info("doing some work!!")
+
+                time.sleep(self.interval)
+                if self.timeout:
+                    self.elapsed += self.interval
+
+                    if self.elapsed >= self.timeout:
+                        self.log.debug("timed out")
+                        break
+
+        except Exception:
+            self.log.exception("error")
+        finally:
+            self.log.debug("exited")
+
+    def collect_and_move_files(self) -> List[str]:
+        """
+        Collect absolute paths of all files that match the given file
+        patterns, then move those files into a newly created subdirectory
+        meant for previously processed files. For example, if the patterns
+        ["/inputs/*.txt", "/inputs2/*.txt] are given, and "/inputs/f1.txt" and
+        "/inputs2/f2.txt" exist, the result will be that those two paths are returned
+        AND those two files will be moved to "/inputs/processed" and "/inputs2/processed"
+        respectively. This is to avoid looping over an increasingly larger set
+        of files as more inputs arrive.
+
+        :return: list of paths to matched files
+        :rtype: List[str]
+        """
+        collected = []
+        for pattern in self.file_patterns:
+            # create dir to move files to if it doesn't already exist
+            parent_dir = Path(pattern).parent.resolve()
+            processed_dir = parent_dir / "processed"
+            processed_dir.mkdir(parents=False, exist_ok=True)
+
+            for match in glob(pattern):
+                # move file into processed dir and add that path
+                f = Path(match).resolve()
+                dst = processed_dir / f.name
+
+                shutil.move(str(f), str(dst))
+                collected.append(str(dst))
+
+        return collected
