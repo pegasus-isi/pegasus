@@ -17,8 +17,8 @@ Description
 
 **pegasus-db-admin** is used to manage Pegasus databases. The tool can
 operate directly over a database URL, or can read configuration
-parameters from the properties file or a submit directory. In the later
-case, a database type should be provided to indicate which properties
+parameters from a properties file or a submit directory. In the latter,
+a database type should be provided to indicate which properties
 should be used to connect to the database. For example, the tool will
 seek for pegasus.catalog.replica.db.\* properties to connect to the
 JDBCRC database; or seek for pegasus.catalog.master.url (or
@@ -26,7 +26,7 @@ pegasus.dashboard.output, which is deprecated) property to connect to
 the MASTER database; or seek for the pegasus.catalog.workflow.url (or
 pegasus.monitord.output, which is deprecated) property to connect to the
 WORKFLOW database. If none of these properties are found, the tool will
-connect to the default database
+connect to the default database.
 
 The **pegasus-db-admin** tool should always be followed by a **COMMAND**
 listed below. To see the available options for each command, please use
@@ -41,9 +41,8 @@ Commands
 **create DATABASE_URL**
    Creates Pegasus databases from new or empty databases, or updates
    current database to the latest version. If a database already exists,
-   it will create a backup (SQLite only) of the current database in the
-   database folder as a 3-digit integer (e.g., workflow.db.000). Pegasus
-   databases can be created by 1) passing a database URL, 2) from the
+   it will create a backup of the current database in the database folder.
+   Pegasus databases can be created by 1) passing a database URL, 2) from the
    properties file, and 3) from the submit directory. Note that if the
    properties file or the submit directory is used, a database type
    (JDBCRC, MASTER, or WORKFLOW) should be provided.
@@ -51,21 +50,19 @@ Commands
 **update [-a] [-V] DATABASE_URL**
    Updates the database to the latest or a given Pegasus version
    provided with the **-V** or **--version** option. If a database
-   already exists, it will create a backup (SQLite only) of the current
-   database in the database folder as a 3-digit integer (e.g.,
-   workflow.db.000). The **-a** or **--all** option will also update
-   databases from completed workflows in the MASTER database.
+   already exists, it will create a backup of the current
+   database in the database folder. The **-a** or **--all** option will
+   also update databases from completed workflows in the MASTER database.
 
 **downgrade [-a] [-V] DATABASE_URL**
    Downgrades the database to the previous or a given Pegasus version
    provided with the **-V** or **--version** option. If a database
-   already exists, it will create a backup (SQLite only) of the current
-   database in the database folder as a 3-digit integer (e.g.,
-   workflow.db.000). The **-a** or **--all** option will also downgrade
+   already exists, it will create a backup of the current database in
+   the database folder. The **-a** or **--all** option will also downgrade
    databases from completed workflows in the MASTER database.
 
 **check [-V] [-e] DATABASE_URL**
-   Verifies if the database is updated to the latest or a given Pegasus
+   Verifies whether the database is updated to the latest or a given Pegasus
    version provided with the **-V** or **--version** option.
 
 **version [-V] [-e] DATABASE_URL**
@@ -126,15 +123,15 @@ Database Upgrades From Pegasus 4.5.X to Pegasus current version
 
 Databases will be automatically updated when **pegasus-plan** is
 invoked, but WORKFLOW databases from past runs may not be updated
-accordingly. Since Pegasus 4.6.0, the pegasus-db-admin tool provides an
-option to automatically update all databases from completed workflows in
+accordingly. The pegasus-db-admin tool provides an option to
+automatically update all databases from completed workflows in
 the MASTER database. To enable this option, run the following command:
 
 ::
 
    $ pegasus-db-admin update -a
    Your database has been updated.
-   Your database is compatible with Pegasus version: 4.7.0
+   Your database is compatible with Pegasus version: 5.0.0
 
    Verifying and updating workflow databases:
    21/21
@@ -152,9 +149,6 @@ the MASTER database. To enable this option, run the following command:
 This option generates a log file for succeeded operations, and a log
 file for failed operations. Each file contains the list of URLs of the
 succeeded/failed databases.
-
-Note that, if no URL is provided, the tool will create/use a SQLite
-
 
 
 Examples
