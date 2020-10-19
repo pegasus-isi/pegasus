@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import os
 import re
@@ -50,8 +51,8 @@ class EnsembleClientCommand(Command):
     def get(self, path, **kwargs):
         return self._request("get", path, **kwargs)
 
-    def post(self, path, **kwargs):
-        return self._request("post", path, **kwargs)
+    def post(self, path, json=None, **kwargs):
+        return self._request("post", path, json=json, **kwargs)
 
     def delete(self, path, **kwargs):
         return self._request("delete", path, **kwargs)
@@ -597,22 +598,7 @@ class ChronTriggerCommand(EnsembleClientCommand):
         self.args = self.parser.parse_args(args)
 
     def run(self):
-        # ensure given ensemble is valid
-        resp = self.get("/ensembles")
-
-        found = False
-        for r in resp.json():
-            if r["name"] == self.args.ensemble:
-                found = True
-                break
-
-        if not found:
-            print(
-                "Ensemble: {0} has not yet been created. Use `pegasus-em create {0}`".format(
-                    self.args.ensemble
-                )
-            )
-            sys.exit(1)
+        is_args_valid = True
 
         # get interval as seconds
         interval = to_seconds(self.args.interval)
@@ -621,7 +607,7 @@ class ChronTriggerCommand(EnsembleClientCommand):
             print(
                 "Invalid interval: {}, must be greater than 0 seconds".format(interval)
             )
-            sys.exit(1)
+            is_args_valid = False
 
         # get timeout as seconds
         timeout = None
@@ -634,6 +620,10 @@ class ChronTriggerCommand(EnsembleClientCommand):
                         timeout
                     )
                 )
+                is_args_valid = False
+
+        if not is_args_valid:
+            sys.exit(1)
 
         request = {
             "workflow_script": self.args.workflow_script,
@@ -653,10 +643,118 @@ class ChronTriggerCommand(EnsembleClientCommand):
         print("this is the response I got: {}".format(response))
 
 
-# TODO: FilePatternTriggerCommand
+class FilePatternTriggerCommand(EnsembleClientCommand):
+    description = "Create a file pattern based and time based workflow trigger"
+    usage = "Usage: pegasus-em file-pattern-trigger ENSEMBLE TRIGGER INTERVAL WORKFLOW_SCRIPT FILE_PATTERN [FILE_PATTERN ...] [--timeout TIMEOUT] [--args ARG1 [ARG2 ...]]"
+
+    def __init__(self):
+        EnsembleClientCommand.__init__(self)
+        self.parser = argparse.ArgumentParser(
+            usage=self.usage, description=self.description
+        )
+
+        self.parser.add_argument(
+            "ensemble", type=str, help="the ensemble to which this trigger belongs"
+        )
+
+        self.parser.add_argument(
+            "trigger", type=str, help="the name of the trigger to be added"
+        )
+
+        self.parser.add_argument(
+            "interval",
+            type=str,
+            help="Duration of each trigger interval. Must be given as '<int> <s|m|h|d>' "
+            "and be greater than 0 seconds",
+        )
+
+        self.parser.add_argument(
+            "workflow_script", type=str, help="path to workflow script"
+        )
+
+        self.parser.add_argument(
+            "file_patterns",
+            nargs="+",
+            help="File pattern(s) that will be passed to glob.Glob to collect files",
+        )
+
+        self.parser.add_argument(
+            "-t",
+            "--timeout",
+            type=str,
+            help="Trigger timeout. Must be given as `<int> <s|m|h|d>` and be greater than 0 seconds.",
+        )
+
+        self.parser.add_argument(
+            "-a", "--args", nargs="+", help="CLI args to be passed to WORKFLOW_SCRIPT",
+        )
+
+    def parse(self, args):
+        self.args = self.parser.parse_args(args)
+
+    def run(self):
+        is_args_valid = True
+
+        # get interval as seconds
+        interval = to_seconds(self.args.interval)
+
+        if interval <= 0:
+            print(
+                "Invalid interval: {}, must be greater than 0 seconds".format(interval)
+            )
+            is_args_valid = False
+
+        # get timeout as seconds
+        timeout = None
+        if self.args.timeout:
+            timeout = to_seconds(self.args.timeout)
+
+            if timeout <= 0:
+                print(
+                    "Invalid timeout: {}, must be greater than 0 seconds".format(
+                        timeout
+                    )
+                )
+
+                is_args_valid = False
+
+        # ensure that file patterns given as abspath
+        for fp in self.args.file_patterns:
+            if fp[0] != "/":
+                print(
+                    "Invalid file pattern: {}, must be an absolute path such as /home/scitech/*.txt".format(
+                        fp
+                    )
+                )
+
+                is_args_valid = False
+                break
+
+        if not is_args_valid:
+            sys.exit(1)
+
+        request = {
+            "workflow_script": self.args.workflow_script,
+            "workflow_args": self.args.args,
+            "interval": interval,
+            "timeout": timeout,
+            "file_patterns": json.dumps(self.args.file_patterns),
+            "type": TriggerType.FILE_PATTERN.value,
+        }
+
+        response = self.post(
+            "/ensembles/{e}/triggers/{t}".format(
+                e=self.args.ensemble, t=self.args.trigger
+            ),
+            data=request,
+        )
+
+        print("this is the response I got: {}".format(response))
+
+
 # TODO: StopTriggerCommand
 
-# TODO: TriggersCommand
+# TODO: ListTriggersCommand
 
 
 # ------------------------------------------------------------------------------
@@ -679,6 +777,7 @@ class EnsembleCommand(CompoundCommand):
         ("rerun", RerunCommand),
         ("priority", PriorityCommand),
         ("chron-trigger", ChronTriggerCommand),
+        ("file-pattern-trigger", FilePatternTriggerCommand),
     ]
     aliases = {
         "c": "create",
