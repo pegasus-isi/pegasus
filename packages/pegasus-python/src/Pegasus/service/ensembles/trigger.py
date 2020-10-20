@@ -264,10 +264,9 @@ class FilePatternTrigger(TriggerThread):
         ensemble: str,
         trigger: str,
         interval: int,
-        timeout: int,
-        file_patterns: List[str],
         workflow_script: str,
         workflow_args: Optional[List[str]] = None,
+        timeout: Optional[int] = None,
         **kwargs
     ):
         TriggerThread.__init__(
@@ -282,7 +281,7 @@ class FilePatternTrigger(TriggerThread):
         self.timeout = int(timeout) if timeout else None
         self.interval = int(interval)
         self.elapsed = 0
-        self.file_patterns = file_patterns
+        self.file_patterns = kwargs["file_patterns"]
 
     def __repr__(self):
         return "<FilePatternTrigger {} interval={}s patterns={}>".format(
