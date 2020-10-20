@@ -32,7 +32,9 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
+import edu.isi.pegasus.planner.common.PegasusProperties.PEGASUS_MODE;
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.util.Collection;
@@ -44,32 +46,32 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * A utility class that returns JAVA Properties that need to be set based on a configuration value
+ * A utility class that returns JAVA Properties that need to be set based on a mode value
  *
  * @author Karan Vahi
  * @version $Revision$
  */
 public class PegasusConfiguration {
 
-    /** The property key for pegasus configuration. */
+    /** The property key for pegasus mode. */
     public static final String PEGASUS_CONFIGURATION_PROPERTY_KEY = "pegasus.data.configuration";
 
-    /** The value for the S3 configuration. */
+    /** The value for the S3 mode. */
     public static final String DEPRECATED_S3_CONFIGURATION_VALUE = "S3";
 
-    /** The value for the non shared filesystem configuration. */
+    /** The value for the non shared filesystem mode. */
     public static final String SHARED_FS_CONFIGURATION_VALUE = "sharedfs";
 
-    /** The value for the condor configuration. */
+    /** The value for the condor mode. */
     public static final String CONDOR_CONFIGURATION_VALUE = "condorio";
 
-    /** The default data configuration value */
+    /** The default data mode value */
     public static String DEFAULT_DATA_CONFIGURATION_VALUE = CONDOR_CONFIGURATION_VALUE;
 
-    /** The value for the non shared filesystem configuration. */
+    /** The value for the non shared filesystem mode. */
     public static final String NON_SHARED_FS_CONFIGURATION_VALUE = "nonsharedfs";
 
-    /** The value for the condor configuration. */
+    /** The value for the condor mode. */
     public static final String DEPRECATED_CONDOR_CONFIGURATION_VALUE = "Condor";
 
     /** The logger to use. */
@@ -89,8 +91,9 @@ public class PegasusConfiguration {
     }
 
     /**
-     * Loads configuration specific properties into PegasusProperties, and adjusts planner options
-     * accordingly.
+     * Loads configuration specific properties into PegasusProperties, and adjust planner options
+     * accordingly. Loads both data configuration properties and properties specific to the data
+     * mode set.
      *
      * @param properties the Pegasus Properties
      * @param options the PlannerOptions .
@@ -99,6 +102,7 @@ public class PegasusConfiguration {
             PegasusProperties properties, PlannerOptions options) {
 
         this.loadConfigurationProperties(properties);
+        this.loadModeProperties(properties);
 
         // PM-1190 if integrity checking is turned on, turn on the stat of
         // files also
@@ -118,7 +122,7 @@ public class PegasusConfiguration {
      * @return the staging site
      */
     public String determineStagingSite(Job job, PlannerOptions options) {
-        // check to see if job has data.configuration set
+        // check to see if job has data.mode set
         if (!job.vdsNS.containsKey(Pegasus.DATA_CONFIGURATION_KEY)) {
             throw new RuntimeException(
                     "Internal Planner Error: Data Configuration should have been set for job "
@@ -129,7 +133,7 @@ public class PegasusConfiguration {
         // shortcut for condorio
         if (conf.equalsIgnoreCase(PegasusConfiguration.CONDOR_CONFIGURATION_VALUE)) {
             // sanity check against the command line option
-            // we are leaving the data configuration to be per site
+            // we are leaving the data mode to be per site
             // by this check
             String stagingSite = options.getStagingSite(job.getSiteHandle());
             if (stagingSite == null) {
@@ -350,7 +354,7 @@ public class PegasusConfiguration {
     }
 
     /**
-     * Loads configuration specific properties into PegasusProperties
+     * Loads mode specific properties into PegasusProperties
      *
      * @param properties the Pegasus Properties.
      */
@@ -366,12 +370,12 @@ public class PegasusConfiguration {
     }
 
     /**
-     * Returns Properties corresponding to a particular configuration.
+     * Returns Properties corresponding to a particular mode.
      *
-     * @param configuration the configuration value.
+     * @param configuration the mode value.
      * @return Properties
      */
-    public Properties getConfigurationProperties(String configuration) {
+    protected Properties getConfigurationProperties(String configuration) {
         Properties p = new Properties();
         // sanity check
         if (configuration == null) {
@@ -421,6 +425,60 @@ public class PegasusConfiguration {
                             + configuration
                             + " specified for property "
                             + PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY);
+        }
+
+        return p;
+    }
+
+    /**
+     * Loads mode specific properties into PegasusProperties. There are the properties corresponding
+     * to the mode under which Pegasus is running under.
+     *
+     * @param properties the Pegasus Properties.
+     * @see #PEGASUS_MODE
+     */
+    protected void loadModeProperties(PegasusProperties properties) {
+        String mode = properties.getProperty(PegasusProperties.PEGASUS_MODE_PROPERTY_KEY);
+
+        Properties props = this.getModeProperties(mode);
+        for (Iterator it = props.keySet().iterator(); it.hasNext(); ) {
+            String key = (String) it.next();
+            String value = props.getProperty(key);
+            this.checkAndSetProperty(properties, key, value);
+        }
+    }
+
+    /**
+     * Returns Properties corresponding to a particular pegasus mode.
+     *
+     * @param mode the mode value.
+     * @return Properties
+     */
+    protected Properties getModeProperties(String mode) {
+        Properties p = new Properties();
+        PEGASUS_MODE m = (mode == null) ? PEGASUS_MODE.production : PEGASUS_MODE.valueOf(mode);
+        switch (m) {
+            case development:
+                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_ARGUMENTS_KEY, "-m 1");
+                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY, "-m 1");
+                p.setProperty(Dagman.NAMESPACE_NAME + "." + Dagman.RETRY_KEY, "0");
+                p.setProperty(
+                        PegasusProperties.PEGASUS_INTEGRITY_CHECKING_KEY,
+                        PegasusProperties.INTEGRITY_DIAL.none.toString());
+                break;
+
+            case tutorial:
+                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_ARGUMENTS_KEY, "-m 1");
+                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY, "-m 1");
+                p.setProperty(Dagman.NAMESPACE_NAME + "." + Dagman.RETRY_KEY, "1");
+                break;
+
+            case production:
+                // do nothing. defaults picked from Pegasus Properties
+                break;
+
+            default:
+                throw new RuntimeException("Unknown Pegasus mode specified " + m);
         }
 
         return p;
