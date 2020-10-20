@@ -55,11 +55,6 @@ if [ "x$PEXE" = "x" ]; then
     exit 1
 fi
 
-# warn if it is not the system python
-if ! (echo "$PEXE" | egrep "^(/bin/|/usr/bin/)") >/dev/null 2>&1; then
-    echo "Warning: Using a non-system Python ($PEXE)" 1>&2
-fi
-
 # some quick validations - only for Python 3
 if [ $ALLOW_PY2 = 0 ]; then
     $PEXE $PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py || exit 1
