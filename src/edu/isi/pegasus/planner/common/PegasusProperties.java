@@ -64,6 +64,11 @@ public class PegasusProperties implements Cloneable {
     public static final String PEGASUS_TRANSFER_WORKER_PACKAGE_AUTODOWNLOAD_PROPERTY =
             "pegasus.transfer.worker.package.autodownload";
 
+    public static final String PEGASUS_TRANSFER_ARGUMENTS_KEY = "pegasus.transfer.arguments";
+
+    public static final String PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY =
+            "pegasus.transfer.lite.arguments";
+
     public static final String PEGASUS_TRANSFORMATION_CATALOG_PROPERTY =
             "pegasus.catalog.transformation";
 
@@ -84,6 +89,11 @@ public class PegasusProperties implements Cloneable {
     public static final String PEGASUS_LOG_METRICS_PROPERTY_FILE = "pegasus.log.metrics.file";
 
     public static final String PEGASUS_APP_METRICS_PREFIX = "pegasus.metrics.app";
+
+    /** The property key for pegasus mode. */
+    public static final String PEGASUS_MODE_PROPERTY_KEY = "pegasus.mode";
+
+    public static final String PEGASUS_INTEGRITY_CHECKING_KEY = "pegasus.integrity.checking";
 
     // Replica Catalog Constants
     public static final String DEFAULT_RC_COLLECTION = "GriphynData";
@@ -158,6 +168,13 @@ public class PegasusProperties implements Cloneable {
 
     /** The default value to be assigned for dagman.maxpre . */
     public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "1";
+
+    /** Various modes pegasus can be run in. */
+    public static enum PEGASUS_MODE {
+        production,
+        development,
+        tutorial
+    };
 
     /** An enum defining The dial for cleanup algorithm */
     public enum CLEANUP_SCOPE {
@@ -1236,7 +1253,7 @@ public class PegasusProperties implements Cloneable {
      *     specified.
      */
     public String getTransferArguments() {
-        return mProps.getProperty("pegasus.transfer.arguments");
+        return mProps.getProperty(PEGASUS_TRANSFER_ARGUMENTS_KEY);
     }
 
     /**
@@ -1247,9 +1264,10 @@ public class PegasusProperties implements Cloneable {
      *
      * @return the arguments specified in the properties file, else null if property is not
      *     specified.
+     * @see #PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY
      */
     public String getSLSTransferArguments() {
-        return mProps.getProperty("pegasus.transfer.lite.arguments");
+        return mProps.getProperty(PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY);
     }
 
     /**
@@ -2158,10 +2176,11 @@ public class PegasusProperties implements Cloneable {
      *
      * @return the value specified in the properties file, else INTEGRITY_DIAL.full
      * @see INTEGRITY_DIAL
+     * @see #PEGASUS_INTEGRITY_CHECKING_KEY
      */
     public INTEGRITY_DIAL getIntegrityDial() {
         INTEGRITY_DIAL dial = INTEGRITY_DIAL.full;
-        String value = mProps.getProperty("pegasus.integrity.checking");
+        String value = mProps.getProperty(PEGASUS_INTEGRITY_CHECKING_KEY);
         if (value == null) {
             return dial;
         }
