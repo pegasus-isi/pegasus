@@ -3113,7 +3113,7 @@ Miscellaneous Properties
     +===================================================+=============================================================+
     | | Property Key: pegasus.code.generator            | | This property is used to load the appropriate Code        |
     | | Profile Key: N/A                                | | Generator to use for writing out the executable           |
-    | | Scope : Properties                              | |  workflow.                                                |
+    | | Scope : Properties                              | | workflow.                                                 |
     | | Since : 3.0                                     |                                                             |
     | | Type : String                                   | | **Condor**                                                |
     | | Values : Condor|Shell|PMC                       | | This is the default code generator for Pegasus .          |
@@ -3137,6 +3137,58 @@ Miscellaneous Properties
     |                                                   | | this mode, Pegasus will generate the executable           |
     |                                                   | | workflow as a PMC task workflow and a sample PBS          |
     |                                                   | | submit script that submits this workflow.                 |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.integrity.checking        | | This property determines the dial for pegasus             |
+    | | Profile Key: N/A                                | | integrity checking. Currently the following dials are     |
+    | | Scope : Properties                              | | supported                                                 |
+    | | Since : 4.9.0                                   |                                                             |
+    | | Type :none|full|nosymlink                       | | **none**                                                  |
+    | | Default : full                                  | | no integrity checking occurs.                             |
+    |                                                   |                                                             |
+    |                                                   | | **full**                                                  |
+    |                                                   | | In this mode, integrity checking happens at 3 levels      |
+    |                                                   | |                                                           |
+    |                                                   | | 1. after the input data has been staged to staging server |
+    |                                                   | | pegasus-transfer verifies integrity of the staged files.  |
+    |                                                   | | 2. before a compute task starts on a remote compute node  |
+    |                                                   | | This ensures that checksums of the data staged in match   |
+    |                                                   | | the checksums specified in the input replica catalog      |
+    |                                                   | | or the ones computed when that piece of data was          |
+    |                                                   | | generated as part of previous task in the workflow.       |
+    |                                                   | | 3. After the workflow output data has been transferred    |
+    |                                                   | | to user servers - This ensures that output data staged    |
+    |                                                   | | to the final location was not corrupted in transit.       |
+    |                                                   |                                                             |
+    |                                                   | | **nosymlink**                                             |
+    |                                                   | | No integrity checking is performed on input files         |
+    |                                                   | | that are symlinked. You should consider turning           |
+    |                                                   | | this on, if you think that your input files at rest       |
+    |                                                   | | are at a low risk of data corruption, and want to         |
+    |                                                   | | save on the checksum computation overheads against        |
+    |                                                   | | the shared filesystem.noneNo integrity checking           |
+    |                                                   | | is performed.                                             |
+    +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.mode                      | | This property determines the mode under which pegasus     |
+    | | Profile Key: N/A                                | | operates. Currently the following modes are               |
+    | | Scope : Properties                              | | supported                                                 |
+    | | Since : 5.0                                     |                                                             |
+    | | Type : production|development|tutorial          | | **production**                                            |
+    | | Default : production                            | | default mode. jobs are retried 3 times, pegasus transfer  |
+    |                                                   | | executable makes 3 attempts for each transfer, and jobs   |
+    |                                                   | | remain in held state for 30 minutes, before being removed.|
+    |                                                   |                                                             |
+    |                                                   | | **development**                                           |
+    |                                                   | | In this mode, integrity checking is disabled; jobs are    |
+    |                                                   | | are not retried in case of failure; pegasus-transfer      |
+    |                                                   | | executable makes only one attempt for each transfer,and   |
+    |                                                   | | jobs remain in held state for 30 seconds, before being    |
+    |                                                   | | removed.                                                  |
+    |                                                   |                                                             |
+    |                                                   | | **tutorial**                                              |
+    |                                                   | | In this mode, jobs are not retried in case of failure;    |
+    |                                                   | | pegasus-transfer executable makes only one attempt for    |
+    |                                                   | | each transfer,and jobs remain in held state for 30 seconds|
+    |                                                   | | before being removed.                                     |
     +---------------------------------------------------+-------------------------------------------------------------+
     | | Property Key: pegasus.condor.concurrency.limits | | This Boolean property is used to determine whether        |
     | | Profile Key: N/A                                | | Pegasus associates default HTCondor concurrency           |
@@ -3293,34 +3345,4 @@ Miscellaneous Properties
     | | Since : 4.4.0                                   | | output file that is listed as input for JobB, then        |
     | | Type :Boolean                                   | | the planner will automatically add an edge between        |
     | | Default : true                                  | | JobA and JobB.                                            |
-    +---------------------------------------------------+-------------------------------------------------------------+
-    | | Property Key: pegasus.integrity.checking        | | This property determines the dial for pegasus             |
-    | | Profile Key: N/A                                | | integrity checking. Currently the following dials are     |
-    | | Scope : Properties                              | | supported                                                 |
-    | | Since : 4.9.0                                   |                                                             |
-    | | Type :none|full|nosymlink                       | | **none**                                                  |
-    | | Default : full                                  | | no integrity checking occurs.                             |
-    |                                                   |                                                             |
-    |                                                   | | **full**                                                  |
-    |                                                   | | In this mode, integrity checking happens at 3 levels      |
-    |                                                   | |                                                           |
-    |                                                   | | 1. after the input data has been staged to staging server |
-    |                                                   | | pegasus-transfer verifies integrity of the staged files.  |
-    |                                                   | | 2. before a compute task starts on a remote compute node  |
-    |                                                   | | This ensures that checksums of the data staged in match   |
-    |                                                   | | the checksums specified in the input replica catalog      |
-    |                                                   | | or the ones computed when that piece of data was          |
-    |                                                   | | generated as part of previous task in the workflow.       |
-    |                                                   | | 3. After the workflow output data has been transferred    |
-    |                                                   | | to user servers - This ensures that output data staged    |
-    |                                                   | | to the final location was not corrupted in transit.       |
-    |                                                   |                                                             |
-    |                                                   | | **nosymlink**                                             |
-    |                                                   | | No integrity checking is performed on input files         |
-    |                                                   | | that are symlinked. You should consider turning           |
-    |                                                   | | this on, if you think that your input files at rest       |
-    |                                                   | | are at a low risk of data corruption, and want to         |
-    |                                                   | | save on the checksum computation overheads against        |
-    |                                                   | | the shared filesystem.noneNo integrity checking           |
-    |                                                   | | is performed.                                             |
     +---------------------------------------------------+-------------------------------------------------------------+
