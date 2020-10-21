@@ -1,7 +1,12 @@
 import subprocess
+import time
 from subprocess import CompletedProcess
 
-from Pegasus.service.ensembles.trigger import FilePatternTrigger
+from Pegasus.service.ensembles.trigger import (
+    ChronTrigger,
+    FilePatternTrigger,
+    TriggerThread,
+)
 
 
 class TestTriggerManager:
@@ -9,11 +14,95 @@ class TestTriggerManager:
 
 
 class TestTriggerThread:
-    pass
+    class DerivedTriggerThread(TriggerThread):
+        def __init__(
+            self,
+            ensemble_id=1,
+            ensemble="test-ens",
+            trigger="test-trigger",
+            workflow_script="/wf.py",
+            workflow_args=["arg1"],
+        ):
+            TriggerThread.__init__(
+                self,
+                ensemble_id=ensemble_id,
+                ensemble=ensemble,
+                trigger=trigger,
+                workflow_script=workflow_script,
+                workflow_args=workflow_args,
+            )
+
+        def run(self):
+            while not self.stop_even.isSet():
+                time.sleep(1)
+
+    def test_constructor(self):
+        trigger = TestTriggerThread.DerivedTriggerThread()
+
+        assert trigger.name == "(1, 'test-trigger')"
+        assert trigger.workflow_cmd == ["/wf.py", "arg1"]
+
+    def test_shutdown(self):
+        trigger = TestTriggerThread.DerivedTriggerThread()
+
+        # start trigger thread
+        trigger.start()
+
+        # tell trigger to gracefully stop
+        trigger.shutdown()
+
+        # shutdown doesn't work if this waits forever
+        trigger.join()
 
 
 class TestChronTrigger:
-    pass
+    def test_run(self, mocker):
+        # force return code of subprocess.run to be 1 so that TestFilePatternTrigger
+        # main loop can exit
+        mocker.patch(
+            "subprocess.run",
+            return_value=CompletedProcess(None, returncode=1, stdout="", stderr=""),
+        )
+
+        chron_trigger = ChronTrigger(
+            ensemble_id=1,
+            ensemble="test-ens",
+            trigger="test-trgr",
+            interval="10",
+            workflow_script="/wf.py",
+            workflow_args=["arg1", "arg2"],
+        )
+
+        # run main loop of trigger
+        chron_trigger.run()
+
+        # ensure epgasus-em submit command was properly built up
+        # ensure pegasus-em submit command was properly built up
+        args = subprocess.run.call_args[0][0]
+        assert args[0:2] == ["pegasus-em", "submit"]
+        assert "test-trgr" in args[2]
+        assert args[3:] == ["/wf.py", "arg1", "arg2"]
+
+    def test_timeout(self, mocker):
+        # mock execution of pegasus-em submit command
+        mocker.patch(
+            "subprocess.run",
+            return_value=CompletedProcess(None, returncode=0, stdout="", stderr=""),
+        )
+
+        chron_trigger = ChronTrigger(
+            ensemble_id=1,
+            ensemble="test-ens",
+            trigger="test-trgr",
+            interval=1,
+            timeout=2,
+            workflow_script="/wf.py",
+        )
+
+        # main loop of trigger should run for two seconds, then exit
+        chron_trigger.run()
+
+        assert chron_trigger.elapsed == 2
 
 
 class TestFilePatternTrigger:
@@ -56,7 +145,6 @@ class TestFilePatternTrigger:
         ]
 
     def test_timeout(self, tmp_path):
-        # create fp trigger so we can use collect_and_move_files()
         fp_trigger = FilePatternTrigger(
             ensemble_id=1,
             ensemble="test-ens",

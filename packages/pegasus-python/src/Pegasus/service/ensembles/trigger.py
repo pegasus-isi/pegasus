@@ -189,9 +189,9 @@ class ChronTrigger(TriggerThread):
         ensemble: str,
         trigger: str,
         interval: int,
-        timeout: int,
         workflow_script: str,
         workflow_args: Optional[List[str]] = None,
+        timeout: Optional[int] = None,
         **kwargs
     ):
 
@@ -235,8 +235,6 @@ class ChronTrigger(TriggerThread):
                 else:
                     self.log.error("encountered an error executing cmd: {}".format(cmd))
                     raise RuntimeError(cp.stderr.decode())
-
-                self.log.info("doing some work!!!!")
 
                 time.sleep(self.interval)
                 if self.timeout:
@@ -320,8 +318,6 @@ class FilePatternTrigger(TriggerThread):
                             "encountered error executing cmd: {}".format(cmd)
                         )
                         raise RuntimeError(cp.stderr.decode())
-
-                self.log.info("doing some work!!")
 
                 time.sleep(self.interval)
                 if self.timeout:
