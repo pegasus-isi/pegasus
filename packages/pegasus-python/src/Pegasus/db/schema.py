@@ -44,9 +44,7 @@ from sqlalchemy.types import (
 from Pegasus.db.ensembles import Ensemble as _Ensemble
 from Pegasus.db.ensembles import EnsembleStates
 from Pegasus.db.ensembles import EnsembleWorkflow as _EnsembleWorkflow
-from Pegasus.db.ensembles import EnsembleWorkflowStates
-from Pegasus.db.ensembles import Trigger as _Trigger
-from Pegasus.db.ensembles import TriggerStates, TriggerType
+from Pegasus.db.ensembles import EnsembleWorkflowStates, TriggerStates, TriggerType
 
 __all__ = (
     "DBVersion",
@@ -1117,8 +1115,4 @@ class Trigger(Base):
 Trigger.__table_args__ = (
     UniqueConstraint(Trigger.ensemble_id, Trigger.name, name="UNIQUE_TRIGGER"),
     table_keywords,
-)
-
-mapper(
-    _Trigger, Trigger.__table__,
 )
