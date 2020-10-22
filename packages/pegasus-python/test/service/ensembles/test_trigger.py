@@ -10,7 +10,7 @@ import Pegasus
 from Pegasus.db.ensembles import Triggers
 from Pegasus.db.schema import Trigger
 from Pegasus.service.ensembles.trigger import (
-    ChronTrigger,
+    CronTrigger,
     FilePatternTrigger,
     TriggerManager,
     TriggerThread,
@@ -31,7 +31,7 @@ class TestTriggerManager:
                     state="READY",
                     workflow=r'{"script":"/wf.py", "args":["arg1"]}',
                     args=r'{"timeout":100, "interval":20}',
-                    _type="CHRON",
+                    _type="CRON",
                 )
             ],
         )
@@ -59,7 +59,7 @@ class TestTriggerManager:
                     state="RUNNING",
                     workflow=r'{"script":"/wf.py", "args":["arg1"]}',
                     args=r'{"timeout":100, "interval":20}',
-                    _type="CHRON",
+                    _type="CRON",
                 )
             ],
         )
@@ -92,7 +92,7 @@ class TestTriggerManager:
                     state="RUNNING",
                     workflow=r'{"script":"/wf.py", "args":["arg1"]}',
                     args=r'{"timeout":100, "interval":20}',
-                    _type="CHRON",
+                    _type="CRON",
                 )
             ],
         )
@@ -128,7 +128,7 @@ class TestTriggerManager:
                     state="STOPPED",
                     workflow=r'{"script":"/wf.py", "args":["arg1"]}',
                     args=r'{"timeout":100, "interval":20}',
-                    _type="CHRON",
+                    _type="CRON",
                 )
             ],
         )
@@ -144,7 +144,7 @@ class TestTriggerManager:
 
     def test_start_cron_trigger(self, mocker):
         mocker.patch(
-            "Pegasus.service.ensembles.trigger.ChronTrigger",
+            "Pegasus.service.ensembles.trigger.CronTrigger",
             return_value=threading.Thread(name="test"),
         )
         mocker.patch("Pegasus.db.ensembles.Triggers.update_state")
@@ -163,11 +163,11 @@ class TestTriggerManager:
                 state="READY",
                 workflow=r'{"script":"/wf.py", "args":["arg1"]}',
                 args=r'{"timeout":100, "interval":20}',
-                _type="CHRON",
+                _type="CRON",
             )
         )
 
-        Pegasus.service.ensembles.trigger.ChronTrigger.assert_called_once_with(
+        Pegasus.service.ensembles.trigger.CronTrigger.assert_called_once_with(
             ensemble_id=1,
             ensemble="test-ens",
             trigger="test-trigger",
@@ -246,7 +246,7 @@ class TestTriggerManager:
                 state="RUNNING",
                 workflow="json string",
                 args=None,
-                _type="CHRON",
+                _type="CRON",
             )
         )
 
@@ -266,7 +266,7 @@ class TestTriggerManager:
             state="RUNNING",
             workflow="/wf.py",
             args=None,
-            _type="CHRON",
+            _type="CRON",
         )
 
         expected = (1, "test-trigger")
@@ -317,7 +317,7 @@ class TestTriggerThread:
         trigger.join()
 
 
-class TestChronTrigger:
+class TestCronTrigger:
     def test_run(self, mocker, caplog):
         # force return code of subprocess.run to be 1 so that TestFilePatternTrigger
         # main loop can exit
@@ -328,7 +328,7 @@ class TestChronTrigger:
             ),
         )
 
-        chron_trigger = ChronTrigger(
+        cron_trigger = CronTrigger(
             ensemble_id=1,
             ensemble="test-ens",
             trigger="test-trgr",
@@ -338,7 +338,7 @@ class TestChronTrigger:
         )
 
         # run main loop of trigger
-        chron_trigger.run()
+        cron_trigger.run()
 
         # ensure epgasus-em submit command was properly built up
         # ensure pegasus-em submit command was properly built up
@@ -356,11 +356,14 @@ class TestChronTrigger:
         mocker.patch(
             "subprocess.run",
             return_value=CompletedProcess(
-                None, returncode=0, stdout=b"out", stderr=b"err",
+                None,
+                returncode=0,
+                stdout=b"out",
+                stderr=b"err",
             ),
         )
 
-        chron_trigger = ChronTrigger(
+        cron_trigger = CronTrigger(
             ensemble_id=1,
             ensemble="test-ens",
             trigger="test-trgr",
@@ -370,9 +373,9 @@ class TestChronTrigger:
         )
 
         # main loop of trigger should run for two seconds, then exit
-        chron_trigger.run()
+        cron_trigger.run()
 
-        assert chron_trigger.elapsed == 2
+        assert cron_trigger.elapsed == 2
 
 
 class TestFilePatternTrigger:

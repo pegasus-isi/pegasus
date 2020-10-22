@@ -379,7 +379,7 @@ TriggerStates = States(["READY", "RUNNING", "FAILED", "STOPPED"])
 class TriggerType(Enum):
     """Supported trigger types"""
 
-    CHRON = "CHRON"
+    CRON = "CRON"
     FILE_PATTERN = "FILE_PATTERN"
 
 
@@ -451,7 +451,7 @@ class Triggers:
         :type ensemble_id: int
         :param trigger: name of the trigger
         :type trigger: str
-        :param trigger_type: the type of the trigger (e.g. CHRON, FILE_PATTERN, etc.)
+        :param trigger_type: the type of the trigger (e.g. CRON, FILE_PATTERN, etc.)
         :type trigger_type: str
         :param workflow_script: the workflow generator & planning script
         :type workflow_script: str
@@ -473,7 +473,10 @@ class Triggers:
                 "name": trigger,
                 "state": "READY",
                 "workflow": json.dumps(
-                    {"script": workflow_script, "args": workflow_args,}
+                    {
+                        "script": workflow_script,
+                        "args": workflow_args,
+                    }
                 ),
                 "args": json.dumps(trigger_kwargs),
                 "type": trigger_type,

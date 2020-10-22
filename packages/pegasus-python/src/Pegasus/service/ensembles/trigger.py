@@ -23,7 +23,9 @@ class TriggerManager(threading.Thread):
     "trigger" table, and the state of each trigger in that table.
     """
 
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         threading.Thread.__init__(self, daemon=True)
 
         self.log = logging.getLogger("trigger.manager")
@@ -96,8 +98,8 @@ class TriggerManager(threading.Thread):
         trigger_specific_kwargs = json.loads(trigger.args)
 
         # create trigger thread
-        if trigger._type == TriggerType.CHRON.value:
-            t = ChronTrigger(**required_args, **trigger_specific_kwargs)
+        if trigger._type == TriggerType.CRON.value:
+            t = CronTrigger(**required_args, **trigger_specific_kwargs)
 
         elif trigger._type == TriggerType.FILE_PATTERN.value:
             t = FilePatternTrigger(**required_args, **trigger_specific_kwargs)
@@ -114,7 +116,9 @@ class TriggerManager(threading.Thread):
         # update state
         self.log.debug(
             "changing {name} state: {old_state} -> {new_state}".format(
-                name=trigger_name, old_state=trigger.state, new_state="RUNNING",
+                name=trigger_name,
+                old_state=trigger.state,
+                new_state="RUNNING",
             )
         )
         self.trigger_dao.update_state(
@@ -180,7 +184,7 @@ class TriggerThread(threading.Thread):
         self.stop_event.set()
 
 
-class ChronTrigger(TriggerThread):
+class CronTrigger(TriggerThread):
     """Submits a workflow to the ensemble manager at a specified interval."""
 
     def __init__(
@@ -209,10 +213,10 @@ class ChronTrigger(TriggerThread):
         self.elapsed = 0
 
     def __repr__(self):
-        return "<ChronTrigger {} interval={}s>".format(self.name, self.interval)
+        return "<CronTrigger {} interval={}s>".format(self.name, self.interval)
 
     def run(self):
-        """ChronTrigger main loop."""
+        """CronTrigger main loop."""
         try:
             self.log.debug("starting")
 
