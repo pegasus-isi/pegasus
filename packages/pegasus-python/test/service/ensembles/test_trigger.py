@@ -1,16 +1,278 @@
+import logging
 import subprocess
+import threading
 import time
 from subprocess import CompletedProcess
 
+import pytest
+
+import Pegasus
+from Pegasus.db.ensembles import Triggers
+from Pegasus.db.schema import Trigger
 from Pegasus.service.ensembles.trigger import (
     ChronTrigger,
     FilePatternTrigger,
+    TriggerManager,
     TriggerThread,
 )
 
 
 class TestTriggerManager:
-    pass
+    def test_run_and_start_trigger(self, mocker):
+        mocker.patch("Pegasus.db.connection.connect", return_value=None)
+        mocker.patch("Pegasus.service.ensembles.trigger.TriggerManager.start_trigger")
+        mocker.patch(
+            "Pegasus.db.ensembles.Triggers.list_triggers",
+            return_value=[
+                Trigger(
+                    _id=1,
+                    ensemble_id=1,
+                    name="test-trigger",
+                    state="READY",
+                    workflow=r'{"script":"/wf.py", "args":["arg1"]}',
+                    args=r'{"timeout":100, "interval":20}',
+                    _type="CHRON",
+                )
+            ],
+        )
+
+        mgr = TriggerManager()
+
+        try:
+            mgr.run()
+        except AttributeError as e:
+            assert "has no attribute 'close'" in str(e)
+
+        Pegasus.service.ensembles.trigger.TriggerManager.start_trigger.assert_called_once()
+
+    def test_run_and_restart_trigger(self, mocker, caplog):
+        caplog.set_level(logging.DEBUG)
+        mocker.patch("Pegasus.db.connection.connect", return_value=None)
+        mocker.patch("Pegasus.service.ensembles.trigger.TriggerManager.start_trigger")
+        mocker.patch(
+            "Pegasus.db.ensembles.Triggers.list_triggers",
+            return_value=[
+                Trigger(
+                    _id=1,
+                    ensemble_id=1,
+                    name="test-trigger",
+                    state="RUNNING",
+                    workflow=r'{"script":"/wf.py", "args":["arg1"]}',
+                    args=r'{"timeout":100, "interval":20}',
+                    _type="CHRON",
+                )
+            ],
+        )
+
+        mgr = TriggerManager()
+
+        try:
+            mgr.run()
+        except AttributeError as e:
+            assert "has no attribute 'close'" in str(e)
+
+        Pegasus.service.ensembles.trigger.TriggerManager.start_trigger.assert_called_once()
+
+        if "(1, 'test-trigger') not in memory, restarting" not in caplog.text:
+            pytest.fail(
+                "TriggerManager.run did not get to the expected restart if statement..."
+            )
+
+    def test_run_and_cleanup_trigger(self, mocker, caplog):
+        caplog.set_level(logging.DEBUG)
+        mocker.patch("Pegasus.db.connection.connect", return_value=None)
+        mocker.patch("Pegasus.service.ensembles.trigger.TriggerManager.stop_trigger")
+        mocker.patch(
+            "Pegasus.db.ensembles.Triggers.list_triggers",
+            return_value=[
+                Trigger(
+                    _id=1,
+                    ensemble_id=1,
+                    name="test-trigger",
+                    state="RUNNING",
+                    workflow=r'{"script":"/wf.py", "args":["arg1"]}',
+                    args=r'{"timeout":100, "interval":20}',
+                    _type="CHRON",
+                )
+            ],
+        )
+
+        mgr = TriggerManager()
+
+        # give triggermanager a thread object where t.is_alive() will return False
+        mgr.running[(1, "test-trigger")] = threading.Thread(name="test")
+
+        try:
+            mgr.run()
+        except AttributeError as e:
+            assert "has no attribute 'close'" in str(e)
+
+        Pegasus.service.ensembles.trigger.TriggerManager.stop_trigger.assert_called_once()
+
+        if "(1, 'test-trigger') exited, removing references" not in caplog.text:
+            pytest.fail(
+                "TriggerManager.run did not get to the expected stop trigger if statement..."
+            )
+
+    def test_run_and_stop_trigger(self, mocker, caplog):
+        caplog.set_level(logging.DEBUG)
+        mocker.patch("Pegasus.db.connection.connect", return_value=None)
+        mocker.patch("Pegasus.service.ensembles.trigger.TriggerManager.stop_trigger")
+        mocker.patch(
+            "Pegasus.db.ensembles.Triggers.list_triggers",
+            return_value=[
+                Trigger(
+                    _id=1,
+                    ensemble_id=1,
+                    name="test-trigger",
+                    state="STOPPED",
+                    workflow=r'{"script":"/wf.py", "args":["arg1"]}',
+                    args=r'{"timeout":100, "interval":20}',
+                    _type="CHRON",
+                )
+            ],
+        )
+
+        mgr = TriggerManager()
+
+        try:
+            mgr.run()
+        except AttributeError as e:
+            assert "has no attribute 'close'" in str(e)
+
+        Pegasus.service.ensembles.trigger.TriggerManager.stop_trigger.assert_called_once()
+
+    def test_start_cron_trigger(self, mocker):
+        mocker.patch(
+            "Pegasus.service.ensembles.trigger.ChronTrigger",
+            return_value=threading.Thread(name="test"),
+        )
+        mocker.patch("Pegasus.db.ensembles.Triggers.update_state")
+        mocker.patch(
+            "Pegasus.db.ensembles.Triggers.get_ensemble_name", return_value="test-ens"
+        )
+        mocker.patch("threading.Thread.start")
+
+        mgr = TriggerManager()
+        mgr.trigger_dao = Triggers(None)
+        mgr.start_trigger(
+            Trigger(
+                _id=1,
+                ensemble_id=1,
+                name="test-trigger",
+                state="READY",
+                workflow=r'{"script":"/wf.py", "args":["arg1"]}',
+                args=r'{"timeout":100, "interval":20}',
+                _type="CHRON",
+            )
+        )
+
+        Pegasus.service.ensembles.trigger.ChronTrigger.assert_called_once_with(
+            ensemble_id=1,
+            ensemble="test-ens",
+            trigger="test-trigger",
+            workflow_script="/wf.py",
+            workflow_args=["arg1"],
+            timeout=100,
+            interval=20,
+        )
+
+        threading.Thread.start.assert_called_once_with()
+        Pegasus.db.ensembles.Triggers.update_state.assert_called_once_with(
+            ensemble_id=1, trigger_id=1, new_state="RUNNING"
+        )
+
+    def test_start_file_pattern_trigger(self, mocker):
+        mocker.patch(
+            "Pegasus.service.ensembles.trigger.FilePatternTrigger",
+            return_value=threading.Thread(name="test"),
+        )
+        mocker.patch("Pegasus.db.ensembles.Triggers.update_state")
+        mocker.patch(
+            "Pegasus.db.ensembles.Triggers.get_ensemble_name", return_value="test-ens"
+        )
+        mocker.patch("threading.Thread.start")
+
+        mgr = TriggerManager()
+        mgr.trigger_dao = Triggers(None)
+        mgr.start_trigger(
+            Trigger(
+                _id=1,
+                ensemble_id=1,
+                name="test-trigger",
+                state="READY",
+                workflow=r'{"script":"/wf.py", "args":["arg1"]}',
+                args=r'{"timeout":100, "interval":20, "file_patterns":["/*.txt"]}',
+                _type="FILE_PATTERN",
+            )
+        )
+
+        Pegasus.service.ensembles.trigger.FilePatternTrigger.assert_called_once_with(
+            ensemble_id=1,
+            ensemble="test-ens",
+            trigger="test-trigger",
+            workflow_script="/wf.py",
+            workflow_args=["arg1"],
+            timeout=100,
+            interval=20,
+            file_patterns=["/*.txt"],
+        )
+
+        threading.Thread.start.assert_called_once_with()
+        Pegasus.db.ensembles.Triggers.update_state.assert_called_once_with(
+            ensemble_id=1, trigger_id=1, new_state="RUNNING"
+        )
+
+    def test_stop_trigger(self, mocker):
+        mocker.patch("Pegasus.service.ensembles.trigger.TriggerThread.shutdown")
+        mocker.patch("Pegasus.db.ensembles.Triggers.delete_trigger")
+
+        # setup TriggerManager state
+        mgr = TriggerManager()
+        mgr.trigger_dao = Triggers(None)
+        mgr.running[(1, "test-trigger")] = TriggerThread(
+            ensemble_id=1,
+            ensemble="test-ens",
+            trigger="test-trigger",
+            workflow_script="/wf.py",
+        )
+
+        # invoke stop trigger
+        mgr.stop_trigger(
+            Trigger(
+                _id=1,
+                ensemble_id=1,
+                name="test-trigger",
+                state="RUNNING",
+                workflow="json string",
+                args=None,
+                _type="CHRON",
+            )
+        )
+
+        # ensure shtudown was called on the target trigger
+        Pegasus.service.ensembles.trigger.TriggerThread.shutdown.assert_called_once_with()
+
+        # ensure the target trigger was removed from the database
+        Pegasus.db.ensembles.Triggers.delete_trigger.assert_called_once_with(
+            1, "test-trigger"
+        )
+
+    def test_get_tname(self):
+        trigger = Trigger(
+            _id=1,
+            ensemble_id=1,
+            name="test-trigger",
+            state="RUNNING",
+            workflow="/wf.py",
+            args=None,
+            _type="CHRON",
+        )
+
+        expected = (1, "test-trigger")
+        result = TriggerManager.get_tname(trigger)
+
+        assert result == expected
 
 
 class TestTriggerThread:
@@ -33,7 +295,7 @@ class TestTriggerThread:
             )
 
         def run(self):
-            while not self.stop_even.isSet():
+            while not self.stop_event.isSet():
                 time.sleep(1)
 
     def test_constructor(self):
@@ -56,12 +318,14 @@ class TestTriggerThread:
 
 
 class TestChronTrigger:
-    def test_run(self, mocker):
+    def test_run(self, mocker, caplog):
         # force return code of subprocess.run to be 1 so that TestFilePatternTrigger
         # main loop can exit
         mocker.patch(
             "subprocess.run",
-            return_value=CompletedProcess(None, returncode=1, stdout="", stderr=""),
+            return_value=CompletedProcess(
+                None, returncode=1, stdout=b"out", stderr=b"error we expected to get"
+            ),
         )
 
         chron_trigger = ChronTrigger(
@@ -83,11 +347,17 @@ class TestChronTrigger:
         assert "test-trgr" in args[2]
         assert args[3:] == ["/wf.py", "arg1", "arg2"]
 
+        # ensure that the exception caught in the main loop of run is what we
+        # expected for testing and not an actual error
+        assert "error we expected to get" in caplog.text
+
     def test_timeout(self, mocker):
         # mock execution of pegasus-em submit command
         mocker.patch(
             "subprocess.run",
-            return_value=CompletedProcess(None, returncode=0, stdout="", stderr=""),
+            return_value=CompletedProcess(
+                None, returncode=0, stdout=b"out", stderr=b"err",
+            ),
         )
 
         chron_trigger = ChronTrigger(
@@ -106,12 +376,14 @@ class TestChronTrigger:
 
 
 class TestFilePatternTrigger:
-    def test_run(self, mocker, tmp_path):
+    def test_run(self, mocker, tmp_path, caplog):
         # force return code of subprocess.run to be 1 so that TestFilePatternTrigger
         # main loop can exit
         mocker.patch(
             "subprocess.run",
-            return_value=CompletedProcess(None, returncode=1, stdout="", stderr=""),
+            return_value=CompletedProcess(
+                None, returncode=1, stdout=b"", stderr=b"error we expected to get"
+            ),
         )
 
         # setup input dirs
@@ -143,6 +415,10 @@ class TestFilePatternTrigger:
             "--inputs",
             str(tmp_path.resolve() / "processed/input_file.txt"),
         ]
+
+        # ensure that the exception caught in the main loop of run is what we
+        # expected for testing and not an actual error
+        assert "error we expected to get" in caplog.text
 
     def test_timeout(self, tmp_path):
         fp_trigger = FilePatternTrigger(
