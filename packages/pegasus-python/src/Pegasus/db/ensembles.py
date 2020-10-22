@@ -383,8 +383,8 @@ class TriggerType(Enum):
     FILE_PATTERN = "FILE_PATTERN"
 
 
-class Trigger:
-    """Trigger table object"""
+class Triggers:
+    """Trigger table data access object"""
 
     def __init__(self, session):
         self.session = session
@@ -407,6 +407,7 @@ class Trigger:
         :param trigger_name: name of the trigger
         :type trigger_name: str
         """
+        # TODO: raise EMError with 404 if query returns nothing
         return (
             self.session.query(Trigger)
             .filter_by(ensemble_id=ensemble_id, name=trigger_name)
@@ -523,15 +524,10 @@ class Trigger:
 
     @staticmethod
     def get_object(trigger):
-        """Get trigger as dict
+        """Get trigger as dict"""
 
-        :param trigger: trigger object
-        :type trigger: Trigger
-        :return: trigger object as dict
-        :rtype: dict
-        """
         return {
-            "id": trigger.id,
+            "id": trigger._id,
             "ensemble_id": trigger.ensemble_id,
             "name": trigger.name,
             "state": trigger.state,
