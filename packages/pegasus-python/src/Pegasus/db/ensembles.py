@@ -408,12 +408,19 @@ class Triggers:
         :param trigger_name: name of the trigger
         :type trigger_name: str
         """
-        # TODO: raise EMError with 404 if query returns nothing
-        return (
-            self.session.query(Trigger)
-            .filter_by(ensemble_id=ensemble_id, name=trigger_name)
-            .first()
-        )
+        try:
+            return (
+                self.session.query(schema.Trigger)
+                .filter_by(ensemble_id=ensemble_id, name=trigger_name)
+                .one()
+            )
+        except NoResultFound:
+            raise EMError(
+                "No such trigger: {} assigned to ensemble id: {}".format(
+                    trigger_name, ensemble_id
+                ),
+                status_code=404,
+            )
 
     def list_triggers(self):
         """List all triggers"""
@@ -492,17 +499,11 @@ class Triggers:
         :param new_state: the new state the trigger will be updated to
         :type new_state: str
         """
-        # TODO: replace vanilla sql (don't use str format too!)
-        stmt = """
-        UPDATE trigger
-        SET state = :state
-        WHERE ensemble_id = :ensemble_id AND id = :trigger_id
-        """
 
-        self.session.execute(
-            stmt,
-            {"state": new_state, "ensemble_id": ensemble_id, "trigger_id": trigger_id},
-        )
+        self.session.query(schema.Trigger).filter_by(
+            ensemble_id=ensemble_id, _id=trigger_id
+        ).update({"state": new_state})
+
         self.session.commit()
 
     def delete_trigger(self, ensemble_id: int, trigger: str):
@@ -514,13 +515,10 @@ class Triggers:
         :type trigger: str
         """
 
-        # TODO: replace vanilla sql
-        stmt = """
-        DELETE FROM trigger
-        WHERE ensemble_id = :ensemble_id AND name = :trigger
-        """
+        self.session.query(schema.Trigger).filter_by(
+            ensemble_id=ensemble_id, name=trigger
+        ).delete()
 
-        self.session.execute(stmt, {"ensemble_id": ensemble_id, "trigger": trigger})
         self.session.commit()
 
     @staticmethod
@@ -534,5 +532,5 @@ class Triggers:
             "state": trigger.state,
             "workflow": json.loads(trigger.workflow),
             "args": json.loads(trigger.args),
-            "type": trigger.type,
+            "type": trigger._type,
         }
