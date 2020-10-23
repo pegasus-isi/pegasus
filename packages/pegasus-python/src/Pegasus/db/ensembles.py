@@ -8,7 +8,8 @@ from flask import url_for
 from sqlalchemy import sql
 from sqlalchemy.orm.exc import NoResultFound
 
-import Pegasus.db.schema as schema
+# TODO: circular import here...
+import Pegasus.db as db
 from Pegasus import user
 
 
@@ -410,7 +411,7 @@ class Triggers:
         """
         try:
             return (
-                self.session.query(schema.Trigger)
+                self.session.query(db.schema.Trigger)
                 .filter_by(ensemble_id=ensemble_id, name=trigger_name)
                 .one()
             )
@@ -424,7 +425,7 @@ class Triggers:
 
     def list_triggers(self):
         """List all triggers"""
-        return self.session.query(schema.Trigger).all()
+        return self.session.query(db.schema.Trigger).all()
 
     def list_triggers_by_ensemble(self, username: str, ensemble: str):
         """List all triggers belonging to a specific ensemble
@@ -436,7 +437,7 @@ class Triggers:
         :return: list of Triggers
         :rtype: List[Trigger]
         """
-        q = self.session.query(Trigger).filter(
+        q = self.session.query(db.schema.Trigger).filter(
             Ensemble.username == username,
             Ensemble.name == ensemble,
             Ensemble.id == Trigger.ensemble_id,
@@ -469,7 +470,7 @@ class Triggers:
         """
 
         self.session.add(
-            schema.Trigger(
+            db.schema.Trigger(
                 ensemble_id=ensemble_id,
                 name=trigger,
                 state="READY",
@@ -492,7 +493,7 @@ class Triggers:
         :type new_state: str
         """
 
-        self.session.query(schema.Trigger).filter_by(
+        self.session.query(db.schema.Trigger).filter_by(
             ensemble_id=ensemble_id, _id=trigger_id
         ).update({"state": new_state})
 
@@ -507,7 +508,7 @@ class Triggers:
         :type trigger: str
         """
 
-        self.session.query(schema.Trigger).filter_by(
+        self.session.query(db.schema.Trigger).filter_by(
             ensemble_id=ensemble_id, name=trigger
         ).delete()
 
