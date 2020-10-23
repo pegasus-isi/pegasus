@@ -43,7 +43,11 @@ class TestTriggerManager:
         except AttributeError as e:
             assert "has no attribute 'close'" in str(e)
 
-        Pegasus.service.ensembles.trigger.TriggerManager.start_trigger.assert_called_once()
+        # using call_count, as assert_called_once() is only py36+
+        assert (
+            Pegasus.service.ensembles.trigger.TriggerManager.start_trigger.call_count
+            == 1
+        )
 
     def test_run_and_restart_trigger(self, mocker, caplog):
         caplog.set_level(logging.DEBUG)
@@ -71,7 +75,11 @@ class TestTriggerManager:
         except AttributeError as e:
             assert "has no attribute 'close'" in str(e)
 
-        Pegasus.service.ensembles.trigger.TriggerManager.start_trigger.assert_called_once()
+        # using call_count, as assert_called_once() is only py36+
+        assert (
+            Pegasus.service.ensembles.trigger.TriggerManager.start_trigger.call_count
+            == 1
+        )
 
         if "(1, 'test-trigger') not in memory, restarting" not in caplog.text:
             pytest.fail(
@@ -107,7 +115,11 @@ class TestTriggerManager:
         except AttributeError as e:
             assert "has no attribute 'close'" in str(e)
 
-        Pegasus.service.ensembles.trigger.TriggerManager.stop_trigger.assert_called_once()
+        # using call_count, as assert_called_once() is only py36+
+        assert (
+            Pegasus.service.ensembles.trigger.TriggerManager.stop_trigger.call_count
+            == 1
+        )
 
         if "(1, 'test-trigger') exited, removing references" not in caplog.text:
             pytest.fail(
@@ -140,7 +152,11 @@ class TestTriggerManager:
         except AttributeError as e:
             assert "has no attribute 'close'" in str(e)
 
-        Pegasus.service.ensembles.trigger.TriggerManager.stop_trigger.assert_called_once()
+        # using call_count, as assert_called_once() is only py36+
+        assert (
+            Pegasus.service.ensembles.trigger.TriggerManager.stop_trigger.call_count
+            == 1
+        )
 
     def test_start_cron_trigger(self, mocker):
         mocker.patch(
