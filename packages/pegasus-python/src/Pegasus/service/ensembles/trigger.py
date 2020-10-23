@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from Pegasus import user
 from Pegasus.db import connection
-from Pegasus.db.ensembles import Triggers, TriggerType
+from Pegasus.db.ensembles import Ensembles, Triggers, TriggerType
 from Pegasus.db.schema import Trigger
 
 
@@ -23,9 +23,7 @@ class TriggerManager(threading.Thread):
     "trigger" table, and the state of each trigger in that table.
     """
 
-    def __init__(
-        self,
-    ):
+    def __init__(self,):
         threading.Thread.__init__(self, daemon=True)
 
         self.log = logging.getLogger("trigger.manager")
@@ -39,6 +37,7 @@ class TriggerManager(threading.Thread):
         self.running = dict()
 
         self.trigger_dao = None
+        self.ensemble_dao = None
 
     def run(self):
         """Trigger manager main loop."""
@@ -54,6 +53,7 @@ class TriggerManager(threading.Thread):
 
             try:
                 self.trigger_dao = Triggers(session)
+                self.ensemble_dao = Ensembles(session)
                 triggers = self.trigger_dao.list_triggers()
                 self.log.info("processing {} triggers".format(len(triggers)))
                 for t in triggers:
@@ -90,7 +90,7 @@ class TriggerManager(threading.Thread):
         workflow = json.loads(trigger.workflow)
         required_args = {
             "ensemble_id": trigger.ensemble_id,
-            "ensemble": self.trigger_dao.get_ensemble_name(trigger.ensemble_id),
+            "ensemble": self.ensemble_dao.get_ensemble_name(trigger.ensemble_id),
             "trigger": trigger.name,
             "workflow_script": workflow["script"],
             "workflow_args": workflow["args"] if workflow["args"] else [],
@@ -116,9 +116,7 @@ class TriggerManager(threading.Thread):
         # update state
         self.log.debug(
             "changing {name} state: {old_state} -> {new_state}".format(
-                name=trigger_name,
-                old_state=trigger.state,
-                new_state="RUNNING",
+                name=trigger_name, old_state=trigger.state, new_state="RUNNING",
             )
         )
         self.trigger_dao.update_state(

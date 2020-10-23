@@ -8,6 +8,7 @@ from flask import url_for
 from sqlalchemy import sql
 from sqlalchemy.orm.exc import NoResultFound
 
+import Pegasus.db.schema as schema
 from Pegasus import user
 
 
@@ -274,6 +275,16 @@ class Ensembles:
         except NoResultFound:
             raise EMError("No such ensemble: %s" % name, 404)
 
+    def get_ensemble_name(self, ensemble_id: int):
+        """Given an ensemble id, get its name
+
+        :param ensemble_id: id of target ensemble
+        :type ensemble_id: int
+        :return: name of target ensemble
+        :rtype: str
+        """
+        return self.session.query(Ensemble).filter_by(id=ensemble_id).first().name
+
     def create_ensemble(self, username, name, max_running, max_planning):
         if (
             self.session.query(Ensemble)
@@ -389,16 +400,6 @@ class Triggers:
     def __init__(self, session):
         self.session = session
 
-    def get_ensemble_name(self, ensemble_id: int):
-        """Given an ensemble id, get its name
-
-        :param ensemble_id: id of target ensemble
-        :type ensemble_id: int
-        :return: name of target ensemble
-        :rtype: str
-        """
-        return self.session.query(Ensemble).filter_by(id=ensemble_id).first().name
-
     def get_trigger(self, ensemble_id: int, trigger_name: str):
         """Get a specific trigger
 
@@ -416,7 +417,7 @@ class Triggers:
 
     def list_triggers(self):
         """List all triggers"""
-        return self.session.query(Trigger).all()
+        return self.session.query(schema.Trigger).all()
 
     def list_triggers_by_ensemble(self, username: str, ensemble: str):
         """List all triggers belonging to a specific ensemble
@@ -473,10 +474,7 @@ class Triggers:
                 "name": trigger,
                 "state": "READY",
                 "workflow": json.dumps(
-                    {
-                        "script": workflow_script,
-                        "args": workflow_args,
-                    }
+                    {"script": workflow_script, "args": workflow_args,}
                 ),
                 "args": json.dumps(trigger_kwargs),
                 "type": trigger_type,

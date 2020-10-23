@@ -7,8 +7,8 @@ from subprocess import CompletedProcess
 import pytest
 
 import Pegasus
-from Pegasus.db.ensembles import Triggers
-from Pegasus.db.schema import Trigger
+import Pegasus.db.schema
+from Pegasus.db.ensembles import Ensembles, Triggers
 from Pegasus.service.ensembles.trigger import (
     CronTrigger,
     FilePatternTrigger,
@@ -24,7 +24,7 @@ class TestTriggerManager:
         mocker.patch(
             "Pegasus.db.ensembles.Triggers.list_triggers",
             return_value=[
-                Trigger(
+                Pegasus.db.schema.Trigger(
                     _id=1,
                     ensemble_id=1,
                     name="test-trigger",
@@ -52,7 +52,7 @@ class TestTriggerManager:
         mocker.patch(
             "Pegasus.db.ensembles.Triggers.list_triggers",
             return_value=[
-                Trigger(
+                Pegasus.db.schema.Trigger(
                     _id=1,
                     ensemble_id=1,
                     name="test-trigger",
@@ -85,7 +85,7 @@ class TestTriggerManager:
         mocker.patch(
             "Pegasus.db.ensembles.Triggers.list_triggers",
             return_value=[
-                Trigger(
+                Pegasus.db.schema.Trigger(
                     _id=1,
                     ensemble_id=1,
                     name="test-trigger",
@@ -121,7 +121,7 @@ class TestTriggerManager:
         mocker.patch(
             "Pegasus.db.ensembles.Triggers.list_triggers",
             return_value=[
-                Trigger(
+                Pegasus.db.schema.Trigger(
                     _id=1,
                     ensemble_id=1,
                     name="test-trigger",
@@ -149,14 +149,15 @@ class TestTriggerManager:
         )
         mocker.patch("Pegasus.db.ensembles.Triggers.update_state")
         mocker.patch(
-            "Pegasus.db.ensembles.Triggers.get_ensemble_name", return_value="test-ens"
+            "Pegasus.db.ensembles.Ensembles.get_ensemble_name", return_value="test-ens"
         )
         mocker.patch("threading.Thread.start")
 
         mgr = TriggerManager()
         mgr.trigger_dao = Triggers(None)
+        mgr.ensemble_dao = Ensembles(None)
         mgr.start_trigger(
-            Trigger(
+            Pegasus.db.schema.Trigger(
                 _id=1,
                 ensemble_id=1,
                 name="test-trigger",
@@ -189,14 +190,15 @@ class TestTriggerManager:
         )
         mocker.patch("Pegasus.db.ensembles.Triggers.update_state")
         mocker.patch(
-            "Pegasus.db.ensembles.Triggers.get_ensemble_name", return_value="test-ens"
+            "Pegasus.db.ensembles.Ensembles.get_ensemble_name", return_value="test-ens"
         )
         mocker.patch("threading.Thread.start")
 
         mgr = TriggerManager()
         mgr.trigger_dao = Triggers(None)
+        mgr.ensemble_dao = Ensembles(None)
         mgr.start_trigger(
-            Trigger(
+            Pegasus.db.schema.Trigger(
                 _id=1,
                 ensemble_id=1,
                 name="test-trigger",
@@ -239,7 +241,7 @@ class TestTriggerManager:
 
         # invoke stop trigger
         mgr.stop_trigger(
-            Trigger(
+            Pegasus.db.schema.Trigger(
                 _id=1,
                 ensemble_id=1,
                 name="test-trigger",
@@ -259,7 +261,7 @@ class TestTriggerManager:
         )
 
     def test_get_tname(self):
-        trigger = Trigger(
+        trigger = Pegasus.db.schema.Trigger(
             _id=1,
             ensemble_id=1,
             name="test-trigger",
@@ -356,10 +358,7 @@ class TestCronTrigger:
         mocker.patch(
             "subprocess.run",
             return_value=CompletedProcess(
-                None,
-                returncode=0,
-                stdout=b"out",
-                stderr=b"err",
+                None, returncode=0, stdout=b"out", stderr=b"err",
             ),
         )
 
