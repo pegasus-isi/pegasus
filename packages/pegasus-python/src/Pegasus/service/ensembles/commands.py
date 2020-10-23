@@ -592,10 +592,7 @@ class CronTriggerCommand(EnsembleClientCommand):
         )
 
         self.parser.add_argument(
-            "-a",
-            "--args",
-            nargs="+",
-            help="CLI args to be passed to WORKFLOW_SCRIPT",
+            "-a", "--args", nargs="+", help="CLI args to be passed to WORKFLOW_SCRIPT",
         )
 
     def parse(self, args):
@@ -693,6 +690,7 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
             "-a",
             "--args",
             nargs="+",
+            default=[],
             help="CLI args to be passed to WORKFLOW_SCRIPT",
         )
 

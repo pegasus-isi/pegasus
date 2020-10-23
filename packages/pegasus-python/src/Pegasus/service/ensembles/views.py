@@ -282,7 +282,7 @@ def route_create_trigger(ensemble, trigger):
         "trigger": trigger,
         "trigger_type": trigger_type,
         "workflow_script": request.form.get("workflow_script"),
-        "workflow_args": request.form.get("workflow_args"),
+        "workflow_args": json.loads(request.form.get("workflow_args")),
     }
 
     if trigger_type == TriggerType.CRON.value:

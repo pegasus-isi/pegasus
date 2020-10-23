@@ -468,25 +468,17 @@ class Triggers:
         :param trigger_kwargs: any arguments specific to the trigger (e.g. interval=10s)
         """
 
-        # TODO: replace vanilla sql
-        stmt = """
-        INSERT INTO trigger (ensemble_id, name, state, workflow, args, type) 
-        VALUES(:ensemble_id, :name, :state, :workflow, :args, :type);
-        """
-
-        self.session.execute(
-            stmt,
-            {
-                "ensemble_id": ensemble_id,
-                "name": trigger,
-                "state": "READY",
-                "workflow": json.dumps(
-                    {"script": workflow_script, "args": workflow_args,}
-                ),
-                "args": json.dumps(trigger_kwargs),
-                "type": trigger_type,
-            },
+        self.session.add(
+            schema.Trigger(
+                ensemble_id=ensemble_id,
+                name=trigger,
+                state="READY",
+                workflow=json.dumps({"script": workflow_script, "args": workflow_args}),
+                args=json.dumps(trigger_kwargs),
+                _type=trigger_type,
+            )
         )
+
         self.session.commit()
 
     def update_state(self, ensemble_id: int, trigger_id: int, new_state: str):
