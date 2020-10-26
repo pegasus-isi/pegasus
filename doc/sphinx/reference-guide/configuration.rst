@@ -1067,6 +1067,12 @@ by the local attributes.sh. The profiles are described below.
     | | Since : 4.0                               | | in the job_instance table described                            |
     | | Type : Integer                            | | :ref:`here <stampede-schema-overview>` .                       |
     +---------------------------------------------+------------------------------------------------------------------+
+    | | Property Key: pegasus.gpus                | | The total number of gpus, required for a job.                  |
+    | | Profile Key:gpus                          | |                                                                |
+    | | Scope : TC, SC, Abstract WF, Properties   | |                                                                |
+    | | Since : 5.0                               | |                                                                |
+    | | Type : Integer                            | |                                                                |
+    +---------------------------------------------+------------------------------------------------------------------+
     | | Property Key: pegasus.nodes               | Indicates the the number of nodes a job requires.                |
     | | Profile Key: nodes                        |                                                                  |
     | | Scope : TC, SC, Abstract WF, Properties   |                                                                  |
