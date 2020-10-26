@@ -67,17 +67,9 @@ $ twine upload <python-package>
 
 11. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
 
-12. Build deplot Docker tutorial.
-
-```bash
-ssh admin@pegasus-tutorial.isi.edu "cd /lfs1/pegasus-docker-tutorial ; ./build.sh"
-```
-
-13. Create and deploy the tutorial VMs.
-
-14. Change the symbolic link for the latest documentation to point
+12. Change the symbolic link for the latest documentation to point
     to latest stable release
     https://pegasus.isi.edu/documentation/
 
-15. Send annouce email to pegasus-announce@mailman.isi.edu
+13. Send annouce email to pegasus-announce@mailman.isi.edu
     (Karan has to do this step)
