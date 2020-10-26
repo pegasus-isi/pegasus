@@ -111,7 +111,7 @@ public class Docker extends Abstract {
         if (job.vdsNS.containsKey(Pegasus.GPUS_KEY)) {
             sb.append("--gpus all");
         }
-        
+
         // PM-1298 mount any host directories if specified
         for (Container.MountPoint mp : c.getMountPoints()) {
             sb.append("-v ").append(mp).append(" ");
