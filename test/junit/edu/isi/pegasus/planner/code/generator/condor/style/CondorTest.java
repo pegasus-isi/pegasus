@@ -33,6 +33,10 @@ public class CondorTest {
 
     private static final String REQUEST_CPUS_KEY =
             edu.isi.pegasus.planner.namespace.Condor.REQUEST_CPUS_KEY;
+
+    private static final String REQUEST_GPUS_KEY =
+            edu.isi.pegasus.planner.namespace.Condor.REQUEST_GPUS_KEY;
+
     private static final String REQUEST_MEMORY_KEY =
             edu.isi.pegasus.planner.namespace.Condor.REQUEST_MEMORY_KEY;
 
@@ -48,6 +52,13 @@ public class CondorTest {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.CORES_KEY, "5");
         testForKey(j, REQUEST_CPUS_KEY, "5");
+    }
+
+    @Test
+    public void testPegasusProfileGPUS() throws CondorStyleException {
+        Job j = new Job();
+        j.vdsNS.checkKeyInNS(Pegasus.GPUS_KEY, "6");
+        testForKey(j, REQUEST_GPUS_KEY, "6");
     }
 
     @Test

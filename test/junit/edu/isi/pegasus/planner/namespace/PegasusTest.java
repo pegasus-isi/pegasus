@@ -179,6 +179,10 @@ public class PegasusTest {
         mLogger.logEventCompletion();
 
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        testKey(Pegasus.GPUS_KEY, "3", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
         testKey(Pegasus.JOB_AGGREGATOR_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 

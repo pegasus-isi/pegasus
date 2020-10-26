@@ -355,6 +355,9 @@ public class Pegasus extends Namespace {
      */
     public static final String CORES_KEY = "cores";
 
+    /** The number of gpus requested for a job. */
+    public static final String GPUS_KEY = "gpus";
+
     /** Key indicating max diskspace used by a job a in MB */
     public static final String DISKSPACE_KEY = "diskspace";
 
@@ -575,6 +578,7 @@ public class Pegasus extends Namespace {
                         || key.compareTo(GRIDSTART_LAUNCHER_KEY) == 0
                         || key.compareTo(GRIDSTART_LAUNCHER_ARGUMENTS_KEY) == 0
                         || key.compareTo(GOOGLEP12) == 0
+                        || key.compareTo(GPUS_KEY) == 0
                         || key.compareTo(GLITE_ARGUMENTS_KEY) == 0) {
                     res = VALID_KEY;
                 } else {
