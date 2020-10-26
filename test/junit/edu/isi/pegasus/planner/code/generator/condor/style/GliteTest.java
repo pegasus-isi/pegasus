@@ -90,6 +90,13 @@ public class GliteTest {
     }
 
     @Test
+    public void testPegasusGPUS() throws CondorStyleException {
+        Job j = new Job();
+        j.vdsNS.construct(Pegasus.GPUS_KEY, "5");
+        this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*GPUS==\"([0-9]*)\".*", "5");
+    }
+
+    @Test
     public void testPegasusProfileMemory() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.construct(Pegasus.MEMORY_KEY, "50");

@@ -70,6 +70,14 @@ public class CondorTest {
     }
 
     @Test
+    public void testPegasusProfileGPUSAndCondorKey() throws CondorStyleException {
+        Job j = new Job();
+        j.vdsNS.checkKeyInNS(Pegasus.GPUS_KEY, "5");
+        j.condorVariables.checkKeyInNS(REQUEST_GPUS_KEY, "6");
+        testForKey(j, REQUEST_GPUS_KEY, "6");
+    }
+
+    @Test
     public void testPegasusProfileMemory() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
