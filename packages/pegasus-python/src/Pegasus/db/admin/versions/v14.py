@@ -2,10 +2,11 @@ __author__ = "Rafael Ferreira da Silva"
 
 import logging
 
+from sqlalchemy.exc import *
+
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.admin.versions.base_version import BaseVersion
 from Pegasus.db.schema import *
-from sqlalchemy.exc import *
 
 DB_VERSION = 14
 
@@ -21,7 +22,7 @@ class Version(BaseVersion):
         log.debug("Updating to version %s" % DB_VERSION)
         try:
             Trigger.__table__.create(self.db.get_bind(), checkfirst=True)
-        except (OperationalError, ProgrammingError) as e:
+        except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
             self.db.rollback()
