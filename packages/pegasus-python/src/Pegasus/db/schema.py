@@ -1109,7 +1109,7 @@ class Trigger(Base):
     state = Column("state", Enum(*TriggerStates, name="trigger_state"), nullable=False)
     workflow = Column("workflow", Text(), nullable=False)
     args = Column("args", Text())
-    _type = Column("type", Enum(*[t.value for t in list(TriggerType)]), nullable=False)
+    _type = Column("type", Enum(*[t.value for t in list(TriggerType)], name="trigger_type"), nullable=False)
 
 
 Trigger.__table_args__ = (
