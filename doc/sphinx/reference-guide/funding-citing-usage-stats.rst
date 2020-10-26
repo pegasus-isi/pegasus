@@ -4,35 +4,12 @@
 Funding, citing, and anonymous usage statistics
 ===============================================
 
-.. _funding:
-
-Pegasus Funding
-===============
-
-Pegasus is funded by the National Science Foundation(NSF) under the *OAC
-SI2-SSI*\ grant **#1664162**. Previously, NSF has funded Pegasus under
-*OCI SDCI program* grant **#0722019** and *OCI SI2-SSI* program grant
-**#1148515**.
-
 .. _citing:
 
 Citing Pegasus in Academic Works
 ================================
 
-The preferred generic way to cite Pegasus is:
-
-*“Pegasus: a Workflow Management System for Science Automation” E.
-Deelman, K. Vahi, G. Juve, M. Rynge, S. Callaghan, P. J. Maechling, R.
-Mayani, W. Chen, R. Ferreira da Silva, M. Livny, and K. Wenger, Future
-Generation Computer Systems, vol. 46, p. 17–35, 2015.*
-
-OR
-
-*Pegasus: a Framework for Mapping Complex Scientific Workflows onto
-Distributed Systems, Ewa Deelman, Gurmeet Singh, Mei-Hui Su, James
-Blythe, Yolanda Gil, Carl Kesselman, Gaurang Mehta, Karan Vahi, G. Bruce
-Berriman, John Good, Anastasia Laity, Joseph C. Jacob, Daniel S. Katz.
-Scientific Programming Journal, Vol 13(3), 2005, Pages 219-237.*
+Please see the `Pegasus Website <https://pegasus.isi.edu/about/acknowledge/>`__
 
 .. _usage-statistics:
 
@@ -44,11 +21,8 @@ Usage Statistics Collection
 Purpose
 -------
 
-Pegasus WMS is primarily a NSF funded project as part of the `NSF
-SI2 <http://www.nsf.gov/funding/pgm_summ.jsp?pims_id=504817>`__ track.
-The SI2 program focuses on robust, reliable, usable and sustainable
-software infrastructure that is critical to the CIF21 vision. As part of
-the requirements of being funded under this program, Pegasus WMS is
+Pegasus WMS is primarily a NSF funded project. As part of
+the requirements of this funding, Pegasus WMS is
 required to gather usage statistics of Pegasus WMS and report it back to
 NSF in annual reports. The metrics will also enable us to improve our
 software as they will include errors encountered during the use of our

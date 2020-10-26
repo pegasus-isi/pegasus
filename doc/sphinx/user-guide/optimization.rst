@@ -69,7 +69,7 @@ which clustering technique to use the user has to pass the **--cluster**
 option to **pegasus-plan** .
 
 Generating Clustered Executable Workflow
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 The clustering of a workflow is activated by passing the
 **--cluster|-C** option to **pegasus-plan**. The clustering granularity
@@ -99,7 +99,7 @@ clustered job.
 .. _horizontal-clustering:
 
 Horizontal Clustering
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 In case of horizontal clustering, each job in the workflow is associated
 with a level. The levels of the workflow are determined by doing a
@@ -113,7 +113,7 @@ use horizontal clustering the user needs to set the **--cluster** option
 of **pegasus-plan to horizontal** .
 
 Controlling Clustering Granularity
-''''''''''''''''''''''''''''''''''
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The number of jobs that have to be clustered into a single large job, is
 determined by the value of two parameters associated with the smaller
@@ -229,7 +229,7 @@ the one in the DAX. The two parameters are described below.
 .. _runtime-clustering:
 
 Runtime Clustering
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Workflows often consist of jobs of same type, but have varying run
 times. Two or more instances of the same job, with varying inputs can
@@ -383,7 +383,7 @@ use runtime clustering. This is done by setting the following property .
 .. _label-clustering:
 
 Label Clustering
-^^^^^^^^^^^^^^^^
+----------------
 
 In label based clustering, the user labels the workflow. All jobs having
 the same label value are clustered into a single clustered job. This
@@ -398,7 +398,7 @@ clustering the user needs to set the **--cluster** option of
 **pegasus-plan** to label.
 
 Labelling the Workflow
-''''''''''''''''''''''
+^^^^^^^^^^^^^^^^^^^^^^
 
 The labels for the jobs in the workflow are specified by associated
 **pegasus** profile keys with the jobs during the DAX generation
@@ -433,7 +433,7 @@ For example if the user sets **pegasus.clusterer.label.key**\ to
    **user_label**\ appears in the same cluster.
 
 Recursive Clustering
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 In some cases, a user may want to use a combination of clustering
 techniques. For e.g. a user may want some jobs in the workflow to be
@@ -455,7 +455,7 @@ For example
    Recursive clustering
 
 Execution of the Clustered Job
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 The execution of the clustered job on the remote site, involves the
 execution of the smaller constituent jobs either
@@ -548,7 +548,7 @@ execution of the smaller constituent jobs either
       with PMC
 
 Specification of Method of Execution for Clustered Jobs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------------------
 
 The method execution of the clustered job(whether to launch via mpiexec
 or seqexec) can be specified
@@ -619,17 +619,18 @@ or seqexec) can be specified
       -  the number of jobs being clustered on the site are more than 1
 
 Outstanding Issues
-~~~~~~~~~~~~~~~~~~
+------------------
 
 1. **Label Clustering**
 
    More rigorous checks are required to ensure that the labeling scheme
    applied by the user is valid.
 
-.. _large-workflows:
 
-How to Scale Large Workflows
-============================
+.. _hierarchial-workflows:
+
+Hierarchical Workflows
+======================
 
 *Issue:* When planning and running large workflows, there are some
 scalability issues to be aware of. During the planning stage, Pegasus
@@ -641,23 +642,11 @@ operating system. A common problem is the number of files in a single
 directory, such as thousands or millons input or output files.
 
 *Solution:* The most common solution to these problems is to use
-`hierarchical workflows <#hierarchial_workflows>`__, which works really
+hierarchical workflows, which works really
 well if your workflow can be logically partitioned into smaller
 workflows. A hierarchical workflow still runs like a single workflow,
 with the difference being that some jobs in the workflow are actually
 sub-workflows.
-
-For workflows with a large number of files, you can control the number
-of files in a single directory by reorganizing the files into a deep
-directory structure.
-
-.. _hierarchial-workflows:
-
-Hierarchical Workflows
-======================
-
-Introduction
-------------
 
 The Abstract Workflow in addition to containing compute jobs, can also
 contain jobs that refer to other workflows. This is useful for running
@@ -686,6 +675,7 @@ Users can embed two types of workflow jobs in the DAX
 
       Planning of a DAG Job
 
+
 Specifying a DAX Job in the DAX
 -------------------------------
 
@@ -702,8 +692,9 @@ API <#api>`__ . An example DAX Job in a DAX is shown below
        <argument>-Xmx1024 -Xms512 -Dpegasus.dir.storage=storagedir  -Dpegasus.dir.exec=execdir -o local -vvvvv --force -s dax_site </argument>
      </dax>
 
+
 DAX File Locations
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 The name attribute in the dax element refers to the LFN ( Logical File
 Name ) of the dax file. The location of the DAX file can be catalogued
@@ -718,8 +709,9 @@ either in the
       Currently, only file url's on the local site ( submit host ) can
       be specified as DAX file locations.
 
+
 Arguments for a DAX Job
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Users can specify specific arguments to the DAX Jobs. The arguments
 specified for the DAX Jobs are passed to the pegasus-plan invocation in
@@ -749,16 +741,18 @@ values to these options for the sub workflows automatically.
 
 3. --relative-submit-dir
 
+
 Profiles for DAX Job
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 Users can choose to specify dagman profiles with the DAX Job to control
 the behavior of the corresponding condor dagman instance in the
 executable workflow. In the example `above <#dax_job_example>`__ maxjobs
 is set to 10 for the sub workflow.
 
-Execution of the PRE script and Condor DAGMan instance
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Execution of the PRE script and HTCondor DAGMan instance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The pegasus plan that is invoked as part of the prescript to the condor
 dagman job is executed on the submit host. The log from the output of
@@ -791,6 +785,7 @@ binary is determined according to the following rules -
    properties file to control the maximum number of pegasus plan
    instances launched by each running dagman instance.
 
+
 Specifying a DAG Job in the DAX
 -------------------------------
 
@@ -807,8 +802,9 @@ a DAX is shown below
        <profile namespace="dagman" key="DIR">/dag-dir/test</profile>
      </dag>
 
+
 DAG File Locations
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 The name attribute in the dag element refers to the LFN ( Logical File
 Name ) of the dax file. The location of the DAX file can be catalogued
@@ -823,8 +819,9 @@ either in the
       Currently, only file url's on the local site ( submit host ) can
       be specified as DAG file locations.
 
+
 Profiles for DAG Job
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 Users can choose to specify dagman profiles with the DAX Job to control
 the behavior of the corresponding condor dagman instance in the
@@ -837,8 +834,9 @@ they want the condor dagman instance to execute. In the example
 directory /dag-dir/test . The /dag-dir/test should be created
 beforehand.
 
+
 File Dependencies Across DAX Jobs
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In hierarchal workflows , if a sub workflow generates some output files
 required by another sub workflow then there should be an edge connecting
@@ -864,6 +862,7 @@ The above is useful in the case, where you are staging out the output
 files to a storage site, and you want the child sub workflow to stage
 these files from the storage output site instead of the workflow
 execution directory where the files were originally created.
+
 
 Recursion in Hierarchal Workflows
 ---------------------------------
@@ -891,12 +890,6 @@ illustrated below.
 
    Execution Time-line for Hierarchal Workflows
 
-Example
--------
-
-The Galactic Plane workflow is a Hierarchical workflow of many Montage
-workflows. For details, see `Workflow of
-Workflows <#example_workflows>`__.
 
 .. _data-transfers:
 

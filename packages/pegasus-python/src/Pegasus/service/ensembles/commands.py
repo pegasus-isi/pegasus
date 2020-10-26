@@ -35,7 +35,8 @@ class EnsembleClientCommand(Command):
         defaults = {"auth": (self.username, self.password), "headers": headers}
         defaults.update(kwargs)
         url = urlparse.urljoin(self.endpoint, path)
-        response = requests.request(method, url, **defaults)
+        # TODO: test this without **Defaults and pass everything as json
+        response = requests.request(method, url, json={"hello": "world"}, **defaults)
 
         if 200 <= response.status_code < 300:
             return response
@@ -51,8 +52,8 @@ class EnsembleClientCommand(Command):
     def get(self, path, **kwargs):
         return self._request("get", path, **kwargs)
 
-    def post(self, path, json=None, **kwargs):
-        return self._request("post", path, json=json, **kwargs)
+    def post(self, path, **kwargs):
+        return self._request("post", path, **kwargs)
 
     def delete(self, path, **kwargs):
         return self._request("delete", path, **kwargs)
@@ -554,9 +555,9 @@ def to_seconds(value: str) -> int:
     return result
 
 
-class ChronTriggerCommand(EnsembleClientCommand):
+class CronTriggerCommand(EnsembleClientCommand):
     description = "Create a time based workflow trigger"
-    usage = "Usage: pegasus-em chron-trigger ENSEMBLE TRIGGER INTERVAL WORKFLOW_SCRIPT [--timeout TIMEOUT] [--args ARG1 [ARG2 ...]]"
+    usage = "Usage: pegasus-em cron-trigger ENSEMBLE TRIGGER INTERVAL WORKFLOW_SCRIPT [--timeout TIMEOUT] [--args ARG1 [ARG2 ...]]"
 
     def __init__(self):
         EnsembleClientCommand.__init__(self)
@@ -627,10 +628,10 @@ class ChronTriggerCommand(EnsembleClientCommand):
 
         request = {
             "workflow_script": self.args.workflow_script,
-            "workflow_args": self.args.args,
+            "workflow_args": json.dumps(self.args.args),
             "interval": interval,
             "timeout": timeout,
-            "type": TriggerType.CHRON.value,
+            "type": TriggerType.CRON.value,
         }
 
         response = self.post(
@@ -686,7 +687,11 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
         )
 
         self.parser.add_argument(
-            "-a", "--args", nargs="+", help="CLI args to be passed to WORKFLOW_SCRIPT",
+            "-a",
+            "--args",
+            nargs="+",
+            default=[],
+            help="CLI args to be passed to WORKFLOW_SCRIPT",
         )
 
     def parse(self, args):
@@ -735,7 +740,7 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
 
         request = {
             "workflow_script": self.args.workflow_script,
-            "workflow_args": self.args.args,
+            "workflow_args": json.dumps(self.args.args),
             "interval": interval,
             "timeout": timeout,
             "file_patterns": json.dumps(self.args.file_patterns),
@@ -776,7 +781,7 @@ class EnsembleCommand(CompoundCommand):
         ("replan", ReplanCommand),
         ("rerun", RerunCommand),
         ("priority", PriorityCommand),
-        ("chron-trigger", ChronTriggerCommand),
+        ("cron-trigger", CronTriggerCommand),
         ("file-pattern-trigger", FilePatternTriggerCommand),
     ]
     aliases = {

@@ -53,22 +53,6 @@ to indicate the omitted output.
 Getting Started
 ===============
 
-Easiest way to start the tutorial is to connect to a hosted service
-using SSH as shown below.
-
-::
-
-   $ ssh tutorial@pegasus-tutorial.isi.edu
-   tutorial@pegasus-tutorial.isi.edu's password: pegasus123
-
-
-.. note::
-
-   The workflow dashboard is not run in the hosted service. To try out
-   the workflow dashboard use the virtual machines provided below.
-
-**OR**
-
 We have provided several virtual machines that contain all of the
 software required for this tutorial. Virtual machine images are provided
 for

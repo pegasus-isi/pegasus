@@ -12,7 +12,8 @@ from typing import List, Optional
 
 from Pegasus import user
 from Pegasus.db import connection
-from Pegasus.db.ensembles import Trigger, TriggerType
+from Pegasus.db.ensembles import Ensembles, Triggers, TriggerType
+from Pegasus.db.schema import Trigger
 
 
 # --- manager ------------------------------------------------------------------
@@ -36,6 +37,7 @@ class TriggerManager(threading.Thread):
         self.running = dict()
 
         self.trigger_dao = None
+        self.ensemble_dao = None
 
     def run(self):
         """Trigger manager main loop."""
@@ -50,10 +52,10 @@ class TriggerManager(threading.Thread):
             )
 
             try:
-                self.trigger_dao = Trigger(session)
+                self.trigger_dao = Triggers(session)
+                self.ensemble_dao = Ensembles(session)
                 triggers = self.trigger_dao.list_triggers()
                 self.log.info("processing {} triggers".format(len(triggers)))
-
                 for t in triggers:
                     t_name = TriggerManager.get_tname(t)
                     if t.state == "READY":
@@ -88,18 +90,18 @@ class TriggerManager(threading.Thread):
         workflow = json.loads(trigger.workflow)
         required_args = {
             "ensemble_id": trigger.ensemble_id,
-            "ensemble": self.trigger_dao.get_ensemble_name(trigger.ensemble_id),
+            "ensemble": self.ensemble_dao.get_ensemble_name(trigger.ensemble_id),
             "trigger": trigger.name,
             "workflow_script": workflow["script"],
-            "workflow_args": workflow["args"].split() if workflow["args"] else [],
+            "workflow_args": workflow["args"] if workflow["args"] else [],
         }
         trigger_specific_kwargs = json.loads(trigger.args)
 
         # create trigger thread
-        if trigger.type == TriggerType.CHRON.value:
-            t = ChronTrigger(**required_args, **trigger_specific_kwargs)
+        if trigger._type == TriggerType.CRON.value:
+            t = CronTrigger(**required_args, **trigger_specific_kwargs)
 
-        elif trigger.type == TriggerType.FILE_PATTERN.value:
+        elif trigger._type == TriggerType.FILE_PATTERN.value:
             t = FilePatternTrigger(**required_args, **trigger_specific_kwargs)
 
         else:
@@ -118,7 +120,7 @@ class TriggerManager(threading.Thread):
             )
         )
         self.trigger_dao.update_state(
-            ensemble_id=trigger.ensemble_id, trigger_id=trigger.id, new_state="RUNNING"
+            ensemble_id=trigger.ensemble_id, trigger_id=trigger._id, new_state="RUNNING"
         )
 
     def stop_trigger(self, trigger: Trigger):
@@ -180,7 +182,7 @@ class TriggerThread(threading.Thread):
         self.stop_event.set()
 
 
-class ChronTrigger(TriggerThread):
+class CronTrigger(TriggerThread):
     """Submits a workflow to the ensemble manager at a specified interval."""
 
     def __init__(
@@ -189,9 +191,9 @@ class ChronTrigger(TriggerThread):
         ensemble: str,
         trigger: str,
         interval: int,
-        timeout: int,
         workflow_script: str,
         workflow_args: Optional[List[str]] = None,
+        timeout: Optional[int] = None,
         **kwargs
     ):
 
@@ -209,10 +211,10 @@ class ChronTrigger(TriggerThread):
         self.elapsed = 0
 
     def __repr__(self):
-        return "<ChronTrigger {} interval={}s>".format(self.name, self.interval)
+        return "<CronTrigger {} interval={}s>".format(self.name, self.interval)
 
     def run(self):
-        """ChronTrigger main loop."""
+        """CronTrigger main loop."""
         try:
             self.log.debug("starting")
 
@@ -234,9 +236,12 @@ class ChronTrigger(TriggerThread):
                     self.log.info("executed cmd: {}".format(cmd))
                 else:
                     self.log.error("encountered an error executing cmd: {}".format(cmd))
-                    raise RuntimeError(cp.stderr.decode())
-
-                self.log.info("doing some work!!!!")
+                    stderr = (
+                        cp.stderr.decode()
+                        if isinstance(cp.stderr, bytes)
+                        else cp.stderr
+                    )
+                    raise RuntimeError(stderr)
 
                 time.sleep(self.interval)
                 if self.timeout:
@@ -319,9 +324,12 @@ class FilePatternTrigger(TriggerThread):
                         self.log.error(
                             "encountered error executing cmd: {}".format(cmd)
                         )
-                        raise RuntimeError(cp.stderr.decode())
-
-                self.log.info("doing some work!!")
+                        stderr = (
+                            cp.stderr.decode()
+                            if isinstance(cp.stderr, bytes)
+                            else cp.stderr
+                        )
+                        raise RuntimeError(stderr)
 
                 time.sleep(self.interval)
                 if self.timeout:
