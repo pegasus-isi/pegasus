@@ -316,7 +316,6 @@ public class GLite extends Abstract {
 
         // PM-1116 set the task requirements as environment variables
         Globus rsl = job.globusRSL;
-
         for (Map.Entry<String, String> entry : Globus.rslToEnvProfiles().entrySet()) {
             String rslKey = entry.getKey();
             String envKey = entry.getValue();
@@ -332,6 +331,9 @@ public class GLite extends Abstract {
 
                 job.envVariables.construct(envKey, value);
             }
+        }
+        if (job.vdsNS.containsKey(Pegasus.GPUS_KEY)) {
+            job.envVariables.construct("PEGASUS_GPUS", (String) job.vdsNS.get(Pegasus.GPUS_KEY));
         }
 
         /* do special handling for jobs scheduled to local site
@@ -440,6 +442,13 @@ public class GLite extends Abstract {
         if (job.globusRSL.containsKey("count")) {
             value.append(" && ");
             addSubExpression(value, "CORES", (String) job.globusRSL.get("count"));
+        }
+
+        /* PM-1625 pick the pegasus profile key gpus directly, as we don't have a RSL
+        counterpart */
+        if (job.vdsNS.containsKey(Pegasus.GPUS_KEY)) {
+            value.append(" && ");
+            addSubExpression(value, "GPUS", (String) job.vdsNS.get(Pegasus.GPUS_KEY));
         }
 
         /* the globus key xcount is PROCS */
