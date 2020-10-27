@@ -1027,10 +1027,14 @@ understands.
     | | Since : 5.0                              | | the container associated with this profile is executed            |
     | | Type :String                             |                                                                     |
     +--------------------------------------------+---------------------------------------------------------------------+
-    | | Profile Key: pegasus_lite_env_source     | | indicates a path to a setup script that needs to be sourced in    |
-    | | Scope : Site Catalog                     | | PegasusLite when running the job. This profile should             |
-    | | Since : 5.0                              | | be associated with compute site on which the job runs in the      |
-    | | Type :String                             | | Site Catalog.                                                     |
+    | | Profile Key: pegasus_lite_env_source     | | indicates a path to a setup script residing on the submit host    |
+    | | Scope : Site Catalog                     | | that needs to be sourced in PegasusLite when running the job.     |
+    | | Since : 5.0                              | | This profile should be associated with local site in the          |
+    | | Type :String                             | | Site Catalog. You can also specify an environment profile named   |
+    | |                                          | | PEGASUS_LITE_ENV_SOURCE with the compute site in the              |
+    | |                                          | | Site Catalog to indicate a setup script that already exists       |
+    | |                                          | | on the compute nodes, but just needs to be sourced when           |
+    |                                            | | executing the job.                                                          |
     +--------------------------------------------+---------------------------------------------------------------------+
 
 

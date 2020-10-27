@@ -19,6 +19,7 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -167,12 +168,6 @@ public class PegasusLite implements GridStart {
     /** The submit directory where the submit files are being generated for the workflow. */
     protected String mSubmitDir;
 
-    /**
-     * The argument string containing the arguments with which the exitcode is invoked on kickstart
-     * output.
-     */
-    //    protected String mExitParserArguments;
-
     /** A boolean indicating whether to generate lof files or not. */
     protected boolean mGenerateLOF;
 
@@ -253,6 +248,9 @@ public class PegasusLite implements GridStart {
     /** integrity handler for containers * */
     protected Integrity mContainerIntegrityHandler;
 
+    /** path to a setup script on the submit host that needs to be sourced in PegasusLite. */
+    protected String mSetupScriptOnTheSubmitHost;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -311,6 +309,11 @@ public class PegasusLite implements GridStart {
 
         mDoIntegrityChecking = mProps.doIntegrityChecking();
         mContainerIntegrityHandler = new Integrity();
+
+        Namespace localSitePegasusProfiles =
+                mSiteStore.lookup("local").getProfiles().get(Profiles.NAMESPACES.pegasus);
+        mSetupScriptOnTheSubmitHost =
+                (String) localSitePegasusProfiles.get(Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY);
     }
 
     /**
@@ -1286,7 +1289,7 @@ public class PegasusLite implements GridStart {
         String setupFile = (String) job.envVariables.get(key);
         if (setupFile == null) {
             // check if the key is specified as a pegasus profile
-            setupFile = job.vdsNS.getStringValue(Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY);
+            setupFile = mSetupScriptOnTheSubmitHost;
             if (setupFile != null) {
                 // in case a pegasus profile is specified, then it means
                 // the script needs to be transferred using Condor File IO
