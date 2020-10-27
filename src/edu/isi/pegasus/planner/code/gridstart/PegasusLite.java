@@ -220,9 +220,6 @@ public class PegasusLite implements GridStart {
      */
     Map<String, String> mWorkerPackageMap;
 
-    /** A map indexed by the execution site and setupFile is the path to chmod on that site. */
-    private Map<String, String> mChmodOnExecutionSiteMap;
-
     /**
      * Indicates whether to enforce strict checks against the worker package provided for jobs in
      * PegasusLite mode. if a job comes with worker package and it does not match fully with worker
@@ -281,8 +278,6 @@ public class PegasusLite implements GridStart {
         mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mAllowWPDownloadFromWebsite = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
-
-        mChmodOnExecutionSiteMap = new HashMap<String, String>();
 
         Version version = Version.instance();
         mMajorVersionLevel = version.getMajor();
