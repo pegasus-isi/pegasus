@@ -35,6 +35,8 @@ public class PegasusTest {
     private TestSetup mTestSetup;
     private LogManager mLogger;
 
+    private static int mTestNum = 1;
+
     public PegasusTest() {}
 
     @BeforeClass
@@ -59,274 +61,279 @@ public class PegasusTest {
     @Test
     public void testcheckKey() {
 
-        int set = 1;
-
         // should print
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.BUNDLE_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.BUNDLE_LOCAL_STAGE_IN_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.BUNDLE_LOCAL_STAGE_OUT_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.BUNDLE_REMOTE_STAGE_IN_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.BUNDLE_STAGE_IN_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.BUNDLE_STAGE_OUT_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CHAIN_STAGE_IN_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CHANGE_DIR_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CLUSTER_ARGUMENTS, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CLUSTER_REMOTE_STAGE_IN_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CLUSTER_STAGE_IN_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CLUSTER_STAGE_OUT_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.COLLAPSE_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CORES_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CREATE_AND_CHANGE_DIR_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.DISKSPACE_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.DATA_CONFIGURATION_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.ENABLE_FOR_DATA_REUSE_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.EXITCODE_FAILURE_MESSAGE, "dummy", Namespace.MERGE_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.EXITCODE_SUCCESS_MESSAGE, "dummy", Namespace.MERGE_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CHECKPOINT_TIME_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.GRIDSTART_ARGUMENTS_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.GRIDSTART_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.GRIDSTART_PATH_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.GROUP_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.GPUS_KEY, "3", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.JOB_AGGREGATOR_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.NODES_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.LABEL_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.MAX_RUN_TIME, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.MAX_WALLTIME, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.MEMORY_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.PMC_PRIORITY_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.PMC_REQUEST_CPUS_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.PMC_REQUEST_MEMORY_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.PMC_TASK_ARGUMENTS, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.REMOTE_INITIALDIR_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.RUNTIME_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.STYLE_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.TRANSFER_ARGUMENTS_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.TRANSFER_PROXY_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.TRANSFER_SLS_ARGUMENTS_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.TRANSFER_SLS_THREADS_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.TRANSFER_THREADS_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.TYPE_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.WORKER_NODE_DIRECTORY_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.WORKER_NODE_DIRECTORY_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
         // test resource requirement keys
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.RUNTIME_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CORES_KEY, "2", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.DISKSPACE_KEY, "12", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.NODES_KEY, "3", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.PPN_KEY, "1", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.MEMORY_KEY, "100", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.QUEUE_KEY, "pegasusQ", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.PROJECT_KEY, "pegasus", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CONTAINER_ARGUMENTS_KEY, "pegasus", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
         // deprecated keys
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.COLLAPSER_KEY, "dummy", Namespace.DEPRECATED_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.DEPRECATED_BUNDLE_STAGE_IN_KEY, "dummy", Namespace.DEPRECATED_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.DEPRECATED_CHANGE_DIR_KEY, "dummy", Namespace.DEPRECATED_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.DEPRECATED_RUNTIME_KEY, "dummy", Namespace.DEPRECATED_KEY);
         mLogger.logEventCompletion();
 
         // other keys
-        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(set++));
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY, "true", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testPegasusLiteEnvSourceKey() {
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
+        testKey(Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
     }
 

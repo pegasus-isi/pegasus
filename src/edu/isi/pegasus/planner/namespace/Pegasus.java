@@ -391,6 +391,10 @@ public class Pegasus extends Namespace {
     /** Profile key to determine condor quoting for a job. */
     public static final String CONDOR_QUOTE_ARGUMENTS_KEY = "condor.arguments.quote";
 
+    /** profile key for pegasus lite source scritp */
+    public static final String PEGASUS_LITE_ENV_SOURCE_KEY =
+            ENV.PEGASUS_LITE_ENV_SOURCE_KEY.toLowerCase();
+
     // credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
     private static final String SSH_PRIVATE_KEY_VARIABLE =
@@ -634,7 +638,8 @@ public class Pegasus extends Namespace {
                         || key.compareTo(PMC_PRIORITY_KEY) == 0
                         || key.compareTo(PMC_TASK_ARGUMENTS) == 0
                         || key.compareTo(PPN_KEY) == 0
-                        || key.compareTo(PROJECT_KEY) == 0) {
+                        || key.compareTo(PROJECT_KEY) == 0
+                        || key.compareTo(PEGASUS_LITE_ENV_SOURCE_KEY) == 0) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;
