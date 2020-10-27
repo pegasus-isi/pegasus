@@ -43,6 +43,7 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -219,7 +220,7 @@ public class PegasusLite implements GridStart {
      */
     Map<String, String> mWorkerPackageMap;
 
-    /** A map indexed by the execution site and value is the path to chmod on that site. */
+    /** A map indexed by the execution site and setupFile is the path to chmod on that site. */
     private Map<String, String> mChmodOnExecutionSiteMap;
 
     /**
@@ -456,7 +457,7 @@ public class PegasusLite implements GridStart {
 
                         if (!mWorkerPackageMap.containsKey(job.getSiteHandle())) {
                             location = retrieveLocationForWorkerPackageFromTC(job.getSiteHandle());
-                            // null can be populated as value
+                            // null can be populated as setupFile
                             this.mWorkerPackageMap.put(job.getSiteHandle(), location);
                         }
                         // add only if location is not null
@@ -521,7 +522,7 @@ public class PegasusLite implements GridStart {
      * the loading of this particular implementation. It is usually the name of the implementing
      * class without the package name.
      *
-     * @return the value of the profile key.
+     * @return the setupFile of the profile key.
      * @see edu.isi.pegasus.planner.namespace.Pegasus#GRIDSTART_KEY
      */
     public String getVDSKeyValue() {
@@ -618,7 +619,7 @@ public class PegasusLite implements GridStart {
      *
      * @param job contains the job description.
      * @param key the key of the profile.
-     * @param value the associated value.
+     * @param value the associated setupFile.
      */
     private void construct(Job job, String key, String value) {
         job.condorVariables.construct(key, value);
@@ -770,6 +771,11 @@ public class PegasusLite implements GridStart {
             }
 
             sb.append('\n');
+
+            // PM-1192 update job to source a setup script in pegasus lite if set
+            if (associateSetupScriptWithJob(job)) {
+                sb.append(".").append(" ").append("$").append(ENV.PEGASUS_LITE_ENV_SOURCE_KEY);
+            }
 
             // PM-1541 for dax jobs (that are setting up pegasus-plan prescript) set
             // PEGASUS_HOME to ensure that there is no confusion for pegasus-db-admin
@@ -1270,6 +1276,37 @@ public class PegasusLite implements GridStart {
             NameValue<String, String> dest = ft.getDestURL();
             job.addCredentialType(dest.getKey(), dest.getValue());
         }
+    }
+
+    /**
+     * Associates a setup script with the job so that it can be invoked from within PegasusLite.
+     *
+     * @param job the job
+     * @return boolean indicating whether a setup script was associated with the job or not.
+     */
+    public boolean associateSetupScriptWithJob(Job job) {
+        String key = ENV.PEGASUS_LITE_ENV_SOURCE_KEY;
+        boolean result = false;
+        // we prefer env profile over pegasus profile
+        String setupFile = (String) job.envVariables.get(key);
+        if (setupFile == null) {
+            // check if the key is specified as a pegasus profile
+            setupFile = job.vdsNS.getStringValue(Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY);
+            if (setupFile != null) {
+                // in case a pegasus profile is specified, then it means
+                // the script needs to be transferred using Condor File IO
+                job.condorVariables.addIPFileForTransfer(setupFile);
+                setupFile = "." + File.separator + new File(setupFile).getName();
+            }
+        }
+        if (setupFile != null) {
+            // set the environment variable in the job env.
+            // value can be absolute(if picked from env profile)
+            // or just the basename (if picked from pegasus profile)
+            job.envVariables.construct(key, setupFile);
+            result = true;
+        }
+        return result;
     }
 
     /**
