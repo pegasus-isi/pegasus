@@ -1044,7 +1044,7 @@ pegasus plan is redirected to a file ( ending with suffix pre.log ) in
 the submit directory of the workflow that contains the DAX Job. The path
 to pegasus-plan is automatically determined.
 
-The DAX Job maps to a Condor DAGMan job. The path to condor dagman
+The pegasusWorkflow Job maps to a Condor DAGMan job. The path to condor dagman
 binary is determined according to the following rules -
 
 1. entry in the transformation catalog for condor::dagman for site
@@ -1070,14 +1070,17 @@ binary is determined according to the following rules -
    instances launched by each running dagman instance.
 
 
-Specifying a DAG Job in the DAX
--------------------------------
+.. _condorWorkflow-job-example:
 
-Specifying a DAGJob in a DAX is pretty similar to how normal compute
-jobs are specified. There are minor differences in terms of the xml
-element name ( dag vs job ) and the attributes specified. For DAGJob XML
-details,see the `API Reference <#api>`__ chapter . An example DAG Job in
-a DAX is shown below
+Specifying a condorWorkflow Job in the Abstract Workflow
+--------------------------------------------------------
+
+Specifying a condorWorkflow in an Abstract Workflow is pretty similar to how
+normal compute jobs are specified. There are minor differences in terms
+of the yaml element name ( condorWorkflow vs job ) and the attributes
+specified. For condorWorkflow XML
+details,see the `API Reference <#api>`__ chapter . An example *condorWorkflow*
+job in an Abstract Workflow is shown below
 
 ::
 
@@ -1090,13 +1093,13 @@ a DAX is shown below
 DAG File Locations
 ^^^^^^^^^^^^^^^^^^
 
-The name attribute in the dag element refers to the LFN ( Logical File
-Name ) of the dax file. The location of the DAX file can be catalogued
-either in the
+The name attribute in the *condorWorkflow* element refers to the LFN
+( Logical File Name ) of the HTCondor dag file. The location of the
+DAG file can be catalogued either in the
 
 1. Replica Catalog
 
-2. Replica Catalog Section in the DAX.
+2. Replica Catalog Section in the Abstract Workflow.
 
    .. note::
 
@@ -1104,28 +1107,28 @@ either in the
       be specified as DAG file locations.
 
 
-Profiles for DAG Job
-^^^^^^^^^^^^^^^^^^^^
+Profiles for condorWorkflow Job
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Users can choose to specify dagman profiles with the DAX Job to control
-the behavior of the corresponding condor dagman instance in the
+Users can choose to specify dagman profiles with the condorWorkflow job
+to control the behavior of the corresponding condor dagman instance in the
 executable workflow. In the example above, maxjobs is set to 10 for the
 sub workflow.
 
 The dagman profile DIR allows users to specify the directory in which
 they want the condor dagman instance to execute. In the example
-`above <#dag_job_example>`__ black.dag is set to be executed in
+:ref:`above <condorWorkflow-job-example>` black.dag is set to be executed in
 directory /dag-dir/test . The /dag-dir/test should be created
 beforehand.
 
 
-File Dependencies Across DAX Jobs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File Dependencies Across pegasusWorkflow Jobs
+---------------------------------------------
 
 In hierarchal workflows , if a sub workflow generates some output files
 required by another sub workflow then there should be an edge connecting
-the two dax jobs. Pegasus will ensure that the prescript for the child
-sub-workflow, has the path to the cache file generated during the
+the two pegasusWorkflow jobs. Pegasus will ensure that the prescript for
+the child sub-workflow, has the path to the cache file generated during the
 planning of the parent sub workflow. The cache file in the submit
 directory for a workflow is a textual replica catalog that lists the
 locations of all the output files created in the remote workflow
