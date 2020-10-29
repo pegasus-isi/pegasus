@@ -969,18 +969,46 @@ in the :ref:`chapter on Workflow API <api-reference>`.
 
 An example pegasusWorkflow Job in the Abstract Workflow is shown below
 
-::
+.. tabs::
 
-     <dax id="ID000002" name="black.dax" node-label="bar" >
-       <profile namespace="dagman" key="maxjobs">10</profile>
-       <argument>-Xmx1024 -Xms512 -Dpegasus.dir.storage=storagedir  -Dpegasus.dir.exec=execdir -o local -vvvvv --force -s dax_site </argument>
-     </dax>
+        .. code-tab:: python generate_wf.py
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            wf = Workflow("local-hierarchy")
+
+            fd = File("f.d")
+            blackdiamond_wf = SubWorkflow("blackdiamond.yml", False).add_args(
+                "--input-dir", "input", "--output-sites", "local", "-vvv", "--force"
+            ).add_outputs(fd).add_dagman_profile(max_jobs="10")
+
+            wf.add_jobs(blackdiamond_wf)
+            # writes out to workflow.yml
+            wf.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T16:42:51Z'}
+            pegasus: '5.0'
+            name: local-hierarchy
+            jobs:
+            - type: pegasusWorkflow
+              file: blackdiamond.yml
+              id: ID0000001
+              arguments: [--input-dir, input, --output-sites, local, -vvv, --force]
+              uses:
+              - {lfn: blackdiamond.yml, type: input}
+              - {lfn: f.d, type: output, stageOut: true, registerReplica: true}
+              profiles:
+                dagman: {MAXJOBS: '10'}
+            jobDependencies: []
 
 
 Abstract Workflow File Locations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The name attribute in the pegasusWorkflow element refers to the
+The file key for the pegasusWorkflow job refers to the
 LFN ( Logical File Name ) of the Abstract Workflow file. The location
 of the Abstract Workflow file can be catalogued either in the
 
