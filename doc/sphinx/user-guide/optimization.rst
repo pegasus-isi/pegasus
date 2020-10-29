@@ -125,11 +125,11 @@ The number of jobs that have to be clustered into a single large job, is
 determined by the value of two parameters associated with the smaller
 jobs. Both these parameters are specified by the use of a PEGASUS
 namespace profile keys. The keys can be specified at any of the
-placeholders for the profiles (abstract transformation in the DAX, site
+placeholders for the profiles (abstract transformation in the Abstract Workflow, site
 in the site catalog, transformation in the transformation catalog). The
 normal overloading semantics apply i.e. profile in transformation
 catalog overrides the one in the site catalog and that in turn overrides
-the one in the DAX. The two parameters are described below.
+the one in the Abstract Workflow. The two parameters are described below.
 
 -  **clusters.size factor**
 
@@ -471,11 +471,11 @@ Runtime clustering supports two modes of operation.
 
 All of these parameters are specified by the use of a PEGASUS namespace
 profile keys. The keys can be specified at any of the placeholders for
-the profiles (abstract transformation in the DAX, site in the site
+the profiles (abstract transformation in the Abstract Workflow, site in the site
 catalog, transformation in the transformation catalog). The normal
 overloading semantics apply i.e. profile in transformation catalog
 overrides the one in the site catalog and that in turn overrides the one
-in the DAX. The two parameters are described below.
+in the Abstract Workflow. The two parameters are described below.
 
 
     .. tabs::
@@ -575,7 +575,7 @@ run approximately for the same duration specified by the
 clusters.maxruntime property. In the above case we assume all jobs
 referring to transformation B run for 100 seconds. For jobs with
 significantly differing runtime, the runtime property will be associated
-with the jobs in the DAX.
+with the jobs in the Abstract Workflow.
 
 In addition to the above two profiles, we need to inform pegasus-plan to
 use runtime clustering. This is done by setting the following property .
@@ -605,7 +605,7 @@ Labelling the Workflow
 ^^^^^^^^^^^^^^^^^^^^^^
 
 The labels for the jobs in the workflow are specified by associated
-**pegasus** profile keys with the jobs during the DAX generation
+**pegasus** profile keys with the jobs during the Abstract Workflow generation
 process. The user can choose which profile key to use for labeling the
 workflow. By default, it is assumed that the user is using the PEGASUS
 profile key ``label`` to associate the labels. To use another key, in the
@@ -614,7 +614,7 @@ profile key ``label`` to associate the labels. To use another key, in the
 -  pegasus.clusterer.label.key
 
 For example if the user sets **pegasus.clusterer.label.key**\ to
-**user_label** then the job description in the DAX looks as follows
+**user_label** then the job description in the Abstract Workflow looks as follows
 
 ::
 
@@ -651,7 +651,7 @@ For example
 
 ::
 
-   $ pegasus-plan --dax example.dax --dir ./dags --cluster label,horizontal -s siteX --output local --verbose
+   $ pegasus-plan  --dir ./dags --cluster label,horizontal -s siteX --output local --verbose workflow.yml
 
 .. figure:: ../images/advanced-clustering-4.png
    :alt: Recursive clustering
@@ -674,11 +674,49 @@ execution of the smaller constituent jobs either
    transformation catalog for an executable with the logical name
    seqexec and namespace as pegasus.
 
-   ::
+    .. tabs::
 
-      #site  transformation   pfn            type                 architecture    profiles
+        .. code-tab:: python generate_tc.py
 
-      siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       INTEL32::LINUX NULL
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # create the TransformationCatalog object
+            tc = TransformationCatalog()
+
+            seqexec  = Transformation(
+                    "pegasus",
+                    "seqexec",
+                    site="siteX",
+                    pfn="/user/bin/pegasus-cluster",
+                    arch=Arch.X86_64,
+                    is_stageable=False
+                )
+            tc.add_transformations(seqexec)
+
+            # write the transformation catalog to the default file path "./transformations.yml"
+            tc.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T14:57:48Z'}
+            pegasus: '5.0'
+            transformations:
+            - namespace: seqexec
+              name: pegasus
+              sites:
+              - {name: siteX, pfn: /user/bin/pegasus-cluster, type: installed, arch: x86_64}
+
+        .. code-tab:: shell Text TC
+
+            tr pegasus::seqexec {
+                       site siteX {
+                               pfn "/user/bin/pegasus-cluster"
+                               arch "x86_64"
+                               os "LINUX"
+                               type "INSTALLED"
+                       }
+               }
 
    If the entry is not specified, Pegasus will attempt create a default
    path on the basis of the environment profile PEGASUS_HOME specified
@@ -707,15 +745,15 @@ execution of the smaller constituent jobs either
    generated by the Pegasus Planner when generating the executable
    workflow. PMC allows for a finer grained control on how each task is
    executed. This can be enabled by associating the following pegasus
-   profiles with the jobs in the DAX
+   profiles with the jobs in the Abstract Workflow
 
-   .. table:: Pegasus Profiles that can be associated with jobs in the DAX for PMC
+   .. table:: Pegasus Profiles that can be associated with jobs in the Abstract Workflow for PMC
 
       ================== =====================================================================================================================================================================================================================================================================================================
       **Key**            **Description**
-      pmc_request_memory This key is used to set the -m option for pegasus-mpi-cluster. It specifies the amount of memory in MB that a job requires. This profile is usually set in the DAX for each job.
-      pmc_request_cpus   This key is used to set the -c option for pegasus-mpi-cluster. It specifies the number of cpu's that a job requires. This profile is usually set in the DAX for each job.
-      pmc_priority       This key is used to set the -p option for pegasus-mpi-cluster. It specifies the priority for a job . This profile is usually set in the DAX for each job. Negative values are allowed for priorities.
+      pmc_request_memory This key is used to set the -m option for pegasus-mpi-cluster. It specifies the amount of memory in MB that a job requires. This profile is usually set in the Abstract Workflow for each job.
+      pmc_request_cpus   This key is used to set the -c option for pegasus-mpi-cluster. It specifies the number of cpu's that a job requires. This profile is usually set in the Abstract Workflow for each job.
+      pmc_priority       This key is used to set the -p option for pegasus-mpi-cluster. It specifies the priority for a job . This profile is usually set in the Abstract Workflow for each job. Negative values are allowed for priorities.
       pmc_task_arguments The key is used to pass any extra arguments to the PMC task during the planning time. They are added to the very end of the argument string constructed for the task in the PMC file. Hence, allows for overriding of any argument constructed by the planner for any particular task in the PMC job.
       ================== =====================================================================================================================================================================================================================================================================================================
 
@@ -728,19 +766,57 @@ execution of the smaller constituent jobs either
    specify the relevant globus profiles such as xcount, host_xcount and
    maxwalltime to control size of the MPI job.
 
-   ::
+    .. tabs::
 
-      # multiple line text-based transformation catalog: 2014-09-30T16:11:11.947-07:00
-      tr pegasus::mpiexec {
-              site siteX {
-                      profile globus "host_xcount" "1"
-                      profile globus "xcount" "32"
-                      pfn "/usr/pegasus/bin/pegasus-mpi-cluster"
-                      arch "x86"
-                      os "LINUX"
-                      type "INSTALLED"
-              }
-      }
+        .. code-tab:: python generate_tc.py
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # create the TransformationCatalog object
+            tc = TransformationCatalog()
+
+            pmc  = Transformation(
+                    "pegasus",
+                    "mpiexec",
+                    site="siteX",
+                    pfn="/usr/bin/pegasus-mpi-cluster",
+                    is_stageable=False,
+
+                ).add_profiles(Namespace.PEGASUS, key="nodes", value=1)\
+                 .add_profiles(Namespace.PEGASUS, key="ppn", value=32)
+
+            tc.add_transformations(pmc)
+
+
+            # write the transformation catalog to the default file path "./transformations.yml"
+            tc.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T14:57:48Z'}
+            pegasus: '5.0'
+            transformations:
+                - namespace: mpiexec
+                  name: pegasus
+                  sites:
+                  - {name: siteX, pfn: /usr/bin/pegasus-mpi-cluster, type: installed}
+                  profiles:
+                    pegasus: {nodes: 1, ppn: 32}
+
+        .. code-tab:: shell Text TC
+
+            tr pegasus::mpiexec {
+                       site siteX {
+                               pfn "/user/bin/pegasus-mpi-cluster"
+                               arch "x86_64"
+                               os "LINUX"
+                               type "INSTALLED"
+                               profile pegasus nodes 1
+                               profile pegasus ppn  32
+                       }
+            }
+
 
    the entry is not specified, Pegasus will attempt create a default
    path on the basis of the environment profile PEGASUS_HOME specified
