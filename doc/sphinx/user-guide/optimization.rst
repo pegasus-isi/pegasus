@@ -1122,10 +1122,22 @@ directory /dag-dir/test . The /dag-dir/test should be created
 beforehand.
 
 
-File Dependencies Across pegasusWorkflow Jobs
----------------------------------------------
+.. _hierarchical-wf-file-dependencies:
 
-In hierarchal workflows , if a sub workflow generates some output files
+File Dependencies in Hierarchical Workflows
+-------------------------------------------
+
+In this section, we explain file dependencies in hierarchical workflows
+namely
+
+#. data dependencies between pegasusWorkflow jobs
+
+#. data dependency between a pegasusWorkflow job and a compute job
+
+File Dependencies Across pegasusWorkflow Jobs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In hierarchical workflows , if a sub workflow generates some output files
 required by another sub workflow then there should be an edge connecting
 the two pegasusWorkflow jobs. Pegasus will ensure that the prescript for
 the child sub-workflow, has the path to the cache file generated during the
@@ -1150,6 +1162,16 @@ files to a storage site, and you want the child sub workflow to stage
 these files from the storage output site instead of the workflow
 execution directory where the files were originally created.
 
+File Dependencies between pegasusWorkflow and Compute Jobs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If in the same workflow W, you have a pegasusWorkflow job (Job D) and
+a dependant compute job (Job C), where job C requires as input an
+output file that is created when the sub workflow corresponding to
+Job D is run; then the planner will ensure that when the sub workflow
+corresponding to Job D runs, it also transfers that file to the
+scratch directory on the staging site for workflow W, in addition to
+transferring to the output site.
 
 Recursion in Hierarchal Workflows
 ---------------------------------
