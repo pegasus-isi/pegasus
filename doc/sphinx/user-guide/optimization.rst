@@ -932,38 +932,42 @@ The Abstract Workflow in addition to containing compute jobs, can also
 contain jobs that refer to other workflows. This is useful for running
 large workflows or ensembles of workflows.
 
-Users can embed two types of workflow jobs in the DAX
+Users can embed two types of workflow jobs in the Abstract Workflow
 
-1. daxjob - refers to a sub workflow represented as a DAX. During the
-   planning of a workflow, the DAX jobs are mapped to condor dagman jobs
-   that have pegasus plan invocation on the dax ( referred to in the DAX
-   job ) as the prescript.
+1. pegasusWorkflow - refers to a sub workflow represented as an Abstract
+   Workflow. During the planning of a workflow, the pegasusWorkflow jobs
+   are mapped to condor dagman jobs that have pegasus plan invocation on
+   the Abstract Workflow for that sub workflow set as the prescript.
 
    .. figure:: ../images/daxjob-mapping.png
       :alt: Planning of a DAX Job
       :width: 100.0%
 
-      Planning of a DAX Job
+      Planning of a pegasusWorkflow Job
 
-2. dagjob - refers to a sub workflow represented as a DAG. During the
-   planning of a workflow, the DAG jobs are mapped to condor dagman and
+2. condorWorkflow - refers to a sub workflow represented as a DAG. During
+   the planning of a workflow, the DAG jobs are mapped to condor dagman and
    refer to the DAG file mentioned in the DAG job.
 
    .. figure:: ../images/dagjob-mapping.png
       :alt: Planning of a DAG Job
       :width: 100.0%
 
-      Planning of a DAG Job
+      Planning of a condorWorkflow Job
 
 
-Specifying a DAX Job in the DAX
--------------------------------
+.. _pegasusWorkflow-job-example:
 
-Specifying a DAXJob in a DAX is pretty similar to how normal compute
-jobs are specified. There are minor differences in terms of the xml
-element name ( dax vs job ) and the attributes specified. DAXJob XML
-specification is described in detail in the `chapter on DAX
-API <#api>`__ . An example DAX Job in a DAX is shown below
+Specifying a pegasusWorkflow Job in the Abstract Workflow
+---------------------------------------------------------
+
+Specifying a pegasusWorkflow in a Abstract Workflow is pretty similar to
+how normal compute jobs are specified. There are minor differences in
+terms of the yaml element name ( pegasusWorkflow vs job ) and the
+attributes specified. pegasusWorkflow specification is described in detail
+in the :ref:`chapter on Workflow API <api-reference>`.
+
+An example pegasusWorkflow Job in the Abstract Workflow is shown below
 
 ::
 
@@ -973,35 +977,35 @@ API <#api>`__ . An example DAX Job in a DAX is shown below
      </dax>
 
 
-DAX File Locations
-^^^^^^^^^^^^^^^^^^
+Abstract Workflow File Locations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The name attribute in the dax element refers to the LFN ( Logical File
-Name ) of the dax file. The location of the DAX file can be catalogued
-either in the
+The name attribute in the pegasusWorkflow element refers to the
+LFN ( Logical File Name ) of the Abstract Workflow file. The location
+of the Abstract Workflow file can be catalogued either in the
 
 1. Replica Catalog
 
-2. Replica Catalog Section in the `DAX <#dax_replica_catalog>`__ .
+2. Replica Catalog Section in the Abstract Workflow.
 
    .. note::
 
       Currently, only file url's on the local site ( submit host ) can
-      be specified as DAX file locations.
+      be specified as Abstract Workflow File locations.
 
 
-Arguments for a DAX Job
-^^^^^^^^^^^^^^^^^^^^^^^
+Arguments for a pegasusWorkflow Job
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Users can specify specific arguments to the DAX Jobs. The arguments
-specified for the DAX Jobs are passed to the pegasus-plan invocation in
-the prescript for the corresponding condor dagman job in the executable
-workflow.
+Users can specify specific arguments to the pegasusWorkflow Jobs. The
+arguments specified for the pegasusWorkflow Jobs are passed to the
+pegasus-plan invocation in the prescript for the corresponding condor
+dagman job in the executable workflow.
 
 The following options for pegasus-plan are inherited from the
 pegasus-plan invocation of the parent workflow. If an option is
-specified in the arguments section for the DAX Job then that overrides
-what is inherited.
+specified in the arguments section for the pegasusWorkflow Job then
+that overrides what is inherited.
 
 .. table:: Options inherited from parent workflow
 
@@ -1022,13 +1026,13 @@ values to these options for the sub workflows automatically.
 3. --relative-submit-dir
 
 
-Profiles for DAX Job
-^^^^^^^^^^^^^^^^^^^^
+Profiles for pegasusWorkflow Job
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Users can choose to specify dagman profiles with the DAX Job to control
-the behavior of the corresponding condor dagman instance in the
-executable workflow. In the example `above <#dax_job_example>`__ maxjobs
-is set to 10 for the sub workflow.
+Users can choose to specify dagman profiles with the pegasusWorkflow Job to
+control the behavior of the corresponding condor dagman instance in the
+executable workflow. In the example :ref:`above <pegasusWorkflow-job-example>`
+maxjobs is set to 10 for the sub workflow.
 
 
 Execution of the PRE script and HTCondor DAGMan instance
