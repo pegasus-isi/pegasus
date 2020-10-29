@@ -7,7 +7,7 @@ Optimizing Workflows for Efficiency and Scalability
 By default, Pegasus generates workflows which targets the most common
 usecases and execution environments. For more specialized environments
 or workflows, the following sections can provide hints on how to
-optimize your workflow to scale better, and run more efficient. Below
+optimize your workflow to scale better, and run more efficiently. Below
 are some common issues and solutions.
 
 .. _short-jobs:
@@ -19,7 +19,7 @@ Optimizing Short Jobs / Scheduling Delays
 overheads when scheduling short jobs. Common overheads include
 scheduling, data transfers, state notifications, and task book keeping.
 These overheads can be very noticeable for short jobs, but not
-noticeable at all for longer jobs as the ration between the computation
+noticeable at all for longer jobs as the ratio between the computation
 and the overhead is higher.
 
 *Solution:* If you have many short tasks to run, the solution to
@@ -28,7 +28,13 @@ This instructs Pegasus to take a set of tasks, selected
 `horizontally <#horizontal_clustering>`__, by
 `labels <#label_clustering>`__, or by `runtime <#runtime_clustering>`__,
 and create jobs containing that whole set of tasks. The result is more
-efficient jobs, for wich the overheads are less noticeable.
+efficient jobs, for which the overheads are less noticeable.
+
+.. tip::
+
+    We generally recommend that your jobs should run at least 10 minutes,
+    to make the various delays worthwhile. That is a good ballpark to keep
+    in mind when clustering short running tasks.
 
 .. _job-clustering:
 
@@ -82,8 +88,8 @@ explained in section 7.
 
    #Running pegasus-plan to generate clustered workflows
 
-   $ pegasus-plan --dax example.dax --dir ./dags -p siteX --output local
-                  --cluster [comma separated list of clustering techniques]  -verbose
+   $ pegasus-plan  --dir ./dags -p siteX --output local
+                  --cluster [comma separated list of clustering techniques]  workflow.yml
 
    Valid clustering techniques are horizontal and label.
 
@@ -136,28 +142,78 @@ the one in the DAX. The two parameters are described below.
    composed of 3 jobs and another of 2 jobs. The clusters.size factor
    can be specified in the transformation catalog as follows
 
-   ::
+    .. tabs::
 
-      # multiple line text-based transformation catalog: 2014-09-30T16:05:01.731-07:00
-      tr B {
-              site siteX {
-                      profile pegasus "clusters.size" "3"
-                      pfn "/shared/PEGASUS/bin/jobB"
-                      arch "x86"
-                      os "LINUX"
-                      type "INSTALLED"
-              }
-      }
+        .. code-tab:: python generate_tc.py
 
-      tr C {
-              site siteX {
-                      profile pegasus "clusters.size" "2"
-                      pfn "/shared/PEGASUS/bin/jobC"
-                      arch "x86"
-                      os "LINUX"
-                      type "INSTALLED"
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # create the TransformationCatalog object
+            tc = TransformationCatalog()
+
+            # create and add the transformation
+            B  = Transformation(
+                    "B",
+                    site="siteX",
+                    pfn="/shared/PEGASUS/bin/jobB",
+                    is_stageable=False,
+
+                ).add_profiles(Namespace.PEGASUS, key="clusters.size", value=3)
+
+            tc.add_transformations(B)
+
+            C  = Transformation(
+                    "C",
+                    site="siteX",
+                    pfn="/shared/PEGASUS/bin/jobC",
+                    is_stageable=False,
+
+                ).add_profiles(Namespace.PEGASUS, key="clusters.size" value=2)
+
+            tc.add_transformations(C)
+
+            # write the transformation catalog to the default file path "./transformations.yml"
+            tc.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T13:39:30Z'}
+            pegasus: '5.0'
+            transformations:
+            - name: B
+              sites:
+              - {name: siteX, pfn: /shared/PEGASUS/bin/jobB, type: installed}
+              profiles:
+                pegasus: {clusters_size: 3}
+            - name: C
+              sites:
+              - {name: siteX, pfn: /shared/PEGASUS/bin/jobC, type: installed}
+              profiles:
+                pegasus: {clusters_size: 2}
+
+        .. code-tab:: shell Text TC
+
+              # multiple line text-based transformation catalog: 2014-09-30T16:05:01.731-07:00
+              tr B {
+                      site siteX {
+                              profile pegasus "clusters.size" "3"
+                              pfn "/shared/PEGASUS/bin/jobB"
+                              arch "x86"
+                              os "LINUX"
+                              type "INSTALLED"
+                      }
               }
-      }
+
+              tr C {
+                      site siteX {
+                              profile pegasus "clusters.size" "2"
+                              pfn "/shared/PEGASUS/bin/jobC"
+                              arch "x86"
+                              os "LINUX"
+                              type "INSTALLED"
+                      }
+              }
 
    .. figure:: ../images/advanced-clustering-1.png
       :alt: Clustering by clusters.size
@@ -176,45 +232,133 @@ the one in the DAX. The two parameters are described below.
    clusters.num factor in the transformation catalog can be specified as
    follows
 
-   ::
+    .. tabs::
 
-      # multiple line text-based transformation catalog: 2014-09-30T16:06:23.397-07:00
-      tr B {
-              site siteX {
-                      profile pegasus "clusters.num" "3"
-                      pfn "/shared/PEGASUS/bin/jobB"
-                      arch "x86"
-                      os "LINUX"
-                      type "INSTALLED"
-              }
-      }
+        .. code-tab:: python generate_tc.py
 
-      tr C {
-              site siteX {
-                      profile pegasus "clusters.num" "2"
-                      pfn "/shared/PEGASUS/bin/jobC"
-                      arch "x86"
-                      os "LINUX"
-                      type "INSTALLED"
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # create the TransformationCatalog object
+            tc = TransformationCatalog()
+
+            # create and add the transformation
+            B  = Transformation(
+                    "B",
+                    site="siteX",
+                    pfn="/shared/PEGASUS/bin/jobB",
+                    is_stageable=False,
+
+                ).add_profiles(Namespace.PEGASUS, key="clusters.num", value=3)
+
+            tc.add_transformations(B)
+
+            C  = Transformation(
+                    "C",
+                    site="siteX",
+                    pfn="/shared/PEGASUS/bin/jobC",
+                    is_stageable=False,
+
+                ).add_profiles(Namespace.PEGASUS, key="clusters.num", value=2)
+
+            tc.add_transformations(C)
+
+            # write the transformation catalog to the default file path "./transformations.yml"
+            tc.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T13:39:30Z'}
+            pegasus: '5.0'
+            transformations:
+            - name: B
+              sites:
+              - {name: siteX, pfn: /shared/PEGASUS/bin/jobB, type: installed}
+              profiles:
+                pegasus: {clusters.num: 3}
+            - name: C
+              sites:
+              - {name: siteX, pfn: /shared/PEGASUS/bin/jobC, type: installed}
+              profiles:
+                pegasus: {clusters.num: 2}
+
+        .. code-tab:: shell Text TC
+
+              # multiple line text-based transformation catalog: 2014-09-30T16:05:01.731-07:00
+              tr B {
+                      site siteX {
+                              profile pegasus "clusters.num" "3"
+                              pfn "/shared/PEGASUS/bin/jobB"
+                              arch "x86"
+                              os "LINUX"
+                              type "INSTALLED"
+                      }
               }
-      }
+
+              tr C {
+                      site siteX {
+                              profile pegasus "clusters.num" "2"
+                              pfn "/shared/PEGASUS/bin/jobC"
+                              arch "x86"
+                              os "LINUX"
+                              type "INSTALLED"
+                      }
+              }
 
    In the case, where both the factors are associated with the job, the
    clusters.num value supersedes the clusters.size value.
 
-   ::
+    .. tabs::
 
-      # multiple line text-based transformation catalog: 2014-09-30T16:08:01.537-07:00
-      tr B {
-              site siteX {
-                      profile pegasus "clusters.num" "3"
-                      profile pegasus "clusters.size" "3"
-                      pfn "/shared/PEGASUS/bin/jobB"
-                      arch "x86"
-                      os "LINUX"
-                      type "INSTALLED"
+        .. code-tab:: python generate_tc.py
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # create the TransformationCatalog object
+            tc = TransformationCatalog()
+
+            # create and add the transformation
+            B  = Transformation(
+                    "B",
+                    site="siteX",
+                    pfn="/shared/PEGASUS/bin/jobB",
+                    is_stageable=False,
+
+                ).add_profiles(Namespace.PEGASUS, clusters_num=3, clusters_size=3)
+
+            tc.add_transformations(B)
+
+
+            # write the transformation catalog to the default file path "./transformations.yml"
+            tc.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T13:39:30Z'}
+            pegasus: '5.0'
+            transformations:
+            - name: B
+              sites:
+              - {name: siteX, pfn: /shared/PEGASUS/bin/jobB, type: installed}
+              profiles:
+                pegasus: {clusters.num: 3, clusters.size:3}
+
+
+        .. code-tab:: shell Text TC
+
+              # multiple line text-based transformation catalog: 2014-09-30T16:05:01.731-07:00
+              tr B {
+                      site siteX {
+                              profile pegasus "clusters.num" "3"
+                              profile pegasus "clusters.size" "3"
+                              pfn "/shared/PEGASUS/bin/jobB"
+                              arch "x86"
+                              os "LINUX"
+                              type "INSTALLED"
+                      }
               }
-      }
+
 
    In the above case the jobs referring to logical transformation B
    scheduled on siteX will be clustered on the basis of 'clusters.num'
