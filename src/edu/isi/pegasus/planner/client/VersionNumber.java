@@ -45,12 +45,16 @@ public class VersionNumber {
 
         System.out.println("PEGASUS version " + Version.instance().toString() + linefeed);
 
-        System.out.println("Usage: " + m_application + " [-f | -V ]");
+        System.out.println("Usage: " + m_application + " [-f | -V | -M | -m]");
         System.out.println(
                 linefeed
                         + "Options:"
                         + linefeed
                         + " -V|--version   print version information about itself and exit."
+                        + linefeed
+                        + " -M|--major     print major version number and exit."
+                        + linefeed
+                        + " -m|--minor     print major.minor version number and exit."
                         + linefeed
                         + "    --verbose   increases the verbosity level (ignored)."
                         + linefeed
@@ -78,12 +82,14 @@ public class VersionNumber {
         LongOpt[] lo = new LongOpt[8];
 
         lo[0] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
-        lo[1] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
-        lo[2] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 1);
+        lo[1] = new LongOpt("major", LongOpt.NO_ARGUMENT, null, 'M');
+        lo[2] = new LongOpt("minor", LongOpt.NO_ARGUMENT, null, 'm');
+        lo[3] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
+        lo[4] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 1);
 
-        lo[3] = new LongOpt("full", LongOpt.NO_ARGUMENT, null, 'f');
-        lo[4] = new LongOpt("long", LongOpt.NO_ARGUMENT, null, 'l');
-        lo[5] = new LongOpt("build", LongOpt.NO_ARGUMENT, null, 'f');
+        lo[5] = new LongOpt("full", LongOpt.NO_ARGUMENT, null, 'f');
+        lo[6] = new LongOpt("long", LongOpt.NO_ARGUMENT, null, 'l');
+        lo[7] = new LongOpt("build", LongOpt.NO_ARGUMENT, null, 'f');
 
         return lo;
     }
@@ -108,7 +114,7 @@ public class VersionNumber {
 
         try {
             me = new VersionNumber("pegasus-version");
-            Getopt opts = new Getopt(me.m_application, args, "Vflhmq", me.generateValidOptions());
+            Getopt opts = new Getopt(me.m_application, args, "VMflhmq", me.generateValidOptions());
             opts.setOpterr(false);
             String installed = null;
             String internal = null;
@@ -123,6 +129,14 @@ public class VersionNumber {
 
                     case 'V':
                         System.out.println("PEGASUS version " + v.toString());
+                        return;
+
+                    case 'M':
+                        System.out.println(v.toString().substring(0, 1));
+                        return;
+
+                    case 'm':
+                        System.out.println(v.toString().substring(0, 3));
                         return;
 
                     case 'l':
