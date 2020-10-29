@@ -355,6 +355,9 @@ public class Pegasus extends Namespace {
      */
     public static final String CORES_KEY = "cores";
 
+    /** The number of gpus requested for a job. */
+    public static final String GPUS_KEY = "gpus";
+
     /** Key indicating max diskspace used by a job a in MB */
     public static final String DISKSPACE_KEY = "diskspace";
 
@@ -387,6 +390,10 @@ public class Pegasus extends Namespace {
 
     /** Profile key to determine condor quoting for a job. */
     public static final String CONDOR_QUOTE_ARGUMENTS_KEY = "condor.arguments.quote";
+
+    /** profile key for pegasus lite source scritp */
+    public static final String PEGASUS_LITE_ENV_SOURCE_KEY =
+            ENV.PEGASUS_LITE_ENV_SOURCE_KEY.toLowerCase();
 
     // credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
@@ -575,6 +582,7 @@ public class Pegasus extends Namespace {
                         || key.compareTo(GRIDSTART_LAUNCHER_KEY) == 0
                         || key.compareTo(GRIDSTART_LAUNCHER_ARGUMENTS_KEY) == 0
                         || key.compareTo(GOOGLEP12) == 0
+                        || key.compareTo(GPUS_KEY) == 0
                         || key.compareTo(GLITE_ARGUMENTS_KEY) == 0) {
                     res = VALID_KEY;
                 } else {
@@ -630,7 +638,8 @@ public class Pegasus extends Namespace {
                         || key.compareTo(PMC_PRIORITY_KEY) == 0
                         || key.compareTo(PMC_TASK_ARGUMENTS) == 0
                         || key.compareTo(PPN_KEY) == 0
-                        || key.compareTo(PROJECT_KEY) == 0) {
+                        || key.compareTo(PROJECT_KEY) == 0
+                        || key.compareTo(PEGASUS_LITE_ENV_SOURCE_KEY) == 0) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;

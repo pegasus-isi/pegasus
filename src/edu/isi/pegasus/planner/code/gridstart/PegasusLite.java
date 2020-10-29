@@ -19,6 +19,7 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -43,6 +44,7 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -166,12 +168,6 @@ public class PegasusLite implements GridStart {
     /** The submit directory where the submit files are being generated for the workflow. */
     protected String mSubmitDir;
 
-    /**
-     * The argument string containing the arguments with which the exitcode is invoked on kickstart
-     * output.
-     */
-    //    protected String mExitParserArguments;
-
     /** A boolean indicating whether to generate lof files or not. */
     protected boolean mGenerateLOF;
 
@@ -219,9 +215,6 @@ public class PegasusLite implements GridStart {
      */
     Map<String, String> mWorkerPackageMap;
 
-    /** A map indexed by the execution site and value is the path to chmod on that site. */
-    private Map<String, String> mChmodOnExecutionSiteMap;
-
     /**
      * Indicates whether to enforce strict checks against the worker package provided for jobs in
      * PegasusLite mode. if a job comes with worker package and it does not match fully with worker
@@ -255,6 +248,9 @@ public class PegasusLite implements GridStart {
     /** integrity handler for containers * */
     protected Integrity mContainerIntegrityHandler;
 
+    /** path to a setup script on the submit host that needs to be sourced in PegasusLite. */
+    protected String mSetupScriptOnTheSubmitHost;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -280,8 +276,6 @@ public class PegasusLite implements GridStart {
         mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mAllowWPDownloadFromWebsite = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
-
-        mChmodOnExecutionSiteMap = new HashMap<String, String>();
 
         Version version = Version.instance();
         mMajorVersionLevel = version.getMajor();
@@ -315,6 +309,11 @@ public class PegasusLite implements GridStart {
 
         mDoIntegrityChecking = mProps.doIntegrityChecking();
         mContainerIntegrityHandler = new Integrity();
+
+        Namespace localSitePegasusProfiles =
+                mSiteStore.lookup("local").getProfiles().get(Profiles.NAMESPACES.pegasus);
+        mSetupScriptOnTheSubmitHost =
+                (String) localSitePegasusProfiles.get(Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY);
     }
 
     /**
@@ -456,7 +455,7 @@ public class PegasusLite implements GridStart {
 
                         if (!mWorkerPackageMap.containsKey(job.getSiteHandle())) {
                             location = retrieveLocationForWorkerPackageFromTC(job.getSiteHandle());
-                            // null can be populated as value
+                            // null can be populated as setupFile
                             this.mWorkerPackageMap.put(job.getSiteHandle(), location);
                         }
                         // add only if location is not null
@@ -521,7 +520,7 @@ public class PegasusLite implements GridStart {
      * the loading of this particular implementation. It is usually the name of the implementing
      * class without the package name.
      *
-     * @return the value of the profile key.
+     * @return the setupFile of the profile key.
      * @see edu.isi.pegasus.planner.namespace.Pegasus#GRIDSTART_KEY
      */
     public String getVDSKeyValue() {
@@ -618,7 +617,7 @@ public class PegasusLite implements GridStart {
      *
      * @param job contains the job description.
      * @param key the key of the profile.
-     * @param value the associated value.
+     * @param value the associated setupFile.
      */
     private void construct(Job job, String key, String value) {
         job.condorVariables.construct(key, value);
@@ -770,6 +769,11 @@ public class PegasusLite implements GridStart {
             }
 
             sb.append('\n');
+
+            // PM-1192 update job to source a setup script in pegasus lite if set
+            if (associateSetupScriptWithJob(job)) {
+                sb.append(".").append(" ").append("$").append(ENV.PEGASUS_LITE_ENV_SOURCE_KEY);
+            }
 
             // PM-1541 for dax jobs (that are setting up pegasus-plan prescript) set
             // PEGASUS_HOME to ensure that there is no confusion for pegasus-db-admin
@@ -1270,6 +1274,37 @@ public class PegasusLite implements GridStart {
             NameValue<String, String> dest = ft.getDestURL();
             job.addCredentialType(dest.getKey(), dest.getValue());
         }
+    }
+
+    /**
+     * Associates a setup script with the job so that it can be invoked from within PegasusLite.
+     *
+     * @param job the job
+     * @return boolean indicating whether a setup script was associated with the job or not.
+     */
+    public boolean associateSetupScriptWithJob(Job job) {
+        String key = ENV.PEGASUS_LITE_ENV_SOURCE_KEY;
+        boolean result = false;
+        // we prefer env profile over pegasus profile
+        String setupFile = (String) job.envVariables.get(key);
+        if (setupFile == null) {
+            // check if the key is specified as a pegasus profile
+            setupFile = mSetupScriptOnTheSubmitHost;
+            if (setupFile != null) {
+                // in case a pegasus profile is specified, then it means
+                // the script needs to be transferred using Condor File IO
+                job.condorVariables.addIPFileForTransfer(setupFile);
+                setupFile = "." + File.separator + new File(setupFile).getName();
+            }
+        }
+        if (setupFile != null) {
+            // set the environment variable in the job env.
+            // value can be absolute(if picked from env profile)
+            // or just the basename (if picked from pegasus profile)
+            job.envVariables.construct(key, setupFile);
+            result = true;
+        }
+        return result;
     }
 
     /**

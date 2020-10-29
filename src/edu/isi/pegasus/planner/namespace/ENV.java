@@ -67,6 +67,9 @@ public class ENV extends Namespace {
     /** The name of the environment variable that specifies the s3cfg path */
     public static final String S3CFG = "S3CFG";
 
+    /** the env variable that indicates the file that is to be sourced in pegasus lite */
+    public static final String PEGASUS_LITE_ENV_SOURCE_KEY = "PEGASUS_LITE_ENV_SOURCE";
+
     /**
      * The name of the implementing namespace. It should be one of the valid namespaces always.
      *

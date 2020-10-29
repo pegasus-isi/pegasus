@@ -318,7 +318,8 @@ class TestProfileMixin:
                 condor_arguments_quote="condor.arguments.quote",
                 runtime="runtime",
                 clusters_max_runtime="clusters.maxruntime",
-                cores="cores",
+                cores=1,
+                gpus=1,
                 nodes="nodes",
                 ppn="ppn",
                 memory="2 GB",
@@ -329,6 +330,7 @@ class TestProfileMixin:
                 boto_config="/home/myuser/.boto",
                 container_arguments="--shm-size",
                 label="nodeLabel",
+                pegasus_lite_env_source="/path",
             )
         ) == id(obj)
 
@@ -364,7 +366,8 @@ class TestProfileMixin:
                 "condor.arguments.quote": "condor.arguments.quote",
                 "runtime": "runtime",
                 "clusters.maxruntime": "clusters.maxruntime",
-                "cores": "cores",
+                "cores": 1,
+                "gpus": 1,
                 "nodes": "nodes",
                 "ppn": "ppn",
                 "memory": 2048,
@@ -375,6 +378,7 @@ class TestProfileMixin:
                 "BOTO_CONFIG": "/home/myuser/.boto",
                 "container.arguments": "--shm-size",
                 "label": "nodeLabel",
+                "pegasus_lite_env_source": "/path",
             }
         }
 

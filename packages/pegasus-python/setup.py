@@ -11,7 +11,7 @@ install_requires = [
     # DAX/Workflow
     "PyYAML",
     # pegasus-init
-    "Jinja2",
+    "GitPython",
     "pamela",
     "pika==1.1.0",
     "Flask",

@@ -90,10 +90,15 @@ public class Singularity extends Abstract {
         ;
 
         // assume singularity is available in path
-        sb.append("singularity exec ");
+        sb.append("singularity exec").append(" ");
 
         // do not mount home - this might not exists when running under for example the nobody user
-        sb.append("--no-home ");
+        sb.append("--no-home").append(" ");
+
+        // PM-1621 add --nv option if user has gpus requested with the job
+        if (job.vdsNS.containsKey(Pegasus.GPUS_KEY)) {
+            sb.append("--nv").append(" ");
+        }
 
         // exec --bind $PWD:/srv
         sb.append("--bind $PWD:").append(CONTAINER_WORKING_DIRECTORY).append(" ");

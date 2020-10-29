@@ -124,13 +124,13 @@ def connect(
     init = _db_is_file(dburi)
 
     try:
-        log.debug(
-            "Connecting to: {} with connection params as {}".format(dburi, connect_args)
-        )
         # parse connection properties
         # PM-898 monitord sends props as None and connect_args has the
         # right values for the connection
         connect_args = _parse_props(dburi, props, db_type, connect_args)
+        log.debug(
+            "Connecting to: {} with connection params as {}".format(dburi, connect_args)
+        )
 
         engine = create_engine(
             dburi, echo=echo, pool_recycle=True, connect_args=connect_args

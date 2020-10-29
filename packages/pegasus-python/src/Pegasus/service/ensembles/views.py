@@ -10,7 +10,7 @@ from Pegasus.db.ensembles import (
     EMError,
     Ensembles,
     EnsembleWorkflowStates,
-    Trigger,
+    Triggers,
     TriggerType,
 )
 from Pegasus.service.ensembles import api, emapp
@@ -232,14 +232,37 @@ def analyze(workflow):
 # --- trigger related routes ---------------------------------------------------
 @emapp.route("/ensembles/<string:ensemble>/triggers", methods=["GET"])
 def route_list_triggers(ensemble):
-    dao = Trigger(g.session)
+    dao = Triggers(g.session)
     triggers = dao.list_triggers_by_ensemble(g.user.username, ensemble)
-    return api.json_response([Trigger.get_object(t) for t in triggers])
+    return api.json_response([Triggers.get_object(t) for t in triggers])
 
 
 @emapp.route("/ensembles/<string:ensemble>/triggers/<string:trigger>", methods=["GET"])
 def route_get_trigger(ensemble, trigger):
     raise NotImplementedError("TODO")
+
+
+# TODO: checks for correct data should be done here on the backend
+# should be just /ensembles/<string:ensemble>/triggers, methods=["POST"]
+# possibly look into using jsonschema to validate incoming json requests
+"""
+# error response format
+
+{
+  id: "id", <-- unique id to a request, it has been added as request.uid (use this when logging)
+  code: "UNPROCESSABLE_ENTITY", <-- capitalized versions of errors that json schema would return 
+  "message": "Err description",
+  "errors": [
+    {
+      code: "MIN_LEN_ERR",
+      message": "Err description",
+      path: [ field_name ],
+    },
+    ..
+  ],
+  "warnings": [ .. ]
+}
+"""
 
 
 @emapp.route("/ensembles/<string:ensemble>/triggers/<string:trigger>", methods=["POST"])
@@ -251,7 +274,7 @@ def route_create_trigger(ensemble, trigger):
     ensemble_id = e_dao.get_ensemble(g.user.username, ensemble).id
 
     # create trigger entry in db
-    t_dao = Trigger(g.session)
+    t_dao = Triggers(g.session)
 
     trigger_type = request.form.get("type")
     kwargs = {
@@ -259,11 +282,11 @@ def route_create_trigger(ensemble, trigger):
         "trigger": trigger,
         "trigger_type": trigger_type,
         "workflow_script": request.form.get("workflow_script"),
-        "workflow_args": request.form.get("workflow_args"),
+        "workflow_args": json.loads(request.form.get("workflow_args")),
     }
 
-    if trigger_type == TriggerType.CHRON.value:
-        # add chron trigger specific parameters
+    if trigger_type == TriggerType.CRON.value:
+        # add cron trigger specific parameters
         kwargs["interval"] = request.form.get("interval")
         kwargs["timeout"] = request.form.get("timeout")
     elif trigger_type == TriggerType.FILE_PATTERN.value:
@@ -279,6 +302,9 @@ def route_create_trigger(ensemble, trigger):
     t_dao.insert_trigger(**kwargs)
 
     # TODO: what to return here
+    # return ID that was created, in this case trigger name is sufficient
+    # probably code 201
+    # use Flask response object and a json object representing an id of the entity
     return "hello world from create_trigger!"
 
 
@@ -294,9 +320,14 @@ def route_delete_trigger(ensemble, trigger):
 
     # update trigger state to be STOPPED so that the TriggerManager can
     # handle it appropriately
-    t_dao = Trigger(g.session)
+    t_dao = Triggers(g.session)
+
+    # make sure get_trigger raises 404 if nothing found
     trigger_id = t_dao.get_trigger(ensemble_id, trigger).id
     t_dao.update_state(ensemble_id, trigger_id)
 
     # TODO: what to return here
+    # return HTTP code that represents that it was successful and that nothing
+    # is to returned
+    # status code 204, nothing else to return
     return "hello world from delete_trigger!"

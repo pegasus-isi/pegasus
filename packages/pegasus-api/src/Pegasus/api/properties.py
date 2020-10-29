@@ -21,6 +21,7 @@ class Properties:
     """
 
     _props = (
+        "pegasus.mode",
         "pegasus.home.datadir",
         "pegasus.home.sysconfdir",
         "pegasus.home.sharedstatedir",

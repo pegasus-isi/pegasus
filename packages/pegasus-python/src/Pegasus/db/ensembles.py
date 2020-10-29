@@ -8,6 +8,8 @@ from flask import url_for
 from sqlalchemy import sql
 from sqlalchemy.orm.exc import NoResultFound
 
+# TODO: circular import here...
+import Pegasus.db as db
 from Pegasus import user
 
 
@@ -274,6 +276,16 @@ class Ensembles:
         except NoResultFound:
             raise EMError("No such ensemble: %s" % name, 404)
 
+    def get_ensemble_name(self, ensemble_id: int):
+        """Given an ensemble id, get its name
+
+        :param ensemble_id: id of target ensemble
+        :type ensemble_id: int
+        :return: name of target ensemble
+        :rtype: str
+        """
+        return self.session.query(Ensemble).filter_by(id=ensemble_id).first().name
+
     def create_ensemble(self, username, name, max_running, max_planning):
         if (
             self.session.query(Ensemble)
@@ -379,25 +391,15 @@ TriggerStates = States(["READY", "RUNNING", "FAILED", "STOPPED"])
 class TriggerType(Enum):
     """Supported trigger types"""
 
-    CHRON = "CHRON"
+    CRON = "CRON"
     FILE_PATTERN = "FILE_PATTERN"
 
 
-class Trigger:
-    """Trigger table object"""
+class Triggers:
+    """Trigger table data access object"""
 
     def __init__(self, session):
         self.session = session
-
-    def get_ensemble_name(self, ensemble_id: int):
-        """Given an ensemble id, get its name
-
-        :param ensemble_id: id of target ensemble
-        :type ensemble_id: int
-        :return: name of target ensemble
-        :rtype: str
-        """
-        return self.session.query(Ensemble).filter_by(id=ensemble_id).first().name
 
     def get_trigger(self, ensemble_id: int, trigger_name: str):
         """Get a specific trigger
@@ -407,15 +409,23 @@ class Trigger:
         :param trigger_name: name of the trigger
         :type trigger_name: str
         """
-        return (
-            self.session.query(Trigger)
-            .filter_by(ensemble_id=ensemble_id, name=trigger_name)
-            .first()
-        )
+        try:
+            return (
+                self.session.query(db.schema.Trigger)
+                .filter_by(ensemble_id=ensemble_id, name=trigger_name)
+                .one()
+            )
+        except NoResultFound:
+            raise EMError(
+                "No such trigger: {} assigned to ensemble id: {}".format(
+                    trigger_name, ensemble_id
+                ),
+                status_code=404,
+            )
 
     def list_triggers(self):
         """List all triggers"""
-        return self.session.query(Trigger).all()
+        return self.session.query(db.schema.Trigger).all()
 
     def list_triggers_by_ensemble(self, username: str, ensemble: str):
         """List all triggers belonging to a specific ensemble
@@ -427,7 +437,7 @@ class Trigger:
         :return: list of Triggers
         :rtype: List[Trigger]
         """
-        q = self.session.query(Trigger).filter(
+        q = self.session.query(db.schema.Trigger).filter(
             Ensemble.username == username,
             Ensemble.name == ensemble,
             Ensemble.id == Trigger.ensemble_id,
@@ -450,7 +460,7 @@ class Trigger:
         :type ensemble_id: int
         :param trigger: name of the trigger
         :type trigger: str
-        :param trigger_type: the type of the trigger (e.g. CHRON, FILE_PATTERN, etc.)
+        :param trigger_type: the type of the trigger (e.g. CRON, FILE_PATTERN, etc.)
         :type trigger_type: str
         :param workflow_script: the workflow generator & planning script
         :type workflow_script: str
@@ -459,25 +469,17 @@ class Trigger:
         :param trigger_kwargs: any arguments specific to the trigger (e.g. interval=10s)
         """
 
-        # TODO: replace vanilla sql
-        stmt = """
-        INSERT INTO trigger (ensemble_id, name, state, workflow, args, type) 
-        VALUES(:ensemble_id, :name, :state, :workflow, :args, :type);
-        """
-
-        self.session.execute(
-            stmt,
-            {
-                "ensemble_id": ensemble_id,
-                "name": trigger,
-                "state": "READY",
-                "workflow": json.dumps(
-                    {"script": workflow_script, "args": workflow_args,}
-                ),
-                "args": json.dumps(trigger_kwargs),
-                "type": trigger_type,
-            },
+        self.session.add(
+            db.schema.Trigger(
+                ensemble_id=ensemble_id,
+                name=trigger,
+                state="READY",
+                workflow=json.dumps({"script": workflow_script, "args": workflow_args}),
+                args=json.dumps(trigger_kwargs),
+                _type=trigger_type,
+            )
         )
+
         self.session.commit()
 
     def update_state(self, ensemble_id: int, trigger_id: int, new_state: str):
@@ -490,17 +492,11 @@ class Trigger:
         :param new_state: the new state the trigger will be updated to
         :type new_state: str
         """
-        # TODO: replace vanilla sql (don't use str format too!)
-        stmt = """
-        UPDATE trigger
-        SET state = :state
-        WHERE ensemble_id = :ensemble_id AND id = :trigger_id
-        """
 
-        self.session.execute(
-            stmt,
-            {"state": new_state, "ensemble_id": ensemble_id, "trigger_id": trigger_id},
-        )
+        self.session.query(db.schema.Trigger).filter_by(
+            ensemble_id=ensemble_id, _id=trigger_id
+        ).update({"state": new_state})
+
         self.session.commit()
 
     def delete_trigger(self, ensemble_id: int, trigger: str):
@@ -512,30 +508,22 @@ class Trigger:
         :type trigger: str
         """
 
-        # TODO: replace vanilla sql
-        stmt = """
-        DELETE FROM trigger
-        WHERE ensemble_id = :ensemble_id AND name = :trigger
-        """
+        self.session.query(db.schema.Trigger).filter_by(
+            ensemble_id=ensemble_id, name=trigger
+        ).delete()
 
-        self.session.execute(stmt, {"ensemble_id": ensemble_id, "trigger": trigger})
         self.session.commit()
 
     @staticmethod
     def get_object(trigger):
-        """Get trigger as dict
+        """Get trigger as dict"""
 
-        :param trigger: trigger object
-        :type trigger: Trigger
-        :return: trigger object as dict
-        :rtype: dict
-        """
         return {
-            "id": trigger.id,
+            "id": trigger._id,
             "ensemble_id": trigger.ensemble_id,
             "name": trigger.name,
             "state": trigger.state,
             "workflow": json.loads(trigger.workflow),
             "args": json.loads(trigger.args),
-            "type": trigger.type,
+            "type": trigger._type,
         }

@@ -465,12 +465,18 @@ public class PegasusConfiguration {
                 p.setProperty(
                         PegasusProperties.PEGASUS_INTEGRITY_CHECKING_KEY,
                         PegasusProperties.INTEGRITY_DIAL.none.toString());
+                p.setProperty(
+                        Condor.NAMESPACE_NAME + "." + Condor.PERIODIC_REMOVE_KEY,
+                        "(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 30)");
                 break;
 
             case tutorial:
                 p.setProperty(PegasusProperties.PEGASUS_TRANSFER_ARGUMENTS_KEY, "-m 1");
                 p.setProperty(PegasusProperties.PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY, "-m 1");
                 p.setProperty(Dagman.NAMESPACE_NAME + "." + Dagman.RETRY_KEY, "1");
+                p.setProperty(
+                        Condor.NAMESPACE_NAME + "." + Condor.PERIODIC_REMOVE_KEY,
+                        "(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 30)");
                 break;
 
             case production:

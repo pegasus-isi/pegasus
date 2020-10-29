@@ -13,8 +13,6 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
-import static edu.isi.pegasus.planner.code.generator.condor.style.Condor.WHEN_TO_TRANSFER_OUTPUT_KEY;
-
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -39,7 +37,7 @@ public class Condor extends Namespace {
     private static Map<String, String> mClassAdToPegasus;
 
     /**
-     * Maps Globus RSL keys to corresponding Pegasus Profile Keys
+     * Maps ClassAD keys to corresponding Pegasus Profile Keys
      *
      * @return
      */
@@ -48,6 +46,7 @@ public class Condor extends Namespace {
             mClassAdToPegasus = new HashMap();
             mClassAdToPegasus.put(Condor.REQUEST_MEMORY_KEY, Pegasus.MEMORY_KEY);
             mClassAdToPegasus.put(Condor.REQUEST_CPUS_KEY, Pegasus.CORES_KEY);
+            mClassAdToPegasus.put(Condor.REQUEST_GPUS_KEY, Pegasus.GPUS_KEY);
             mClassAdToPegasus.put(Condor.REQUEST_DISK_KEY, Pegasus.DISKSPACE_KEY);
         }
         return mClassAdToPegasus;
@@ -442,6 +441,7 @@ public class Condor extends Namespace {
      * remote_initialdir- not allowed, the working directory is picked up from
      *                    pool file and properties file
      * request_cpus     - number of cpu's required. New in Condor 7.8.0
+     * request_gpus     - number of gpus's required.
      * request_memory   - amount of memory required . New in Condor 7.8.0
      * request_disk     - amount of disk required. New in Condor 7.8.0.
      * stream_error     -  supported,however it is applicable only for globus jobs.

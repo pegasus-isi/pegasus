@@ -446,6 +446,7 @@ class ProfileMixin:
         runtime="runtime",
         clusters_max_runtime="clusters.maxruntime",
         cores="cores",
+        gpus="gpus",
         nodes="nodes",
         ppn="ppn",
         memory=("memory", to_mb),
@@ -456,6 +457,7 @@ class ProfileMixin:
         boto_config="BOTO_CONFIG",
         container_arguments="container.arguments",
         label="label",
+        pegasus_lite_env_source="pegasus_lite_env_source",
     )
     def add_pegasus_profile(
         self,
@@ -493,6 +495,7 @@ class ProfileMixin:
         runtime: str = None,
         clusters_max_runtime: int = None,
         cores: int = None,
+        gpus: int = None,
         nodes: int = None,
         ppn: int = None,
         memory: str = None,
@@ -502,7 +505,8 @@ class ProfileMixin:
         project: str = None,
         boto_config: str = None,
         container_arguments: str = None,
-        label: str = None
+        label: str = None,
+        pegasus_lite_env_source: str = None
     ):
         """Add Pegasus profile(s).
 
@@ -572,6 +576,8 @@ class ProfileMixin:
         :type clusters_max_runtime: int, optional
         :param cores: The total number of cores required for a job. This is also used for accounting purposes in the database while generating statistics. It corresponds to the multiplier_factor in the job_instance table, defaults to None
         :type cores: int, optional
+        :param gpus: The total number of gpus required for a job, defaults to None
+        :type gpus: int, optional
         :param nodes: Indicates the number of nodes a job requires, defaults to None
         :type nodes: int, optional
         :param ppn: Indicates the number of processors per node. This profile is best set in the Site Catalog and usually set when running workflows with MPI jobs, defaults to None
@@ -592,6 +598,8 @@ class ProfileMixin:
         :type container_arguments: str, optional
         :param label: associate a label to a job; used for label based clustering
         :type label: str, optional
+        :param pegasus_lite_env_source: specify a path on the submit host to indicate the file that needs to be sourced, defaults to None
+        :type pegasus_lite_env_source: str, optional
         """
         ...
 
