@@ -325,7 +325,7 @@ the one in the DAX. The two parameters are described below.
                     pfn="/shared/PEGASUS/bin/jobB",
                     is_stageable=False,
 
-                ).add_profiles(Namespace.PEGASUS, clusters_num=3, clusters_size=3)
+                ).add_pegasus_profiles(clusters_num=3, clusters_size=3)
 
             tc.add_transformations(B)
 
@@ -477,32 +477,92 @@ overloading semantics apply i.e. profile in transformation catalog
 overrides the one in the site catalog and that in turn overrides the one
 in the DAX. The two parameters are described below.
 
-::
 
-   # multiple line text-based transformation catalog: 2014-09-30T16:09:40.610-07:00
-   #Cluster all jobs of type B at siteX, into 2 clusters such that the 2 clusters have similar runtimes
-   tr B {
-           site siteX {
-                   profile pegasus "clusters.num" "2"
-                   profile pegasus "runtime" "100"
-                   pfn "/shared/PEGASUS/bin/jobB"
-                   arch "x86"
-                   os "LINUX"
-                   type "INSTALLED"
-           }
-   }
+    .. tabs::
 
-   #Cluster all jobs of type C at siteX, such that the duration of the clustered job does not exceed 300.
-   tr C {
-           site siteX {
-                   profile pegasus "clusters.maxruntime" "300"
-                   profile pegasus "runtime" "100"
-                   pfn "/shared/PEGASUS/bin/jobC"
-                   arch "x86"
-                   os "LINUX"
-                   type "INSTALLED"
-           }
-   }
+        .. code-tab:: python generate_tc.py
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # create the TransformationCatalog object
+            tc = TransformationCatalog()
+
+            # create and add the transformation
+            # Cluster all jobs of type B at siteX, into 2 clusters
+            # such that the 2 clusters have similar runtimes
+
+            B  = Transformation(
+                    "B",
+                    site="siteX",
+                    pfn="/shared/PEGASUS/bin/jobB",
+                    is_stageable=False,
+
+                ).add_profiles(Namespace.PEGASUS, key="clusters.num", value=2)\
+                 .add_profiles(Namespace.PEGASUS, key="runtime", value=100)
+            tc.add_transformations(B)
+
+            # Cluster all jobs of type C at siteX, such that the duration
+            # duration of the clustered job does not exceed 300.
+            C  = Transformation(
+                    "C",
+                    site="siteX",
+                    pfn="/shared/PEGASUS/bin/jobC",
+                    is_stageable=False,
+
+                ).add_profiles(Namespace.PEGASUS, key="maxruntime", value=300)\
+                 .add_profiles(Namespace.PEGASUS, key="runtime", value=100)
+
+            tc.add_transformations(C)
+
+            # write the transformation catalog to the default file path "./transformations.yml"
+            tc.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T14:45:49Z'}
+            pegasus: '5.0'
+            transformations:
+            - name: B
+              sites:
+              - {name: siteX, pfn: /shared/PEGASUS/bin/jobB, type: installed}
+              profiles:
+                pegasus: {clusters.num: 2, runtime: 100}
+            - name: C
+              sites:
+              - {name: siteX, pfn: /shared/PEGASUS/bin/jobC, type: installed}
+              profiles:
+                pegasus: {maxruntime: 300, runtime: 100}
+
+        .. code-tab:: shell Text TC
+
+               # multiple line text-based transformation catalog: 2014-09-30T16:09:40.610-07:00
+               #Cluster all jobs of type B at siteX, into 2 clusters such that the 2 clusters have similar runtimes
+               tr B {
+                       site siteX {
+                               profile pegasus "clusters.num" "2"
+                               profile pegasus "runtime" "100"
+                               pfn "/shared/PEGASUS/bin/jobB"
+                               arch "x86"
+                               os "LINUX"
+                               type "INSTALLED"
+                       }
+               }
+
+               #Cluster all jobs of type C at siteX, such that the duration of the clustered job does not exceed 300.
+               tr C {
+                       site siteX {
+                               profile pegasus "clusters.maxruntime" "300"
+                               profile pegasus "runtime" "100"
+                               pfn "/shared/PEGASUS/bin/jobC"
+                               arch "x86"
+                               os "LINUX"
+                               type "INSTALLED"
+                       }
+               }
+
+
+
 
 .. figure:: ../images/advanced-clustering-5.png
    :alt: Clustering by runtime
