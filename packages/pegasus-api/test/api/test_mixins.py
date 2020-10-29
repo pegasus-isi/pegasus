@@ -330,6 +330,7 @@ class TestProfileMixin:
                 boto_config="/home/myuser/.boto",
                 container_arguments="--shm-size",
                 label="nodeLabel",
+                pegasus_lite_env_source="/path",
             )
         ) == id(obj)
 
@@ -377,6 +378,7 @@ class TestProfileMixin:
                 "BOTO_CONFIG": "/home/myuser/.boto",
                 "container.arguments": "--shm-size",
                 "label": "nodeLabel",
+                "pegasus_lite_env_source": "/path",
             }
         }
 

@@ -457,6 +457,7 @@ class ProfileMixin:
         boto_config="BOTO_CONFIG",
         container_arguments="container.arguments",
         label="label",
+        pegasus_lite_env_source="pegasus_lite_env_source",
     )
     def add_pegasus_profile(
         self,
@@ -504,7 +505,8 @@ class ProfileMixin:
         project: str = None,
         boto_config: str = None,
         container_arguments: str = None,
-        label: str = None
+        label: str = None,
+        pegasus_lite_env_source: str = None
     ):
         """Add Pegasus profile(s).
 
@@ -596,6 +598,8 @@ class ProfileMixin:
         :type container_arguments: str, optional
         :param label: associate a label to a job; used for label based clustering
         :type label: str, optional
+        :param pegasus_lite_env_source: specify a path on the submit host to indicate the file that needs to be sourced, defaults to None
+        :type pegasus_lite_env_source: str, optional
         """
         ...
 
