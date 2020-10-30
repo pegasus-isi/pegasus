@@ -1386,21 +1386,43 @@ workflows. Some of the useful parameters that you may want to tune are
 
 .. table:: Useful HTCondor Job Throttling Configuration Parameters
 
-   ============================================================================================ ==========================================================================================================================================================================================================================================================================================================================================================================================================================================
-   **HTCondor Configuration Parameter**                                                         **Description**
-   **Parameter Name:**\ START_LOCAL_UNIVERSE\ **Sample Value :**\ TotalLocalJobsRunning < 20    Most of the pegauss added auxillary jobs ( createdir, cleanup, registration and data cleanup ) run in the local universe on the submit host. If you have a lot of workflows running, HTCondor may try to start too many local universe jobs, that may bring down your submit host. This global parameter is used to configure condor to not launch too many local universe jobs.
-   **Parameter Name:**\ GRIDMANAGER_MAX_JOBMANAGERS_PER_RESOURCE\ **Sample Value :**\ Integer   For grid jobs of type gt2, limits the number of globus-job-manager processes that the condor_gridmanager lets run at a time on the remote head node. Allowing too many globus-job-managers to run causes severe load on the head note, possibly making it non-functional. Usually the default value in htcondor ( as of version 8.3.5) is 10.
-                                                                                                This parameter is useful when you are doing remote job submissions using HTCondor-G.
-   **Parameter Name:**\ GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE\ **Sample Value :** Integer An integer value that limits the number of jobs that a condor_gridmanager daemon will submit to a resource. A comma-separated list of pairs that follows this integer limit will specify limits for specific remote resources. Each pair is a host name and the job limit for that host. Consider the example
-                                                                                                ::
-
-                                                                                                   GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE =
-                                                                                                                            200, foo.edu, 50, bar.com, 100.
-
-                                                                                                In this example, all resources have a job limit of 200, except foo.edu, which has a limit of 50, and bar.com, which has a limit of 100. Limits specific to grid types can be set by appending the name of the grid type to the configuration variable name, as the example GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_CREAM = 300 In this example, the job limit for all CREAM resources is 300. Defaults to 1000 ( as of version 8.3.5).
-
-                                                                                                This parameter is useful when you are doing remote job submissions using HTCondor-G.
-   ============================================================================================ ==========================================================================================================================================================================================================================================================================================================================================================================================================================================
+    +-------------------------------------------------+----------------------------------------------------------------------------------+
+    | HTCondor Configuration Parameter                | Description                                                                      |
+    +=================================================+==================================================================================+
+    | | Parameter:START_LOCAL_UNIVERSE                | | Most of the pegauss added auxillary jobs (createdir, cleanup, registration     |
+    | | Sample Value :TotalLocalJobsRunning < 20      | | and data cleanup ) run in the local universe on the submit host. If you        |
+    |                                                 | | have a lot of workflows running, HTCondor may try to start too many            |
+    |                                                 | | local universe jobs, that may bring down your submit host. This global         |
+    |                                                 | | parameter is used to configure condor to not launch too many local             |
+    |                                                 | | universe jobs.                                                                 |
+    +-------------------------------------------------+----------------------------------------------------------------------------------+
+    | | Parameter:                                    | | For grid jobs of type gt2, limits the number of globus-job-manager             |
+    | |  GRIDMANAGER_MAX_JOBMANAGERS_PER_RESOURCE     | | processes that the condor_gridmanager lets run at a time on the                |
+    | | Sample Value :Integer                         | | remote head node. Allowing too many globus-job-managers to run                 |
+    |                                                 | | causes severe load on the head note, possibly making it non-functional.        |
+    |                                                 | | Usually the default value in htcondor ( as of version 8.3.5) is 10.            |
+    |                                                 | | This parameter is useful when you are doing remote job submissions             |
+    |                                                 | | using HTCondor-G.                                                              |
+    +-------------------------------------------------+----------------------------------------------------------------------------------+
+    | | Parameter:                                    | | An integer value that limits the number of jobs that a                         |
+    | |   GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE | | condor_gridmanager daemon will submit to a resource.                           |
+    | | Sample Value : Integer                        | | A comma-separated list of pairs that follows this integer limit will           |
+    |                                                 | | specify limits for specific remote resources.                                  |
+    |                                                 | | Each pair is a host name and the job limit for that host. Consider             |
+    |                                                 | | the example                                                                    |
+    |                                                 | |                                                                                |
+    |                                                 | | GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE = 200, foo.edu, 50, bar.com, 100.  |
+    |                                                 | |                                                                                |
+    |                                                 | | In this example, all resources have a job limit of 200, except foo.edu,        |
+    |                                                 | | which has a limit of 50, and bar.com, which has a limit of 100. Limits         |
+    |                                                 | | specific to grid types can be set by appending the name of the grid type       |
+    |                                                 | | to the configuration variable name, as the example                             |
+    |                                                 | | GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_CREAM = 300                        |
+    |                                                 | | In this example, the job limit for all CREAM resources is 300.                 |
+    |                                                 | | Defaults to 1000 ( as of version 8.3.5).                                       |
+    |                                                 | | This parameter is useful when you are doing remote job submissions             |
+    |                                                 | | using HTCondor-G.                                                              |
+    +-------------------------------------------------+----------------------------------------------------------------------------------+
 
 .. _job-throttling-across-workflows:
 
