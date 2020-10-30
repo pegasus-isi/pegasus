@@ -987,7 +987,7 @@ An example pegasusWorkflow Job in the Abstract Workflow is shown below
             # writes out to workflow.yml
             wf.write()
 
-        .. code-tab:: yaml YAML
+        .. code-tab:: yaml Abstract Workflow
 
             x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T16:42:51Z'}
             pegasus: '5.0'
@@ -1110,12 +1110,38 @@ specified. For condorWorkflow XML
 details,see the `API Reference <#api>`__ chapter . An example *condorWorkflow*
 job in an Abstract Workflow is shown below
 
-::
+.. tabs::
 
-     <dag id="ID000003" name="black.dag" node-label="foo" >
-       <profile namespace="dagman" key="maxjobs">10</profile>
-       <profile namespace="dagman" key="DIR">/dag-dir/test</profile>
-     </dag>
+        .. code-tab:: python generate_wf.py
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            wf = Workflow("local-hierarchy")
+
+            blackdiamond_wf = SubWorkflow("black.dag", True).add_dagman_profile(max_jobs="10").add_profiles(
+            Namespace.DAGMAN, key="dir", value="/dag-dir/test")
+
+            wf.add_jobs(blackdiamond_wf)
+            # writes out to workflow.yml
+            wf.write()
+
+        .. code-tab:: yaml Abstract Workflow
+
+            x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T17:10:43Z'}
+            pegasus: '5.0'
+            name: local-hierarchy
+            jobs:
+            - type: condorWorkflow
+              file: black.dag
+              id: ID0000001
+              arguments: []
+              uses:
+              - {lfn: black.dag, type: input}
+              profiles:
+                dagman: {MAXJOBS: '10', dir: /dag-dir/test}
+            jobDependencies: []
+
 
 
 DAG File Locations
