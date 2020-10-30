@@ -975,7 +975,7 @@ large workflows or ensembles of workflows.
 Users can embed two types of workflow jobs in the Abstract Workflow
 
 1. pegasusWorkflow - refers to a sub workflow represented as an Abstract
-   Workflow. During the planning of a workflow, the pegasusWorkflow jobs
+   Workflow. During the planning of a workflow, the *pegasusWorkflow* jobs
    are mapped to condor dagman jobs that have pegasus plan invocation on
    the Abstract Workflow for that sub workflow set as the prescript.
 
@@ -983,7 +983,7 @@ Users can embed two types of workflow jobs in the Abstract Workflow
       :alt: Planning of a DAX Job
       :width: 100.0%
 
-      Planning of a pegasusWorkflow Job
+      Planning of a *pegasusWorkflow* Job
 
 2. condorWorkflow - refers to a sub workflow represented as a DAG. During
    the planning of a workflow, the DAG jobs are mapped to condor dagman and
@@ -993,7 +993,7 @@ Users can embed two types of workflow jobs in the Abstract Workflow
       :alt: Planning of a DAG Job
       :width: 100.0%
 
-      Planning of a condorWorkflow Job
+      Planning of a *condorWorkflow* Job
 
 
 .. _pegasusWorkflow-job-example:
@@ -1001,13 +1001,13 @@ Users can embed two types of workflow jobs in the Abstract Workflow
 Specifying a pegasusWorkflow Job in the Abstract Workflow
 ---------------------------------------------------------
 
-Specifying a pegasusWorkflow in a Abstract Workflow is pretty similar to
+Specifying a *pegasusWorkflow* in a Abstract Workflow is pretty similar to
 how normal compute jobs are specified. There are minor differences in
-terms of the yaml element name ( pegasusWorkflow vs job ) and the
-attributes specified. pegasusWorkflow specification is described in detail
+terms of the yaml element name ( *pegasusWorkflow* vs job ) and the
+attributes specified. *pegasusWorkflow* specification is described in detail
 in the :ref:`chapter on Workflow API <api-reference>`.
 
-An example pegasusWorkflow Job in the Abstract Workflow is shown below
+An example *pegasusWorkflow* Job in the Abstract Workflow is shown below
 
 .. tabs::
 
@@ -1048,7 +1048,7 @@ An example pegasusWorkflow Job in the Abstract Workflow is shown below
 Abstract Workflow File Locations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The file key for the pegasusWorkflow job refers to the
+The file key for the *pegasusWorkflow* job refers to the
 LFN ( Logical File Name ) of the Abstract Workflow file. The location
 of the Abstract Workflow file can be catalogued either in the
 
@@ -1065,14 +1065,14 @@ of the Abstract Workflow file can be catalogued either in the
 Arguments for a pegasusWorkflow Job
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Users can specify specific arguments to the pegasusWorkflow Jobs. The
-arguments specified for the pegasusWorkflow Jobs are passed to the
+Users can specify specific arguments to the *pegasusWorkflow* Jobs. The
+arguments specified for the *pegasusWorkflow* Jobs are passed to the
 pegasus-plan invocation in the prescript for the corresponding condor
 dagman job in the executable workflow.
 
 The following options for pegasus-plan are inherited from the
 pegasus-plan invocation of the parent workflow. If an option is
-specified in the arguments section for the pegasusWorkflow Job then
+specified in the arguments section for the *pegasusWorkflow* Job then
 that overrides what is inherited.
 
 .. table:: Options inherited from parent workflow
@@ -1097,7 +1097,7 @@ values to these options for the sub workflows automatically.
 Profiles for pegasusWorkflow Job
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Users can choose to specify dagman profiles with the pegasusWorkflow Job to
+Users can choose to specify dagman profiles with the *pegasusWorkflow* Job to
 control the behavior of the corresponding condor dagman instance in the
 executable workflow. In the example :ref:`above <pegasusWorkflow-job-example>`
 maxjobs is set to 10 for the sub workflow.
@@ -1112,7 +1112,7 @@ pegasus plan is redirected to a file ( ending with suffix pre.log ) in
 the submit directory of the workflow that contains the DAX Job. The path
 to pegasus-plan is automatically determined.
 
-The pegasusWorkflow Job maps to a Condor DAGMan job. The path to condor dagman
+The *pegasusWorkflow* Job maps to a Condor DAGMan job. The path to condor dagman
 binary is determined according to the following rules -
 
 1. entry in the transformation catalog for condor::dagman for site
@@ -1143,11 +1143,10 @@ binary is determined according to the following rules -
 Specifying a condorWorkflow Job in the Abstract Workflow
 --------------------------------------------------------
 
-Specifying a condorWorkflow in an Abstract Workflow is pretty similar to how
+Specifying a *condorWorkflow* in an Abstract Workflow is pretty similar to how
 normal compute jobs are specified. There are minor differences in terms
-of the yaml element name ( condorWorkflow vs job ) and the attributes
-specified. For condorWorkflow XML
-details,see the `API Reference <#api>`__ chapter . An example *condorWorkflow*
+of the yaml element name ( *condorWorkflow* vs job ) and the attributes
+specified. An example *condorWorkflow*
 job in an Abstract Workflow is shown below
 
 .. tabs::
@@ -1204,7 +1203,7 @@ DAG file can be catalogued either in the
 Profiles for condorWorkflow Job
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Users can choose to specify dagman profiles with the condorWorkflow job
+Users can choose to specify dagman profiles with the *condorWorkflow* job
 to control the behavior of the corresponding condor dagman instance in the
 executable workflow. In the example above, maxjobs is set to 10 for the
 sub workflow.
@@ -1224,16 +1223,16 @@ File Dependencies in Hierarchical Workflows
 In this section, we explain file dependencies in hierarchical workflows
 namely
 
-#. data dependencies between pegasusWorkflow jobs
+#. data dependencies between *pegasusWorkflow* jobs
 
-#. data dependency between a pegasusWorkflow job and a compute job
+#. data dependency between a *pegasusWorkflow* job and a compute job
 
 File Dependencies Across pegasusWorkflow Jobs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In hierarchical workflows , if a sub workflow generates some output files
 required by another sub workflow then there should be an edge connecting
-the two pegasusWorkflow jobs. Pegasus will ensure that the prescript for
+the two *pegasusWorkflow* jobs. Pegasus will ensure that the prescript for
 the child sub-workflow, has the path to the cache file generated during the
 planning of the parent sub workflow. The cache file in the submit
 directory for a workflow is a textual replica catalog that lists the
@@ -1259,7 +1258,7 @@ execution directory where the files were originally created.
 File Dependencies between pegasusWorkflow and Compute Jobs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If in the same workflow W, you have a pegasusWorkflow job (Job D) and
+If in the same workflow W, you have a *pegasusWorkflow* job (Job D) and
 a dependant compute job (Job C), where job C requires as input an
 output file that is created when the sub workflow corresponding to
 Job D is run; then the planner will ensure that when the sub workflow
@@ -1267,8 +1266,13 @@ corresponding to Job D runs, it also transfers that file to the
 scratch directory on the staging site for workflow W, in addition to
 transferring to the output site.
 
-Recursion in Hierarchal Workflows
----------------------------------
+This is achieved by passing an *output.map* file to the *pegasusWorkflow*
+job that lists the location on the staging site (where job D will pickup
+from when it executes). The *output.map* file tells the *pegasusWorkflow*
+job as to where to place certain outputs.
+
+Recursion in Hierarchical Workflows
+-----------------------------------
 
 It is possible for a user to add a dax jobs to a dax that already
 contain dax jobs in them. Pegasus does not place a limit on how many
