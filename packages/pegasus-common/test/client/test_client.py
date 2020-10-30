@@ -74,37 +74,41 @@ def client():
 class TestClient:
     def test_plan(self, mocker, mock_subprocess, client):
         mocker.patch(
+            "Pegasus.client._client.Result.json",
+            return_value={"submit_dir": "/submit_dir"},
+        )
+
+        mocker.patch(
             "Pegasus.client._client.Workflow._get_braindump",
             return_value=Braindump(user="ryan"),
         )
         wf_instance = client.plan(
             abstract_workflow="wf.yml",
             basename="test_basename",
-            job_prefix="job_pref",
+            cache=["/cache_file1", "/cache_file2"],
+            cleanup="leaf",
             cluster=["horizontal", "label"],
             conf="pegasus.conf",
-            sites=["site1", "site2"],
-            output_sites=["local", "other_site"],
-            staging_sites={"es1": "ss1", "es2": "ss2"},
-            cache=["/cache_file1", "/cache_file2"],
-            input_dirs=["/input_dir1", "/input_dir2"],
-            output_dir="/output_dir",
             dir="/dir",
-            relative_dir="/relative_dir",
-            relative_submit_dir="rsd",
-            random_dir="/random/dir",
-            inherited_rc_files=["f1", "f2"],
-            cleanup="leaf",
-            reuse=["/submit_dir1", "/submit_dir2"],
-            verbose=3,
-            quiet=3,
+            env=123,
             force=True,
             force_replan=True,
             forward=["arg1", "opt1=value"],
-            submit=True,
-            json=True,
+            inherited_rc_files=["f1", "f2"],
+            input_dirs=["/input_dir1", "/input_dir2"],
             java_options=["mx1024m", "ms512m"],
-            env=123,
+            job_prefix="job_pref",
+            output_dir="/output_dir",
+            output_sites=["local", "other_site"],
+            quiet=3,
+            random_dir="/random/dir",
+            relative_dir="/relative_dir",
+            relative_submit_dir="rsd",
+            reuse=["/submit_dir1", "/submit_dir2"],
+            sites=["site1", "site2"],
+            staging_sites={"es1": "ss1", "es2": "ss2"},
+            submit=True,
+            verbose=3,
         )
         subprocess.Popen.assert_called_once_with(
             [
@@ -152,10 +156,10 @@ class TestClient:
                 "--forward",
                 "opt1=value",
                 "--submit",
-                "--json",
                 "-Xmx1024m",
                 "-Xms512m",
                 "wf.yml",
+                "--json",
             ],
             stderr=-1,
             stdout=-1,
@@ -337,75 +341,6 @@ class TestClient:
             client._exec(None)
 
         assert str(e.value) == "cmd is required"
-
-    def test__get_submit_dir(self):
-        plan_output_with_direct_submit = dedent(
-            """
-            2020.02.11 15:39:42.958 PST:
-            2020.02.11 15:39:42.963 PST:   -----------------------------------------------------------------------
-            2020.02.11 15:39:42.969 PST:   File for submitting this DAG to HTCondor           : appends-0.dag.condor.sub
-            2020.02.11 15:39:42.974 PST:   Log of DAGMan debugging messages                 : appends-0.dag.dagman.out
-            2020.02.11 15:39:42.979 PST:   Log of HTCondor library output                     : appends-0.dag.lib.out
-            2020.02.11 15:39:42.984 PST:   Log of HTCondor library error messages             : appends-0.dag.lib.err
-            2020.02.11 15:39:42.990 PST:   Log of the life of condor_dagman itself          : appends-0.dag.dagman.log
-            2020.02.11 15:39:42.995 PST:
-            2020.02.11 15:39:43.000 PST:   -no_submit given, not submitting DAG to HTCondor.  You can do this with:
-            2020.02.11 15:39:43.010 PST:   -----------------------------------------------------------------------
-            2020.02.11 15:39:43.820 PST:   Your database is compatible with Pegasus version: 4.9.3
-            2020.02.11 15:39:43.912 PST:   Submitting to condor appends-0.dag.condor.sub
-            2020.02.11 15:39:43.940 PST:   Submitting job(s).
-            2020.02.11 15:39:43.945 PST:   1 job(s) submitted to cluster 1533083.
-            2020.02.11 15:39:43.950 PST:
-            2020.02.11 15:39:43.956 PST:   Your workflow has been started and is running in the base directory:
-            2020.02.11 15:39:43.961 PST:
-            2020.02.11 15:39:43.966 PST:     /local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()
-            2020.02.11 15:39:43.971 PST:
-            2020.02.11 15:39:43.977 PST:   *** To monitor the workflow you can run ***
-            2020.02.11 15:39:43.982 PST:
-            2020.02.11 15:39:43.987 PST:     pegasus-status -l /local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()
-            2020.02.11 15:39:43.992 PST:
-            2020.02.11 15:39:43.998 PST:   *** To remove your workflow run ***
-            2020.02.11 15:39:44.003 PST:
-            2020.02.11 15:39:44.008 PST:     pegasus-remove /local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()
-            2020.02.11 15:39:44.013 PST:
-            2020.02.11 15:39:44.069 PST:   Time taken to execute is 2.117 seconds
-        """
-        )
-
-        assert (
-            Client._get_submit_dir(plan_output_with_direct_submit)
-            == "/local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()"
-        )
-
-        plan_output_without_direct_submit = dedent(
-            """
-            2020.02.11 15:42:04.236 PST:
-            2020.02.11 15:42:04.242 PST:   -----------------------------------------------------------------------
-            2020.02.11 15:42:04.247 PST:   File for submitting this DAG to HTCondor           : appends-0.dag.condor.sub
-            2020.02.11 15:42:04.252 PST:   Log of DAGMan debugging messages                 : appends-0.dag.dagman.out
-            2020.02.11 15:42:04.258 PST:   Log of HTCondor library output                     : appends-0.dag.lib.out
-            2020.02.11 15:42:04.263 PST:   Log of HTCondor library error messages             : appends-0.dag.lib.err
-            2020.02.11 15:42:04.268 PST:   Log of the life of condor_dagman itself          : appends-0.dag.dagman.log
-            2020.02.11 15:42:04.273 PST:
-            2020.02.11 15:42:04.279 PST:   -no_submit given, not submitting DAG to HTCondor.  You can do this with:
-            2020.02.11 15:42:04.289 PST:   -----------------------------------------------------------------------
-            2020.02.11 15:42:05.120 PST:   Your database is compatible with Pegasus version: 4.9.3
-            2020.02.11 15:42:05.126 PST:
-
-
-            I have concretized your abstract workflow. The workflow has been entered
-            into the workflow database with a state of "planned". The next step is
-            to start or execute your workflow. The invocation required is
-
-
-            pegasus-run  /local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()
-        """
-        )
-
-        assert (
-            Client._get_submit_dir(plan_output_without_direct_submit)
-            == "/local-scratch/tanaka/workflows/test-workflow-THIS-SHOULD-BE-FOUND-BY-Client._get_submit_dir()"
-        )
 
 
 @pytest.fixture(scope="function")
