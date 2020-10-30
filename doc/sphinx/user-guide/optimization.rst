@@ -871,19 +871,59 @@ or seqexec) can be specified
 3. **associating profile key job.aggregator with the transformation that
    is being clustered, in the transformation catalog**
 
-   ::
+    .. tabs::
 
-      # multiple line text-based transformation catalog: 2014-09-30T16:11:52.230-07:00
-      tr B {
-              site siteX {
-                      profile pegasus "clusters.size" "3"
-                      profile pegasus "job.aggregator" "mpiexec"
-                      pfn "/shared/PEGASUS/bin/jobB"
-                      arch "x86"
-                      os "LINUX"
-                      type "INSTALLED"
-              }
-      }
+        .. code-tab:: python generate_tc.py
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # create the TransformationCatalog object
+            tc = TransformationCatalog()
+
+            # create and add the transformation
+
+            B  = Transformation(
+                    "B",
+                    site="siteX",
+                    pfn="/shared/PEGASUS/bin/jobB",
+                    is_stageable=False,
+
+                ).add_profiles(Namespace.PEGASUS, key="clusters.num", value=2)\
+                 .add_profiles(Namespace.PEGASUS, key="job.aggregator", value="mpiexec")
+            tc.add_transformations(B)
+
+
+            # write the transformation catalog to the default file path "./transformations.yml"
+            tc.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '10-29-20T14:45:49Z'}
+            pegasus: '5.0'
+            transformations:
+            - name: B
+              sites:
+              - {name: siteX, pfn: /shared/PEGASUS/bin/jobB, type: installed}
+              profiles:
+                pegasus: {clusters.num: 2, job.aggregator: "mpiexec"}
+
+
+        .. code-tab:: shell Text TC
+
+               # multiple line text-based transformation catalog: 2014-09-30T16:09:40.610-07:00
+               # jobs of type B when clustered, should run using pegasus-mpi-cluster
+               tr B {
+                       site siteX {
+                               profile pegasus "clusters.num" "2"
+                               profile pegasus "job.aggregator" "mpiexec"
+                               pfn "/shared/PEGASUS/bin/jobB"
+                               arch "x86"
+                               os "LINUX"
+                               type "INSTALLED"
+                       }
+               }
+
 
    In the above example, all the clustered jobs that consist of
    transformation B on siteX will be executed via mpiexec.
