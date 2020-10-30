@@ -979,7 +979,7 @@ Users can embed two types of workflow jobs in the Abstract Workflow
    are mapped to condor dagman jobs that have pegasus plan invocation on
    the Abstract Workflow for that sub workflow set as the prescript.
 
-   .. figure:: ../images/daxjob-mapping.png
+   .. figure:: ../images/pegasus-wf-job-mapping.png
       :alt: Planning of a DAX Job
       :width: 100.0%
 
@@ -989,7 +989,7 @@ Users can embed two types of workflow jobs in the Abstract Workflow
    the planning of a workflow, the DAG jobs are mapped to condor dagman and
    refer to the DAG file mentioned in the DAG job.
 
-   .. figure:: ../images/dagjob-mapping.png
+   .. figure:: ../images/condor-wf-job-mapping.png
       :alt: Planning of a DAG Job
       :width: 100.0%
 
