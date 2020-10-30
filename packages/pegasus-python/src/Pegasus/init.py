@@ -3,12 +3,12 @@ import subprocess
 import time
 import urllib.request
 from argparse import ArgumentParser
-from enum import Enum, unique
 
 #### Url to Sites.py on pegasushub ####
 
 #### Url to workflows on pegasushub ####
 pegasushub_workflows_url = "https://raw.githubusercontent.com/pegasushub/pegasushub.github.io/master/_data/workflows.yml"
+
 
 def console_select_workflow(workflows_available):
     pass
@@ -29,7 +29,9 @@ def console_select_site():
     site = None
     project_name = None
 
-    sites_available = {site.value: {"name": site.name, "member": site} for site in Sites.SitesAvailable}
+    sites_available = {
+        site.value: {"name": site.name, "member": site} for site in Sites.SitesAvailable
+    }
     print_sites(sites_available)
 
     try:
@@ -134,10 +136,10 @@ def read_workflows(wf_gallery, site):
 
 
 def update_workflow_list(wf_gallery):
-    if (not os.path.isfile(wf_gallery)):
-        os.makedirs(wf_gallery[:wf_gallery.rfind("/")], exist_ok=True)
+    if not os.path.isfile(wf_gallery):
+        os.makedirs(wf_gallery[: wf_gallery.rfind("/")], exist_ok=True)
         urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
-    elif int(os.path.getmtime(wf_gallery)) < time.time()-(24*60*60):
+    elif int(os.path.getmtime(wf_gallery)) < time.time() - (24 * 60 * 60):
         urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
 
 

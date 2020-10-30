@@ -79,34 +79,53 @@ class TestClient:
         )
         wf_instance = client.plan(
             abstract_workflow="wf.yml",
+            basename="test_basename",
+            job_prefix="job_pref",
+            cluster=["horizontal", "label"],
             conf="pegasus.conf",
             sites=["site1", "site2"],
             output_sites=["local", "other_site"],
             staging_sites={"es1": "ss1", "es2": "ss2"},
+            cache=["/cache_file1", "/cache_file2"],
             input_dirs=["/input_dir1", "/input_dir2"],
             output_dir="/output_dir",
             dir="/dir",
             relative_dir="/relative_dir",
+            relative_submit_dir="rsd",
             random_dir="/random/dir",
+            inherited_rc_files=["f1", "f2"],
             cleanup="leaf",
             reuse=["/submit_dir1", "/submit_dir2"],
             verbose=3,
+            quiet=3,
             force=True,
+            force_replan=True,
+            forward=["arg1", "opt1=value"],
             submit=True,
+            json=True,
+            java_options=["mx1024m", "ms512m"],
             env=123,
         )
         subprocess.Popen.assert_called_once_with(
             [
                 "/path/bin/pegasus-plan",
                 "-Denv=123",
+                "--basename",
+                "test_basename",
+                "--job-prefix",
+                "job_pref",
                 "--conf",
                 "pegasus.conf",
+                "--cluster",
+                "horizontal,label",
                 "--sites",
                 "site1,site2",
                 "--output-sites",
                 "local,other_site",
                 "--staging-site",
                 "es1=ss1,es2=ss2",
+                "--cache",
+                "/cache_file1,/cache_file2",
                 "--input-dir",
                 "/input_dir1,/input_dir2",
                 "--output-dir",
@@ -115,14 +134,27 @@ class TestClient:
                 "/dir",
                 "--relative-dir",
                 "/relative_dir",
+                "--relative-submit-dir",
+                "rsd",
                 "--randomdir=/random/dir",
+                "--inherited-rc-files",
+                "f1,f2",
                 "--cleanup",
                 "leaf",
                 "--reuse",
                 "/submit_dir1,/submit_dir2",
                 "-vvv",
+                "-qqq",
                 "--force",
+                "--force-replan",
+                "--forward",
+                "arg1",
+                "--forward",
+                "opt1=value",
                 "--submit",
+                "--json",
+                "-Xmx1024m",
+                "-Xms512m",
                 "wf.yml",
             ],
             stderr=-1,
@@ -130,6 +162,12 @@ class TestClient:
         )
 
         assert wf_instance.braindump.user == "ryan"
+
+    def test_plan_invalid_cluster(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", cluster="cluster")
+
+        assert "invalid cluster: cluster" in str(e)
 
     def test_plan_invalid_sites(self, client):
         with pytest.raises(TypeError) as e:
@@ -143,6 +181,12 @@ class TestClient:
 
         assert "invalid staging_sites: condorpool=origin" in str(e)
 
+    def test_plan_invalid_cache(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", cache="cache")
+
+        assert "invalid cache: cache" in str(e)
+
     def test_plan_invalid_output_sites(self, client):
         with pytest.raises(TypeError) as e:
             client.plan("wf.yml", output_sites="site1,site2")
@@ -154,6 +198,24 @@ class TestClient:
             client.plan("wf.yml", input_dirs="/input_dir")
 
         assert "invalid input_dirs: /input_dir" in str(e)
+
+    def test_plan_invalid_inherited_rc_files(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", inherited_rc_files="files")
+
+        assert "invalid inherited_rc_files: files" in str(e)
+
+    def test_plan_invalid_forward(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", forward="forward")
+
+        assert "invalid forward: forward" in str(e)
+
+    def test_plan_invalid_java_options(self, client):
+        with pytest.raises(TypeError) as e:
+            client.plan("wf.yml", java_options="opts")
+
+        assert "invalid java_options: opts" in str(e)
 
     def test_run(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3, json=True)

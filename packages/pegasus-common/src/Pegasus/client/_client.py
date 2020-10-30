@@ -67,20 +67,31 @@ class Client:
     def plan(
         self,
         abstract_workflow: str = None,
+        basename: str = None,
+        job_prefix: str = None,
         conf: str = None,
+        cluster: List[str] = None,
         sites: List[str] = None,
         output_sites: List[str] = ["local"],
         staging_sites: Dict[str, str] = None,
+        cache: List[str] = None,
         input_dirs: List[str] = None,
         output_dir: str = None,
         dir: str = None,
         relative_dir: str = None,
+        relative_submit_dir: str = None,
         random_dir: Union[bool, str] = False,
+        inherited_rc_files: List[str] = None,
         cleanup: str = "none",
         reuse: List[str] = None,
         verbose: int = 0,
+        quiet: int = 0,
         force: bool = False,
+        force_replan: bool = False,
+        forward: List[str] = None,
         submit: bool = False,
+        json: bool = False,
+        java_options: List[str] = None,
         **kwargs
     ):
         cmd = [self._plan]
@@ -88,8 +99,22 @@ class Client:
         for k, v in kwargs.items():
             cmd.append("-D{}={}".format(k, v))
 
+        if basename:
+            cmd.extend(("--basename", basename))
+
+        if job_prefix:
+            cmd.extend(("--job-prefix", job_prefix))
+
         if conf:
             cmd.extend(("--conf", conf))
+
+        if cluster:
+            if not isinstance(cluster, list):
+                raise TypeError(
+                    "invalid cluster: {}; list of str must be given".format(cluster)
+                )
+
+            cmd.extend(("--cluster", ",".join(cluster)))
 
         if sites:
             if not isinstance(sites, list):
@@ -123,10 +148,18 @@ class Client:
                 )
             )
 
+        if cache:
+            if not isinstance(cache, list):
+                raise TypeError(
+                    "invalid cache: {}; list of str must be given".format(cache)
+                )
+
+            cmd.extend(("--cache", ",".join(cache)))
+
         if input_dirs:
             if not isinstance(input_dirs, list):
                 raise TypeError(
-                    "invalid input_dirs: {} list of str must be given".format(
+                    "invalid input_dirs: {}; list of str must be given".format(
                         input_dirs
                     )
                 )
@@ -142,11 +175,24 @@ class Client:
         if relative_dir:
             cmd.extend(("--relative-dir", relative_dir))
 
+        if relative_submit_dir:
+            cmd.extend(("--relative-submit-dir", relative_submit_dir))
+
         if random_dir:
             if random_dir == True:
                 cmd.append("--randomdir")
             else:
                 cmd.append("--randomdir={}".format(random_dir))
+
+        if inherited_rc_files:
+            if not isinstance(inherited_rc_files, list):
+                raise TypeError(
+                    "invalid inherited_rc_files: {}; list of str must be given".format(
+                        inherited_rc_files
+                    )
+                )
+
+            cmd.extend(("--inherited-rc-files", ",".join(inherited_rc_files)))
 
         if cleanup:
             cmd.extend(("--cleanup", cleanup))
@@ -154,14 +200,43 @@ class Client:
         if reuse:
             cmd.extend(("--reuse", ",".join(reuse)))
 
-        if verbose:
+        if verbose > 0:
             cmd.append("-" + "v" * verbose)
+
+        if quiet > 0:
+            cmd.append("-" + "q" * quiet)
 
         if force:
             cmd.append("--force")
 
+        if force_replan:
+            cmd.append("--force-replan")
+
+        if forward:
+            if not isinstance(forward, list):
+                raise TypeError(
+                    "invalid forward: {}; list of str must be given".format(forward)
+                )
+
+            for opt in forward:
+                cmd.extend(("--forward", opt))
+
         if submit:
             cmd.append("--submit")
+
+        if json:
+            cmd.append("--json")
+
+        if java_options:
+            if not isinstance(java_options, list):
+                raise TypeError(
+                    "invalid java_options: {}; list of str must be given".format(
+                        java_options
+                    )
+                )
+
+            for opt in java_options:
+                cmd.append("-X{}".format(opt))
 
         # pegasus-plan will look for "workflow.yml" in cwd by default if
         # it is not given as last positional argument
@@ -172,7 +247,8 @@ class Client:
 
         rv = self._exec(cmd)
 
-        submit_dir = self._get_submit_dir(rv.stdout)
+        # TODO: updated _get_submit_dir to parse submit_dir from stdout if json option given
+        submit_dir = self._get_submit_dir(rv.stderr if json else rv.stdout)
         workflow = Workflow(submit_dir, self)
         return workflow
 
