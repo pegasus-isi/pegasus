@@ -1,14 +1,43 @@
 import os
+import sys
 import subprocess
 import time
+import yaml
 import urllib.request
 from argparse import ArgumentParser
 
-#### Url to Sites.py on pegasushub ####
+#### Get PEGASUS_HOME from env ####
+PEGASUS_HOME = os.getenv('PEGASUS_HOME')
+
+#### Default data path ####
+pegasushub_data_path = os.path.expanduser("~/.pegasus/pegasushub")
+
+#### Pegasus major_minor_version ####
+pegasus_major_minor_version = subprocess.check_output([os.path.join(PEGASUS_HOME, "bin", "pegasus-version"), "-m"]).strip().decode("utf-8")
+
+#### Url to Sites.py on pegasushub and Sites.py location ####
+pegasushub_site_catalogs_url = f"https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs/{pegasus_major_minor_version}/Sites.py"
+wf_sites = os.path.join(pegasushub_data_path, f"{pegasus_major_minor_version}/Sites.py")
+def update_site_catalogs(wf_sites):
+    if not os.path.isfile(wf_sites):
+        os.makedirs(wf_sites[: wf_sites.rfind("/")], exist_ok=True)
+        urllib.request.urlretrieve(pegasushub_site_catalogs_url, wf_sites)
+    elif int(os.path.getmtime(wf_sites)) < time.time() - (24 * 60 * 60):
+        urllib.request.urlretrieve(pegasushub_site_catalogs_url, wf_sites)
 
 #### Url to workflows on pegasushub ####
 pegasushub_workflows_url = "https://raw.githubusercontent.com/pegasushub/pegasushub.github.io/master/_data/workflows.yml"
+def update_workflow_list(wf_gallery):
+    if not os.path.isfile(wf_gallery):
+        os.makedirs(wf_gallery[: wf_gallery.rfind("/")], exist_ok=True)
+        urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
+    elif int(os.path.getmtime(wf_gallery)) < time.time() - (24 * 60 * 60):
+        urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
 
+#### Update Site Catalogs and load Sites ####
+update_site_catalogs(wf_sites)
+sys.path.insert(0, os.path.join(pegasushub_data_path, pegasus_major_minor_version))
+import Sites
 
 def console_select_workflow(workflows_available):
     pass
@@ -75,7 +104,7 @@ def clone_workflow(wf_dir, workflow):
 def read_pegasushub_config(wf_dir):
     config = {"generator": "workflow_generator.py"}
     data = None
-    # data = yaml.load(open(os.path.join(os.getcwd(), wf_dir, ".pegasushub.yml")), Loader=yaml.FullLoader)
+    data = yaml.load(open(os.path.join(os.getcwd(), wf_dir, ".pegasushub.yml")), Loader=yaml.FullLoader)
     if not data is None:
         if "generator" in data:
             config["generator"] = data["generator"]
@@ -134,13 +163,6 @@ def read_workflows(wf_gallery, site):
 
     return workflows_available
 
-
-def update_workflow_list(wf_gallery):
-    if not os.path.isfile(wf_gallery):
-        os.makedirs(wf_gallery[: wf_gallery.rfind("/")], exist_ok=True)
-        urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
-    elif int(os.path.getmtime(wf_gallery)) < time.time() - (24 * 60 * 60):
-        urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
 
 
 def main():
