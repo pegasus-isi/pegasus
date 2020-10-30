@@ -763,23 +763,33 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self,
         *,
         conf: Optional[str] = None,
+        basename: Optional[str] = None,
+        job_prefix: Optional[str] = None,
+        cluster: Optional[List[str]] = None,
         sites: Optional[List[str]] = None,
         output_sites: List[str] = ["local"],
         staging_sites: Optional[Dict[str, str]] = None,
+        cache: Optional[List[Union[str, Path]]] = None,
         input_dirs: Optional[List[Union[str, Path]]] = None,
         output_dir: Optional[Union[str, Path]] = None,
         dir: Optional[Union[str, Path]] = None,
         relative_dir: Optional[str] = None,
         random_dir: Union[bool, str, Path] = False,
+        relative_submit_dir: Optional[str] = None,
+        inherited_rc_files: Optional[List[Union[str, Path]]] = None,
         cleanup: str = "inplace",
         reuse: Optional[List[Union[str, Path]]] = None,
         verbose: int = 0,
+        quiet: int = 0,
         force: bool = False,
+        force_replan: bool = False,
+        forward: Optional[List[str]] = None,
         submit: bool = False,
+        java_options: Optional[List[str]] = None,
         **kwargs
     ):
         """
-        plan(self, conf: Optional[str] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, random_dir: Union[bool, str, Path] = False, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, force: bool = False, submit: bool = False, **kwargs)
+        plan(self, conf: Optional[str] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[str] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **kwargs)
         Plan the workflow.
 
         .. code-block:: python
@@ -791,12 +801,20 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         :param conf:  the path to the properties file to use for planning, defaults to None
         :type conf: Optional[str]
+        :param basename: the basename prefix while constructing the per workflow files like .dag etc., defaults to None
+        :type basename: Optional[str]
+        :param job_prefix: the prefix to be applied while construction job submit filenames, defaults to None
+        :type job_prefix: Optional[str]
+        :param cluster: comma separated list of clustering techniques to be applied to the workflow to cluster jobs in to larger jobs, to avoid scheduling overheads., defaults to None
+        :type cluster: Optional[List[str]]
         :param sites: list of execution sites on which to map the workflow, defaults to None
         :type sites: Optional[List[str]]
         :param output_sites: the output sites where the data products during workflow execution are transferred to, defaults to :code:`["local"]`
         :type output_sites: List[str]
         :param staging_sites: key, value pairs of execution site to staging site mappings such as :code:`{"condorpool": "staging-site"}`, defaults to None
         :type staging_sites: Optional[Dict[str,str]]
+        :param cache: comma separated list of replica cache files, defaults to None
+        :type cache: Optional[List[Union[str, Path]]]
         :param input_dirs: comma separated list of optional input directories where the input files reside on submit host, defaults to None
         :type input_dirs: Optional[List[Union[str, Path]]]
         :param output_dir: an optional output directory where the output files should be transferred to on submit host, defaults to None
@@ -807,16 +825,28 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type relative_dir: Optional[str]
         :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`pathlib.Path`, then that will be used as the basename of the directory that is to be created, defaults to False
         :type random_dir: Union[bool, str, Path], optional
+        :param relative_submit_dir: the relative submit directory where to generate the concrete workflow. Overrides relative_dir, defaults to None
+        :type relative_submit_dir: Optional[str]
+        :param inherited_rc_files: comma separated list of replica files, defaults to None
+        :type inherited_rc_files: Optional[List[Union[str, Path]]]
         :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
         :type cleanup: str, optional
         :param reuse: list of submit directories of previous runs from which to pick up for reuse (e.g. :code:`["/workflows/submit_dir1", "/workflows/submit_dir2"]`), defaults to None
         :type reuse: Optional[List[Union[str,Path]]]
         :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
+        :param quiet: decreases the verbosity of messages about what is going on, defaults to 0
+        :type quiet: int
         :param force: skip reduction of the workflow, resulting in build style dag, defaults to False
         :type force: bool, optional
+        :param force_replan: force replanning for sub workflows in case of failure, defaults to False
+        :type force_replan: bool
+        :param forward: any options that need to be passed ahead to pegasus-run in format option[=value] (e.g. :code:`["nogrid"]`), defaults to None
+        :type forward: Optional[List[str]]
         :param submit: submit the executable workflow generated, defaults to False
         :type submit: bool, optional
+        :param java_options: pass to jvm a non standard option (e.g. :code:`["mx1024m", "ms512m"]`), defaults to None
+        :type java_options: Optional[List[str]]
         :raises PegasusClientError: pegasus-plan encountered an error
         :return: self
         """
@@ -828,6 +858,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         workflow_instance = self._client.plan(
             abstract_workflow=self._path,
+            basename=basename,
+            job_prefix=job_prefix,
+            cluster=cluster,
+            cache=[str(c) for c in cache] if cache else None,
             conf=conf,
             sites=sites,
             output_sites=output_sites,
@@ -836,12 +870,20 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             output_dir=str(output_dir) if output_dir else None,
             dir=str(dir) if dir else None,
             relative_dir=relative_dir,
+            relative_submit_dir=relative_submit_dir,
+            inherited_rc_files=[str(p) for p in inherited_rc_files]
+            if inherited_rc_files
+            else None,
             random_dir=random_dir if isinstance(random_dir, bool) else str(random_dir),
             cleanup=cleanup,
             reuse=[str(submit_dir) for submit_dir in reuse] if reuse else None,
             verbose=verbose,
+            quiet=quiet,
             force=force,
+            force_replan=force_replan,
+            forward=forward,
             submit=submit,
+            java_options=java_options,
             **kwargs,
         )
 

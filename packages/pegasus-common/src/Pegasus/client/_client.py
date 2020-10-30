@@ -90,7 +90,6 @@ class Client:
         force_replan: bool = False,
         forward: List[str] = None,
         submit: bool = False,
-        json: bool = False,
         java_options: List[str] = None,
         **kwargs
     ):
@@ -224,9 +223,6 @@ class Client:
         if submit:
             cmd.append("--submit")
 
-        if json:
-            cmd.append("--json")
-
         if java_options:
             if not isinstance(java_options, list):
                 raise TypeError(
@@ -243,12 +239,35 @@ class Client:
         if abstract_workflow:
             cmd.append(abstract_workflow)
 
+        # always use --json option
+        cmd.append("--json")
+
         self._log.info("\n################\n# pegasus-plan #\n################")
 
-        rv = self._exec(cmd)
+        # don't stream stdout from planner, as this will be json output
+        rv = self._exec(cmd, stream_stdout=False, stream_stderr=True)
 
-        # TODO: updated _get_submit_dir to parse submit_dir from stdout if json option given
-        submit_dir = self._get_submit_dir(rv.stderr if json else rv.stdout)
+        json_output = rv.json
+        submit_dir = json_output["submit_dir"]
+
+        # Some tools (launch-bamboo-script, ensemble-mananager) parse submit directory from
+        # planner output. Therefore we need to log the following and retain the structure
+        # of planner output when the --json flag is not given.
+        if submit:
+            self._log.info(
+                "\nYour workflow has been started and is running in the base directory:\n"
+            )
+            self._log.info(submit_dir)
+
+            self._log.info("\n*** To monitor the workflow you can run ***\n")
+            self._log.info(". . .  pegasus-status -l {}\n".format(submit_dir))
+
+            self._log.info("\n*** To remove your workflow run ***\n")
+            self._log.info(". . .  pegasus-remove {}\n".format(submit_dir))
+        else:
+            self._log.info("\n\n" + json_output["message"].strip() + "\n\n")
+            self._log.info("pegasus-run {}".format(submit_dir))
+
         workflow = Workflow(submit_dir, self)
         return workflow
 
@@ -264,7 +283,7 @@ class Client:
         cmd.append(submit_dir)
 
         self._log.info("\n###############\n# pegasus-run #\n###############")
-        self._exec(cmd)
+        self._exec(cmd, stream_stdout=True, stream_stderr=True)
 
     def status(self, submit_dir: str, long: bool = False, verbose: int = 0):
         cmd = [self._status]
@@ -471,57 +490,56 @@ class Client:
 
         self._exec(cmd)
 
-    def _exec(self, cmd):
+    def _exec(self, cmd, stream_stdout=True, stream_stderr=False):
         if not cmd:
             raise ValueError("cmd is required")
 
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out = []
+        err = []
 
         # stream output
         while True:
             stdout_line = proc.stdout.readline()
+            stderr_line = proc.stderr.readline()
 
             if stdout_line:
                 out.append(stdout_line)
-                self._log.info(stdout_line.strip().decode())
+
+                if stream_stdout:
+                    self._log.info(stdout_line.strip().decode())
+
+            if stderr_line:
+                err.append(stderr_line)
+
+                if stream_stderr:
+                    self._log.error(stderr_line.strip().decode())
 
             # has proc terminated?
             if proc.poll() is not None:
-                # handle any output still left in stdout
+                # handle any output still left in stdout and stderr
                 for line in proc.stdout.readlines():
                     out.append(line)
-                    self._log.info(line.strip().decode())
+
+                    if stream_stdout:
+                        self._log.info(line.strip().decode())
+
+                for line in proc.stderr.readlines():
+                    err.append(line)
+
+                    if stream_stderr:
+                        self._log.error(line.strip().decode())
 
                 break
 
-        err = proc.stderr.read()
-        self._log.error(err.decode())
         exit_code = proc.returncode
 
-        result = Result(cmd, exit_code, b"".join(out), err)
+        result = Result(cmd, exit_code, b"".join(out), b"".join(out))
 
         if exit_code != 0:
             raise PegasusClientError("Pegasus command: {} FAILED".format(cmd), result)
 
         return result
-
-    @staticmethod
-    def _get_submit_dir(output: str):
-        if not output:
-            return
-
-        # pegasus-plan produces slightly different output based on the presence
-        # of the --submit flag, therefore we need to search for
-        # pegasus-(run|remove) to get the submit directory
-        pattern = re.compile(r"pegasus-(run|remove)\s*(.*)$")
-
-        for line in output.splitlines():
-            line = line.strip()
-            match = pattern.search(line)
-
-            if match:
-                return match.group(2)
 
 
 class WorkflowInstanceError(Exception):
