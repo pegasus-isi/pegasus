@@ -849,4 +849,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="--recreate"/>
     </exec>
   </target>
+  
+  <target name="tutorial-image-build" depends="setup" description="Builds the Docker based tutorial container image">
+      <exec executable="docker" dir="tutorial/docker" failonerror="true">
+        <arg line="build -t pegasus/tutorial:${pegasus.version} ."/>
+    </exec>
+  </target>
+
 </project>

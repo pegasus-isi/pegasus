@@ -65,11 +65,16 @@ $ cat ~/.pypirc
 $ twine upload <python-package>
 ```
 
-11. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
+11. Build and push the tutorial container image:
+    ant tutorial-image-build
+    docker push pegasus/tutorial:N.M.O
 
-12. Change the symbolic link for the latest documentation to point
+12. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
+
+13. Change the symbolic link for the latest documentation to point
     to latest stable release
     https://pegasus.isi.edu/documentation/
 
-13. Send annouce email to pegasus-announce@mailman.isi.edu
+14. Send annouce email to pegasus-announce@mailman.isi.edu
     (Karan has to do this step)
+

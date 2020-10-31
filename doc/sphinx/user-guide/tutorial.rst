@@ -4,6 +4,22 @@
 Tutorial
 ========
 
+Docker Based Tutorial or Command Line?
+======================================
+
+
+Docker
+======
+
+TODO: install Docker
+
+.. parsed-literal::
+
+    docker run --privileged --rm -p 9999:8888  pegasus/tutorial:|release|
+
+
+
+
 .. _tutorial-introduction:
 
 Introduction
