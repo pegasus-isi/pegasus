@@ -6,6 +6,12 @@ import urllib.request
 from argparse import ArgumentParser
 
 import yaml
+from git import Repo
+
+from Pegasus.api import *
+
+#### Default time to update dynamic config files in seconds ####
+update_config_timeout = 24 * 60 * 60
 
 #### Get PEGASUS_HOME from env ####
 PEGASUS_HOME = os.getenv("PEGASUS_HOME")
@@ -31,7 +37,7 @@ def update_site_catalogs(wf_sites):
     if not os.path.isfile(wf_sites):
         os.makedirs(wf_sites[: wf_sites.rfind("/")], exist_ok=True)
         urllib.request.urlretrieve(pegasushub_site_catalogs_url, wf_sites)
-    elif int(os.path.getmtime(wf_sites)) < time.time() - (24 * 60 * 60):
+    elif int(os.path.getmtime(wf_sites)) < time.time() - update_config_timeout:
         urllib.request.urlretrieve(pegasushub_site_catalogs_url, wf_sites)
 
 
@@ -43,7 +49,7 @@ def update_workflow_list(wf_gallery):
     if not os.path.isfile(wf_gallery):
         os.makedirs(wf_gallery[: wf_gallery.rfind("/")], exist_ok=True)
         urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
-    elif int(os.path.getmtime(wf_gallery)) < time.time() - (24 * 60 * 60):
+    elif int(os.path.getmtime(wf_gallery)) < time.time() - update_config_timeout:
         urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
 
 
@@ -54,8 +60,6 @@ import Sites
 
 
 def console_select_workflow(workflows_available):
-    pass
-
     print_workflows(workflows_available)
 
     try:
@@ -71,6 +75,7 @@ def console_select_workflow(workflows_available):
 def console_select_site():
     site = None
     project_name = None
+    queue_name = None
 
     sites_available = {
         site.value: {"name": site.name, "member": site} for site in Sites.SitesAvailable
@@ -84,10 +89,13 @@ def console_select_site():
         print("This is not a valid option...")
         exit()
 
+    if site in Sites.SitesRequireQueue:
+        queue_name = input("What's the targeted queue name: ")
+
     if site in Sites.SitesRequireProject:
         project_name = input("What's your project name: ")
 
-    return (site, project_name)
+    return (site, project_name, queue_name)
 
 
 def print_sites(sites_available):
@@ -137,16 +145,32 @@ def create_pegasus_properties():
     return
 
 
-def create_workflow(wf_dir, workflow, site, project_name):
+def create_workflow(wf_dir, workflow, site, project_name, queue_name):
     print("Generating workflow...")
     pegasushub_config = read_pegasushub_config(wf_dir)
 
     os.chdir(wf_dir)
 
     if project_name is None:
-        exec_sites = MySite(os.getcwd(), os.getcwd(), site)
+        if queue_name is None:
+            exec_sites = Sites.MySite(os.getcwd(), os.getcwd(), site)
+        else:
+            exec_sites = Sites.MySite(
+                os.getcwd(), os.getcwd(), site, queue_name=queue_name
+            )
     else:
-        exec_sites = MySite(os.getcwd(), os.getcwd(), site, project=project_name)
+        if queue_name is None:
+            exec_sites = Sites.MySite(
+                os.getcwd(), os.getcwd(), site, project_name=project_name
+            )
+        else:
+            exec_sites = Sites.MySite(
+                os.getcwd(),
+                os.getcwd(),
+                site,
+                project_name=project_name,
+                queue_name=queue_name,
+            )
 
     subprocess.run(
         [
@@ -200,14 +224,14 @@ def main():
         if args.workflows == os.path.expanduser("~/.pegasus/pegasushub/workflows.yml"):
             update_workflow_list(args.workflows)
 
-    (site, project_name) = console_select_site()
+    (site, project_name, queue_name) = console_select_site()
     workflows_available = read_workflows(args.workflows, site)
 
     workflow = console_select_workflow(workflows_available)
 
     clone_workflow(args.dir, workflow)
 
-    create_workflow(args.dir, workflow, site, project_name)
+    create_workflow(args.dir, workflow, site, project_name, queue_name)
 
     return
 

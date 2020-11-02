@@ -88,7 +88,7 @@ pegasus-plan \
     | tee plan.out
 
 # we need to wait for a while, halt the workflow, wait for it to stop, than start it again
-RUN_DIR=`grep pegasus-remove plan.out | awk '{print $5}'`
+RUN_DIR=`grep pegasus-remove plan.out | sed 's/.*pegasus-remove //'`
 cd $RUN_DIR
 
 # wait for subworkflow to start

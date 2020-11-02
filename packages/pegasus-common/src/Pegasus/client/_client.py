@@ -252,7 +252,7 @@ class Client:
 
         # Some tools (launch-bamboo-script, ensemble-mananager) parse submit directory from
         # planner output. Therefore we need to log the following and retain the structure
-        # of planner output when the --json flag is not given.
+        # of planner output.
         if submit:
             self._log.info(
                 "\nYour workflow has been started and is running in the base directory:\n"
@@ -260,10 +260,10 @@ class Client:
             self._log.info(submit_dir)
 
             self._log.info("\n*** To monitor the workflow you can run ***\n")
-            self._log.info(". . .  pegasus-status -l {}\n".format(submit_dir))
+            self._log.info("pegasus-status -l {}\n".format(submit_dir))
 
             self._log.info("\n*** To remove your workflow run ***\n")
-            self._log.info(". . .  pegasus-remove {}\n".format(submit_dir))
+            self._log.info("pegasus-remove {}\n".format(submit_dir))
         else:
             self._log.info("\n\n" + json_output["message"].strip() + "\n\n")
             self._log.info("pegasus-run {}".format(submit_dir))
@@ -271,19 +271,36 @@ class Client:
         workflow = Workflow(submit_dir, self)
         return workflow
 
-    def run(self, submit_dir: str, verbose: int = 0, json: bool = False):
+    def run(self, submit_dir: str, verbose: int = 0, grid: bool = False):
         cmd = [self._run]
 
         if verbose:
             cmd.append("-" + "v" * verbose)
 
-        if json:
-            cmd.append("-j")
+        if grid:
+            cmd.append("--grid")
+
+        # always use --json option
+        cmd.append("--json")
 
         cmd.append(submit_dir)
 
         self._log.info("\n###############\n# pegasus-run #\n###############")
-        self._exec(cmd, stream_stdout=True, stream_stderr=True)
+        rv = self._exec(cmd, stream_stdout=False, stream_stderr=True)
+
+        # As json output is printed to stdout and captured. Print out the
+        # output that is normally emitted to stdout from pegasus-run when the
+        # --json option is not given.
+        self._log.info(
+            "Your workflow has been started and is running in the base directory:\n"
+        )
+        self._log.info(submit_dir + "\n")
+        self._log.info("*** To monitor the workflow you can run ***\n")
+        self._log.info("pegasus-status -l {}\n".format(submit_dir))
+        self._log.info("*** To remove your workflow run ***\n")
+        self._log.info("pegasus-remove {}".format(submit_dir))
+
+        return rv.json
 
     def status(self, submit_dir: str, long: bool = False, verbose: int = 0):
         cmd = [self._status]

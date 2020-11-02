@@ -31,11 +31,11 @@ fi
 STATUS=$?
 
 #Get RUNDIR from the planning output
-RUN_DIR=`grep pegasus-remove $PLANFILE | awk '{print $5}'`
+RUN_DIR=`grep pegasus-remove $PLANFILE | sed 's/.*pegasus-remove //'`
 if [ "x$RUN_DIR" = "x" ]; then
 
     # if the workflow was planned with out --submit, it only has a pegasus-run line
-    RUN_DIR=`grep pegasus-run $PLANFILE | awk '{print $2}'`
+    RUN_DIR=`grep pegasus-run $PLANFILE | sed 's/.*pegasus-run //'`
 
     if [ "x$RUN_DIR" = "x" ]; then
         echo "Unable to determine the RUN_DIR from the planner output - did the planner fail?" 1>&2

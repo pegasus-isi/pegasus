@@ -52,7 +52,7 @@ def test_from_env_no_pegasus_home(monkeypatch):
 def mock_subprocess(mocker):
     class Popen:
         def __init__(self):
-            self.stdout = io.BytesIO(b"some initial binary data: \x00\x01\n")
+            self.stdout = io.BytesIO(b'{"key":"value"}')
             self.stderr = io.BytesIO(b"some initial binary data: \x00\x01\n")
             self.returncode = 0
 
@@ -222,9 +222,19 @@ class TestClient:
         assert "invalid java_options: opts" in str(e)
 
     def test_run(self, mock_subprocess, client):
-        client.run("submit_dir", verbose=3, json=True)
+        client.run("submit_dir", verbose=3, grid=True)
         subprocess.Popen.assert_called_once_with(
-            ["/path/bin/pegasus-run", "-vvv", "-j", "submit_dir"], stderr=-1, stdout=-1
+            ["/path/bin/pegasus-run", "-vvv", "--grid", "--json", "submit_dir"],
+            stderr=-1,
+            stdout=-1,
+        )
+
+    def test_run_no_grid(self, mock_subprocess, client):
+        client.run("submit_dir", verbose=3)
+        subprocess.Popen.assert_called_once_with(
+            ["/path/bin/pegasus-run", "-vvv", "--json", "submit_dir"],
+            stderr=-1,
+            stdout=-1,
         )
 
     def test_status(self, mock_subprocess, client):
