@@ -106,6 +106,7 @@ re_parse_job_held = re.compile(r"\s*Hold reason:(.*)")
 MONITORD_WF_RETRY_FILE = (
     "monitord.subwf"  # filename for writing persistent sub-workflow retry information
 )
+MONITORD_LOG_FILE = "monitord.log"
 MAX_SLEEP_TIME = 10  # in seconds
 SLEEP_WAIT_NOTIFICATION = 5  # in seconds
 DAGMAN_OUT_MAX_READ_SIZE = (
@@ -521,6 +522,11 @@ if options.replay_mode is not None:
     condor_daemon = False
     # No notifications in replay mode
     do_notifications = False
+    # replay mode: manually run by user on the command line.
+    # we take a backup of monitord.log file if it exists to ensure
+    # pegasus-statistics does not complain while generating statistics
+    # Normally, backup of monitord.log file is taken by pegasus-dagman
+    utils.rotate_log_file(MONITORD_LOG_FILE)
 if options.no_notify is not None:
     do_notifications = False
 if options.notifications_max is not None:
