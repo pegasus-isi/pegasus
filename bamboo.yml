@@ -1562,6 +1562,40 @@ project:
                     matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+        - name: Container Images
+          description: Build and upload container images
+          jobs:
+            - key: TDI
+              name: Tutorial Docker Image
+              tasks:
+                - !script
+                  description: Builds and uploads a tutorial image to DockerHub
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      set -e
+                      set -x
+
+                      tar xzf pegasus-source.tar.gz
+                      VERSION=`./pegasus-source/release-tools/getversion`
+                      if [ "X$VERSION" = "X" ]; then
+                          echo "Unable to determine Pegasus version! Exiting..."
+                          exit 1
+                      fi
+
+                      cd pegasus-source
+                      ant tutorial-image-build
+
+                      docker push pegasus/tutorial:$VERSION
+
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: hostname
+                  matchType: !equals
+                    matchValue: build-1.pegasus.isi.edu
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
       permissions:
         user:
           mayani:
