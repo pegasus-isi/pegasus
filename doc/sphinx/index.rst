@@ -14,6 +14,7 @@ Welcome to Pegasus WMS's documentation!
     user-guide/introduction.rst
     user-guide/installation.rst
     user-guide/tutorial.rst
+    user-guide/example-workflows.rst
     user-guide/creating-workflows.rst
     user-guide/running-workflows.rst
     user-guide/submit-directory.rst
