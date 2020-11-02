@@ -2,10 +2,12 @@ import os
 import subprocess
 import sys
 import time
-import yaml
 import urllib.request
-from git import Repo
 from argparse import ArgumentParser
+
+import yaml
+from git import Repo
+
 from Pegasus.api import *
 
 #### Default time to update dynamic config files in seconds ####
@@ -37,6 +39,7 @@ def update_site_catalogs(wf_sites):
         urllib.request.urlretrieve(pegasushub_site_catalogs_url, wf_sites)
     elif int(os.path.getmtime(wf_sites)) < time.time() - update_config_timeout:
         urllib.request.urlretrieve(pegasushub_site_catalogs_url, wf_sites)
+
 
 #### Url to workflows on pegasushub ####
 pegasushub_workflows_url = "https://raw.githubusercontent.com/pegasushub/pegasushub.github.io/master/_data/workflows.yml"
@@ -152,13 +155,22 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name):
         if queue_name is None:
             exec_sites = Sites.MySite(os.getcwd(), os.getcwd(), site)
         else:
-            exec_sites = Sites.MySite(os.getcwd(), os.getcwd(), site, queue_name=queue_name)
+            exec_sites = Sites.MySite(
+                os.getcwd(), os.getcwd(), site, queue_name=queue_name
+            )
     else:
         if queue_name is None:
-            exec_sites = Sites.MySite(os.getcwd(), os.getcwd(), site, project_name=project_name)
+            exec_sites = Sites.MySite(
+                os.getcwd(), os.getcwd(), site, project_name=project_name
+            )
         else:
-            exec_sites = Sites.MySite(os.getcwd(), os.getcwd(), site, project_name=project_name, queue_name=queue_name)
-
+            exec_sites = Sites.MySite(
+                os.getcwd(),
+                os.getcwd(),
+                site,
+                project_name=project_name,
+                queue_name=queue_name,
+            )
 
     subprocess.run(
         [
