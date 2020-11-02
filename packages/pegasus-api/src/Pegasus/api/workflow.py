@@ -712,6 +712,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self._submit_dir = None
         self._braindump = None
 
+        # set/overridden by call to Workflow.run
+        self._run_output = None
+
         self._client = None
 
         self._path = None
@@ -756,6 +759,32 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :raises PegasusError: :py:class:`~Pegasus.api.workflow.Workflow.plan` must be called before accessing the braindump file
         """
         return self._braindump
+
+    @property
+    def run_output(self):
+        """Get the json output from pegasus-run after it has been called.
+
+        .. code-block:: python
+
+            try:
+                wf.plan()
+                wf.run()
+
+                print(wf.run_output)
+            except PegasusClientError as e:
+                print(e.output)
+
+
+        :raises PegasusError: :py:class:`~Pegasus.api.workflow.Workflow.run` must be called prior to accessing run_output
+        :return: output of pegasus-run
+        :rtype: dict
+        """
+        if not self._run_output:
+            raise PegasusError(
+                "Workflow.run must be called before run_output can be accessed"
+            )
+
+        return self._run_output
 
     @_chained
     @_needs_client
@@ -892,19 +921,21 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
     @_chained
     @_needs_client
-    def run(self, *, verbose: int = 0, json: bool = False):
+    def run(self, *, verbose: int = 0, grid: bool = False):
         """
-        run(self, verbose: int = 0, json: bool = False)
+        run(self, verbose: int = 0, json: bool = False, grid: bool = False)
         Run the planned workflow.
 
         :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
-        :param json: Output in JSON format, defaults to False
-        :type json: bool
+        :param grid: enable checking for grids, defaults to False
+        :type grid: bool, optional
         :raises PegasusClientError: pegasus-run encountered an error
         :return: self
         """
-        self._client.run(self._submit_dir, verbose=verbose, json=json)
+        self._run_output = self._client.run(
+            self._submit_dir, verbose=verbose, grid=grid
+        )
 
     @_chained
     @_needs_submit_dir
