@@ -260,10 +260,10 @@ class Client:
             self._log.info(submit_dir)
 
             self._log.info("\n*** To monitor the workflow you can run ***\n")
-            self._log.info(". . .  pegasus-status -l {}\n".format(submit_dir))
+            self._log.info("pegasus-status -l {}\n".format(submit_dir))
 
             self._log.info("\n*** To remove your workflow run ***\n")
-            self._log.info(". . .  pegasus-remove {}\n".format(submit_dir))
+            self._log.info("pegasus-remove {}\n".format(submit_dir))
         else:
             self._log.info("\n\n" + json_output["message"].strip() + "\n\n")
             self._log.info("pegasus-run {}".format(submit_dir))
