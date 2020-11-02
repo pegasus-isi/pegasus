@@ -1485,15 +1485,33 @@ class TestWorkflow:
             in str(e)
         )
 
-    def test_run(self, wf, mocker):
-        mocker.patch("Pegasus.client._client.Client.run")
+    def test_run_and_access_run_output(self, wf, mocker):
+        mocker.patch("Pegasus.client._client.Client.run", return_value={"key": "value"})
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
 
         wf.run()
 
+        assert wf.run_output == {"key": "value"}
+
         Pegasus.client._client.Client.run.assert_called_once_with(
-            None, verbose=0, json=False
+            None, verbose=0, grid=False
         )
+
+    def test_run_with_grid_checking(self, wf, mocker):
+        mocker.patch("Pegasus.client._client.Client.run")
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        wf.run(grid=True)
+
+        Pegasus.client._client.Client.run.assert_called_once_with(
+            None, verbose=0, grid=True
+        )
+
+    def test_access_run_output_before_workflow_run(self, wf):
+        with pytest.raises(PegasusError) as e:
+            wf.run_output
+
+        assert "Workflow.run must be called before run_output can be accessed" in str(e)
 
     def test_status(self, wf, mocker):
         mocker.patch("Pegasus.client._client.Client.status")
