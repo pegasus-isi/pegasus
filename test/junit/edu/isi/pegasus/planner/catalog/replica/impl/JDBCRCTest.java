@@ -223,9 +223,9 @@ public class JDBCRCTest {
         HashMap attr3 = new HashMap();
         attr3.put("key", "value");
 
-        assertFalse(c.contains(new ReplicaCatalogEntry("d", attr)));
+        assertTrue(c.contains(new ReplicaCatalogEntry("d", attr)));
         assertTrue(c.contains(new ReplicaCatalogEntry("d", attr2)));
-        assertFalse(c.contains(new ReplicaCatalogEntry("d", attr3)));
+        assertTrue(c.contains(new ReplicaCatalogEntry("d", attr3)));
     }
 
     @Test
@@ -269,9 +269,6 @@ public class JDBCRCTest {
 
     @After
     public void tearDown() {
-        jdbcrc.delete("a", "b");
-        jdbcrc.delete("a", "c");
-        jdbcrc.delete("a", "d");
         jdbcrc.close();
         new File("jdbcrc_test.db").delete();
     }
