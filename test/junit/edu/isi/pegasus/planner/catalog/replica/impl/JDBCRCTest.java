@@ -223,9 +223,9 @@ public class JDBCRCTest {
         HashMap attr3 = new HashMap();
         attr3.put("key", "value");
 
-        assertTrue(c.contains(new ReplicaCatalogEntry("d", attr)));
+        assertFalse(c.contains(new ReplicaCatalogEntry("d", attr)));
         assertTrue(c.contains(new ReplicaCatalogEntry("d", attr2)));
-        assertTrue(c.contains(new ReplicaCatalogEntry("d", attr3)));
+        assertFalse(c.contains(new ReplicaCatalogEntry("d", attr3)));
     }
 
     @Test
