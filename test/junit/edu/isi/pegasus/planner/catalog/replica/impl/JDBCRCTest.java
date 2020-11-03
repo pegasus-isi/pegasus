@@ -126,8 +126,17 @@ public class JDBCRCTest {
 
     @Test
     public void insertMultipleResourceHandles() {
-        jdbcrc.insert("a", new ReplicaCatalogEntry("b", "x"));
-        jdbcrc.insert("a", new ReplicaCatalogEntry("b", "y"));
+        HashMap attr = new HashMap();
+        attr.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
+        attr.put("bk", "bvalue");
+        attr.put("bk2", "bvalue2");
+        jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
+
+        HashMap attr2 = new HashMap();
+        attr2.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "y");
+        attr2.put("bk", "bvalue");
+        attr2.put("bk2", "bvalue2");
+        jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr2));
 
         assertEquals("b", jdbcrc.lookup("a", "x"));
         assertEquals("b", jdbcrc.lookup("a", "y"));
