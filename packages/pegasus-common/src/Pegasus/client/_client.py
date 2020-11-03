@@ -352,78 +352,87 @@ class Client:
         # progress bar length
         bar_len = 50
 
-        can_continue = True
-        while can_continue:
-            rv = subprocess.run(
-                ["pegasus-status", "-l", submit_dir],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
+        try:
+            can_continue = True
+            while can_continue:
+                rv = subprocess.run(
+                    ["pegasus-status", "-l", submit_dir],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
 
-            if rv.returncode != 0:
-                raise Exception(rv.stderr)
+                if rv.returncode != 0:
+                    raise Exception(rv.stderr)
 
-            found_match = False
-            for line in rv.stdout.decode("utf8").split("\n"):
-                matched = p.match(line)
+                found_match = False
+                for line in rv.stdout.decode("utf8").split("\n"):
+                    matched = p.match(line)
 
-                if matched:
-                    found_match = True
-                    v = matched.group(1).split()
-                    v.append(float(matched.group(3).strip()))
-                    v.append(matched.group(4).strip())
+                    if matched:
+                        found_match = True
+                        v = matched.group(1).split()
+                        v.append(float(matched.group(3).strip()))
+                        v.append(matched.group(4).strip())
 
-                    completed = green("Completed: " + str(v[DONE]).replace(",", ""))
-                    queued = yellow("Queued: " + str(v[READY]).replace(",", ""))
-                    running = blue("Running: " + str(v[IN_Q]).replace(",", ""))
-                    fail = red("Failed: " + str(v[FAIL]).replace(",", ""))
+                        completed = green("Completed: " + str(v[DONE]).replace(",", ""))
+                        queued = yellow("Queued: " + str(v[READY]).replace(",", ""))
+                        running = blue("Running: " + str(v[IN_Q]).replace(",", ""))
+                        fail = red("Failed: " + str(v[FAIL]).replace(",", ""))
 
-                    stats = (
-                        "("
-                        + completed
-                        + ", "
-                        + queued
-                        + ", "
-                        + running
-                        + ", "
-                        + fail
-                        + ")"
-                    )
+                        stats = (
+                            "("
+                            + completed
+                            + ", "
+                            + queued
+                            + ", "
+                            + running
+                            + ", "
+                            + fail
+                            + ")"
+                        )
 
-                    filled_len = int(round(bar_len * (v[PCNT_DONE] * 0.01)))
+                        filled_len = int(round(bar_len * (v[PCNT_DONE] * 0.01)))
 
+                        bar = (
+                            "\r["
+                            + green("#" * filled_len)
+                            + ("-" * (bar_len - filled_len))
+                            + "] {percent:>5}% ..{state} {stats}".format(
+                                percent=v[PCNT_DONE], state=v[STATE], stats=stats
+                            )
+                        )
+
+                        if v[PCNT_DONE] < 100:
+                            if v[STATE] != "Failure":
+                                print(bar, end="")
+                            else:
+                                # failure
+                                can_continue = False
+                                print(bar, end="\n")
+                        else:
+                            # percent done >= 100 means STATE = success
+                            can_continue = False
+                            print(bar)
+
+                        # skip the rest of the lines
+                        break
+
+                # When workflow is submitted, the pattern above may not be initially
+                # present when the workflow job is idle or has just started running.
+                if not found_match:
                     bar = (
                         "\r["
-                        + green("#" * filled_len)
-                        + ("-" * (bar_len - filled_len))
-                        + "] {percent:>5}% ..{state} {stats}".format(
-                            percent=v[PCNT_DONE], state=v[STATE], stats=stats
-                        )
+                        + ("-" * bar_len)
+                        + "] {percent:>5}% ..".format(percent=0.0)
                     )
 
-                    if v[PCNT_DONE] < 100:
-                        if v[STATE] != "Failure":
-                            print(bar, end="")
-                        else:
-                            # failure
-                            can_continue = False
-                            print(bar, end="\n")
-                    else:
-                        # percent done >= 100 means STATE = success
-                        can_continue = False
-                        print(bar)
+                    print(bar, end="")
 
-                    # skip the rest of the lines
-                    break
-
-            # When workflow is submitted, the pattern above may not be initially
-            # present when the workflow job is idle or has just started running.
-            if not found_match:
-                bar = "\r[" + ("-" * bar_len) + "] {percent:>5}% ..".format(percent=0.0)
-
-                print(bar, end="")
-
-            time.sleep(delay)
+                time.sleep(delay)
+        except KeyboardInterrupt:
+            print(
+                "\nCancelling Client.wait(). Your workflow is still running and can be monitored with pegasus-status"
+            )
 
     def remove(self, submit_dir: str, verbose: int = 0):
         cmd = [self._remove]
