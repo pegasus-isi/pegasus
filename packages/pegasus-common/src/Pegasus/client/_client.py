@@ -3,11 +3,12 @@ import logging
 import re
 import shutil
 import subprocess
+import threading
 import time
 from functools import partial
 from os import path
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import BinaryIO, Dict, List, Union
 
 from Pegasus import braindump, yaml
 
@@ -516,51 +517,103 @@ class Client:
 
         self._exec(cmd)
 
+    @staticmethod
+    def _handle_stream(
+        proc: subprocess.Popen,
+        stream: BinaryIO,
+        dst: list,
+        logger: logging.Logger = None,
+        log_lvl: int = None,
+    ):
+        """Handler for processing and logging byte streams from subprocess.Popen.
+
+        :param proc: subprocess.Popen object used to run a pegasus CLI tool
+        :type proc: subprocess.Popen
+        :param stream: either :code:`stdout` or :code:`stderr` of the given proc
+        :type stream: BinaryIO
+        :param dst: list where proc output from the given stream will be stored, line by line
+        :type dst: list
+        :param logger: the logger to use, defaults to None
+        :type logger: logging.Logger, optional
+        :param log_lvl: the log level to use (e.g. :code:`logging.INFO`, :code:`logging.ERROR`), defaults to None
+        :type log_lvl: int, optional
+        """
+
+        def _log(logger: logging.Logger, log_lvl: int, msg: bytes):
+            if logger:
+                log_func = {
+                    10: logger.debug,
+                    20: logger.info,
+                    30: logger.warning,
+                    40: logger.error,
+                    50: logger.critical,
+                }
+                try:
+                    log_func[log_lvl](msg.decode().strip())
+                except KeyError:
+                    raise ValueError("invalid log_lvl: {}".format(log_lvl))
+
+        log = partial(_log, logger, log_lvl)
+
+        while True:
+            line = stream.readline()
+
+            if line:
+                dst.append(line)
+                log(line)
+
+            # Has proc terminated? If so, collect remaining output and exit.
+            if proc.poll() is not None:
+                for l in stream.readlines():
+                    dst.append(l)
+                    log(l)
+
+                break
+
     def _exec(self, cmd, stream_stdout=True, stream_stderr=False):
         if not cmd:
             raise ValueError("cmd is required")
 
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        stream_handlers = []
+
+        # out is not synchronized, don't access until after stdout_handler completes
         out = []
+        stdout_handler = threading.Thread(
+            target=Client._handle_stream,
+            args=(
+                proc,
+                proc.stdout,
+                out,
+                self._log if stream_stdout else None,
+                logging.INFO,
+            ),
+        )
+        stream_handlers.append(stdout_handler)
+        stdout_handler.start()
+
+        # err is not synchronized, don't access until after stderr_handler completes
         err = []
+        stderr_handler = threading.Thread(
+            target=Client._handle_stream,
+            args=(
+                proc,
+                proc.stderr,
+                err,
+                self._log if stream_stderr else None,
+                logging.ERROR,
+            ),
+        )
+        stream_handlers.append(stderr_handler)
+        stderr_handler.start()
 
-        # stream output
-        while True:
-            stdout_line = proc.stdout.readline()
-            stderr_line = proc.stderr.readline()
-
-            if stdout_line:
-                out.append(stdout_line)
-
-                if stream_stdout:
-                    self._log.info(stdout_line.strip().decode())
-
-            if stderr_line:
-                err.append(stderr_line)
-
-                if stream_stderr:
-                    self._log.error(stderr_line.strip().decode())
-
-            # has proc terminated?
-            if proc.poll() is not None:
-                # handle any output still left in stdout and stderr
-                for line in proc.stdout.readlines():
-                    out.append(line)
-
-                    if stream_stdout:
-                        self._log.info(line.strip().decode())
-
-                for line in proc.stderr.readlines():
-                    err.append(line)
-
-                    if stream_stderr:
-                        self._log.error(line.strip().decode())
-
-                break
+        for sh in stream_handlers:
+            sh.join()
 
         exit_code = proc.returncode
 
-        result = Result(cmd, exit_code, b"".join(out), b"".join(out))
+        result = Result(cmd, exit_code, b"".join(out), b"".join(err))
 
         if exit_code != 0:
             raise PegasusClientError("Pegasus command: {} FAILED".format(cmd), result)

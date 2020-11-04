@@ -161,8 +161,8 @@ class TestClient:
                 "wf.yml",
                 "--json",
             ],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
         assert wf_instance.braindump.user == "ryan"
@@ -225,24 +225,24 @@ class TestClient:
         client.run("submit_dir", verbose=3, grid=True)
         subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-run", "-vvv", "--grid", "--json", "submit_dir"],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_run_no_grid(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3)
         subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-run", "-vvv", "--json", "submit_dir"],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_status(self, mock_subprocess, client):
         client.status("submit_dir", long=True, verbose=3)
         subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-status", "--long", "-vvv", "submit_dir"],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     @pytest.mark.parametrize(
@@ -302,19 +302,25 @@ class TestClient:
     def test_remove(self, mock_subprocess, client):
         client.remove("submit_dir", verbose=3)
         subprocess.Popen.assert_called_once_with(
-            ["/path/bin/pegasus-remove", "-vvv", "submit_dir"], stderr=-1, stdout=-1
+            ["/path/bin/pegasus-remove", "-vvv", "submit_dir"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_analyzer(self, mock_subprocess, client):
         client.analyzer("submit_dir", verbose=3)
         subprocess.Popen.assert_called_once_with(
-            ["/path/bin/pegasus-analyzer", "-vvv", "submit_dir"], stderr=-1, stdout=-1
+            ["/path/bin/pegasus-analyzer", "-vvv", "submit_dir"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_statistics(self, mock_subprocess, client):
         client.statistics("submit_dir", verbose=3)
         subprocess.Popen.assert_called_once_with(
-            ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"], stderr=-1, stdout=-1
+            ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_graph(self, mock_subprocess, client):
@@ -341,8 +347,8 @@ class TestClient:
                 "--width=256",
                 "--height=256",
             ],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test__exec(self, mock_subprocess, client):
