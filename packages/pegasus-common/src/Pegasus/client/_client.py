@@ -3,11 +3,12 @@ import logging
 import re
 import shutil
 import subprocess
+import threading
 import time
 from functools import partial
 from os import path
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import BinaryIO, Dict, List, Union
 
 from Pegasus import braindump, yaml
 
@@ -352,78 +353,87 @@ class Client:
         # progress bar length
         bar_len = 50
 
-        can_continue = True
-        while can_continue:
-            rv = subprocess.run(
-                ["pegasus-status", "-l", submit_dir],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
+        try:
+            can_continue = True
+            while can_continue:
+                rv = subprocess.run(
+                    ["pegasus-status", "-l", submit_dir],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
 
-            if rv.returncode != 0:
-                raise Exception(rv.stderr)
+                if rv.returncode != 0:
+                    raise Exception(rv.stderr)
 
-            found_match = False
-            for line in rv.stdout.decode("utf8").split("\n"):
-                matched = p.match(line)
+                found_match = False
+                for line in rv.stdout.decode("utf8").split("\n"):
+                    matched = p.match(line)
 
-                if matched:
-                    found_match = True
-                    v = matched.group(1).split()
-                    v.append(float(matched.group(3).strip()))
-                    v.append(matched.group(4).strip())
+                    if matched:
+                        found_match = True
+                        v = matched.group(1).split()
+                        v.append(float(matched.group(3).strip()))
+                        v.append(matched.group(4).strip())
 
-                    completed = green("Completed: " + str(v[DONE]).replace(",", ""))
-                    queued = yellow("Queued: " + str(v[READY]).replace(",", ""))
-                    running = blue("Running: " + str(v[IN_Q]).replace(",", ""))
-                    fail = red("Failed: " + str(v[FAIL]).replace(",", ""))
+                        completed = green("Completed: " + str(v[DONE]).replace(",", ""))
+                        queued = yellow("Queued: " + str(v[READY]).replace(",", ""))
+                        running = blue("Running: " + str(v[IN_Q]).replace(",", ""))
+                        fail = red("Failed: " + str(v[FAIL]).replace(",", ""))
 
-                    stats = (
-                        "("
-                        + completed
-                        + ", "
-                        + queued
-                        + ", "
-                        + running
-                        + ", "
-                        + fail
-                        + ")"
-                    )
+                        stats = (
+                            "("
+                            + completed
+                            + ", "
+                            + queued
+                            + ", "
+                            + running
+                            + ", "
+                            + fail
+                            + ")"
+                        )
 
-                    filled_len = int(round(bar_len * (v[PCNT_DONE] * 0.01)))
+                        filled_len = int(round(bar_len * (v[PCNT_DONE] * 0.01)))
 
+                        bar = (
+                            "\r["
+                            + green("#" * filled_len)
+                            + ("-" * (bar_len - filled_len))
+                            + "] {percent:>5}% ..{state} {stats}".format(
+                                percent=v[PCNT_DONE], state=v[STATE], stats=stats
+                            )
+                        )
+
+                        if v[PCNT_DONE] < 100:
+                            if v[STATE] != "Failure":
+                                print(bar, end="")
+                            else:
+                                # failure
+                                can_continue = False
+                                print(bar, end="\n")
+                        else:
+                            # percent done >= 100 means STATE = success
+                            can_continue = False
+                            print(bar)
+
+                        # skip the rest of the lines
+                        break
+
+                # When workflow is submitted, the pattern above may not be initially
+                # present when the workflow job is idle or has just started running.
+                if not found_match:
                     bar = (
                         "\r["
-                        + green("#" * filled_len)
-                        + ("-" * (bar_len - filled_len))
-                        + "] {percent:>5}% ..{state} {stats}".format(
-                            percent=v[PCNT_DONE], state=v[STATE], stats=stats
-                        )
+                        + ("-" * bar_len)
+                        + "] {percent:>5}% ..".format(percent=0.0)
                     )
 
-                    if v[PCNT_DONE] < 100:
-                        if v[STATE] != "Failure":
-                            print(bar, end="")
-                        else:
-                            # failure
-                            can_continue = False
-                            print(bar, end="\n")
-                    else:
-                        # percent done >= 100 means STATE = success
-                        can_continue = False
-                        print(bar)
+                    print(bar, end="")
 
-                    # skip the rest of the lines
-                    break
-
-            # When workflow is submitted, the pattern above may not be initially
-            # present when the workflow job is idle or has just started running.
-            if not found_match:
-                bar = "\r[" + ("-" * bar_len) + "] {percent:>5}% ..".format(percent=0.0)
-
-                print(bar, end="")
-
-            time.sleep(delay)
+                time.sleep(delay)
+        except KeyboardInterrupt:
+            print(
+                "\nCancelling Client.wait(). Your workflow is still running and can be monitored with pegasus-status"
+            )
 
     def remove(self, submit_dir: str, verbose: int = 0):
         cmd = [self._remove]
@@ -507,51 +517,103 @@ class Client:
 
         self._exec(cmd)
 
+    @staticmethod
+    def _handle_stream(
+        proc: subprocess.Popen,
+        stream: BinaryIO,
+        dst: list,
+        logger: logging.Logger = None,
+        log_lvl: int = None,
+    ):
+        """Handler for processing and logging byte streams from subprocess.Popen.
+
+        :param proc: subprocess.Popen object used to run a pegasus CLI tool
+        :type proc: subprocess.Popen
+        :param stream: either :code:`stdout` or :code:`stderr` of the given proc
+        :type stream: BinaryIO
+        :param dst: list where proc output from the given stream will be stored, line by line
+        :type dst: list
+        :param logger: the logger to use, defaults to None
+        :type logger: logging.Logger, optional
+        :param log_lvl: the log level to use (e.g. :code:`logging.INFO`, :code:`logging.ERROR`), defaults to None
+        :type log_lvl: int, optional
+        """
+
+        def _log(logger: logging.Logger, log_lvl: int, msg: bytes):
+            if logger:
+                log_func = {
+                    10: logger.debug,
+                    20: logger.info,
+                    30: logger.warning,
+                    40: logger.error,
+                    50: logger.critical,
+                }
+                try:
+                    log_func[log_lvl](msg.decode().strip())
+                except KeyError:
+                    raise ValueError("invalid log_lvl: {}".format(log_lvl))
+
+        log = partial(_log, logger, log_lvl)
+
+        while True:
+            line = stream.readline()
+
+            if line:
+                dst.append(line)
+                log(line)
+
+            # Has proc terminated? If so, collect remaining output and exit.
+            if proc.poll() is not None:
+                for l in stream.readlines():
+                    dst.append(l)
+                    log(l)
+
+                break
+
     def _exec(self, cmd, stream_stdout=True, stream_stderr=False):
         if not cmd:
             raise ValueError("cmd is required")
 
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        stream_handlers = []
+
+        # out is not synchronized, don't access until after stdout_handler completes
         out = []
+        stdout_handler = threading.Thread(
+            target=Client._handle_stream,
+            args=(
+                proc,
+                proc.stdout,
+                out,
+                self._log if stream_stdout else None,
+                logging.INFO,
+            ),
+        )
+        stream_handlers.append(stdout_handler)
+        stdout_handler.start()
+
+        # err is not synchronized, don't access until after stderr_handler completes
         err = []
+        stderr_handler = threading.Thread(
+            target=Client._handle_stream,
+            args=(
+                proc,
+                proc.stderr,
+                err,
+                self._log if stream_stderr else None,
+                logging.ERROR,
+            ),
+        )
+        stream_handlers.append(stderr_handler)
+        stderr_handler.start()
 
-        # stream output
-        while True:
-            stdout_line = proc.stdout.readline()
-            stderr_line = proc.stderr.readline()
-
-            if stdout_line:
-                out.append(stdout_line)
-
-                if stream_stdout:
-                    self._log.info(stdout_line.strip().decode())
-
-            if stderr_line:
-                err.append(stderr_line)
-
-                if stream_stderr:
-                    self._log.error(stderr_line.strip().decode())
-
-            # has proc terminated?
-            if proc.poll() is not None:
-                # handle any output still left in stdout and stderr
-                for line in proc.stdout.readlines():
-                    out.append(line)
-
-                    if stream_stdout:
-                        self._log.info(line.strip().decode())
-
-                for line in proc.stderr.readlines():
-                    err.append(line)
-
-                    if stream_stderr:
-                        self._log.error(line.strip().decode())
-
-                break
+        for sh in stream_handlers:
+            sh.join()
 
         exit_code = proc.returncode
 
-        result = Result(cmd, exit_code, b"".join(out), b"".join(out))
+        result = Result(cmd, exit_code, b"".join(out), b"".join(err))
 
         if exit_code != 0:
             raise PegasusClientError("Pegasus command: {} FAILED".format(cmd), result)

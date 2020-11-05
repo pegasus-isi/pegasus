@@ -1,9 +1,10 @@
 import io
+import logging
 import shutil
 import subprocess
 from collections import namedtuple
 from pathlib import Path
-from subprocess import CompletedProcess
+from subprocess import CompletedProcess, Popen
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 
@@ -72,6 +73,86 @@ def client():
 
 
 class TestClient:
+    @pytest.mark.parametrize("log_lvl", [(logging.INFO), (logging.ERROR)])
+    def test__handle_stream(self, client, caplog, log_lvl):
+        test_logger = logging.getLogger("handle_stream_test")
+        caplog.set_level(log_lvl)
+
+        # fork process to print 0\n1\n..4\n"
+        proc = Popen(
+            ["python3", "-c", 'exec("for i in range(5):\\n\\tprint(i)\\n")'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        stuff = []
+
+        # invoke stream handler
+        Client._handle_stream(
+            proc=proc,
+            stream=proc.stdout,
+            dst=stuff,
+            logger=test_logger,
+            log_lvl=log_lvl,
+        )
+
+        assert stuff == [b"0\n", b"1\n", b"2\n", b"3\n", b"4\n"]
+
+        for t in caplog.record_tuples:
+            if t[0] == "handle_stream_test":
+                assert t[1] == log_lvl
+
+    def test__handle_stream_no_logging(self, client, caplog):
+        logging.getLogger("handle_stream_test")
+        caplog.set_level(logging.DEBUG)
+
+        # fork process to print 0\n1\n..4\n"
+        proc = Popen(
+            ["python3", "-c", 'exec("for i in range(5):\\n\\tprint(i)\\n")'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        stuff = []
+
+        # invoke stream handler
+        Client._handle_stream(proc=proc, stream=proc.stdout, dst=stuff)
+
+        assert stuff == [b"0\n", b"1\n", b"2\n", b"3\n", b"4\n"]
+
+        for t in caplog.record_tuples:
+            if t[0] == "handle_stream_test":
+                pytest.fail(
+                    "nothing should have been logged under logger: handle_stream_test"
+                )
+
+    def test__handle_stream_invalid_log_lvl(self, client):
+        test_logger = logging.getLogger("handle_stream_test")
+
+        # fork process to print 0\n1\n..4\n"
+        proc = Popen(
+            ["python3", "-c", 'exec("for i in range(5):\\n\\tprint(i)\\n")'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        stuff = []
+
+        # invoke stream handler
+        with pytest.raises(ValueError) as e:
+            Client._handle_stream(
+                proc=proc,
+                stream=proc.stdout,
+                dst=stuff,
+                logger=test_logger,
+                log_lvl="INVALID_LOG_LEVEL",
+            )
+
+        assert "invalid log_lvl: INVALID_LOG_LEVEL" in str(e)
+
+        # for good measure
+        proc.kill()
+
     def test_plan(self, mocker, mock_subprocess, client):
         mocker.patch(
             "Pegasus.client._client.Result.json",
@@ -161,8 +242,8 @@ class TestClient:
                 "wf.yml",
                 "--json",
             ],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
         assert wf_instance.braindump.user == "ryan"
@@ -225,24 +306,24 @@ class TestClient:
         client.run("submit_dir", verbose=3, grid=True)
         subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-run", "-vvv", "--grid", "--json", "submit_dir"],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_run_no_grid(self, mock_subprocess, client):
         client.run("submit_dir", verbose=3)
         subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-run", "-vvv", "--json", "submit_dir"],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_status(self, mock_subprocess, client):
         client.status("submit_dir", long=True, verbose=3)
         subprocess.Popen.assert_called_once_with(
             ["/path/bin/pegasus-status", "--long", "-vvv", "submit_dir"],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     @pytest.mark.parametrize(
@@ -302,19 +383,25 @@ class TestClient:
     def test_remove(self, mock_subprocess, client):
         client.remove("submit_dir", verbose=3)
         subprocess.Popen.assert_called_once_with(
-            ["/path/bin/pegasus-remove", "-vvv", "submit_dir"], stderr=-1, stdout=-1
+            ["/path/bin/pegasus-remove", "-vvv", "submit_dir"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_analyzer(self, mock_subprocess, client):
         client.analyzer("submit_dir", verbose=3)
         subprocess.Popen.assert_called_once_with(
-            ["/path/bin/pegasus-analyzer", "-vvv", "submit_dir"], stderr=-1, stdout=-1
+            ["/path/bin/pegasus-analyzer", "-vvv", "submit_dir"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_statistics(self, mock_subprocess, client):
         client.statistics("submit_dir", verbose=3)
         subprocess.Popen.assert_called_once_with(
-            ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"], stderr=-1, stdout=-1
+            ["/path/bin/pegasus-statistics", "-vvv", "submit_dir"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test_graph(self, mock_subprocess, client):
@@ -341,8 +428,8 @@ class TestClient:
                 "--width=256",
                 "--height=256",
             ],
-            stderr=-1,
-            stdout=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def test__exec(self, mock_subprocess, client):
