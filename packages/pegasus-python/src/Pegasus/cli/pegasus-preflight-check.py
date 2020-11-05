@@ -17,8 +17,7 @@ except Exception:
     sys.exit(1)
 
 try:
-    import git
+    import git  # noqa
 except Exception:
     sys.stderr.write("Pegasus requires the Python3 GitPython module to be installed\n")
     sys.exit(1)
-
