@@ -5,9 +5,9 @@ import time
 import urllib.request
 
 import click
-import yaml
 from git import Repo
 
+from Pegasus import yaml
 from Pegasus.api import *
 
 #### Default time to update dynamic config files in seconds ####
@@ -60,7 +60,7 @@ def update_workflow_list(wf_gallery):
 #### Update Site Catalogs and load Sites ####
 update_site_catalogs(wf_sites)
 sys.path.insert(0, os.path.join(pegasushub_data_path, pegasus_major_minor_version))
-import Sites
+import Sites  # isort:skip
 
 
 def console_select_workflow(workflows_available):
@@ -158,8 +158,7 @@ def read_pegasushub_config(wf_dir, workflow):
     config = yaml.load(
         open(
             os.path.join(os.getcwd(), wf_dir, workflow["repo_name"], ".pegasushub.yml")
-        ),
-        Loader=yaml.FullLoader,
+        )
     )
 
     if config:
@@ -181,8 +180,6 @@ def create_pegasus_properties():
     props["pegasus.transfer.arguments"] = "-m 1"
     props.write()
 
-    return
-
 
 def create_plan_script(exec_site_name, workflow_file):
     plan_script = """#!/bin/sh
@@ -201,7 +198,6 @@ pegasus-plan --conf pegasus.properties \\
         g.write("\n")
 
     os.chmod("plan.sh", 0o775)
-    return
 
 
 def create_generate_script(commands):
@@ -212,7 +208,6 @@ def create_generate_script(commands):
         g.write("\n")
 
     os.chmod("generate.sh", 0o775)
-    return
 
 
 def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_home):
@@ -312,16 +307,15 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
     create_generate_script(commands)
 
     os.chdir(old_dir)
-    return
 
 
 def read_workflows(wf_gallery, site):
-    data = yaml.load(open(wf_gallery), Loader=yaml.FullLoader)
+    data = yaml.load(open(wf_gallery))
     workflows_available = [
         x
         for x in data
         if "training" in x
-        and x["training"] == True
+        and x["training"] is True
         and site.name in x["execution_sites"]
     ]
 
@@ -382,8 +376,6 @@ def main(directory, workflow_gallery):
     clone_workflow(directory, workflow)
 
     create_workflow(directory, workflow, site, project_name, queue_name, pegasus_home)
-
-    return
 
 
 if __name__ == "__main__":
