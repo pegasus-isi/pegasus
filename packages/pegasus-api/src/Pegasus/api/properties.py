@@ -81,6 +81,7 @@ class Properties:
         "pegasus.clusterer.job.aggregator.seqexec.firstjobfail",
         "pegasus.clusterer.allow.single",
         "pegasus.clusterer.label.key",
+        "pegasus.clusterer.preference",
         "pegasus.log.manager",
         "pegasus.log.manager.formatter",
         "pegasus.log.memory.usage",
