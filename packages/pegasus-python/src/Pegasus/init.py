@@ -125,8 +125,6 @@ def print_sites(sites_available):
         site = sites_available[k]
         click.echo("{}) {}".format(k, site["name"]))
 
-    return
-
 
 def print_workflows(workflows_available):
     for k in workflows_available:
@@ -134,8 +132,6 @@ def print_workflows(workflows_available):
         click.echo(
             "{}) {}/{}".format(k, workflow["organization"], workflow["repo_name"])
         )
-
-    return
 
 
 def clone_workflow(wf_dir, workflow):
@@ -148,8 +144,6 @@ def clone_workflow(wf_dir, workflow):
     Repo.clone_from(
         workflow_source, os.path.join(os.getcwd(), wf_dir, workflow["repo_name"]),
     )
-
-    return
 
 
 def read_pegasushub_config(wf_dir, workflow):
