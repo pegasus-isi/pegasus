@@ -3,8 +3,8 @@ import subprocess
 import sys
 import time
 import urllib.request
-from argparse import ArgumentParser
 
+import click
 import yaml
 from git import Repo
 
@@ -29,8 +29,12 @@ pegasus_major_minor_version = (
 )
 
 #### Url to Sites.py on pegasushub and Sites.py location ####
-pegasushub_site_catalogs_url = f"https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs/{pegasus_major_minor_version}/Sites.py"
-wf_sites = os.path.join(pegasushub_data_path, f"{pegasus_major_minor_version}/Sites.py")
+pegasushub_site_catalogs_url = "https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs/{}/Sites.py".format(
+    pegasus_major_minor_version
+)
+wf_sites = os.path.join(
+    pegasushub_data_path, "{}/Sites.py".format(pegasus_major_minor_version)
+)
 
 
 def update_site_catalogs(wf_sites):
@@ -62,46 +66,64 @@ import Sites
 def console_select_workflow(workflows_available):
     print_workflows(workflows_available)
 
-    try:
-        option = int(input("Select a training workflow: "))
-        workflow = workflows_available[option]
-    except:
-        print("This is not a valid option...")
-        exit()
+    workflow = click.prompt(
+        "Select an example workflow",
+        default=1,
+        type=click.IntRange(1, len(workflows_available)),
+        show_default=True,
+    )
+    workflow = workflows_available[workflow]
 
     return workflow
 
 
 def console_select_site():
     site = None
-    project_name = None
-    queue_name = None
+    project_name = ""
+    queue_name = ""
+    pegasus_home = ""
 
+    #### Select Site ####
     sites_available = {
         site.value: {"name": site.name, "member": site} for site in Sites.SitesAvailable
     }
     print_sites(sites_available)
 
-    try:
-        option = int(input("Select an execution site: "))
-        site = sites_available[option]["member"]
-    except:
-        print("This is not a valid option...")
-        exit()
+    site = click.prompt(
+        "Select an execution site",
+        default=1,
+        type=click.IntRange(1, len(sites_available)),
+        show_default=True,
+    )
+    site = sites_available[site]["member"]
 
+    #### Insert queue name ####
     if site in Sites.SitesRequireQueue:
-        queue_name = input("What's the targeted queue name: ")
+        queue_name = click.prompt("What's the execution site's queue")
 
+    #### Insert project name ####
     if site in Sites.SitesRequireProject:
-        project_name = input("What's your project name: ")
+        project_name = click.prompt("What's your project's name")
+    elif site in Sites.SitesMayRequireProject:
+        project_name = click.prompt(
+            "What's your project's name", default="", show_default=True
+        )
 
-    return (site, project_name, queue_name)
+    #### Insert pegasus home location ####
+    if site in Sites.SitesRequirePegasusHome:
+        pegasus_home = click.prompt(
+            "What's the location of the PEGASUS_HOME dir",
+            default=PEGASUS_HOME,
+            show_default=True,
+        )
+
+    return (site, project_name, queue_name, pegasus_home)
 
 
 def print_sites(sites_available):
     for k in sites_available:
         site = sites_available[k]
-        print(f"{k}) {site['name']}")
+        click.echo("{}) {}".format(k, site["name"]))
 
     return
 
@@ -109,30 +131,47 @@ def print_sites(sites_available):
 def print_workflows(workflows_available):
     for k in workflows_available:
         workflow = workflows_available[k]
-        print(f"{k}) {workflow['organization']}/{workflow['repo_name']}")
+        click.echo(
+            "{}) {}/{}".format(k, workflow["organization"], workflow["repo_name"])
+        )
 
     return
 
 
 def clone_workflow(wf_dir, workflow):
-    print("Fetching workflow...")
-    Repo.clone_from(
-        f"https://github.com/{workflow['organization']}/{workflow['repo_name']}.git",
-        os.path.join(os.getcwd(), wf_dir),
+    workflow_source = "https://github.com/{}/{}.git".format(
+        workflow["organization"], workflow["repo_name"]
     )
+
+    click.echo("Fetching workflow from {}".format(workflow_source))
+
+    Repo.clone_from(
+        workflow_source, os.path.join(os.getcwd(), wf_dir, workflow["repo_name"]),
+    )
+
     return
 
 
-def read_pegasushub_config(wf_dir):
-    config = {"generator": "workflow_generator.py"}
-    data = None
-    data = yaml.load(
-        open(os.path.join(os.getcwd(), wf_dir, ".pegasushub.yml")),
+def read_pegasushub_config(wf_dir, workflow):
+    config = None
+
+    config = yaml.load(
+        open(
+            os.path.join(os.getcwd(), wf_dir, workflow["repo_name"], ".pegasushub.yml")
+        ),
         Loader=yaml.FullLoader,
     )
-    if not data is None:
-        if "generator" in data:
-            config["generator"] = data["generator"]
+
+    if config:
+        if "scripts" in config:
+            if (not "generator" in config["scripts"]) or (
+                config["scripts"]["generator"] == ""
+            ):
+                config["scripts"]["generator"] = "workflow_generator.py"
+        else:
+            config["scripts"] = {"generator": "workflow_generator.py"}
+    else:
+        config = {"scripts": {"generator": "workflow_generator.py"}}
 
     return config
 
@@ -140,49 +179,139 @@ def read_pegasushub_config(wf_dir):
 def create_pegasus_properties():
     props = Properties()
     props["pegasus.transfer.arguments"] = "-m 1"
-
     props.write()
+
     return
 
 
-def create_workflow(wf_dir, workflow, site, project_name, queue_name):
-    print("Generating workflow...")
-    pegasushub_config = read_pegasushub_config(wf_dir)
+def create_plan_script(exec_site_name, workflow_file):
+    plan_script = """#!/bin/sh
+pegasus-plan --conf pegasus.properties \\
+    --dir submit \\
+    --sites {} \\
+    --output-sites local \\
+    --cleanup leaf \\
+    --force \\
+    {}""".format(
+        exec_site_name, workflow_file
+    )
 
+    with open("plan.sh", "w+") as g:
+        g.write(plan_script)
+        g.write("\n")
+
+    os.chmod("plan.sh", 0o775)
+    return
+
+
+def create_generate_script(commands):
+    generate_script = "#!/bin/sh\n" + "\n".join(commands)
+
+    with open("generate.sh", "w+") as g:
+        g.write(generate_script)
+        g.write("\n")
+
+    os.chmod("generate.sh", 0o775)
+    return
+
+
+def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_home):
+    commands = []
+    pegasushub_config = read_pegasushub_config(wf_dir, workflow)
+
+    click.echo(
+        "Generating workflow based on {}/{}".format(
+            workflow["organization"], workflow["repo_name"]
+        )
+    )
+    if queue_name:
+        click.echo('This workflow will target queue "{}"'.format(queue_name))
+
+    if project_name:
+        click.echo('The project allocation used is "{}"'.format(project_name))
+
+    if pegasus_home:
+        click.echo('The PEGASUS_HOME location is "{}"'.format(pegasus_home))
+
+    old_dir = os.getcwd()
     os.chdir(wf_dir)
 
-    if project_name is None:
-        if queue_name is None:
-            exec_sites = Sites.MySite(os.getcwd(), os.getcwd(), site)
-        else:
-            exec_sites = Sites.MySite(
-                os.getcwd(), os.getcwd(), site, queue_name=queue_name
-            )
-    else:
-        if queue_name is None:
-            exec_sites = Sites.MySite(
-                os.getcwd(), os.getcwd(), site, project_name=project_name
-            )
-        else:
-            exec_sites = Sites.MySite(
-                os.getcwd(),
-                os.getcwd(),
-                site,
-                project_name=project_name,
-                queue_name=queue_name,
-            )
-
-    subprocess.run(
-        [
-            "python3",
-            pegasushub_config["generator"],
-            "-s",
-            "-e",
-            exec_sites.exec_site_name,
-        ]
+    exec_site = Sites.MySite(
+        os.getcwd(),
+        os.getcwd(),
+        site,
+        project_name=project_name,
+        queue_name=queue_name,
+        pegasus_home=pegasus_home,
     )
-    exec_sites.write()
+
+    pre_scripts = [x for x in pegasushub_config["scripts"] if x.startswith("pre-")]
+
+    scripts = [
+        x
+        for x in pegasushub_config["scripts"]
+        if not (x.startswith(("pre-", "post-")) or x == "generator")
+    ]
+
+    post_scripts = [x for x in pegasushub_config["scripts"] if x.startswith("post-")]
+
+    for pre_script in pre_scripts:
+        exec_script = pegasushub_config["scripts"][pre_script]
+        if not exec_script.startswith("/"):
+            exec_script = os.path.join("./", workflow["repo_name"], exec_script)
+        subprocess.run(exec_script, shell=True)
+        commands.append(exec_script)
+
+    for script in scripts:
+        exec_script = pegasushub_config["scripts"][script]
+        if not exec_script.startswith("/"):
+            exec_script = os.path.join("./", workflow["repo_name"], exec_script)
+        subprocess.run(exec_script, shell=True)
+        commands.append(exec_script)
+
+    exec_script = pegasushub_config["scripts"]["generator"]
+    if not exec_script.startswith("/"):
+        exec_script = os.path.join("./", workflow["repo_name"], exec_script)
+    generate_workflow_cmd = " ".join(
+        [exec_script, "-s", "-e", exec_site.exec_site_name, "-o", "workflow.yml"]
+    )
+    subprocess.run(generate_workflow_cmd, shell=True)
+    commands.append(generate_workflow_cmd)
+
+    for post_script in post_scripts:
+        exec_script = pegasushub_config["scripts"][post_script]
+        if not exec_script.startswith("/"):
+            exec_script = os.path.join("./", workflow["repo_name"], exec_script)
+        subprocess.run(exec_script, shell=True)
+        commands.append(exec_script)
+
+    click.echo("Creating properties file...")
     create_pegasus_properties()
+
+    click.echo("Creating site catalog for {}...".format(site))
+    exec_site.write()
+
+    generate_sites_cmd = """python3 {} \\
+    --execution-site {} \\
+    --project-name \"{}\" \\
+    --queue-name \"{}\" \\
+    --pegasus-home \"{}\" \\
+    --scratch-parent-dir {} \\
+    --storage-parent-dir {}""".format(
+        wf_sites,
+        site.name,
+        str(project_name),
+        queue_name,
+        pegasus_home,
+        os.getcwd(),
+        os.getcwd(),
+    )
+    commands.append(generate_sites_cmd)
+
+    create_plan_script(exec_site.exec_site_name, "workflow.yml")
+    create_generate_script(commands)
+
+    os.chdir(old_dir)
     return
 
 
@@ -195,6 +324,7 @@ def read_workflows(wf_gallery, site):
         and x["training"] == True
         and site.name in x["execution_sites"]
     ]
+
     workflows_available_tmp = sorted(
         workflows_available, key=lambda x: (x["organization"], x["repo_name"])
     )
@@ -205,33 +335,53 @@ def read_workflows(wf_gallery, site):
     return workflows_available
 
 
-def main():
-    parser = ArgumentParser()
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
-    parser.add_argument("-d", "--dir", type=str, help="Directory Name", required=True)
-    parser.add_argument(
-        "-w",
-        "--workflows",
-        default="~/.pegasus/pegasushub/workflows.yml",
-        type=str,
-        help="Workflow Gallery (Default: ~/.pegasus/workflows.yml)",
-        required=False,
-    )
-    args = parser.parse_args()
 
-    if args.workflows.startswith("~"):
-        args.workflows = os.path.expanduser(args.workflows)
-        if args.workflows == os.path.expanduser("~/.pegasus/pegasushub/workflows.yml"):
-            update_workflow_list(args.workflows)
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option(
+    "-w",
+    "--workflow-gallery",
+    default=os.path.expanduser("~/.pegasus/pegasushub/workflows.yml"),
+    type=click.Path(),
+    show_default=True,
+    help="Workflow Gallery File.",
+)
+@click.argument("directory", type=click.Path(exists=False))
+def main(directory, workflow_gallery):
+    """Welcome to Pegasus Init.
 
-    (site, project_name, queue_name) = console_select_site()
-    workflows_available = read_workflows(args.workflows, site)
+    This tool is designed to be an interactive cli tool that generates
+    example workflows, ready to be executed on common execution environments.
+    The example workflows provided are a subset of the workflows availabe at
+    PegasusHub ( https://pegasushub.github.io ), which are marked as examples.
+
+    Some of the example workflows might overwrite the configuration
+    Pegasus Init generates. Be cautious when executing commands that
+    may alter the workflow and catalogs generated by Pegasus Init.
+    """
+
+    if os.path.isfile(directory) or os.path.isdir(directory):
+        click.echo("The given directory name already exists")
+        click.echo("Exiting...")
+        exit()
+
+    if workflow_gallery == os.path.expanduser("~/.pegasus/pegasushub/workflows.yml"):
+        update_workflow_list(workflow_gallery)
+
+    (site, project_name, queue_name, pegasus_home) = console_select_site()
+    workflows_available = read_workflows(workflow_gallery, site)
+
+    if not workflows_available:
+        click.echo("There are no example workflows supported for this site")
+        click.echo("Exiting...")
+        exit()
 
     workflow = console_select_workflow(workflows_available)
 
-    clone_workflow(args.dir, workflow)
+    clone_workflow(directory, workflow)
 
-    create_workflow(args.dir, workflow, site, project_name, queue_name)
+    create_workflow(directory, workflow, site, project_name, queue_name, pegasus_home)
 
     return
 

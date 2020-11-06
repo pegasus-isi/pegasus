@@ -1,8 +1,3 @@
-pegasus.catalog.replica=SimpleFile
-pegasus.catalog.replica.file=rc
-
-pegasus.catalog.transformation=Text
-pegasus.catalog.transformation.file=tc
 
 pegasus.dir.useTimestamp=true
 
@@ -13,3 +8,4 @@ pegasus.gridstart = None
 pegasus.catalog.transformation.mapper = Staged
 pegasus.transfer.worker.package = True
 pegasus.clusterer.preference = Runtime
+

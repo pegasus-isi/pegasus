@@ -1,53 +1,270 @@
-#!/usr/bin/env python
-
-from Pegasus.DAX3 import ADAG, File, Link, Job, Executable, PFN, Profile
-import sys
+#!/usr/bin/env python3
 import os
-import ConfigParser
+import argparse
+import configparser
+import logging
+import sys
+import logging
+import subprocess
+from datetime import datetime
+from pathlib import Path
+from Pegasus.api import *
 
-if len(sys.argv) != 3:
-    print "Usage: %s PEGASUS_HOME" % (sys.argv[0])
-    sys.exit(1)
+logging.basicConfig(level=logging.DEBUG)
 
-config = ConfigParser.ConfigParser({'input_file':'', 'workflow_name':'horizontal-clustering-test', 'executable_installed':"False", 'clusters_size':"3", 'clusters_maxruntime':"7"})
-config.read(sys.argv[2] + '/test.config')
 
-# Create an abstract dag
-cluster = ADAG (config.get('all', 'workflow_name'))
+def parse_args(args=sys.argv[1:]):
+    parser = argparse.ArgumentParser(description="Runtime Cluster Test Workflow")
 
-input_file = config.get('all', 'input_file')
-if (input_file == ''):
-        input_file = os.getcwd ()
-else:
-        input_file += '/' + os.getenv ('USER') + '/inputs'
+    parser.add_argument(
+        "pegasus_keg_path",
+        help="abs path to pegasus-keg install (e.g '/usr/bin/pegasus-keg')",
+        metavar="PEGASUS_KEG_PATH",
+    )
 
-# Add input file to the DAX-level replica catalog
-a = File("f.a")
-a.addPFN(PFN(config.get('all', 'file_url') + input_file + "/f.a", config.get('all', 'file_site')))
-cluster.addFile(a)
+    parser.add_argument(
+        "config_dir",
+        help="name of test config dir (e.g. 'runtime-condorio', 'runtime-nonsharedfs'",
+    )
 
-for i in range (1, 3):
-    sleep = Executable (namespace = "cluster", name = "level" + str (i), version = "1.0", os = "linux", arch = "x86_64", installed=config.getboolean('all', 'executable_installed'))
-    sleep.addPFN (PFN (config.get('all', 'executable_url') + sys.argv[1] + "/bin/pegasus-keg", config.get('all', 'executable_site')))
-    sleep.addProfile (Profile (namespace = "pegasus", key = "clusters.size", value = config.get('all', 'clusters_size')))
-    sleep.addProfile (Profile (namespace = "pegasus", key = "clusters.maxruntime", value = config.get('all', 'clusters_maxruntime')))
-    cluster.addExecutable(sleep)
+    return parser.parse_args(args)
 
-for i in range (4):
-    job = Job (namespace = "cluster", name = "level1", version = "1.0")
-    job.addArguments('-a level1 -T ' + str (i + 1))
-    job.addArguments('-i', a)
-    job.addProfile (Profile (namespace = "pegasus", key = "job.runtime", value = str (i + 1)))
-    job.uses(a, link=Link.INPUT)
-    cluster.addJob (job)
 
-    for j in range (4):
-        child = Job (namespace = "cluster", name = "level2", version = "1.0")
-	child.addArguments('-a level2 -T ' + str ((j + 1) * 2))
-        child.addProfile (Profile (namespace = "pegasus", key = "runtime", value = str ((j + 1) * 2)))
-        cluster.addJob (child)
+def write_sc(top_dir: Path, run_id: str):
+    # get pegasus version
+    cp = subprocess.run(
+        ["pegasus-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if cp.returncode != 0:
+        raise RuntimeError(
+            "unable to call pegasus-version: {}".format(cp.stderr.decode().strip())
+        )
 
-        cluster.depends (parent = job, child = child)
+    REMOTE_PEGASUS_HOME = "/lizard/scratch-90-days/bamboo/installs/pegasus-{}".format(
+        cp.stdout.decode().strip()
+    )
 
-# Write the DAX to standard out
-cluster.writeXML (sys.stdout)
+    sc = SiteCatalog()
+
+    # --- cartman-data site ----------------------------------------------------
+    cartman_data = Site(name="cartman-data", arch=Arch.X86_64, os_type=OS.LINUX)
+    cartman_data.add_directories(
+        Directory(
+            Directory.SHARED_SCRATCH,
+            top_dir / "staging-site/scratch",
+        ).add_file_servers(
+            FileServer(
+                "gsiftp://bamboo.isi.edu" + str(top_dir / "staging-site/scratch"),
+                Operation.ALL,
+            )
+        )
+    )
+    cartman_data.add_env(PEGASUS_HOME=REMOTE_PEGASUS_HOME)
+    sc.add_sites(cartman_data)
+
+    # --- condorpool site ------------------------------------------------------
+    condorpool = Site(name="condorpool", arch=Arch.X86_64, os_type=OS.LINUX)
+    condorpool.add_condor_profile(universe="vanilla")
+    condorpool.add_pegasus_profile(style="condor")
+    sc.add_sites(condorpool)
+
+    # --- sharedfs site --------------------------------------------------------
+    sharedfs = Site(name="sharedfs", arch=Arch.X86_64, os_type=OS.LINUX)
+    sharedfs_dir1 = Directory(
+        Directory.SHARED_STORAGE,
+        Path("/lizard/scratch-90-days")
+        / os.getenv("USER")
+        / "storage/black-diamond-output"
+        / run_id,
+    )
+    sharedfs_dir1.add_file_servers(
+        FileServer(
+            "file://"
+            + str(
+                Path("/lizard/scratch-90-days")
+                / os.getenv("USER")
+                / "storage/black-diamond-output"
+                / run_id
+            ),
+            Operation.ALL,
+        )
+    )
+    sharedfs.add_directories(sharedfs_dir1)
+
+    sharedfs_dir2 = Directory(
+        Directory.SHARED_SCRATCH,
+        Path("/lizard/scratch-90-days") / os.getenv("USER") / "scratch" / run_id,
+    )
+    sharedfs_dir2.add_file_servers(
+        FileServer(
+            "file://"
+            + str(
+                Path("/lizard/scratch-90-days") / os.getenv("USER") / "scratch" / run_id
+            ),
+            Operation.ALL,
+        )
+    )
+    sharedfs.add_directories(sharedfs_dir2)
+    sharedfs.add_env(PEGASUS_HOME=REMOTE_PEGASUS_HOME)
+    sharedfs.add_condor_profile(
+        should_transfer_files="Yes",
+        universe="vanilla",
+        when_to_transfer_output="ON_EXIT",
+    )
+    sharedfs.add_pegasus_profile(style="condor")
+    sc.add_sites(sharedfs)
+
+    # --- local site -----------------------------------------------------------
+    local_site_url = config.get("all", "local_site_url", fallback="")
+
+    local = Site(name="local", arch=Arch.X86_64, os_type=OS.LINUX)
+    local_dir1 = Directory(Directory.SHARED_STORAGE, top_dir / "outputs")
+    local_dir1.add_file_servers(
+        FileServer(local_site_url + str(top_dir / "outputs"), Operation.ALL)
+    )
+    local.add_directories(local_dir1)
+
+    local_dir2 = Directory(Directory.SHARED_SCRATCH, top_dir / "work")
+    local_dir2.add_file_servers(
+        FileServer(local_site_url + str(top_dir / "work"), Operation.ALL)
+    )
+    local.add_directories(local_dir2)
+
+    sc.add_sites(local)
+
+    # write
+    sc.write()
+
+
+def write_rc(config: configparser.ConfigParser):
+    input_file = config.get("all", "input_file")
+    if input_file == "":
+        input_file = Path("f.a")
+    else:
+        # is a directory such as '/lizard/scratch-90-days'
+        input_dir = Path(input_file) / os.getenv("USER") / "inputs"
+        input_dir.mkdir(parents=True, exist_ok=True)
+        input_file = input_dir / "f.a"
+
+    with input_file.open("w") as f:
+        f.write("This is sample input to KEG")
+
+    rc = ReplicaCatalog()
+    rc.add_replica(
+        site=config.get("all", "file_site"), lfn="f.a", pfn=input_file.resolve()
+    )
+    rc.write()
+
+
+def write_tc(config: configparser.ConfigParser, pegasus_keg_path: str):
+    tc = TransformationCatalog()
+
+    for i in range(1, 3):
+        sleep = Transformation(
+            namespace="cluster",
+            name="level{}".format(i),
+            version="1.0",
+            site=config.get("all", "executable_site"),
+            pfn=config.get("all", "executable_url") + pegasus_keg_path,
+            is_stageable=True,
+            os_type=OS.LINUX,
+            arch=Arch.X86_64,
+        )
+
+        sleep.add_pegasus_profile(
+            clusters_size=config.get("all", "clusters_size"),
+            clusters_max_runtime=config.get("all", "clusters_maxruntime"),
+        )
+
+        tc.add_transformations(sleep)
+
+    tc.write()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    TOP_DIR = Path().cwd().resolve()
+    RUN_ID = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # --- validate test config dir ---------------------------------------------
+    config_dir = Path(__file__).parent / args.config_dir
+    if not config_dir.is_dir():
+        raise ValueError(
+            "config_dir: {} does not a directory or does not exist".format(config_dir)
+        )
+
+    config_file = config_dir / "test.config"
+    if not config_file.is_file():
+        raise ValueError("{} does not contain required file: {}".format(config_file))
+
+    # --- general test config --------------------------------------------------
+    config = configparser.ConfigParser(
+        {
+            "input_file": "",
+            "workflow_name": "horizontal-clustering-test",
+            "clusters_size": "3",
+            "clusters_maxruntime": "7",
+        }
+    )
+
+    config.read(str(config_file))
+
+    # --- catalogs -------------------------------------------------------------
+    write_sc(TOP_DIR, RUN_ID)
+    write_rc(config)
+    write_tc(config, args.pegasus_keg_path)
+
+    # --- workflow -------------------------------------------------------------
+    wf = Workflow(config.get("all", "workflow_name"))
+    input_file = File("f.a")
+
+    # create 4 lvl1 jobs
+    for i in range(4):
+        job = (
+            Job(namespace="cluster", transformation="level1", version="1.0")
+            .add_args("-a", "level1", "-T", i + 1, "-i", input_file)
+            .add_inputs(input_file)
+            .add_profiles(Namespace.PEGASUS, key="job.runtime", value=i + 1)
+        )
+
+        wf.add_jobs(job)
+
+        # for each lvl1 job, create 4 lvl2 children
+        for j in range(4):
+            child = (
+                Job(namespace="cluster", transformation="level2", version="1.0")
+                .add_args("-a", "level2", "-T", ((j + 1) * 2))
+                .add_profiles(Namespace.PEGASUS, key="runtime", value=((j + 1) * 2))
+            )
+
+            wf.add_jobs(child)
+            wf.add_dependency(job=job, children=[child])
+
+    # plan and run
+    execution_site = config.get("all", "execution_site", fallback="local")
+    staging_site = config.get("all", "staging_site", fallback="local")
+    output_site = config.get("all", "output_site", fallback="local")
+
+    top_pegasusrc = Path(__file__).parent / "pegasusrc"
+    pegasusrc = config_dir / "pegasusrc"
+
+    # include anything in __file__/pegasusrc in ./config_dir/pegasusrc
+    with top_pegasusrc.open("r") as top_cfg, pegasusrc.open("a") as cfg:
+        cfg.write(top_cfg.read())
+
+    try:
+        wf.plan(
+            conf=str(pegasusrc),
+            sites=[execution_site],
+            staging_sites={execution_site: staging_site},
+            output_sites=[output_site],
+            dir="work/submit",
+            cleanup="leaf",
+            cluster=["horizontal"],
+            verbose=3,
+            submit=True,
+        ).wait().analyze().statistics()
+    except PegasusClientError as e:
+        print(e)
+        print(e.result.stdout)
