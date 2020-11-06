@@ -55,7 +55,7 @@ GB = 1024 * MB
 TB = 1024 * GB
 
 
-def configure_logging(verbose: bool, debug: bool):
+def configure_logging(verbose, debug):
 
     if verbose or debug:
         if verbose:
