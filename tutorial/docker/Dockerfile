@@ -13,9 +13,17 @@ RUN dnf -y install --allowerasing --nobest \
      curl \
      docker-ce \
      glibc-langpack-en \
+     graphviz \
+     java-11-openjdk-devel \
      langpacks-en \
      perl-Getopt-Long \
+     python3-devel \
+     python3-GitPython \
+     python3-pika \
      python3-pip \
+     python3-pyOpenSSL \
+     python3-PyYAML \
+     python3-setuptools \
      sudo \
      tar \
      vim \ 
@@ -32,14 +40,20 @@ RUN python3 -m pip install jupyter
 ENV LANG en_US.UTF-8 
 RUN cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
-# Get Condor yum repo
+# HTCondor
 RUN dnf -y config-manager --add-repo=https://research.cs.wisc.edu/htcondor/yum/repo.d/htcondor-stable-rhel8.repo && \
     rpm --import https://research.cs.wisc.edu/htcondor/yum/RPM-GPG-KEY-HTCondor && \
-    dnf -y install condor minicondor https://download.pegasus.isi.edu/pegasus/5.0.0dev/pegasus-5.0.0dev-1.el8.x86_64.rpm && \
+    dnf -y install condor minicondor && \
     sed -i 's/condor@/scitech@/g' /etc/condor/config.d/00-minicondor
 
 RUN usermod -a -G condor scitech
 RUN chmod -R g+w /var/{lib,log,lock,run}/condor
+
+# Pegasus -- rebuild everything below here
+#            http://dev.im-bot.com/docker-select-caching/
+ARG CACHEBUST=1
+ARG PEGASUS_VERSION=1
+RUN dnf -y install https://download.pegasus.isi.edu/pegasus/$PEGASUS_VERSION/pegasus-$PEGASUS_VERSION-1.el8.x86_64.rpm
 
 ADD ./notebooks /home/scitech/notebooks
 RUN chown -R scitech /home/scitech/
