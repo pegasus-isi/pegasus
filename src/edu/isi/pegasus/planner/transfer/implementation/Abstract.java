@@ -673,13 +673,22 @@ public abstract class Abstract implements Implementation {
      * @param files the collection <code>FileTransfer</code> containing the file that has to be X
      *     Bit Set.
      * @param name the name that has to be assigned to the job.
-     * @param site the site at which the job has to be created
+     * @param site the site for which the job has to be created
      * @return the chmod job, else null if it is not able to be created for some reason.
      */
     protected Job createSetXBitJob(Collection<FileTransfer> files, String name, String site) {
         Job xBitJob = new Job();
         TransformationCatalogEntry entry = null;
-        String eSiteHandle = site;
+        String computeSiteHandle = site;
+        SiteCatalogEntry computeSite = mSiteStore.lookup(computeSiteHandle);
+
+        // eSiteHandle is the site where the xbit job should execute
+        // PM-1701 get the xbit jobs to run locally if possible
+        String eSiteHandle =
+                computeSite.isVisibleToLocalSite()
+                        ? "local"
+                        : // we can run the job locally
+                        computeSiteHandle; // we run on the compute site itself
 
         List entries;
         try {
@@ -745,7 +754,7 @@ public abstract class Abstract implements Implementation {
         xBitJob.executable = entry.getPhysicalTransformation();
         xBitJob.executionPool = eSiteHandle;
         // PM-845 set staging site handle to same as execution site of compute job
-        xBitJob.setStagingSiteHandle(eSiteHandle);
+        xBitJob.setStagingSiteHandle(computeSiteHandle);
         xBitJob.strargs = arguments.toString();
         xBitJob.jobClass = Job.CHMOD_JOB;
         xBitJob.jobID = name;
