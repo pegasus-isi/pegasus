@@ -127,7 +127,7 @@ public class JDBCRC implements ReplicaCatalog {
         // 2:
         "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=? AND p.site=?",
         // 3:
-        "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?",
+        "DELETE p FROM rc_pfn p INNER JOIN rc_lfn l ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?",
         // 4:
         "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)",
         // 5:
@@ -147,7 +147,7 @@ public class JDBCRC implements ReplicaCatalog {
         // 10:
         "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE p.site=?",
         // 11:
-        "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT l.lfn_id FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?)",
+        "DELETE FROM rc_pfn WHERE pfn_id IN (SELECT pfn_id FROM rc_lfn INNER JOIN rc_pfn ON rc_lfn.lfn=? AND rc_pfn.pfn=?)",
         // 12:
         "INSERT INTO rc_lfn(lfn) VALUES(?)",
         // 13:
@@ -159,7 +159,11 @@ public class JDBCRC implements ReplicaCatalog {
         // 16:
         "SELECT lfn_id,`key`,value FROM rc_meta WHERE lfn_id=? AND `key`=?",
         // 17:
-        "UPDATE rc_meta SET value=? WHERE lfn_id=? and `key`=?"
+        "UPDATE rc_meta SET value=? WHERE lfn_id=? and `key`=?",
+        // 18:
+        "DELETE l FROM rc_lfn l LEFT JOIN rc_pfn p ON p.lfn_id=l.lfn_id WHERE p.lfn_id IS NULL",
+        // 19:
+        "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT rc_lfn.lfn_id FROM rc_lfn LEFT JOIN rc_pfn ON rc_lfn.lfn_id=rc_pfn.lfn_id WHERE rc_pfn.lfn_id IS NULL)"
     };
 
     /** Remembers if obtaining generated keys will work or not. */
@@ -1219,6 +1223,8 @@ public class JDBCRC implements ReplicaCatalog {
             String metadataQuery = "";
             List<String> pfnsToInsert = new ArrayList<String>();
             List<String> metadataToInsert = new ArrayList<String>();
+            Map<String, Map<String, String>> metadataMap =
+                    new HashMap<String, Map<String, String>>();
 
             for (String lfn : lfns) {
                 List<ReplicaCatalogEntry> value = (List<ReplicaCatalogEntry>) x.get(lfn);
@@ -1229,7 +1235,7 @@ public class JDBCRC implements ReplicaCatalog {
                         String rh =
                                 tuple.getResourceHandle() == null
                                         ? " IS NULL"
-                                        : "='" + quote(tuple.getResourceHandle());
+                                        : "='" + quote(tuple.getResourceHandle()) + "'";
                         query += query.isEmpty() ? "DELETE FROM rc_pfn WHERE " : " OR ";
                         query +=
                                 "(lfn_id="
@@ -1238,7 +1244,7 @@ public class JDBCRC implements ReplicaCatalog {
                                         + quote(tuple.getPFN())
                                         + "' AND site"
                                         + rh
-                                        + "')";
+                                        + ")";
                         rh = tuple.getResourceHandle() == null ? "NULL" : tuple.getResourceHandle();
                         pfnsToInsert.add(
                                 "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES('"
@@ -1250,6 +1256,9 @@ public class JDBCRC implements ReplicaCatalog {
                                         + "')");
 
                         // metadata
+                        if (!metadataMap.containsKey(lfn)) {
+                            metadataMap.put(lfn, new HashMap<String, String>());
+                        }
                         for (Iterator i = tuple.getAttributeIterator(); i.hasNext(); ) {
                             String name = (String) i.next();
                             if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
@@ -1266,6 +1275,11 @@ public class JDBCRC implements ReplicaCatalog {
                                             : tuple.getAttribute(name) instanceof String
                                                     ? (String) tuple.getAttribute(name)
                                                     : tuple.getAttribute(name).toString();
+
+                            Map<String, String> metadataM = metadataMap.get(lfn);
+                            if (metadataM.containsKey(name) && metadataM.get(name).equals(val)) {
+                                continue;
+                            }
                             metadataToInsert.add(
                                     "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES('"
                                             + lfnToID.get(lfn)
@@ -1274,6 +1288,7 @@ public class JDBCRC implements ReplicaCatalog {
                                             + "','"
                                             + val
                                             + "')");
+                            metadataM.put(name, val);
                         }
                         result++;
                     }
@@ -1395,6 +1410,12 @@ public class JDBCRC implements ReplicaCatalog {
             PreparedStatement ps = getStatement(which);
             ps.setString(1, quote(lfn));
             ps.setString(2, quote(pfn));
+            result = ps.executeUpdate();
+
+            // remove trailing LFN
+            which = mUsingSQLiteBackend ? 19 : 18;
+            query = mCStatements[which];
+            ps = getStatement(which);
             result = ps.executeUpdate();
 
         } catch (SQLException e) {
