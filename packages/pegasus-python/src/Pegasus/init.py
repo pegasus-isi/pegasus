@@ -113,7 +113,7 @@ def console_select_site():
     #### Insert pegasus home location ####
     if site in Sites.SitesRequirePegasusHome:
         pegasus_home = click.prompt(
-            "What's the location of the PEGASUS_HOME dir",
+            "What's the location of the PEGASUS_HOME dir on the compute nodes",
             default=PEGASUS_HOME,
             show_default=True,
         )
