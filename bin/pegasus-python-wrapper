@@ -55,9 +55,13 @@ if [ "x$PEXE" = "x" ]; then
     exit 1
 fi
 
-# some quick validations - only for Python 3
+# Some quick validations - only for Python 3, also exclude pegasus-config as
+# it is annoying when we can't run for example Java tools because of a missing
+# Python module.
 if [ $ALLOW_PY2 = 0 ]; then
-    $PEXE $PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py || exit 1
+    if [ "x$BASE_NAME" != "xpegasus-config" ]; then
+        $PEXE $PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py || exit 1
+    fi
 fi
 
 # set up a PYTHONPATH so the tools do not have to worry about that
