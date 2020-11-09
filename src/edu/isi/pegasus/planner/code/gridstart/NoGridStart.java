@@ -527,10 +527,10 @@ public class NoGridStart implements GridStart {
      * @return
      */
     protected boolean requiresToSetDirectory(Job job) {
-        // the cleanup, registration and chmod (PM-1701) jobs should never have directory set 
+        // the cleanup, registration and chmod (PM-1701) jobs should never have directory set
         // as full path is specified in their arguments
         int type = job.getJobType();
-        return ( type != Job.CLEANUP_JOB && type != Job.REPLICA_REG_JOB && type != Job.CHMOD_JOB);
+        return (type != Job.CLEANUP_JOB && type != Job.REPLICA_REG_JOB && type != Job.CHMOD_JOB);
     }
 
     /**

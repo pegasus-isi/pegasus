@@ -1009,6 +1009,8 @@ public class DeployWorkerPackage extends Engine {
             // PM-497
             // we ignore any clean up jobs that may be running
             if (job.getJobType() == Job.CLEANUP_JOB
+                    // PM-1701 chmod jobs should have same handling as cleanup jobs
+                    || job.getJobType() == Job.CHMOD_JOB
                     || (job.getJobType() == Job.STAGE_IN_JOB
                             || job.getJobType() == Job.STAGE_OUT_JOB
                             || job.getJobType() == Job.INTER_POOL_JOB)) {
