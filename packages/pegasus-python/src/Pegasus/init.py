@@ -6,6 +6,7 @@ import urllib.request
 
 import click
 from git import Repo
+from git.exc import GitError
 
 from Pegasus import yaml
 from Pegasus.api import *
@@ -135,15 +136,24 @@ def print_workflows(workflows_available):
 
 
 def clone_workflow(wf_dir, workflow):
-    workflow_source = "https://github.com/{}/{}.git".format(
+    workflow_source = "https://null:null@github.com/{}/{}.git".format(
         workflow["organization"], workflow["repo_name"]
     )
 
-    click.echo("Fetching workflow from {}".format(workflow_source))
-
-    Repo.clone_from(
-        workflow_source, os.path.join(os.getcwd(), wf_dir, workflow["repo_name"]),
+    click.echo(
+        "Fetching workflow from https://github.com/{}/{}.git".format(
+            workflow["organization"], workflow["repo_name"]
+        )
     )
+
+    try:
+        Repo.clone_from(
+            workflow_source, os.path.join(os.getcwd(), wf_dir, workflow["repo_name"]),
+        )
+    except GitError:
+        click.echo("This repository doesn't exist in this location or it's private.")
+        click.echo("Exiting...")
+        exit()
 
 
 def read_pegasushub_config(wf_dir, workflow):
@@ -169,14 +179,25 @@ def read_pegasushub_config(wf_dir, workflow):
     return config
 
 
-def create_pegasus_properties():
+def create_pegasus_properties(commands):
+    commands.append("#### Generating Pegasus Properties ####")
+
     props = Properties()
     props["pegasus.transfer.arguments"] = "-m 1"
+    commands.append(
+        'echo "{} = {}" > pegasus.properties'.format(
+            "pegasus.transfer.arguments", "-m 1"
+        )
+    )
+
     props.write()
+
+    return commands
 
 
 def create_plan_script(exec_site_name, workflow_file):
     plan_script = """#!/bin/sh
+
 pegasus-plan --conf pegasus.properties \\
     --dir submit \\
     --sites {} \\
@@ -195,7 +216,7 @@ pegasus-plan --conf pegasus.properties \\
 
 
 def create_generate_script(commands):
-    generate_script = "#!/bin/sh\n" + "\n".join(commands)
+    generate_script = "#!/bin/sh\n\n" + "\n".join(commands)
 
     with open("generate.sh", "w+") as g:
         g.write(generate_script)
@@ -244,6 +265,9 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
 
     post_scripts = [x for x in pegasushub_config["scripts"] if x.startswith("post-")]
 
+    if pre_scripts:
+        commands.append("#### Executing Workflow Pre Scripts ####")
+
     for pre_script in pre_scripts:
         exec_script = pegasushub_config["scripts"][pre_script]
         if not exec_script.startswith("/"):
@@ -251,6 +275,8 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
         subprocess.run(exec_script, shell=True)
         commands.append(exec_script)
 
+    if scripts:
+        commands.append("#### Executing Workflow Scripts ####")
     for script in scripts:
         exec_script = pegasushub_config["scripts"][script]
         if not exec_script.startswith("/"):
@@ -258,6 +284,7 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
         subprocess.run(exec_script, shell=True)
         commands.append(exec_script)
 
+    commands.append("#### Executing Workflow Generator ####")
     exec_script = pegasushub_config["scripts"]["generator"]
     if not exec_script.startswith("/"):
         exec_script = os.path.join("./", workflow["repo_name"], exec_script)
@@ -267,6 +294,8 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
     subprocess.run(generate_workflow_cmd, shell=True)
     commands.append(generate_workflow_cmd)
 
+    if post_scripts:
+        commands.append("#### Executing Workflow Post Scripts ####")
     for post_script in post_scripts:
         exec_script = pegasushub_config["scripts"][post_script]
         if not exec_script.startswith("/"):
@@ -275,11 +304,12 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
         commands.append(exec_script)
 
     click.echo("Creating properties file...")
-    create_pegasus_properties()
+    commands = create_pegasus_properties(commands)
 
     click.echo("Creating site catalog for {}...".format(site))
     exec_site.write()
 
+    commands.append("#### Generating Sites Catalog ####")
     generate_sites_cmd = """python3 {} \\
     --execution-site {} \\
     --project-name \"{}\" \\
@@ -361,7 +391,7 @@ def main(directory, workflow_gallery):
     workflows_available = read_workflows(workflow_gallery, site)
 
     if not workflows_available:
-        click.echo("There are no example workflows supported for this site")
+        click.echo("There are no example workflows supported for this site.")
         click.echo("Exiting...")
         exit()
 
@@ -370,6 +400,8 @@ def main(directory, workflow_gallery):
     clone_workflow(directory, workflow)
 
     create_workflow(directory, workflow, site, project_name, queue_name, pegasus_home)
+
+    return
 
 
 if __name__ == "__main__":
