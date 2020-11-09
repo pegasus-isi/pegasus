@@ -147,12 +147,14 @@ public class JDBCRCTest {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b"));
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", "x"));
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", "y"));
+        jdbcrc.insert("a", new ReplicaCatalogEntry("c", "y"));
         jdbcrc.delete("a", "b");
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b")));
         assertFalse(c.contains(new ReplicaCatalogEntry("b", "x")));
         assertFalse(c.contains(new ReplicaCatalogEntry("b", "y")));
+        assertTrue(c.contains(new ReplicaCatalogEntry("c", "y")));
     }
 
     @Test
