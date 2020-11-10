@@ -241,7 +241,9 @@ pegasus-plan --conf pegasus.properties \\
 
 
 def create_generate_script(commands):
-    generate_script = "#!/bin/sh\n\n" + "\n".join(commands)
+    generate_script = "#!/bin/sh\n\nexport PYTHONPATH={}\n\n{}".format(
+        os.getenv("PYTHONPATH"), "\n".join(commands)
+    )
 
     with open("generate.sh", "w+") as g:
         g.write(generate_script)
