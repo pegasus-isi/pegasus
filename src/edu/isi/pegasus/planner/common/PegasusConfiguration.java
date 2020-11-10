@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -196,6 +197,26 @@ public class PegasusConfiguration {
                             + store.lookup("local"),
                     LogManager.CONFIG_MESSAGE_LEVEL);
         }
+
+        // PM-1702 set PATH and PYTHONPATH for local site to what the planner
+        // sees only if a user has not set it explicilty
+        SiteCatalogEntry localSiteEntry = store.lookup("local");
+        List<String> envVariables = Arrays.asList("PATH", "PYTHONPATH");
+        for (String envVariable : envVariables) {
+            if (localSiteEntry.getEnvironmentVariable(envVariable, false) == null) {
+                String plannerEnvValue = System.getenv(envVariable);
+                if (plannerEnvValue != null) {
+                    localSiteEntry.setEnvironmentVariable(envVariable, plannerEnvValue);
+                    mLogger.log(
+                            "Set environment profile for local site "
+                                    + envVariable
+                                    + "="
+                                    + plannerEnvValue,
+                            LogManager.CONFIG_MESSAGE_LEVEL);
+                }
+            }
+        }
+
         // PM-1516 check for condorpool site or create a default entry
         if (!store.list().contains("condorpool")) {
             store.addEntry(constructDefaultCondorPoolSiteEntry(options, pegasusHome));
