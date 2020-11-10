@@ -1,4 +1,5 @@
 from collections import defaultdict
+from pathlib import Path
 
 import pytest
 
@@ -135,16 +136,38 @@ def obj():
 
 
 class TestProfileMixin:
-    def test_add_valid_profile(self, obj):
+    @pytest.mark.parametrize(
+        "given_value,expected_value",
+        [
+            (1, 1),
+            (1.0, 1.0),
+            ("value", "value"),
+            (True, "True"),
+            (Path("/file/path.txt"), "/file/path.txt"),
+        ],
+    )
+    def test_add_valid_profile(self, obj, given_value, expected_value):
         assert id(
-            obj.add_profiles(Namespace.ENV, key="ABC-123.45/", value="value")
+            obj.add_profiles(Namespace.ENV, key="ABC-123.45/", value=given_value)
         ) == id(obj)
-        assert dict(obj.profiles) == {"env": {"ABC-123.45/": "value"}}
+        assert dict(obj.profiles) == {"env": {"ABC-123.45/": expected_value}}
 
-    def test_add_valid_profiles(self, obj):
-        assert id(obj.add_profiles(Namespace.ENV, ENV1="env1", ENV2="env2",)) == id(obj)
+    @pytest.mark.parametrize(
+        "given_value,expected_value",
+        [
+            (1, 1),
+            (1.0, 1.0),
+            ("value", "value"),
+            (False, "False"),
+            (Path("/file/path.txt"), "/file/path.txt"),
+        ],
+    )
+    def test_add_valid_profiles(self, obj, given_value, expected_value):
+        assert id(
+            obj.add_profiles(Namespace.ENV, ENV1="env1", ENV2=given_value,)
+        ) == id(obj)
 
-        assert dict(obj.profiles) == {"env": {"ENV1": "env1", "ENV2": "env2"}}
+        assert dict(obj.profiles) == {"env": {"ENV1": "env1", "ENV2": expected_value}}
 
     def test_add_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
