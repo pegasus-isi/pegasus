@@ -567,3 +567,21 @@ libraries a binary depends on.
 If for some reason you install an application specific library in a non
 standard location, make sure to set the ``LD_LIBRARY_PATH`` for the application
 in the transformation catalog for each site.
+
+Setting the Job Environment
+----------------------------
+
+Pegasus allows users to associate env profiles with the jobs, that allow them
+to specify the environment variables that need to be set when the job executes.
+Sometimes this maybe insufficient, as you may need to run a script at runtime
+on the compute node to determine the environment in which your job can execute
+in.
+
+If your job runs with PegasusLite (i.e. your data configuration is either
+*condorio* or *nonsharedfs*), Pegasus allows you to specify an
+environment setup script file that is sourced in the PegasusLite wrapper
+before your job is invoked. This setup script can be used to set up the environment
+for your job. Details on how to configure this can be found in the
+:ref:`PegasusLite chapter<source-env-in-pegasuslite>`.
+
+

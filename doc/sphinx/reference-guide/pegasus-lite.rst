@@ -46,3 +46,27 @@ it performs the following actions:
    If you are using containers for your workflow, then Steps 3-6
    will occur inside the container.
 
+.. _source-env-in-pegasuslite:
+
+Setting the environment in PegasusLite for your job
+===================================================
+
+In addition, to the usual environment profiles that you can associate
+with your job in the various catalogs, PegasusLite allows you to specify
+a user provided environment setup script file that is sourced early in the
+generated PegasusLite wrapper. The purpose of this is to allow users
+to specify to do things such as module load to load appropriate libraries
+required by their jobs; when they run on nodes on a cluster.
+
+In order to specify this setup script, you can specify it in the Site Catalog
+either as a
+
+#. Pegasus profile named **pegasus_lite_env_source** associated with site
+   *local* that indicates a path to a setup script residing on the
+   submit host that needs to be sourced in PegasusLite when running the job.
+   This file is then transferred using Condor file transfer from the submit
+   host to the compute node where the job executes.
+
+#. If the setup script already is present on the compute nodes on the cluster;
+   path to it can be set as an env profile named **PEGASUS_LITE_ENV_SOURCE**
+   with the compute site.
