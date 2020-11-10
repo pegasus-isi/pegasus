@@ -38,6 +38,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
@@ -461,12 +462,42 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * Returns an environment variable associated with the site.
+     * Set an environment variable for the site as environment profile
+     *
+     * @param key the key
+     * @param value the value
+     */
+    public void setEnvironmentVariable(String key, String value) {
+        Namespace n = this.mProfiles.get(Profiles.NAMESPACES.env);
+        if (n == null) {
+            n = new ENV();
+            this.mProfiles.set(n);
+        }
+        n.construct(key, value);
+    }
+
+    /**
+     * Returns an environment variable associated with the site. If an environment variable for a
+     * local site is requested, the value in System environment is returned if not specified in the
+     * Site entry.
      *
      * @param variable the environment variable whose value is required.
      * @return value of the environment variable if found, else null
      */
     public String getEnvironmentVariable(String variable) {
+        return this.getEnvironmentVariable(variable, true);
+    }
+
+    /**
+     * Returns an environment variable associated with the site. If an environment variable for a
+     * local site is requested, then setting the fallback parameter to true will result in System
+     * environment lookup if not specified in the Site entry.
+     *
+     * @param variable the environment variable whose value is required.
+     * @param fallback whether to fall back to System env for local site
+     * @return value of the environment variable if found, else null
+     */
+    public String getEnvironmentVariable(String variable, boolean fallback) {
         Namespace n = this.mProfiles.get(Profiles.NAMESPACES.env);
         String value = (n == null) ? null : (String) n.get(variable);
 
@@ -474,7 +505,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
         if (value == null) {
             // fall back only for local site the value in the env
             String handle = this.getSiteHandle();
-            if (handle != null && handle.equals("local")) {
+            if (fallback && handle != null && handle.equals("local")) {
                 // try to retrieve value from environment
                 // for local site.
                 value = System.getenv(variable);
