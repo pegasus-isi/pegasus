@@ -214,13 +214,14 @@ keep the HTCondor installation separate from the Pegasus installation.
       $ export PATH=/path/to/pegasus-install/bin:$PATH
 
 -  If you do not already have the Python3 package ``yaml``,
-   you can create a virtual environment. For example:
+   and ``GitPython``, you can create a virtual environment.
+   For example:
 
    ::
 
       $ python3 -m venv ~/pegasus-env
       $ . ~/pegasus-env/bin/activate
-      $ pip3 install pyyaml 
+      $ python3 -m pip install pyyaml GitPython
 
 
 .. _pypi-packages:

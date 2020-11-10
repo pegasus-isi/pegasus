@@ -351,7 +351,7 @@ class Client:
         red = lambda s: "\x1b[1;31m" + s + "\x1b[0m"
 
         # progress bar length
-        bar_len = 50
+        bar_len = 36
 
         try:
             can_continue = True
@@ -403,17 +403,15 @@ class Client:
                             )
                         )
 
-                        if v[PCNT_DONE] < 100:
-                            if v[STATE] != "Failure":
-                                print(bar, end="")
-                            else:
-                                # failure
-                                can_continue = False
-                                print(bar, end="\n")
-                        else:
-                            # percent done >= 100 means STATE = success
+
+                        if v[STATE] == "Running":
+                            print(bar, end="")
+                        elif v[STATE] in ["Failure", "Success"]:
                             can_continue = False
-                            print(bar)
+                            print(bar, end="\n")
+                        else:
+                            # unknown
+                            print(bar, end="")
 
                         # skip the rest of the lines
                         break
