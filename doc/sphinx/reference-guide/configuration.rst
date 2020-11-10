@@ -1034,7 +1034,7 @@ understands.
     | |                                          | | PEGASUS_LITE_ENV_SOURCE with the compute site in the              |
     | |                                          | | Site Catalog to indicate a setup script that already exists       |
     | |                                          | | on the compute nodes, but just needs to be sourced when           |
-    |                                            | | executing the job.                                                          |
+    |                                            | | executing the job.                                                |
     +--------------------------------------------+---------------------------------------------------------------------+
 
 
