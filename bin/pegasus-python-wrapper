@@ -60,7 +60,8 @@ fi
 # Python module.
 if [ $ALLOW_PY2 = 0 ]; then
     if [ "x$BASE_NAME" != "xpegasus-config" ]; then
-        $PEXE $PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py || exit 1
+        # this is just a warning for now
+        $PEXE $PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py || true
     fi
 fi
 
