@@ -1681,7 +1681,6 @@ sub dag_status($$;%) {
             # special check for top level workflows - ensure they are not sitting in the
             # queue still
             if ($fn eq $lastfn) {
-                print $run;
                 if (is_running($run)) {
                     $state = 2;    # running
                 }
