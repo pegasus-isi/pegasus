@@ -193,12 +193,12 @@ Any option will be displayed with its long options synonym(s).
          property and two profile keys. The property
          pegasus.clusterer.preference must be set to the value
          *runtime*. In addition user needs to specify two Pegasus
-         profiles. a. clusters.maxruntime which specifies the maximum
+         profiles. a. ``clusters.maxruntime`` which specifies the maximum
          duration for which the clustered job should run for. b.
-         job.runtime which specifies the duration for which the job with
+         ``runtime`` which specifies the duration for which the job with
          which the profile key is associated, runs for. Ideally,
-         clusters.maxruntime should be set in transformation catalog and
-         job.runtime should be set for each job individually.
+         ``clusters.maxruntime`` should be set in transformation catalog and
+         ``runtime`` should be set for each job individually.
 
    -  **label** is the style of clustering in which you can label the
       jobs in your workflow. The jobs with the same level are put in the

@@ -403,7 +403,6 @@ class Client:
                             )
                         )
 
-
                         if v[STATE] == "Running":
                             print(bar, end="")
                         elif v[STATE] in ["Failure", "Success"]:
