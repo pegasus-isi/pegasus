@@ -1,5 +1,6 @@
 from enum import Enum
 from functools import partialmethod, wraps
+from pathlib import Path
 from typing import Dict, Optional, Union
 
 from ._utils import _chained, _get_enum_str
@@ -228,11 +229,11 @@ class ProfileMixin:
         self,
         ns: Namespace,
         key: Optional[str] = None,
-        value: Optional[str] = None,
+        value: Optional[Union[str, int, float, bool, Path]] = None,
         **kw
     ):
         r"""
-        add_profiles(self, ns: Namespace, key: Optional[str] = None, value: Optional[str] = None, **kw)
+        add_profiles(self, ns: Namespace, key: Optional[str] = None, value: Optional[str, int, float, bool, Path] = None, **kw)
         Add a profile.
 
         If key and value are given, then :code:`**kw` are ignored and :code:`{Namespace::key : value}`
@@ -268,8 +269,17 @@ class ProfileMixin:
 
         # add profile(s)
         if key and value:
+            if isinstance(value, Path) or type(value) == bool:
+                # convert pathlib.Path and bool to str
+                value = str(value)
+
             self.profiles[ns].update({key: value})
         else:
+            for k, v in kw.items():
+                if isinstance(v, Path) or type(v) == bool:
+                    # convert pathlib.Path, bool, to str
+                    kw[k] = str(v)
+
             self.profiles[ns].update(kw)
 
     #: Add environment variable(s)
@@ -506,7 +516,7 @@ class ProfileMixin:
         boto_config: str = None,
         container_arguments: str = None,
         label: str = None,
-        pegasus_lite_env_source: str = None
+        pegasus_lite_env_source: Union[str, Path] = None
     ):
         """Add Pegasus profile(s).
 
@@ -599,7 +609,7 @@ class ProfileMixin:
         :param label: associate a label to a job; used for label based clustering
         :type label: str, optional
         :param pegasus_lite_env_source: specify a path on the submit host to indicate the file that needs to be sourced, defaults to None
-        :type pegasus_lite_env_source: str, optional
+        :type pegasus_lite_env_source: Union[str, Path], optional
         """
         ...
 
@@ -610,7 +620,11 @@ class ProfileMixin:
         grid_job_type="grid.jobtype",
     )
     def add_selector_profile(
-        self, *, execution_site: str = None, pfn: str = None, grid_job_type: str = None
+        self,
+        *,
+        execution_site: str = None,
+        pfn: Union[str, Path] = None,
+        grid_job_type: str = None
     ):
         """Add Selector(s).
 
@@ -621,7 +635,7 @@ class ProfileMixin:
         :param execution_site: the execution site where a job should be executed, defaults to None
         :type execution_site: str, optional
         :param pfn: the physical file name to the main executable that a job refers to. Overrides any entries specified in the transformation catalog, defaults to None
-        :type pfn: str, optional
+        :type pfn: Union[str, Path], optional
         :param grid_job_type: This profile is usually used to ensure that a compute job executes on another job manager (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`_ for more information), defaults to None
         :type grid_job_type: str, optional
         :return: self
@@ -647,7 +661,7 @@ class ProfileMixin:
     def add_dagman_profile(
         self,
         *,
-        pre: str = None,
+        pre: Union[str, Path] = None,
         pre_arguments: str = None,
         post: str = None,
         post_arguments: str = None,
@@ -672,7 +686,7 @@ class ProfileMixin:
             job.add_profiles(Namespace.DAGMAN, key="<category-name>.maxjobs", value=<value string>)
 
         :param pre: is the path to the pre-script. DAGMan executes the pre-script before it runs the job, defaults to None
-        :type pre: str, optional
+        :type pre: Union[str, Path], optional
         :param pre_arguments: are command-line arguments for the pre-script, if any, defaults to None
         :type pre_arguments: str, optional
         :param post: is the postscript type/mode that a user wants to associate with a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`_ for more information), defaults to None
