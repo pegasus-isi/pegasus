@@ -5,7 +5,7 @@ Optimizing Workflows for Efficiency and Scalability
 ===================================================
 
 By default, Pegasus generates workflows which targets the most common
-usecases and execution environments. For more specialized environments
+use cases and execution environments. For more specialized environments
 or workflows, the following sections can provide hints on how to
 optimize your workflow to scale better, and run more efficiently. Below
 are some common issues and solutions.
@@ -22,11 +22,11 @@ These overheads can be very noticeable for short jobs, but not
 noticeable at all for longer jobs as the ratio between the computation
 and the overhead is higher.
 
-*Solution:* If you have many short tasks to run, the solution to
-minimize the overheads is to use `task clustering <#job_clustering>`__.
-This instructs Pegasus to take a set of tasks, selected
-`horizontally <#horizontal_clustering>`__, by
-`labels <#label_clustering>`__, or by `runtime <#runtime_clustering>`__,
+*Solution:* If you have many short jobs to run, the solution to
+minimize the overheads is to use :ref:`job clustering <job-clustering>`.
+This instructs Pegasus to take a set of jobs, selected
+:ref:`horizontally <horizontal-clustering>`, by
+:ref:`labels <label-clustering>`, or by :ref:`runtime <runtime-clustering>`,
 and create jobs containing that whole set of tasks. The result is more
 efficient jobs, for which the overheads are less noticeable.
 
@@ -42,44 +42,44 @@ Job Clustering
 ==============
 
 A large number of workflows executed through the Pegasus Workflow
-Management System, are composed of several jobs that run for only a few
-seconds or so. The overhead of running any job on the grid is usually 60
-seconds or more. Hence, it makes sense to cluster small independent jobs
+Management System are composed of several jobs that run for only a few
+seconds or so. The overhead of running any job on the grid is usually **60
+seconds or more**. Hence, it makes sense to cluster small independent jobs
 into a larger job. This is done while mapping an abstract workflow to an
 executable workflow. Site specific or transformation specific criteria
 are taken into consideration while clustering smaller jobs into a larger
 job in the executable workflow. The user is allowed to control the
-granularity of this clustering on a per transformation per site basis.
+granularity of this clustering on a per transformation, per site basis.
 
 Overview
 --------
 
 The abstract workflow is mapped onto the various sites by the Site
 Selector. This semi executable workflow is then passed to the clustering
-module. The clustering of the workflow can be either be
+module. The clustering of the workflow can be either be:
 
 -  level based horizontal clustering - where you can denote how many
    jobs get clustered into a single clustered job per level, or how many
    clustered jobs should be created per level of the workflow
 
--  level based runtime clustering - similar to horizontal clustering ,
+-  level based runtime clustering - similar to horizontal clustering,
    but while creating the clusters per level take into account the job
    runtimes.
 
--  label based (label clustering)
+-  label based (clustering by label)
 
 The clustering module clusters the jobs into larger/clustered jobs, that
 can then be executed on the remote sites. The execution can either be
-sequential on a single node or on multiple nodes using MPI. To specify
-which clustering technique to use the user has to pass the **--cluster**
-option to **pegasus-plan** .
+sequential on a single node, or on multiple nodes using MPI. To specify
+which clustering technique to use the user has to pass the ``--cluster``
+option to :ref:`pegasus-plan <cli-pegasus-plan>`.
 
 Generating Clustered Executable Workflow
 ----------------------------------------
 
 The clustering of a workflow is activated by passing the
-**--cluster|-C** option to **pegasus-plan**. The clustering granularity
-of a particular logical transformation on a particular site is dependant
+``--cluster`` | ``-C`` option to :ref:`pegasus-plan <cli-pegasus-plan>`. The clustering 
+granularity of a particular logical transformation on a particular site is dependant
 upon the clustering techniques being used. The executable that is used
 for running the clustered job on a particular site is determined as
 explained in section 7.
@@ -91,11 +91,11 @@ explained in section 7.
    $ pegasus-plan  --dir ./dags -p siteX --output local
                   --cluster [comma separated list of clustering techniques]  workflow.yml
 
-   Valid clustering techniques are horizontal and label.
+   Valid clustering techniques are "horizontal" and "label".
 
 The naming convention of submit files of the clustered jobs
-is\ **merge_NAME_IDX.sub** . The NAME is derived from the logical
-transformation name. The IDX is an integer number between 1 and the
+is **merge_NAME_IDX.sub** . The ``NAME`` is derived from the logical
+transformation name. The ``IDX`` is an integer number between 1 and the
 total number of jobs in a cluster. Each of the submit files has a
 corresponding input file, following the naming convention
 **merge_NAME_IDX.in**. The input file contains the respective execution
@@ -114,16 +114,16 @@ nodes. The level associated with a node, is the furthest distance of it
 from the root node instead of it being the shortest distance as in
 normal BFS. For each level the jobs are grouped by the site on which
 they have been scheduled by the Site Selector. Only jobs of same type
-(txnamespace, txname, txversion) can be clustered into a larger job. To
-use horizontal clustering the user needs to set the **--cluster** option
-of **pegasus-plan to horizontal** .
+(``txnamespace``, ``txname``, ``txversion``) can be clustered into a larger job. To
+use horizontal clustering the user needs to set the ``--cluster`` option
+of :ref:`pegasus-plan <cli-pegasus-plan>` to ``horizontal``.
 
 Controlling Clustering Granularity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The number of jobs that have to be clustered into a single large job, is
 determined by the value of two parameters associated with the smaller
-jobs. Both these parameters are specified by the use of a PEGASUS
+jobs. Both these parameters are specified by the use of ``PEGASUS``
 namespace profile keys. The keys can be specified at any of the
 placeholders for the profiles (abstract transformation in the Abstract Workflow, site
 in the site catalog, transformation in the transformation catalog). The
@@ -133,13 +133,13 @@ the one in the Abstract Workflow. The two parameters are described below.
 
 -  **clusters.size factor**
 
-   The clusters.size factor denotes how many jobs need to be merged into
-   a single clustered job. It is specified via the use of a PEGASUS
-   namespace profile key 'clusters.size'. for e.g. if at a particular
+   The ``clusters.size`` factor denotes how many jobs need to be merged into
+   a single clustered job. It is specified via the use of a ``PEGASUS``
+   namespace profile key ``clusters.size``. For e.g. if at a particular
    level, say 4 jobs referring to logical transformation B have been
-   scheduled to a siteX. The clusters.size factor associated with job B
+   scheduled to a siteX. The ``clusters.size`` factor associated with job B
    for siteX is say 3. This will result in 2 clustered jobs, one
-   composed of 3 jobs and another of 2 jobs. The clusters.size factor
+   composed of 3 jobs and another of 1 job. The ``clusters.size`` factor
    can be specified in the transformation catalog as follows
 
     .. tabs::
@@ -218,18 +218,18 @@ the one in the Abstract Workflow. The two parameters are described below.
    .. figure:: ../images/advanced-clustering-1.png
       :alt: Clustering by clusters.size
 
-      Clustering by clusters.size
+      Clustering by ``clusters.size``
 
 -  **clusters.num factor**
 
-   The clusters.num factor denotes how many clustered jobs does the user
+   The ``clusters.num`` factor denotes how many clustered jobs does the user
    want to see per level per site. It is specified via the use of a
-   PEGASUS namespace profile key 'clusters.num'. for e.g. if at a
+   ``PEGASUS`` namespace profile key ``clusters.num``. for e.g. if at a
    particular level, say 4 jobs referring to logical transformation B
-   have been scheduled to a siteX. The 'clusters.num' factor associated
+   have been scheduled to a siteX. The ``clusters.num`` factor associated
    with job B for siteX is say 3. This will result in 3 clustered jobs,
    one composed of 2 jobs and others of a single job each. The
-   clusters.num factor in the transformation catalog can be specified as
+   ``clusters.num`` factor in the transformation catalog can be specified as
    follows
 
     .. tabs::
@@ -306,7 +306,7 @@ the one in the Abstract Workflow. The two parameters are described below.
               }
 
    In the case, where both the factors are associated with the job, the
-   clusters.num value supersedes the clusters.size value.
+   ``clusters.num`` value supersedes the ``clusters.size`` value.
 
     .. tabs::
 
@@ -361,14 +361,14 @@ the one in the Abstract Workflow. The two parameters are described below.
 
 
    In the above case the jobs referring to logical transformation B
-   scheduled on siteX will be clustered on the basis of 'clusters.num'
+   scheduled on siteX will be clustered on the basis of ``clusters.num``
    value. Hence, if there are 4 jobs referring to logical transformation
    B scheduled to siteX, then 3 clustered jobs will be created.
 
    .. figure:: ../images/advanced-clustering-2.png
       :alt: Clustering by clusters.num
 
-      Clustering by clusters.num
+      Clustering by ``clusters.num``
 
 .. _runtime-clustering:
 
@@ -379,8 +379,8 @@ Workflows often consist of jobs of same type, but have varying run
 times. Two or more instances of the same job, with varying inputs can
 differ significantly in their runtimes. A simple way to think about this
 is running the same program on two distinct input sets, where one input
-is smaller (1 MB) as compared to the other which is 10 GB in size. In
-such a case the two jobs will having significantly differing run times.
+is smaller, say 1 MB, as compared to the other which is 10 GB in size. In
+such a case the two jobs will have significantly differing run times.
 When such jobs are clustered using horizontal clustering, the benefits
 of job clustering may be lost if all smaller jobs get clustered
 together, while the larger jobs are clustered together. In such
@@ -391,10 +391,10 @@ In case of runtime clustering, jobs in the workflow are associated with
 a level. The levels of the workflow are determined in the same manner as
 in horizontal clustering. For each level the jobs are grouped by the
 site on which they have been scheduled by the Site Selector. Only jobs
-of same type (txnamespace, txname, txversion) can be clustered into a
+of same type (``txnamespace``, ``txname``, ``txversion``) can be clustered into a
 larger job. To use runtime clustering the user needs to set the
-**--cluster** option of **pegasus-plan to horizontal**, and set the
-Pegasus property **pegasus.clusterer.preference** to **Runtime**.
+``--cluster`` option of :ref:`pegasus-plan <cli-pegasus-plan>` ``horizontal``, and set the
+Pegasus property ``pegasus.clusterer.preference`` to ``Runtime``.
 
 Runtime clustering supports two modes of operation.
 
@@ -420,7 +420,7 @@ Runtime clustering supports two modes of operation.
               Add job j to newly added bin
 
    The runtime of a job, and the maximum runtime for which a clustered
-   jobs should run is determined by the value of two parameters
+   job should run is determined by the value of two parameters
    associated with the jobs.
 
    -  **runtime**
@@ -433,7 +433,7 @@ Runtime clustering supports two modes of operation.
       possible into a cluster, as long as the clustered jobs' runtime
       does not exceed clusters.maxruntime.
 
-2. Clusters all the into a fixed number of clusters (clusters.num), such
+2. Clusters all the jobs into a fixed number of clusters (``clusters.num``), such
    that the runtimes of the clustered jobs are similar.
 
    Basic Algorithm of grouping jobs into clusters is as follows
@@ -458,19 +458,19 @@ Runtime clustering supports two modes of operation.
 
    -  **clusters.num**
 
-      clusters.num factor denotes how many clustered jobs does the user
+      ``clusters.num`` factor denotes how many clustered jobs does the user
       want to see per level per site
 
 ..
 
 .. note::
 
-   Users should either specify clusters.maxruntime or clusters.num. If
-   both of them are specified, then clusters.num profile will be ignored
+   Users should either specify ``clusters.maxruntime`` or ``clusters.num``. If
+   both of them are specified, then ``clusters.num`` profile will be ignored
    by the clustering engine.
 
-All of these parameters are specified by the use of a PEGASUS namespace
-profile keys. The keys can be specified at any of the placeholders for
+All of these parameters are specified by the use of a ``PEGASUS`` namespace
+profile key. The keys can be specified at any of the placeholders for
 the profiles (abstract transformation in the Abstract Workflow, site in the site
 catalog, transformation in the transformation catalog). The normal
 overloading semantics apply i.e. profile in transformation catalog
@@ -567,17 +567,17 @@ in the Abstract Workflow. The two parameters are described below.
 .. figure:: ../images/advanced-clustering-5.png
    :alt: Clustering by runtime
 
-   Clustering by runtime
+   Clustering by ``runtime``
 
 In the above case the jobs referring to logical transformation B
 scheduled on siteX will be clustered such that all clustered jobs will
 run approximately for the same duration specified by the
-clusters.maxruntime property. In the above case we assume all jobs
+``clusters.maxruntime`` property. In the above case we assume all jobs
 referring to transformation B run for 100 seconds. For jobs with
-significantly differing runtime, the runtime property will be associated
+significantly differing runtime, the ``runtime`` property will be associated
 with the jobs in the Abstract Workflow.
 
-In addition to the above two profiles, we need to inform pegasus-plan to
+In addition to the above two profiles, we need to inform :ref:`pegasus-plan <cli-pegasus-plan>` to
 use runtime clustering. This is done by setting the following property .
 
 ::
@@ -592,29 +592,29 @@ Label Clustering
 In label based clustering, the user labels the workflow. All jobs having
 the same label value are clustered into a single clustered job. This
 allows the user to create clusters or use a clustering technique that is
-specific to his workflows. If there is no label associated with the job,
+specific to his or her workflow. If there is no label associated with the job,
 the job is not clustered and is executed as is
 
 Since, the jobs in a cluster in this case are not independent, it is
 important the jobs are executed in the correct order. This is done by
 doing a topological sort on the jobs in each cluster. To use label based
-clustering the user needs to set the **--cluster** option of
-**pegasus-plan** to label.
+clustering the user needs to set the ``--cluster`` option of
+:ref:`pegasus-plan <cli-pegasus-plan>` to ``label``.
 
 Labelling the Workflow
 ^^^^^^^^^^^^^^^^^^^^^^
 
 The labels for the jobs in the workflow are specified by associated
-**pegasus** profile keys with the jobs during the Abstract Workflow generation
+``PEGASUS`` profile keys with the jobs during the Abstract Workflow generation
 process. The user can choose which profile key to use for labeling the
-workflow. By default, it is assumed that the user is using the PEGASUS
+workflow. By default, it is assumed that the user is using the ``PEGASUS``
 profile key ``label`` to associate the labels. To use another key, in the
-**pegasus** namespace the user needs to set the following property
+``PEGASUS`` namespace the user needs to set the following property
 
--  pegasus.clusterer.label.key
+-  ``pegasus.clusterer.label.key``
 
-For example if the user sets **pegasus.clusterer.label.key**\ to
-**user_label** then the job description in the Abstract Workflow looks as follows
+For example if the user sets ``pegasus.clusterer.label.key`` to
+``user_label`` then the job description in the Abstract Workflow looks as follows
 
 ::
 
@@ -630,11 +630,11 @@ For example if the user sets **pegasus.clusterer.label.key**\ to
    ...
    </adag>
 
--  The above states that the **pegasus** profiles with key as
-   **user_label** are to be used for designating clusters.
+-  The above states that the ``PEGASUS`` profiles with key as
+   ``user_label`` are to be used for designating clusters.
 
--  Each job with the same value for **pegasus** profile key
-   **user_label**\ appears in the same cluster.
+-  Each job with the same value for ``PEGASUS`` profile key
+   ``user_label`` appears in the same cluster.
 
 Recursive Clustering
 --------------------
@@ -643,7 +643,7 @@ In some cases, a user may want to use a combination of clustering
 techniques. For e.g. a user may want some jobs in the workflow to be
 horizontally clustered and some to be label clustered. This can be
 achieved by specifying a comma separated list of clustering techniques
-to the\ **--cluster** option of **pegasus-plan**. In this case the
+to the ``--cluster`` option of :ref:`pegasus-plan <cli-pegasus-plan>`. In this case the
 clustering techniques are applied one after the other on the workflow in
 the order specified on the command line.
 
@@ -666,10 +666,10 @@ execution of the smaller constituent jobs either
 
 -  **sequentially on a single node of the remote site**
 
-   The clustered job is executed using **pegasus-cluster**, a wrapper
-   tool written in C that is distributed as part of the PEGASUS. It
+   The clustered job is executed using :ref:`pegasus-cluster <cli-pegasus-cluster>`, a wrapper
+   tool written in C that is distributed as part of Pegasus. It
    takes in the jobs passed to it, and ends up executing them
-   sequentially on a single node. To use pegasus-cluster for executing
+   sequentially on a single node. To use :ref:`pegasus-cluster <cli-pegasus-cluster>` for executing
    any clustered job on a siteX, there needs to be an entry in the
    transformation catalog for an executable with the logical name
    seqexec and namespace as pegasus.
@@ -719,15 +719,15 @@ execution of the smaller constituent jobs either
                }
 
    If the entry is not specified, Pegasus will attempt create a default
-   path on the basis of the environment profile PEGASUS_HOME specified
+   path on the basis of the environment profile ``PEGASUS_HOME`` specified
    in the site catalog for the remote site.
 
 -  **On multiple nodes of the remote site using MPI based task
    management tool called Pegasus MPI Cluster (PMC)**
 
-   The clustered job is executed using **pegasus-mpi-cluster**, a
-   wrapper MPI program written in C that is distributed as part of the
-   PEGASUS. A PMC job consists of a single master process (this process
+   The clustered job is executed using :ref:`pegasus-mpi-cluster <cli-pegasus-mpi-cluster>`, a
+   wrapper MPI program written in C that is distributed as part of 
+   Pegasus. A PMC job consists of a single master process (this process
    is rank 0 in MPI parlance) and several worker processes. These
    processes follow the standard master-worker architecture. The master
    process manages the workflow and assigns workflow tasks to workers
@@ -757,14 +757,14 @@ execution of the smaller constituent jobs either
       pmc_task_arguments The key is used to pass any extra arguments to the PMC task during the planning time. They are added to the very end of the argument string constructed for the task in the PMC file. Hence, allows for overriding of any argument constructed by the planner for any particular task in the PMC job.
       ================== =====================================================================================================================================================================================================================================================================================================
 
-   Refer to the pegasus-mpi-cluster man page in the `command line tools
-   chapter <#cli>`__ to know more about PMC and how it schedules
-   individual tasks.
+   Refer to the :ref:`pegasus-mpi-cluster manpage <cli-pegasus-mpi-cluster>` to 
+   learn more about how it schedules individual tasks.
+   
 
-   It is recommended to have a pegasus::mpiexec entry in the
+   It is recommended to have a ``pegasus::mpiexec`` entry in the
    transformation catalog to specify the path to PMC on the remote and
-   specify the relevant globus profiles such as xcount, host_xcount and
-   maxwalltime to control size of the MPI job.
+   specify the relevant globus profiles such as ``xcount``, ``host_xcount`` and
+   ``maxwalltime`` to control size of the MPI job.
 
     .. tabs::
 
@@ -818,8 +818,8 @@ execution of the smaller constituent jobs either
             }
 
 
-   the entry is not specified, Pegasus will attempt create a default
-   path on the basis of the environment profile PEGASUS_HOME specified
+   If the entry is not specified, Pegasus will attempt create a default
+   path on the basis of the environment profile ``PEGASUS_HOME`` specified
    in the site catalog for the remote site.
 
    .. tip::
