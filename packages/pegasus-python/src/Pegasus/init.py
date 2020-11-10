@@ -91,7 +91,7 @@ def console_select_site():
     print_sites(sites_available)
 
     site = click.prompt(
-        "Select an execution site",
+        "Select an execution environment",
         default=1,
         type=click.IntRange(1, len(sites_available)),
         show_default=True,
@@ -100,7 +100,7 @@ def console_select_site():
 
     #### Insert queue name ####
     if site in Sites.SitesRequireQueue:
-        queue_name = click.prompt("What's the execution site's queue")
+        queue_name = click.prompt("What's the execution environment's queue")
 
     #### Insert project name ####
     if site in Sites.SitesRequireProject:
@@ -122,17 +122,38 @@ def console_select_site():
 
 
 def print_sites(sites_available):
+    click.echo(
+        """###########################################################
+###########   Available Execution Environments   ##########
+###########################################################"""
+    )
+
     for k in sites_available:
-        site = sites_available[k]
-        click.echo("{}) {}".format(k, site["name"]))
+        click.echo(
+            "{}) {}".format(
+                k, Sites.SitesAvailableDescription[sites_available[k]["member"]]
+            )
+        )
+
+    click.echo()
+    return
 
 
 def print_workflows(workflows_available):
+    click.echo(
+        """###########################################################
+###########     Available Workflow Examples      ##########
+###########################################################"""
+    )
+
     for k in workflows_available:
         workflow = workflows_available[k]
         click.echo(
             "{}) {}/{}".format(k, workflow["organization"], workflow["repo_name"])
         )
+
+    click.echo()
+    return
 
 
 def clone_workflow(wf_dir, workflow):
@@ -154,6 +175,8 @@ def clone_workflow(wf_dir, workflow):
         click.echo("This repository doesn't exist in this location or it's private.")
         click.echo("Exiting...")
         exit()
+
+    return
 
 
 def read_pegasushub_config(wf_dir, workflow):
@@ -214,6 +237,8 @@ pegasus-plan --conf pegasus.properties \\
 
     os.chmod("plan.sh", 0o775)
 
+    return
+
 
 def create_generate_script(commands):
     generate_script = "#!/bin/sh\n\n" + "\n".join(commands)
@@ -223,6 +248,8 @@ def create_generate_script(commands):
         g.write("\n")
 
     os.chmod("generate.sh", 0o775)
+
+    return
 
 
 def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_home):
@@ -331,6 +358,8 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
     create_generate_script(commands)
 
     os.chdir(old_dir)
+
+    return
 
 
 def read_workflows(wf_gallery, site):
