@@ -22,7 +22,7 @@ Once logged in, you should see a listing similar to:
 .. figure:: ../images/tutorial-jupyter-listing.png
    :alt: Process Workflow
 
-Please access the notebooks in order. Start with *01-Pegasus-Tutorial*, and once that is complete, run *02-Debugging* and so on.
+Please access the notebooks in order. Start with *01-Introduction-API*, and once that is complete, run *02-Debugging* and so on.
 
 It is important that each step in a workbook is `Run` in order. The best way to do ensure this is to start at the top and hit the `Run` button to advance to the next step.
 
