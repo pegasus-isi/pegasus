@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-set -v
+#set -v
 
 if [ X${testdir} = "X" ]; then
     testdir=`dirname  $0`
@@ -35,6 +35,7 @@ cat > sites.xml <<EOF
                 <file-server  operation="all" url="file://$TOPDIR/outputs">
                 </file-server>
         </directory>
+	<profile namespace="pegasus" key="pegasus_lite_env_source">${TOPDIR}/job-setup.sh</profile>
 </site>
 
 <site handle="condorpool" arch="x86_64" os="LINUX" >
@@ -55,3 +56,16 @@ pegasus-plan \
     blackdiamond.dax \
     | tee plan.out
 
+WORK_DIR=`cat plan.out | grep pegasus-remove | sed -E 's/.*pegasus-remove[ ]+(.*)[ ]+/\1/'`
+# account for deep submit directory structure                                                                                                                                                                                              
+cd $WORK_DIR/00/00
+
+# PM-1192 make sure the env variable PEGASUS_LITE_ENV_SOURCE is set
+for sub in ` ls *sub | grep -E "analyze|findrange|preprocess"`; do
+    echo "Searching in file $sub"
+    pegasus_lite_env_source_set=`(grep environment $sub | grep PEGASUS_LITE_ENV_SOURCE) 2>/dev/null || /bin/true`
+    if [ "x$pegasus_lite_env_source_set" == "x" ]; then
+        echo "ERROR: PEGASUS_LITE_ENV_SOURCE not set in environment for $sub"
+        exit 1
+    fi
+done
