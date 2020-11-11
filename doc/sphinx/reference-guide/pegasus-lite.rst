@@ -95,10 +95,10 @@ the wrapper as the executable path in TC, as in that case
 To get this behavior you can specify the following Pegasus Profile keys
 with your job
 
-.# **gridstart.launcher** : Specifies the launcher executable to use to
+#. **gridstart.launcher** : Specifies the launcher executable to use to
    launch the GridStart(*pegasus-kickstart*). In the above example value
    for this would be jsrun.
 
-.# **gridstart.launcher.arguments**: Specifies the arguments to pass to
+#. **gridstart.launcher.arguments**: Specifies the arguments to pass to
    the launcher. In the above example, value for this would be
    -n 1 -a 1 -c 42 -g 0 .
