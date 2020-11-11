@@ -92,6 +92,9 @@ public class ClassADSGenerator {
     /** The key for the number of cores for the multiplier factor in stampede. */
     public static final String CORES_KEY = "pegasus_cores";
 
+    /** The key for the number of gpus associated with the job */
+    public static final String GPUS_KEY = "pegasus_gpus";
+
     /**
      * The class ad to store the execution pool at which the job is run. The globusscheduler
      * specified in the submit file refers to the jobmanager on this execution pool.
@@ -208,6 +211,18 @@ public class ClassADSGenerator {
             // ignore
         }
         writer.println(generateClassAdAttribute(ClassADSGenerator.CORES_KEY, cores));
+
+        // PM-1621 write out the gpus if specified for job
+        String gpusValue = job.vdsNS.getStringValue(Pegasus.GPUS_KEY);
+        int gpus = -1;
+        try {
+            gpus = (gpusValue == null) ? 1 : Integer.parseInt(gpusValue);
+        } catch (Exception e) {
+            // ignore
+        }
+        if (gpus > 0) {
+            writer.println(generateClassAdAttribute(ClassADSGenerator.GPUS_KEY, gpus));
+        }
 
         // determine the cluster size
         int csize =
