@@ -109,7 +109,7 @@ public class Docker extends Abstract {
 
         // PM-1621 add --gpus all option if user has gpus requested with the job
         if (job.vdsNS.containsKey(Pegasus.GPUS_KEY)) {
-            sb.append("--gpus all");
+            sb.append("--gpus all").append(" ");
         }
 
         // PM-1298 mount any host directories if specified
