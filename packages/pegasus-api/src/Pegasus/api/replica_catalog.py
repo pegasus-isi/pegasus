@@ -93,14 +93,14 @@ class _ReplicaCatalogEntry:
         self,
         lfn: str,
         pfns: Set[_PFN],
-        checksum: Dict[str, str] = dict(),
-        metadata: Dict[str, Union[int, str, float]] = dict(),
+        checksum: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, Union[int, str, float]]] = None,
         regex: bool = False,
     ):
         self.lfn = lfn
         self.pfns = pfns
-        self.checksum = checksum
-        self.metadata = metadata
+        self.checksum = checksum or dict()
+        self.metadata = metadata or dict()
         self.regex = regex
 
     def __json__(self):
@@ -148,10 +148,10 @@ class ReplicaCatalog(Writable):
         site: str,
         pattern: str,
         pfn: Union[str, Path],
-        metadata: Dict[str, Union[int, str, float]] = {},
+        metadata: Optional[Dict[str, Union[int, str, float]]] = None,
     ):
         r"""
-        add_regex_replica(self, site: str, pattern: str, pfn: Union[str, Path], metadata: Dict[str, Union[int, str, float]] = {})
+        add_regex_replica(self, site: str, pattern: str, pfn: Union[str, Path], metadata: Optional[Dict[str, Union[int, str, float]]] = None)
         Add an entry to this replica catalog using a regular expression pattern.
         Note that regular expressions should follow Java regular expression syntax
         as the underlying code that handles this catalog is Java based.
@@ -180,10 +180,12 @@ class ReplicaCatalog(Writable):
         :type pattern: str
         :param pfn: path to the file (may also be a pattern as shown in the example above)
         :type pfn: Union[str, Path]
-        :param metadata: any metadata to be associated with the matched files, for example: :code:`{"creator": "pegasus"}`
-        :type metadata: Dict[str, Union[int, str, float]]
+        :param metadata: any metadata to be associated with the matched files, for example: :code:`{"creator": "pegasus"}`, defaults to None
+        :type metadata: Optional[Dict[str, Union[int, str, float]]]
         :raises DuplicateError: Duplicate patterns with different PFNs are currently not supported
         """
+
+        metadata = metadata or dict()
 
         # restricting pattern to single pfn (may be relaxed in future release)
         if (pattern, True) in self.entries:
@@ -212,11 +214,11 @@ class ReplicaCatalog(Writable):
         site: str,
         lfn: Union[str, File],
         pfn: Union[str, Path],
-        checksum: Dict[str, str] = dict(),
-        metadata: Dict[str, Union[int, str, float]] = dict(),
+        checksum: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, Union[int, str, float]]] = None,
     ):
         """
-        add_replica(self, site: str, lfn: Union[str, File], pfn: Union[str, Path], checksum: Dict[str, str] = dict(), metadata: Dict[str, Union[int, str, float]] = dict())
+        add_replica(self, site: str, lfn: Union[str, File], pfn: Union[str, Path], checksum: Optional[Dict[str, str]] = None, metadata: Optiona[Dict[str, Union[int, str, float]]] = None)
         Add an entry to this replica catalog.
 
             .. code-block:: python
@@ -245,10 +247,10 @@ class ReplicaCatalog(Writable):
         :type lfn: Union[str, File]
         :param pfn: physical file name such as :code:`Path("f.txt").resolve()`, :code:`/home/ryan/file.txt`, or :code:`http://pegasus.isi.edu/file.txt`
         :type pfn: Union[str, Path]
-        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as :code:`{"sha256": <value>}`, defaults to :code:`{}`
-        :type checksum: Dict[str, str], optional
-        :param metadata: metadata key value pairs associated with this lfn such as :code:`{"created": "Thu Jun 18 22:18:36 PDT 2020", "owner": "pegasus"}`, defaults to :code:`{}`
-        :type metadata: Dict[str, Union[int, str, float]], optional
+        :param checksum: Dict containing checksums for this file. Currently only sha256 is given. This should be entered as :code:`{"sha256": <value>}`, defaults to None
+        :type checksum: Optional[Dict[str, str]], optional
+        :param metadata: metadata key value pairs associated with this lfn such as :code:`{"created": "Thu Jun 18 22:18:36 PDT 2020", "owner": "pegasus"}`, defaults to None
+        :type metadata: Optional[Dict[str, Union[int, str, float]]], optional
         :raises ValueError: if pfn is given as a :code:`pathlib.Path`, it must be an absolute path
         :raises ValueError: an unsupported checksum type was given
         """
@@ -263,6 +265,9 @@ class ReplicaCatalog(Writable):
                 )
 
             pfn = str(pfn)
+
+        metadata = metadata or dict()
+        checksum = checksum or dict()
 
         # File might contain metadata that should be included
         if isinstance(lfn, File):

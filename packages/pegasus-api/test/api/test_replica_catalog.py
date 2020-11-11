@@ -149,8 +149,6 @@ class TestReplicaCatalog:
 
         assert "Invalid pfn: file" in str(e)
 
-    # TODO: why does this test break the following tests???
-    """
     def test_add_replica_file_as_lfn(self):
         rc = ReplicaCatalog()
         f = File("f.a", size=1024).add_metadata(creator="ryan")
@@ -161,7 +159,6 @@ class TestReplicaCatalog:
             "pfns": [{"site": "local", "pfn": "/f.a"}],
             "metadata": {"size": 1024, "creator": "ryan"},
         }
-    """
 
     def test_add_multiple_replicas(self):
         rc = ReplicaCatalog()
@@ -322,11 +319,7 @@ class TestReplicaCatalog:
                     "checksum": {"sha256": "123"},
                     "metadata": {"extra": "metadata", "size": 1024, "creator": "ryan"},
                 },
-                {
-                    "lfn": "f.b",
-                    "pfns": [{"site": "local", "pfn": "/f.b"}],
-                    "metadata": {"size": 1024, "creator": "ryan"},
-                },
+                {"lfn": "f.b", "pfns": [{"site": "local", "pfn": "/f.b"}],},
                 {
                     "lfn": "*.txt",
                     "pfns": [{"site": "local", "pfn": "/path"}],
