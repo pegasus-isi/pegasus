@@ -218,13 +218,17 @@ class TestReplicaCatalog:
 
         assert "Invalid checksum: md5" in str(e)
 
-    def test_add_regex_replica(self):
+    @pytest.mark.parametrize(
+        "given_pfn, expected_pfn",
+        [("/path", "/path"), (Path("/path/[0]"), "/path/[0]")],
+    )
+    def test_add_regex_replica(self, given_pfn, expected_pfn):
         rc = ReplicaCatalog()
-        rc.add_regex_replica("local", "*.txt", "/path")
+        rc.add_regex_replica("local", "*.txt", given_pfn)
 
         assert _tojson(rc.entries[("*.txt", True)]) == {
             "lfn": "*.txt",
-            "pfns": [{"site": "local", "pfn": "/path"}],
+            "pfns": [{"site": "local", "pfn": expected_pfn}],
             "regex": True,
         }
 
@@ -236,6 +240,13 @@ class TestReplicaCatalog:
             rc.add_regex_replica("local", "*.txt", "/path")
 
         assert "Pattern: *.txt already exists" in str(e)
+
+    def test_add_invalid_pfn_regex_replica(self):
+        rc = ReplicaCatalog()
+        with pytest.raises(ValueError) as e:
+            rc.add_regex_replica("local", "*.txt", Path("not_an_absolute_path"))
+
+        assert "Invalid pfn: not_an_absolute_path" in str(e)
 
     def test_add_regex_replica_with_metadata(self):
         rc = ReplicaCatalog()
