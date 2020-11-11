@@ -874,6 +874,19 @@ understands.
     | | Since : 2.0                              |                                                                     |
     | | Type :String                             |                                                                     |
     +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key: pegasus.gridstart.launcher | | Specifies the launcher executable to use to launch the GridStart. |
+    | | Profile Key: gridstart.launche           | | Is useful, when we want the kickstart invocation for the compute  |
+    | | Scope : TC, SC, Abstract WF, Properties  | | jobs to be submitted using jsrun, as in on sites where originally |
+    | | Since : 4.9.4                            | | the job lands on DTN node like OLCF sites.                        |
+    | | Type : file path                         |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | The arguments to the launcher executable for GridStart            |
+    | |    pegasus.gridstart.launcher.arguments  |                                                                     |
+    | | Profile Key:gridstart.launcher.arguments |                                                                     |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 2.0                              |                                                                     |
+    | | Type :String                             |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
     | | Property Key: pegasus.stagein.clusters   | | This key determines the maximum number of stage-in jobs that      |
     | | Profile Key: stagein.clusters            | | are can executed locally or remotely per compute site per         |
     | | Scope : TC, SC, Abstract WF, Properties  | | workflow. This is used to configure the                           |
