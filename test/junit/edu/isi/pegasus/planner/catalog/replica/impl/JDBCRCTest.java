@@ -162,59 +162,100 @@ public class JDBCRCTest {
         HashMap attr =
                 new HashMap() {
                     {
-                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
-                        put("name", "value");
+                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "e");
+                        put("k", "v");
+                        put("u", "v");
+                        put("y", "x");
                     }
                 };
         HashMap attr2 =
                 new HashMap() {
                     {
-                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "y");
-                        put("name", "value");
+                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "f");
+                        put("k", "v");
+                        put("u", "v");
+                        put("y", "x");
                     }
                 };
-
+        HashMap attr3 =
+                new HashMap() {
+                    {
+                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "d");
+                        put("k", "v");
+                        put("u", "v");
+                        put("y", "x");
+                    }
+                };
+        HashMap attr4 =
+                new HashMap() {
+                    {
+                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "g");
+                        put("k", "v");
+                        put("u", "v");
+                        put("y", "x");
+                    }
+                };
+        HashMap attr5 =
+                new HashMap() {
+                    {
+                        put("h", "p");
+                        put("i", "p");
+                        put("k", "v");
+                        put("u", "s");
+                        put("y", "x");
+                    }
+                };
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
-        jdbcrc.insert(
-                "a",
-                new ReplicaCatalogEntry(
-                        "b",
-                        new HashMap() {
-                            {
-                                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "y");
-                            }
-                        }));
+        jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr2));
+        jdbcrc.insert("a", new ReplicaCatalogEntry("c", attr3));
+        jdbcrc.insert("a", new ReplicaCatalogEntry("c", attr4));
+        jdbcrc.insert("w", new ReplicaCatalogEntry("t", attr5));
+        jdbcrc.insert("w", new ReplicaCatalogEntry("z", attr5));
+
+        Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
+        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
+        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr2)));
+        assertTrue(c.contains(new ReplicaCatalogEntry("c", attr3)));
+        assertTrue(c.contains(new ReplicaCatalogEntry("c", attr4)));
+
         jdbcrc.delete(
                 "a",
                 new ReplicaCatalogEntry(
                         "b",
                         new HashMap() {
                             {
-                                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
+                                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "e");
                             }
                         }));
-
-        Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr2)));
-
-        jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr));
         c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
-        assertFalse(
-                c.contains(
-                        new ReplicaCatalogEntry(
-                                "b",
-                                new HashMap() {
-                                    {
-                                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
-                                    }
-                                })));
         assertTrue(c.contains(new ReplicaCatalogEntry("b", attr2)));
+        assertTrue(c.contains(new ReplicaCatalogEntry("c", attr3)));
+        assertTrue(c.contains(new ReplicaCatalogEntry("c", attr4)));
 
-        jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr2));
+        jdbcrc.delete(
+                "a",
+                new ReplicaCatalogEntry(
+                        "b",
+                        new HashMap() {
+                            {
+                                put(ReplicaCatalogEntry.RESOURCE_HANDLE, "f");
+                                put("u", "v");
+                            }
+                        }));
         c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr2)));
+        assertFalse(c.contains(new ReplicaCatalogEntry("c", attr3)));
+        assertFalse(c.contains(new ReplicaCatalogEntry("c", attr4)));
+        HashMap attr6 =
+                new HashMap() {
+                    {
+                        put(ReplicaCatalogEntry.RESOURCE_HANDLE, "f");
+                        put("k", "v");
+                        put("y", "x");
+                    }
+                };
+        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr6)));
     }
 
     @Test

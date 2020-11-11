@@ -1161,7 +1161,7 @@ public class JDBCRC implements ReplicaCatalog {
         // sanity checks
         if (x == null || x.size() == 0) return result;
         if (mConnection == null) throw new RuntimeException(c_error);
-        String query = "";
+        StringBuilder query = new StringBuilder();
         boolean autoCommitWasOn = false;
         int state = 0;
         List<String> lfns = new ArrayList<String>((Set<String>) x.keySet());
@@ -1174,13 +1174,13 @@ public class JDBCRC implements ReplicaCatalog {
 
             // check whether the lfns already exist
             for (String lfn : lfns) {
-                query +=
-                        query.isEmpty()
+                query.append(
+                        query.length() == 0
                                 ? "SELECT lfn_id, lfn FROM rc_lfn WHERE lfn='" + lfn + "'"
-                                : " OR lfn='" + lfn + "'";
+                                : " OR lfn='" + lfn + "'");
             }
-            if (!query.isEmpty()) {
-                ResultSet rs = st.executeQuery(query);
+            if (query.length() != 0) {
+                ResultSet rs = st.executeQuery(query.toString());
                 while (rs.next()) {
                     lfnToID.put(rs.getString(2), rs.getString(1));
                 }
@@ -1219,8 +1219,8 @@ public class JDBCRC implements ReplicaCatalog {
             state = 2;
 
             // check whether the pfns and metadata already exist
-            query = "";
-            String metadataQuery = "";
+            query.setLength(0);
+            StringBuilder metadataQuery = new StringBuilder();
             List<String> pfnsToInsert = new ArrayList<String>();
             List<String> metadataToInsert = new ArrayList<String>();
             Map<String, Map<String, String>> metadataMap =
@@ -1234,17 +1234,17 @@ public class JDBCRC implements ReplicaCatalog {
                         // pfn
                         String rh =
                                 tuple.getResourceHandle() == null
-                                        ? " IS NULL"
+                                        ? "='NULL'"
                                         : "='" + quote(tuple.getResourceHandle()) + "'";
-                        query += query.isEmpty() ? "DELETE FROM rc_pfn WHERE " : " OR ";
-                        query +=
+                        query.append(query.length() == 0 ? "DELETE FROM rc_pfn WHERE " : " OR ");
+                        query.append(
                                 "(lfn_id="
                                         + lfnToID.get(lfn)
                                         + " AND pfn='"
                                         + quote(tuple.getPFN())
                                         + "' AND site"
                                         + rh
-                                        + ")";
+                                        + ")");
                         rh = tuple.getResourceHandle() == null ? "NULL" : tuple.getResourceHandle();
                         pfnsToInsert.add(
                                 "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES('"
@@ -1264,10 +1264,12 @@ public class JDBCRC implements ReplicaCatalog {
                             if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
                                 continue;
                             }
-                            metadataQuery +=
-                                    metadataQuery.isEmpty() ? "DELETE FROM rc_meta WHERE " : " OR ";
-                            metadataQuery +=
-                                    "(lfn_id=" + lfnToID.get(lfn) + " AND `key`='" + name + "')";
+                            metadataQuery.append(
+                                    metadataQuery.length() == 0
+                                            ? "DELETE FROM rc_meta WHERE "
+                                            : " OR ");
+                            metadataQuery.append(
+                                    "(lfn_id=" + lfnToID.get(lfn) + " AND `key`='" + name + "')");
 
                             String val =
                                     tuple.getAttribute(name) == null
@@ -1295,22 +1297,22 @@ public class JDBCRC implements ReplicaCatalog {
                 }
             }
             // delete existing pfns
-            if (!query.isEmpty()) {
-                st.executeUpdate(query);
+            if (query.length() != 0) {
+                st.executeUpdate(query.toString());
             }
             state = 3;
             // delete existing metadata
-            if (!metadataQuery.isEmpty()) {
-                st.executeUpdate(metadataQuery);
+            if (metadataQuery.length() != 0) {
+                st.executeUpdate(metadataQuery.toString());
             }
             state = 4;
             // insert pfns
-            query = "[PFN INSERT BATCH]";
+            query = new StringBuilder("[PFN INSERT BATCH]");
             for (String pfn : pfnsToInsert) {
                 st.addBatch(pfn);
             }
             // insert metadata
-            query += " [METADATA INSERT BATCH]";
+            query.append(" [METADATA INSERT BATCH]");
             for (String md : metadataToInsert) {
                 st.addBatch(md);
             }
@@ -1328,7 +1330,7 @@ public class JDBCRC implements ReplicaCatalog {
             e.printStackTrace();
             throw new RuntimeException(
                     "Unable to tell database "
-                            + query
+                            + query.toString()
                             + " (state="
                             + state
                             + "): "
@@ -1428,8 +1430,8 @@ public class JDBCRC implements ReplicaCatalog {
     }
 
     /**
-     * Deletes a very specific mapping from the replica catalog. The LFN must matches the PFN, and
-     * all PFN attributes specified in the replica catalog entry. More than one entry could
+     * Deletes a very specific mapping from the replica catalog. The LFN must match the PFN, and all
+     * PFN attributes specified in the replica catalog entry. More than one entry could
      * theoretically be removed. Upon removal of an entry, all attributes associated with the PFN
      * also evaporate (cascading deletion).
      *
@@ -1448,71 +1450,80 @@ public class JDBCRC implements ReplicaCatalog {
 
         try {
             query =
-                    new StringBuilder("SELECT lfn_id FROM rc_lfn WHERE lfn='")
-                            .append(lfn)
-                            .append("'");
+                    new StringBuilder("SELECT DISTINCT rc_lfn.lfn_id, rc_pfn.pfn_id FROM rc_lfn ")
+                            .append("INNER JOIN rc_pfn ON rc_lfn.lfn_id=rc_pfn.lfn_id ")
+                            .append("WHERE rc_lfn.lfn='" + lfn + "' ")
+                            .append("AND rc_pfn.pfn='" + quote(tuple.getPFN()) + "'");
+
+            if (tuple.getResourceHandle() != null) {
+                query.append(" AND rc_pfn.site='" + tuple.getResourceHandle() + "'");
+            }
             Statement st = mConnection.createStatement();
             ResultSet rs = st.executeQuery(query.toString());
-            if (!rs.next()) {
-                return result;
-            }
-            int id = rs.getInt("lfn_id");
-            st.close();
-            rs.close();
-
-            query =
-                    new StringBuilder("SELECT `key`, value FROM rc_meta " + "WHERE lfn_id=")
-                            .append(id);
-            st = mConnection.createStatement();
-            rs = st.executeQuery(query.toString());
+            int lfnID = -1;
+            List<Integer> pfnIDs = new ArrayList<Integer>();
             while (rs.next()) {
-                String key = rs.getString("key");
-                String value = rs.getString("value");
-                if (key != null
-                        && (!tuple.hasAttribute(key)
-                                || (value != null && !tuple.getAttribute(key).equals(value)))) {
-                    st.close();
-                    rs.close();
-                    return result;
-                }
+                lfnID = rs.getInt("lfn_id");
+                pfnIDs.add(rs.getInt("pfn_id"));
             }
             st.close();
             rs.close();
 
-            query =
-                    new StringBuilder("SELECT COUNT(lfn_id) AS c " + "FROM rc_pfn WHERE lfn_id=")
-                            .append(id);
-            st = mConnection.createStatement();
-            rs = st.executeQuery(query.toString());
-            if (!rs.next()) {
+            // pfn and site do not match
+            if (pfnIDs.size() == 0) {
                 return result;
             }
-            int count = rs.getInt("c");
 
-            query = new StringBuilder(256);
-            if (count > 1) {
-                query.append("DELETE FROM rc_pfn WHERE lfn_id=")
-                        .append(id)
-                        .append(" AND pfn='")
-                        .append(tuple.getPFN())
-                        .append("'");
-
-                if (tuple.getResourceHandle() != null) {
-                    query.append(" AND site='")
-                            .append(quote(tuple.getResourceHandle()))
-                            .append("'");
+            int countMeta = 0;
+            query = new StringBuilder();
+            for (Iterator i = tuple.getAttributeIterator(); i.hasNext(); ) {
+                String name = (String) i.next();
+                if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
+                    continue;
                 }
-            } else {
-                query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
+                String val =
+                        tuple.getAttribute(name) == null
+                                ? "NULL"
+                                : tuple.getAttribute(name) instanceof String
+                                        ? (String) tuple.getAttribute(name)
+                                        : tuple.getAttribute(name).toString();
+                query.append(
+                        query.length() == 0
+                                ? "DELETE FROM rc_meta WHERE lfn_id=" + lfnID + " AND ("
+                                : " OR ");
+                query.append("(`key`='")
+                        .append(name)
+                        .append("' AND value='")
+                        .append(val)
+                        .append("')");
+                countMeta++;
             }
-            st = mConnection.createStatement();
-            result = st.executeUpdate(query.toString());
-            st.close();
-            rs.close();
+
+            if (countMeta == 0) {
+                // remove pfn entry
+                for (int pfnID : pfnIDs) {
+                    query = new StringBuilder("DELETE FROM rc_pfn WHERE pfn_id=" + pfnID);
+                    st = mConnection.createStatement();
+                    result = st.executeUpdate(query.toString());
+                }
+
+                // remove trailing LFN
+                int which = mUsingSQLiteBackend ? 19 : 18;
+                query = new StringBuilder(mCStatements[which]);
+                PreparedStatement ps = getStatement(which);
+                result = ps.executeUpdate();
+
+            } else {
+                // remove meta entries
+                query.append(")");
+                st = mConnection.createStatement();
+                result = st.executeUpdate(query.toString());
+            }
             return result;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Unable to tell database " + query + ": " + e.getMessage());
+            throw new RuntimeException(
+                    "Unable to tell database " + query.toString() + ": " + e.getMessage());
         }
     }
 
