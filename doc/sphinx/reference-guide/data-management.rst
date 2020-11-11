@@ -273,57 +273,9 @@ In order to use S3, it is necessary to create a config file for the S3
 transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`.
 You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
 
-Next, you need to modify your site catalog to tell the location of your
-s3cfg file. See `the section on credential staging <#cred-staging>`__.
-
-The following site catalog shows how to specify the location of the
-s3cfg file on the local site and how to specify an Amazon S3 staging
-site:
-
-::
-
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-                http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-       <site handle="local" arch="x86_64" os="LINUX">
-           <head-fs>
-               <scratch>
-                   <shared>
-                       <file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/>
-                       <internal-mount-point mount-point="/tmp/wf/work"/>
-                   </shared>
-               </scratch>
-               <storage>
-                   <shared>
-                       <file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/>
-                       <internal-mount-point mount-point="/tmp/wf/storage"/>
-                   </shared>
-               </storage>
-           </head-fs>
-           <profile namespace="env" key="S3CFG">/home/username/.s3cfg</profile>
-       </site>
-       <site handle="s3" arch="x86_64" os="LINUX">
-           <head-fs>
-               <scratch>
-                   <shared>
-                       <!-- wf-scratch is the name of the S3 bucket that will be used -->
-                       <file-server protocol="s3" url="s3://user@amazon" mount-point="/wf-scratch"/>
-                       <internal-mount-point mount-point="/wf-scratch"/>
-                   </shared>
-               </scratch>
-           </head-fs>
-       </site>
-       <site handle="condorpool" arch="x86_64" os="LINUX">
-           <head-fs>
-               <scratch/>
-               <storage/>
-           </head-fs>
-           <profile namespace="pegasus" key="style">condor</profile>
-           <profile namespace="condor" key="universe">vanilla</profile>
-           <profile namespace="condor" key="requirements">(Target.Arch == "X86_64")</profile>
-       </site>
-   </sitecatalog>
+Next, you need create a Pegasus credentials files. See 
+`the section on credential staging <#cred-staging>`__. This file is
+picked up automatically when your workflow contains s3 transfers.
 
 .. _transfer-docker:
 
@@ -337,27 +289,52 @@ Example: docker://pegasus/osg-el7
 
 Only public images are supported at this time.
 
-.. _transfer-singularity:
-
-Singularity (<shub \| library>://)
-----------------------------------
-
-Container images can be pulled directly from Singularity hub and
-Singularity library depending on the version of Singularity installed on
-a node requiring the container image. Singularity hub images require at
-least Singularity v2.3, while Singularity library images require at
-least Singularity v3.0.
-
-Example: shub://vsoch/singularity-images
-
-Example: library://sylabsed/examples/lolcow
-
-Only public images are supported at this time.
 
 .. _transfer-file:
 
 File / Symlink (file:// , symlink://)
 -------------------------------------
+
+.. _transfer-globus-online:
+
+Globus Online (go://)
+---------------------
+
+`Globus Online <http://globus.org>`__ is a transfer service with
+features such as policy based connection management and automatic
+failure detection and recovery. Pegasus has limited the support for
+Globus Online transfers.
+
+If you want to use Globus Online in your workflow, all data has to be
+accessible via a Globus Online endpoint. You can not mix Globus Online
+endpoints with other protocols. For most users, this means they will
+have to create an endpoint for their submit host and probably modify
+both the replica catalog and Abstract Workflow generator so that all URLs in the
+workflow are for Globus Online endpoints.
+
+There are two levels of credentials required. One is for the workflow to
+use the Globus Online API, which is handled by OAuth tokens, provided by
+Globus Auth service. The second level is for the endpoints, which the
+user will have to manage via the Globus Online web interface. The
+required steps are:
+
+1. Using *pegasus-globus-online-init*, provide authorization to Pegasus
+   and retrieve your transfer access tokens. By default Pegasus acquires
+   temporary tokens that expire within a few days. Using --permanent
+   option you can request refreshable tokens that last indefinetely (or
+   until access is revoked).
+
+2. In the Globus Online web interface, under Endpoints, find the
+   endpoints you need for the workflow, and activate them. Note that you
+   should activate them for the whole duration of the workflow or you
+   will have to regularly log in and re-activate the endpoints during
+   workflow execution.
+
+URLs for Globus Online endpoint data follows the following scheme:
+*go://[endpoint]/[path]*. For example, for a user with the Globus Online
+private endpoint *bob#researchdata* and a file
+*/home/bsmith/experiment/1.dat*, the URL would be:
+*go://bob#researchdata/home/bsmith/experiment/1.dat*
 
 .. _transfer-gridftp:
 
@@ -497,17 +474,13 @@ Example:
 
    irods://some-host.org/path/to/file.txt
 
+
 The path to the file is **relative** to the internal iRODS location. In
 the example above, the path used to refer to the file in iRODS is
 *path/to/file.txt* (no leading /).
 
 See `the section on credential staging <#cred_staging>`__ for
 information on how to set up an irodsEnv file to be used by Pegasus.
-
-.. _transfer-scp:
-
-SCP (scp://)
-------------
 
 .. _transfer-stashcp:
 
@@ -520,46 +493,44 @@ how to set up the site catalog and URLs can be found in the `OSG User
 Support Pegasus
 tutorial <https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus>`__
 
-.. _transfer-globus-online:
 
-Globus Online (go://)
----------------------
+.. _transfer-scp:
 
-`Globus Online <http://globus.org>`__ is a transfer service with
-features such as policy based connection management and automatic
-failure detection and recovery. Pegasus has limited the support for
-Globus Online transfers.
+SCP (scp://)
+------------
 
-If you want to use Globus Online in your workflow, all data has to be
-accessible via a Globus Online endpoint. You can not mix Globus Online
-endpoints with other protocols. For most users, this means they will
-have to create an endpoint for their submit host and probably modify
-both the replica catalog and Abstract Workflow generator so that all URLs in the
-workflow are for Globus Online endpoints.
+.. _transfer-singularity:
 
-There are two levels of credentials required. One is for the workflow to
-use the Globus Online API, which is handled by OAuth tokens, provided by
-Globus Auth service. The second level is for the endpoints, which the
-user will have to manage via the Globus Online web interface. The
-required steps are:
+Singularity (<shub \| library>://)
+----------------------------------
 
-1. Using *pegasus-globus-online-init*, provide authorization to Pegasus
-   and retrieve your transfer access tokens. By default Pegasus acquires
-   temporary tokens that expire within a few days. Using --permanent
-   option you can request refreshable tokens that last indefinetely (or
-   until access is revoked).
+Container images can be pulled directly from Singularity hub and
+Singularity library depending on the version of Singularity installed on
+a node requiring the container image. Singularity hub images require at
+least Singularity v2.3, while Singularity library images require at
+least Singularity v3.0.
 
-2. In the Globus Online web interface, under Endpoints, find the
-   endpoints you need for the workflow, and activate them. Note that you
-   should activate them for the whole duration of the workflow or you
-   will have to regularly log in and re-activate the endpoints during
-   workflow execution.
+Example: shub://vsoch/singularity-images
 
-URLs for Globus Online endpoint data follows the following scheme:
-*go://[endpoint]/[path]*. For example, for a user with the Globus Online
-private endpoint *bob#researchdata* and a file
-*/home/bsmith/experiment/1.dat*, the URL would be:
-*go://bob#researchdata/home/bsmith/experiment/1.dat*
+Example: library://sylabsed/examples/lolcow
+
+Only public images are supported at this time.
+
+.. _transfer-webdav:
+
+WebDAV (webdav://, webdavs://)
+------------------------------
+
+Authenticated WebDAV transfers uses the
+`credential staging <#cred-staging>`__ file. Please add a section in
+it describing your endpoint. For example:
+
+..
+
+  [data.cyverse.org]
+  username = myname
+  password = abc123
+
 
 .. _cred-staging:
 
