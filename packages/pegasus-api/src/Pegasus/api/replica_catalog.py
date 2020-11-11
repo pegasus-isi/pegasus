@@ -147,11 +147,11 @@ class ReplicaCatalog(Writable):
         self,
         site: str,
         pattern: str,
-        pfn: str,
+        pfn: Union[str, Path],
         metadata: Dict[str, Union[int, str, float]] = {},
     ):
         r"""
-        add_regex_replica(self, site: str, pattern: str, pfn: str, metadata: Dict[str, Union[int, str, float]] = {})
+        add_regex_replica(self, site: str, pattern: str, pfn: Union[str, Path], metadata: Dict[str, Union[int, str, float]] = {})
         Add an entry to this replica catalog using a regular expression pattern.
         Note that regular expressions should follow Java regular expression syntax
         as the underlying code that handles this catalog is Java based.
@@ -171,15 +171,15 @@ class ReplicaCatalog(Writable):
                 # regular expressions. Note that this should be the last entry into the replica
                 # catalog if used.
 
-                rc.add_regex("local", ".*", "/Volumes/data/input/[0]")
+                rc.add_regex_replica("local", ".*", Path("/Volumes/data") / "input/[0]")
 
 
         :param site: the site at which this replica (file) resides
         :type site: str
         :param pattern: regular expression used to match a file
         :type pattern: str
-        :param pfn: path to the file
-        :type pfn: str
+        :param pfn: path to the file (may also be a pattern as shown in the example above)
+        :type pfn: Union[str, Path]
         :param metadata: any metadata to be associated with the matched files, for example: :code:`{"creator": "pegasus"}`
         :type metadata: Dict[str, Union[int, str, float]]
         :raises DuplicateError: Duplicate patterns with different PFNs are currently not supported
@@ -190,6 +190,17 @@ class ReplicaCatalog(Writable):
             raise DuplicateError(
                 "Pattern: {} already exists in this replica catalog".format(pattern)
             )
+
+        # handle Path obj if given for pfn
+        if isinstance(pfn, Path):
+            if not pfn.is_absolute():
+                raise ValueError(
+                    "Invalid pfn: {}, the given pfn must be an absolute path".format(
+                        pfn
+                    )
+                )
+
+            pfn = str(pfn)
 
         self.entries[(pattern, True)] = _ReplicaCatalogEntry(
             lfn=pattern, pfns={_PFN(site, pfn)}, metadata=metadata, regex=True
