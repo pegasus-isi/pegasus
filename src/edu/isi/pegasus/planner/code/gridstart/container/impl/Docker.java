@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
@@ -108,7 +109,8 @@ public class Docker extends Abstract {
         sb.append("-v $PWD:").append(CONTAINER_WORKING_DIRECTORY).append(" ");
 
         // PM-1621 add --gpus all option if user has gpus requested with the job
-        if (job.vdsNS.containsKey(Pegasus.GPUS_KEY)) {
+        if (job.vdsNS.containsKey(Pegasus.GPUS_KEY)
+                || job.condorVariables.containsKey(Condor.REQUEST_GPUS_KEY)) {
             sb.append("--gpus all").append(" ");
         }
 
