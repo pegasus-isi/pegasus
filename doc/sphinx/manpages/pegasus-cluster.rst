@@ -326,10 +326,3 @@ pertinent need to change the internal name, too, as no name clashes are
 expected.
 
 
-
-Authors
-=======
-
-Jens-S. Vöckler <voeckler at isi dot edu>
-
-Pegasus **http://pegasus.isi.edu/**

@@ -123,7 +123,3 @@ variables into a single global ``%pegasus`` variable for convenience:
 
 
 
-Author
-======
-
-Pegasus Team http://pegasus.isi.edu

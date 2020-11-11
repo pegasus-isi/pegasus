@@ -214,14 +214,3 @@ There is a limit of *4 \* page size* to the output buffer of things that
 restriction on the input to output file copy.
 
 
-
-Authors
-=======
-
-Jens-S. Vöckler <voeckler at isi dot edu>
-
-Mike Wilde
-
-Yong Zhao
-
-Pegasus - http://pegasus.isi.edu/

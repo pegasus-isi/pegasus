@@ -304,15 +304,3 @@ pegasus-run(1)
 
 
 
-Authors
-=======
-
-Gaurang Mehta ``<gmehta at isi dot edu>``
-
-Fabio Silva ``<fabio at isi dot edu>``
-
-Karan Vahi ``<vahi at isi dot edu>``
-
-Jens-S. Vöckler ``<voeckler at isi dot edu>``
-
-Pegasus Team http://pegasus.isi.edu

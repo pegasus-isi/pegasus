@@ -138,12 +138,3 @@ Example
 
    pegasus-sc-converter -i sites.xml -o sites.yml  -O YAML -v
 
-Authors
-=======
-
-Karan Vahi ``<vahi at isi dot edu>``
-
-Gaurang Mehta ``<gmehta at isi dot edu>``
-
-Pegasus Team http://pegasus.isi.edu
-

@@ -40,7 +40,3 @@ configuration file.
 
 
 
-Authors
-=======
-
-Pegasus Team ``<pegasus@isi.edu>``

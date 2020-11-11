@@ -87,14 +87,3 @@ See Also
 pegasus-plan(1), pegasus-run(1)
 
 
-
-Authors
-=======
-
-Gaurang Mehta <gmehta at isi dot edu>
-
-Jens-S. Vöckler <voeckler at isi dot edu>
-
-Rajiv Mayani <mayani at isi dot edu>
-
-Pegasus Team http://pegasus.isi.edu

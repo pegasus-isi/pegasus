@@ -359,10 +359,3 @@ you run any jobs using the tool, then tool will return with a non zero
 exitcode in case one or more of your tasks fail.
 
 
-
-Author
-======
-
-Karan Vahi ``<vahi@isi.edu>``
-
-Pegasus Team http://pegasus.isi.edu

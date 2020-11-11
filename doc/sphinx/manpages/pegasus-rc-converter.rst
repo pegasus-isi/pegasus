@@ -78,8 +78,3 @@ Example
    # File to file format conversion
    $ pegasus-rc-converter -i cc.txt -I File -o rc.yml -v
 
-
-Authors
-=======
-
-Pegasus Team http://pegasus.isi.edu

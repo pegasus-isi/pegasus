@@ -28,7 +28,7 @@ have installed:
 ::
 
    $ pegasus-version
-   3.1.0cvs
+   5.0.0
 
 If you want to know more details about the installed version, i.e. which
 system it was compiled for and when, use the long or full mode:
@@ -36,7 +36,7 @@ system it was compiled for and when, use the long or full mode:
 ::
 
    $ pegasus-version -f
-   3.1.0cvs-x86_64_cent_5.6-20110706191019Z
+   5.0.0-x86_64_rhel_7-20201111222004Z-60da39ac7c5cdf07862eb4d9311824132e4972b1 
 
 
 
@@ -104,9 +104,3 @@ Example
 
 
 
-Authors
-=======
-
-Jens-S. Vöckler ``<voeckler at isi dot edu>``
-
-Pegasus Team http://pegasus.isi.edu

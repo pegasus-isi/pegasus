@@ -34,8 +34,3 @@ Options
    **GLITE_LOCATION** from the Condor configuration files.
 
 
-
-Authors
-=======
-
-Pegasus Team http://pegasus.isi.edu

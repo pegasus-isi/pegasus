@@ -213,9 +213,3 @@ After making these changes to my.cnf you must restart MySQL.
 
 
 
-Authors
-=======
-
-Rafael Ferreira da Silva ``<rafsilva@isi.edu>``
-
-Pegasus Team http://pegasus.isi.edu

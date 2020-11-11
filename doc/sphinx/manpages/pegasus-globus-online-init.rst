@@ -41,8 +41,3 @@ Options
    revoked from globus web interface (manage consents)
 
 
-
-Author
-======
-
-Pegasus Team http://pegasus.isi.edu

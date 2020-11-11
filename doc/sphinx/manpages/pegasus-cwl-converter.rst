@@ -126,9 +126,3 @@ into Pegasus's native format by calling:
 
         pegasus-cwl-converter workflow.cwl input.yml tr_specs.yml  pegasus_workflow.yml
 
-Authors
-=======
-Ryan Tanaka ``<tanaka at isi dot edu>``
-
-Pegasus Team http://pegasus.isi.edu
-    
