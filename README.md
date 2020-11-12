@@ -26,7 +26,7 @@ effectiveness:
 
 * Portability / Reuse – User created workflows can easily be run in different
 environments without alteration. Pegasus currently runs workflows on top of
-Condor pools, Grid infrastrucutures such as Open Science Grid and XSEDE,
+Condor pools, Grid infrastructures such as Open Science Grid and XSEDE,
 Amazon EC2, Google Cloud, and HPC clusters. The same workflow can run on a
 single system or across a heterogeneous set of resources.
 * Performance – The Pegasus mapper can reorder, group, and prioritize tasks in
@@ -66,23 +66,26 @@ You can find more information about Pegasus on the [Pegasus Website](http://pega
 Pegasus has an extensive [User Guide](http://pegasus.isi.edu/documentation/)
 that documents how to create, plan, and monitor workflows.
 
-We recommend you start by completing the Pegasus Tutorial from [Chapter 2 of the
-Pegasus User Guide](http://pegasus.isi.edu/documentation/tutorial.php).
+We recommend you start by completing the Pegasus Tutorial from [Chapter 3 of the
+Pegasus User Guide](https://pegasus.isi.edu/documentation/user-guide/tutorial.html).
 
 The easiest way to install Pegasus is to use one of the binary packages
 available on the [Pegasus downloads page](http://pegasus.isi.edu/downloads).
-Consult [Chapter 3 of the Pegasus User Guide](http://pegasus.isi.edu/wms/docs/latest/installation.php)
+Consult [Chapter 2 of the Pegasus User Guide](https://pegasus.isi.edu/documentation/user-guide/installation.html)
 for more information about installing Pegasus from binary packages.
 
-There is documentation on the Pegasus website for the Python, Java and Perl
-[DAX generator APIs](https://pegasus.isi.edu/documentation/dax_generator_api.php).
+There is documentation on the Pegasus website for the Python, Java and R
+[Abstract Workflow Generator APIs](https://pegasus.isi.edu/documentation/reference-guide/api-reference.html).
+We strongly recommend using the Python API which is feature complete, and also
+allows you to invoke all the pegasus command line tools.
 
-There are [several examples](http://pegasus.isi.edu/documentation/examples/) of
-how to construct workflows on the Pegasus website and in the [Pegasus Git
-repository](https://github.com/pegasus-isi/pegasus/tree/master/share/pegasus/examples).
+You can use *pegasus-init* command line tool to run several examples 
+on your local machine. Consult [Chapter 4 of the Pegasus 
+User Guide](https://pegasus.isi.edu/documentation/user-guide/example-workflows.html)
+for more information.
 
-There are also examples of how to [configure Pegasus for different execution
-environments](http://pegasus.isi.edu/documentation/execution_environments.php)
+There are also examples of how to [Configure Pegasus for Different Execution
+Environments](https://pegasus.isi.edu/documentation/user-guide/execution-environments.html)
 in the Pegasus User Guide.
 
 If you need help using Pegasus, please contact us. See the [contact page]
