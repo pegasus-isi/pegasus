@@ -96,7 +96,7 @@ add_module_names = False
 html_theme = "sphinx_rtd_theme"
 
 # add logo to appear in the sidebar on the top
-html_logo = 'images/pegasus_circular_white_logo.png'
+html_logo = "images/pegasus_circular_white_logo.png"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -104,16 +104,14 @@ html_logo = 'images/pegasus_circular_white_logo.png'
 #
 
 html_theme_options = {
-    'logo_only': False,
-    'display_version': True,
+    "logo_only": False,
+    "display_version": True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
-
-
 
 
 # Custom sidebar templates, must be a dictionary that maps document names

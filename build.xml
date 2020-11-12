@@ -330,10 +330,14 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="doc-user-guide" depends="setup" description="Generate user guide from sphinx source">
     <mkdir dir="${dist.doc}"/>
 
+    <replaceregexp file="doc/sphinx/conf.py" match="^version.*$" replace="version = &quot;${pegasus.version}&quot;" byline="true" />
+    <replaceregexp file="doc/sphinx/conf.py" match="^release.*$" replace="release = &quot;${pegasus.version}&quot;" byline="true" />
     <exec executable="tox" dir="packages/pegasus-python" failonerror="true">
       <arg line="--recreate"/>
       <arg line="-e docs"/>
     </exec>
+    <replaceregexp file="doc/sphinx/conf.py" match="^version.*$" replace="version = &quot;5.0.0dev&quot;" byline="true" />
+    <replaceregexp file="doc/sphinx/conf.py" match="^release.*$" replace="release = &quot;5.0.0dev&quot;" byline="true" />
 
     <!-- Copy HTML -->
     <copy preservelastmodified="true" todir="${dist.doc}/wordpress">
@@ -849,7 +853,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="--recreate"/>
     </exec>
   </target>
-  
+
   <target name="tutorial-image-build" depends="setup" description="Builds the Docker based tutorial container image">
       <exec executable="docker" dir="tutorial/docker" failonerror="true">
           <arg line="build --build-arg CACHEBUST=${ISODATE.utc} --build-arg PEGASUS_VERSION=${pegasus.version} -t pegasus/tutorial:${pegasus.version} ."/>
