@@ -1842,6 +1842,8 @@ The routing key set for the messages matches the name of the stampede
 workflow event being sent. By default, if you enable AMQP population
 only the following events are sent to the server
 
+-  stampede.job_inst.composite
+
 -  stampede.job_inst.tag
 
 -  stampede.inv.end

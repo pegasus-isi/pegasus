@@ -695,22 +695,8 @@ clashes are expected.
 
 
 
-Authors
-=======
-
-Michael Milligan ``<mbmillig@uchicago.edu>``
-
-Mike Wilde ``<wilde@mcs.anl.gov>``
-
-Yong Zhao ``<yongzh@cs.uchicago.edu>``
-
-Jens-S. Vöckler ``<voeckler@isi.edu>``
-
-Gideon Juve ``<gideon@isi.edu>``
-
-Mats Rynge ``<rynge@isi.edu>``
-
-Pegasus Team http://pegasus.isi.edu/
+Notes
+=====
 
 sha256 implementation by Dr Brian Gladman, Worcester, UK. Please see
 the source code at https://github.com/pegasus-isi for the full

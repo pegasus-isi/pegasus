@@ -85,7 +85,3 @@ The same as **pegasus-keg**.
 
 
 
-Authors
-=======
-
-Pegasus - http://pegasus.isi.edu/

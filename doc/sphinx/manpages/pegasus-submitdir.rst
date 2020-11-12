@@ -95,10 +95,3 @@ Global Options
    Prints a usage summary with all the available command-line options.
 
 
-
-Authors
-=======
-
-Gideon Juve <gideon@isi.edu>
-
-Pegasus Team http://pegasus.isi.edu

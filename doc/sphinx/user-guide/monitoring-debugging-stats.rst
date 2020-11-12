@@ -677,6 +677,11 @@ sample file is shown below.
 -  **Mean (avg. cpu)** - the mean of the average cpu utilization value corresponding
    to the transformation.
 
+The memory values reported are derived from the maxrss values reported by
+*pegasus-kickstart* in the invocation records. The average cpu utilization to be
+computed as (utime+stime)/duration from the values reported by
+*pegasus-kickstart* in the invocation record for the main job.
+
 .. table:: Transformation Statistics
 
    ========================= ========== ===== ============= ============= ============== =============== ========= ========= ========== ============== ============== ===============

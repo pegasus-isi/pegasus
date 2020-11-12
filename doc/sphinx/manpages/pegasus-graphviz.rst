@@ -68,9 +68,3 @@ Example
 
    pegasus-graphviz workflow.yml --label=xform-id --output=wf.dot
 
-Author
-======
-
-Gideon Juve ``<gideon@isi.edu>``
-
-Pegasus Team http://pegasus.isi.edu

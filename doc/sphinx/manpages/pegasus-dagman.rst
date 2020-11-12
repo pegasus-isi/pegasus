@@ -42,10 +42,3 @@ See Also
 pegasus-run(1) pegasus-monitord(1) pegasus-submit-dag(1)
 
 
-
-Authors
-=======
-
-Gaurang Mehta ``<gmehta at isi dot edu>``
-
-Pegasus Team http://pegasus.isi.edu

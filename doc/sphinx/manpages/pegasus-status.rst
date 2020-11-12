@@ -243,11 +243,3 @@ condor_q(1), pegasus-statistics(1)
 
 
 
-Authors
-=======
-
-Jens-S. Vöckler ``<voeckler at isi dot edu>``
-
-Gaurang Mehta ``<gmehta at isi dot edu>``
-
-Pegasus Team http://pegasus.isi.edu/

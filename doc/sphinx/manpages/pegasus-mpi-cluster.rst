@@ -1000,10 +1000,3 @@ is used.
    Alias for the **--max-wall-time** option.
 
 
-
-Author
-======
-
-Gideon Juve ``<gideon@isi.edu>``
-
-Mats Rynge ``<rynge@isi.edu>``

@@ -63,10 +63,3 @@ Options
 **-d**; \ **--debug**
    Enables debugging output.
 
-
-
-
-Author
-======
-
-Pegasus Team http://pegasus.isi.edu

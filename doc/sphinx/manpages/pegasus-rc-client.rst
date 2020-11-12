@@ -226,15 +226,3 @@ Database Schema
 The tables are set up as part of the PEGASUS database setup. The files
 concerned with the database have a suffix *-rc.sql*.
 
-
-
-Authors
-=======
-
-Karan Vahi ``<vahi at isi dot edu>``
-
-Gaurang Mehta ``<gmetha at isi dot edu>``
-
-Jens-S. Vöckler ``<voeckler at isi dot dot edu>``
-
-Pegasus Team http://pegasus.isi.edu/

@@ -42,8 +42,3 @@ Options
    configuration.
 
 
-
-Authors
-=======
-
-Pegasus Team http://pegasus.isi.edu

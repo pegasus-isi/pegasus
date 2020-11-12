@@ -70,3 +70,35 @@ either as a
 #. If the setup script already is present on the compute nodes on the cluster;
    path to it can be set as an env profile named **PEGASUS_LITE_ENV_SOURCE**
    with the compute site.
+
+.. _separate-compute-jobs-dtn:
+
+Specify Compute Job in PegasusLite to run on different node
+===========================================================
+
+When running workflows on systems such as OLCF summit, data staging can be tricky
+for PegasusLite jobs. The data staging needs to happen on the cluster DTN nodes,
+while the compute job need to be launched using the *jsrun* command to execute
+on the compute nodes.
+
+For example; an invocation of a compute job in PegasusLite would need to
+look like this
+
+..
+
+    jsrun -n 1 -a 1 -c 42 -g 0 /path/to/kickstart user-executable args
+
+The above cannot be achieved by specifying a job wrapper, as mentioning
+the wrapper as the executable path in TC, as in that case
+*pegasus-kickstart* will run on the DTN node, and invoke the jsrun command.
+
+To get this behavior you can specify the following Pegasus Profile keys
+with your job
+
+#. **gridstart.launcher** : Specifies the launcher executable to use to
+   launch the GridStart(*pegasus-kickstart*). In the above example value
+   for this would be jsrun.
+
+#. **gridstart.launcher.arguments**: Specifies the arguments to pass to
+   the launcher. In the above example, value for this would be
+   -n 1 -a 1 -c 42 -g 0 .

@@ -39,6 +39,7 @@ Welcome to Pegasus WMS's documentation!
     reference-guide/monitoring.rst
     reference-guide/pegasus-lite.rst
     reference-guide/pegasus-service.rst
+    reference-guide/cwl-support.rst
     reference-guide/variable-expansion.rst
     reference-guide/cli.rst
     reference-guide/funding-citing-usage-stats.rst
