@@ -493,7 +493,7 @@ example site calatog entry looks like this:
         project: CSC355
         nodes: '1'
         runtime: '1800'
-        auxillary.local: true
+        auxillary.local: 'true'
       condor:
         grid_resource: batch lsf
       env:
@@ -620,7 +620,7 @@ An example site catalog entry for a BOSCO site looks like this:
         
         # Works around bug in the HTCondor GAHP, that does not
         # set the remote directory
-        change.dir: true
+        change.dir: 'true'
         
         # Job requirements should be specified using Pegasus profiles.
         queue: default
