@@ -389,11 +389,15 @@ public class CondorGenerator extends Abstract {
 
             if (this.mAssignDefaultJobPriorities) {
                 int priority = 0;
-                if (job.condorVariables.containsKey(Condor.PRIORITY_KEY)
-                        && job.getJobType() == Job.STAGE_IN_JOB) {
-                    // PM-1385 we add the precomputed priority to default priority
-                    int existing = job.condorVariables.getIntValue(Condor.PRIORITY_KEY, 0);
-                    priority = getJobPriority(job, node.getDepth()) + existing;
+                if (job.condorVariables.containsKey(Condor.PRIORITY_KEY)) {
+                    // PM-1705, PM-1385  store the existing value with the jobs unless
+                    // there is a stagein job, for which we add the existing priority
+                    // to the depth based computed one.
+                    priority = job.condorVariables.getIntValue(Condor.PRIORITY_KEY, 0);
+                    if (job.getJobType() == Job.STAGE_IN_JOB) {
+                        // PM-1385 we add the precomputed priority to default priority
+                        priority = getJobPriority(job, node.getDepth()) + priority;
+                    }
                 } else {
                     // only apply priority if job is not associated with a priority
                     // beforehand and assign priorities by default is true
