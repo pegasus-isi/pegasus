@@ -110,7 +110,7 @@ Example workflow generator using the Python API:
             .analyze()\
             .statistics()
    except PegasusClientError as e:
-      print(e.output)
+      print(e)
 
 .. _api-java:
 

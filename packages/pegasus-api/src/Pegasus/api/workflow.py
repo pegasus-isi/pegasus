@@ -29,6 +29,10 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :type _id: Optional[str]
         :param node_label: a short descriptive label that can be assined to this job, defaults to None
         :type node_label: Optional[str]
+
+        **Note**: avoid using IDs such as :code:`'0000008'` or :code:`'00000009'` as these may end up being
+        unquoted by PyYaml, and consequently misinterpreted as integer values when
+        read in by other tools.
         """
         self._id = _id
         self.node_label = node_label

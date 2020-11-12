@@ -486,7 +486,7 @@ representations of the classic *diamond* workflow.
                         .analyze()\
                         .statistics()
             except PegasusClientError as e:
-                print(e.output)
+                print(e)
 
 
    .. tab:: Pegasus.DAX3
@@ -867,7 +867,7 @@ then ``wf.plan(submit=True).wait()`` can be used.
         wf.analyze()
         wf.statistics()
     except PegasusClientError as e:
-        print(e.output)
+        print(e)
 
 .. tip::
     Because the property file, catalogs, and the workflow can all be generated and
