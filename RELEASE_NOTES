@@ -522,6 +522,7 @@ Bugs Fixed
 [PM-1676] – hierarchical workflow failing only when integrity checking is on
 [PM-1680] – kickstart needs to quote argument vector when outputting it to yaml
 [PM-1702] – registration jobs fail out of a 5.0 binary install
+[PM-1705] - priorities are not propagated correctly
 
 ====================================
 Release Notes for Pegasus 5.0.0beta1
