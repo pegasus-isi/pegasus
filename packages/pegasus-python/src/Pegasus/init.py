@@ -6,7 +6,7 @@ import urllib.request
 
 import click
 from git import Repo
-from git.exc import GitError
+from git.exc import GitCommandError
 
 from Pegasus import yaml
 from Pegasus.api import *
@@ -168,10 +168,10 @@ def clone_workflow(wf_dir, workflow):
     )
 
     try:
-        Repo.clone_from(
+        repo = Repo.clone_from(
             workflow_source, os.path.join(os.getcwd(), wf_dir, workflow["repo_name"]),
         )
-    except GitError:
+    except GitCommandError:
         click.echo("This repository doesn't exist in this location or it's private.")
         click.echo("Exiting...")
         exit()
