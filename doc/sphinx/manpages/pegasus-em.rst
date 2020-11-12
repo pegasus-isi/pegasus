@@ -55,7 +55,11 @@ Commands
 **priority** *ENSEMBLE.WORKFLOW* -p *PRIORITY*
    Alter the priority of a workflow.
 
+**cron-trigger** *ENSEMBLE* *TRIGGER* *INTERVAL* *WORKFLOW_SCRIPT* [-t TIMEOUT] [--args ARG1 [ARG2 ...]]
+   Start a timed workflow trigger.
 
+**file-pattern-trigger** *ENSEMBLE* *TRIGGER* *INTERVAL* *WORKFLOW_SCRIPT* *FILE_PATTERN* [FILE_PATTERN ...] [-t TIMEOUT] [--args ARG1 [ARG2 ...]]
+   Start a timed, file pattern workflow trigger.
 
 Common Options
 ==============

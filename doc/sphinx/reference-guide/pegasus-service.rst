@@ -237,15 +237,37 @@ They can also be updated using the config command:
 
    $ pegasus-em config myruns.run1 -P 1 -R 5
 
+Cron Based Workflow Trigger
+---------------------------
+
+If you need submit workflows at given time intervals, the ensemble manager can
+create a trigger using the ``pegasus-em cron-trigger`` command. For example,
+if you have created an ensemble called ``myruns`` and have the workflow 
+script ``/home/ryan/workflow.py``. The following command can be issued to 
+continually submit this workflow to the ensemble manager every hour:
+
+.. code-block::
+
+   pegasus-em cron-trigger myruns mytrigger 1h /home/ryan/workflow.py -t 1d
+
+This trigger will timeout in 1 day. 
 
 File Pattern, Timed Interval, Based Workflow Trigger
 ----------------------------------------------------
 
-Workflows can be dynamically triggered for submission to the ensemble manager
-using the ``pegasus-em trigger`` command. This will start up a thread that, at
-each given time interval, collects all new input files based on given file patterns,
-and calls ``pegasus-em submit <ensemble>.<runXXX> <workflow script> [ADDITIONAL_ARGS] --inputs <file1> <file2> ... <fileN>``.
-If no new files are detected, the trigger will try again on the next interval.
+File pattern based, cron triggers can also be created to submit workflows to the
+ensemble manager, along with any new files which match the given file pattern(s)
+using the ``pegasus-em file-pattern-trigger`` command. The trigger created by this
+command will periodically invoke :
+
+.. code::
+
+   pegasus-em submit <ensemble>.<runXXX> <workflow script> [ADDITIONAL_ARGS] --inputs <file1> <file2> ... <fileN>
+
+
+where ``--inputs`` includes any new file detected matching the given file pattern(s)
+during the current time interval. If no new files are picked up, no workflow will
+be submitted to the ensemble manager for the current time interval. 
 
 The workflow generation script **must** have a CLI argument flag ``--inputs`` which
 takes one or more arguments as this is the interface between the ensemble manager
@@ -277,7 +299,7 @@ The workflow script used with the trigger should be as follows:
         # do not set submit=True
         wf.plan()
     except PegasusClientError as e:
-        print(e.output)
+        print(e)
         sys.exit(1)
 
 
@@ -285,74 +307,58 @@ Usage of the ``pegasus-em trigger`` command is as follows:
 
 ::
 
-    pegasus-em trigger -e ENSEMBLE \ 
-                        -t TRIGGER_NAME \
-                        -p PREFIX \
-                        -f FILE_PATTERN \
-                        -w WORKFLOW_SCRIPT \
-                        -i INTERVAL \
-                        [-k TIMEOUT] \ 
-                        [-a 'ADDITIONAL_ARGS']
-
+    pegasus-em trigger ENSEMBLE \
+                        TRIGGER \
+                        INTERVAL \
+                        WORKFLOW_SCRIPT \
+                        FILE_PATTERN [FILE_PATTERN ...] \
+                        [--timeout TIMEOUT] \
+                        [--args ARG1 [ARG2 ...]]
 
 - ``ENSEMBLE``: the name of the (already created) ensemble to which newly submitted 
   workflows will be added
 
-- ``TRIGGER_NAME``: a name to be associated with this trigger; may be used to shutdown 
+- ``TRIGGER``: a name to be associated with this trigger; may be used to shutdown 
   the trigger
-
-- ``PREFIX``: a prefix that will be attached to each newly created workflow; workflows will
-  have the name ``<PREFIX>_<UNIX TS>`` within the ensemble manager
-
-- ``FILE_PATTERN``: a file pattern acceptible by ``glob.glob``; note that
-  this pattern must begin with an absolute path (e.g., ``/inputs/*.csv``) and that more 
-  than one file pattern may be given by passing another ``-f FILE_PATTERN`` argument
 
 - ``WORKFLOW_SCRIPT``: a workflow generation & planning script as outlined above
 
 - ``INTERVAL``: the time interval on which the trigger will operate; must be formatted as
   ``<int><s|m|h|d>`` (e.g. ``5m``)
 
+- ``FILE_PATTERN``: a file pattern acceptible by ``glob.glob``; note that
+  this pattern must begin with an absolute path (e.g., ``/inputs/*.csv``)
+
 - ``TIMEOUT``: a timeout for the trigger; must be formatted as ``<int><s|m|h|d>`` (e.g. ``1h``)
 
-- ``ADDITIONAL_ARGS``: any additional arguments to be passed to the ``WORKFLOW_SCRIPT``;
+- ``ARG``: any additional arguments to be passed to the ``WORKFLOW_SCRIPT``;
   these should be quoted when given (passed as a single string). 
  
-.. note::
-
-   If any of the given ``FILE_PATTERN`` s match against a symlink, the timestamp used
-   to determine if the linked file is to be included in the workflow submission will
-   be the last modification date of the symlink itself and not the file it resolves
-   to. 
-
 **Example Usage**
 
 :: 
 
-    pegasus-em trigger \
-        --ensemble myruns \
-        --trigger-name 10s_txt_csv \
-        --workflow-name-prefix trigger-wf \
-        --file-pattern "/tmp/input/*.txt" \
-        --file-pattern "/tmp/input/*.csv" \
-        --workflow-script workflow.py \
-        --interval 10s \ 
-        --timeout 10m \
-        --additional-args 'arg1 -f arg2'
- 
-This means that a trigger called ``10s_txt_csv`` will be created for the ensemble
-``myruns``. Every ``10 seconds``, this trigger will look for new ``*.csv`` and ``*.txt``
-files in the ``/tmp/input`` directory. Say that on the current interval the files
-``/tmp/input/f1.txt`` and ``/tmp/input/f1.csv`` are found. The trigger will
+   pegasus-em file-pattern-trigger\
+      myruns \
+      10s_txt \
+      10s \
+      /home/ryan/workflow.py \
+      /home/ryan/input/*.txt \
+      --timeout 40s
+   
+This means that a trigger called ``10s_txt`` will be created for the ensemble
+``myruns``. Every ``10 seconds``, this trigger will look for new ``*.txt``
+files in the ``/home/ryan/input`` directory. Say that on the current interval the files
+``/home/ryan/input/f1.txt`` and ``/home/ryan/input/f2.txt`` are found. The trigger will
 internally call:
 
 .. code-block:: none
 
     pegasus-em submit \
-        myruns.trigger-wf_<time now as UNIX TS> \
-        workflow.py arg1 -f arg2 --inputs /tmp/input/f1.txt /tmp/input.f2.txt
+        myruns.10s_txt_<time now as UNIX TS> \
+        workflow.py --inputs /home/ryan/input/f1.txt /home/ryan/input.f2.txt
 
-10 minutes after the trigger has started, it will shutdown.
+40 seconds after the trigger has started, it will shutdown.
 
 
 

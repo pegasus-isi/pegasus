@@ -641,7 +641,7 @@ class CronTriggerCommand(EnsembleClientCommand):
             data=request,
         )
 
-        print("this is the response I got: {}".format(response))
+        # print("this is the response I got: {}".format(response))
 
 
 class FilePatternTriggerCommand(EnsembleClientCommand):
@@ -754,7 +754,7 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
             data=request,
         )
 
-        print("this is the response I got: {}".format(response))
+        # print("this is the response I got: {}".format(response))
 
 
 # TODO: StopTriggerCommand
