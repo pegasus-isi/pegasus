@@ -1219,14 +1219,14 @@ To use AWS Batch for your workflows, we need two credential files
 2. **S3 Config File:** Pegasus workflows use pegasus-s3 command line
    tool to stage-in input data required by the tasks to S3 and push data
    output data generated to S3 when user application code runs. These
-   credentials are specified in .s3cfg file usually put in the user home
-   directory. This format of the file is described in the `pegaus-s3
+   credentials are specified in ~/.pegasus/credentials.conf .
+   This format of the file is described in the `pegaus-s3
    command line client's man page <#cli-pegasus-s3>`__. A minimalistic
    file is illustrated below
 
    ::
 
-      $ cat ~/.s3cfg
+      $ cat ~/.pegasus/credentials.conf
       [amazon]
       # end point has to be consistent with the EC2 region you are using. Here we are referring to us-west-2 region.
       endpoint = http://s3-us-west-2.amazonaws.com

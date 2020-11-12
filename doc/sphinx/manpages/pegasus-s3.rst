@@ -196,7 +196,6 @@ Each user should specify a configuration file that **pegasus-s3** will
 use to look up connection parameters and authentication tokens.
 
 
-
 Search Path
 -----------
 
@@ -207,14 +206,7 @@ the user’s configuration file:
 
 2. The S3CFG environment variable
 
-3. $HOME/.pegasus/s3cfg
-
-4. $HOME/.s3cfg
-
-If it does not find the configuration file in one of these locations it
-will fail with an error. The ``$HOME/.s3cfg`` location is only supported for
-backward-compatibility. ``$HOME/.pegasus/s3cfg`` should be used instead.
-
+3. $HOME/.pegasus/credentials.conf (default for workflows)
 
 
 Configuration File Format
@@ -358,10 +350,3 @@ successful. A non-zero exit status is returned in case of failure.
 
 
 
-Author
-======
-
-| Gideon Juve ``<gideon@isi.edu>``
-| Ryan Tanaka ``<tanaka@isi.edu>``
-
-Pegasus Team https://pegasus.isi.edu

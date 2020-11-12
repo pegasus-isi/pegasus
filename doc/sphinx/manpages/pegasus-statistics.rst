@@ -155,13 +155,3 @@ Runs pegasus-statistics over all workflows in the STAMPEDE database:
 
    $ pegasus-statistics  --conf pegasusrc --multiple-wf
 
-
-
-Authors
-=======
-
-Prasanth Thomas
-
-Rajiv Mayani ``<mayani at isi dot edu>``
-
-Pegasus Team http://pegasus.isi.edu

@@ -86,8 +86,3 @@ Workflows Options
    Use long listing format.
 
 
-
-Authors
-=======
-
-Pegasus Team ``<pegasus@isi.edu>``

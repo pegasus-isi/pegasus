@@ -126,11 +126,3 @@ Options
    redirected.
 
 
-
-Authors
-=======
-
-Gideon Juve ``<juve@usc.edu>`` Rafael Ferreira da Silva
-``<rafsilva@isi.edu>``
-
-Pegasus Team http://pegasus.isi.edu

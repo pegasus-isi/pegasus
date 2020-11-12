@@ -310,12 +310,3 @@ See Also
 pegasus-status(1), pegasus-monitord(1), pegasus-statistics(1).
 
 
-
-Authors
-=======
-
-Fabio Silva ``<fabio at isi dot edu>``
-
-Karan Vahi ``<vahi at isi dot edu>``
-
-Pegasus Team http://pegasus.isi.edu

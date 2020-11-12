@@ -101,9 +101,3 @@ Examples
    # Trace entire metadata for a given file
    $ pegasus-metadata file --file-name f.a --trace /path/to/submit-dir
 
-
-
-Authors
-=======
-
-Pegasus Team http://pegasus.isi.edu

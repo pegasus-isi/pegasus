@@ -608,10 +608,3 @@ pegasus-run(1), pegasus-status(1), pegasus-remove(1),
 pegasus-rc-client(1), pegasus-analyzer(1)
 
 
-
-Authors
-=======
-
-Karan Vahi ``<vahi at isi dot edu>``
-
-Pegasus Team http://pegasus.isi.edu

@@ -32,8 +32,3 @@ Options
    The run directory of the workflow you want to stop
 
 
-
-Authors
-=======
-
-Pegasus Team http://pegasus.isi.edu
