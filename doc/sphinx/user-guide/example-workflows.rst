@@ -17,15 +17,15 @@ some of the examples and through a cli tool called ``pegasus-init`` we
 enable users to fetch them in a ready to execute state on some of the
 most common execution environments Pegasus supports.
 
-   **Note**
+.. note::
 
-   These examples are intended to be a starting point for when you want
-   to create your own workflows and want to see how other workflows are
-   set up. The example workflows might not work in your
-   environment without modifications. Site and transformation catalogs
-   may contain site and user specifics such as paths to scratch directories
-   and installed software, and minor modificiations might be
-   required to get the workflows to plan and run.
+  These examples are intended to be a starting point for when you want
+  to create your own workflows and want to see how other workflows are
+  set up. The example workflows might not work in your
+  environment without modifications. Site and transformation catalogs
+  may contain site and user specifics such as paths to scratch directories
+  and installed software, and minor modificiations might be
+  required to get the workflows to plan and run.
 
 .. _pegasushub:
 
@@ -47,18 +47,37 @@ details.
   -organization: your-github-organization
    repo_name: your-workflow-repository
 
+Diamond Workflow
+----------------
+
+The diamond workflow (``https://github.com/pegasus-isi/diamond-workflow``)
+has 4 nodes, layed out in a diamond shape, with files being
+passed between them (f.*):
+
+Merge Workflow
+--------------
+
+Process Workflow
+----------------
+
+Pipeline Workflow
+-----------------
+
+Split Workflow
+--------------
+
 .. _pegasus-init:
 
 Pegasus Init
 ============
 
-pegasus-init is designed to be an interactive cli tool that generates example
+Pegasus Init (``pegasus-init``) is designed to be an interactive cli tool that generates example
 workflows, ready to be executed on common execution environments. The
 example workflows provided are a subset of the workflows availabe at
 PegasusHub (``https://pegasushub.github.io``).
 
 
-  **Note**
+.. note::
 
   Some of the example workflows might overwrite the configuration ``pegasus-init``
   generates. Be cautious when executing commands that may alter the
@@ -67,6 +86,51 @@ PegasusHub (``https://pegasushub.github.io``).
 
 Being an interactive cli tool, ``pegasus-init`` prompts the user for input,
 asking questions that will customize the selected execution environment.
+
+Example usage:
+
+::
+
+  pegasus-init example-workflow
+
+
+``pegasus-init`` first asks you to select one of the execution environments.
+
+::
+
+  ###########################################################
+  ###########   Available Execution Environments   ##########
+  ###########################################################
+  1) Local Machine Condor Pool
+  2) Local SLURM Cluster
+  3) Local LSF Cluster
+  4) OLCF Summit from OLCF Headnode
+  5) OLCF Summit from OLCF Hosted Kubernetes Pod
+  
+  select an execution environment [1]:
+
+
+Afterwards, it asks you to select one of the available workflow examples
+offered for the selected execution environment
+
+
+::
+
+  ###########################################################
+  ###########     Available Workflow Examples      ##########
+  ###########################################################
+  1) pegasus-isi/diamond-workflow
+  2) pegasus-isi/merge-workflow
+  3) pegasus-isi/pipeline-workflow
+  4) pegasus-isi/process-workflow
+  5) pegasus-isi/split-workflow
+  
+  Select an example workflow [1]:
+
+
+Based on your answers ``pegasus-init`` might ask more questions
+in order to customize the execution environment's configuration
+such as your project allocation, the scheduler's queue etc.
 
 .. _pegasus-init-exec-envs:
 
@@ -91,6 +155,6 @@ it can be used to scaffold a Pegasus site catalog.
     --storage-parent-dir ~/storage
 
   
-  **Hint**
+.. note::
 
   Use ``-h|--help`` to discover more iformation about the input arguments.
