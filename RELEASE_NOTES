@@ -279,8 +279,6 @@ New Features
 [PM-1651] – Add more profile keys in the add_pegasus_profile
 [PM-1654] – pick up workflow api from vendor extensions encoded in the workflow
 [PM-1657] – a pre-flight check needs to be done for the python package attrs
-[PM-1672] – override add_args for SubWorkflow so that args refer to planner args
-[PM-1673] – passing properties as str to Properties() can be error prone, add some preliminary checks before writing
 [PM-1674] – Deprecate hints profile namespace and use selector namespace
 [PM-1687] – disable warnings when validating yaml files
 [PM-1691] – Add pre script hook to hub repos
@@ -464,7 +462,6 @@ New Features
 [PM-1668] – fb-nlp workflow generator creates multiple jobs that create same output file
 [PM-1669] – remove “pegasus: <version>” from tc when inlined in a workflow
 [PM-1670] – expose a schema validation function that can be used in unit tests
-[PM-1677] – add status command to see running triggers
 [PM-1682] – add –reuse option to Workflow.plan in python api
 [PM-1683] – update section 7.3 supported transfer protocols in data management guide
 [PM-1684] – reorg table of contents
