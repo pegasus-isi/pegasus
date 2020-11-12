@@ -79,8 +79,8 @@ There is documentation on the Pegasus website for the Python, Java and R
 We strongly recommend using the Python API which is feature complete, and also
 allows you to invoke all the pegasus command line tools.
 
-You can use *pegasus-init* command line tool to run several examples 
-on your local machine. Consult [Chapter 4 of the Pegasus 
+You can use *pegasus-init* command line tool to run several examples
+on your local machine. Consult [Chapter 4 of the Pegasus
 User Guide](https://pegasus.isi.edu/documentation/user-guide/example-workflows.html)
 for more information.
 
@@ -99,88 +99,21 @@ Pegasus can be compiled on any recent Linux or Mac OS X system.
 
 ### Source Dependencies
 
-In order to build Pegasus from source, make sure you have the following
-packages installed:
+In order to build Pegasus from source, make sure you have the following installed:
 
-#### Debian systems (Debian, Ubuntu, etc.)
-
-Install the following packages using apt-get:
-
-* default-jdk
-* ant
+* Git
+* Java 8 or higher
+* Python 3.5 or higher
+* R
+* Ant
 * gcc
 * g++
 * make
-* python-setuptools
-* R (optional, required to build R DAX api)
-* asciidoc (optional, required to build documentation)
-* fop (optional, required to build documentation)
-* lintian (optional, required to build DEB package)
-* debhelper (optional, required to build DEB package)
-* libmysqlclient-dev (optional, required to access MySQL databases)
-* libpq-dev (optional, required to access PostgreSQL databases)
-
-#### Red Hat systems (RHEL, CentOS, Scientific Linux, Fedora, etc.)
-
-Install the following packages using yum:
-
-* java
-* java-devel
-* ant
-* ant-junit
-* gcc
-* gcc-c++
-* make
-* python-devel
-* openssl-devel
-* R (optional, required to build R DAX api)
-* rpm-build (optional, required to build RPM package)
-* mysql-devel (optional, required to access MySQL databases)
-* postgresql-devel (optional, required to access PostgreSQL databases)
-
-In addition, RHEL 5 systems will require Python 2.6, which can be
-installed from EPEL. You will also need to install the right setuptools
-for Python 2.6, which can be installed from the Python Package Index using:
-
-    $ wget http://pypi.python.org/packages/2.6/s/setuptools/setuptools-0.6c9-py2.6.egg#md5=ca37b1ff16fa2ede6e19383e7b59245a
-    $ sudo /bin/sh setuptools-0.6c9-py2.6.egg
-
-or, if you don't have root access:
-
-    $ /bin/sh setuptools-0.6c9-py2.6.egg -d ~/.local/lib/python2.6/site-packages
-
-#### Mac OS X
-
-Install Xcode and the Xcode command-line tools.
-
-Install homebrew and the following homebrew packages:
-
-* ant
-* openssl
-* R (optional, required to build R DAX api)
-* asciidoc (optional, required for manpages and docs)
-* fop (optional, required for docs)
+* tox 3.14.5 or higher
 * mysql (optional, required to access MySQL databases)
 * postgresql (optional, required to access PostgreSQL databases)
-
-#### SUSE (openSUSE, SLES)
-
-Install the following packages:
-
-* git-core
-* ant
-* ant-nodeps
-* make
-* gcc
-* gcc-c++
-* sqlite3
-* python
-* python-setuptools
-* python-devel
-* libopenssl-devel
-* R (optional, required to build R DAX api)
-* asciidoc (optional, required for documentation)
-* libmysqlclient-devel (optional, required for MySQL support)
+* Python pyyaml
+* Python GitPython
 
 Other packages may be required to run unit tests, and build MPI tools.
 
@@ -203,4 +136,3 @@ To build the release tarball (including documentation), run:
     $ ant dist-release
 
 The resulting packages will be created in the `dist` subdirectory.
-
