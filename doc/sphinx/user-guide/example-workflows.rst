@@ -4,8 +4,8 @@
 Example Workflows
 =================
 
-PegasusHub is a gallery of Pegasus workflows created and published by 
-Pegasus' user community. PegasusHub is located at 
+PegasusHub is a gallery of Pegasus workflows created and published by
+Pegasus' user community. PegasusHub is located at
 ``https://pegasushub.github.io/`` and contains workflows ranging from
 simple examples that are suitable for beginners (e.g., Diamond Workflow)
 to more complicated examples showcasing more advanced Pegasus capabilities
@@ -47,24 +47,58 @@ details.
   -organization: your-github-organization
    repo_name: your-workflow-repository
 
-Diamond Workflow
-----------------
-
-The diamond workflow (``https://github.com/pegasus-isi/diamond-workflow``)
-has 4 nodes, layed out in a diamond shape, with files being
-passed between them (f.*):
-
-Merge Workflow
---------------
-
 Process Workflow
 ----------------
+
+The process workflow (``https://github.com/pegasus-isi/process-workflow``) has one node, which does not
+consume any inputs, and produces one output file ``listing.txt`` containing the output of the ``ls`` command.
+
+.. figure:: ../images/tutorial-single-job-wf.jpg
+   :alt: Process Workflow Example
 
 Pipeline Workflow
 -----------------
 
+The pipeline workflow (``https://github.com/pegasus-isi/pipeline-workflow``) has two nodes in a sequence
+as shown in the figure below. The first node fetches a webpage using the ``curl`` command, followed by a
+node which computes the no. of lines in the fetched webpage, which is saved in an output file called ``count.txt``.
+
+.. figure:: ../images/tutorial-pipeline-tasks-wf.jpg
+   :alt: Pipeline Workflow Example
+
 Split Workflow
 --------------
+
+The split workflow (``https://github.com/pegasus-isi/split-workflow``) has five nodes as shown in the figure below.
+The first node consumes and input file ``pegasus.html`` and splits it to produce 4 parts. Each part is then processed
+by a node which computes the no. of lines in each part using ``wc`` command.
+
+.. figure:: ../images/tutorial-split-wf.jpg
+   :alt: Split Workflow Example
+
+Merge Workflow
+--------------
+
+The merge workflow (``https://github.com/pegasus-isi/merge-workflow``) is as shown in the figure below.
+The first set of nodes execute the ``ls`` command on different locations and stores the output in files
+names ``bin_*.txt``. The output of the above nodes is merged using the ``cat`` command and it's output
+stored in a single file ``binaries.txt``.
+
+.. figure:: ../images//tutorial-merge-wf.jpg
+   :alt: Merge Workflow Example
+
+Diamond Workflow
+----------------
+
+The diamond workflow (``https://github.com/pegasus-isi/diamond-workflow``) has 4 nodes, layed out in
+a diamond shape, with files being passed between them (f.*): First node represents a computation to
+preprocess an input ``f.a`` and produce two output files ``f.b*``. Each of the output file is then analyzed
+by a ``findrange`` job, which produces one output ``f.c*``. The outputs are then processed by a single node
+called ``analyze`` which produces an output file ``f.d``.
+
+.. figure:: ../images/tutorial-diamond-wf.jpg
+   :alt: Diamond Workflow Example
+
 
 .. _pegasus-init:
 
@@ -106,7 +140,7 @@ Example usage:
   3) Local LSF Cluster
   4) OLCF Summit from OLCF Headnode
   5) OLCF Summit from OLCF Hosted Kubernetes Pod
-  
+
   select an execution environment [1]:
 
 
@@ -124,7 +158,7 @@ offered for the selected execution environment
   3) pegasus-isi/pipeline-workflow
   4) pegasus-isi/process-workflow
   5) pegasus-isi/split-workflow
-  
+
   Select an example workflow [1]:
 
 
@@ -141,7 +175,7 @@ The execution environemnts supported by ``pegasus-init`` are updated dynamically
 and their source code can be found at the GitHub repository
 ``https://github.com/pegasushub/pegasus-site-catalogs``. The python script
 ``Sites.py`` is used by ``pegasus-init`` to generate the appropriate site
-catalog for a supported execution environment, but it's also standalone and 
+catalog for a supported execution environment, but it's also standalone and
 it can be used to scaffold a Pegasus site catalog.
 
 ::
@@ -154,7 +188,7 @@ it can be used to scaffold a Pegasus site catalog.
     --scratch-parent-dir ~/scratch \
     --storage-parent-dir ~/storage
 
-  
+
 .. note::
 
   Use ``-h|--help`` to discover more iformation about the input arguments.
