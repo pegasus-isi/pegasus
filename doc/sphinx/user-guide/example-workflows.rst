@@ -55,6 +55,7 @@ consume any inputs, and produces one output file ``listing.txt`` containing the 
 
 .. figure:: ../images/tutorial-single-job-wf.jpg
    :alt: Process Workflow Example
+   :align: center
 
 Pipeline Workflow
 -----------------
@@ -65,6 +66,7 @@ node which computes the no. of lines in the fetched webpage, which is saved in a
 
 .. figure:: ../images/tutorial-pipeline-tasks-wf.jpg
    :alt: Pipeline Workflow Example
+   :align: center
 
 Split Workflow
 --------------
@@ -75,6 +77,8 @@ by a node which computes the no. of lines in each part using ``wc`` command.
 
 .. figure:: ../images/tutorial-split-wf.jpg
    :alt: Split Workflow Example
+   :align: center
+   :width: 378
 
 Merge Workflow
 --------------
@@ -86,6 +90,8 @@ stored in a single file ``binaries.txt``.
 
 .. figure:: ../images//tutorial-merge-wf.jpg
    :alt: Merge Workflow Example
+   :align: center
+   :width: 378
 
 Diamond Workflow
 ----------------
@@ -98,6 +104,8 @@ called ``analyze`` which produces an output file ``f.d``.
 
 .. figure:: ../images/tutorial-diamond-wf.jpg
    :alt: Diamond Workflow Example
+   :align: center
+   :width: 378
 
 
 .. _pegasus-init:
