@@ -3,7 +3,7 @@ project:
   name: Pegasus
   plans:
     - key: BNT50
-      name: Build and Test (master)
+      name: Build and Test (5.0)
       scm:
         - !git
           name: Pegasus
@@ -1655,7 +1655,7 @@ project:
           value: focal
 
     - key: WT50
-      name: Workflow Tests (master)
+      name: Workflow Tests (5.0)
       scm:
         - !git
           name: Pegasus
