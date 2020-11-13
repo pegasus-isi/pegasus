@@ -77,7 +77,7 @@ Specify Compute Job in PegasusLite to run on different node
 ===========================================================
 
 When running workflows on systems such as OLCF summit, data staging can be tricky
-for PegasusLite jobs. The data staging needs to happen on the cluster DTN nodes,
+for PegasusLite jobs. The data staging needs to happen on the cluster Service nodes,
 while the compute job need to be launched using the *jsrun* command to execute
 on the compute nodes.
 
@@ -90,7 +90,7 @@ look like this
 
 The above cannot be achieved by specifying a job wrapper, as mentioning
 the wrapper as the executable path in TC, as in that case
-*pegasus-kickstart* will run on the DTN node, and invoke the jsrun command.
+*pegasus-kickstart* will run on the Service node, and invoke the jsrun command.
 
 To get this behavior you can specify the following Pegasus Profile keys
 with your job
