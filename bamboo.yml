@@ -41,7 +41,7 @@ project:
                       # pegasus-source.tar.gz is a tarball which is used to in subsequent buildsteps
                       # make this a copy of the generated source tarball to keep everyhing
                       # consistent
-                      (cd pegasus-source/dist && tar xzf ../../pegasus-$VERSION.tar.gz && mv pegasus-$VERSION pegasus-source && tar -czf ../../pegasus-source.tar.gz pegasus-source && rm -rf pegasus-source)
+                      (pegasus-source && ant dist-source && cd dist && tar xzf ../../pegasus-$VERSION.tar.gz && mv pegasus-$VERSION pegasus-source && tar -czf ../../pegasus-source.tar.gz pegasus-source && rm -rf pegasus-source)
 
                       # Create the source tarball for python source files using setup.py
                       (cd pegasus-source && ant dist-python-source && mv dist/pegasus-wms*-*.tar.gz ..)
