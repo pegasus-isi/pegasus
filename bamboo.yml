@@ -38,10 +38,6 @@ project:
                       # Make sure it is clean
                       (cd pegasus-source && ant clean)
 
-                      # We need a versioned copy to put on the website that
-                      # excludes git files, but include the generated docs
-                      (cd pegasus-source && ant dist-source swamp-tarballs && mv dist/pegasus-$VERSION.tar.gz dist/pegasus-swamp*-$VERSION.tar.gz ..)
-
                       # pegasus-source.tar.gz is a tarball which is used to in subsequent buildsteps
                       # make this a copy of the generated source tarball to keep everyhing
                       # consistent
@@ -56,15 +52,6 @@ project:
                   isShared: true
                 - name: pegasus-source-versioned
                   copyPattern: "pegasus-?.*.tar.gz"
-                  isShared: true
-                - name: pegasus-source-versioned-swamp-c
-                  copyPattern: "pegasus-swamp-c-?.*.tar.gz"
-                  isShared: true
-                - name: pegasus-source-versioned-swamp-java
-                  copyPattern: "pegasus-swamp-java-?.*.tar.gz"
-                  isShared: true
-                - name: pegasus-source-versioned-swamp-python
-                  copyPattern: "pegasus-swamp-python-?.*.tar.gz"
                   isShared: true
                 - name: pegasus-source
                   copyPattern: "pegasus-source.tar.gz"
@@ -1470,7 +1457,6 @@ project:
                       DOWNLOADS=pegasus/$VERSION
                       mkdir -p $DOWNLOADS
                       mv pegasus-5*.tar.gz $DOWNLOADS/
-                      mv pegasus-swamp-*.tar.gz $DOWNLOADS/
                       mv pegasus-wms*-*.tar.gz $DOWNLOADS/
                       mv pegasus-binary-*.tar.gz $DOWNLOADS/
                       mv pegasus-worker-*.tar.gz $DOWNLOADS/
@@ -1494,10 +1480,10 @@ project:
                       # rhel
                       mkdir -p $DOWNLOADS/rhel/src
                       cp $DOWNLOADS/pegasus-*.src.rpm $DOWNLOADS/rhel/src/
-                      #mkdir -p $DOWNLOADS/rhel/6/x86_64
-                      #cp $DOWNLOADS/pegasus-*el6.x86_64.rpm $DOWNLOADS/rhel/6/x86_64/
                       mkdir -p $DOWNLOADS/rhel/7/x86_64
                       cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/7/x86_64/
+                      mkdir -p $DOWNLOADS/rhel/8/x86_64
+                      cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/8/x86_64/
 
                       # standard filenames for RPMs - used by tutorial VM
                       cd pegasus/$VERSION
@@ -1544,9 +1530,6 @@ project:
                 - name: pegasus-rpm-x86_64_rhel_8
                 - name: pegasus-source
                 - name: pegasus-source-versioned
-                - name: pegasus-source-versioned-swamp-c
-                - name: pegasus-source-versioned-swamp-java
-                - name: pegasus-source-versioned-swamp-python
                 - name: pegasus-srcrpm
                 - name: pegasus-worker-x86_64_alpine_3
                 - name: pegasus-worker-x86_64_deb_9
