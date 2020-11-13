@@ -2,7 +2,7 @@ project:
   key: PEGASUS
   name: Pegasus
   plans:
-    - key: BNT50
+    - key: BNT51
       name: Build and Test (master)
       scm:
         - !git
@@ -1654,7 +1654,7 @@ project:
         - key: TAG_UBUNTU_20
           value: focal
 
-    - key: WT50
+    - key: WT51
       name: Workflow Tests (master)
       scm:
         - !git
@@ -4811,7 +4811,7 @@ project:
           cronExpression: "0 0 20 * * ?"
           onlyRunIfOtherPlansArePassing:
             planKeys:
-              - PEGASUS-BNT50
+              - PEGASUS-BNT51
       notifications:
         - !email
           address: pegasus-svn@isi.edu
