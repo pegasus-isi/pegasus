@@ -153,10 +153,6 @@ project:
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-                - name: Coverage Report - Pegasus DAX
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
-                  isShared: false
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
@@ -276,10 +272,6 @@ project:
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-                - name: Coverage Report - Pegasus DAX
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
-                  isShared: false
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
@@ -393,10 +385,6 @@ project:
                 - name: Coverage Report - Pegasus API
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus DAX
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: "*"
@@ -539,10 +527,6 @@ project:
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-                - name: Coverage Report - Pegasus DAX
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
-                  isShared: false
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
@@ -656,10 +640,6 @@ project:
                 - name: Coverage Report - Pegasus API
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus DAX
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: "*"
@@ -776,10 +756,6 @@ project:
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
                   isShared: false
-                - name: Coverage Report - Pegasus DAX
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
-                  isShared: false
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-worker/htmlcov/
@@ -894,10 +870,6 @@ project:
                 - name: Coverage Report - Pegasus API
                   copyPattern: "*"
                   location: pegasus-source/packages/pegasus-api/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus DAX
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
                   isShared: false
                 - name: Coverage Report - Pegasus Worker
                   copyPattern: "*"

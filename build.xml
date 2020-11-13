@@ -183,11 +183,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="--recreate"/>
       <arg line="-e lint"/>
     </exec>
-    <exec executable="tox" dir="packages/pegasus-dax-python" resultproperty="python-dax.format.error">
-      <env key="CI" value="${CI}"/>
-      <arg line="--recreate"/>
-      <arg line="-e lint"/>
-    </exec>
     <exec executable="tox" dir="packages/pegasus-worker" resultproperty="python-worker.format.error">
       <env key="CI" value="${CI}"/>
       <arg line="--recreate"/>
@@ -446,9 +441,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
       <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
     </exec>
-    <exec executable="${dist.python}" dir="packages/pegasus-dax-python" failonerror="true">
-      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
-    </exec>
     <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
       <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
     </exec>
@@ -644,9 +636,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="false">
       <arg line="setup.py clean --all"/>
     </exec>
-    <exec executable="${dist.python}" dir="packages/pegasus-dax-python" failonerror="false">
-      <arg line="setup.py clean --all"/>
-    </exec>
     <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="false">
       <arg line="setup.py clean --all"/>
     </exec>
@@ -678,19 +667,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </delete>
     <delete>
       <dirset dir="packages/pegasus-api" includes="**/__pycache__"/>
-    </delete>
-
-    <delete dir="packages/pegasus-dax-python/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
-    <delete dir="packages/pegasus-dax-python/.cache"/>
-    <delete dir="packages/pegasus-dax-python/.coverage"/>
-    <delete dir="packages/pegasus-dax-python/.pytest_cache"/>
-    <delete dir="packages/pegasus-dax-python/test-reports"/>
-    <delete dir="packages/pegasus-dax-python/htmlcov"/>
-    <delete>
-      <fileset dir="packages/pegasus-dax-python" includes="**/*.pyc"/>
-    </delete>
-    <delete>
-      <dirset dir="packages/pegasus-dax-python" includes="**/__pycache__"/>
     </delete>
 
     <delete dir="packages/pegasus-worker/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
@@ -748,12 +724,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="setup.py sdist --dist-dir ../../dist"/>
     </exec>
     <replace file="packages/pegasus-api/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
-
-    <replace file="packages/pegasus-dax-python/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
-    <exec executable="${dist.python}" dir="packages/pegasus-dax-python" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
-    </exec>
-    <replace file="packages/pegasus-dax-python/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
 
     <replace file="packages/pegasus-python/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
     <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
@@ -835,9 +805,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="--recreate"/>
     </exec>
     <exec executable="tox" dir="packages/pegasus-api" failonerror="true">
-      <arg line="--recreate"/>
-    </exec>
-    <exec executable="tox" dir="packages/pegasus-dax-python" failonerror="true">
       <arg line="--recreate"/>
     </exec>
     <exec executable="tox" dir="packages/pegasus-worker" failonerror="true">
