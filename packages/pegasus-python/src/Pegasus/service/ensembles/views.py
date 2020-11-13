@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import subprocess
+from pathlib import Path
 
 from flask import g, make_response, request, url_for
 
@@ -243,8 +244,6 @@ def route_get_trigger(ensemble, trigger):
 
 
 # TODO: checks for correct data should be done here on the backend
-# should be just /ensembles/<string:ensemble>/triggers, methods=["POST"]
-# possibly look into using jsonschema to validate incoming json requests
 """
 # error response format
 
@@ -265,47 +264,143 @@ def route_get_trigger(ensemble, trigger):
 """
 
 
-@emapp.route("/ensembles/<string:ensemble>/triggers/<string:trigger>", methods=["POST"])
-def route_create_trigger(ensemble, trigger):
+@emapp.route("/ensembles/<string:ensemble>/triggers/cron", methods=["POST"])
+def route_create_cron_trigger(ensemble):
     # verify that ensemble exists for user
     e_dao = Ensembles(g.session)
 
     # raises EMError code 404 if does not exist
     ensemble_id = e_dao.get_ensemble(g.user.username, ensemble).id
 
-    # create trigger entry in db
-    t_dao = Triggers(g.session)
+    # validate trigger
+    trigger = request.form.get("trigger", type=str)
+    if not trigger or len(trigger) == 0:
+        raise EMError("trigger name must be a non-empty string")
 
-    trigger_type = request.form.get("type")
+    # validate workflow_script
+    workflow_script = request.form.get("workflow_script", type=str)
+    if not workflow_script or len(workflow_script) == 0:
+        raise EMError("workflow_script name must be a non-empty string")
+
+    if not Path(workflow_script).is_absolute():
+        raise EMError("workflow_script must be given as an absolute path")
+
+    # validate workflow_args
+    can_decode = True
+    try:
+        workflow_args = json.loads(request.form.get("workflow_args"))
+    except json.JSONDecodeError:
+        can_decode = False
+
+    if not can_decode or not isinstance(workflow_args, list):
+        raise EMError("workflow_args must be given as a list serialized to json")
+
+    # validate interval
+    interval = request.form.get("interval", type=int)
+    if interval <= 0:
+        raise EMError("interval must be >= 1")
+
+    # validate timeout
+    timeout = request.form.get("timeout", type=int, default=None)
+    if timeout and timeout <= 0:
+        raise EMError("timeout must be >= 1")
+
     kwargs = {
         "ensemble_id": ensemble_id,
         "trigger": trigger,
-        "trigger_type": trigger_type,
-        "workflow_script": request.form.get("workflow_script"),
-        "workflow_args": json.loads(request.form.get("workflow_args")),
+        "trigger_type": TriggerType.CRON.value,
+        "workflow_script": workflow_script,
+        "workflow_args": workflow_args,
+        "interval": interval,
+        "timeout": timeout,
     }
 
-    if trigger_type == TriggerType.CRON.value:
-        # add cron trigger specific parameters
-        kwargs["interval"] = request.form.get("interval")
-        kwargs["timeout"] = request.form.get("timeout")
-    elif trigger_type == TriggerType.FILE_PATTERN.value:
-        # add file pattern specific parameters
-        kwargs["interval"] = request.form.get("interval")
-        kwargs["timeout"] = request.form.get("timeout")
-        kwargs["file_patterns"] = json.loads(request.form.get("file_patterns"))
-    else:
-        raise NotImplementedError(
-            "encountered unsupported trigger type: {}".format(trigger_type)
-        )
-
+    # create trigger entry in db
+    t_dao = Triggers(g.session)
     t_dao.insert_trigger(**kwargs)
 
-    # TODO: what to return here
-    # return ID that was created, in this case trigger name is sufficient
-    # probably code 201
-    # use Flask response object and a json object representing an id of the entity
-    return "hello world from create_trigger!"
+    # return response success
+    return api.json_created(
+        url_for("route_get_trigger", ensemble=ensemble, trigger=trigger)
+    )
+
+
+@emapp.route("/ensembles/<string:ensemble>/triggers/file_pattern", methods=["POST"])
+def route_create_file_pattern_trigger(ensemble):
+    # verify that ensemble exists for user
+    e_dao = Ensembles(g.session)
+
+    # raises EMError code 404 if does not exist
+    ensemble_id = e_dao.get_ensemble(g.user.username, ensemble).id
+
+    # validate trigger
+    trigger = request.form.get("trigger", type=str)
+    if not trigger or len(trigger) == 0:
+        raise EMError("trigger name must be a non-empty string")
+
+    # validate workflow_script
+    workflow_script = request.form.get("workflow_script", type=str)
+    if not workflow_script or len(workflow_script) == 0:
+        raise EMError("workflow_script name must be a non-empty string")
+
+    if not Path(workflow_script).is_absolute():
+        raise EMError("workflow_script must be given as an absolute path")
+
+    # validate workflow_args
+    can_decode = True
+    try:
+        workflow_args = json.loads(request.form.get("workflow_args"))
+    except json.JSONDecodeError:
+        can_decode = False
+
+    if not can_decode or not isinstance(workflow_args, list):
+        raise EMError("workflow_args must be given as a list serialized to json")
+
+    # validate interval
+    interval = request.form.get("interval", type=int)
+    if interval <= 0:
+        raise EMError("interval must be >= 1")
+
+    # validate timeout
+    timeout = request.form.get("timeout", type=int, default=None)
+    if timeout and timeout <= 0:
+        raise EMError("timeout must be >= 1")
+
+    # validate file_patterns
+    can_decode = True
+    try:
+        file_patterns = json.loads(request.form.get("file_patterns"))
+    except json.JSONDecodeError:
+        can_decode = False
+
+    if not can_decode or not isinstance(file_patterns, list):
+        raise EMError("file_patterns must be given as a list serialized to json")
+
+    for fp in file_patterns:
+        if not Path(fp).is_absolute():
+            raise EMError(
+                "each file pattern must be given as an absolute path (e.g. '/inputs/*.txt"
+            )
+
+    kwargs = {
+        "ensemble_id": ensemble_id,
+        "trigger": trigger,
+        "trigger_type": TriggerType.CRON.value,
+        "workflow_script": workflow_script,
+        "workflow_args": workflow_args,
+        "interval": interval,
+        "timeout": timeout,
+        "file_patterns": file_patterns,
+    }
+
+    # create trigger entry in db
+    t_dao = Triggers(g.session)
+    t_dao.insert_trigger(**kwargs)
+
+    # return response success
+    return api.json_created(
+        url_for("route_get_trigger", ensemble=ensemble, trigger=trigger)
+    )
 
 
 @emapp.route(

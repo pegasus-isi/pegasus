@@ -35,8 +35,7 @@ class EnsembleClientCommand(Command):
         defaults = {"auth": (self.username, self.password), "headers": headers}
         defaults.update(kwargs)
         url = urlparse.urljoin(self.endpoint, path)
-        # TODO: test this without **Defaults and pass everything as json
-        response = requests.request(method, url, json={"hello": "world"}, **defaults)
+        response = requests.request(method, url, **defaults)
 
         if 200 <= response.status_code < 300:
             return response
@@ -592,7 +591,11 @@ class CronTriggerCommand(EnsembleClientCommand):
         )
 
         self.parser.add_argument(
-            "-a", "--args", nargs="+", help="CLI args to be passed to WORKFLOW_SCRIPT",
+            "-a",
+            "--args",
+            default=[],
+            nargs="+",
+            help="CLI args to be passed to WORKFLOW_SCRIPT",
         )
 
     def parse(self, args):
@@ -627,6 +630,7 @@ class CronTriggerCommand(EnsembleClientCommand):
             sys.exit(1)
 
         request = {
+            "trigger": self.args.trigger,
             "workflow_script": self.args.workflow_script,
             "workflow_args": json.dumps(self.args.args),
             "interval": interval,
@@ -635,13 +639,11 @@ class CronTriggerCommand(EnsembleClientCommand):
         }
 
         response = self.post(
-            "/ensembles/{e}/triggers/{t}".format(
-                e=self.args.ensemble, t=self.args.trigger
-            ),
+            "/ensembles/{e}/triggers/cron".format(e=self.args.ensemble),
             data=request,
         )
 
-        # print("this is the response I got: {}".format(response))
+        print("response: {}".format(response.json()))
 
 
 class FilePatternTriggerCommand(EnsembleClientCommand):
@@ -739,6 +741,7 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
             sys.exit(1)
 
         request = {
+            "trigger": self.args.trigger,
             "workflow_script": self.args.workflow_script,
             "workflow_args": json.dumps(self.args.args),
             "interval": interval,
@@ -748,13 +751,11 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
         }
 
         response = self.post(
-            "/ensembles/{e}/triggers/{t}".format(
-                e=self.args.ensemble, t=self.args.trigger
-            ),
+            "/ensembles/{e}/triggers/file_pattern".format(e=self.args.ensemble),
             data=request,
         )
 
-        # print("this is the response I got: {}".format(response))
+        print("response: {}".format(response.json()))
 
 
 # TODO: StopTriggerCommand
