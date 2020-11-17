@@ -30,6 +30,7 @@ import signal
 import sys
 from datetime import datetime, timedelta
 
+from Pegasus.tools import amqp
 import globus_sdk
 
 # --- global variables ----------------------------------------------------------------
@@ -208,7 +209,7 @@ def mkdir(request):
     logger.info("Mkdir complete")
 
 
-def transfer(request):
+def transfer(request, amqp_url):
     """
     takes a transfer specification parsed from json:
     {
@@ -274,8 +275,17 @@ def transfer(request):
     except Exception as err:
         logger.error(err)
         cancel_task(transfer_client, task_id)
+        
+        # retrieve globus logs for the transfer
+        if not amqp_url is None :
+            retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url)
+        
         sys.exit(1)
     logger.info("Transfer complete")
+    
+    # retrieve globus logs for the transfer
+    if not amqp_url is None :
+        retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url)
 
 
 def remove(request):
@@ -332,6 +342,55 @@ def remove(request):
     logger.info("Delete complete")
 
 
+def retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url):
+    """
+    Query Globus Service to retrieve logs, merge them and publish them to AMQP
+    AMQP URL should look like: amqps://user:pass@host:port/vhost/exchange"
+    Default exchange is "monitoring"
+    """
+
+    EXCH_OPTS = {'exchange_type' : 'topic', 'durable' : True, 'auto_delete' : False}
+    
+    parsed_url = urlparse.urlparse(amqp_url)
+
+    if parsed_url.path.count("/") > 1 :
+        path_split = parsed_url.path.split("/")
+        exchange_name = path_split[2] if path_split[2] != "" else "monitoring"
+        amqp_url = parsed_url.scheme + "://" + parsed_url.netloc + "/" + path_split[1]
+    else:
+        exchange_name = "monitoring"
+
+    amqp_conn = amqp.connect(amqp_url)
+    amqp_channel = amqp_conn.channel()
+    amqp_channel.exchange_declare(exchange_name, **EXCH_OPTS)
+
+    task_show = transfer_client.get_task(task_id)
+    task_events = transfer_client.task_event_list(task_id, None)
+
+    task_show = json.loads(str(task_show), object_pairs_hook=OrderedDict)
+    task_show.pop("event_link", None)
+    task_show["transfer_events"] = []
+
+    for event in task_events:
+        task_show["transfer_events"].append(event.data)
+
+    task_show["wf_uuid"] = None
+    task_show["dag_job_id"] = None
+
+    if "PEGASUS_WF_UUID" in os.environ:
+        task_show["wf_uuid"] = os.environ["PEGASUS_WF_UUID"]
+
+    if "PEGASUS_DAG_JOB_ID" in os.environ:
+        task_show["dag_job_id"] = os.environ["PEGASUS_DAG_JOB_ID"]
+
+    task_show["event"] = "transfer.inv.go"
+    amqp_channel.basic_publish(exchange=exchange_name, routing_key="transfer.inv.go", body=json.dumps(task_show, indent=2))
+    
+    amqp_conn.close()
+
+    logger.info("Globus log retrieval completed")
+
+
 def main():
 
     # Configure command line option parser
@@ -353,6 +412,7 @@ def main():
         dest="file",
         help="File containing GO URL pairs to be transferred",
     )
+    parser.add_option("--publish", action = "store_true", dest = "publish", help = "Publish transfer stats to AMQP")
     parser.add_option(
         "-d",
         "--debug",
@@ -377,10 +437,20 @@ def main():
     signal.signal(signal.SIGINT, prog_sigint_handler)
     signal.signal(signal.SIGTERM, prog_sigint_handler)
 
+    # If publish enabled, try to find AMQP endpoint and credentials from ENV
+    amqp_url = None
+    amqp_env_var = "PEGASUS_AMQP_URL"
+    if options.publish:
+        value = os.getenv(amqp_env_var)
+        if value is None :
+            logger.warning("'%s' is not set in the environment" % amqp_env_var)
+        else:
+            amqp_url = value
+    
     if options.mkdir:
         mkdir(data)
     elif options.transfer:
-        transfer(data)
+        transfer(data, amqp_url)
     elif options.remove:
         remove(data)
     else:

@@ -42,6 +42,7 @@ import time
 import traceback
 
 from Pegasus.tools import worker_utils as utils
+from Pegasus.tools import amqp
 
 try:
     import configparser
@@ -2250,6 +2251,8 @@ class GlobusOnlineHandler(TransferHandlerBase):
         cmd = tools.full_path("pegasus-globus-online") + " --mkdir --file " + tmp_name
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
+        if publish_enabled:
+            cmd += " --publish"
         try:
             tc = utils.TimedCommand(cmd)
             tc.run()
@@ -4042,14 +4045,14 @@ class Stats:
             data += "    bytes: %d\n" % (bytes)
         self._yaml += data
 
-        # call out to panorama if asked to do so, but make sure that failures
-        # do not stop us
-        if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
-            try:
+        # publish transfer statistics for Panorama to an AMQP endpoint if not 3rd party transfer
+        # but make sure that failures do not stop us
+        if publish_enabled and not self._detected_3rd_party:
+            try: 
                 p = Panorama()
-                p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
+                p.single_transfer(transfer, local_filename, was_successful, t_start, t_end, bytes)
             except Exception as e:
-                logger.warn("Panorama send failure: " + e)
+                logger.warn("Panorama send failure: " + str(e))
 
     def all_transfers_done(self):
         self._t_end_global = time.time()
@@ -4175,71 +4178,132 @@ class Stats:
                     iso_prefix_formatted(Bps * 8),
                 )
             )
+        
+        # publish transfer statistics for Panorama to an AMQP endpoint if not 3rd party transfer
+        # but make sure that failures do not stop us
+        if publish_enabled and not self._detected_3rd_party:
+            try: 
+                p = Panorama()
+                p.summary_transfer(self._total_count, self._t_start_global, self._t_end_global, self._total_bytes)
+            except Exception as e:
+                logger.warn("Panorama send failure: " + str(e))
 
 
 class Panorama:
+    """ Singleton for sending Panorama live stats
     """
-    Singleton for sending Panorama live stats
-    """
-
-    # singleton
-    instance = None
+    
+    __metaclass__ = Singleton
 
     def __init__(self):
-        if not Panorama.instance:
-            Panorama.instance = Panorama.__Panorama()
+        """
+        Publish transfer statistics for local transfer to an AMQP endpoint
+        AMQP URL should look like: amqps://user:pass@host:port/vhost/exchange"
+        Default exchange is "monitoring"
+        """
+        self.EXCH_OPTS = {'exchange_type' : 'topic', 'durable' : True, 'auto_delete' : False}
+        self.amqp_env_var = "PEGASUS_AMQP_URL"
+        self.amqp_url = os.getenv(self.amqp_env_var)
+        self.exchange_name = None
 
-    def __getattr__(self, name):
-        return getattr(self.instance, name)
+        if self.amqp_url is None: 
+            logger.warning("'%s' is not set in the environment" % self.amqp_env_var)
+        else:
+            parsed_url = urlparse.urlparse(self.amqp_url)
 
-    class __Panorama:
-        def one_transfer(self, transfer, was_successful, t_start, t_end, filesize):
+            if parsed_url.path.count("/") > 1 :
+                path_split = parsed_url.path.split("/")
+                self.exchange_name = path_split[2] if path_split[2] != "" else "monitoring"
+                self.amqp_url = parsed_url.scheme + "://" + parsed_url.netloc + "/" + path_split[1]
+            else:
+                self.exchange_name = "monitoring"
 
-            if "KICKSTART_MON_ENDPOINT_URL" not in os.environ:
-                return
+    def publish_transfer_metrics(self, transfer_routing_key, event_payload):
+        amqp_conn = amqp.connect(self.amqp_url)
+        amqp_channel = amqp_conn.channel()
+        amqp_channel.exchange_declare(self.exchange_name, **self.EXCH_OPTS)
+        
+        amqp_channel.basic_publish(exchange=self.exchange_name, routing_key=transfer_routing_key, body=json.dumps(event_payload, indent=2))
+    
+        amqp_conn.close()
 
-            # status follows UNIX exit code convention
-            status = 1
-            if was_successful:
-                status = 0
+    def single_transfer(self, transfer, local_filename, was_successful, t_start, t_end, filesize):
+        if self.amqp_url is None: 
+            return
+        
+        # status follows UNIX exit code convention
+        status = 1
+        if was_successful:
+            status = 0
+        
+        event_payload = {
+            "ts": int(time.time()),
+            "event": "transfer.inv.local.single",
+            "level": "INFO",
+            "status": status,
+            "hostname": socket.getfqdn(),
+            "wf_uuid": None,
+            "dag_job_id": None,
+            "condor_job_id": None,
+            "filename": local_filename,
+            "source_url": transfer.src_url(),
+            "source_site_name": transfer.get_src_site_label(),
+            "destination_url": transfer.dst_url(),
+            "destination_site_name": transfer.get_dst_site_label(),
+            "transfer_start_time": int(t_start),
+            "transfer_completion_time": int(t_end),
+            "transfer_duration": int(t_end - t_start),
+            "bytes_transferred": None
+        }
 
-            payload = "ts=%.0f" % (time.time())
-            payload += " event=data_transfer"
-            payload += " level=INFO"
-            payload += " status=" + str(status)
-            payload += " wf_uuid=" + os.environ["PEGASUS_WF_UUID"]
-            payload += " dag_job_id=" + os.environ["PEGASUS_DAG_JOB_ID"]
-            payload += " hostname=" + socket.getfqdn()
-            payload += " condor_job_id=" + os.environ["CONDOR_JOBID"]
-            payload += " src_url=" + transfer.src_url()
-            payload += " src_site_name=" + transfer.get_src_site_label()
-            payload += " dst_url=" + transfer.dst_url()
-            payload += " dst_site_name=" + transfer.get_dst_site_label()
-            payload += " transfer_start_ts=%.0f" % (t_start)
-            payload += " transfer_duration=%.0f" % (t_end - t_start)
-            if filesize is not None and filesize > 0:
-                payload += " bytes_transferred=%.0f" % (filesize)
-            payload += "  "
+        event_payload["wf_uuid"] = os.getenv("PEGASUS_WF_UUID")
+        event_payload["dag_job_id"] = os.getenv("PEGASUS_DAG_JOB_ID")
+        event_payload["condor_job_id"] = os.getenv("CONDOR_JOBID")
+        
+        if filesize is not None and filesize > 0:
+            event_payload["bytes_transferred"] = int(filesize)
 
-            logger.debug(payload)
-            data = (
-                '{"properties":{},"routing_key":"%s","payload":"%s","payload_encoding":"base64"}'
-                % (os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
-            )
-            logger.debug(data)
-            req = urllib2.Request(os.environ["KICKSTART_MON_ENDPOINT_URL"], data)
-            base64string = base64.encodestring(
-                os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"]
-            )[:-1]
-            authheader = "Basic %s" % base64string
-            req.add_header("Authorization", authheader)
-            try:
-                u = urllib2.urlopen(req)
-            except IOError as e:
-                logger.error("Unable to publish to Panorama: " + str(e))
-                return
-            data = u.read()
-
+        self.publish_transfer_metrics(event_payload["event"], event_payload)
+        logger.info("Publish individual transfer statistics completed")
+    
+    def summary_transfer(self, total_files, t_start_global, t_end_global, total_bytes):
+        total_secs = t_end_global - t_start_global
+        bytes_per_second = total_bytes / total_secs
+        
+        event_payload = {
+            "event": "transfer.inv.local",
+            "level": "INFO",
+            #"status": status,
+            "hostname": socket.getfqdn(),
+            "wf_uuid": None,
+            "dag_job_id": None,
+            "condor_job_id": None,
+            "total_files": total_files,
+            "transfer_start_time": int(t_start_global),
+            "transfer_completion_time": int(t_end_global),
+            "transfer_duration": int(total_secs),          
+            "bytes_transferred": int(total_bytes),
+            "effective_bytes_per_second": int(bytes_per_second)
+        }
+        
+        event_payload["wf_uuid"] = os.getenv("PEGASUS_WF_UUID")
+        event_payload["dag_job_id"] = os.getenv("PEGASUS_DAG_JOB_ID")
+        event_payload["condor_job_id"] = os.getenv("CONDOR_JOBID")
+        
+        # If amqp_url is none try to use the generic monitoring event
+        # to publish the statistics as a stampede event
+        if self.amqp_url is None: 
+            data = {
+                "ts": int(time.time()),
+                "monitoring_event": event_payload["event"], 
+                "payload": [event_payload]
+            }
+            logger.info('@@@MONITORING_PAYLOAD - START@@@' + json.dumps(data) + '@@@MONITORING_PAYLOAD - END@@@')
+        else:
+            event_payload["ts"] = int(time.time())
+            self.publish_transfer_metrics(event_payload["event"], event_payload)
+            logger.info("Publish summary transfer statistics completed")
+        
 
 class SimilarWorkSet:
     """
@@ -5095,6 +5159,7 @@ def main():
     global stats_start
     global stats_end
     global symlink_file_transfer
+    global publish_enabled
 
     # dup stderr onto stdout
     sys.stderr = sys.stdout
@@ -5144,6 +5209,10 @@ def main():
         + " then the source file will be symlinked"
         + " to the destination rather than being copied.",
     )
+    parser.add_option("-p", "--publish", action = "store_true", dest = "publish",
+                      help = "Enables publishing of statistics to AMQP." +
+                             " This option can also be set via the" +
+                             " PEGASUS_TRANSFER_PUBLISH enviroment variable.")
     parser.add_option(
         "-d",
         "--debug",
@@ -5166,6 +5235,11 @@ def main():
             options.threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
         else:
             options.threads = 8
+
+    if options.publish or "PEGASUS_TRANSFER_PUBLISH" in os.environ:
+        publish_enabled = True
+    else:
+        publish_enabled = False
 
     # stdin or file input?
     input_data = None
