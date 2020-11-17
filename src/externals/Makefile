@@ -111,6 +111,7 @@ $(LIBDIR)/requests: requests-2.23.0.tar.gz
 $(LIBDIR)/s3transfer: s3transfer-0.3.3.tar.gz
 $(LIBDIR)/six: six-1.14.0.tar.gz
 $(LIBDIR)/urllib3: urllib3-1.25.8.tar.gz
+$(LIBDIR)/pytz: pytz-2017.3.tar.gz
 
 
 clean:
