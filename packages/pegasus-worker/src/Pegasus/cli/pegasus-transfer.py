@@ -91,11 +91,6 @@ try:
 except Exception:
     pass
 
-# panorama real time monitoring
-if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
-    import base64
-
-    import urllib2
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -4190,11 +4185,8 @@ class Stats:
 
 
 class Panorama:
-    """ Singleton for sending Panorama live stats
-    """
+    """ Class for sending Panorama live stats"""
     
-    __metaclass__ = Singleton
-
     def __init__(self):
         """
         Publish transfer statistics for local transfer to an AMQP endpoint
