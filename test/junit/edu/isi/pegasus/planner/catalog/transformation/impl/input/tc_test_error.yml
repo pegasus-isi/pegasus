@@ -1,0 +1,25 @@
+pegasus: "5.0"
+transformations:
+  - name: "keg"
+    namespace: "example"
+    version: "1.0"
+
+    profiles:
+      env:
+        "APP_HOME": "/tmp/karan"
+        "JAVA_HOME": "/bin/java.1.5"
+
+    sites:
+      - name: "isi"
+        profiles:
+          env:
+            "me": "with"
+            "JAVA_HOME": "/bin/java.1.6"
+          condor:
+            "more": "test"
+        pfn: "/path/to/keg"
+        unknown: "unknown"
+        os.type: "linux"
+        os.release: fc
+        os.version: "1.0"
+        type: installed

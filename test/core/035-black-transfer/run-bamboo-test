@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-set -v
 
 
 if [ X${testdir} = "X" ]; then
@@ -58,10 +57,10 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
-    --output-site local \
+    --output-sites local \
     --dir work \
     --cleanup leaf \
-    --dax blackdiamond.dax \
+    blackdiamond.dax \
      | tee $TOPDIR/plan.out
 
 

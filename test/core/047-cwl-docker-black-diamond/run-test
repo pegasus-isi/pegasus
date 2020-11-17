@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+set -v
+
+testdir=`dirname  $0`
+export testdir
+
+$testdir/run-bamboo-test
+
+# wait for workflow to finish
+$testdir/../../common/wait-for-workflow
+
+# check success with pegasus-analyzer - does it use exit codes correctly?
+cd work/047-cwl-docker-black-diamond*
+pegasus-analyzer
+
+# show some stats
+pegasus-statistics `pwd`
+
+

@@ -1,0 +1,1315 @@
+swagger: "2.0"
+info:
+  title: Monitoring API
+  description: |
+    # Pegasus Monitoring API
+  termsOfService: https://pegasus.isi.edu
+  contact:
+    name: API Support
+    url: https://pegasus.isi.edu
+    email: pegasus-users@isi.edu
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0
+  version: "1"
+host: localhost:5000
+basePath: /api/v1/user/{username}
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  basic:
+    type: basic
+    description: Basic authentication
+
+parameters:
+  query:
+    name: query
+    in: query
+    required: false
+    type: string
+    description: "A query to filter out records. See: `Querying <#querying>`__"
+  order:
+    name: order
+    in: query
+    required: false
+    type: string
+    description: "Result sorting criteria. See: `Ordering <#ordering>`__"
+  start-index:
+    name: start-index
+    in: query
+    default: 1
+    minimum: 1
+    type: integer
+    description: Return results starting from record <start-index> (0 indexed)
+    x-nrgr-extension:
+      include: false
+  max-results:
+    name: max-results
+    in: query
+    minimum: 0
+    description: Max no. of records to return
+    type: integer
+    x-nrgr-extension:
+      include: false
+  pretty-print:
+    name: pretty-print
+    in: query
+    default: False
+    type: boolean
+    description: Enable or disable pretty printing of the output
+    x-nrgr-extension:
+      include: false
+  recent:
+    name: recent
+    in: query
+    required: false
+    type: boolean
+    description: Get most recent record.
+
+  m-wf-id:
+    name: m-wf-id
+    in: path
+    required: true
+    minimum: 0
+    type: string
+    description: Master Workflow's ID or UUID
+  wf-id:
+    name: wf-id
+    in: path
+    required: true
+    minimum: 0
+    type: string
+    description: Workflow's ID or UUID
+  host-id:
+    name: host-id
+    in: path
+    required: true
+    minimum: 0
+    type: integer
+    description: Host Id
+  task-id:
+    name: task-id
+    in: path
+    required: true
+    minimum: 0
+    type: integer
+    description: Task Id
+  invocation-id:
+    name: invocation-id
+    in: path
+    required: true
+    minimum: 0
+    type: integer
+    description: Invocation Id
+  job-id:
+    name: job-id
+    in: path
+    required: true
+    minimum: 0
+    type: integer
+    description: job Id
+  job-instance-id:
+    name: job-instance-id
+    in: path
+    required: true
+    minimum: 0
+    type: integer
+    description: job-instance Id
+
+responses:
+  no-content:
+    description: No content
+  created:
+    description: Created
+    schema:
+      $ref: "#/definitions/Error"
+  bad-request:
+    description: Bad request
+    schema:
+      $ref: "#/definitions/Error"
+  authentication-error:
+    description: Not authenticated
+    schema:
+      $ref: "#/definitions/Error"
+  authorization-error:
+    description: Not authorized
+    schema:
+      $ref: "#/definitions/Error"
+  not-found-error:
+    description: Not found
+    schema:
+      $ref: "#/definitions/Error"
+  unprocessable-entity:
+    description: Unprocessable entity
+    schema:
+      $ref: "#/definitions/Error"
+  default-error:
+    description: Internal server error
+    schema:
+      $ref: "#/definitions/Error"
+
+  root-workflow-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/RootWorkflow"
+  workflow-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Workflow"
+  workflow-meta-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/WorkflowMeta"
+  workflow-file-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/WorkflowFile"
+  workflowstate-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Workflowstate"
+  job-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Job"
+  host-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Host"
+  jobstate-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Jobstate"
+  task-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Task"
+  task-meta-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/TaskMeta"
+  job-instance-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/JobInstance"
+  invocation-array:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Invocation"
+
+  root-workflow:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/RootWorkflow"
+  workflow:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Workflow"
+  job:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Job"
+  host:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Host"
+  task:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/Task"
+  job-instance:
+    description: Success
+    schema:
+      type: array
+      items:
+        $ref: "#/definitions/JobInstance"
+  invocation:
+    description: Success
+    examples:
+      application/json:
+        wf-id: 1
+
+x-nrgr-extension:
+  name: Monitoring
+  namespace: monitoring
+  login-required: False
+
+paths:
+  # Root Workflow
+
+  /root:
+    parameters:
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-root-workflows
+      summary: Retrieve all root workflows
+      description: Returns a collection of the Root Workflow resource
+      tags:
+        - Root Workflow
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/root-workflow-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: retrieve-root-workflow
+      summary: Retrieve a root workflow
+      description: Returns a Root Workflow resource identified by m_wf_id
+      tags:
+        - Root Workflow
+      responses:
+        "200":
+          $ref: "#/responses/root-workflow"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Workflow
+
+  /root/{m-wf-id}/workflow:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-workflows
+      summary: Retrieve all workflows
+      description: Returns a collection of the Workflow resource
+      tags:
+        - Workflow
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/workflow-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: retrieve-workflow
+      summary: Retrieve a workflow
+      description: Returns a Workflow resource identified by m_wf_id, wf_id
+      tags:
+        - Workflow
+      responses:
+        "200":
+          $ref: "#/responses/workflow"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Workflow Meta
+
+  /root/{m-wf-id}/workflow/{wf-id}/meta:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-workflow-meta
+      summary: Retrieve workflow metadata
+      description: Returns a collection of the WorkflowMetadata resource
+      tags:
+        - Workflow
+        - Workflow Meta
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/workflow-meta-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Workflow Files
+
+  /root/{m-wf-id}/workflow/{wf-id}/files:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-workflow-files
+      summary: Retrieve all workflow files
+      description: Returns a collection of the WorkflowFiles resource.
+      tags:
+        - Workflow
+        - Workflow File
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/workflow-file-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/state:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-workflow-states
+      summary: Retrieve workflow's states
+      description: Returns a collection of the Workflow State resource
+      tags:
+        - Workflow
+        - Workflowstate
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/workflowstate-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Host
+
+  /root/{m-wf-id}/workflow/{wf-id}/host:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-workflow-hosts
+      summary: Retrieve all hosts on which a workflows job ran on
+      description: Returns a collection of the Host resource
+      tags:
+        - Host
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/host-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/host/{host-id}:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/host-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: retrieve-workflow-host
+      summary: Retrieve a host
+      description: Returns a Host resource identified by m_wf_id, wf_id, host_id
+      tags:
+        - Host
+      responses:
+        "200":
+          $ref: "#/responses/host"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Task
+
+  /root/{m-wf-id}/workflow/{wf-id}/task:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-workflow-tasks
+      summary: Retrieve all workflow tasks
+      description: Returns a collection of the Task resource
+      tags:
+        - Task
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/task-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/task/{task-id}:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/task-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: retrieve-workflow-task
+      summary: Retrieve a workflow's task
+      description: Returns a Task resource identified by m_wf_id, wf_id, task_id
+      tags:
+        - Task
+      responses:
+        "200":
+          $ref: "#/responses/task"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Task Meta
+
+  /root/{m-wf-id}/workflow/{wf-id}/task/{task-id}/meta:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/task-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-task-meta
+      summary: Retrieve all task metadata
+      description: Returns a collection of the TaskMetadata resource
+      tags:
+        - Task
+        - Task Meta
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/task-meta-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Invocation
+
+  /root/{m-wf-id}/workflow/{wf-id}/invocation:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-workflow-invocations
+      summary: Retrieve all workflow invocations
+      description: Returns a collection of the Invocation resource
+      tags:
+        - Invocation
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/invocation-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/invocation/{invocation-id}:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/invocation-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: retrieve-workflow-invocation
+      summary: Retrieve a workflow invocation
+      description: Returns a Invocation resource identified by m_wf_id, wf_id, invocation_id
+      tags:
+        - Invocation
+      responses:
+        "200":
+          $ref: "#/responses/invocation"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Job
+
+  /root/{m-wf-id}/workflow/{wf-id}/job:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-workflow-jobs
+      summary: Retrieve all workflows jobs
+      description: Returns a collection of the Job resource
+      tags:
+        - Job
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/job-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/job/{job-id}:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/job-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: retrieve-workflow-job
+      summary: Retrieve a workflow job
+      description: Returns a Job resource identified by m_wf_id, wf_id, job_id
+      tags:
+        - Job
+      responses:
+        "200":
+          $ref: "#/responses/job-array"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/job/{job-id}/task:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/job-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-job-tasks
+      summary: Retrieve all job tasks
+      description: Returns a collection of the Task resource
+      tags:
+        - Task
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/task-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Job Instance
+
+  /root/{m-wf-id}/workflow/{wf-id}/job/{job-id}/job-instance:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/job-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-job-instance
+      summary: Retrieve all job's job instances
+      description: Returns a collection of the Job Instance resource
+      tags:
+        - Job Instance
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+        - $ref: "#/parameters/recent"
+      responses:
+        "200":
+          $ref: "#/responses/job-instance-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/job/{job-id}/job-instance/{job-instance-id}:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/job-id"
+      - $ref: "#/parameters/job-instance-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: retrieve-job-instance
+      summary: Retrieve a job's job instance
+      description: Returns a Job Instance resource identified by m_wf_id, wf_id, job_id, job_instance_id
+      tags:
+        - Job Instance
+      responses:
+        "200":
+          $ref: "#/responses/job-instance"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Jobstate
+
+  /root/{m-wf-id}/workflow/{wf-id}/job/{job-id}/job-instance/{job-instance-id}/state:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/job-id"
+      - $ref: "#/parameters/job-instance-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-job-states
+      summary: Retrieve all job states
+      description: Returns a collection of the Job State resource
+      tags:
+        - Jobstate
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/jobstate-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/job/{job-id}/job-instance/{job-instance-id}/invocation:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/job-id"
+      - $ref: "#/parameters/job-instance-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-job-invocations
+      summary: Retrieve all job invocations
+      description: Returns a collection of the Invocation resource
+      tags:
+        - Invocation
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/invocation-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # Utilities
+
+  /root/{m-wf-id}/workflow/{wf-id}/job/running:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-running-jobs
+      summary: Retrieve a workflow's running jobs
+      description: |
+        Returns a collection of running Job resource.
+        Note: Queries, Sorting can include fields from Job and JobInstance resource
+      tags:
+        - Job
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/job-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/job/succesful:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-successful-jobs
+      summary: Retrieve a workflow's successful jobs
+      description: |
+        Returns a collection of successful Job resource.
+        Note: Queries, Sorting can include fields from Job and JobInstance resource
+      tags:
+        - Job
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/job-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/job/failed:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-failed-jobs
+      summary: Retrieve a workflow's failed jobs
+      description: |
+        Returns a collection of failed Job resource.
+        Note: Queries, Sorting can include fields from Job and JobInstance resource
+      tags:
+        - Job
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/job-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /root/{m-wf-id}/workflow/{wf-id}/failing/job:
+    parameters:
+      - $ref: "#/parameters/m-wf-id"
+      - $ref: "#/parameters/wf-id"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-failing-jobs
+      summary: Retrieve a workflow's failing jobs
+      description: |
+        Returns a collection of failing Job resource.
+        Note: Queries, Sorting can include fields from Job and JobInstance resource
+      tags:
+        - Job
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/job-array"
+        "204":
+          $ref: "#/responses/no-content"
+        "400":
+          $ref: "#/responses/bad-request"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "403":
+          $ref: "#/responses/authorization-error"
+        default:
+          $ref: "#/responses/default-error"
+
+definitions:
+  Error:
+    type: object
+    required:
+      - id
+      - code
+      - message
+    properties:
+      id:
+        type: string
+        pattern: "^[0-9A-Fa-f]+$"
+      code:
+        type: string
+        pattern: "^[A-Z0-9_]+$"
+      message:
+        type: string
+  RootWorkflow:
+    type: object
+    properties:
+      wf_id:
+        type: integer
+      wf_uuid:
+        type: string
+      submit_hostname:
+        type: string
+      submit_dir:
+        type: string
+      planner_arguments:
+        type: string
+      planner_version:
+        type: string
+      user:
+        type: string
+      grid_dn:
+        type: string
+      dax_label:
+        type: string
+      dax_version:
+        type: string
+      dax_file:
+        type: string
+      dag_file_name:
+        type: string
+      timestamp:
+        type: number
+      workflow_state:
+        $ref: "#/definitions/Workflowstate"
+      archived:
+        type: boolean
+  Workflow:
+    type: object
+    properties:
+      wf_id:
+        type: integer
+      wf_uuid:
+        type: string
+      submit_hostname:
+        type: string
+      submit_dir:
+        type: string
+      planner_arguments:
+        type: string
+      planner_version:
+        type: string
+      user:
+        type: string
+      grid_dn:
+        type: string
+      dax_label:
+        type: string
+      dax_version:
+        type: string
+      dax_file:
+        type: string
+      dag_file_name:
+        type: string
+      timestamp:
+        type: number
+      workflow_state:
+        $ref: "#/definitions/Workflowstate"
+  WorkflowMeta:
+    type: object
+    properties:
+      wf_id:
+        type: integer
+      key:
+        type: string
+      value:
+        type: string
+  WorkflowFile:
+    type: object
+    properties:
+      wf_id:
+        type: integer
+      lfn_id:
+        type: integer
+      lfn:
+        type: string
+      pfns:
+        type: array
+        items:
+          $ref: "#/definitions/RCPFN"
+      meta:
+        type: array
+        items:
+          $ref: "#/definitions/RCMeta"
+  Workflowstate:
+    type: object
+    properties:
+      wf_id:
+        type: integer
+      state:
+        type: string
+      status:
+        type: integer
+      restart_count:
+        type: integer
+      timestamp:
+        type: number
+  Job:
+    type: object
+    properties:
+      job_id:
+        type: integer
+      exec_job_id:
+        type: string
+      submit_file:
+        type: string
+      type_desc:
+        type: string
+      max_retries:
+        type: integer
+      clustered:
+        type: boolean
+      executable:
+        type: string
+      argv:
+        type: string
+      task_count:
+        type: integer
+  Host:
+    type: object
+    properties:
+      host_id:
+        type: integer
+      site_name:
+        type: string
+      hostname:
+        type: string
+      ip:
+        type: string
+      uname:
+        type: string
+      total_memory:
+        type: string
+  Jobstate:
+    type: object
+    properties:
+      job_instance_id:
+        type: integer
+      state:
+        type: string
+      jobstate_submit_seq:
+        type: string
+      timestamp:
+        type: number
+  Task:
+    type: object
+    properties:
+      task_id:
+        type: integer
+      abs_task_id:
+        type: string
+      type_desc:
+        type: string
+      transformation:
+        type: string
+      argv:
+        type: string
+  TaskMeta:
+    type: object
+    properties:
+      task_id:
+        type: integer
+      key:
+        type: string
+      value:
+        type: string
+  JobInstance:
+    type: object
+    properties:
+      job_instance_id:
+        type: integer
+      host_id:
+        type: integer
+      job_submit_seq:
+        type: integer
+      sched_id:
+        type: string
+      site_name:
+        type: string
+      user:
+        type: string
+      work_dir:
+        type: string
+      cluster_start:
+        type: number
+      cluster_duration:
+        type: number
+      local_duration:
+        type: number
+      subwf_id:
+        type: integer
+      stdout_text:
+        type: string
+      stderr_text:
+        type: string
+      stdin_file:
+        type: string
+      stdout_file:
+        type: string
+      stderr_file:
+        type: string
+      multiplier_factor:
+        type: string
+      exitcode:
+        type: string
+  IntegrityMetrics:
+    type: object
+    properties:
+      integrity_id:
+        type: integer
+      wf_id:
+        type: integer
+      job_instance_id:
+        type: integer
+      type:
+        type: string
+        enum:
+          - check
+          - compute
+      file_type:
+        type: string
+        enum:
+          - input
+          - output
+      count:
+        type: integer
+      duration:
+        type: number
+  Invocation:
+    type: object
+    properties:
+      invocation_id:
+        type: integer
+      job_instance_id:
+        type: integer
+      abs_task_id:
+        type: string
+      task_submit_seq:
+        type: integer
+      start_time:
+        type: number
+      remote_duration:
+        type: number
+      remote_cpu_time:
+        type: number
+      exitcode:
+        type: integer
+      transformation:
+        type: string
+      executable:
+        type: string
+      argv:
+        type: string
+  RCPFN:
+    type: object
+    properties:
+      pfn_id:
+        type: integer
+      pfn:
+        type: string
+      site:
+        type: string
+  RCMeta:
+    type: object
+    properties:
+      meta_id:
+        type: integer
+      key:
+        type: string
+      value:
+        type: string

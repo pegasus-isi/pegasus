@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal the arrow operator to the parser.
- * This class is module-local on purpose.
+ * Class to signal the arrow operator to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtArrow
-  implements VDLtToken
-{
-  // empty
+class VDLtArrow implements VDLtToken {
+    // empty
 }

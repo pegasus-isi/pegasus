@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Home Page - Title{% endblock %}
+{% block javascript_includes %}
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
+{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+var chart;
+var chartOptions;
+$(document).ready (function ()
+{
+    highChartsInitialization();
+
+    $ ('#workflow_list').dataTable ({
+        "jQueryUI"      : true,
+        "pagingType": "full_numbers",
+        "processing"    : true,
+        "serverSide"    : true,
+        "ajax": {
+            "url": "{{ url_for ('.index') }}",
+            "data": function (aoData) {
+                aoData.time_filter =  $ ('#time_filter').val ();
+            },
+            "dataSrc": function (json) {
+                var data = json.data;
+                var urlTmpl = "{{ url_for('.workflow', root_wf_id='-11-', wf_uuid='-22-') }}";
+                for(var i = 0; i < data.length; i++) {
+                    data[i].DT_RowClass = data[i].archived ? "archived" : data[i].state.toLowerCase();
+                    data[i].dax_label = $("<a>" + data[i].dax_label + "</a>").attr("href",
+                        urlTmpl
+                            .replace("-11-", data[i].wf_id).replace("-22-", data[i].wf_uuid)
+                    )[0].outerHTML;
+
+                    var d = new Date(data[i].timestamp* 1000);
+                    data[i].timestamp = d.toDateString() + " " + d.toLocaleTimeString();
+
+                    if (data[i].status > 0 && data[i].reason) {
+                        data[i].state = data[i].state + " (" + data[i].reason + ")"
+                    }
+                }
+                return data;
+            }
+        },
+        "autoWidth"     : false,
+        "order"      : [
+            [ 4, "desc" ]
+        ],
+        "columns": [
+            { "data": "dax_label" },
+            { "data": "submit_hostname" },
+            { "data": "submit_dir" },
+            { "data": "state" },
+            { "data": "timestamp", "sClass": "text-nowrap" }
+        ]
+    });
+
+    $("#time_filter").change ( function()
+    {
+        $("#workflow_list").dataTable().fnDraw();
+    });
+
+    chartOptions =
+    {
+        chart:
+        {
+            renderTo: 'workflow_counts',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            height: 250
+        },
+        title:
+        {
+            text: null
+        },
+        credits :
+        {
+            enabled : false
+        },
+        tooltip:
+        {
+            formatter: function()
+            {
+                return '<b>'+ this.point.name +'</b>: '+ this.point.y;
+            }
+        },
+        plotOptions:
+        {
+            pie:
+            {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels:
+                {
+                    enabled: false
+                },
+                showInLegend: true,
+                dataLabels:
+                {
+                    color: '#000000',
+                    formatter: function ()
+                    {
+                        return '<b>'+ this.point.name +':</b> '+ this.point.y;
+                    }
+                }
+            }
+        },
+        series:
+        [{
+            type: 'pie',
+            name: 'Workflow Distribution',
+            data: [
+                {
+                    name: 'Running',
+                    y: 0{{ counts.others }},
+                    sliced: true,
+                    selected: true
+                },
+                {
+                    name: 'Failed',
+                    y: 0{{ counts.fail }}
+                },
+                {
+                    name: 'Successful',
+                    y: 0{{ counts.success }}
+                }
+            ]
+        }]
+    };
+
+chart = new Highcharts.Chart (chartOptions);
+});
+</script>
+{% endblock %}
+{% block title_header %}Workflow Listing{% endblock %}
+{% block content %}
+<section class="row">
+    <div id="workflow_counts" class="col-xs-12"></div>
+</section>
+<section class="row">
+    <div id="table_wrapper" class="col-xs-12">
+        <label for="time_filter" class="control-label">Show results for </label>
+
+        <div style="display: inline-block; margin-bottom: .5em;">
+            <select id="time_filter" name="time_filter" class="form-control" style="width: auto;">
+                <option value="all">all</option>
+                <option value="day">last day</option>
+                <option value="week">last week</option>
+                <option value="month">last month</option>
+                <option value="year">last year</option>
+            </select>
+        </div>
+
+        <table id="workflow_list">
+            <thead>
+            <tr>
+                <th>Workflow Label</th>
+                <th>Submit Host</th>
+                <th>Submit Directory</th>
+                <th>State</th>
+                <th>Submitted On</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

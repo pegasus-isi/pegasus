@@ -1,74 +1,50 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-
 package edu.isi.pegasus.planner.classes;
 
-
-import java.io.Writer;
-import java.io.StringWriter;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 
 /**
- * Captures the parent child relationship between the  jobs in the ADAG.
+ * Captures the parent child relationship between the jobs in the ADAG.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
+public class PCRelation extends Data /*implements Comparable*/ {
 
-public class PCRelation extends Data /*implements Comparable*/{
-
-    /**
-     * the parent making up the
-     * parent child relationship pair
-     * in a dag
-     */
+    /** the parent making up the parent child relationship pair in a dag */
     public String parent;
 
-    /**
-     * the child making up the
-     * parent child relationship pair
-     * in a dag
-     */
+    /** the child making up the parent child relationship pair in a dag */
     public String child;
 
     /**
-     * this is used for collapsing the dag
-     * during the reduction algorithm
-     * on the basis of the results returned
-     * from the Replica Catalog.
+     * this is used for collapsing the dag during the reduction algorithm on the basis of the
+     * results returned from the Replica Catalog.
      */
     public boolean isDeleted;
 
-    
-    /**
-     * The abstract id for the parent node. required for stampede events.
-     */
+    /** The abstract id for the parent node. required for stampede events. */
     private String mAbstractParentID;
-    
-    
-    /**
-     * The abstract id for the child node. required for stampede events.
-     */
+
+    /** The abstract id for the child node. required for stampede events. */
     private String mAbstractChildID;
-    
-    /**
-     * the default constructor
-     */
-    public PCRelation(){
+
+    /** the default constructor */
+    public PCRelation() {
         parent = "";
         child = "";
         mAbstractParentID = "";
@@ -76,26 +52,20 @@ public class PCRelation extends Data /*implements Comparable*/{
         isDeleted = false;
     }
 
-    /**
-     * the overloaded constructor
-     */
-    public PCRelation(String parentName,String childName,boolean deleted){
+    /** the overloaded constructor */
+    public PCRelation(String parentName, String childName, boolean deleted) {
         this();
         parent = parentName;
-        child  = childName;
+        child = childName;
         isDeleted = deleted;
-
     }
 
-    /**
-     * the overloaded constructor
-     */
-    public PCRelation(String parentName,String childName){
+    /** the overloaded constructor */
+    public PCRelation(String parentName, String childName) {
         this();
         parent = parentName;
-        child  = childName;
+        child = childName;
         isDeleted = false;
-
     }
 
     /**
@@ -103,95 +73,80 @@ public class PCRelation extends Data /*implements Comparable*/{
      *
      * @return parent
      */
-    public String getParent(){
+    public String getParent() {
         return parent;
     }
-
 
     /**
      * Returns the child in the edge.
      *
      * @return child
      */
-    public String getChild(){
+    public String getChild() {
         return child;
     }
-    
+
     /**
      * Sets the abstract parent id associated with the edge.
      *
-     * @param id  the abstract id
+     * @param id the abstract id
      */
-    public void setAbstractParentID( String id){
+    public void setAbstractParentID(String id) {
         mAbstractParentID = id;
     }
-
 
     /**
      * Sets the abstract child id associated with the edge.
      *
-     * @param id  the abstract id
+     * @param id the abstract id
      */
-    public void setAbstractChildID( String id){
+    public void setAbstractChildID(String id) {
         mAbstractChildID = id;
     }
 
-
-    
     /**
      * Returns the abstract parent id associated with the edge.
      *
      * @return parent
      */
-    public String getAbstractParentID(){
+    public String getAbstractParentID() {
         return mAbstractParentID;
     }
-
 
     /**
      * Returns the abstract child id associated with the edge.
      *
      * @return child
      */
-    public String getAbstractChildID(){
+    public String getAbstractChildID() {
         return mAbstractChildID;
     }
 
-
-
-    /**
-     * returns a new copy of the
-     * Object
-     */
-    public Object clone(){
+    /** returns a new copy of the Object */
+    public Object clone() {
         PCRelation pc = new PCRelation();
-        pc.parent     = this.parent;
-        pc.child      = this.child;
-        pc.isDeleted  = this.isDeleted;
+        pc.parent = this.parent;
+        pc.child = this.child;
+        pc.isDeleted = this.isDeleted;
         pc.mAbstractChildID = this.mAbstractChildID;
         pc.mAbstractParentID = this.mAbstractParentID;
         return pc;
     }
 
     /**
-     * Checks if an object is similar to the one referred to by this class.
-     * We compare the primary key to determine if it is the same or not.
+     * Checks if an object is similar to the one referred to by this class. We compare the primary
+     * key to determine if it is the same or not.
      *
-     * @return true if the primary key (parent,child) match.
-     *         else false.
+     * @return true if the primary key (parent,child) match. else false.
      */
-    public boolean equals(Object o){
-        PCRelation rel = (PCRelation)o;
+    public boolean equals(Object o) {
+        PCRelation rel = (PCRelation) o;
 
-        return (rel.parent.equals(this.parent) &&
-                rel.child.equals(this.child))?
-               true:
-               false;
+        return (rel.parent.equals(this.parent) && rel.child.equals(this.child)) ? true : false;
     }
 
-    public int compareTo(Object o){
-        return (this.equals(o))?0:
-            1;
+    public int compareTo(Object o) {
+        return (this.equals(o)) ? 0 : 1;
     }
 
     /**
@@ -199,64 +154,67 @@ public class PCRelation extends Data /*implements Comparable*/{
      *
      * @return textual description.
      */
-    public String toString(){
+    public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append( "{" ).append( parent ).append( " [" ).append( this.getAbstractParentID()).
-           append( "]" ).append( " -> " ).append( child ).append( " [" ).append( this.getAbstractChildID()).
-           append( "]" ).append( "," ).append( this.isDeleted ).append( "}" );
+        sb.append("{")
+                .append(parent)
+                .append(" [")
+                .append(this.getAbstractParentID())
+                .append("]")
+                .append(" -> ")
+                .append(child)
+                .append(" [")
+                .append(this.getAbstractChildID())
+                .append("]")
+                .append(",")
+                .append(this.isDeleted)
+                .append("}");
 
         return sb.toString();
     }
 
     /**
-     * Returns the DOT description of the object. This is used for visualizing
-     * the workflow.
+     * Returns the DOT description of the object. This is used for visualizing the workflow.
      *
      * @return String containing the Partition object in XML.
-     *
      * @exception IOException if something fishy happens to the stream.
      */
-    public String toDOT() throws IOException{
+    public String toDOT() throws IOException {
         Writer writer = new StringWriter(32);
-        toDOT( writer, "" );
+        toDOT(writer, "");
         return writer.toString();
     }
 
     /**
-     * Returns the DOT description of the object. This is used for visualizing
-     * the workflow.
+     * Returns the DOT description of the object. This is used for visualizing the workflow.
      *
-     * @param stream is a stream opened and ready for writing. This can also
-     *               be a StringWriter for efficient output.
-     * @param indent  is a <code>String</code> of spaces used for pretty
-     *                printing. The initial amount of spaces should be an empty
-     *                string. The parameter is used internally for the recursive
-     *                traversal.
-     *
-     *
+     * @param stream is a stream opened and ready for writing. This can also be a StringWriter for
+     *     efficient output.
+     * @param indent is a <code>String</code> of spaces used for pretty printing. The initial amount
+     *     of spaces should be an empty string. The parameter is used internally for the recursive
+     *     traversal.
      * @exception IOException if something fishy happens to the stream.
      */
-    public void toDOT( Writer stream, String indent ) throws IOException {
-        String newLine = System.getProperty( "line.separator", "\r\n" );
+    public void toDOT(Writer stream, String indent) throws IOException {
+        String newLine = System.getProperty("line.separator", "\r\n");
 
-        //write out the edge
-        stream.write( indent );
-        stream.write( "\"" );
-        stream.write( getParent());
-        stream.write( "\"" );
-        stream.write( " -> ");
-        stream.write( "\"" );
-        stream.write( getChild() );
-        stream.write( "\"" );
-        stream.write( newLine );
+        // write out the edge
+        stream.write(indent);
+        stream.write("\"");
+        stream.write(getParent());
+        stream.write("\"");
+        stream.write(" -> ");
+        stream.write("\"");
+        stream.write(getChild());
+        stream.write("\"");
+        stream.write(newLine);
         stream.flush();
     }
-
 
     /**
      * Sets the child of the edge.
      *
-     * @param childNode  the child node
+     * @param childNode the child node
      */
     public void setChild(String childNode) {
         this.child = childNode;
@@ -265,11 +223,9 @@ public class PCRelation extends Data /*implements Comparable*/{
     /**
      * Sets the parent of the edge.
      *
-     * @param parentNode  the parent node
+     * @param parentNode the parent node
      */
     public void setParent(String parentNode) {
         this.parent = parentNode;
     }
-
-
 }

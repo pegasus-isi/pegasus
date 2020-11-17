@@ -32,6 +32,6 @@ typedef struct {
 extern void initLimitInfo(LimitInfo* limits);
 extern void updateLimitInfo(LimitInfo* limits);
 extern void deleteLimitInfo(LimitInfo* limits);
-extern int printXMLLimitInfo(FILE *out, int indent, const LimitInfo* limits);
+extern int printYAMLLimitInfo(FILE *out, int indent, const LimitInfo* limits);
 
 #endif /* _LIMIT_INFO_H */

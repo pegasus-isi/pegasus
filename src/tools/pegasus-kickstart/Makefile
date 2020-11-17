@@ -7,6 +7,7 @@ LDLIBS = -lm
 LI_LDFLAGS = -ldl -lcurl -pthread
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 ARCH = $(shell uname -m)
+MUSLLIBC = $(shell gcc -dumpmachine | grep musl | wc -l)
 TARGET = pegasus-kickstart
 
 ifndef ${prefix}
@@ -30,6 +31,7 @@ OBJS+=mylist.o
 OBJS+=invoke.o
 OBJS+=pegasus-kickstart.o
 OBJS+=procinfo.o
+OBJS+=sha2.o
 OBJS+=checksum.o
 OBJS+=log.o
 
@@ -38,6 +40,7 @@ ifeq (DARWIN,${SYSTEM})
 endif
 
 ifeq (LINUX,${SYSTEM})
+ifeq (0,${MUSLLIBC})
 ifeq (x86_64,${ARCH})
     TARGET += libinterpose.so
     # TODO Replace this with pkg-config, which is supported in PAPI 5.4.1
@@ -87,9 +90,11 @@ install: $(TARGET)
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
 ifeq (LINUX,${SYSTEM})
 	$(INSTALL) -m 0755 pegasus-monitor $(prefix)/bin
+ifeq (0,${MUSLLIBC})
 ifeq (x86_64,${ARCH})
 	mkdir -p $(libdir)
 	$(INSTALL) -m 0755 libinterpose.so $(libdir)
+endif
 endif
 endif
 

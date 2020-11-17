@@ -1,1 +1,1 @@
-TASK A -m 1 python test/limit.py
+TASK A -m 1 python3 test/limit.py

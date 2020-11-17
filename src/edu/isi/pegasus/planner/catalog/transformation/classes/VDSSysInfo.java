@@ -1,56 +1,44 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
 /**
- * This class keeps the system information associated with a
- * resource or transformation.
+ * This class keeps the system information associated with a resource or transformation.
  *
  * @author Gaurang Mehta gmehta@isi.edu
  * @version $Revision$
  */
+public class VDSSysInfo {
 
-public class VDSSysInfo{
-
-    /**
-     * Architecture of the system.
-     */
+    /** Architecture of the system. */
     private Arch arch;
 
-    /**
-     * Os of the system.
-     */
+    /** Os of the system. */
     private Os os;
 
-    /**
-     * Os version of the system.
-     */
+    /** Os version of the system. */
     private String osversion;
 
-    /**
-     * Glibc version of the system
-     */
+    /** Glibc version of the system */
     private String glibc;
 
     /**
      * The secondary convenience constructor.
-     * @param arch Arch  The architecture of the system.
+     *
+     * @param arch Arch The architecture of the system.
      * @param os Os The os of the system.
-     * @param osversion String  The os version of the system.
+     * @param osversion String The os version of the system.
      * @param glibc String The glibc version of the system.
      * @see Arch
      * @see Os
@@ -59,29 +47,25 @@ public class VDSSysInfo{
         this.arch = (arch == null) ? Arch.INTEL32 : arch;
         this.os = (os == null) ? Os.LINUX : os;
 
-        this.osversion = (osversion == null || osversion.equals("") ) ?
-                          null:
-                          osversion;
+        this.osversion = (osversion == null || osversion.equals("")) ? null : osversion;
 
-        this.glibc = (glibc == null || glibc.equals(""))?
-                      null:
-                      glibc;
+        this.glibc = (glibc == null || glibc.equals("")) ? null : glibc;
     }
-
-
 
     /**
      * Another convenience constructor that uses all entries as strings.
+     *
      * @param arch String
      * @param os String
      * @param glibc String
      */
     public VDSSysInfo(String arch, String os, String glibc) {
-        this( arch, os, null, glibc );
+        this(arch, os, null, glibc);
     }
 
     /**
      * Another convenience constructor that uses all entries as strings.
+     *
      * @param arch String
      * @param os String
      * @param osversion String
@@ -90,17 +74,10 @@ public class VDSSysInfo{
     public VDSSysInfo(String arch, String os, String osversion, String glibc) {
         this.arch = (arch == null) ? Arch.INTEL32 : Arch.fromString(arch);
         this.os = (os == null) ? Os.LINUX : Os.fromString(os);
-        this.osversion = (osversion == null || osversion.equals("") ) ?
-                          null:
-                          osversion;
+        this.osversion = (osversion == null || osversion.equals("")) ? null : osversion;
 
-        this.glibc = (glibc == null || glibc.equals(""))?
-                      null:
-                      glibc;
+        this.glibc = (glibc == null || glibc.equals("")) ? null : glibc;
     }
-
-
-
 
     public VDSSysInfo(String system) {
         if (system != null) {
@@ -118,8 +95,7 @@ public class VDSSysInfo{
                     }
                 }
             } else {
-                throw new IllegalStateException(
-                    "Error : Please check your system info string");
+                throw new IllegalStateException("Error : Please check your system info string");
             }
         } else {
             this.arch = Arch.INTEL32;
@@ -127,17 +103,15 @@ public class VDSSysInfo{
         }
     }
 
-    /**
-     * The default constructor.
-     * Sets the sysinfo to INTEL32::LINUX
-     */
+    /** The default constructor. Sets the sysinfo to INTEL32::LINUX */
     public VDSSysInfo() {
-        this.arch=Arch.INTEL32;
-        this.os=Os.LINUX;
+        this.arch = Arch.INTEL32;
+        this.os = Os.LINUX;
     }
 
     /**
      * Sets the architecture of the system.
+     *
      * @param arch Arch
      * @see Arch
      */
@@ -147,6 +121,7 @@ public class VDSSysInfo{
 
     /**
      * Sets the Os of the sytem.
+     *
      * @param os Os
      * @see Os
      */
@@ -156,6 +131,7 @@ public class VDSSysInfo{
 
     /**
      * Sets the Os version of the system.
+     *
      * @param osversion String
      */
     public void setOsversion(String osversion) {
@@ -164,6 +140,7 @@ public class VDSSysInfo{
 
     /**
      * Sets the glibc version of the system
+     *
      * @param glibc String
      */
     public void setGlibc(String glibc) {
@@ -172,6 +149,7 @@ public class VDSSysInfo{
 
     /**
      * Returns the architecture of the sytem.
+     *
      * @return Arch
      * @see Arch
      */
@@ -181,6 +159,7 @@ public class VDSSysInfo{
 
     /**
      * Returns the os type of the system.
+     *
      * @return Os
      * @see Os
      */
@@ -190,6 +169,7 @@ public class VDSSysInfo{
 
     /**
      * Returns the os version of the system.
+     *
      * @return String
      */
     public String getOsversion() {
@@ -198,6 +178,7 @@ public class VDSSysInfo{
 
     /**
      * Retuns the glibc version of the system.
+     *
      * @return String
      */
     public String getGlibc() {
@@ -206,6 +187,7 @@ public class VDSSysInfo{
 
     /**
      * Return a copy of this Sysinfo object
+     *
      * @return Object
      */
     public Object clone() {
@@ -214,20 +196,21 @@ public class VDSSysInfo{
 
     /**
      * Check if the system information matches.
+     *
      * @param obj to be compared.
      * @return boolean
      */
     public boolean equals(Object obj) {
         boolean result = false;
-        if(obj instanceof VDSSysInfo){
-            VDSSysInfo sysinfo = (VDSSysInfo)obj;
-            result = (arch.equals(sysinfo.getArch())
-                      && os.equals(sysinfo.getOs()));
+        if (obj instanceof VDSSysInfo) {
+            VDSSysInfo sysinfo = (VDSSysInfo) obj;
+            result = (arch.equals(sysinfo.getArch()) && os.equals(sysinfo.getOs()));
         }
         return result;
     }
     /**
      * Returns the output of the data class as string.
+     *
      * @return String
      */
     public String toString() {

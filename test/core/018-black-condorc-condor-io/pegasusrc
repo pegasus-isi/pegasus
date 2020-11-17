@@ -1,6 +1,3 @@
-pegasus.catalog.site=XML3
-pegasus.catalog.site.file=sites.xml
-
 pegasus.dir.useTimestamp=true
 pegasus.dir.storage.deep=false
 

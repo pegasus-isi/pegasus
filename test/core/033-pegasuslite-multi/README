@@ -1,8 +1,8 @@
 TEST DESCRIPTION
 - clustering is turned on
 - CCG site is sharedfs
-- condorpool is condorio
-- in pegasusrc pegasus.data.configuration is not set.
+- condorpool defaults to condorio
+- in pegasusrc pegasus.data.configuration is set to sharedfs
 
 
 PURPOSE

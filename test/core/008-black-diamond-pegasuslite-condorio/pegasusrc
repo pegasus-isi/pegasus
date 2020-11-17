@@ -7,3 +7,5 @@ pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = condorio
 pegasus.transfer.worker.package = True
+#PM-1192 always print out the job env
+pegasus.gridstart.arguments = -f

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+TOP_DIR=`pwd`
+
+# determine TEST_NAME to setup site catalog
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+fi
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+export TEST_NAME
+
+echo "Running blackdiamond.py"
+export PYTHONPATH=`pegasus-config --python`
+python3 blackdiamond.py 2>&1 | tee $TOP_DIR/plan.out
+
+
+WORK_DIR=`cat plan.out | grep pegasus-remove | sed -E 's/.*pegasus-remove[ ]+(.*)[ ]*/\1/'`
+# account for deep submit directory structure
+cd $WORK_DIR/00/00
+
+NUM_JOBS=`find $WORK_DIR -name "stage_in*sub" | wc -l`
+
+if [ "$NUM_JOBS" -gt "0" ]; then
+    echo "ERROR: planner created $NUM_JOBS stage_in jobs . It should have created 0 as bypass is set for all files in workflow"
+    exit 1
+fi
+

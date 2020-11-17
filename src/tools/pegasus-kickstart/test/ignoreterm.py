@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import signal
 import time
 import sys
@@ -9,6 +11,6 @@ if len(sys.argv) != 2:
 
 sleeptime = int(sys.argv[1])
 
-print "Sleeping for %d seconds" % sleeptime
+print("Sleeping for %d seconds" % sleeptime)
 time.sleep(int(sleeptime))
 

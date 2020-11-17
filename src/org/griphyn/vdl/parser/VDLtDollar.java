@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal a dollar symbol to the parser.
- * This class is module-local on purpose.
+ * Class to signal a dollar symbol to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtDollar
-  implements VDLtToken
-{
-  // empty
+class VDLtDollar implements VDLtToken {
+    // empty
 }

@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal an opened bracket to the parser.
- * This class is module-local on purpose.
+ * Class to signal an opened bracket to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtOpenBracket
-  implements VDLtToken
-{
-  // empty
+class VDLtOpenBracket implements VDLtToken {
+    // empty
 }

@@ -90,7 +90,7 @@ public class CloudWatchLog {
     /**
      * Retrieves a cloud watch log for an AWS Job
      *
-     * @param job AWSJob
+     * @param j AWSJob
      * 
      * @return a Tuple containing the stdout and stderr files to which it is retrieved
      */
@@ -210,8 +210,8 @@ public class CloudWatchLog {
     /**
      * Deletes a log stream from CloudWatch
      * 
-     * @param logGroup
-     * @param streamName
+     * @param logGroup    the log group
+     * @param streamName  the stream name
      * 
      * @return boolean 
      */

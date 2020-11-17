@@ -55,8 +55,8 @@
         </site>
 
          <site handle="isi" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
-                <grid type="gt2" contact="smarty.isi.edu/jobmanager-fork" scheduler="PBS" jobtype="auxillary"/>
-                <grid type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
+                <grid type="gt5" contact="smarty.isi.edu/jobmanager-fork" scheduler="PBS" jobtype="auxillary"/>
+                <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
 
                 <!-- this layout means the xml schema cannot enforce
                      duplicate  directory are 

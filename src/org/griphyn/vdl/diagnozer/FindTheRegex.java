@@ -17,36 +17,30 @@ package org.griphyn.vdl.diagnozer;
 import java.io.*;
 import java.util.regex.*;
 
-/**
- * Implements a file filter that search by regular expression matches. 
- */
-class FindTheRegex implements FilenameFilter
-{
-  /**
-   * Compiled pattern container.
-   */
-  private Pattern m_pattern;
+/** Implements a file filter that search by regular expression matches. */
+class FindTheRegex implements FilenameFilter {
+    /** Compiled pattern container. */
+    private Pattern m_pattern;
 
-  /**
-   * C'tor
-   * @param re is the regular expression to filter with
-   */
-  public FindTheRegex( String re )
-  {
-    m_pattern = Pattern.compile(re);
-  }
+    /**
+     * C'tor
+     *
+     * @param re is the regular expression to filter with
+     */
+    public FindTheRegex(String re) {
+        m_pattern = Pattern.compile(re);
+    }
 
-  /**
-   * Tests if a specified file should be included in a file list.
-   *
-   * @param dir the directory in which the file was found.
-   * @param name the name of the file.
-   * @return <code>true</code> iff the name should be included in the 
-   * file list; <code>false</code> otherwise. 
-   */
-  public boolean accept( File dir, String name )
-  {
-    Matcher m = m_pattern.matcher(name);
-    return m.matches();
-  }
+    /**
+     * Tests if a specified file should be included in a file list.
+     *
+     * @param dir the directory in which the file was found.
+     * @param name the name of the file.
+     * @return <code>true</code> iff the name should be included in the file list; <code>false
+     *     </code> otherwise.
+     */
+    public boolean accept(File dir, String name) {
+        Matcher m = m_pattern.matcher(name);
+        return m.matches();
+    }
 }

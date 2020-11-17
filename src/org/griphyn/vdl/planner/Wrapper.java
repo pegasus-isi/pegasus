@@ -21,13 +21,11 @@ package org.griphyn.vdl.planner;
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  */
-public interface Wrapper
-{
-  /**
-   * Frees resources taken by the instance of the replica catalog. This
-   * method is safe to be called on failed or already closed catalogs.
-   */
-  public void close();
+public interface Wrapper {
+    /**
+     * Frees resources taken by the instance of the replica catalog. This method is safe to be
+     * called on failed or already closed catalogs.
+     */
+    public void close();
 }

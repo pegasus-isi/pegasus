@@ -18,34 +18,31 @@ import java.io.*;
 
 /**
  * This class is used to signal errors while scanning or parsing.
+ *
  * @see VDLtScanner
  * @see VDLtParser
  */
-public class VDLtException 
-  extends java.lang.RuntimeException
-{
-  /**
-   * Contains the current line number when the exception was thrown.
-   */
-  private int m_lineno; 
+public class VDLtException extends java.lang.RuntimeException {
+    /** Contains the current line number when the exception was thrown. */
+    private int m_lineno;
 
-  /**
-   * Constructs a message that contains a line number prefix.
-   * @param lineno is the line number to prefix
-   * @param message is the message to attach when throwing.
-   */
-  public VDLtException( int lineno, String message )
-  {
-    super("line " + lineno + ": " + message);
-    this.m_lineno = lineno;
-  }
+    /**
+     * Constructs a message that contains a line number prefix.
+     *
+     * @param lineno is the line number to prefix
+     * @param message is the message to attach when throwing.
+     */
+    public VDLtException(int lineno, String message) {
+        super("line " + lineno + ": " + message);
+        this.m_lineno = lineno;
+    }
 
-  /**
-   * Obtains the current line number as of the throw.
-   * @return a line number.
-   */
-  public int getLineNumber()
-  {
-    return this.m_lineno;
-  }
+    /**
+     * Obtains the current line number as of the throw.
+     *
+     * @return a line number.
+     */
+    public int getLineNumber() {
+        return this.m_lineno;
+    }
 }

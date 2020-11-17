@@ -1,19 +1,16 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
 /**
@@ -22,12 +19,10 @@ package edu.isi.pegasus.planner.catalog.transformation.classes;
  * @author Gaurang Mehta gmehta@isi.edu
  * @version $Revision$
  */
-
 import java.io.Serializable;
 import java.util.HashMap;
 
-public class Os
-    implements Serializable {
+public class Os implements Serializable {
     private String _value_;
     private static HashMap _table_ = new HashMap(5);
 
@@ -46,10 +41,12 @@ public class Os
     public static final Os AIX = new Os(_AIX);
     public static final Os WINDOWS = new Os(_WINDOWS);
 
-    public static final String err = "Error: Illegal Operating System defined. Please specify one of the predefined types \n [LINUX, SUNOS, AIX, WINDOWS]";
+    public static final String err =
+            "Error: Illegal Operating System defined. Please specify one of the predefined types \n [LINUX, SUNOS, AIX, WINDOWS]";
 
     /**
      * Returns the value of the operating system as string.
+     *
      * @return String
      */
     public String getValue() {
@@ -58,8 +55,10 @@ public class Os
 
     /**
      * Creates a new Os object given an os string.
+     *
      * @param value String
-     * @throws IllegalStateException Throws Exception if the operating system is not defined in this class.
+     * @throws IllegalStateException Throws Exception if the operating system is not defined in this
+     *     class.
      * @return Os
      */
     public static Os fromValue(String value) throws IllegalStateException {
@@ -72,8 +71,10 @@ public class Os
 
     /**
      * Creates a new Os object given an os string.
+     *
      * @param value String
-     * @throws IllegalStateException Throws Exception if the operating system is not defined in this class.
+     * @throws IllegalStateException Throws Exception if the operating system is not defined in this
+     *     class.
      * @return Os
      */
     public static Os fromString(String value) throws IllegalStateException {
@@ -82,6 +83,7 @@ public class Os
 
     /**
      * Compares if a given Os object is equal to this.
+     *
      * @param obj Object
      * @return boolean
      */
@@ -95,10 +97,10 @@ public class Os
 
     /**
      * Returns the string value of the operating system.
+     *
      * @return String
      */
     public String toString() {
         return _value_;
     }
-
 }

@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+
+import yaml
+import sys
+
+with open(sys.argv[1], 'r', encoding='utf8') as f:
+    yml = yaml.safe_load(f)
+    # this depends on the output locale, which may not be utf8
+    # print(yml)
+

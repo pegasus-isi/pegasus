@@ -14,130 +14,121 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import java.util.*;
-import java.io.Writer;
 import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
 
 /**
- * This class is the container for a temporary file object. A temporary
- * file object contains a filename and a file descriptor.
+ * This class is the container for a temporary file object. A temporary file object contains a
+ * filename and a file descriptor.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public class Temporary extends File implements HasDescriptor, HasFilename
-{
-  /**
-   * Name of the file.
-   */
-  protected String m_filename;
+public class Temporary extends File implements HasDescriptor, HasFilename {
+    /** Name of the file. */
+    protected String m_filename;
 
-  /**
-   * Descriptor of the file.
-   */
-  protected int m_descriptor;
+    /** Descriptor of the file. */
+    protected int m_descriptor;
 
-  /**
-   * Default c'tor: Construct a hollow shell and allow further
-   * information to be added later.
-   */
-  public Temporary()
-  {
-    super();
-    m_filename = null;
-    m_descriptor = -1;
-  }
-
-  /**
-   * Constructs a temporary file object.
-   * @param filename is the name of the file that stat was invoked
-   * @param descriptor is a valid file descriptor number. 
-   */
-  public Temporary( String filename, int descriptor )
-  {
-    super();
-    m_filename = filename;
-    m_descriptor = descriptor;
-  }
-
-  /**
-   * Accessor
-   *
-   * @see #setFilename(String)
-   */
-  public String getFilename()
-  { return this.m_filename; }
-
-  /**
-   * Accessor.
-   *
-   * @param filename
-   * @see #getFilename()
-   */
-  public void setFilename( String filename )
-  { this.m_filename = filename; }
-
-  /**
-   * Accessor
-   *
-   * @see #setDescriptor(int)
-   */
-  public int getDescriptor()
-  { return this.m_descriptor; }
-
-  /**
-   * Accessor.
-   *
-   * @param descriptor
-   * @see #getDescriptor()
-   */
-  public void setDescriptor( int descriptor )
-  { this.m_descriptor = descriptor; }
-
-  /**
-   * Dump the state of the current element as XML output. This function
-   * traverses all sibling classes as necessary, and converts the data
-   * into pretty-printed XML output. The stream interface should be able
-   * to handle large output efficiently.
-   *
-   * @param stream is a stream opened and ready for writing. This can also
-   * be a string stream for efficient output.
-   * @param indent is a <code>String</code> of spaces used for pretty
-   * printing. The initial amount of spaces should be an empty string.
-   * The parameter is used internally for the recursive traversal.
-   * If a <code>null</code> value is specified, no indentation nor
-   * linefeeds will be generated. 
-   * @param namespace is the XML schema namespace prefix. If neither
-   * empty nor null, each element will be prefixed with this prefix,
-   * and the root element will map the XML namespace. 
-   * @exception IOException if something fishy happens to the stream.
-   */
-  public void toXML( Writer stream, String indent, String namespace )
-    throws IOException
-  {
-    String tag = ( namespace != null && namespace.length() > 0 ) ?
-      namespace + ":temporary" : "temporary";
-
-    if ( indent != null && indent.length() > 0 ) stream.write( indent );
-    stream.write( '<' );
-    stream.write( tag );
-    writeAttribute( stream, " name=\"", m_filename );
-    writeAttribute( stream, " descriptor=\"", Integer.toString(m_descriptor) );
-
-    if ( m_hexbyte != null && m_hexbyte.length() > 0 ) {
-      // yes, content
-      stream.write( '>' );
-      stream.write( m_hexbyte );
-      stream.write( "</" );
-      stream.write( tag );
-      stream.write( '>' );
-    } else {
-      // no content
-      stream.write( "/>" );
+    /** Default c'tor: Construct a hollow shell and allow further information to be added later. */
+    public Temporary() {
+        super();
+        m_filename = null;
+        m_descriptor = -1;
     }
 
-    if ( indent != null ) 
-      stream.write( System.getProperty( "line.separator", "\r\n" ) );
-  }
+    /**
+     * Constructs a temporary file object.
+     *
+     * @param filename is the name of the file that stat was invoked
+     * @param descriptor is a valid file descriptor number.
+     */
+    public Temporary(String filename, int descriptor) {
+        super();
+        m_filename = filename;
+        m_descriptor = descriptor;
+    }
+
+    /**
+     * Accessor
+     *
+     * @see #setFilename(String)
+     */
+    public String getFilename() {
+        return this.m_filename;
+    }
+
+    /**
+     * Accessor.
+     *
+     * @param filename
+     * @see #getFilename()
+     */
+    public void setFilename(String filename) {
+        this.m_filename = filename;
+    }
+
+    /**
+     * Accessor
+     *
+     * @see #setDescriptor(int)
+     */
+    public int getDescriptor() {
+        return this.m_descriptor;
+    }
+
+    /**
+     * Accessor.
+     *
+     * @param descriptor
+     * @see #getDescriptor()
+     */
+    public void setDescriptor(int descriptor) {
+        this.m_descriptor = descriptor;
+    }
+
+    /**
+     * Dump the state of the current element as XML output. This function traverses all sibling
+     * classes as necessary, and converts the data into pretty-printed XML output. The stream
+     * interface should be able to handle large output efficiently.
+     *
+     * @param stream is a stream opened and ready for writing. This can also be a string stream for
+     *     efficient output.
+     * @param indent is a <code>String</code> of spaces used for pretty printing. The initial amount
+     *     of spaces should be an empty string. The parameter is used internally for the recursive
+     *     traversal. If a <code>null</code> value is specified, no indentation nor linefeeds will
+     *     be generated.
+     * @param namespace is the XML schema namespace prefix. If neither empty nor null, each element
+     *     will be prefixed with this prefix, and the root element will map the XML namespace.
+     * @exception IOException if something fishy happens to the stream.
+     */
+    public void toXML(Writer stream, String indent, String namespace) throws IOException {
+        String tag =
+                (namespace != null && namespace.length() > 0)
+                        ? namespace + ":temporary"
+                        : "temporary";
+
+        if (indent != null && indent.length() > 0) stream.write(indent);
+        stream.write('<');
+        stream.write(tag);
+        writeAttribute(stream, " name=\"", m_filename);
+        writeAttribute(stream, " descriptor=\"", Integer.toString(m_descriptor));
+
+        if (m_hexbyte != null && m_hexbyte.length() > 0) {
+            // yes, content
+            stream.write('>');
+            stream.write(m_hexbyte);
+            stream.write("</");
+            stream.write(tag);
+            stream.write('>');
+        } else {
+            // no content
+            stream.write("/>");
+        }
+
+        if (indent != null) stream.write(System.getProperty("line.separator", "\r\n"));
+    }
 }

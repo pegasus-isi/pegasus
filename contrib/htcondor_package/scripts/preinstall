@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -e
-
-# Shutdown condor
-if /bin/launchctl list "edu.wisc.cs.htcondor" &> /dev/null; then
-    /bin/launchctl unload /Library/LaunchDaemons/edu.wisc.cs.htcondor.plist
-fi
-

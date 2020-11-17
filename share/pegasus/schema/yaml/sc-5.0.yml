@@ -1,0 +1,194 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+$defs:
+  # --- pre-defined site related properties ------------------------------------
+  arch:
+    type: string
+    enum:
+      - x86
+      - x86_64
+      - ppc
+      - ppc_64
+      - ppc64le
+      - ia64
+      - sparcv7
+      - sparcv9
+      - amd64
+
+  os.type:
+    type: string
+    enum:
+      - linux
+      - sunos
+      - macosx
+      - aix
+      - windows
+
+  # --- a file server entry ----------------------------------------------------
+  fileServer:
+    type: object
+    properties:
+      url:
+        type: string
+      operation:
+        type: string
+        enum:
+          - all
+          - put
+          - get
+      profiles:
+        $ref: "common.yml#/$defs/profiles"
+    required:
+      - url
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+  # --- a directory entry ------------------------------------------------------
+  directory:
+    type: object
+    properties:
+      type:
+        type: string
+        enum:
+          - sharedScratch
+          - sharedStorage
+          - localScratch
+          - localStorage
+      path:
+        type: string
+      freeSize:
+        type: string
+      totalSize:
+        type: string
+      fileServers:
+        type: array
+        items:
+          $ref: "#/$defs/fileServer"
+        minItems: 1
+    required:
+      - type
+      - fileServers
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+  # --- a grid entry -----------------------------------------------------------
+  grid:
+    type: object
+    properties:
+      type:
+        type: string
+        enum:
+          - gt5
+          - condor
+          - cream
+          - batch
+          - nordugrid
+          - unicore
+          - ec2
+          - deltacloud
+      contact:
+        type: string
+      scheduler:
+        type: string
+        enum:
+          - fork
+          - pbs
+          - lsf
+          - condor
+          - sge
+          - slurm
+          - unknown
+      jobtype:
+        type: string
+        enum:
+          - compute
+          - auxillary
+          - transfer
+          - register
+          - cleanup
+      freeMem:
+        type: string
+      totalMem:
+        type: string
+      maxCount:
+        type: string
+      maxCPUTime:
+        type: string
+      runningJobs:
+        type: number
+        minimum: 0
+      jobsInQueue:
+        type: number
+        minimum: 0
+      idleNodes:
+        type: number
+        minimum: 0
+      totalNodes:
+        type: number
+        minimum: 0
+    required:
+      - type
+      - contact
+      - scheduler
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+  # --- a site entry -----------------------------------------------------------
+  site:
+    type: object
+    properties:
+      name:
+        type: string
+      arch:
+        $ref: "#/$defs/arch"
+      os.type:
+        $ref: "#/$defs/os.type"
+      os.release:
+        type: string
+      os.version:
+        $ref: "common.yml#/$defs/versionString"
+      directories:
+        type: array
+        items:
+          $ref: "#/$defs/directory"
+      grids:
+        type: array
+        items:
+          $ref: "#/$defs/grid"
+      profiles:
+        $ref: "common.yml#/$defs/profiles"
+    required:
+      - name
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+  # --- schema when inlined in dax ---------------------------------------------
+  inlineSiteCatalog:
+    type: object
+    properties:
+      pegasus:
+        $ref: "common.yml#/$defs/versionString"
+      sites:
+        type: array
+        items:
+          $ref: "#/$defs/site"
+        minItems: 1
+    required:
+      - sites
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+# --- schema for standalone file -----------------------------------------------
+allOf:
+  - $ref: "#/$defs/inlineSiteCatalog"
+  - type: object
+    required:
+      - pegasus

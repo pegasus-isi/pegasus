@@ -14,29 +14,25 @@
  */
 
 package edu.isi.pegasus.planner.parser;
-import edu.isi.pegasus.planner.invocation.Invocation;
 
+import edu.isi.pegasus.planner.invocation.Invocation;
 import java.util.*;
 
 /**
- * This class keeps the name of an element and its corresponding
- * java object reference. The structure is used by the stack in 
- * <code>InvocationParser</code>. 
+ * This class keeps the name of an element and its corresponding java object reference. The
+ * structure is used by the stack in <code>InvocationParser</code>.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see InvocationParser
  */
-public class IVSElement
-{
-  public String m_name;
-  public Invocation m_obj;
-    
-  public IVSElement( String name, Invocation invocation )
-  {
-    m_name = new String(name);
-    m_obj = invocation;
-  }
+public class IVSElement {
+    public String m_name;
+    public Invocation m_obj;
+
+    public IVSElement(String name, Invocation invocation) {
+        m_name = new String(name);
+        m_obj = invocation;
+    }
 }

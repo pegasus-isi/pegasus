@@ -15,36 +15,33 @@
 
 package org.griphyn.vdl.router;
 
-import org.griphyn.vdl.classes.*;
-import org.griphyn.vdl.router.*;
-import org.griphyn.vdl.util.Logging;
 import java.io.*;
+import org.griphyn.vdl.classes.*;
+import org.griphyn.vdl.util.Logging;
 
 public class ShowDiamond {
-  public static void main( String[] args )
-    throws IllegalArgumentException, IOException
-  {
-    // create debug output
-    Logging.instance().register( "dag", System.err );
-    Logging.instance().register( "state", System.err );
-    Logging.instance().register( "route", System.err );
+    public static void main(String[] args) throws IllegalArgumentException, IOException {
+        // create debug output
+        Logging.instance().register("dag", System.err);
+        Logging.instance().register("state", System.err);
+        Logging.instance().register("route", System.err);
 
-    // start timer
-    long start = System.currentTimeMillis();
+        // start timer
+        long start = System.currentTimeMillis();
 
-    // create the diamond
-    Definitions diamond = org.griphyn.vdl.router.CreateDiamond.create();
-    if ( args.length > 0 && args[0] != null &&
-	 (args[0].equalsIgnoreCase("vdlt") || args[0].startsWith("t") ) )
-      System.out.println( diamond.toString() );
-    else {
-      BufferedWriter bw =
-	new BufferedWriter( new OutputStreamWriter(System.out) );
-      diamond.toXML(bw,"");
-      bw.flush(); // IMPORTANT!
+        // create the diamond
+        Definitions diamond = org.griphyn.vdl.router.CreateDiamond.create();
+        if (args.length > 0
+                && args[0] != null
+                && (args[0].equalsIgnoreCase("vdlt") || args[0].startsWith("t")))
+            System.out.println(diamond.toString());
+        else {
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+            diamond.toXML(bw, "");
+            bw.flush(); // IMPORTANT!
+        }
+        long diff = System.currentTimeMillis() - start;
+        System.err.println("execution time: " + diff + " ms");
+        System.exit(0);
     }
-    long diff = System.currentTimeMillis() - start;
-    System.err.println( "execution time: " + diff + " ms" );
-    System.exit(0);
-  }
 }

@@ -1,46 +1,38 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package edu.isi.pegasus.planner.code.generator.condor;
 
 /**
- * This class is used to signal errors while parsing argument strings for
- * Condor Quoting.
- *
+ * This class is used to signal errors while parsing argument strings for Condor Quoting.
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
  * @version $Revision$
- *
  * @see CondorQuoteParser
  */
-public class CondorQuoteParserException extends Exception{
+public class CondorQuoteParserException extends Exception {
 
-    /**
-     * Remembers the position that cause the exception to be thrown.
-     */
+    /** Remembers the position that cause the exception to be thrown. */
     private int mPosition;
 
     /**
      * The overloaded constructor
      *
-     * @param msg       the message to be thrown in exception
-     * @param position  the position at which error occured
+     * @param msg the message to be thrown in exception
+     * @param position the position at which error occured
      */
-    public CondorQuoteParserException( String msg, int position ){
+    public CondorQuoteParserException(String msg, int position) {
         super(msg);
         mPosition = position;
     }
@@ -48,20 +40,21 @@ public class CondorQuoteParserException extends Exception{
     /**
      * The overloaded constructor
      *
-     * @param msg       the message to be thrown in exception.
-     * @param position  the position at which error occured.
-     * @param cause     the cause of the error.
+     * @param msg the message to be thrown in exception.
+     * @param position the position at which error occured.
+     * @param cause the cause of the error.
      */
-    public CondorQuoteParserException( String msg, int position, Throwable cause ){
-        super(msg,cause);
+    public CondorQuoteParserException(String msg, int position, Throwable cause) {
+        super(msg, cause);
         mPosition = position;
     }
 
     /**
      * Obtains the position at which point the exception was thrown.
+     *
      * @return a column position into the string
      */
-    public int getPosition(){
+    public int getPosition() {
         return this.mPosition;
     }
 }

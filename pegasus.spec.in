@@ -9,20 +9,31 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 
 Source:         pegasus-%{version}.tar.gz
 
-BuildRequires:  python-setuptools, openssl-devel, pyOpenSSL ant, ant-apache-regexp, gcc, groff, python-devel, gcc-c++, make, jpackage-utils, asciidoc, libxslt, fop, R-devel
-%if 0%{?rhel} < 7
-BuildRequires:  ant-nodeps, java-1.8.0-openjdk-devel, /usr/share/java-1.8.0
+BuildRequires:  ant-apache-regexp, gcc, gcc-c++, jpackage-utils, make, openssl-devel, ant, R-devel
+Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, perl-Getopt-Long
+
+%if 0%{?rhel} <= 7
+# Jinja2 v2.11 has async code, which uses py36 syntax, and is never imported in < py36, but
+# byte compiling in RPM fails as py27 interpreter tries to compile all files.
+# To resolve the above we set default interpreter to py3.
+# Alternatively, we can set % global _python_bytecompile_errors_terminate_build to 0, to ignore
+# byte compile errors
+%global __python %{python3}
+
+BuildRequires:  java-devel = 1:1.8.0, python36-pyOpenSSL, python36-PyYAML, python36-GitPython, python3-devel, python3-setuptools
+Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, python36-pika, python36-PyYAML, python36-GitPython, perl-Getopt-Long
 %endif
-%if 0%{?rhel} >= 7
-BuildRequires:  java-devel = 1:1.8.0, /usr/share/java-1.8.0
+
+%if 0%{?rhel} >= 8
+BuildRequires:  java-11-openjdk-devel, python3-pyOpenSSL, python3-PyYAML, python3-GitPython, python3-devel, python3-setuptools
+Requires:       jre-11-openjdk-headless, python3, condor >= 8.8, graphviz, python3-pyOpenSSL, python3-pika, python3-PyYAML, python3-GitPython, perl-Getopt-Long
 %endif
-Requires:       java >= 1:1.8.0, python >= 2.6, condor >= 8.6, graphviz, pyOpenSSL, python-amqplib
 
 %define sourcedir %{name}-%{version}
 
-# rpmbuild might add python3 as a dependency due to some Singularity example
-# workflows. This is a false dependency, so make sure it is excluded.
-%global __requires_exclude ^/usr/bin/python3$
+# Turn off automatic python bytecompilation
+# Will bytecompile manually with Python 2 and 3 separately
+%undefine __brp_python_bytecompile
 
 %description
 The Pegasus project encompasses a set of technologies that
@@ -70,8 +81,6 @@ rm -f %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
 %{_bindir}/*
 %{_libdir}/pegasus
 %{_libdir}/python*
-%{_datadir}/doc/%{name}
-%{_datadir}/man/man1/*
 %{_datadir}/%{name}
 
 

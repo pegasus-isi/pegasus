@@ -14,106 +14,86 @@
  */
 package org.griphyn.vdl.annotation;
 
-import java.sql.Types;
-
 /**
- * This simple class defines the long values for the values at the
- * heart of Yong's annotations. 
+ * This simple class defines the long values for the values at the heart of Yong's annotations.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public class TupleInteger extends Tuple
-{
-  /**
-   * Defines the key for which we store the annotation.
-   */
-  private long m_value = 0;
+public class TupleInteger extends Tuple {
+    /** Defines the key for which we store the annotation. */
+    private long m_value = 0;
 
-  /**
-   * Constructs an instance of a long tuple.
-   *
-   * @param key is the key to store annotations for.
-   * @param value is the long value of the annotation.
-   */
-  public TupleInteger( String key, long value )
-  {
-    super(key);
-    m_value = value;
-  }
+    /**
+     * Constructs an instance of a long tuple.
+     *
+     * @param key is the key to store annotations for.
+     * @param value is the long value of the annotation.
+     */
+    public TupleInteger(String key, long value) {
+        super(key);
+        m_value = value;
+    }
 
-  /**
-   * Obtains the current value of the value part.
-   *
-   * @return the current value as long.
-   * @see #setLong( long )
-   */
-  public long getLong()
-  {
-    return m_value;
-  }
+    /**
+     * Obtains the current value of the value part.
+     *
+     * @return the current value as long.
+     * @see #setLong( long )
+     */
+    public long getLong() {
+        return m_value;
+    }
 
-  /**
-   * Overwrites the current value of the value part.
-   *
-   * @param value is the new value to use from now on.
-   * @see #getLong()
-   */
-  public void setLong( long value )
-  {
-    m_value = value;
-  }
+    /**
+     * Overwrites the current value of the value part.
+     *
+     * @param value is the new value to use from now on.
+     * @see #getLong()
+     */
+    public void setLong(long value) {
+        m_value = value;
+    }
 
-  /**
-   * Return generically the value wrapped into a Java class.
-   *
-   * @return the value wrapped as Java object.
-   * @see #setValue( Object )
-   * @see java.lang.Long
-   */ 
-  public Object getValue()
-  {
-    return new Long( m_value );
-  }
+    /**
+     * Return generically the value wrapped into a Java class.
+     *
+     * @return the value wrapped as Java object.
+     * @see #setValue( Object )
+     * @see java.lang.Long
+     */
+    public Object getValue() {
+        return new Long(m_value);
+    }
 
-  /**
-   * Generic interface to set a value in an instance. Note that this
-   * action may fail, if the instance is of an incompatible type.
-   *
-   * @param value is the data object to set. 
-   * @see #getValue()
-   * @exception ClassCastException if the actual argument type of the value
-   * is incompatible with the value maintained by the instance. 
-   */
-  public void setValue( Object value )
-    throws ClassCastException
-  {
-    if ( value instanceof java.lang.Number )
-      m_value = ((Long) value).longValue();
-    else if ( value instanceof java.lang.String )
-      m_value = Long.parseLong( (String) value );
-    else
-      throw new ClassCastException( "type cast failed: not a Long" );
-  }
+    /**
+     * Generic interface to set a value in an instance. Note that this action may fail, if the
+     * instance is of an incompatible type.
+     *
+     * @param value is the data object to set.
+     * @see #getValue()
+     * @exception ClassCastException if the actual argument type of the value is incompatible with
+     *     the value maintained by the instance.
+     */
+    public void setValue(Object value) throws ClassCastException {
+        if (value instanceof java.lang.Number) m_value = ((Long) value).longValue();
+        else if (value instanceof java.lang.String) m_value = Long.parseLong((String) value);
+        else throw new ClassCastException("type cast failed: not a Long");
+    }
 
-  /**
-   * Returns the type of the value as SQL Type.
-   *
-   * @return a constant from the set of SQL types. 
-   * @see java.sql.Types
-   */ 
-  public int getType()
-  {
-    return java.sql.Types.BIGINT;
-  }
+    /**
+     * Returns the type of the value as SQL Type.
+     *
+     * @return a constant from the set of SQL types.
+     * @see java.sql.Types
+     */
+    public int getType() {
+        return java.sql.Types.BIGINT;
+    }
 
-  /**
-   * Returns the string representation of the type.
-   */ 
-  public String getTypeString()
-  {
-    return "int";
-  }
+    /** Returns the string representation of the type. */
+    public String getTypeString() {
+        return "int";
+    }
 }
-

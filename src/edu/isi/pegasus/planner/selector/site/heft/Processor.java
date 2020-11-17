@@ -1,20 +1,16 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-
 package edu.isi.pegasus.planner.selector.site.heft;
 
 /**
@@ -25,46 +21,37 @@ package edu.isi.pegasus.planner.selector.site.heft;
  */
 public class Processor {
 
-    /**
-     * The start time of the current scheduled job.
-     */
+    /** The start time of the current scheduled job. */
     private long mStartTime;
 
-    /**
-     * The end time of the current scheduled job.
-     */
+    /** The end time of the current scheduled job. */
     private long mEndTime;
 
-
-    /**
-     * The default constructor.
-     */
+    /** The default constructor. */
     public Processor() {
         mStartTime = 0;
-        mEndTime   = 0;
+        mEndTime = 0;
     }
 
     /**
-     * Returns the earliest time the processor is available for scheduling
-     * a job.  It is non insertion based scheduling policy.
+     * Returns the earliest time the processor is available for scheduling a job. It is non
+     * insertion based scheduling policy.
      *
-     * @param start     the time at which to start the search.
-     *
+     * @param start the time at which to start the search.
      * @return long
      */
-    public long getAvailableTime( long start ){
-       return ( mEndTime > start )? mEndTime : start;
+    public long getAvailableTime(long start) {
+        return (mEndTime > start) ? mEndTime : start;
     }
-
 
     /**
      * Schedules a job on to a processor.
      *
-     * @param start    the start time of the job.
-     * @param end      the end time for the job
+     * @param start the start time of the job.
+     * @param end the end time for the job
      */
-    public void scheduleJob( long start, long end ){
+    public void scheduleJob(long start, long end) {
         mStartTime = start;
-        mEndTime   = end;
+        mEndTime = end;
     }
 }

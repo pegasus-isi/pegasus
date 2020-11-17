@@ -151,7 +151,7 @@
 {% elif tutorial_setup == "summit-kub-bosco" %}
         <!-- This profile tells Pegasus where the worker package is installed on the site -->
         <!-- Without this, Pegasus will automatically stage a worker package to the site -->
-        <profile namespace="env"  key="PEGASUS_HOME">/ccs/proj/csc355/summit/pegasus/stable</profile>
+        <profile namespace="env"  key="PEGASUS_HOME">/gpfs/alpine/csc355/world-shared/binaries/summit/pegasus/stable</profile>
         <profile namespace="pegasus" key="runtime">1800</profile>
 
         <profile namespace="pegasus" key="change.dir">true</profile>

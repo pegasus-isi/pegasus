@@ -45,11 +45,11 @@ pegasus-plan \
     --conf ./pegasusrc \
     --sites condorpool \
     --staging-site condorpool \
-    --output-site local \
+    --output-sites local \
     --dir dags \
-    --dax blackdiamond.dax \
     --force \
     -v \
+    blackdiamond.dax \
      | tee $TOPDIR/plan.out
 
 

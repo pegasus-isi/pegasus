@@ -17,29 +17,26 @@ package org.griphyn.vdl.parser;
 import org.griphyn.vdl.classes.*;
 
 /**
- * This interface introduces a callback to be employed whenever
- * a Definition is fully read into memory, and ready to be processed.
- * Any overwrite or dontcare mode is not part of this interface's 
+ * This interface introduces a callback to be employed whenever a Definition is fully read into
+ * memory, and ready to be processed. Any overwrite or dontcare mode is not part of this interface's
  * contract.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see Definition
  * @see Transformation
  * @see Derivation
  */
-public interface FinalizerHandler 
-{
-  /**
-   * This method adds the given top-level VDL element to whatever storage is
-   * implemented underneath. Please note that the Defintions class will not
-   * be maintained by the parser for memory efficiency reasons!
-   *
-   * @param d is the VDL that is ready to be stored.
-   * @return true, if new version was stored and database modified,
-   * false, if the definition was rejected for any reason. 
-   */
-  public boolean store( VDL d );
+public interface FinalizerHandler {
+    /**
+     * This method adds the given top-level VDL element to whatever storage is implemented
+     * underneath. Please note that the Defintions class will not be maintained by the parser for
+     * memory efficiency reasons!
+     *
+     * @param d is the VDL that is ready to be stored.
+     * @return true, if new version was stored and database modified, false, if the definition was
+     *     rejected for any reason.
+     */
+    public boolean store(VDL d);
 }

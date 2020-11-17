@@ -29,7 +29,7 @@ typedef struct {
 } MachineInfo;
 
 extern void initMachineInfo(MachineInfo* machine);
-extern int printXMLMachineInfo(FILE *out, int indent, const char* tag,
+extern int printYAMLMachineInfo(FILE *out, int indent, const char* tag,
                                const MachineInfo* machine);
 extern void deleteMachineInfo(MachineInfo* machine);
 

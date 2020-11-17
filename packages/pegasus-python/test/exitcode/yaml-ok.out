@@ -1,0 +1,191 @@
+- invocation: True
+  version: 3.0
+  start: 2019-02-15T14:06:34.252-08:00
+  duration: 6.252
+  transformation: "diamond::findrange:4.0"
+  derivation: "ID0000002"
+  resource: "condorpool"
+  wf-label: "diamond"
+  wf-stamp: "2019-02-15T14:01:44-08:00"
+  interface: eth0
+  hostaddr: 128.9.35.234
+  hostname: compute-6.isi.edu
+  pid: 48225
+  uid: 550
+  user: bamboo
+  gid: 100
+  group: users
+  umask: 0o0022
+  mainjob:
+    start: 2019-02-15T14:06:34.460-08:00
+    duration: 6.035
+    pid: 48239
+    usage:
+      utime: 6.001
+      stime: 0.002
+      maxrss: 1300
+      minflt: 388
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 0
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 23
+      nivcsw: 3
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /scitech/shared/lizard/scratch-90-days/bamboo/shared-scratch/bamboo/pegasus/diamond/20190215T140144-0800/diamond-findrange-4_0
+      mode: 0o100755
+      size: 23176
+      inode: 4214141
+      nlink: 1
+      blksize: 65536
+      blocks: 46
+      mtime: 2019-02-15T14:04:20-08:00
+      atime: 2019-02-15T14:04:20-08:00
+      ctime: 2019-02-15T14:04:53-08:00
+      uid: 550
+      user: bamboo
+      gid: 100
+      group: users
+    argument_vector:
+      - -a
+      - findrange
+      - -T6-
+      - -i
+      - f.b1
+      - -o
+      - f.c1
+    procs:
+  jobids:
+    condor: 5363338.0
+  cwd: /scitech/shared/lizard/scratch-90-days/bamboo/shared-scratch/bamboo/pegasus/diamond/20190215T140144-0800
+  usage:
+    utime: 0.011
+    stime: 0.064
+    maxrss: 2276
+    minflt: 2482
+    majflt: 0
+    nswap: 0
+    inblock: 0
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 26
+    nivcsw: 6
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: compute-6.isi.edu
+    uname_release: 3.10.0-957.5.1.el7.x86_64
+    uname_machine: x86_64
+    ram_total: 96504804
+    ram_free: 2545168
+    ram_shared: 0
+    ram_buffer: 632
+    swap_total: 18874364
+    swap_free: 18868468
+    cpu_count: 64
+    cpu_speed: 2200
+    cpu_vendor: AuthenticAMD
+    cpu_model: QEMU Virtual CPU version 1.5.3
+    load_min1: 0.33
+    load_min5: 0.31
+    load_min15: 0.47
+    procs_total: 565
+    procs_running: 1
+    procs_sleeping: 563
+    procs_waiting: 1
+    procs_vmsize: 28583300
+    procs_rss: 870408
+    task_total: 935
+    task_running: 1
+    task_sleeping: 933
+    task_waiting: 1
+  files:
+    final:
+      lfn: "f.c1"
+      file_name: /scitech/shared/lizard/scratch-90-days/bamboo/shared-scratch/bamboo/pegasus/diamond/20190215T140144-0800/f.c1
+      mode: 0o100644
+      size: 220
+      inode: 4213923
+      nlink: 1
+      blksize: 65536
+      blocks: 1
+      mtime: 2019-02-15T14:06:34-08:00
+      atime: 2019-02-15T14:06:34-08:00
+      ctime: 2019-02-15T14:06:34-08:00
+      uid: 550
+      user: bamboo
+      gid: 100
+      group: users
+      integrity_error: pegasus-integrity callout failed
+    stdin:
+      file_name: /dev/null
+      mode: 0o20666
+      size: 0
+      inode: 1028
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2019-02-13T07:01:49-08:00
+      atime: 2019-02-13T07:01:49-08:00
+      ctime: 2019-02-13T07:01:49-08:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    stdout:
+      temporary_name: /var/lib/condor/execute/dir_48217/ks.out.t3mNxc
+      descriptor: 3
+      mode: 0o100600
+      size: 0
+      inode: 4327756620
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2019-02-15T14:06:34-08:00
+      atime: 2019-02-15T14:06:34-08:00
+      ctime: 2019-02-15T14:06:34-08:00
+      uid: 550
+      user: bamboo
+      gid: 100
+      group: users
+    stderr:
+      temporary_name: /var/lib/condor/execute/dir_48217/ks.err.szvrFT
+      descriptor: 4
+      mode: 0o100600
+      size: 0
+      inode: 4327868002
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2019-02-15T14:06:34-08:00
+      atime: 2019-02-15T14:06:34-08:00
+      ctime: 2019-02-15T14:06:34-08:00
+      uid: 550
+      user: bamboo
+      gid: 100
+      group: users
+    metadata:
+      temporary_name: /var/lib/condor/execute/dir_48217/ks.meta.Vlx5MA
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 4327868023
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2019-02-15T14:06:34-08:00
+      atime: 2019-02-15T14:06:34-08:00
+      ctime: 2019-02-15T14:06:34-08:00
+      uid: 550
+      user: bamboo
+      gid: 100
+      group: users
+

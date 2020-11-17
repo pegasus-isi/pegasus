@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -eo pipefail
+
+PYTHON=$($(dirname $0)/get-system-python)
+
+# This script takes the bin dir as an argument
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 bindir"
+    echo
+    echo "Where 'bindir' is a directory containing scripts with #!/usr/bin/env python"
+    exit 1
+fi
+
+# Update the matching files in that directory
+for f in "$1"/*; do
+    if grep -E "^#!/usr/bin/env python" $f >/dev/null 2>&1; then
+        echo "Updating #! line of $f"
+        perl -p -i -e "s|^#!/usr/bin/env python.*|#!$PYTHON|g" "$f"
+    fi
+done
+
+# this is the newer style tools - using a bash wrapper to determine
+# python version at runtime
+cd $1
+for TOOL in \
+    pegasus-analyzer \
+    pegasus-config \
+    pegasus-cwl-converter \
+    pegasus-dagman \
+    pegasus-db-admin \
+    pegasus-em \
+    pegasus-exitcode \
+    pegasus-globus-online \
+    pegasus-globus-online-init \
+    pegasus-graphviz \
+    pegasus-init \
+    pegasus-integrity \
+    pegasus-metadata \
+    pegasus-monitord \
+    pegasus-preflight-check \
+    pegasus-remove \
+    pegasus-run \
+    pegasus-s3 \
+    pegasus-service \
+    pegasus-statistics \
+    pegasus-submitdir \
+    pegasus-transfer \
+; do
+    rm -f $TOOL
+    cat pegasus-python-wrapper | sed "s/%%BASE_NAME%%/$TOOL/" >$TOOL
+    chmod 755 $TOOL
+done
+

@@ -15,28 +15,28 @@
 package edu.isi.pegasus.planner.invocation;
 
 /**
- * This interface defines a common base for all File elements in an invocation
- * record that carry a filename in their values. It exists primarily for
- * grouping purposes and for easier access for the database manager.
+ * This interface defines a common base for all File elements in an invocation record that carry a
+ * filename in their values. It exists primarily for grouping purposes and for easier access for the
+ * database manager.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public interface HasFilename
-{
-  /**
-   * Accessor: Obtains the name of the file
-   * @return the name of the file objects. Null is legal.
-   *
-   * @see #setFilename(String)
-   */
-  public String getFilename();
+public interface HasFilename {
+    /**
+     * Accessor: Obtains the name of the file
+     *
+     * @return the name of the file objects. Null is legal.
+     * @see #setFilename(String)
+     */
+    public String getFilename();
 
-  /**
-   * Accessor: Sets the name of an file object.
-   * @param filename is the new name to store as filename. 
-   * @see #getFilename()
-   */
-  public void setFilename( String filename );
+    /**
+     * Accessor: Sets the name of an file object.
+     *
+     * @param filename is the new name to store as filename.
+     * @see #getFilename()
+     */
+    public void setFilename(String filename);
 }

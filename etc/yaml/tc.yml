@@ -1,0 +1,43 @@
+pegasus: "5.0"
+transformations:
+  - name: foo
+    requires:
+      - bar
+    sites:
+      - name: local
+        pfn: /nfs/u2/ryan/bin/foo
+        type: stageable
+        arch: x86_64
+        os.type: linux
+        profiles:
+          env:
+            JAVA_HOME: /usr/bin/java
+        metadata:
+          size: "2048"
+    profiles:
+      globus:
+        maxtime: 2
+      dagman:
+        retry: 2
+    hooks:
+      shell:
+        - _on: start
+          cmd: /bin/echo 'starting''
+    metadata:
+      size: "2048"
+  - name: bar
+    sites:
+      - name: local
+        pfn: /nfs/u2/ryan/bin/bar
+        type: stageable
+        arch: x86_64
+        os.type: linux
+containers:
+  - name: centos-pegasus
+    type: docker
+    image: docker:///ryan/centos-pegasus:latest
+    mounts:
+      - /Volumes/Work/lfs1:/shared-data/:ro
+    profiles:
+      env:
+        JAVA_HOME: /usr/bin/java

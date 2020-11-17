@@ -57,7 +57,7 @@ extern int initStatInfoFromName(StatInfo* statinfo, const char* filename,
 extern int initStatInfoFromHandle(StatInfo* statinfo, int descriptor);
 extern int updateStatInfo(StatInfo* statinfo);
 extern int addLFNToStatInfo(StatInfo* info, const char* lfn);
-extern size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
+extern size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
                                const StatInfo* info, int includeData, int useCDATA,
                                int allowTruncate);
 extern void deleteStatInfo(StatInfo* statinfo);

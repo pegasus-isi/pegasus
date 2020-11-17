@@ -1166,6 +1166,32 @@ sub condor_q(\%\%\@;%) {
 	}
 }
 
+sub is_running($) {
+    # purpose: determine if a top level workflow is actually submitted
+    # paramtr: $wfdir
+    # returns: 1 if workflow is in the HTCondor queue
+
+    my $wfdir = shift;
+	
+    local (*Q);
+	my $condor_q = find_exec('condor_q')
+	  || die "FATAL: Unable to find 'condor_q' in your PATH.\n";
+
+    my $constraint = "Iwd == \"$wfdir\"";
+    open( Q, "$condor_q -nobatch -af ClusterID -constraint '$constraint'|" )
+        || die "FATAL: Unable to execute $condor_q -nobatch -af ClusterID -constraint '$constraint': $!\n";
+    my $count = 0;
+	while (<Q>) {
+        $count++;
+    }
+    close Q;
+    if ($count > 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
 sub find_leaves(\%) {
 
 	# purpose: determine which are the top-level jobs to show
@@ -1651,6 +1677,14 @@ sub dag_status($$;%) {
 				# finished: success (3) or failure (4)
 				$state = ( $status == 0 ? 3 : 4 );
 			}
+
+            # special check for top level workflows - ensure they are not sitting in the
+            # queue still
+            if ($fn eq $lastfn) {
+                if (is_running($run)) {
+                    $state = 2;    # running
+                }
+            }
 
 			# I need this separately for bookeeping
 			my %detail = dag_process_tab(@tab);

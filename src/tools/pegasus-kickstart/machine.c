@@ -49,9 +49,9 @@ void initMachineInfo(MachineInfo* machine) {
     machine->data = machine->ctor();
 }
 
-int printXMLMachineInfo(FILE *out, int indent, const char* tag,
+int printYAMLMachineInfo(FILE *out, int indent, const char* tag,
                         const MachineInfo* machine) {
-    /* purpose: format the job information into the given stream as XML.
+    /* purpose: format the job information into the given stream as YAML.
      * paramtr: out (IO): The stream
      *          indent (IN): indentation level
      *          tag (IN): name to use for element tags.

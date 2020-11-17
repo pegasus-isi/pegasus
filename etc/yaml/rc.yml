@@ -1,0 +1,12 @@
+pegasus: "5.0"
+replicas:
+  # matches "f.a"
+  - lfn: "f.a"
+    pfn: "file:///Volumes/data/input/f.a"
+    site: "local"
+
+  # matches faa, f.a, f0a, etc.
+  - lfn: "f.a"
+    pfn: "file:///Volumes/data/input/f.a"
+    site: "local"
+    regex: true

@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal a single equality sign to the parser.
- * This class is module-local on purpose.
+ * Class to signal a single equality sign to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtEquals
-  implements VDLtToken
-{
-  // empty
+class VDLtEquals implements VDLtToken {
+    // empty
 }

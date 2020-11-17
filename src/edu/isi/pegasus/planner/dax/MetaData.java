@@ -1,66 +1,67 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.dax;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.XMLWriter;
+import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+import java.io.IOException;
 
 /**
  * Metadata object for the DAX API
+ *
  * @author gmehta
  * @version $Revision$
  */
+@JsonSerialize(using = MetaData.JsonSerializer.class)
 public class MetaData {
 
-    /**
-     * Metadata Key
-     */
+    /** Metadata Key */
     protected String mKey;
-    /**
-     * Metadata type
-     */
+    /** Metadata type */
     protected String mType;
-    /**
-     * Metadata value
-     */
+    /** Metadata value */
     protected String mValue;
 
     /**
      * Copy constructor
-     * @param m
+     *
+     * @param m the MetaData object being copied from
      */
     public MetaData(MetaData m) {
-        //create a copy
+        // create a copy
         this(m.getKey(), m.getType(), m.getValue());
     }
 
     /**
      * Create a new Metadata object
-     * 
-     * @param key
-     * @param value
+     *
+     * @param key the key
+     * @param value the value
      */
     public MetaData(String key, String value) {
-        this( null, key, value );
+        this(null, key, value);
     }
 
     /**
      * Create a new Metadata object
-     * @param type
-     * @param key
-     * @param value
+     *
+     * @param type type of metadata
+     * @param key the key
+     * @param value the value
      */
     private MetaData(String type, String key, String value) {
         mType = type;
@@ -70,7 +71,8 @@ public class MetaData {
 
     /**
      * Create a copy of this Metdata Object
-     * @return
+     *
+     * @return clone of the object
      */
     public MetaData clone() {
         return new MetaData(this.mType, this.mKey, this.mValue);
@@ -78,8 +80,9 @@ public class MetaData {
 
     /**
      * Set the value of the metadata
-     * @param value
-     * @return
+     *
+     * @param value value to be set for metadata attribute
+     * @return MetaData
      */
     public MetaData setValue(String value) {
         mValue = value;
@@ -88,7 +91,8 @@ public class MetaData {
 
     /**
      * Get the key of this metadata object
-     * @return
+     *
+     * @return the key
      */
     public String getKey() {
         return mKey;
@@ -96,7 +100,8 @@ public class MetaData {
 
     /**
      * Get the type of the metdata object
-     * @return
+     *
+     * @return the type
      */
     private String getType() {
         return mType;
@@ -104,7 +109,8 @@ public class MetaData {
 
     /**
      * Get the value of the metdata object
-     * @return
+     *
+     * @return the value
      */
     public String getValue() {
         return mValue;
@@ -117,6 +123,30 @@ public class MetaData {
     public void toXML(XMLWriter writer, int indent) {
         writer.startElement("metadata", indent);
         writer.writeAttribute("key", mKey).writeData(mValue).endElement();
+    }
 
+    /**
+     * Custom serializer for YAML representation of a MetaData k,v pair
+     *
+     * @author Ryan Tanaka
+     */
+    public static class JsonSerializer extends PegasusJsonSerializer<MetaData> {
+
+        public JsonSerializer() {}
+
+        /**
+         * Serializes a MetaData object in to YAML representation
+         *
+         * @param md medata object being serialized
+         * @param gen the json generator
+         * @param sp the serialization provider
+         * @throws IOException IoException
+         */
+        public void serialize(MetaData md, JsonGenerator gen, SerializerProvider sp)
+                throws IOException {
+            gen.writeStartObject();
+            gen.writeStringField(md.getKey(), md.getValue());
+            gen.writeEndObject();
+        }
     }
 }

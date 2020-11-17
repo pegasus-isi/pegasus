@@ -28,320 +28,271 @@ import java.io.Writer;
  */
 public interface SiteDataVisitor {
 
-
     /**
      * Initialize the visitor implementation
-     * 
-     * @param writer  the writer
+     *
+     * @param writer the writer
      */
-    public void initialize( Writer writer );
-
+    public void initialize(Writer writer);
 
     /**
      * Visit the SiteStore object
      *
-     * @param entry  the site store
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param entry the site store
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void visit( SiteStore entry ) throws IOException;
-
+    public void visit(SiteStore entry) throws IOException;
 
     /**
-     * Depart  the Site Store object.
+     * Depart the Site Store object.
      *
-     * @param entry  the SiteStore
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param entry the SiteStore
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void depart( SiteStore entry ) throws IOException;
-
+    public void depart(SiteStore entry) throws IOException;
 
     /**
      * Visit the Site CatalogEntry object
      *
-     * @param entry  the site catalog entry
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param entry the site catalog entry
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void visit( SiteCatalogEntry entry) throws IOException;
-
+    public void visit(SiteCatalogEntry entry) throws IOException;
 
     /**
-     * Depart  the Site Catalog Entry object.
+     * Depart the Site Catalog Entry object.
      *
-     * @param entry  the site catalog entry
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param entry the site catalog entry
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void depart( SiteCatalogEntry entry  ) throws IOException;
+    public void depart(SiteCatalogEntry entry) throws IOException;
 
     /**
      * Visit the GridGateway object
      *
-     * @param gateway  the grid gateway
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param gateway the grid gateway
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void visit( GridGateway entry) throws IOException;
-
+    public void visit(GridGateway entry) throws IOException;
 
     /**
-     * Depart  the GridGateway object
+     * Depart the GridGateway object
      *
-     * @param entry  GridGateway object
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param entry GridGateway object
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void depart( GridGateway entry  ) throws IOException;
-
+    public void depart(GridGateway entry) throws IOException;
 
     /**
      * Visit Directory site data object
      *
-     * @param headnode  the object laying out the directory
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param headnode the object laying out the directory
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void visit( Directory headnode  )throws IOException;
+    public void visit(Directory headnode) throws IOException;
 
     /**
      * Depart the Directory object
      *
-     * @param directory  the object laying out the directory
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param directory the object laying out the directory
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void depart( Directory directory) throws IOException;
-
+    public void depart(Directory directory) throws IOException;
 
     /**
      * Visit FileServer site data object
      *
-     * @param server  the object corresponding to the FileServer
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param server the object corresponding to the FileServer
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void visit( FileServer server )throws IOException;
+    public void visit(FileServer server) throws IOException;
 
     /**
      * Depart the Directory object
      *
-     * @param server  the object corresponding to the FileServer
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param server the object corresponding to the FileServer
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void depart( FileServer server) throws IOException;
-
+    public void depart(FileServer server) throws IOException;
 
     /**
      * Visit the ReplicaCatalog object
      *
-     * @param catalog  the object describing the catalog
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param catalog the object describing the catalog
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void visit( ReplicaCatalog catalog  ) throws IOException;
+    public void visit(ReplicaCatalog catalog) throws IOException;
 
     /**
      * Depart the ReplicaCatalog object
      *
-     * @param catalog  the object describing the catalog
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param catalog the object describing the catalog
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void depart( ReplicaCatalog catalog  ) throws IOException;
+    public void depart(ReplicaCatalog catalog) throws IOException;
 
     /**
      * Visit the connection object
      *
-     * @param c  the connection.
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param c the connection.
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void visit( Connection c ) throws IOException;
+    public void visit(Connection c) throws IOException;
 
     /**
      * Depart the connection object
      *
-     * @param c  the connection.
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param c the connection.
+     * @throws IOException in case of error while writing to underlying stream
      */
-    public void depart( Connection c  ) throws IOException;
+    public void depart(Connection c) throws IOException;
 
+    public void visit(SiteData data) throws IOException;
 
-    public void visit( SiteData data ) throws IOException;
-
-    public void depart( SiteData data ) throws IOException;
+    public void depart(SiteData data) throws IOException;
 
     /**
      * Visit HeadNodeFS object
      *
-     * @param headnode  the object laying out the headnode
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param headnode the object laying out the headnode
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void visit( HeadNodeFS headnode  )throws IOException;
+    //    public void visit( HeadNodeFS headnode  )throws IOException;
 
     /**
      * Depart the HeadNodeFS object
      *
-     * @param headnode  the object laying out the headnode
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param headnode the object laying out the headnode
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void depart( HeadNodeFS headnode) throws IOException;
-
+    //    public void depart( HeadNodeFS headnode) throws IOException;
 
     /**
      * Visit the HeadNodeScratch object
      *
-     * @param scratch   the object describing the scratch area of the headnode.
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param scratch the object describing the scratch area of the headnode.
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void visit( HeadNodeScratch scratch) throws IOException;
+    //    public void visit( HeadNodeScratch scratch) throws IOException;
 
     /**
      * Depart the HeadNodeScratch object
      *
-     * @param scratch   the object describing the scratch area of the headnode.
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param scratch the object describing the scratch area of the headnode.
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void depart( HeadNodeScratch scratch ) throws IOException;
+    //    public void depart( HeadNodeScratch scratch ) throws IOException;
 
     /**
      * Visit the HeadNodeStorage object
      *
      * @param storage the object describing the storage area of the headnode
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void visit( HeadNodeStorage storage  ) throws IOException;
+    //    public void visit( HeadNodeStorage storage  ) throws IOException;
 
     /**
      * Depart the HeadNodeStorage object
      *
      * @param storage the object describing the storage area of the headnode
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void depart( HeadNodeStorage storage  ) throws IOException;
+    //    public void depart( HeadNodeStorage storage  ) throws IOException;
 
     /**
      * Visit the WorkerNodeFS object
      *
-     * @param workernode  the object describing the worker node
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param workernode the object describing the worker node
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void visit( WorkerNodeFS workernode ) throws IOException;
+    //    public void visit( WorkerNodeFS workernode ) throws IOException;
 
     /**
      * Depart the WorkerNodeFS object
      *
-     * @param workernode  the object describing the worker node
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param workernode the object describing the worker node
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void depart( WorkerNodeFS workernode  ) throws IOException;
+    //    public void depart( WorkerNodeFS workernode  ) throws IOException;
 
     /**
      * Visit the WorkerNodeScratch object
      *
-     * @param scratch   the object describing the scratch area
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param scratch the object describing the scratch area
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void visit( WorkerNodeScratch scratch) throws IOException;
+    //    public void visit( WorkerNodeScratch scratch) throws IOException;
 
     /**
      * Depart the WorkerNodeScratch object
      *
-     * @param scratch   the object describing the scratch area
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param scratch the object describing the scratch area
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void depart( WorkerNodeScratch scratch ) throws IOException;
+    //    public void depart( WorkerNodeScratch scratch ) throws IOException;
 
     /**
      * Visit the WorkerNodeStorage object
      *
-     * @param storage   the object describing the storage area
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param storage the object describing the storage area
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void visit( WorkerNodeStorage storage) throws IOException;
+    //    public void visit( WorkerNodeStorage storage) throws IOException;
 
     /**
      * Depart the WorkerNodeStorage object
      *
-     * @param storage   the object describing the storage area
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param storage the object describing the storage area
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void depart( WorkerNodeStorage storage ) throws IOException;
-
-
-
+    //    public void depart( WorkerNodeStorage storage ) throws IOException;
 
     /**
      * Visit the local directory
      *
-     * @param directory  the directory
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param directory the directory
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void visit( LocalDirectory directory) throws IOException;
+    //    public void visit( LocalDirectory directory) throws IOException;
 
     /**
      * Depart the local directory
      *
-     * @param directory  the directory
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param directory the directory
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void depart( LocalDirectory directory  ) throws IOException;
+    //    public void depart( LocalDirectory directory  ) throws IOException;
 
     /**
      * Visit the shared directory
      *
-     * @param directory  the directory
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param directory the directory
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void visit( SharedDirectory directory ) throws IOException;
+    //    public void visit( SharedDirectory directory ) throws IOException;
 
     /**
      * Depart the shared directory
      *
-     * @param directory  the directory
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param directory the directory
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void depart( SharedDirectory directory ) throws IOException;
-
-
+    //    public void depart( SharedDirectory directory ) throws IOException;
 
     /**
      * Visit the worker shared directory
      *
-     * @param directory  the directory
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param directory the directory
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void visit( WorkerSharedDirectory directory  ) throws IOException;
+    //    public void visit( WorkerSharedDirectory directory  ) throws IOException;
 
     /**
      * Depart the worker shared directory
      *
-     * @param directory  the directory
-     *
-     * @throws  IOException  in case of error while writing to underlying stream
+     * @param directory the directory
+     * @throws IOException in case of error while writing to underlying stream
      */
-//    public void depart( WorkerSharedDirectory directory ) throws IOException;
+    //    public void depart( WorkerSharedDirectory directory ) throws IOException;
 
-    
 }

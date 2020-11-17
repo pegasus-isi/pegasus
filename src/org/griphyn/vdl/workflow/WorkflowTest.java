@@ -14,12 +14,12 @@
  */
 package org.griphyn.vdl.workflow;
 
+import java.io.*;
+import java.sql.SQLException;
+import java.util.*;
+import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.util.*;
-import org.griphyn.vdl.dbschema.*;
-import java.sql.SQLException;
-import java.io.*;
-import java.util.*;
 
 /**
  * This class is used to show-case some elementary WF table stuff.
@@ -28,27 +28,22 @@ import java.util.*;
  * @version $Revision$
  */
 public class WorkflowTest // extends Toolkit
-{
-  public static void asdf( DatabaseSchema dbschema )
-    throws SQLException
-  {
-    WF workflow = (WF) dbschema;
-    Map x = workflow.getWorkflows(null);
-    for ( Iterator i=x.values().iterator(); i.hasNext(); ) {
-      WorkEntry w = (WorkEntry) i.next();
-      System.out.println( w.toString() );
+ {
+    public static void asdf(DatabaseSchema dbschema) throws SQLException {
+        WF workflow = (WF) dbschema;
+        Map x = workflow.getWorkflows(null);
+        for (Iterator i = x.values().iterator(); i.hasNext(); ) {
+            WorkEntry w = (WorkEntry) i.next();
+            System.out.println(w.toString());
+        }
     }
-  }
 
-  public static void main( String args[] )
-    throws Exception
-  {
-    // Connect the database.
-    String schemaName = ChimeraProperties.instance().getWFSchemaName();
-    Connect connect = new Connect();
-    DatabaseSchema dbschema = connect.connectDatabase(schemaName);
-    asdf(dbschema);
-    dbschema.close();
-  }
+    public static void main(String args[]) throws Exception {
+        // Connect the database.
+        String schemaName = ChimeraProperties.instance().getWFSchemaName();
+        Connect connect = new Connect();
+        DatabaseSchema dbschema = connect.connectDatabase(schemaName);
+        asdf(dbschema);
+        dbschema.close();
+    }
 }
-

@@ -17,5 +17,5 @@ export LD_LIBRARY_PATH=/opt/apps/intel15/mvapich2/2.1/lib:/opt/apps/intel15/mvap
 
 ibrun  {{workflowdir}}/bin/pegasus-mpi-hw  "$@"
 {% elif tutorial_setup == "summit-kub-bosco" %}
-jsrun -n $PEGASUS_CORES  /ccs/proj/csc355/summit/pegasus/stable/bin/pegasus-mpi-hw  "$@"
+jsrun -n $PEGASUS_CORES  /gpfs/alpine/csc355/world-shared/binaries/summit/pegasus/stable/bin/pegasus-mpi-hw  "$@"
 {% endif %}

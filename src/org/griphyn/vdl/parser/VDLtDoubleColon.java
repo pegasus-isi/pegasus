@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal a double colon to the parser.
- * This class is module-local on purpose.
+ * Class to signal a double colon to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtDoubleColon
-  implements VDLtToken
-{
-  // empty
+class VDLtDoubleColon implements VDLtToken {
+    // empty
 }

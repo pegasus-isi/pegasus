@@ -40,35 +40,39 @@ javac HierarchicalDiamonds.java
 java HierarchicalDiamonds /usr
 
 # create the site catalog
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/scratch"/>
-                    <internal-mount-point mount-point="$TOPDIR/scratch"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
-                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
-                </shared>
-            </storage>
-        </head-fs>
-    </site>
-    <site handle="condorpool" arch="x86_64" os="LINUX" >
-        <head-fs>
-            <scratch />
-            <storage />
-        </head-fs>
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
-    </site>
-</sitecatalog>
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    env:
+      PEGASUS_HOME: "/usr"
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "$TOPDIR/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$TOPDIR/scratch"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/scratch"
 EOF
 
 # plan and submit the  workflow
@@ -77,13 +81,14 @@ pegasus-plan \
     --sites condorpool \
     --staging-site local \
     --dir work \
-    --output-site local \
+    --output-sites local \
     --cleanup leaf \
-    --dax top.dax \
-    --submit | tee plan.out
+    --submit \
+    top.dax \
+    | tee plan.out
 
 # we need to wait for a while, halt the workflow, wait for it to stop, than start it again
-RUN_DIR=`grep pegasus-remove plan.out | awk '{print $5}'`
+RUN_DIR=`grep pegasus-remove plan.out | sed 's/.*pegasus-remove //'`
 cd $RUN_DIR
 
 # wait for subworkflow to start
@@ -102,8 +107,8 @@ pegasus-halt $RUN_DIR
 
 # wait for all jobs to go away before restarting
 
-if [ ! -e braindump.txt ]; then
-    echo "braindump.txt was not found in this directory. Planner probably failed!" 1>&2
+if [ ! -e braindump.yml ]; then
+    echo "braindump.yml was not found in this directory. Planner probably failed!" 1>&2
     exit 1
 fi
 
@@ -115,7 +120,7 @@ MAX_TS=`echo "$START_TS + $TIMEOUT * 60" | bc`
 
 update_status
 show_state
-while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
     NOW=`date +'%s'`
     if [ $NOW -gt $MAX_TS ]; then
         echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2
@@ -137,7 +142,7 @@ pegasus-run
 sleep 30s
 update_status
 show_state
-while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
     NOW=`date +'%s'`
     if [ $NOW -gt $MAX_TS ]; then
         echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2

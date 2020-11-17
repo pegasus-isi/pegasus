@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # generate a Concrete Dag by providing a DAX
 #
@@ -8,11 +8,14 @@ set -e
 
 PEGASUS_CONFIG="`dirname $0`/pegasus-config"
 eval `$PEGASUS_CONFIG --sh-dump`
-. $PEGASUS_SHARE_DIR/common.sh
+. $PEGASUS_SHARE_DIR/sh/java.sh
 
 # PEGASUS_HOME should not be set - this is so we can find all the
 # places in the planner which still depends on PEGASUS_HOME
 unset PEGASUS_HOME
+
+# ensure we have a good environment to run in
+$PEGASUS_BIN_DIR/pegasus-preflight-check
 
 # run java program
 nice ${JAVA} \
@@ -20,5 +23,5 @@ nice ${JAVA} \
        "-Dpegasus.home.bindir=$PEGASUS_BIN_DIR" \
        "-Dpegasus.home.sharedstatedir=$PEGASUS_SHARE_DIR" \
        "-Dpegasus.home.schemadir=$PEGASUS_SCHEMA_DIR" \
-       $addon edu.isi.pegasus.planner.client.CPlanner "$@"
+       $addon edu.isi.pegasus.planner.client.CPlanner $args
 

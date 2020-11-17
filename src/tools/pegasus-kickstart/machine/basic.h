@@ -25,7 +25,8 @@
 #ifdef _SYS_NAMELEN /* DARWIN */
 #define SYS_NMLN 65
 #else
-#error "No SYS_NMLN nor _SYS_NAMELEN: check <sys/utsname.h>"
+#define SYS_NMLN 65
+#define _SYS_NAMELEN 65
 #endif /* _SYS_NAMELEN */
 #endif /* SYS_NMLN */
 

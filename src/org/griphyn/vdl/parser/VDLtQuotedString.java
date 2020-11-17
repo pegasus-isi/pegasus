@@ -15,60 +15,53 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to pass the content from a quoted string from scanner to parser.
- * This class is module-local on purpose.
+ * Class to pass the content from a quoted string from scanner to parser. This class is module-local
+ * on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtQuotedString
-  implements VDLtToken
-{
-  /**
-   * The content of the string to be passed.
-   */
-  private String m_value;
-  
-  /**
-   * Contructs a new string value to pass.
-   * @param value is the content of the string.
-   */
-  public VDLtQuotedString( String value )
-  {
-    this.m_value = value == null ? null : new String(value);
-  }
+class VDLtQuotedString implements VDLtToken {
+    /** The content of the string to be passed. */
+    private String m_value;
 
-  /**
-   * Obtains the current, unmodified content of the string. This
-   * means that quote characters inside the string will remain
-   * as-is.
-   * @return the content of the quoted string. 
-   */
-  public String getValue()
-  {
-    return this.m_value;
-  }
-
-  /**
-   * Turns the content of a string into a quoted version of itself.
-   * The quote and backslash character are quoted by prepending a
-   * backslash in front of them. Single quotes (apostrophe) are not
-   * touched. 
-   * @param unquoted is the raw string that may require quoting.
-   * @return null if the input was null, or the quoted string.
-   */
-  public static String getQuotedValue( String unquoted )
-  {
-    if ( unquoted == null ) return null;
-
-    StringBuffer result = new StringBuffer( unquoted.length() );
-    for ( int i=0; i<unquoted.length(); ++i ) {
-      char ch = unquoted.charAt(i);
-      if ( ch == '\\' || ch == '\"' ) result.append('\\');
-      result.append(ch);
+    /**
+     * Contructs a new string value to pass.
+     *
+     * @param value is the content of the string.
+     */
+    public VDLtQuotedString(String value) {
+        this.m_value = value == null ? null : new String(value);
     }
 
-    return result.toString();
-  }
+    /**
+     * Obtains the current, unmodified content of the string. This means that quote characters
+     * inside the string will remain as-is.
+     *
+     * @return the content of the quoted string.
+     */
+    public String getValue() {
+        return this.m_value;
+    }
+
+    /**
+     * Turns the content of a string into a quoted version of itself. The quote and backslash
+     * character are quoted by prepending a backslash in front of them. Single quotes (apostrophe)
+     * are not touched.
+     *
+     * @param unquoted is the raw string that may require quoting.
+     * @return null if the input was null, or the quoted string.
+     */
+    public static String getQuotedValue(String unquoted) {
+        if (unquoted == null) return null;
+
+        StringBuffer result = new StringBuffer(unquoted.length());
+        for (int i = 0; i < unquoted.length(); ++i) {
+            char ch = unquoted.charAt(i);
+            if (ch == '\\' || ch == '\"') result.append('\\');
+            result.append(ch);
+        }
+
+        return result.toString();
+    }
 }

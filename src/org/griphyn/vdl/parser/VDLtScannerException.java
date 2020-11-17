@@ -18,21 +18,19 @@ import java.io.*;
 
 /**
  * This class is used to signal errors while scanning only.
- * @see VDLtScanner
  *
+ * @see VDLtScanner
  * @author Jens-S. Vöckler
  * @version $Revision$
  */
-public class VDLtScannerException 
-  extends VDLtException
-{
-  /**
-   * Constructs an exception that will contain the line number.
-   * @param stream is the lineno stream to obtain the line number from.
-   * @param message is the message to print for the failed parse.
-   */
-  public VDLtScannerException( LineNumberReader stream, String message )
-  {
-    super(stream.getLineNumber(),message);
-  }
+public class VDLtScannerException extends VDLtException {
+    /**
+     * Constructs an exception that will contain the line number.
+     *
+     * @param stream is the lineno stream to obtain the line number from.
+     * @param message is the message to print for the failed parse.
+     */
+    public VDLtScannerException(LineNumberReader stream, String message) {
+        super(stream.getLineNumber(), message);
+    }
 }

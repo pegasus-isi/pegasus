@@ -36,7 +36,7 @@ else
 fi
 
 #Launch the test
-./run-bamboo-test "$@" | tee $PLANFILE
+./run-bamboo-test "$@" 2>&1 | tee $PLANFILE
 
 STATUS=$?
 if [ $STATUS != 0 ]; then
@@ -51,11 +51,11 @@ if  grep -v 'I am: hostname:' $PLANFILE | grep 'ERROR'  >/dev/null 2>&1; then
 fi
 
 #Get RUNDIR from the planning output
-RUN_DIR=`grep pegasus-remove $PLANFILE | awk '{print $5}'`
+RUN_DIR=`grep pegasus-remove $PLANFILE | sed 's/.*pegasus-remove //'`
 if [ "x$RUN_DIR" = "x" ]; then
     
     # if the workflow was planned with out --submit, it only has a pegasus-run line
-    RUN_DIR=`grep pegasus-run $PLANFILE | awk '{print $2}'`
+    RUN_DIR=`grep pegasus-run $PLANFILE | sed 's/.*pegasus-run //'`
 
     if [ "x$RUN_DIR" = "x" ]; then
         echo "Unable to determine the RUN_DIR from the planner output - did the planner fail?" 1>&2
@@ -113,15 +113,15 @@ if [ $LOG_COUNT -lt 1 -o $LOG_COUNT -gt 1 ]; then
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log | grep -E '(ERR)|(CRITICAL)' >/dev/null 2>&1; then
+if cat monitord.log | grep -E '(:ERR:)|(:CRITICAL:)' >/dev/null 2>&1; then
     echo "monitord log contains errors:"
     echo
-    grep -E '(ERR)|(CRITICAL)' monitord.log
+    grep -E '(:ERR:)|(:CRITICAL:)' monitord.log
     echo
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log | grep -v "DAGMan was aborted for workflow" | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(unable to read output file)|(truncating std)' >/dev/null 2>&1; then
+if cat monitord.log | grep -v "DAGMan was aborted for workflow" | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(unable to read output file)|(truncating std)|(Skipping container verification)|(unable to verify container)|(exists and is already owned by user)|(signature not found for object group)|(Skipping container verification)' >/dev/null 2>&1; then
     echo "monitord log contains warnings:"
     echo
     grep WARN monitord.log
@@ -130,7 +130,7 @@ if cat monitord.log | grep -v "DAGMan was aborted for workflow" | grep WARN | gr
 fi
 
 # check for metrics file consistency with submit files
-METRICS_FILE=`ls *metrics 2>/dev/null|  grep -v dag`
+METRICS_FILE=`ls *.metrics 2>/dev/null|  grep -v dag.metrics`
 METRICS_TOTAL_JOBS=`grep total_jobs $METRICS_FILE | sed -E "s/.*\"total_jobs\": //"`
 NUM_SUBMIT_FILES=`find . -maxdepth 3 -name "*sub"  2>/dev/null| grep -v condor.sub | wc -l | sed -E "s/\s//"`
 
@@ -155,11 +155,12 @@ if [ $STATUS -ne 0 ]; then
     tar czf $TARFILE $RUN_DIR 2>&1
     chmod 0644 $TARFILE
     echo "Created tarball $TARFILE"
+else
+    # clean up pegasus install and tarballs to save disk space
+    cd $TOP_DIR
+    rm -rf pegasus tests.tar
 fi
 
-# clean up pegasus install and tarballs to save disk space
-cd $TOP_DIR
-rm -rf pegasus tests.tar
 
 if [ $STATUS != 0 ]; then
    echo "ERROR: Test failed" 1>&2

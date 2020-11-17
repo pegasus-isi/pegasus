@@ -16,45 +16,42 @@
 package edu.isi.pegasus.planner.parser;
 
 /**
- * This class keeps the name of an element and its corresponding
- * java object reference. The structure is used by the stack in 
- * <code>SiteCatalogParser</code>. 
+ * This class keeps the name of an element and its corresponding java object reference. The
+ * structure is used by the stack in <code>SiteCatalogParser</code>.
  *
  * @author Karan Vahi
  * @version $Revision$
- *
  */
-public class ParserStackElement{
+public class ParserStackElement {
     private String mElement;
     private Object mObject;
-    
+
     /**
      * The overloaded constructor
-     * 
+     *
      * @param name
      * @param obj
      */
-    public ParserStackElement( String name, Object obj ) {
+    public ParserStackElement(String name, Object obj) {
         mElement = name;
         mObject = obj;
     }
-    
+
     /**
      * Returns the element name.
-     * 
+     *
      * @return name
      */
-    public String getElementName(){
+    public String getElementName() {
         return mElement;
     }
-    
+
     /**
      * Returns the object referred to by the element.
      *
-     * @return  the object
+     * @return the object
      */
-    public Object getElementObject(){
+    public Object getElementObject() {
         return mObject;
     }
-            
 }

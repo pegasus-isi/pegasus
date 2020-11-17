@@ -15,45 +15,38 @@
 
 package org.griphyn.vdl.parser;
 
+import java.io.*;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.util.*;
-import java.io.*;
 
 /**
- * This class is used to test the <code>DAXParser</code> class and 
- * the input file index. It parses all the DAX documents specified
- * in the commandline, creates the corresponding java objects, and
- * generates an XML document from these objects. It also prints 
- * the input file list if the last definition in the document is 
- * a derivation.
+ * This class is used to test the <code>DAXParser</code> class and the input file index. It parses
+ * all the DAX documents specified in the commandline, creates the corresponding java objects, and
+ * generates an XML document from these objects. It also prints the input file list if the last
+ * definition in the document is a derivation.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see DAXParser
  * @see org.griphyn.vdl.dax.ADAG
  */
+public class DAXTest {
+    public static void main(String[] args) throws IOException {
+        if (args.length == 0) {
+            System.err.println("Usage: java Test [daxURI] ...");
+            return;
+        }
+        // connect debug stream
+        Logging.instance().register("DAXparser", System.err);
+        Logging.instance().register("app", System.err);
 
-public class DAXTest 
-{
-  static public void main(String[] args) 
-    throws IOException
-  {
-    if (args.length == 0) {
-      System.err.println( "Usage: java Test [daxURI] ..." );
-      return;
+        DAXParser daxParser = new DAXParser(System.getProperty("vds.schema.dax"));
+        Writer stdout = new BufferedWriter(new OutputStreamWriter(System.out));
+        for (int i = 0; i < args.length; i++) {
+            ADAG adag = daxParser.parse(args[i]);
+            adag.toXML(stdout, "", null);
+            Logging.instance().log("app", 0, "done writing XML");
+        }
     }
-    // connect debug stream
-    Logging.instance().register( "DAXparser", System.err );
-    Logging.instance().register( "app", System.err );
-
-    DAXParser daxParser = new DAXParser(System.getProperty("vds.schema.dax"));
-    Writer stdout = new BufferedWriter(new OutputStreamWriter(System.out));
-    for (int i = 0; i < args.length; i++) {
-      ADAG adag = daxParser.parse(args[i]);
-      adag.toXML( stdout, "", null );
-      Logging.instance().log( "app", 0, "done writing XML" );
-    }
-  }
 }

@@ -17,51 +17,40 @@ package org.griphyn.vdl.parser;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.*;
 import org.xml.sax.*;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
- * This class adds a given Definition from the parser's callback into
- * the fresh in-memory storage. It is a streamlined version of the more
- * versatile {@link MemoryStorage} handler. End-users should not use 
- * this class, hence it is not public.
+ * This class adds a given Definition from the parser's callback into the fresh in-memory storage.
+ * It is a streamlined version of the more versatile {@link MemoryStorage} handler. End-users should
+ * not use this class, hence it is not public.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  */
-public class NoHassleHandler implements DefinitionHandler
-{
-  /**
-   * This is a reference to the already established in-memory storage.
-   */
-  private Definitions m_memory;
+public class NoHassleHandler implements DefinitionHandler {
+    /** This is a reference to the already established in-memory storage. */
+    private Definitions m_memory;
 
-  /**
-   * The c'tor initializes the references to modify the in-memory database
-   * of definitions.
-   *
-   * @param definitions is a reference to the in-memory database.
-   */
-  public NoHassleHandler( Definitions definitions )
-  {
-    if ( (this.m_memory = definitions) == null ) 
-      throw new NullPointerException();
-  }
+    /**
+     * The c'tor initializes the references to modify the in-memory database of definitions.
+     *
+     * @param definitions is a reference to the in-memory database.
+     */
+    public NoHassleHandler(Definitions definitions) {
+        if ((this.m_memory = definitions) == null) throw new NullPointerException();
+    }
 
-  /**
-   * This method adds the given Definition to whatever storage is
-   * implemented underneath. It is assumed that a database will be
-   * read from file, and that there are no duplicates. Each new
-   * definition will be added right away, skipping any safety net checks!
-   *
-   * @param d is the Definition that is ready to be stored.
-   * @return true, if new version was stored and database modified
-   */
-  public boolean store( Definition d )
-  {
-    // definition does not exist
-    this.m_memory.addDefinition(d);
-    return true;
-  }
+    /**
+     * This method adds the given Definition to whatever storage is implemented underneath. It is
+     * assumed that a database will be read from file, and that there are no duplicates. Each new
+     * definition will be added right away, skipping any safety net checks!
+     *
+     * @param d is the Definition that is ready to be stored.
+     * @return true, if new version was stored and database modified
+     */
+    public boolean store(Definition d) {
+        // definition does not exist
+        this.m_memory.addDefinition(d);
+        return true;
+    }
 }

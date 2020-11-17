@@ -15,13 +15,10 @@
 package edu.isi.pegasus.planner.invocation;
 
 import java.util.*;
-import java.io.Writer;
-import java.io.IOException;
 
 /**
- * This abstract class is the interface for all classes that describe
- * the job exit, which describes more clearly failure, regular
- * execution, signal and suspension.
+ * This abstract class is the interface for all classes that describe the job exit, which describes
+ * more clearly failure, regular execution, signal and suspension.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
@@ -29,5 +26,5 @@ import java.io.IOException;
  */
 public abstract class JobStatus extends Invocation // implements Cloneable
 {
-  // empty
+    // empty
 }

@@ -1,0 +1,715 @@
+{% extends "base.html" %}
+{% block title %}Workflow Details{% endblock %}
+{% block javascript_includes %}
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
+{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+var tablesInitialized = [false, false, false, false, false]
+
+var chart;
+var chartOptions;
+var chartData =
+{
+    Others:
+    {
+        jobs: {{ counts.others - counts.others_workflow }},
+        workflow: {{ counts.others_workflow }},
+        total: {{ counts.others }}
+    },
+    Running:
+    {
+        jobs: {{ counts.running - counts.running_workflow }},
+        workflow: {{ counts.running_workflow }},
+        total: {{ counts.running }}
+    },
+    Successful:
+    {
+        jobs: {{ counts.success - counts.success_workflow }},
+        workflow: {{ counts.success_workflow }},
+        total: {{ counts.success }}
+    },
+    Failed:
+    {
+        jobs: {{ counts.fail - counts.fail_workflow }},
+        workflow: {{ counts.fail_workflow }},
+        total: {{ counts.fail }}
+    }
+};
+
+function loadMetadata() {
+    var ajaxOpt =
+    {
+        url     : '{{ url_for('monitoring.get_workflow_meta', m_wf_id=root_wf_id, wf_id=wf_id) }}',
+        dataType: 'json',
+        error   : function (xhr, textStatus, errorThrown)
+        {
+            alert ('Error occurred: ' + textStatus + xhr.responseText);
+        },
+        success : function (data, textStatus, xhr)
+        {
+            if (xhr.status == 204) {
+                $('.metadata-badge').html(0);
+                $('#metadata').html('No metadata associated with this workflow');
+                return;
+            }
+
+            var metadata = data.records;
+            var table = $('<table id="metadata_table" class="table-fixed workflow_info"></table>');
+            table.append($('<col width="30%">'));
+
+            $('.metadata-badge').html(metadata.length);
+
+            for( var i = 0; i < metadata.length; ++i) {
+                var tr = $('<tr></tr>');
+                var th = $('<th>' + metadata[i].key + '</th>');
+                var td = $('<td>' + metadata[i].value + '</td>');
+                table.append(tr.append(th).append(td));
+            }
+
+            $('#metadata').html(table);
+            verticalTableInitStatus('#metadata_table', '{{workflow.state}}');
+        }
+    };
+
+    $.ajax (ajaxOpt)
+}
+
+function loadFiles() {
+    var ajaxOpt =
+    {
+        url     : '{{ url_for('monitoring.get_workflow_files', m_wf_id=root_wf_id, wf_id=wf_id) }}',
+        data: {
+            order: 'l.lfn'
+        },
+        dataType: 'json',
+        error   : function (xhr, textStatus, errorThrown)
+        {
+            alert ('Error occurred: ' + textStatus + xhr.responseText);
+        },
+        success : function (data, textStatus, xhr)
+        {
+            if (xhr.status == 204) {
+                $('.files-badge').html(0);
+                $('#files').html('No files found for this workflow');
+                return;
+            }
+
+            var files = data.records;
+            var table = $('<table id="files_table" class="table-fixed workflow_info"></table>');
+            table.append($('<col width="30%">'));
+            table.append($('<col width="50%">'));
+
+            $('.files-badge').html(files.length);
+
+            for (var i = 0; i < files.length; ++i) {
+                var lfn = files[i].lfn;
+                var pfns = files[i].pfns;
+                var metas = files[i].meta;
+
+                var tr = $('<tr></tr>');
+                var th = $('<th>' + lfn + '</th>');
+                var td, metatd;
+
+                if (pfns == null) {
+                    td = $('<td>PFN not available yet</td>');
+                } else {
+                    td = $('<table></table>');
+
+                    for (var j = 0; j < pfns.length; ++j) {
+                        var tr_in = $('<tr style="background-color:transparent;"></tr>');
+                        var td_in = $('<td style="padding:0">' + pfns[j].pfn + '</td>');
+                        td.append(tr_in.append(td_in));
+                    }
+
+                    td = $('<td></td>').append(td);
+                }
+
+                if (metas == null) {
+                    metatd = $('<td>No metadata available</td>');
+                } else {
+                    metatd = $('<table cellpadding=0></table>');
+
+                    for (var j = 0; j < metas.length; ++j) {
+                        var tr_in = $('<tr style="background-color:transparent;"></tr>');
+                        var key = $('<td style="padding:0 .5em 0 0">' + metas[j].key + '</td>');
+                        var value = $('<td style="padding:0">' + metas[j].value + '</td>');
+                        metatd.append(tr_in.append(key).append(value));
+                    }
+
+                    metatd = $('<td></td>').append(metatd);
+                }
+
+                table.append(tr.append(th).append(td).append(metatd));
+            }
+
+            $('#files').html(table);
+            verticalTableInitStatus('#files_table', '{{workflow.state}}');
+        }
+    };
+
+    $.ajax (ajaxOpt)
+}
+
+$(document).ready(function () {
+    $('.button').button();
+
+    highChartsInitialization();
+
+    $('#jobs_tabs').tabs(
+    {
+        beforeLoad: function (event, ui) {
+            ui.jqXHR.error(function () {
+                ui.panel.html('Error loading contents of this tab.');
+            })
+        },
+        create: function (event, ui) {
+            var tabIndex = ui.tab.index();
+
+            if (tabIndex == 0 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                $('#sub_workflows_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "ajax": {
+                        "url": "{{ url_for ('.sub_workflows', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var wfTmpl = "{{ url_for('.workflow', root_wf_id='-11-', wf_id='-22-') }}";
+                            var data = json;
+
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = data[i].state.toLowerCase();
+                                data[i].dax_label = $("<a>" + data[i].dax_label + "</a>").attr("href",
+                                    wfTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                )[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "dax_label"},
+                        {"data": "state"},
+                    ]
+                });
+            }
+        },
+        activate: function (event, ui) {
+            var tabIndex = ui.newTab.index();
+            var urlTmpl = "{{ url_for('.job', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
+            var stdOutTmpl = "{{ url_for('.stdout', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
+            var stdErrTmpl = "{{ url_for('.stderr', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
+
+            if (tabIndex == 0 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                $('#sub_workflows_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "ajax": {
+                        "url": "{{ url_for ('.sub_workflows', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var wfTmpl = "{{ url_for('.workflow', root_wf_id='-11-', wf_id='-22-') }}";
+                            var data = json.data;
+
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = data[i].state.toLowerCase();
+                                data[i].dax_label = $("<a>" + data[i].dax_label + "</a>").attr("href",
+                                    wfTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                )[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "dax_label"},
+                        {"data": "state"},
+                    ]
+                });
+            }
+            else if (tabIndex == 1 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                $('#failed_jobs_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "processing": true,
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "{{ url_for ('.failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var data = json.data;
+
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = "failed";
+                                data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                    urlTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                        .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                )[0].outerHTML;
+                                data[i].stdout = $("<a>Application Stdout/Stderr    </a>")
+                                    .attr("href",
+                                        stdOutTmpl
+                                            .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                            .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                    )
+                                    .attr("target", "_blank")[0].outerHTML;
+                                data[i].stderr = $("<a>Condor Stderr/Pegasus Lite Log</a>")
+                                    .attr("href",
+                                        stdErrTmpl
+                                            .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                            .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                    )
+                                    .attr("target", "_blank")[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "exec_job_id"},
+                        {"data": "exitcode"},
+                        {"data": "stdout"},
+                        {"data": "stderr"}
+                    ]
+                });
+            }
+            else if (tabIndex == 2 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                $('#running_jobs_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "processing": true,
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "{{ url_for ('.running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var data = json.data;
+
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = "running";
+                                data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                    urlTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                        .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                )[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "exec_job_id"}
+                    ]
+                });
+            }
+            else if (tabIndex == 3 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                $('#successful_jobs_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "processing": true,
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "{{ url_for ('.successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var data = json.data;
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = "succesfull";
+                                data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                    urlTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                        .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                )[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "exec_job_id"},
+                        {"data": "duration_formatted"}
+                    ]
+                });
+            }
+            else if (tabIndex == 4 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                $('#failing_jobs_list').dataTable({
+                    "jQueryUI": true,
+                    "pagingType": "full_numbers",
+                    "processing": true,
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "{{ url_for ('.failing_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                        "dataSrc": function (json) {
+                            var data = json.data;
+
+                            for(var i = 0; i < data.length; i++) {
+                                data[i].DT_RowClass = "failing";
+                                data[i].exec_job_id = $("<a>" + data[i].exec_job_id + "</a>").attr("href",
+                                    urlTmpl
+                                        .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                        .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                )[0].outerHTML;
+                                data[i].stdout = $("<a>Application Stdout/Stderr</a>")
+                                    .attr("href",
+                                        stdOutTmpl
+                                            .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                            .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                    )
+                                    .attr("target", "_blank")[0].outerHTML;
+                                data[i].stderr = $("<a>Condor Stderr/Pegasus Lite Log</a>")
+                                    .attr("href",
+                                        stdErrTmpl
+                                            .replace("-11-", data[i].root_wf_id).replace("-22-", data[i].wf_id)
+                                            .replace("-33-", data[i].job_id).replace("-44-", data[i].job_instance_id)
+                                    )
+                                    .attr("target", "_blank")[0].outerHTML;
+                            }
+                            return data;
+                        }
+                    },
+                    "autoWidth": false,
+                    "columns": [
+                        {"data": "exec_job_id"},
+                        {"data": "exitcode"},
+                        {"data": "stdout"},
+                        {"data": "stderr"}
+                    ]
+                });
+            }
+        }
+    });
+
+    chartOptions =
+    {
+        chart: {
+            renderTo: 'workflow_graph',
+            type: 'pie',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: 'Job Status (Per Workflow)'
+        },
+        credits: {
+            enabled: false
+        },
+        tooltip: {
+            enabled: false
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: false
+                },
+                showInLegend: true,
+                dataLabels: {
+                    color: '#000000',
+                    formatter: function () {
+                        var str = '';
+                        str += '<b>Jobs:</b> ' + chartData [this.point.name].jobs + "<br\>";
+                        str += '<b>Workflows:</b> ' + chartData [this.point.name].workflow + "<br\>";
+                        str += '<b>Total:</b> ' + chartData [this.point.name].total;
+                        return str;
+                    }
+                }
+            }
+        },
+        series: [{
+            name: 'Job Status',
+            data: [
+                {
+                    name: 'Running',
+                    y: {{ counts.running }},
+                    sliced: true,
+                    selected: true
+                },
+                {
+                    name: 'Failed',
+                    y: {{ counts.fail }}
+                },
+                {
+                    name: 'Successful',
+                    y: {{ counts.success }}
+                },
+                {
+                    name: 'Others',
+                    y: {{ counts.others }}
+                }]
+        }]
+    };
+
+    var statOptions;
+
+    statOptions =
+    {
+        chart: {
+            renderTo: 'stat_graph',
+            type: 'pie',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: 'Job Status (Entire Workflow)'
+        },
+        credits: {
+            enabled: false
+        },
+        tooltip: {
+            enabled: false
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: false
+                },
+                showInLegend: true,
+                dataLabels: {
+                    color: '#000000',
+                    formatter: function () {
+                        return '<b>' + this.point.name + ':</b> ' + this.point.y;
+                    }
+                }
+            }
+        },
+        series: [{
+            name: 'Job Status',
+            data: [
+                {
+                    name: 'Running',
+                    y: {{ statistics ['running-jobs'] }},
+                    sliced: true,
+                    selected: true
+                },
+                {
+                    name: 'Failed',
+                    y: {{ statistics ['failed-jobs'] }}
+                },
+                {
+                    name: 'Successful',
+                    y: {{ statistics ['successful-jobs'] }}
+                },
+                {
+                    name: 'Unsubmitted',
+                    y: {{ statistics ['unsubmitted-jobs'] }},
+                }]
+        }]
+    };
+
+    stats_chart = new Highcharts.Chart(statOptions);
+
+    chart = new Highcharts.Chart(chartOptions);
+    verticalTableInitStatus('#workflow_text_info', '{{workflow.state}}');
+
+    clipboardTooltipInitialization();
+    loadMetadata();
+    loadFiles();
+    $("#job_tabs").tabs("load", 0);
+});
+</script>
+{% endblock %}
+{% block navigation_bar %}
+<li class="active">Workflow</li>
+{% endblock %}
+{% block title_header %}Workflow Details
+<small>{{ workflow.wf_uuid }}<button class="copy-button" data-clipboard-text="{{ workflow.wf_uuid }}"></button></small>
+{% endblock %}
+{% block content %}
+<section class="row">
+    <div class="col-md-12">
+        <div role="tabpanel">
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#wf_summary" role="tab" data-toggle="tab">Summary</a>
+                </li>
+                <li role="presentation"><a href="#files" role="tab" data-toggle="tab">Files <span class="badge files-badge"></span></a></li>
+                <li role="presentation"><a href="#metadata" role="tab" data-toggle="tab">Metadata <span class="badge metadata-badge"></span></a></li>
+            </ul>
+            <div class="tab-content">
+                <br>
+
+                <div role="tabpanel" class="tab-pane active" id="wf_summary">
+                    <table id="workflow_text_info" class="table-fixed workflow_info">
+                        <col width="30%">
+                        <tr>
+                            <th>Label</th>
+                            <td>{{ workflow.dax_label }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type</th>
+                            <td>{% if workflow.root_wf_id == workflow.wf_id %}root-wf {% else %}sub-wf{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Progress</th>
+                            <td>{{ workflow.state }}{%  if workflow.reason %} '{{ workflow.reason }}'{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Submit Host</th>
+                            <td>{{ workflow.submit_hostname }}</td>
+                        </tr>
+                        <tr>
+                            <th>User</th>
+                            <td>{{ workflow.user }}</td>
+                        </tr>
+                        <tr>
+                            <th>Submit Directory</th>
+                            <td class="text-nowrap">
+                                <a target="_blank"
+                                   href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}"
+                                   class="file-browser" data-toggle="tooltip" data-placement="top"
+                                   title="Browse directory">
+                                </a>
+                                <button class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
+                                </button>
+                                {{ workflow.submit_dir }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>DAGMan Out File</th>
+                            <td class="text-nowrap">
+                                <span class="pe-7s-link"> </span>
+                                <a target="_blank"
+                                   href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ workflow.dax_label }}-0.dag.dagman.out"
+                                   data-toggle="tooltip" data-placement="top" title="View in file browser">
+                                    {{ workflow.dax_label }}-0.dag.dagman.out
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Wall Time</th>
+                            <td>{{ statistics ['wall-time']|time_to_str }}</td>
+                        </tr>
+                        <tr>
+                            <th>Cumulative Wall Time</th>
+                            <td>{{ statistics ['cum-time']|time_to_str }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="files">
+                    Files
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="metadata">
+                    Metadata
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="row">
+    <div class="col-md-6">
+        <div id="stat_graph"></div>
+    </div>
+    <div class="col-md-6">
+        <div id="workflow_graph"></div>
+    </div>
+</section>
+<section class="row">
+    <div class="text-center">
+        <a href="{{ url_for ('.charts', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="button">Charts</a>
+        <a href="{{ url_for ('.statistics', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="button">Statistics</a>
+    </div>
+</section>
+<section class="row">
+    <div class="col-md-12">
+        <div id="jobs_tabs_wrapper">
+            <div id="jobs_tabs">
+                <ul>
+                    <li>
+                        <a href="#sub_workflows" title="sub_workflows">Sub Workflows</a>
+                    </li>
+                    <li>
+                        <a href="#failed_jobs" title="failed_jobs">Failed</a>
+                    </li>
+                    <li>
+                        <a href="#running_jobs" title="running_jobs">Running</a>
+                    </li>
+                    <li>
+                        <a href="#successful_jobs" title="successful_jobs">Successful</a>
+                    </li>
+                    <li>
+                        <a href="#failing_jobs" title="failing_jobs">Failing</a>
+                    </li>
+                </ul>
+                <div id="sub_workflows">
+                    <table id="sub_workflows_list">
+                        <thead>
+                        <tr>
+                            <th>Workflow Label</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="failed_jobs">
+                    <table id="failed_jobs_list">
+                        <thead>
+                        <tr>
+                            <th>Job Name</th>
+                            <th>Exit Code</th>
+                            <th>Application Stdout/Stderr</th>
+                            <th>Condor Stderr/Pegasus Lite Log</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="running_jobs">
+                    <table id="running_jobs_list">
+                        <thead>
+                        <tr>
+                            <th>Job Name</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="successful_jobs">
+                    <table id="successful_jobs_list">
+                        <thead>
+                        <tr>
+                            <th>Job Name</th>
+                            <th>Time Taken</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="failing_jobs">
+                    <table id="failing_jobs_list">
+                        <thead>
+                        <tr>
+                            <th>Job Name</th>
+                            <th>Exit Code</th>
+                            <th>Application Stdout/Stderr</th>
+                            <th>Condor Stderr/Pegasus Lite Log</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

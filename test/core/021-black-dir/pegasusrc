@@ -5,5 +5,6 @@ pegasus.dir.storage.deep=false
 
 pegasus.condor.logs.symlink = false
 
-
+# starting 5.0 default is condorio
+pegasus.data.configuration = sharedfs
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+
+    <site  handle="local" arch="ppc64le" os="LINUX">
+        <directory type="shared-scratch" path="/Volumes/Work/lfs1/work/pegasus-features/PM-1159/work">
+            <file-server operation="all" url="file:///Volumes/Work/lfs1/work/pegasus-features/PM-1159/work"/>
+        </directory>
+        <directory type="local-storage" path="/Volumes/Work/lfs1/work/pegasus-features/PM-1159/outputs">
+            <file-server operation="all" url="file:///Volumes/Work/lfs1/work/pegasus-features/PM-1159/outputs"/>
+        </directory>
+	<profile namespace="pegasus" key="clusters.num">1</profile>
+	<profile namespace="env" key="PEGASUS_HOME">/usr/</profile>
+    </site>
+
+</sitecatalog>

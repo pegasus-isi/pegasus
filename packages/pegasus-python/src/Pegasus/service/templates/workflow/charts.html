@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Charts{% endblock %}
+{% block javascript_includes %}
+
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts-more.js"></script>
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/modules/exporting.js"></script>
+<script type="text/javascript" src="{{ url_for ('static', filename='js/charts.js') }}"></script>
+{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+
+    jobDistribution.data = {{ job_dist | tojson | safe }};
+
+    function accordianCreate (event, ui)
+    {
+        initJobDistributionData(1);
+        plotJobDistributionChart();
+
+        $ ("#job_distribution_options").buttonset ();
+    }
+
+    function init ()
+    {
+        highChartsInitialization();
+
+        var charts = $ ("#charts_container");
+        charts.accordion ({
+            heightStyle: "content",
+            autoHeight: false,
+            activate: activateEventHandler,
+            create : accordianCreate
+        });
+    }
+
+    $(function ()
+    {
+        init();
+    });
+</script>
+{% endblock %}
+{% block navigation_bar %}
+<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li class="active">Charts</li>
+{% endblock %}
+{% block title_header %}Charts{% endblock %}
+{% block content %}
+<section class="row">
+    <div class="col-xs-12">
+        <div id="charts_container">
+            <h3 href="{{ url_for ('.workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}"
+                title="distribution_chart_container">Job Distribution
+            </h3>
+
+            <div id="distribution_chart_container">
+                <div id="job_distribution">No information available.</div>
+                <div id="job_distribution_options" class="text-center">
+                    <input type="radio" id="by_count" name="job_dist" onclick="jobDistributionGraphToggle (1);"
+                           checked="checked"/><label for="by_count">By Count</label>
+                    <input type="radio" id="by_time" name="job_dist" onclick="jobDistributionGraphToggle (2);"/><label
+                        for="by_time">By Time</label>
+                </div>
+            </div>
+            <h3 href="{{ url_for ('.time_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}"
+                title="time_chart_container">Time Chart
+            </h3>
+
+            <div id="time_chart_container">
+                <div id="time_chart">No information available.</div>
+                <div id="time_chart_options" class="text-center">
+                    <input type="radio" id="by_job" name="time_chart" onclick="timeChartToggle (1);"
+                           checked="checked"/><label
+                        for="by_job">By Jobs</label>
+                    <input type="radio" id="by_runtime" name="time_chart" onclick="timeChartToggle (2);"/><label
+                        for="by_runtime">By Invocations</label>
+                </div>
+            </div>
+            <h3 href="{{ url_for ('.gantt_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="gantt_chart">
+                Gantt Chart
+            </h3>
+
+            <div id="gantt_chart" style="height: 800px;">
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

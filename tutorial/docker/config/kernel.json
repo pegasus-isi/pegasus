@@ -1,0 +1,15 @@
+{
+ "argv": [
+  "python",
+  "-m",
+  "ipykernel_launcher",
+  "-f",
+  "{connection_file}"
+ ],
+ "display_name": "Python 3",
+ "language": "python",
+ "env": {
+     "PATH":"/home/scitech/pegasus/dist/pegasus/bin:/home/scitech/.pyenv/bin:$PATH:/usr/lib64/mpich/bin",
+     "PYTHONPATH": "/home/scitech/pegasus/dist/pegasus/lib64/python3.6/site-packages"
+ }
+}

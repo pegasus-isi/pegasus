@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal the at symbol to the parser.
- * This class is module-local on purpose.
+ * Class to signal the at symbol to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtAt
-  implements VDLtToken
-{
-  // empty
+class VDLtAt implements VDLtToken {
+    // empty
 }

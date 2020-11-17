@@ -18,74 +18,63 @@ import java.util.*;
 import org.griphyn.vdl.dbschema.*;
 
 /**
- * This class maintains each element in the nesting of Definitions.
- * It turned out that the caching for LFNs etc must also be kept in 
- * the stack instead of globally. In some cases, the caching may be
- * adverse to the performance, though.
+ * This class maintains each element in the nesting of Definitions. It turned out that the caching
+ * for LFNs etc must also be kept in the stack instead of globally. In some cases, the caching may
+ * be adverse to the performance, though.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision $
  */
-public class StackElement 
-{
-  /**
-   * The database schema intermediary.
-   */
-  private DatabaseSchema m_dbschema;
+public class StackElement {
+    /** The database schema intermediary. */
+    private DatabaseSchema m_dbschema;
 
-  /**
-   * Temporarily saves filename lookups in a local cache.
-   */
-  private Cache m_lfnCache;
+    /** Temporarily saves filename lookups in a local cache. */
+    private Cache m_lfnCache;
 
-  /**
-   * Temporarily saves TR lookups in a local cache.
-   */
-  private Cache m_TRCache;
-  
-  /**
-   * ctor: Initializes the local caches and the major data element.
-   * @param schema is a database backend manager
-   */
-  public StackElement( DatabaseSchema schema )
-  {
-    this.m_dbschema = schema;
-    if ( schema.cachingMakesSense() ) {
-      this.m_lfnCache = new Cache(600);
-      this.m_TRCache = new Cache(600);
-    } else {
-      this.m_lfnCache = this.m_TRCache = null;
+    /** Temporarily saves TR lookups in a local cache. */
+    private Cache m_TRCache;
+
+    /**
+     * ctor: Initializes the local caches and the major data element.
+     *
+     * @param schema is a database backend manager
+     */
+    public StackElement(DatabaseSchema schema) {
+        this.m_dbschema = schema;
+        if (schema.cachingMakesSense()) {
+            this.m_lfnCache = new Cache(600);
+            this.m_TRCache = new Cache(600);
+        } else {
+            this.m_lfnCache = this.m_TRCache = null;
+        }
     }
-  }
 
-  /**
-   * Obtains the reference to the database backend manager.
-   *
-   * @return a handle to the database backend manager.
-   */
-  public DatabaseSchema getDatabaseSchema()
-  {
-    return this.m_dbschema;
-  }
+    /**
+     * Obtains the reference to the database backend manager.
+     *
+     * @return a handle to the database backend manager.
+     */
+    public DatabaseSchema getDatabaseSchema() {
+        return this.m_dbschema;
+    }
 
-  /**
-   * Obtains the reference to the transient LFN cache.
-   *
-   * @return a handle to the transient LFN cache, or null for no caching.
-   */
-  public Cache getLFNCache()
-  {
-    return this.m_lfnCache;
-  }
+    /**
+     * Obtains the reference to the transient LFN cache.
+     *
+     * @return a handle to the transient LFN cache, or null for no caching.
+     */
+    public Cache getLFNCache() {
+        return this.m_lfnCache;
+    }
 
-  /**
-   * Obtains the reference to the transient TR cache.
-   *
-   * @return a handle to the transient TR cache, or null for no caching.
-   */
-  public Cache getTRCache()
-  {
-    return this.m_TRCache;
-  }
+    /**
+     * Obtains the reference to the transient TR cache.
+     *
+     * @return a handle to the transient TR cache, or null for no caching.
+     */
+    public Cache getTRCache() {
+        return this.m_TRCache;
+    }
 }

@@ -1,0 +1,335 @@
+{% macro status_code(exitcode=None) -%}
+{% if exitcode == None %}"running"{% elif exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %}
+{%- endmacro %}
+{% extends "base.html" %}
+{% block title %}Job Details{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+    var tablesInitialized = [false, false];
+
+    //
+    // http://stackoverflow.com/questions/1899500/sorting-column-with-anchor-tags-in-jquery-datatables
+    //
+    jQuery.fn.dataTableExt.oSort['num-html-asc'] = function (a, b) {
+        var x = a.replace(/<.*?>/g, "");
+        var y = b.replace(/<.*?>/g, "");
+        x = parseInt(x);
+        y = parseInt(y);
+        return ((x < y || isNaN(y) ) ? -1 : ((x > y || isNaN(x)) ? 1 : 0));
+    };
+
+    jQuery.fn.dataTableExt.oSort['num-html-desc'] = function (a, b) {
+        var x = a.replace(/<.*?>/g, "");
+        var y = b.replace(/<.*?>/g, "");
+        x = parseInt(x);
+        y = parseInt(y);
+        return ((x < y || isNaN(x)) ? 1 : ((x > y || isNaN(y) ) ? -1 : 0));
+    };
+
+    $(document).ready (function ()
+    {
+        var invTmpl = "{{ url_for ('.invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id, invocation_id = '-55-') }}";
+
+        $('#invocations_tabs').tabs (
+        {
+            beforeLoad: function (event, ui)
+            {
+                var isInitialized = ui.panel.data ('initialized');
+
+                if (isInitialized === true)
+                {
+                    return false;
+                }
+
+                ui.jqXHR.error (function ()
+                {
+                    ui.panel.html ('Error loading contents of this tab.');
+                })
+            },
+            create: function (event, ui) {
+                var tabIndex = ui.tab.index();
+
+                if (tabIndex == 0 && !tablesInitialized [tabIndex]) {
+                    tablesInitialized [tabIndex] = true;
+
+                    $('#failed_invocations_list').dataTable({
+                        "jQueryUI": true,
+                        "pagingType": "full_numbers",
+                        "ajax": {
+                            "url": "{{ url_for ('.failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}",
+                            "dataSrc": function (json) {
+                                var data = json;
+
+                                for(var i = 0; i < data.length; i++) {
+                                    data[i].DT_RowClass = "failed";
+                                    data[i].invocation = $("<a>" + (data[i].abs_task_id == null ? data[i].exec_job_id : data[i].abs_task_id) + "</a>")
+                                        .attr("href",
+                                            invTmpl.replace("-55-", data[i].invocation_id)
+                                        )[0].outerHTML;
+                                }
+
+                                return data;
+                            }
+                        },
+                        "autoWidth": false,
+                        "columns": [
+                            {"data": "invocation"},
+                            {"data": "remote_duration"},
+                        ]
+                    });
+                }
+            },
+            activate: function (event, ui) {
+                var tabIndex = ui.newTab.index();
+
+            if (tabIndex == 1 && !tablesInitialized [tabIndex]) {
+                tablesInitialized [tabIndex] = true;
+
+                    $('#successful_invocations_list').dataTable({
+                        "jQueryUI": true,
+                        "pagingType": "full_numbers",
+                        "processing": true,
+                        "serverSide": true,
+                        "ajax": {
+                            "url": "{{ url_for ('.successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}",
+                            "dataSrc": function (json) {
+                                var data = json;
+
+                                for(var i = 0; i < data.length; i++) {
+                                    console.log(data[i].invocation_id);
+                                    data[i].DT_RowClass = "succesful";
+                                    data[i].invocation = $("<a>" + (data[i].abs_task_id == null ? data[i].exec_job_id : data[i].abs_task_id) + "</a>")
+                                        .attr("href",
+                                            invTmpl.replace("-55-", data[i].invocation_id)
+                                        )[0].outerHTML;
+                                }
+                                return data;
+                            }
+                        },
+                        "autoWidth": false,
+                        "columns": [
+                            {"data": "invocation"},
+                            {"data": "remote_duration"},
+                        ]
+                    });
+                }
+            }
+        });
+
+        verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
+        verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
+
+        $('#job_instances_info').dataTable({
+            "jQueryUI": true,
+            "pagingType": "full_numbers",
+            "searching": false,
+            "info": true,
+            "order"      : [
+                [ 0, "desc" ]
+            ],
+            "columns": [
+                null,
+                { "sType": "num-html" },
+                null,
+                null,
+                null
+            ]
+        });
+
+        clipboardTooltipInitialization();
+    })
+</script>
+{% endblock %}
+{% block css_includes %}
+<style>
+    .job_table_width {
+        width: 40%;
+    }
+</style>
+{% endblock %}
+{% block navigation_bar %}
+<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li class="active">Job</li>
+{% endblock %}
+{% block title_header %}Job Details{% endblock %}
+{% block content %}
+<section class="row">
+    <div id="job_text" class="col-xs-12">
+        <table id="job_text_info" class="table-fixed">
+            <tr>
+                <th class="job_table_width">Label</th>
+                <td><strong>{{ job.exec_job_id }}</strong></td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Type</th>
+                <td>{% if job.clustered %}Clustered{% else %}Compute{% endif %}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Exit Code</th>
+                <td>{{ job.exitcode }}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Working Directory</th>
+                <td class="text-nowrap">
+                    <button class="copy-button" data-clipboard-text="{{ job.work_dir }}">
+                    </button>
+                    {{ job.work_dir }}
+                </td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Application Stdour/Stderr</th>
+                <td>
+                    <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
+                </td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Kickstart Output</th>
+                <td class="text-nowrap">
+                    <span class="pe-7s-link"> </span>
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stdout_file }}"
+                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ job.stdout_file }}
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Condor Stderr/Pegasus Lite Log</th>
+                <td class="text-nowrap">
+                    <span class="pe-7s-link"> </span>
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stderr_file }}"
+                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ job.stderr_file }}
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Condor Submit File</th>
+                <td class="text-nowrap">
+                    <span class="pe-7s-link"> </span>
+                    {% set sub_file = (job.stderr_file[:job.stderr_file.rfind("/") + 1] if job.stderr_file and "/" in job.stderr_file  else "") ~ job.exec_job_id ~ ".sub" %}
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ sub_file }}"
+                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                       {{ sub_file }}
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Site</th>
+                <td>{{ job.site }}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Host</th>
+                <td>{{ job.ip }} > {{ job.hostname }}</td>
+            </tr>
+        </table>
+    </div>
+</section>
+
+{% if job_states|length %}
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Job States</h3>
+        <hr>
+        <div id="job_states">
+            <table id="job_states_info">
+                {% set previous = namespace(value=0) %}
+                {% for state in job_states %}
+                <tr>
+                    <th class="job_table_width" style="text-transform: capitalize;">{{ state.state|replace('_', '
+                        ')|capitalize }}
+                    </th>
+                    {% if not previous.value %}
+                    {% set interval = 0.0 %}
+                    {% else %}
+                    {% set interval = state.timestamp - previous.value %}
+                    {% endif %}
+                    {% set previous.value = state.timestamp %}
+                    <td>{{ state.timestamp|time_to_date_str("%a %b %d, %Y %I:%M:%S %p") }} ( {{ interval|time_to_str }} ){% if state.reason %} - {{ state.reason }}{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Job Instances</h3>
+        <hr>
+        <div id="job_instances">
+            <table id="job_instances_info">
+                <thead>
+                <tr>
+                    <th>Try</th>
+                    <th>Job Instance ID</th>
+                    <th>Exitcode</th>
+                    <th>Stdout</th>
+                    <th>Stderr</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for instance in job_instances %}
+                <tr class={{ status_code (instance.exitcode) }}>
+                <td>{{ loop.revindex }}</td>
+                <td>
+                    <a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">
+                        {{ instance.job_instance_id }}
+                    </a>
+                </td>
+                <td>{{ instance.exitcode }}</td>
+                <td>
+                    <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                </td>
+                <td>
+                    <a target="_blank" href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Job Invocations</h3>
+        <hr>
+        <div id="invocations_tabs">
+            <ul>
+                <li>
+                    <a href="#failed_invocations" title="failed_invocations">Failed</a>
+                </li>
+                <li>
+                    <a href="#successful_invocations" title="successful_invocations">Successful</a>
+                </li>
+            </ul>
+            <div id="failed_invocations">
+                <table id="failed_invocations_list">
+                    <thead>
+                    <tr>
+                        <th>Invocations</th>
+                        <th>Time Taken</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div id="successful_invocations">
+                <table id="successful_invocations_list">
+                    <thead>
+                    <tr>
+                        <th>Invocations</th>
+                        <th>Time Taken</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

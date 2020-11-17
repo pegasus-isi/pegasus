@@ -1,0 +1,4 @@
+tarball:
+    class: File
+    path: $INPUT_DIR/src_tarball
+filenames_to_extract: ["src/source_1.cpp", "src/source_2.cpp"]

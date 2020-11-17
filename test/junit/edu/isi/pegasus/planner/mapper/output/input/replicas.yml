@@ -1,0 +1,10 @@
+x-pegasus:
+  apiLang: python
+  createdBy: vahi
+  createdOn: 09-04-20T15:09:06Z
+pegasus: '5.0'
+replicas:
+- lfn: f0
+  pfns:
+  - site: local
+    pfn: /Users/vahi/Pegasus/PM-1675-output-mapper/f0

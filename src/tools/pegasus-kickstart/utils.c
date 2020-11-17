@@ -25,32 +25,46 @@
 #include <fcntl.h>
 #include <utime.h>
 #include <sys/poll.h>
+#include <wchar.h>
+#include <locale.h>
 
 #include "utils.h"
 
 static const char* asciilookup[128] = {
-  "&#xe000;", "&#xe001;", "&#xe002;", "&#xe003;", "&#xe004;", "&#xe005;", "&#xe006;", "&#xe007;",
-  "&#xe008;",       "\t",       "\n", "&#xe00b;", "&#xe00c;",       "\r", "&#xe00e;", "&#xe00f;",
-  "&#xe010;", "&#xe011;", "&#xe012;", "&#xe013;", "&#xe014;", "&#xe015;", "&#xe016;", "&#xe017;",
-  "&#xe018;", "&#xe019;", "&#xe01a;", "&#xe01b;", "&#xe01c;", "&#xe01d;", "&#xe01e;", "&#xe01f;",
-         " ",        "!",   "&quot;",        "#",        "$",        "%",    "&amp;",   "&apos;",
+          "",         "",         "",         "",         "",         "",         "",         "",
+          "",      "\\t",      "\\n",         "",         "",      "\\r",         "",         "",
+          "",         "",         "",         "",         "",         "",         "",         "",
+          "",         "",         "",         "",         "",         "",         "",         "",
+         " ",        "!",     "\\\"",        "#",        "$",        "%",        "&",        "'",
          "(",        ")",        "*",        "+",        ",",        "-",        ".",        "/",
          "0",        "1",        "2",        "3",        "4",        "5",        "6",        "7",
-         "8",        "9",        ":",        ";",     "&lt;",        "=",     "&gt;",        "?",
+         "8",        "9",        ":",        ";",        "<",        "=",        ">",        "?",
          "@",        "A",        "B",        "C",        "D",        "E",        "F",        "G",
          "H",        "I",        "J",        "K",        "L",        "M",        "N",        "O",
          "P",        "Q",        "R",        "S",        "T",        "U",        "V",        "W",
-         "X",        "Y",        "Z",        "[",       "\\",        "]",        "^",        "_",
+         "X",        "Y",        "Z",        "[",     "\\\\",        "]",        "^",        "_",
          "`",        "a",        "b",        "c",        "d",        "e",        "f",        "g",
          "h",        "i",        "j",        "k",        "l",        "m",        "n",        "o",
          "p",        "q",        "r",        "s",        "t",        "u",        "v",        "w",
-         "x",        "y",        "z",        "{",        "|",        "}",        "~", "&#xe07f;"
+         "x",        "y",        "z",        "{",        "|",        "}",        "~",        ""
 };
 
-void xmlquote(FILE *out, const char* msg, size_t msglen) {
-    /* purpose: write a possibly binary message to the stream while XML
-     *          quoting
-     * paramtr: out (IO): stream to write the quoted xml to
+
+int yamlprintable(wint_t c)
+{
+    /* see https://yaml.org/spec/1.2/spec.html#id2770814 */
+    if (c == 0x9 || c == 0xA || c == 0xD || (c >= 0x20 && c <= 0x7E) ||
+        c == 0x85 || (c >= 0xA0 && c <= 0xD7FF) || (c <= 0xE000 && c >= 0xFFFD) ||
+        (c >= 0x10000 && c <= 0x10FFFF)) {
+        return 1;
+    }
+    return 0;
+}
+
+
+void yamlquote(FILE *out, const char* msg, size_t msglen) {
+    /* purpose: write a possibly binary message to the stream with YAML
+     * paramtr: out (IO): stream to write the quoted yaml to
      *          msg (IN): message to append to buffer
      *          mlen (IN): length of message area to append
      * returns: nada
@@ -65,7 +79,38 @@ void xmlquote(FILE *out, const char* msg, size_t msglen) {
         if (j < 128) {
             fputs(asciilookup[j], out);
         } else {
+            /* FIXME */
             fputc(msg[i], out);
+        }
+    }
+}
+
+void yamldump(FILE *in, FILE *out, const int indent) {
+    /* purpose: write a stream to yaml as a literal`
+     * paramtr: out (IO): stream to write the quoted xml to
+     *          indent: indentation of the lines
+     *          msg (IN): message to append to buffer
+     *          mlen (IN): length of message area to append
+     * returns: nada
+     */
+    wint_t c;
+    int first_line = 1;
+    while ((c = fgetwc(in)) != WEOF) {
+        /* first line can not have leading white spaces */
+        if (first_line && (
+              c == 0x20 ||
+              c == 0x9  ||
+              c == 0xD  )) {
+            continue;
+        }
+
+        /* newline or cr maps to a new line */
+        if (c == 0xA || c == 0xD) {
+            fprintf(out, "\n%*s", indent, "");
+        }
+        else if (yamlprintable(c)) {
+            fprintf(out, "%lc", c);
+            first_line = 0;
         }
     }
 }

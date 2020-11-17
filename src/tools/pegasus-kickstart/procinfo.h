@@ -83,7 +83,7 @@ typedef struct _ProcInfo {
 int procChild();
 int procParentTrace(pid_t main, int* main_status, struct rusage* main_usage, ProcInfo** procs, int interpose);
 int procParentWait(pid_t main, int* main_status, struct rusage* main_usage, ProcInfo** procs);
-int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs);
+int printYAMLProcInfo(FILE *out, int indent, ProcInfo* procs);
 void deleteProcInfo(ProcInfo *list);
 
 #endif /* _PROC_H */

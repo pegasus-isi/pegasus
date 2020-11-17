@@ -2,8 +2,6 @@
 
 set -e
 
-TOP_DIR=`pwd`
-
 # download rosetta binary - this is to save space in the Pegasus distribution
 if [ ! -e rosetta.exe ]; then
    wget -q -O rosetta.exe http://pegasus.isi.edu/wms/example-workflows/rosetta/fake-rosetta.exe
@@ -24,62 +22,9 @@ if [ ! -e pdbs ]; then
    rm pdbs.tar.gz
 fi
 
-# figure out where Pegasus is installed
-export PEGASUS_BIN_DIR=`pegasus-config --bin`
-if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
-    echo "Please make sure pegasus-plan is in your path"
-    exit 1
-fi 
+echo "Running Rosetta.py"
+export PYTHONPATH=`pegasus-config --python`
+python3 Rosetta.py
 
-# build the dax generator
-export CLASSPATH=.:`pegasus-config --classpath`
-javac RosettaDAX.java
-
-# generate the dax
-java RosettaDAX dax.xml
-
-# site catalog
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <directory type="shared-scratch" path="$TOP_DIR/scratch">
-            <file-server operation="all" url="file://$TOP_DIR/scratch"/>
-        </directory>
-        <directory type="local-storage" path="$TOP_DIR/outputs">
-            <file-server operation="all" url="file://$TOP_DIR/outputs"/>
-        </directory>
-        <profile namespace="env" key="PEGASUS_BIN_DIR" >$PEGASUS_BIN_DIR</profile>
-        <profile namespace="pegasus" key="SSH_PRIVATE_KEY" >/localhome/bamboo/.ssh/workflow_id_rsa</profile>
-    </site>
-    <site  handle="condor_pool" arch="x86_64" os="LINUX">
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-    </site>
-    <site  handle="staging_site" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/data/scratch/http">
-            <file-server operation="get" url="http://obelix.isi.edu/scratch"/>
-            <file-server operation="put" url="scp://ptesting@obelix.isi.edu/data/scratch/http"/>
-        </directory>
-    </site>
-</sitecatalog>
-EOF
-
-echo
-echo
-echo "The site catalog is:"
-cat sites.xml
-
-echo
-echo
-echo "Planning and submitting the workflow..."
-pegasus-plan \
-    --conf pegasusrc \
-    --dir work \
-    --dax dax.xml \
-    --sites condor_pool \
-    --staging-site staging_site \
-    --output-site local \
-    --submit | tee $TOP_DIR/plan.out
 
 

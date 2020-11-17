@@ -14,61 +14,68 @@ DEGREES=0.5
 TOP_DIR=`pwd`
 
 export PATH=/ccg/software/montage/current/bin:$PATH
+export PYTHONPATH=`pegasus-config --python`
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
 RUN_DIR=`pwd`/work/$RUN_ID
 
-rm -rf montage-workflow-v2
-git clone https://github.com/pegasus-isi/montage-workflow-v2.git
+rm -rf montage-workflow-v3
+git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
-cd montage-workflow-v2
+cd montage-workflow-v3
 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.1 \
                       --band 2mass:j:green \
                       --band 2mass:h:blue \
                       --band 2mass:k:red
 
-cat pegasus.properties >> ../pegasusrc
-
 # site catalog
 echo
 echo "Creating the site catalog..."
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86_64">
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/scratch"/>
-                    <internal-mount-point mount-point="$RUN_DIR/scratch"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs"/>
-                </shared>
-            </storage>
-        </head-fs>
-        <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="universe">local</profile>
-        <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/current</profile>
-        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
-    </site>
-</sitecatalog>
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "$RUN_DIR/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$RUN_DIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$RUN_DIR/scratch"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$RUN_DIR/scratch"
+  profiles:
+    env:
+      MONTAGE_HOME: "/ccg/software/montage/current"
+      http_proxy: "workflow.isi.edu:3128"
+    condor:
+      universe: "local"
+    pegasus:
+      style: "condor"
+
 EOF
 
+cp ../pegasus.properties .
+
 pegasus-plan \
-        --conf ../pegasusrc \
         --dir work \
-        --relative-dir `date +'%s'` \
-        --dax data/montage.dax \
+        --relative-dir $RUN_ID \
         --sites local \
-        --output-site local \
+        --output-sites local \
         --cluster horizontal \
         --submit \
+	data/montage-workflow.yml \
         | tee $TOP_DIR/plan.out
 

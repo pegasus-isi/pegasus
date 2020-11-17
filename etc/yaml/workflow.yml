@@ -1,0 +1,149 @@
+pegasus: "5.0"
+name: diamond
+
+hooks:
+  shell:
+    - _on: error
+      cmd: /bin/mailx -s &apos;diamond failed&apos; use@some.domain
+
+profiles:
+  env:
+      JAVA_HOME: /opt/java/1.6
+
+metadata:
+    createdBy: ryan
+
+siteCatalog:
+  $ref: "https://pegasus.isi.edu/hosted/site/catalog"
+
+replicaCatalog:
+  replicas:
+    - lfn: f.a
+      pfn: file:///lfs/voeckler/src/svn/pegasus/trunk/examples/grid-blackdiamond-perl/f.a
+      site: local
+
+transformationCatalog:
+  transformations:
+    - namespace: example
+      name: keg
+      version: "1.0"
+      profiles:
+        env:
+          APP_HOME: /tmp/myscratch
+          JAVA_HOME: /opt/java/1.6
+
+      requires:
+        - anotherTr
+
+      sites:
+        - name: isi
+          type: installed
+          pfn: /path/to/keg
+          arch: x86_64
+          os.type: linux
+          os.release: fc
+          os.version: "4"
+          profiles:
+            env:
+              Hello: World
+              JAVA_HOME: /bin/java.1.6
+            condor:
+              FOO: bar
+          container: centos-pegasus
+
+    - namespace: example
+      name: anotherTr
+      version: "1.2.3"
+
+      sites:
+        - name: isi
+          type: installed
+          pfn: /path/to/anotherTr
+
+  containers:
+    - name: centos-pegasus
+      type: docker
+      image: docker:///rynge/montage:latest
+      mounts:
+        - /Volumes/Work/lfs1:/shared-data/:ro
+      profiles:
+        env:
+          JAVA_HOME: /opt/java/1.6
+
+jobDependencies:
+  - id: ID000001
+    children:
+      - ID000002
+      - ID000003
+  - id: ID000002
+    children:
+      - ID000004
+  - id: ID000003
+    children:
+      - ID000004
+
+jobs:
+  - id: ID000001
+    name: preprocess
+    namespace: diamond
+    version: "2.0"
+    stdin: stdin_file.txt
+    arguments:
+      ["-a", "preprocess", "-T60", "-i", "f.a", "-o", "f.b1", "f.b2", "-nums", 1, 1.1]
+    uses:
+      - lfn: stdin_file.txt
+        type: input
+      - lfn: f.b2
+        type: output
+        registerReplica: false
+        stageOut: true
+      - lfn: f.b1
+        metadata:
+          size: "2048"
+        type: output
+        registerReplica: false
+        stageOut: true
+      - lfn: f.a
+        type: input
+
+  - id: ID000002
+    name: findrange
+    namespace: diamond
+    version: "2.0"
+    arguments: ["-a", "findrange", "-T60", "-i", "f.b1", "-o", "f.c1"]
+    uses:
+      - lfn: f.b1
+        type: input
+      - lfn: f.c1
+        type: output
+        registerReplica: false
+        stageOut: true
+
+  - id: ID000003
+    name: findrange
+    namespace: diamond
+    version: "2.0"
+    arguments: ["-a", "findrange", "-T60", "-i", "f.b2", "-o", "f.c2"]
+    uses:
+      - lfn: f.b2
+        type: input
+      - lfn: f.c2
+        type: output
+        registerReplica: false
+        stageOut: true
+
+  - id: ID000004
+    name: analyze
+    namespace: diamond
+    version: "2.0"
+    arguments: ["-a", "analyze", "-T60", "-i", "f.c1", "f.c2", "-o", "f.d"]
+    uses:
+      - lfn: f.c2
+        type: input
+      - lfn: f.c1
+        type: input
+      - lfn: f.d
+        type: output
+        registerReplica: false
+        stageOut: true
+

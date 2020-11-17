@@ -1,0 +1,4 @@
+# file-based replica catalog: 2010-11-24T19:13:41.029-08:00
+david.f.a gsiftp://hellboy.isi.edu/tmp/david.test pool="local"
+vahi.f.a file:///local-site/already-there/vahi.f.a pool="local"
+vahi.f.d file:///local-site/already-there/vahi.f.a pool="local"

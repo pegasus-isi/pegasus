@@ -15,44 +15,41 @@
 
 package org.griphyn.vdl.router;
 
-import org.griphyn.vdl.classes.*;
-import org.griphyn.vdl.router.*;
-import org.griphyn.vdl.dbschema.*;
-import org.griphyn.vdl.dax.*;
-import org.griphyn.vdl.util.Logging;
 import java.io.*;
-import java.sql.SQLException;
 import java.lang.reflect.*;
+import java.sql.SQLException;
+import org.griphyn.vdl.classes.*;
+import org.griphyn.vdl.dax.*;
+import org.griphyn.vdl.dbschema.*;
+import org.griphyn.vdl.util.Logging;
 
 public class FullDiamondTest {
-  public static void main( String[] args )
-    throws IllegalArgumentException, IOException, ClassNotFoundException,
-	   NoSuchMethodException, InstantiationException, SQLException,
-	   IllegalAccessException, InvocationTargetException
-  {
-    // create debug output
-    Logging.instance().register( "dag", System.err );
-    Logging.instance().register( "state", System.err );
-    Logging.instance().register( "route", System.err );
+    public static void main(String[] args)
+            throws IllegalArgumentException, IOException, ClassNotFoundException,
+                    NoSuchMethodException, InstantiationException, SQLException,
+                    IllegalAccessException, InvocationTargetException {
+        // create debug output
+        Logging.instance().register("dag", System.err);
+        Logging.instance().register("state", System.err);
+        Logging.instance().register("route", System.err);
 
-    // create new route object, in memory classes
-    Definitions diamond = org.griphyn.vdl.router.CreateFullDiamond.create(); 
-    Route r = new Route( new InMemorySchema(diamond) );
+        // create new route object, in memory classes
+        Definitions diamond = org.griphyn.vdl.router.CreateFullDiamond.create();
+        Route r = new Route(new InMemorySchema(diamond));
 
-    // request known production
-    BookKeeper bk = r.requestLfn("f.d");
-    ADAG dax = bk.getDAX("testing");
+        // request known production
+        BookKeeper bk = r.requestLfn("f.d");
+        ADAG dax = bk.getDAX("testing");
 
-    // show us the result(s)
-    BufferedWriter bw =
-      new BufferedWriter( new OutputStreamWriter(System.out) );
-    if ( args.length > 0 && args[0] != null && args[0].startsWith("t") ) {
-      dax.toString(bw);
-    } else {
-      dax.toXML(bw,"");
+        // show us the result(s)
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+        if (args.length > 0 && args[0] != null && args[0].startsWith("t")) {
+            dax.toString(bw);
+        } else {
+            dax.toXML(bw, "");
+        }
+        bw.flush();
+
+        System.exit(0);
     }
-    bw.flush();
-
-    System.exit(0);
-  }
 }

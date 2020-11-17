@@ -1,0 +1,81 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+$defs:
+  # --- a file object ----------------------------------------------------------
+  file:
+    type: object
+    properties:
+      lfn:
+        type: string
+      size:
+        type: integer
+      metadata:
+        $ref: "common.yml#/$defs/metadata"
+    required:
+      - lfn
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+  # --- a single entry in the replica catalog ----------------------------------
+  replica:
+    type: object
+    properties:
+      lfn:
+        type: string
+      pfns:
+        type: array
+        items:
+          type: object
+          properties:
+            site:
+              type: string
+            pfn:
+              type: string
+          additionalProperties: false
+          required:
+            - site
+            - pfn
+        minItems: 0
+      regex:
+        type: boolean
+      checksum:
+        type: object
+        description: "To add new checksum types update pattern '^(sha256|<new type>|..)$'"
+        patternProperties:
+          "^(sha256)$":
+            type: string
+        additionalProperties: false
+      metadata:
+        $ref: "common.yml#/$defs/metadata"
+    required:
+      - lfn
+      - pfns
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+  # --- schema when inlined in dax ---------------------------------------------
+  inlineReplicaCatalog:
+    type: object
+    properties:
+      pegasus:
+        $ref: "common.yml#/$defs/versionString"
+      replicas:
+        type: array
+        items:
+          $ref: "#/$defs/replica"
+        minItems: 0
+    required:
+      - replicas
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+# --- schema for standalone file -----------------------------------------------
+allOf:
+  - $ref: "#/$defs/inlineReplicaCatalog"
+  - type: object
+    required:
+      - pegasus

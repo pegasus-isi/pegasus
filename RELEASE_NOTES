@@ -1,4 +1,646 @@
 ===============================
+Release Notes for Pegasus 5.0.0
+===============================
+We are happy to announce the release of Pegasus 5.0.  Pegasus 5.0
+is be a major release of Pegasus and builds upon the beta version
+released couple of months back. It also includes all features and
+bug fixes from the 4.9 branch. We invite our users to give it a
+try.    
+
+The release can be downloaded from:
+https://pegasus.isi.edu/downloads
+
+If you are an existing user, please carefully follow these
+instructions to upgrade at
+https://pegasus.isi.edu/docs/5.0.0/user-guide/migration.html#migrating-from-pegasus-4-9-x-to-pegasus-5-0 
+
+Highlights of the Release
+--------------------------
+
+1)  Reworked Python API:
+
+    This new API has been developed from the
+    ground up so that, in addition to generating the abstract workflow
+    and all the catalogs, it now allows you to plan, submit, monitor,
+    analyze and generate statistics of your workflow.
+    To use this new Python API refer to the Moving From
+    DAX3 to Pegasus.api at
+    https://pegasus.isi.edu/docs/5.0.0/user-guide/migration.html#moving-from-dax3
+    
+2)  Adoption of YAML formats:
+
+    With Pegasus 5.0, we are moving to
+    adoption of YAML for representation of all major catalogs. We
+    have provided catalog converters for you to convert your existing
+    catalogs to the new formats. In 5.0, the following are now represented
+    in YAML:
+       - Abstract Workflow
+       - Replica Catalog
+       - Transformation Catalog
+       - Site Catalog
+       - Kickstart Provenance Records
+       
+3)  Python3 Support:
+
+    All Pegasus tools are Python 3 compliant.
+    5.0 release will require Python 3 on workflow submit node
+    Python PIP packages for workflow composition and monitoring
+
+
+4) Default data configuration
+
+   In Pegasus 5.0, the default data configuration has been changed
+   to condorio . Up to 4.9.x releases, the default configuration
+   was sharedfs.
+   
+5) Zero configuration required to submit to local HTCondor pool
+
+6) Data Management Improvements
+
+   - New output replica catalog that registers outputs including
+     file metadata such as size and checksums
+   - Ability to do bypass staging of files at a per file,
+     executable and container level
+   - Improved support for hierarchal workflows allow you to create
+     data dependencies between sub workflow jobs and compute jobs
+   - Support for staging of generated outputs to multiple output sites
+   - Support for integrity checking of user executables and application
+     containers in addition to data
+   - Support for webdav transfers
+   - Easier enabling of data reuse by specifying previous workflow
+     submit directories using –reuse option to pegasus-plan. 
+   - Stagein transfer jobs are assigned priorities based on the number
+     of child compute jobs. Details can be found in JIRA ticket 1385
+
+7)  New Jupyter Notebook Based Tutorial
+
+    With this release, we are pleased to announce a brand new tutorial
+    based on a Docker container running interactive Jupyter notebooks.
+    You can access the tutorial at
+    https://jira.isi.edu/browse/PM-1385
+    
+8)  Support for CWL (Common Workflow Language)
+
+    The pegasus-cwl-converter command line tool has been developed to
+    convert a subset of the Common Workflow Language (CWL) to Pegasus’s
+    native YAML format. Given the following three files: a CWL workflow
+    file, a workflow inputs specification file, and a transformation
+    (executable) specification file, pegasus-cwl-converter
+    will do a best-effort translation. This will also work with CWL
+    workflow specifications that refer to Docker containers. The entire
+    CWL language specification is not yet covered by this converter, and
+    as such we can provide additional support in converting
+    your workflows into the Pegasus YAML format.
+    
+9) Support for triggers in Ensemble Manager
+
+    The Pegasus Ensemble Manager is a service that manages collections
+    of workflows. In this latest release of Pegasus, workflow triggering
+    functionality has been added to this service. With the ensemble manager
+    service up and running, the pegasus-em command can now be used to start
+    workflow triggers. Two triggersare currently supported:
+    - a cron based trigger: The cron based trigger will, at a given
+      interval, submit a new workflow to your ensemble.
+    - a cron based, file pattern trigger: The cron based, file pattern
+      trigger, much like the cron based trigger, will submit a new
+      workflow to your ensemble at a given time interval, with the addition
+      of any new files that are detected based on a given file pattern.
+      This is useful for automatically processing data as it arrives.
+     
+10) Improved events for each job reported to AMQP
+
+    Historically the events reported to AMQP endpoints are normalized
+    events corresponding to the stampede database, which makes
+    correlation hard. Pegasus now also reports a new job composite event
+    (stampede.job_inst.composite) to AMQP end points that have a
+    complete information about a job execution.
+    
+11) Revamped Documentation
+
+    Documentation has been overhauled and broken down into a user guide
+    and a reference guide. In addition, we have moved to readthedocs style
+    documentation using restructured text.  The documentation can be found
+    at https://pegasus.isi.edu/docs/5.0.0/index.html .
+
+12) pegasus-statistics reports memory usage and avg cpu utilization
+
+    pegasus-statistics now reports memory usage and average cpu utilization
+    for your jobs in the transformation statistics file (breakdown.txt).
+    
+13) PegasusLite Improvements
+
+    - Users can now specify environment setup scripts in the site catalog
+      that need to be sourced to setup the environment before the job is
+      launched by PegasusLite. More details at
+      https://pegasus.isi.edu/docs/5.0.0/reference-guide/pegasus-lite.html#setting-the-environment-in-pegasuslite-for-your-job 
+    - Users can get the transfers in PegasusLite to run on DTN nodes while
+      the jobs run on the the compute nodes. More details at
+      https://pegasus.isi.edu/docs/5.0.0/reference-guide/pegasus-lite.html#specify-compute-job-in-pegasuslite-to-run-on-different-node 
+
+13) Credentials existence is checked upfront by planner
+
+14) Performance improvements for pegasus-rc-client
+
+    pegasus-rc-client now does bulk inserts when inserting entries into
+    a database backed Replica Catalog.
+
+15) Pegasus ensures a consistent UTF8 environment across full workflow
+    Details can be found in JIRA ticket 1592 .
+
+
+JIRA items
+-----------
+Exhaustive list of features, improvements and bug fixes can be found below.
+
+New Features
+------------
+
+[PM-603] – Enable workflows to reference local input files directly instead of symlinking them
+[PM-1133] – Kickstart should send a heartbeat so that condor can kill stuck jobs
+[PM-1156] – PegasusLite to tar up the contents of the cwd in case of job failure
+[PM-1278] – stats should include cpu and memory utilization
+[PM-1309] – develop a pip package that only contains the DAX API and the catalogs API
+[PM-1335] – YAML based transformation catalog
+[PM-1339] – construct a default entry for local site if not present in site catalog
+[PM-1345] – Support for Shifter at Nersc
+[PM-1351] – YAML based kickstart records
+[PM-1352] – Build failure on Debian 10 due to mariadb/MySQL-Python incompatibility
+[PM-1354] – pegasus-init to support titan tutorial
+[PM-1355] – composite records when sending events to AMQP
+[PM-1357] – In lite jobs, chirp durations for stage in, stage out of data
+[PM-1367] – Support for retrieval from HPSS tape store using commands htar and hsi
+[PM-1390] – ensure all machine parseable information is one file associated with job
+[PM-1396] – kickstart yaml parser fails because of : unacceptable character #x001b: special characters are not allowed
+[PM-1398] – include machine information in job_instance.composite event
+[PM-1402] – pegasus-init to support summit as execution env for tutorial
+[PM-1411] – create the schema for a YAML based DAX
+[PM-1438] – YAML Based Site Catalog
+[PM-1461] – Ability to specify a wrapper/launcher for compute jobs in PegasusLite
+[PM-1470] – pegasus-graphviz needs a yaml handler
+[PM-1493] – YAML Based Replica Catalog
+[PM-1501] – Parse YAML DAX files
+[PM-1516] – Planner should create a default condorpool compute site if a user does not have it specified
+[PM-1528] – update DAX R API to emit new workflow format in yaml
+[PM-1529] – set default data configuration to condorio
+[PM-1551] – Update JAVA DAX API to generate yaml formatted DAX
+[PM-1552] – move to using pegasus lite for cases, where we transfer pegasus-transfer
+[PM-1608] – data dependencies between dax jobs and compute jobs in a workflow
+[PM-1620] – enable integrity checking for containers
+[PM-1681] – Enable easy data reuse from previous runs
+[PM-1685] – Python package to clone github repos for pegasus-init in 5.0
+[PM-1286] – Deprecate Perl DAX API
+[PM-1376] – Add LSF local attributes
+[PM-1378] – Handle (copy) HPSS credentials when an environment variable is set
+[PM-1382] – Add ppc64le to the known architectures
+[PM-1383] – Switching to AMQP 0.9.1 in Pegasus Monitord
+[PM-1400] – Remove MacOS .pkg builder
+[PM-1401] – Deprecate pegasus-plots
+[PM-1412] – Upgrade documentation
+[PM-1413] – Upgrade Pegasus Databases to be Unicode Compatible
+[PM-1416] – add data collection setup instructions to docs under section 6.7.1.1. Monitord, RabbitMQ, ElasticSearch Example
+[PM-1446] – create tests for python client
+[PM-1467] – Update jupyter notebook code to use new 5.0 api
+[PM-1484] – create a default site catalog
+[PM-1485] – change default pegasus.data.configuration from sharedfs to condorio
+[PM-1486] – update default filenames for catalogs and workflow
+[PM-1495] – checksum.value and checksum.type need to be added as optional rc entry fields
+[PM-1510] – stageOut and registerReplica fields in Uses to be omitted for Uses of type input
+[PM-1513] – Merge DECAF branch to master to support decaf integration
+[PM-1524] – Use entrypoint in docker containers
+[PM-1533] – Database Schema Cleanup
+[PM-1537] – update existing workflow tests to use yaml
+[PM-1547] – for hierarchical workflows, sc and tc cannot be inlined into the workflow file
+[PM-1602] – Decaf development for the tess_dense example
+[PM-1663] – remove old grid types from schema and add slurm to scheduler type
+[PM-1679] – pegasus-s3 mkdir should cleanly exit if bucket already exists and is owned by user
+[PM-1689] – pegasus-rc-client delete semantics
+[PM-1692] – Add any missing options from pegasus-plan cli to Workflow.plan() and Client.plan()
+[PM-1697] – Add major and minor number options to pegasus-version
+[PM-643] – Better support for stdout of clustered jobs
+[PM-1049] – Jobs should not be retried immediately, but rather delayed for some time
+[PM-1170] – statistics should include memory details
+[PM-1232] – Allow for multiple output sites
+[PM-1235] – Python 2/3 compatible code
+[PM-1247] – Revisit release-tools/get-system-python
+[PM-1321] – Move transfer staging into the container rather than the host OS
+[PM-1323] – pegasus transfer should not try and transfer a file that does not exist
+[PM-1324] – pegasus plan should be able to create site scratch directories with unique names
+[PM-1329] – pegasus integrity causes LIGO workflows to fail
+[PM-1338] – Add support for TACC wrangler to pegasus-init
+[PM-1341] – Transition from vendored `configobj` to release
+[PM-1344] – update pam usage by pamela
+[PM-1349] – Improve error message when jobs fail due to deep dir. structure with depth of > 20.
+[PM-1356] – Replace Google CDN with a different CDN as China block it
+[PM-1359] – Don’t support Chinese character in the file path
+[PM-1363] – Condor Configuration MOUNT_UNDER_SCRATCH causes pegasus auxiliary jobs to fail
+[PM-1368] – Implement Catch and Release for integrity errors
+[PM-1373] – Debian Buster no longer provides openjdk-8-jdk
+[PM-1374] – make monitord resilient to dagman logging the debug level in dagman.out
+[PM-1375] – Do not run integrity checks on symlinked files
+[PM-1385] – Prioritize transfers bases on dependencies
+[PM-1386] – bypass should be a per-file option
+[PM-1391] – Allow properties to be set via environment variables.
+[PM-1392] – YAML based braindump file
+[PM-1403] – Support POWER9 nodes in PMC
+[PM-1417] – add type field in job, dax, and dag
+[PM-1418] – No code to handle postgresql backup.
+[PM-1427] – remove STAT profile namespace
+[PM-1429] – Introduce PEGASUS_ENV variable to define mode of workflow i.e. development, production, etc
+[PM-1431] – Remove -0 suffixes from generated code files.
+[PM-1432] – Remove deprecated pegasus-plan CLI args
+[PM-1459] – Upgrade Java Unit Test Setup
+[PM-1462] – Remove pegasus-submit-dag
+[PM-1463] – improve insert performance of pegasus-rc-client
+[PM-1472] – Update pegasus-s3 regions
+[PM-1474] – Extend command line tools with –json option.
+[PM-1476] – Explore deprecation/replacement of Perl codebase
+[PM-1481] – add status progress bar to python client code
+[PM-1489] – Implement a generic data access credential handler
+[PM-1490] – Support Webdav for data transfers
+[PM-1508] – in the python api, the method signature to manually add dependencies needs to be updated
+[PM-1512] – Removed unused code from planner codebase
+[PM-1514] – Move to boto3 and port p-s3
+[PM-1527] – p-status shows failure when state is unknown
+[PM-1532] – python client “plan” should accept –sites as a list needs a –staging-site flag
+[PM-1539] – Support PANDA GAHP – allow condorio for glite style
+[PM-1544] – pegasus-transfer logs skips container verification when retrieving from singularity hub
+[PM-1545] – handling metadata in 5.0
+[PM-1550] – resolve relative input-dir and output-dir options for dax jobs in hierarchical workflows
+[PM-1580] – build packages for ubuntu 20 for 5.0
+[PM-1581] – pegasus-integrity callout from kickstart
+[PM-1584] – 5.0 Python Api Improvements
+[PM-1592] – Consistent UTF8 environment across full workflow
+[PM-1594] – Short circuit p-transfer in the case of excessive failure in large transfers
+[PM-1621] – Basic support for gpus in Docker and Singularity containers
+[PM-1622] – /bin/sh compatibility
+[PM-1626] – Allow users to specify arbitrary cli arguments for containers
+[PM-1647] – Add more profile keys in the add_condor_profile
+[PM-1650] – replace –dax with a positional argument
+[PM-1651] – Add more profile keys in the add_pegasus_profile
+[PM-1654] – pick up workflow api from vendor extensions encoded in the workflow
+[PM-1657] – a pre-flight check needs to be done for the python package attrs
+[PM-1674] – Deprecate hints profile namespace and use selector namespace
+[PM-1687] – disable warnings when validating yaml files
+[PM-1691] – Add pre script hook to hub repos
+[PM-1236] – Compatibility Module
+[PM-1237] – Python 3: Pegasus Dashboard
+[PM-1238] – Python 3: Pegasus Monitord
+[PM-1239] – Python 2/3 Compatible: Pegasus Transfer
+[PM-1240] – Python 3: Pegasus Statistics
+[PM-1241] – Python 3: Pegasus DB Admin
+[PM-1242] – Python 3: Pegasus Metadata
+[PM-1328] – support sharedfs on the compute site as staging site
+[PM-1340] – make planner os releases consistent with builds
+[PM-1353] – update monitord to parse both xml and yams based ks records
+[PM-1361] – create the schema for a YAML based Site Catalog
+[PM-1365] – remove __ from event keys wherever possible
+[PM-1371] – Python 3 Compatible: DAX
+[PM-1372] – Python 3 Compatible: pegasus-exitcode
+[PM-1381] – Associated planner changes to handle LSF sites
+[PM-1387] – make the netlogger events consistent with the documentation
+[PM-1404] – pegasus tutorial for summit from Kubernetes
+[PM-1407] – Python 3: Netlogger Monitord Code
+[PM-1408] – Python 3: Pegasus Analyzer
+[PM-1410] – create the schema for a YAML based Replica Catalog
+[PM-1419] – Java
+[PM-1420] – add checksum field for Containers in the TransformationCatalog schema
+[PM-1422] – integrate the client code into the dax api
+[PM-1423] – refactor and improve tests
+[PM-1428] – change dax and dag to subworkflow
+[PM-1430] – ensure that api can write out unicode characters in utf-8
+[PM-1433] – Remove old SC RC TC catalog versions
+[PM-1435] – create a “moving from dax3 to new api” doc
+[PM-1436] – implement method chaining using decorators
+[PM-1437] – add type annotations
+[PM-1439] – Planner support for YAML based Site Catalog
+[PM-1441] – Python
+[PM-1442] – Integrate Check in CI
+[PM-1443] – implement api for pegasus.conf
+[PM-1445] – update monitord to parse yaml based brain dump file
+[PM-1447] – update pegasus-sc-converter to covert old format catalog to new yaml based one
+[PM-1448] – SiteFactory should auto detect version and load the correct implementation
+[PM-1450] – Module to load/dump YAML files
+[PM-1453] – Module to load/dump Workflow(DAX) files
+[PM-1454] – Module to load/dump Replica Catalog files
+[PM-1455] – Module to load/dump Transformation Catalog files
+[PM-1456] – Module to load/dump Site Catalog files
+[PM-1457] – Module to load/dump Properties files
+[PM-1460] – add docs to user guide
+[PM-1464] – disallow variable expansion while converting site catalog from one format to another
+[PM-1465] – Module to load/dump JSON files
+[PM-1468] – remove catalog
+[PM-1469] – update Pegasus-DAX3-Tutorial.ipynb
+[PM-1471] – update jupyter docs
+[PM-1473] – fix logging bug
+[PM-1475] – Pegasus Plan
+[PM-1477] – pegasus-config
+[PM-1478] – pegasus-remove
+[PM-1479] – pegasus-run
+[PM-1480] – pegasus-status
+[PM-1482] – Clean up javadoc warnings
+[PM-1483] – rename ProfileMixin.add_<ns>() to ProfileMixin.add_profile_<ns>()
+[PM-1487] – update python api to write new default filenames
+[PM-1491] – Update pegasus-tc-converter to convert from old format to new YAML format
+[PM-1492] – support docker/singularity container usage in cwl
+[PM-1494] – Parse YAML Based RC files
+[PM-1496] – update rc schema so that rc entries can have checksum fields
+[PM-1497] – update rc api to support checksum fields
+[PM-1498] – update RC docs to mention checksum values
+[PM-1499] – Implement YAML Based RC Backend
+[PM-1500] – create workflow test
+[PM-1502] – add infer_dependencies=True to wf.write
+[PM-1503] – in the python api, write out yml in order
+[PM-1504] – flatten out the uses section. remove the extra file property aggregation
+[PM-1505] – for job arguments, files should be added as a strings
+[PM-1507] – update schema for stdin, stdout, stderr in jobs to s.t only lfn is used
+[PM-1509] – update “type” field options in the AbstractJob schema to be “job”, “pegasusWorkflow”, and “condorWorkflow”
+[PM-1511] – Update DAXParser Factory to load the right parser based on content of input dax file
+[PM-1515] – prefer catalog entries for SC, RC and TC in the DAX over everything else
+[PM-1517] – update default –sites option in python client planner wrapper code
+[PM-1518] – Update Replica Factory to auto load RC backend based on type of file
+[PM-1519] – update schema for job args s.t. types can be strings and scalars
+[PM-1520] – Update Transformation Factory to auto load Transformation backend based on type of file
+[PM-1523] – work on replica catalog converter
+[PM-1525] – support in planner for compound transformations
+[PM-1526] – update python api to write out tr requirements in the format “namespace::name:version”
+[PM-1535] – default paths picked up should be logged in the properties file in the submit directory
+[PM-1538] – convert test 023-sc4-ssh-http to use yaml
+[PM-1540] – allow mount point regex to parse shell variable names
+[PM-1541] – change the pegasus-plan invocation via pegasus lite in dagman prescripts to handle new worker package organization
+[PM-1542] – convert test 024-sc4-gridftp-http to use yaml
+[PM-1543] – convert test 025-sc4-file-http to use yaml
+[PM-1546] – add metadata to entry in replica catalog
+[PM-1548] – preserve case for property keys when properties python api is used
+[PM-1549] – registration of outputs in Pegasus 5.0
+[PM-1555] – Chapter 2. Tutorial – Update and review
+[PM-1556] – Chapter 3. Installation – Update and review
+[PM-1557] – Chapter 4. Creating Workflows – Update and review
+[PM-1558] – Chapter 5. Running Workflows – Update and review
+[PM-1559] – Chapter 6. Monitoring, Debugging and Statistics – Update and review
+[PM-1560] – Chapter 7. Execution Environments – Update and review
+[PM-1561] – Chapter 8. Containers – Update and review
+[PM-1562] – Chapter 9. Example Workflows – Update and review
+[PM-1563] – Chapter 10. Data Management – Update and review
+[PM-1564] – Chapter 11. Optimizing Workflows for Efficiency and Scalability – Update and review
+[PM-1565] – Chapter 12. Pegasus Service – Update and review
+[PM-1566] – Chapter 13. Configuration – Update and review
+[PM-1567] – Chapter 14. Submit Directory Details – Update and review
+[PM-1568] – Chapter 15. Jupyter Notebooks – Update and review
+[PM-1569] – Chapter 16. API Reference – Update and review
+[PM-1570] – Chapter Command Line Tools man pages – Update and review
+[PM-1571] – rewrite Introduction
+[PM-1572] – Chapter “Packages” – Update and review
+[PM-1573] – Chapter 17. Useful Tips – Update and review
+[PM-1574] – Chapter 18. Funding, citing, and anonymous usage statistics – Update and review
+[PM-1575] – Chapter 19. Glossary – Update and review
+[PM-1576] – Chapter 20. Tutorial VM – Update and review
+[PM-1577] – convert test 045-hierarchy-sharedfs
+[PM-1578] – Migration Guide to 5.0
+[PM-1579] – convert test 045-hierarchy-sharedfs-b to use yaml
+[PM-1582] – ensure checksum and file metadata also appears in the output replica catalog
+[PM-1583] – Parse meta files as a RC backend in the planner
+[PM-1585] – remove glibc from schema and api as it is not used anymore
+[PM-1586] – add built-in support for pathlib.Path objects where ever paths are used
+[PM-1587] – _DirectoryType enums should have underscores in name
+[PM-1588] – in add_pegasus_profile(), add data_configuration as a kwarg
+[PM-1590] – in the Workflow object set infer_dependencies to be True by default
+[PM-1591] – Only require site and pfn in Transformation constructor when automatically creating a TransformationSite
+[PM-1596] – pegasus-db-admin should use PEGASUS_HOME to discover pegasus-version etc
+[PM-1597] – Pegasus Run
+[PM-1598] – Output originating from pegasus-tools should be output by workflow object as is (without any log category)
+[PM-1599] – Improve exception handling for failed execution of pegasus client commands
+[PM-1600] – Update workflow and client python apis to support multiple output sites
+[PM-1601] – Client plan input_dir must take in a list of str
+[PM-1604] – Fix deprecation warnings
+[PM-1605] – Get ensemble manager running on master (Python3)
+[PM-1606] – Merge in/factor in code implemented in add-ensemble-triggers branch
+[PM-1607] – Add time interval based triggering on a given directory/file pattern
+[PM-1609] – register_replica should be set to True by default
+[PM-1610] – ensure pegasus-db-admin downgrade works
+[PM-1611] – add pegasus-graphviz functionality into the api
+[PM-1612] – update monitord to record avg cpu utilization and maxrss
+[PM-1613] – update database schema to track maxrss and avg_cpu
+[PM-1614] – update planner for revised 5.0 replica catalog format
+[PM-1615] – unique constraint failed error when using multiple output sites
+[PM-1616] – add checksums for executables
+[PM-1617] – add missing integrity check for executables
+[PM-1618] – update 039-black-metadata to use python 5.0 api
+[PM-1623] – fix 5.0 python auto generated python api documentation
+[PM-1624] – convert 032-black-checkpoint
+[PM-1625] – Pegasus specific profile for requesting GPU resources
+[PM-1627] – workflow uuid, submit dir, submit hostname, root wf id should be accessible from the workflow object
+[PM-1628] – files generated by the api should have comments specifying that they have been auto generated by the api
+[PM-1629] – Add metadata to container
+[PM-1631] – create 032-kickstart-chkpoint-signal-condorio
+[PM-1632] – create 032-kickstart-chkpoint-signal-nonsharedfs
+[PM-1633] – CLI: manpage pegasus-plan
+[PM-1634] – CLI: manpage pegasus-db-admin
+[PM-1635] – CLI: manpage pegasus-status
+[PM-1636] – CLI: manpage pegasus-remove
+[PM-1637] – CLI: manpage pegasus-anaylzer
+[PM-1638] – CLI: manpage pegasus-statistics
+[PM-1639] – CLI: manpage pegasus-run
+[PM-1640] – CLI: manpage pegasus-transfer
+[PM-1641] – CLI: manpage pegasus-s3
+[PM-1642] – CLI: manpage pegasus-integrity
+[PM-1643] – CLI: manpage pegasus-rc-converter
+[PM-1644] – CLI: manpage pegasus-sc-converter
+[PM-1645] – CLI: manpage pegasus-tc-converter
+[PM-1646] – update database overview, and update schema picture
+[PM-1648] – add unit tests that put/pull to/from aws s3 and ceph
+[PM-1649] – remove old config parameters if they are not used
+[PM-1652] – update pegasus client api to pass the workflow to be planned at the end
+[PM-1655] – the metrics server should pick up key wf_api , and default back to dax_api if not present
+[PM-1656] – Add unit tests to ensure YAML is being generated correctly
+[PM-1659] – in the python api, add pegasus profile key container.arguments
+[PM-1660] – add boolean bypass flag for input files
+[PM-1661] – expose bypass parameter for Containers and TransformationSites
+[PM-1662] – document behavior in user guide about bypassing file staging
+[PM-1665] – expose –randomdir/–randomdir=<path> in client code in the python api
+[PM-1666] – get live output from pegasus cli tools when they are called with the client code
+[PM-1667] – when client code is called, it should be more obvious what pegasus-<tool> is being called
+[PM-1668] – fb-nlp workflow generator creates multiple jobs that create same output file
+[PM-1669] – remove “pegasus: <version>” from tc when inlined in a workflow
+[PM-1670] – expose a schema validation function that can be used in unit tests
+[PM-1682] – add –reuse option to Workflow.plan in python api
+[PM-1683] – update section 7.3 supported transfer protocols in data management guide
+[PM-1684] – reorg table of contents
+[PM-1688] – update pegasus-db-admin as a new ‘trigger’ table has been added to the schema
+[PM-1693] – convert test 010-runtime-clustering-CondorIO to use python api
+[PM-1694] – convert test 010-runtime-clustering-Non-SharedFS to use python api
+[PM-1695] – convert 010-runtime-clustering-SharedFS to use python api
+[PM-1696] – convert 010-runtime-clustering-SharedFS Staging and No Kickstart to use python api
+[PM-1698] – Release notes for 5.0 release
+[PM-1699] – add logo the documentation pages
+[PM-1700] – add SIGINT handler to Client.wait() so that it can exit cleanly
+[PM-1701] – planner should get chmod jobs to run locally if compute site has auxiliary.local set
+
+Bugs Fixed
+----------
+
+[PM-1150] – Pegasus should verify that required credentials exists before starting a workflow
+[PM-1192] – User supplied env setup script for lite
+[PM-1199] – Notification naming / meta notifications
+[PM-1326] – singularity suffix computed incorrectly
+[PM-1327] – bypass input file staging broken for container execution
+[PM-1330] – .meta files created even when integrity checking is disabled.
+[PM-1332] – monitord is failing on a dagman.out file
+[PM-1333] – amqp endpoint errors should not disable database population for multiplexed sinks
+[PM-1334] – pegasus dagman is not exiting cleanly
+[PM-1336] – pegasus-submitdir is broken
+[PM-1346] – Pegasus job checkpointing is incompatible with condorio
+[PM-1347] – pegasus will always try and transfer output when a code has checkpointed
+[PM-1350] – pegasus is ignoring when_to_transfer_output
+[PM-1358] – HTCondor 8.8.0/8.8.1 remaps /tmp, and can break access to x509 credentials
+[PM-1360] – planner drops transfer_(in|out)put_files if NoGridStart is used
+[PM-1362] – Chinese characters in the file path
+[PM-1366] – Pegasus Cluster Label – Job Env Not Picked Up in Containers
+[PM-1377] – A + in a tc name breaks pegasus-plan
+[PM-1379] – Stage out job fails – wrong src location
+[PM-1380] – Support for Singularity Library
+[PM-1389] – pegasus.cores causes issues on Summit
+[PM-1395] – GLite LSF scripts don’t work as intended on OLCF’s DTNs
+[PM-1405] – Is Pegasus supposed to build on 32-bit x86 (Debian i386 Stretch)?
+[PM-1409] – Python virtual environments not considered first before system wide installation
+[PM-1421] – p-lite generated sh files fail, when used with Docker containers, that make use of USER argument
+[PM-1466] – Upgrade Python Package Versions
+[PM-1488] – Get condorpool worker machine ipaddr error!!!
+[PM-1506] – pegasus-python-wrapper locates executable from PEGASUS_HOME instead of dirname of the exec.
+[PM-1521] – Decaf Jobs does not generate valid JSON for Decaf anymore
+[PM-1522] – output not being capture in pegasus client code
+[PM-1530] – site selector does map job correctly when using stageable or all mapper with a containerized job
+[PM-1531] – pegasus-db-admin fails on macosx on a clean db
+[PM-1534] – integrity checking with bypass input staging if checksums are specified in replica catalog
+[PM-1595] – hostname is not generated in case of integrity failures
+[PM-1619] – pegasus-analyzer output doesn’t match pegasus-status
+[PM-1630] – PATH variable in Docker containers is not preserved in some cases
+[PM-1671] – ConfigParser still referenced in pegasus-worker CLI scripts
+[PM-1675] – planner throws error when using “pegasus.dir.storage.mapper.replica.file” without specifying “pegasus.dir.storage.mapper.replica”
+[PM-1676] – hierarchical workflow failing only when integrity checking is on
+[PM-1680] – kickstart needs to quote argument vector when outputting it to yaml
+[PM-1702] – registration jobs fail out of a 5.0 binary install
+[PM-1705] - priorities are not propagated correctly
+
+====================================
+Release Notes for Pegasus 5.0.0beta1
+====================================
+We are happy to announce the beta1 release of Pegasus 5.0.  Pegasus
+5.0 will be a major release of pegasus and this beta version has most
+of the features and bug fixes that will be in 5.0.
+
+We invite our users to give it a try. Since this is a beta release,
+it has to manually downloaded from the website at 
+https://download.pegasus.isi.edu/pegasus/5.0.0beta1/ 
+
+There, you can find there the various RPM/DEB packages and the binary
+tarballs.
+
+If you are an existing user, please carefully follow these instructions
+to upgrade.
+https://pegasus.isi.edu/docs/5.0.0dev/migration.html#migrating-from-pegasus-4-9-x-to-pegasus-5-0 
+
+Highlights of the new Release
+------------------------------
+
+1) Reworked Python API:
+
+   This new API has been developed from the grounds up that in addition
+   to generating the abstract workflow and all the catalogs, allows you to
+   plan, submit, monitor, analyze and generate statistics of your workflow.
+   To use this new Python API refer to the Moving From DAX3 to Pegasus.api.
+   https://pegasus.isi.edu/docs/5.0.0dev/migration.html#moving-from-dax3
+   
+2) Adoption of YAML formats:
+
+   With Pegasus 5.0, we are moving to adoption of YAML for representation
+   of all major catalogs. In 5.0, the following are now represented in YAML
+
+      * Abstract Workflow
+      * Replica Catalog
+      * Transformation Catalog
+      * Site Catalog
+      * Kickstart Provenance Records
+      
+3) Python3 Support
+      * All Pegasus tools are Python 3 compliant.
+      * 5.0 release will require Python 3 on workflow submit node
+      * Python PIP packages for workflow composition and monitoring
+      
+4) Default data configuration
+
+   In Pegasus 5.0, the default data configuration has been changed to condorio .
+   Uptil 4.9.x releases, the default configuration was sharedfs.
+
+5) Zero configuration required to submit to local HTCondor pool
+
+6) Data Management Improvements
+
+     * New output replica catalog that registers outputs including file metadata
+       such as size and checksums
+     * Ability to do bypass staging of files at a per file, executable and container
+       level.
+     * Improved support for hierarchal workflows allow you to create data dependencies
+       between sub workflow jobs and compute jobs
+       
+7) Support for integrity checking of user executables and application containers
+   in addition to data
+   
+8) Revamped Documentation
+
+   The documentation has been moved to readthedocs style documentation using
+   restructured text. The documentation can be found at
+   https://pegasus.isi.edu/docs/5.0.0dev/index.html 
+
+
+===============================
+Release Notes for Pegasus 4.9.3
+===============================
+
+We are happy to announce the release of Pegasus 4.9.3. Pegasus 4.9.3 is a
+minor bug fix release after Pegasus 4.9.2.   
+
+This release has support for Singularity Library as a source for pulling
+singularity containers, in lieu of Singularity HUB.  It also has support
+for non authenticated ftp to file transfers for pulling in input datasets. 
+
+The tutorial utility pegasus-init was updated to support to execute on
+Summit from a Kubernetes cluster at OLCF. 
+
+The release also improvement to workflow monitoring events that can be
+sent to an AMQP endpoint, that in turn in can be used to populate
+ElasticSearch and build a dashboard in Grafana. More details can be
+found in the guide at https://pegasus.isi.edu/docs/monitoring_amqp.php. 
+
+New Features
+----------------------------
+1) [PM-1398] - include machine information in job_instance.composite event
+
+2) [PM-1402] - pegasus-init to support summit as execution env for tutorial
+
+3) [PM-1397] - Support ftp to file transfers in pegasus-transfer
+
+4) [PM-1416] - add data collection setup instructions to docs under
+   	       section 6.7.1.1. Monitord, RabbitMQ, ElasticSearch Example
+	       
+5) [PM-1403] - Support POWER9 nodes in PMC
+
+6) [PM-1404] - pegasus tutorial for summit from Kubernetes
+
+Bugs Fixed
+----------------------------
+1) [PM-1346] - Pegasus job checkpointing is incompatible with condorio
+
+2) [PM-1380] - Support for Singularity Library
+
+3) [PM-1388] - PegasusLite cannot locate osname and version SLES 15
+
+4) [PM-1389] - pegasus.cores causes issues on Summit
+
+5) [PM-1395] - GLite LSF scripts don't work as intended on OLCF's DTNs
+
+6) [PM-1405] - Is Pegasus supposed to build on 32-bit x86 (Debian i386 Stretch)?
+
+===============================
 Release Notes for Pegasus 4.9.2
 ===============================
 

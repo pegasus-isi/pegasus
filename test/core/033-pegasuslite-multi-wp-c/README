@@ -3,7 +3,7 @@ TEST DESCRIPTION
 - worker package transfer is not explicity set. instead it is only
 transferred for condorpool that is run in condorio mode.
 - CCG site is sharedfs
-- condorpool is condorio
+- condorpool is condorio (default configuration)
 - in pegasusrc pegasus.data.configuration is not set.
 
 

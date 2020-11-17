@@ -10,36 +10,34 @@ OSID:=$(shell $(CURDIR)/../../release-tools/getosid)
 EXTDIR=$(prefix)/lib/pegasus/externals
 LIBDIR=$(EXTDIR)/python
 
-PACKAGES=sqlalchemy
-
-ifneq ($(shell $(PYTHON) -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
-    PACKAGES+=ordereddict.py
-endif
-
-PACKAGES+=argparse
-PACKAGES+=click
 PACKAGES+=flask
-PACKAGES+=flask_cache
-PACKAGES+=flask_sqlalchemy.py
+PACKAGES+=flask_caching
 PACKAGES+=jinja2
 PACKAGES+=markupsafe
-PACKAGES+=werkzeug
-PACKAGES+=requests
-PACKAGES+=itsdangerous.py
-PACKAGES+=boto
-PACKAGES+=pam.py
-#PACKAGES+=OpenSSL
-PACKAGES+=six
-#PACKAGES+=enum34
-#PACKAGES+=cffi
-#PACKAGES+=cryptography
-PACKAGES+=plex
-PACKAGES+=future
-PACKAGES+=chardet
-PACKAGES+=idna
-PACKAGES+=certifi
-PACKAGES+=urllib3
 PACKAGES+=pyjwt
+#PACKAGES+=yaml
+PACKAGES+=sqlalchemy
+PACKAGES+=werkzeug
+PACKAGES+=boto3
+PACKAGES+=botocore
+PACKAGES+=certifi
+PACKAGES+=chardet
+PACKAGES+=click
+PACKAGES+=docutils
+PACKAGES+=globus_sdk
+PACKAGES+=idna
+PACKAGES+=itsdangerous.py
+PACKAGES+=jmespath
+PACKAGES+=pamela
+PACKAGES+=pika
+PACKAGES+=pycparser
+PACKAGES+=dateutil
+PACKAGES+=requests
+PACKAGES+=s3transfer
+PACKAGES+=six
+PACKAGES+=urllib3
+
+
 ifeq ($(shell python --version 2>&1 | grep " 2.6"),)
     PACKAGES+=globus_sdk
 else
@@ -74,49 +72,45 @@ endif
 all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
 $(LIBDIR)/%:
-	$(eval TARNAME := $(subst .tar.gz,,$<))
+	$(eval PACKDIR:=$(shell echo $< | sed -E 's/\.tar\.gz|\.zip//'))
 	@echo Building $< &&\
+	export LANG=en_US.UTF-8 && \
 	mkdir -p $(LIBDIR) &&\
-	tar xzf $< &&\
-	pushd $(TARNAME) > /dev/null &&\
-	if [ -d "src/OpenSSL" ]; then $(PYTHON) setup.py build_ext $(PYOPENSSL_ARGS) > /dev/null; fi &&\
-	if [ -d "src/cryptography" ]; then $(PYTHON) setup.py build_ext $(PYOPENSSL_ARGS) > /dev/null; fi &&\
+	if (echo "$<" | grep tar.gz) >/dev/null; then tar xzf $< ; else unzip -q -o $< ; fi &&\
+	pushd $(PACKDIR) > /dev/null &&\
 	$(PYTHON) setup.py install_lib -d $(LIBDIR) > /dev/null &&\
 	popd > /dev/null &&\
-	rm -rf $(TARNAME) &&\
+	rm -rf $(PACKDIR) &&\
 	touch $@
 
-$(LIBDIR)/argparse: argparse-1.4.0.tar.gz
-$(LIBDIR)/click: click-6.7.tar.gz
-$(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
-$(LIBDIR)/flask: Flask-0.12.4.tar.gz
-$(LIBDIR)/flask_cache: Flask-Cache-0.13.1.tar.gz
-$(LIBDIR)/flask_sqlalchemy.py: Flask-SQLAlchemy-0.16.tar.gz
-$(LIBDIR)/jinja2: Jinja2-2.8.1.tar.gz
-$(LIBDIR)/markupsafe: MarkupSafe-1.0.tar.gz
-$(LIBDIR)/werkzeug: Werkzeug-0.14.1.tar.gz
-$(LIBDIR)/requests: requests-2.18.4.tar.gz
-$(LIBDIR)/itsdangerous.py: itsdangerous-0.24.tar.gz
-$(LIBDIR)/boto: boto-2.48.0.tar.gz
-$(LIBDIR)/pam.py: pam-0.1.4.tar.gz
-$(LIBDIR)/OpenSSL: pyOpenSSL-16.2.0.tar.gz
-$(LIBDIR)/enum34: enum34-1.1.6.tar.gz
-$(LIBDIR)/cffi: cffi-1.10.0.tar.gz
-$(LIBDIR)/cryptography: cryptography-2.0.3.tar.gz
-$(LIBDIR)/plex: plex-2.0.0dev.tar.gz
-$(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
-$(LIBDIR)/future: future-0.16.0.tar.gz
+$(LIBDIR)/flask: Flask-1.1.1.tar.gz
+$(LIBDIR)/flask_caching: Flask-Caching-1.8.0.tar.gz
+$(LIBDIR)/jinja2: Jinja2-2.11.1.tar.gz
+$(LIBDIR)/markupsafe: MarkupSafe-1.1.1.tar.gz
+$(LIBDIR)/pyjwt: PyJWT-1.7.1.tar.gz
+#$(LIBDIR)/yaml: PyYAML-5.3.1.tar.gz
+$(LIBDIR)/sqlalchemy: SQLAlchemy-1.3.15.tar.gz
+$(LIBDIR)/werkzeug: Werkzeug-1.0.0.tar.gz
+$(LIBDIR)/attrs: attrs-19.3.0.tar.gz
+$(LIBDIR)/boto3: boto3-1.12.37.tar.gz
+$(LIBDIR)/botocore: botocore-1.15.37.tar.gz
+$(LIBDIR)/certifi: certifi-2019.11.28.tar.gz
 $(LIBDIR)/influxdb: influxdb-4.1.1.tar.gz
-$(LIBDIR)/pika: pika-0.11.2.tar.gz
-$(LIBDIR)/dateutil: python-dateutil-2.6.1.tar.gz
-$(LIBDIR)/six: six-1.11.0.tar.gz
 $(LIBDIR)/chardet: chardet-3.0.4.tar.gz
-$(LIBDIR)/idna: idna-2.6.tar.gz
-$(LIBDIR)/certifi: python-certifi-2017.11.05.tar.gz
-$(LIBDIR)/urllib3: urllib3-1.22.tar.gz
-$(LIBDIR)/pytz: pytz-2017.3.tar.gz
-$(LIBDIR)/pyjwt: pyjwt-1.5.3.tar.gz
-$(LIBDIR)/globus_sdk: globus-sdk-python-1.4.1.tar.gz
+$(LIBDIR)/click: click-7.1.1.tar.gz
+$(LIBDIR)/docutils: docutils-0.15.2.tar.gz
+$(LIBDIR)/globus_sdk: globus-sdk-1.4.1.tar.gz
+$(LIBDIR)/idna: idna-2.9.tar.gz
+$(LIBDIR)/itsdangerous.py: itsdangerous-1.1.0.tar.gz
+$(LIBDIR)/jmespath: jmespath-0.9.5.tar.gz
+$(LIBDIR)/pamela: pamela-1.0.0.tar.gz
+$(LIBDIR)/pika: pika-1.1.0.tar.gz
+$(LIBDIR)/pycparser: pycparser-2.20.tar.gz
+$(LIBDIR)/dateutil: python-dateutil-2.8.1.tar.gz
+$(LIBDIR)/requests: requests-2.23.0.tar.gz
+$(LIBDIR)/s3transfer: s3transfer-0.3.3.tar.gz
+$(LIBDIR)/six: six-1.14.0.tar.gz
+$(LIBDIR)/urllib3: urllib3-1.25.8.tar.gz
 
 
 clean:

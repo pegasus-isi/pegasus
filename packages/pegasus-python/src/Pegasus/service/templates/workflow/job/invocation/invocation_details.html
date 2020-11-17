@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+{% if invocation.task_id %}
+function loadMetadata() {
+    var ajaxOpt =
+    {
+        url     : '{{ url_for('monitoring.get_task_meta', m_wf_id=root_wf_id, wf_id=wf_id, task_id=invocation.task_id) }}',
+        dataType: 'json',
+        error   : function (xhr, textStatus, errorThrown)
+        {
+            alert ('Error occurred: ' + textStatus + xhr.responseText);
+        },
+        success : function (data, textStatus, xhr)
+        {
+            if (xhr.status == 204) {
+                $('#metadata').html('No metadata associated with this task');
+                return;
+            }
+
+            var metadata = data.records;
+            var table = $('<table id="metadata_table" class="table-fixed"></table>');
+            table.append($('<col width="25%">'));
+
+            for( var i = 0; i < metadata.length; ++i) {
+                var tr = $('<tr></tr>');
+                var th = $('<th>' + metadata[i].key + '</th>');
+                var td = $('<td>' + metadata[i].value + '</td>');
+                table.append(tr.append(th).append(td));
+            }
+
+            $('#metadata').html(table);
+            verticalTableInitStatus('#metadata_table', {% if invocation.exitcode == 0 %}'successful' {% else %} 'failed' {% endif %});
+        }
+    };
+
+    $.ajax (ajaxOpt)
+}
+{% endif %}
+
+$(document).ready (function ()
+{
+    verticalTableInitStatus ('#invocation_text_info', {% if invocation.exitcode == 0 %}'successful' {% else %} 'failed' {% endif %});
+    clipboardTooltipInitialization();
+    {% if invocation.task_id %}
+    loadMetadata();
+    {% endif %}
+});
+</script>
+{% endblock %}
+{% block title %}Task Details{% endblock %}
+{% block title_header %}Task Details{% endblock %}
+{% block navigation_bar %}
+<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li><a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id) }}">Job</a></li>
+<li class="active">Task Details</li>
+{% endblock %}
+{% block content %}
+<section class="row">
+    <div class="col-xs-12">
+        <table id="invocation_text_info" class="table-fixed">
+            <col width="25%">
+            <tr>
+                <th>Task Label</th>
+                <td>{{ invocation.abs_task_id }}</td>
+            </tr>
+            <tr>
+                <th>Transformation</th>
+                <td>{{ invocation.transformation }}</td>
+            </tr>
+            <tr>
+                <th>Working Directory</th>
+                <td class="text-nowrap">
+                    <button class="copy-button" data-clipboard-text="{{ invocation.work_dir }}">
+                    </button>
+                    {{ invocation.work_dir }}
+                </td>
+            </tr>
+            <tr>
+                <th>Executable</th>
+                <td class="text-nowrap">
+                    <button class="copy-button" data-clipboard-text="{{ invocation.executable }}">
+                    </button>
+                    {{ invocation.executable }}
+                </td>
+            </tr>
+            <tr>
+                <th>Arguments</th>
+                <td class="text-nowrap">
+                    {% if invocation.argv %}
+                    <button class="copy-button" data-clipboard-text="{{ invocation.argv }}">
+                    </button>
+                    {% endif %}
+                    {{ invocation.argv }}
+                </td>
+            </tr>
+            <tr>
+                <th>Exit Code</th>
+                <td>{{ invocation.exitcode }}</td>
+            </tr>
+            <tr>
+                <th>Start Time</th>
+                <td>{{ invocation.start_time | time_to_date_str("%a, %d %b %Y %H:%M:%S") }}</td>
+            </tr>
+            <tr>
+                <th>Remote Duration</th>
+                <td>{{ invocation.remote_duration | time_to_str }}</td>
+            </tr>
+            <tr>
+                <th>Remote CPU Time</th>
+                <td>{{ invocation.remote_cpu_time | time_to_str }}</td>
+            </tr>
+        </table>
+    </div>
+</section>
+<section>
+    <h3>Task Metadata</h3>
+    <hr>
+</section>
+<section class="row">
+    <div class="col-xs-12" id="metadata">
+        {% if not invocation.task_id %}No metadata associated with this task{% endif %}
+    </div>
+</section>
+{% endblock %}

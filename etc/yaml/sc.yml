@@ -1,0 +1,51 @@
+pegasus: "5.0"
+sites:
+  - name: local
+    arch: x86_64
+    os.type: linux
+    directories:
+      - type: sharedScratch
+        path: /tmp/workflows/scratch
+        fileServers:
+          - operation: all
+            url: file:///tmp/workflows/scratch
+      - type: localStorage
+        path: /tmp/workflows/outputs
+        fileServers:
+          - operation: all
+            url: file:///tmp/workflows/outputs
+    profiles:
+      env:
+        PATH: /usr/bin:/bin
+        x-ext: true
+
+  - name: condor_pool
+    arch: x86_64
+    os.type: linux
+    grids:
+      - type: gt5
+        contact: smarty.isi.edu/jobmanager-pbs
+        scheduler: pbs
+        jobtype: auxillary
+      - type: gt5
+        contact: smarty.isi/edu/jobmanager-pbs
+        scheduler: pbs
+        jobtype: compute
+    directories:
+      - type: sharedScratch
+        path: /lustre
+        fileServers:
+          - operation: all
+            url: gsiftp://smarty.isi.edu/lustre
+
+  - name: staging_site
+    arch: x86_64
+    os.type: linux
+    directories:
+      - type: sharedScratch
+        path: /data
+        fileServers:
+          - operation: put
+            url: scp://obelix.isi.edu/data
+          - operation: get
+            url: http://obelix.isi.edu/data

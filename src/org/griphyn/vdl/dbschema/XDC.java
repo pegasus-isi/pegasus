@@ -15,28 +15,20 @@
 package org.griphyn.vdl.dbschema;
 
 import java.sql.*;
-import org.griphyn.vdl.classes.Definition;
 
 /**
- * This common schema interface defines advanced search interfaces for
- * VDC. The advanced methods required permit wildcard searches, partial
- * matches, and candidate list compilations that are not part of the
- * simpler {@link VDC} interface.
+ * This common schema interface defines advanced search interfaces for VDC. The advanced methods
+ * required permit wildcard searches, partial matches, and candidate list compilations that are not
+ * part of the simpler {@link VDC} interface.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
- * @see org.griphyn.vdl.dbschema.DatabaseSchema 
- * @see org.griphyn.vdl.dbdriver 
+ * @see org.griphyn.vdl.dbschema.DatabaseSchema
+ * @see org.griphyn.vdl.dbdriver
  */
-public interface XDC extends Advanced, Annotation
-{
-  public abstract java.util.List 
-    searchDefinition( String xpath)
-    throws SQLException;
+public interface XDC extends Advanced, Annotation {
+    public abstract java.util.List searchDefinition(String xpath) throws SQLException;
 
-  public abstract java.util.List 
-    searchElements( String xpath)
-    throws SQLException;
+    public abstract java.util.List searchElements(String xpath) throws SQLException;
 }

@@ -14,28 +14,25 @@
  */
 
 package org.griphyn.vdl.parser;
-import org.griphyn.vdl.classes.*;
+
 import java.util.*;
+import org.griphyn.vdl.classes.*;
 
 /**
- * This class keeps the name of an element and its corresponding
- * java object reference. The structure is used by the stack in 
- * <code>VDLContentHandler</code>. 
+ * This class keeps the name of an element and its corresponding java object reference. The
+ * structure is used by the stack in <code>VDLContentHandler</code>.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
- *
  * @see VDLContentHandler
  */
-public class StackElement
-{
-  public String m_name;
-  public VDL m_obj;
-    
-  public StackElement( String name, VDL vdl )
-  {
-    m_name = new String(name);
-    m_obj = vdl;
-  }
+public class StackElement {
+    public String m_name;
+    public VDL m_obj;
+
+    public StackElement(String name, VDL vdl) {
+        m_name = new String(name);
+        m_obj = vdl;
+    }
 }

@@ -188,8 +188,8 @@ pegasus-plan \
     --conf pegasusrc \
     --sites local,CCG \
     --dir work \
-    --output-site local \
-    --dax outer.dax \
+    --output-sites local \
     --submit \
+    outer.dax \
     | tee $TOP_DIR/plan.out
 

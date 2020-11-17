@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-set -v
 
 
 if [ X${testdir} = "X" ]; then
@@ -60,9 +59,9 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
     --staging-site staging \
-    --output-site local \
+    --output-sites local \
     --dir work \
-    --dax blackdiamond.dax  | tee $TOPDIR/plan.out
+    blackdiamond.dax  | tee $TOPDIR/plan.out
 
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`
 cd $WORK_DIR

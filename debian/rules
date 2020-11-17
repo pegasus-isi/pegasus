@@ -53,6 +53,7 @@ install: build
 	
 	# no pyc files in debian packages
 	find debian/pegasus/ -name \*.pyc -exec rm {} \;
+	find debian/pegasus/ -depth -name __pycache__ -exec rm -rf {} \;
 	
 
 # Build architecture-independent files here.

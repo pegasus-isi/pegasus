@@ -1,0 +1,127 @@
+tr pegasus::prepare-input-data:4.0 { 
+
+  #specify profiles that apply for all the sites for the transformation 
+  #in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "/usr/bin/pegasus-keg"
+    arch "x86_64"
+    os "linux"
+
+      
+    # installed means pfn refers to path in the container.
+    # stageable means the executable can be staged into the container
+    type "INSTALLED" 
+
+   
+  }
+}
+
+tr dataflow::decaf {
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "tess_dense.json"
+    arch "x86_64"
+    os "linux"
+
+    type "INSTALLED"
+  }
+}
+
+tr points {
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${DECAF_PREFIX}/examples/tess_dense/points"
+    arch "x86_64"
+    os "linux"
+
+    type "INSTALLED"
+  }
+}
+
+tr tessellate {
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${DECAF_PREFIX}/examples/tess_dense/tess"
+    arch "x86_64"
+    os "linux"
+
+    type "INSTALLED"
+  }
+}
+
+tr density_estimate {
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${DECAF_PREFIX}/examples/tess_dense/dense"  
+    arch "x86_64"
+    os "linux"
+
+    type "INSTALLED"
+  }
+}
+
+tr pts_tess {
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${DECAF_PREFIX}/examples/tess_dense/pts_dflow"  
+    arch "x86_64"
+    os "linux"
+
+    type "INSTALLED"
+  }
+}
+
+tr tess_dense {
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site condorpool {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "${DECAF_PREFIX}/examples/tess_dense/pts_dflow"  
+    arch "x86_64"
+    os "linux"
+
+    type "INSTALLED"
+  }
+}
+

@@ -15,15 +15,11 @@
 package org.griphyn.vdl.parser;
 
 /**
- * Class to signal the reserved words TR to the parser.
- * This class is module-local on purpose.
+ * Class to signal the reserved words TR to the parser. This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
  * @version $Revision$
- *
  */
-class VDLtTransformation
-  extends VDLtDefinition
-{
-  // empty
+class VDLtTransformation extends VDLtDefinition {
+    // empty
 }

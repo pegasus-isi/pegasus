@@ -18,7 +18,7 @@
 #include <sys/types.h>
 #include <sys/resource.h>
 
-extern int printXMLUseInfo(FILE *out, int indent, const char* id,
+extern int printYAMLUseInfo(FILE *out, int indent, const char* id,
                            const struct rusage* use);
 extern void addUseInfo(struct rusage* sum, const struct rusage* summand);
 

@@ -13,24 +13,31 @@ fi
 
 TOP_DIR=$PWD
 
-rm -f lib/pegasus/python/dist/pegasus*.tar.gz
-mkdir -p dist
 
 # create the dist package
-( cd lib/pegasus/python && /usr/bin/env python setup.py sdist)
+for pkg in `find packages -maxdepth 1 -type d`; do
+    if [ ! -f ${pkg}/setup.py ]; then
+        continue
+    fi
 
-# python is now normalizing the version (see PEP 440)
-cd lib/pegasus/python/dist/
-ls -l
-NORM_VERSION=`ls *.tar.gz | sed 's/pegasus-wms-//' | sed 's/\.tar\.gz//'`
-echo "Normalized verison is $NORM_VERSION"
+    rm -rf ${pkg}/dist
 
-tar xzf pegasus-wms-$NORM_VERSION.tar.gz
-sed -i.bak -e s/version=read_version\(\)/version=\"${VERSION}\"/g pegasus-wms-${NORM_VERSION}/setup.py
-rm pegasus-wms-${NORM_VERSION}/setup.py.bak
+    ( cd ${pkg} && /usr/bin/env python3 setup.py sdist)
 
-# create the final tarball
-tar czf $TOP_DIR/dist/pegasus-python-source-${VERSION}.tar.gz pegasus-wms-${NORM_VERSION}
-rm -rf pegasus-wms-${NORM_VERSION}*
+    # python is now normalizing the version (see PEP 440)
+    cd ${pkg}/dist
 
+    SDIST=$(basename `ls *.tar.gz` .tar.gz)
+    NORM_VERSION=`ls *.tar.gz | sed 's/pegasus-wms.*-//' | sed 's/\.tar\.gz//'`
+    echo "Normalized verison is $NORM_VERSION"
 
+    tar xzf $SDIST.tar.gz
+    sed -i.bak -e s/version=read_version\(\)/version=\"${VERSION}\"/g ${SDIST}/setup.py
+    rm ${SDIST}/setup.py.bak
+
+    # create the final tarball
+    tar czf $TOP_DIR/dist/pegasus-python-source-${VERSION}.tar.gz ${SDIST}
+    rm -rf pegasus-wms-${NORM_VERSION}*
+
+    cd $TOP_DIR
+done

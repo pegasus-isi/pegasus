@@ -1,0 +1,3 @@
+f.a:
+    class: File
+    path: $INPUT_DIR/f.a
