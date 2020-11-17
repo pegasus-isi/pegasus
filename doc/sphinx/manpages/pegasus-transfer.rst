@@ -13,6 +13,7 @@ Handles data transfers for Pegasus workflows.
                          [--max-attempts attempts]
                          [--threads threads]
                          [--symlink]
+                         [--publish]
                          [--debug]
 
 Description
@@ -51,6 +52,10 @@ Options
    Allow symlinking of file URLs. If the source and destination URLs
    chosen are both file URLs with the same site_label then the source
    file will be symlinked to the destination rather than being copied.
+
+**-p**; \ **--publish**
+   Enables publishing of statistics to AMQP. This option can also
+   be set via the PEGASUS_TRANSFER_PUBLISH enviroment variable.
 
 **-d**; \ **--debug**
    Enables debugging ouput.

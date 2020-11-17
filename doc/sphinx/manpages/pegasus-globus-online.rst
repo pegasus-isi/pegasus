@@ -11,6 +11,7 @@ Interfaces with Globus Online for managed transfers.
                             [--transfer]
                             [--remove]
                             [--file inputfile]
+                            [--publish]
                             [--debug]
 
 
@@ -46,6 +47,9 @@ Options
 
 **--file** *inputfile*
    JSON transfer specification. If not given, stdin will be used.
+
+**--publish**
+   Publish transfer stats to AMQP
 
 **--debug**
    Enables debugging output.
