@@ -53,6 +53,7 @@ ifeq (x86_64,${ARCH})
         endif
     endif
 endif
+endif
     TARGET += pegasus-monitor
     LDLIBS += -lcurl -pthread
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
