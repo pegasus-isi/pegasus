@@ -98,6 +98,9 @@ html_theme = "sphinx_rtd_theme"
 # add logo to appear in the sidebar on the top
 html_logo = "images/pegasus_circular_white_logo.png"
 
+# add icon to appear on the browser tab
+html_favicon = "images/favicon.png"
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
