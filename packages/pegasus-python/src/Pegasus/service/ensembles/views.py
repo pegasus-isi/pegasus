@@ -235,6 +235,7 @@ def analyze(workflow):
 def route_list_triggers(ensemble):
     dao = Triggers(g.session)
     triggers = dao.list_triggers_by_ensemble(g.user.username, ensemble)
+
     return api.json_response([Triggers.get_object(t) for t in triggers])
 
 
@@ -302,7 +303,7 @@ def route_create_cron_trigger(ensemble):
 
     # validate timeout
     timeout = request.form.get("timeout", type=int, default=None)
-    if timeout and timeout <= 0:
+    if timeout is not None and timeout <= 0:
         raise EMError("timeout must be >= 1")
 
     kwargs = {
@@ -363,7 +364,7 @@ def route_create_file_pattern_trigger(ensemble):
 
     # validate timeout
     timeout = request.form.get("timeout", type=int, default=None)
-    if timeout and timeout <= 0:
+    if timeout is not None and timeout <= 0:
         raise EMError("timeout must be >= 1")
 
     # validate file_patterns
@@ -376,6 +377,9 @@ def route_create_file_pattern_trigger(ensemble):
     if not can_decode or not isinstance(file_patterns, list):
         raise EMError("file_patterns must be given as a list serialized to json")
 
+    if len(file_patterns) < 1:
+        raise EMError("file_patterns must contain at least one file pattern")
+
     for fp in file_patterns:
         if not Path(fp).is_absolute():
             raise EMError(
@@ -385,7 +389,7 @@ def route_create_file_pattern_trigger(ensemble):
     kwargs = {
         "ensemble_id": ensemble_id,
         "trigger": trigger,
-        "trigger_type": TriggerType.CRON.value,
+        "trigger_type": TriggerType.FILE_PATTERN.value,
         "workflow_script": workflow_script,
         "workflow_args": workflow_args,
         "interval": interval,
@@ -418,11 +422,14 @@ def route_delete_trigger(ensemble, trigger):
     t_dao = Triggers(g.session)
 
     # make sure get_trigger raises 404 if nothing found
-    trigger_id = t_dao.get_trigger(ensemble_id, trigger).id
-    t_dao.update_state(ensemble_id, trigger_id)
+    trigger_id = t_dao.get_trigger(ensemble_id, trigger)._id
+    t_dao.update_state(ensemble_id, trigger_id, "STOPPED")
 
-    # TODO: what to return here
-    # return HTTP code that represents that it was successful and that nothing
-    # is to returned
-    # status code 204, nothing else to return
-    return "hello world from delete_trigger!"
+    return api.json_response(
+        {
+            "message": "ensemble: {}, trigger: {} marked for deletion".format(
+                ensemble, trigger
+            )
+        },
+        status_code=202,
+    )
