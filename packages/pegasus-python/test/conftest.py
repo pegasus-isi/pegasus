@@ -126,6 +126,22 @@ def app():
         yield app
 
 
+@pytest.fixture(scope="session")
+def emapp():
+    from Pegasus.service.ensembles import emapp
+
+    emapp.config["AUTHENTICATION"] = "NoAuthentication"
+    emapp.config["PROCESS_SWITCHING"] = False
+
+    with emapp.app_context():
+        yield emapp
+
+
+@pytest.fixture(scope="session")
+def emapp_client(emapp):
+    return FlaskTestClient(emapp)
+
+
 @pytest.fixture()
 def request_ctx(app):
     if _request_ctx_stack.top is None:
