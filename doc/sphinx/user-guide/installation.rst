@@ -234,12 +234,3 @@ Pegasus Python Packages for PyPi
    ::
 
       $ pip install pegasus-wms.api
-
-
-- To install old Python DAX API. **The old DAX API is deprecated and will be
-  removed in Pegasus 5.1.0.**
-
-   ::
-
-      $ pip install pegasus-wms.dax
-
