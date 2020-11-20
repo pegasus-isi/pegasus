@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -297,14 +298,22 @@ def route_create_cron_trigger(ensemble):
         raise EMError("workflow_args must be given as a list serialized to json")
 
     # validate interval
-    interval = request.form.get("interval", type=int)
-    if interval <= 0:
-        raise EMError("interval must be >= 1")
+    try:
+        interval = to_seconds(request.form.get("interval", type=str))
+    except ValueError:
+        raise EMError(
+            "interval must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
 
     # validate timeout
-    timeout = request.form.get("timeout", type=int, default=None)
-    if timeout is not None and timeout <= 0:
-        raise EMError("timeout must be >= 1")
+    try:
+        timeout = request.form.get("timeout", type=str, default=None)
+        if timeout is not None:
+            timeout = to_seconds(timeout)
+    except ValueError:
+        raise EMError(
+            "timeout must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
 
     kwargs = {
         "ensemble_id": ensemble_id,
@@ -358,14 +367,22 @@ def route_create_file_pattern_trigger(ensemble):
         raise EMError("workflow_args must be given as a list serialized to json")
 
     # validate interval
-    interval = request.form.get("interval", type=int)
-    if interval <= 0:
-        raise EMError("interval must be >= 1")
+    try:
+        interval = to_seconds(request.form.get("interval", type=str))
+    except ValueError:
+        raise EMError(
+            "interval must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
 
     # validate timeout
-    timeout = request.form.get("timeout", type=int, default=None)
-    if timeout is not None and timeout <= 0:
-        raise EMError("timeout must be >= 1")
+    try:
+        timeout = request.form.get("timeout", type=str, default=None)
+        if timeout is not None:
+            timeout = to_seconds(timeout)
+    except ValueError:
+        raise EMError(
+            "timeout must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
 
     # validate file_patterns
     can_decode = True
@@ -433,3 +450,39 @@ def route_delete_trigger(ensemble, trigger):
         },
         status_code=202,
     )
+
+
+def to_seconds(value: str) -> int:
+    """Convert time unit given as '<int> <s|m|h|d>` to seconds.
+    :param value: input str
+    :type value: str
+    :raises ValueError: value must be given as '<int> <s|m|h|d>
+    :raises ValueError: value must be > 0s
+    :return: value given in seconds
+    :rtype: int
+    """
+
+    value = value.strip()
+    pattern = re.compile(r"\d+ *[sSmMhHdD]")
+    if not pattern.fullmatch(value):
+        raise ValueError(
+            "invalid interval: {}, interval must be given as '<int> <s|m|h|d>'".format(
+                value
+            )
+        )
+
+    num = int(value[0 : len(value) - 1])
+    unit = value[-1].lower()
+
+    as_seconds = {"s": 1, "m": 60, "h": 60 * 60, "d": 60 * 60 * 24}
+
+    result = as_seconds[unit] * num
+
+    if result <= 0:
+        raise ValueError(
+            "invalid interval: {}, interval must be greater than 0 seconds".format(
+                result
+            )
+        )
+
+    return result
