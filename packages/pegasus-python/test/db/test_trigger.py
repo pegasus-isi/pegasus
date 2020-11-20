@@ -80,7 +80,7 @@ class TestTriggers:
         assert "No such trigger: test-trigger" in str(e)
         assert e.value.status_code == 404
 
-    def list_triggers(self, session):
+    def test_list_triggers(self, session):
         t1 = schema.Trigger(
             _id=1,
             ensemble_id=1,
@@ -102,12 +102,13 @@ class TestTriggers:
             _type=TriggerType.CRON.value,
         )
         session.add(t2)
+        session.commit()
 
         triggers = Triggers(session)
         result = triggers.list_triggers()
         assert len(result) == 2
 
-    def list_triggers_by_ensemble(self, session):
+    def test_list_triggers_by_ensemble(self, session):
         # add another ensemble to the ensemble table
         session.add(
             schema.Ensemble(
@@ -133,6 +134,7 @@ class TestTriggers:
             _type=TriggerType.CRON.value,
         )
         session.add(t)
+        session.commit()
 
         triggers = Triggers(session)
         result = triggers.list_triggers_by_ensemble(
@@ -143,7 +145,7 @@ class TestTriggers:
         assert Triggers.get_object(result[0]) == {
             "id": 1,
             "ensemble_id": 2,
-            "name": "test-trigger",
+            "name": "test-trigger1",
             "state": "READY",
             "workflow": {"script": "/wf.py", "args": ["arg1"]},
             "args": {"timeout": 100, "interval": 20},
