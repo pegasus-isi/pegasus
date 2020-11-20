@@ -102,6 +102,7 @@ class TestTriggers:
             _type=TriggerType.CRON.value,
         )
         session.add(t2)
+        session.commit()
 
         triggers = Triggers(session)
         result = triggers.list_triggers()
@@ -133,6 +134,7 @@ class TestTriggers:
             _type=TriggerType.CRON.value,
         )
         session.add(t)
+        session.commit()
 
         triggers = Triggers(session)
         result = triggers.list_triggers_by_ensemble(
