@@ -1,11 +1,12 @@
-import os
 import json
 import logging
+import os
 
 from Pegasus.monitoring import event_output as eo
 from Pegasus.tools import amqp
 
 log = logging.getLogger(__name__)
+
 
 class AnomalyHandler:
     def __init__(self, wf_label, wf_uuid, dburi):
@@ -36,10 +37,14 @@ class AnomalyHandler:
         mq_channel = mq_conn.channel()
 
         # create a queue for the observer workflow uuid
-        mq_channel.queue_declare(queue=self.queue_name, auto_delete=True, exclusive=True)
+        mq_channel.queue_declare(
+            queue=self.queue_name, auto_delete=True, exclusive=True
+        )
 
         # bind the queue to the monitoring exchange
-        mq_channel.queue_bind(queue=self.queue_name, exchange="anomalies", routing_key=self.wf_uuid)
+        mq_channel.queue_bind(
+            queue=self.queue_name, exchange="anomalies", routing_key=self.wf_uuid
+        )
 
         mq_channel.basic_consume(self.on_message, self.queue_name, exclusive=True)
 
@@ -71,7 +76,9 @@ class AnomalyHandler:
         if anomaly is not None and self.event_sink is not None:
             self.emit_anomaly_event(anomaly)
         else:
-            log.warning("Either anomaly or event sink is None: %s %s", anomaly, self.event_sink)
+            log.warning(
+                "Either anomaly or event sink is None: %s %s", anomaly, self.event_sink
+            )
 
         if channel is not None:
             channel.basic_ack(delivery_tag=method_frame.delivery_tag)
@@ -99,8 +106,8 @@ class AnomalyMessage:
         self.message = message
         self.json = raw_data  # this should be a dict object
 
-        if 'metrics' in raw_data:
-            self.json['metrics'] = json.loads(raw_data['metrics'])
+        if "metrics" in raw_data:
+            self.json["metrics"] = json.loads(raw_data["metrics"])
 
     @staticmethod
     def required_params():
@@ -111,29 +118,39 @@ class AnomalyMessage:
         """
         Factory method
         """
-        anomaly_message = dict(item.split("=") for item in raw_message.strip().split("|||"))
+        anomaly_message = dict(
+            item.split("=") for item in raw_message.strip().split("|||")
+        )
 
         if not all(k in anomaly_message for k in AnomalyMessage.required_params()):
-            log.warning("We expect anomaly message to include parameters: %s", AnomalyMessage.required_params())
+            log.warning(
+                "We expect anomaly message to include parameters: %s",
+                AnomalyMessage.required_params(),
+            )
             log.warning("but we got: %s", raw_message)
             return None
         else:
-            return AnomalyMessage(anomaly_message["ts"], anomaly_message["wf_uuid"], anomaly_message["anomaly_type"],
-                                  anomaly_message["message"], anomaly_message)
+            return AnomalyMessage(
+                anomaly_message["ts"],
+                anomaly_message["wf_uuid"],
+                anomaly_message["anomaly_type"],
+                anomaly_message["message"],
+                anomaly_message,
+            )
 
     def message_info(self):
         info = {
-            'ts': self.ts,
-            'wf_uuid': self.wf_uuid,
-            'anomaly_type': self.anomaly_type,
-            'message': self.message,
-            'json': self.json
+            "ts": self.ts,
+            "wf_uuid": self.wf_uuid,
+            "anomaly_type": self.anomaly_type,
+            "message": self.message,
+            "json": self.json,
         }
 
-        if 'dag_job_id' in self.json:
-            info['dag_job_id'] = self.json['dag_job_id']
+        if "dag_job_id" in self.json:
+            info["dag_job_id"] = self.json["dag_job_id"]
 
-        if 'metrics' in self.json:
-            info['metrics'] = self.json['metrics']
+        if "metrics" in self.json:
+            info["metrics"] = self.json["metrics"]
 
         return info

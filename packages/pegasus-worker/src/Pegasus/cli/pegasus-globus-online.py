@@ -30,8 +30,9 @@ import signal
 import sys
 from datetime import datetime, timedelta
 
-from Pegasus.tools import amqp
 import globus_sdk
+
+from Pegasus.tools import amqp
 
 # --- global variables ----------------------------------------------------------------
 
@@ -275,16 +276,16 @@ def transfer(request, amqp_url):
     except Exception as err:
         logger.error(err)
         cancel_task(transfer_client, task_id)
-        
+
         # retrieve globus logs for the transfer
-        if not amqp_url is None :
+        if not amqp_url is None:
             retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url)
-        
+
         sys.exit(1)
     logger.info("Transfer complete")
-    
+
     # retrieve globus logs for the transfer
-    if not amqp_url is None :
+    if not amqp_url is None:
         retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url)
 
 
@@ -349,11 +350,11 @@ def retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url):
     Default exchange is "monitoring"
     """
 
-    EXCH_OPTS = {'exchange_type' : 'topic', 'durable' : True, 'auto_delete' : False}
-    
+    EXCH_OPTS = {"exchange_type": "topic", "durable": True, "auto_delete": False}
+
     parsed_url = urlparse.urlparse(amqp_url)
 
-    if parsed_url.path.count("/") > 1 :
+    if parsed_url.path.count("/") > 1:
         path_split = parsed_url.path.split("/")
         exchange_name = path_split[2] if path_split[2] != "" else "monitoring"
         amqp_url = parsed_url.scheme + "://" + parsed_url.netloc + "/" + path_split[1]
@@ -384,8 +385,12 @@ def retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url):
         task_show["dag_job_id"] = os.environ["PEGASUS_DAG_JOB_ID"]
 
     task_show["event"] = "transfer.inv.go"
-    amqp_channel.basic_publish(exchange=exchange_name, routing_key="transfer.inv.go", body=json.dumps(task_show, indent=2))
-    
+    amqp_channel.basic_publish(
+        exchange=exchange_name,
+        routing_key="transfer.inv.go",
+        body=json.dumps(task_show, indent=2),
+    )
+
     amqp_conn.close()
 
     logger.info("Globus log retrieval completed")
@@ -412,7 +417,12 @@ def main():
         dest="file",
         help="File containing GO URL pairs to be transferred",
     )
-    parser.add_option("--publish", action = "store_true", dest = "publish", help = "Publish transfer stats to AMQP")
+    parser.add_option(
+        "--publish",
+        action="store_true",
+        dest="publish",
+        help="Publish transfer stats to AMQP",
+    )
     parser.add_option(
         "-d",
         "--debug",
@@ -442,11 +452,11 @@ def main():
     amqp_env_var = "PEGASUS_AMQP_URL"
     if options.publish:
         value = os.getenv(amqp_env_var)
-        if value is None :
+        if value is None:
             logger.warning("'%s' is not set in the environment" % amqp_env_var)
         else:
             amqp_url = value
-    
+
     if options.mkdir:
         mkdir(data)
     elif options.transfer:

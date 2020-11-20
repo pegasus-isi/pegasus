@@ -1,6 +1,5 @@
 import logging
-import time
-from heapq import heappush, heappop
+from heapq import heappop, heappush
 
 from Pegasus.shadowq.dag import JobState
 
@@ -13,11 +12,13 @@ DAGMAN_INITIAL_DELAY = 12.0
 
 log = logging.getLogger(__name__)
 
+
 class SimulationException(Exception):
     pass
 
-class Event(object):
-    __slots__ = ['to','fm','when','tag','data']
+
+class Event:
+    __slots__ = ["to", "fm", "when", "tag", "data"]
 
     def __init__(self, to, fm, when, tag, data):
         self.to = to
@@ -27,9 +28,12 @@ class Event(object):
         self.data = data
 
     def __str__(self):
-        return "%s -> %s@%s %s: %s" % (self.to, self.fm, self.when, self.tag, self.data)
+        return "{} -> {}@{} {}: {}".format(
+            self.to, self.fm, self.when, self.tag, self.data
+        )
 
-class Entity(object):
+
+class Entity:
     def __init__(self, name, simulation):
         self.name = name
         self.simulation = simulation
@@ -48,9 +52,10 @@ class Entity(object):
         return self.simulation.time()
 
     def log(self, message):
-        log.debug("%s@%0.3f %s" % (self.name, self.time(), message))
+        log.debug("{}@{:0.3f} {}".format(self.name, self.time(), message))
 
-class Simulation(object):
+
+class Simulation:
     def __init__(self, start=0.0):
         self.start = start
         self.clock = start
@@ -75,7 +80,7 @@ class Simulation(object):
         self.log("Simulation starting...")
 
         for entity in self.entities:
-            self.event(Event(entity, self, self.clock, 'sim.start', None))
+            self.event(Event(entity, self, self.clock, "sim.start", None))
 
         self.running = True
 
@@ -102,7 +107,7 @@ class Simulation(object):
         self.stop = self.clock
 
         for entity in self.entities:
-            ev = Event(entity, self, self.clock, 'sim.stop', None)
+            ev = Event(entity, self, self.clock, "sim.stop", None)
             entity.process(ev)
 
         self.log("Simulation finished")
@@ -130,6 +135,7 @@ class Simulation(object):
 # TODO Do we care about MAXPRE and MAXPOST?
 # TODO Do we care about MAXJOBS?
 
+
 class WorkflowEngine(Entity):
     def __init__(self, name, simulation, dag, slots=1):
         Entity.__init__(self, name, simulation)
@@ -152,7 +158,9 @@ class WorkflowEngine(Entity):
             elif j.state == JobState.PRESCRIPT:
                 # Compute time remaining for prescript
                 # FIXME Some prescripts may run for a long time
-                delay = max(0, PRE_SCRIPT_DELAY - (self.simulation.start - j.prescript_start))
+                delay = max(
+                    0, PRE_SCRIPT_DELAY - (self.simulation.start - j.prescript_start)
+                )
                 self.run_prescript(j, delay=delay)
             elif j.state == JobState.QUEUED:
                 self.queue_job(j)
@@ -162,7 +170,9 @@ class WorkflowEngine(Entity):
                 self.run_job(j, delay)
             elif j.state == JobState.POSTSCRIPT:
                 # Compute time remaining for post script
-                delay = max(0, POST_SCRIPT_DELAY - (self.simulation.start - j.postscript_start))
+                delay = max(
+                    0, POST_SCRIPT_DELAY - (self.simulation.start - j.postscript_start)
+                )
                 self.run_postscript(j, delay)
             elif j.state == JobState.SUCCESSFUL:
                 # Don't need to do anything
@@ -177,7 +187,7 @@ class WorkflowEngine(Entity):
                 raise SimulationException("Unknown job state: %s", j.state)
 
         # Cancel any initial schedules generated above
-        self.simulation.cancel('schedule')
+        self.simulation.cancel("schedule")
 
         # We know that the last schedule couldn't be older than the dag start
         self.last_schedule = self.dag.start
@@ -216,9 +226,13 @@ class WorkflowEngine(Entity):
                 # If a job was queued after the last_schedule, then the next
                 # schedule will be after a minimum cycle delay. The 5.0 is just
                 # a fudge factor based on DAGMan's polling interval.
-                if j.state == JobState.QUEUED and j.queue_start >= (self.last_schedule - 5.0):
+                if j.state == JobState.QUEUED and j.queue_start >= (
+                    self.last_schedule - 5.0
+                ):
                     log.debug("Setting next_schedule based on queued job: %s", j.name)
-                    next_schedule = min(next_schedule, j.queue_start + SCHEDULER_CYCLE_DELAY)
+                    next_schedule = min(
+                        next_schedule, j.queue_start + SCHEDULER_CYCLE_DELAY
+                    )
 
         # If the next schedule time is in the past, schedule now, otherwise schedule
         # at the right time
@@ -228,7 +242,7 @@ class WorkflowEngine(Entity):
 
         log.debug("Delay until next simulated schedule: %f", delay_until_next_schedule)
 
-        self.send(self, 'schedule', delay=delay_until_next_schedule)
+        self.send(self, "schedule", delay=delay_until_next_schedule)
 
     def ready_job(self, job):
         # This job is ready, either run prescript or queue it
@@ -241,7 +255,7 @@ class WorkflowEngine(Entity):
         log.debug("%s %s %s", self.time(), job.name, "PRESCRIPT")
 
         job.state = JobState.PRESCRIPT
-        self.send(self, 'prescript.finished', delay=delay, data=job)
+        self.send(self, "prescript.finished", delay=delay, data=job)
 
     def queue_job(self, job):
         log.debug("%s %s %s", self.time(), job.name, "QUEUED")
@@ -254,13 +268,13 @@ class WorkflowEngine(Entity):
 
         # If the last scheduler cycle was recent, then schedule now
         log.debug("last_schedule: %s", self.last_schedule)
-        next_schedule = self.simulation.find_next('schedule')
+        next_schedule = self.simulation.find_next("schedule")
         if self.last_schedule + SCHEDULER_CYCLE_DELAY <= self.time():
-            self.simulation.cancel('schedule') # Cancel future schedule events
-            self.send(self, 'schedule', delay=0.0)
+            self.simulation.cancel("schedule")  # Cancel future schedule events
+            self.send(self, "schedule", delay=0.0)
         elif next_schedule and (next_schedule - self.time()) >= SCHEDULER_CYCLE_DELAY:
-            self.simulation.cancel('scheule')
-            self.send(self, 'schedule', delay=SCHEDULER_CYCLE_DELAY)
+            self.simulation.cancel("scheule")
+            self.send(self, "schedule", delay=SCHEDULER_CYCLE_DELAY)
 
     def run_job(self, job, delay=None):
         log.debug("%s %s %s", self.time(), job.name, "RUNNING")
@@ -273,13 +287,13 @@ class WorkflowEngine(Entity):
         if delay is None:
             delay = job.runtime
 
-        self.send(self, 'job.finished', delay=delay, data=job)
+        self.send(self, "job.finished", delay=delay, data=job)
 
     def run_postscript(self, job, delay=POST_SCRIPT_DELAY):
         log.debug("%s %s %s", self.time(), job.name, "POSTSCRIPT")
 
         job.state = JobState.POSTSCRIPT
-        self.send(self, 'postscript.finished', delay=delay, data=job)
+        self.send(self, "postscript.finished", delay=delay, data=job)
 
     def queue_ready(self, jobs):
         for c in jobs:
@@ -312,7 +326,7 @@ class WorkflowEngine(Entity):
             _, job = heappop(self.queue)
             self.run_job(job)
 
-        self.send(self, 'schedule', delay=SCHEDULER_INTERVAL)
+        self.send(self, "schedule", delay=SCHEDULER_INTERVAL)
 
     def prescript_finished(self, job):
         self.log("pre script finished for %s" % job.name)
@@ -340,16 +354,15 @@ class WorkflowEngine(Entity):
         self.queue_ready(job.children)
 
     def process(self, ev):
-        if ev.tag == 'sim.start':
+        if ev.tag == "sim.start":
             pass
-        elif ev.tag == 'prescript.finished':
+        elif ev.tag == "prescript.finished":
             self.prescript_finished(ev.data)
-        elif ev.tag == 'job.finished':
+        elif ev.tag == "job.finished":
             self.job_finished(ev.data)
-        elif ev.tag == 'postscript.finished':
+        elif ev.tag == "postscript.finished":
             self.postscript_finished(ev.data)
-        elif ev.tag == 'schedule':
+        elif ev.tag == "schedule":
             self.schedule()
-        elif ev.tag == 'sim.stop':
+        elif ev.tag == "sim.stop":
             self.runtime = self.time() - self.simulation.start
-

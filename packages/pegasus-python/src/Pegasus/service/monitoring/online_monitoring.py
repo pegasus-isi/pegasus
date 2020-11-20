@@ -1,14 +1,16 @@
+import json
+import logging
+import os
+
+import urlparse
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
-import urlparse
-import os
-import logging
-import json
 
 from Pegasus.monitoring import event_output
 from Pegasus.tools import amqp
 
 log = logging.getLogger(__name__)
+
 
 class OnlineMonitord:
     def __init__(self, wf_label, wf_uuid, dburi, child_conn):
@@ -31,7 +33,7 @@ class OnlineMonitord:
     def start(self):
         log.info("Starting online monitoring listener...")
         self.setup_timeseries_db_conn()
-        #self.start_web_server()
+        # self.start_web_server()
         self.start_consuming_mq_messages()
 
     def setup_timeseries_db_conn(self):
@@ -41,9 +43,13 @@ class OnlineMonitord:
 
         url = urlparse.urlparse(self.influxdb_url)
 
-        self.influx_client = InfluxDBClient(host=url.hostname, port=url.port,
-                                            username=url.username, password=url.password,
-                                            ssl=(url.scheme == "https"))
+        self.influx_client = InfluxDBClient(
+            host=url.hostname,
+            port=url.port,
+            username=url.username,
+            password=url.password,
+            ssl=(url.scheme == "https"),
+        )
 
         # Create the database for this workflow
         try:
@@ -62,8 +68,9 @@ class OnlineMonitord:
         # the monitord.env file, which is picked up by pegasus-submit-job
         # and passed to the environment of condor_submit, where it can be
         # incorporated into the job environment using $ENV() classad exprs.
-        from flask import Flask, request
         import socket
+
+        from flask import Flask, request
 
         # The endpoint is the workflow UUID
         endpoint = "/" + self.wf_uuid
@@ -72,13 +79,13 @@ class OnlineMonitord:
 
         @app.route(endpoint, methods=["POST"])
         def post_monitoring_data():
-            print request.headers
-            print request.json
+            print(request.headers)
+            print(request.json)
             return "", 200
 
         # Get a random port to use
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(('localhost', 0))
+        sock.bind(("localhost", 0))
         port = sock.getsockname()[1]
         sock.close()
 
@@ -104,12 +111,16 @@ class OnlineMonitord:
         mq_channel.queue_declare(queue=self.wf_name, auto_delete=True, exclusive=True)
 
         # bind the queue to the monitoring exchange
-        mq_channel.queue_bind(queue=self.wf_name, exchange="monitoring", routing_key=self.wf_uuid)
+        mq_channel.queue_bind(
+            queue=self.wf_name, exchange="monitoring", routing_key=self.wf_uuid
+        )
 
         message_count = None
         db_is_processing_events = False
 
-        for result in mq_channel.consume(self.wf_name, no_ack=True, inactivity_timeout=60.0):
+        for result in mq_channel.consume(
+            self.wf_name, no_ack=True, inactivity_timeout=60.0
+        ):
 
             # If we got a message, then process it
             if result:
@@ -125,13 +136,21 @@ class OnlineMonitord:
 
                     # check how many messages we have in a message broker
                     response = mq_channel.queue_declare(self.wf_name, passive=True)
-                    log.info('The queue has {0} more messages'.format(response.method.message_count))
+                    log.info(
+                        "The queue has {} more messages".format(
+                            response.method.message_count
+                        )
+                    )
                     message_count = int(response.method.message_count)
 
                     # check if there is any event to be processed by database
-                    db_is_processing_online_monitoring_msgs = getattr(self.event_sink, "is_processing_online_monitoring_msgs", None)
+                    db_is_processing_online_monitoring_msgs = getattr(
+                        self.event_sink, "is_processing_online_monitoring_msgs", None
+                    )
                     if callable(db_is_processing_online_monitoring_msgs):
-                        db_is_processing_events = db_is_processing_online_monitoring_msgs()
+                        db_is_processing_events = (
+                            db_is_processing_online_monitoring_msgs()
+                        )
                     else:
                         db_is_processing_events = False
 
@@ -156,7 +175,9 @@ class OnlineMonitord:
         if self.influx_client is None:
             return
 
-        trace_id = "{0}:{1}:{2}".format(message["dag_job_id"], message["condor_job_id"], message["pid"])
+        trace_id = "{}:{}:{}".format(
+            message["dag_job_id"], message["condor_job_id"], message["pid"]
+        )
 
         data = {}
         data["read_bytes"] = message["bread"]
@@ -187,13 +208,15 @@ class OnlineMonitord:
             point = [
                 {
                     "measurement": trace_id,
-                    "time": int(message["ts"] * 1000000), # microseconds
-                    "fields": data
+                    "time": int(message["ts"] * 1000000),  # microseconds
+                    "fields": data,
                 }
             ]
             self.influx_client.write_points(point, time_precision="u")
         except Exception, err:
-            log.error("An error occured while sending monitoring measurement to InfluxDB: ")
+            log.error(
+                "An error occured while sending monitoring measurement to InfluxDB: "
+            )
             log.exception(err)
 
     def write_stampede(self, message):
@@ -243,4 +266,3 @@ class OnlineMonitord:
 
     def close(self):
         self.event_sink.close()
-

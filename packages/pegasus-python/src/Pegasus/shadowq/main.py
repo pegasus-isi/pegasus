@@ -1,15 +1,16 @@
-import os
 import logging
+import os
 import time
 
-from Pegasus.tools import utils
 from Pegasus.shadowq.dag import parse_dag
 from Pegasus.shadowq.jobstate import JSLog
-from Pegasus.shadowq.wfmonitor import WorkflowMonitor
-from Pegasus.shadowq.provision import Provisioner
 from Pegasus.shadowq.messaging import ManifestListener, RequestPublisher
+from Pegasus.shadowq.provision import Provisioner
+from Pegasus.shadowq.wfmonitor import WorkflowMonitor
+from Pegasus.tools import utils
 
 log = logging.getLogger(__name__)
+
 
 def start(dag_file):
     log.info("Shadow queue starting...")
@@ -86,4 +87,3 @@ def start(dag_file):
     publisher.send_workflow_finished()
 
     log.info("Shadow queue exiting")
-

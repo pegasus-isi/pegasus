@@ -1,11 +1,10 @@
-import threading
 import logging
-
-from Pegasus.shadowq.jobstate import JSLogEvent
+import threading
 
 __all__ = ["WorkflowMonitor"]
 
 log = logging.getLogger(__name__)
+
 
 class WorkflowMonitor(threading.Thread):
     def __init__(self, dag, jslog):
@@ -20,5 +19,3 @@ class WorkflowMonitor(threading.Thread):
             self.dag.process_jslog_record(r)
 
         log.info("Workflow finished")
-
-

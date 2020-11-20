@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-import json
-import optparse
-import logging
-import subprocess
 import distutils.spawn
+import json
+import logging
+import optparse
+import os
+import subprocess
+import sys
 
 # --- global variables ----------------------------------------------------------------
 
-prog_dir  = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
-prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
+prog_dir = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
+prog_base = os.path.split(sys.argv[0])[1]  # Name of this program
 
 logger = logging.getLogger("my_logger")
 darhan_parser = distutils.spawn.find_executable("darshan-parser")
 
 # --- functions ----------------------------------------------------------------
-            
+
+
 def setup_logger(debug_flag):
     # log to the console
     console = logging.StreamHandler()
-    
+
     # default log level - make logger/console match
     logger.setLevel(logging.INFO)
     console.setLevel(logging.INFO)
@@ -43,7 +44,7 @@ def prog_sigint_handler(signum, frame):
     sys.exit(1)
 
 
-#event: darshan.summary
+# event: darshan.summary
 def parse_summary(inputFile):
     summary_obj = {}
 
@@ -57,11 +58,10 @@ def parse_summary(inputFile):
         sys.exit(1)
 
     # summary region
-    k = 0
     for i in xrange(len(darshan_output)):
         line = darshan_output[i]
         if not line:
-            k = i + 1
+            i + 1
             break
 
         splitted = line.split(": ")
@@ -79,10 +79,9 @@ def parse_summary(inputFile):
             splitted_tier2 = splitted[1].split(" = ")
             key_tier2 = splitted_tier2[0].strip().replace(" ", "_")
             summary_obj[key][key_tier2] = splitted_tier2[1].strip()
-                
 
     #### log file region
-    #for i in xrange(k, len(darshan_output)):
+    # for i in xrange(k, len(darshan_output)):
     #    line = darshan_output[i]
     #    if not line:
     #        k = i + 1
@@ -94,7 +93,7 @@ def parse_summary(inputFile):
     #
     #    splitted = line.split(": ")
     #    key = splitted[0].replace("#", "").strip().replace(" ", "_")
-    #    
+    #
     #    value = {}
     #    splitted_tier2 = splitted[1].strip().split()
     #    value["bytes"] = splitted_tier2[0]
@@ -103,11 +102,11 @@ def parse_summary(inputFile):
     #        value["version"] = splitted_tier2[3].split("=")[1]
     #
     #    summary_obj[key] = value
-    
+
     return summary_obj
 
 
-#event: darshan.total
+# event: darshan.total
 def parse_total(inputFile):
     total_obj = {}
 
@@ -128,18 +127,18 @@ def parse_total(inputFile):
         key = splitted[0].replace("#", "").strip().replace(" ", "_")
 
         total_obj[key] = float(splitted[1])
-        
+
     return total_obj
 
 
-#event: darshan.perf
+# event: darshan.perf
 def parse_perf(inputFile):
     curr_obj = None
     POSIX_module_data = {"unique_files": {}, "shared_files": {}}
     STDIO_module_data = {"unique_files": {}, "shared_files": {}}
 
     cmd = [darhan_parser, "--perf", inputFile]
-    
+
     try:
         darshan_output = subprocess.check_output(cmd)
         darshan_output = darshan_output.split("\n")
@@ -166,9 +165,13 @@ def parse_perf(inputFile):
             key = splitted[0].replace("#", "").strip().replace(" ", "_")
             curr_obj[key] = float(splitted[1])
 
-    perf_obj = {"POSIX_module_data": POSIX_module_data, "STDIO_module_data": STDIO_module_data}
+    perf_obj = {
+        "POSIX_module_data": POSIX_module_data,
+        "STDIO_module_data": STDIO_module_data,
+    }
 
     return perf_obj
+
 
 def main():
     MONITORING_EVENT_START_MARKER = "@@@MONITORING_PAYLOAD - START@@@"
@@ -177,14 +180,22 @@ def main():
     # Configure command line option parser
     prog_usage = "usage: %s [options]" % (prog_base)
     parser = optparse.OptionParser(usage=prog_usage)
-    
-    parser.add_option("-f", "--file", action = "store", dest = "file", help = "Darshan log file")
-    parser.add_option("-d", "--debug", action = "store_true", dest = "debug", help = "Enables debugging output")
-    
+
+    parser.add_option(
+        "-f", "--file", action="store", dest="file", help="Darshan log file"
+    )
+    parser.add_option(
+        "-d",
+        "--debug",
+        action="store_true",
+        dest="debug",
+        help="Enables debugging output",
+    )
+
     # Parse command line options
     (options, args) = parser.parse_args()
     setup_logger(options.debug)
-    
+
     # Check if darshan-parser was found
     if darhan_parser is None:
         logger.critical("darshan-parser couldn't be located !!!")
@@ -195,9 +206,9 @@ def main():
     if not options.file:
         logger.critical("An input file has to be given with --file")
         sys.exit(1)
-    
+
     payload_summary = parse_summary(options.file)
-    #payload_total = parse_total(inputFile)
+    # payload_total = parse_total(inputFile)
     payload_perf = parse_perf(options.file)
 
     event_payload = payload_summary.copy()
@@ -206,14 +217,12 @@ def main():
     darshan_event = {
         "ts": int(os.path.getmtime(options.file)),
         "monitoring_event": "darshan.perf",
-        "payload": [event_payload]
+        "payload": [event_payload],
     }
 
-
     print(MONITORING_EVENT_START_MARKER)
-    print(json.dumps(darshan_event, sort_keys = True, indent=2))
+    print(json.dumps(darshan_event, sort_keys=True, indent=2))
     print(MONITORING_EVENT_END_MARKER)
-    
 
 
 if __name__ == "__main__":

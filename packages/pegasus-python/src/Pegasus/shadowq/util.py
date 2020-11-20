@@ -1,4 +1,3 @@
-
 class Enum(set):
     def __getattr__(self, name):
         if name in self:
@@ -7,4 +6,3 @@ class Enum(set):
 
     def __getitem__(self, name):
         return self.__getattr__(name)
-

@@ -1,39 +1,42 @@
 import logging
-import time
 import threading
 
 from Pegasus.shadowq.jobstate import JSLogEvent
 from Pegasus.shadowq.util import Enum
 
-__all__ = ["JobState","Job","DAG","DAGException","parse_dag"]
+__all__ = ["JobState", "Job", "DAG", "DAGException", "parse_dag"]
 
 log = logging.getLogger(__name__)
 
-JobState = Enum([
-    "UNREADY",
-    "READY",
-    "PRESCRIPT",
-    "QUEUED",
-    "RUNNING",
-    "POSTSCRIPT",
-    "SUCCESSFUL",
-    "FAILED"
-])
+JobState = Enum(
+    [
+        "UNREADY",
+        "READY",
+        "PRESCRIPT",
+        "QUEUED",
+        "RUNNING",
+        "POSTSCRIPT",
+        "SUCCESSFUL",
+        "FAILED",
+    ]
+)
 
-JobType = Enum([
-    "UNASSIGNED",
-    "COMPUTE",
-    "STAGE_IN",
-    "STAGE_OUT",
-    "REPLICA_REG",
-    "INTER_POOL",
-    "CREATE_DIR",
-    "STAGE_IN_WORKER_PACKAGE",
-    "CLEANUP",
-    "CHMOD",
-    "DAX",
-    "DAG"
-])
+JobType = Enum(
+    [
+        "UNASSIGNED",
+        "COMPUTE",
+        "STAGE_IN",
+        "STAGE_OUT",
+        "REPLICA_REG",
+        "INTER_POOL",
+        "CREATE_DIR",
+        "STAGE_IN_WORKER_PACKAGE",
+        "CLEANUP",
+        "CHMOD",
+        "DAX",
+        "DAG",
+    ]
+)
 
 JOB_TYPE_MAP = {
     "0": JobType.UNASSIGNED,
@@ -47,10 +50,11 @@ JOB_TYPE_MAP = {
     "8": JobType.CLEANUP,
     "9": JobType.CHMOD,
     "10": JobType.DAX,
-    "11": JobType.DAG
+    "11": JobType.DAG,
 }
 
-class Job(object):
+
+class Job:
     def __init__(self, name):
         self.name = name
         self.runtime = 0.0
@@ -72,12 +76,16 @@ class Job(object):
 
     def process_jslog_record(self, record):
         if self.state == JobState.SUCCESSFUL:
-            raise DAGException("Invalid state: Successful job %s got event %s" % (self.name, record.event))
+            raise DAGException(
+                "Invalid state: Successful job {} got event {}".format(
+                    self.name, record.event
+                )
+            )
 
         if record.event == JSLogEvent.PRE_SCRIPT_STARTED:
             self.state = JobState.PRESCRIPT
             self.prescript_start = record.ts
-        elif record.event ==JSLogEvent.PRE_SCRIPT_TERMINATED:
+        elif record.event == JSLogEvent.PRE_SCRIPT_TERMINATED:
             pass
         elif record.event == JSLogEvent.PRE_SCRIPT_SUCCESS:
             pass
@@ -110,7 +118,7 @@ class Job(object):
         elif record.event == JSLogEvent.POST_SCRIPT_STARTED:
             self.state = JobState.POSTSCRIPT
             self.postscript_start = record.ts
-        elif record.event ==JSLogEvent.POST_SCRIPT_TERMINATED:
+        elif record.event == JSLogEvent.POST_SCRIPT_TERMINATED:
             pass
         elif record.event == JSLogEvent.POST_SCRIPT_SUCCESS:
             self.state = JobState.SUCCESSFUL
@@ -124,7 +132,11 @@ class Job(object):
         if self.state == JobState.SUCCESSFUL:
             for c in self.children:
                 if c.state != JobState.UNREADY:
-                    raise DAGException("Child %s of newly successful job %s should be UNREADY" % (c.name, self.name))
+                    raise DAGException(
+                        "Child {} of newly successful job {} should be UNREADY".format(
+                            c.name, self.name
+                        )
+                    )
 
                 ready = True
                 for p in c.parents:
@@ -136,7 +148,9 @@ class Job(object):
                     c.state = JobState.READY
 
     def __str__(self):
-        return "Job(%s, %s, %s, %f)" % (self.name, self.jobtype, self.state, self.runtime)
+        return "Job({}, {}, {}, {:f})".format(
+            self.name, self.jobtype, self.state, self.runtime
+        )
 
     def clone(self):
         newjob = Job(self.name)
@@ -156,7 +170,8 @@ class Job(object):
         newjob.postscript = self.postscript
         return newjob
 
-class DAG(object):
+
+class DAG:
     def __init__(self, jobs):
         self.jobs = jobs
         self.start = None
@@ -176,7 +191,7 @@ class DAG(object):
         elif record.event == JSLogEvent.DAGMAN_FINISHED:
             log.info("DAGMan finished")
             self.finish = record.ts
-        else: # Means it is a job event
+        else:  # Means it is a job event
             job_name = record.job_name
             job = self.jobs[job_name]
             job.process_jslog_record(record)
@@ -229,12 +244,15 @@ class DAG(object):
 
         return dag
 
-class DAGException(Exception): pass
+
+class DAGException(Exception):
+    pass
+
 
 def parse_submit_file(submit_file):
     record = {}
 
-    with open(submit_file, "r") as f:
+    with open(submit_file) as f:
         for l in f:
             l = l.strip()
             if " = " in l:
@@ -243,13 +261,14 @@ def parse_submit_file(submit_file):
 
     return record
 
+
 def parse_dag(dag_file):
     log.info("Parsing DAG...")
 
     job_sequence = 0
     jobs = {}
 
-    with open(dag_file, "r") as f:
+    with open(dag_file) as f:
         for l in f:
             l = l.strip()
             rec = l.split()
@@ -319,4 +338,3 @@ def parse_dag(dag_file):
     log.info("Parsed DAG with %d jobs", len(jobs))
 
     return dag
-

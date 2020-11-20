@@ -1,16 +1,22 @@
 import logging
-import time
-import threading
 import subprocess
+import threading
+import time
+
 from Pegasus.shadowq import sim
 from Pegasus.shadowq.dag import JobState, JobType
 
 log = logging.getLogger(__name__)
 
+
 def get_slots():
     try:
-        proc = subprocess.Popen(["condor_status", "-total"], shell=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            ["condor_status", "-total"],
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         output, error = proc.communicate()
         if proc.wait() != 0:
             raise Exception("Non-zero exitcode")
@@ -22,6 +28,7 @@ def get_slots():
         log.exception(e)
         return None
 
+
 def uses_slot(jobtype):
     # FIXME This is probably not 100% correct
     return jobtype in (
@@ -32,8 +39,9 @@ def uses_slot(jobtype):
         JobType.CREATE_DIR,
         JobType.STAGE_IN_WORKER_PACKAGE,
         JobType.CLEANUP,
-        JobType.CHMOD
+        JobType.CHMOD,
     )
+
 
 def read_estimates(filename):
     if filename is None:
@@ -49,6 +57,7 @@ def read_estimates(filename):
         estimates[rec[0]] = float(rec[1])
 
     return estimates
+
 
 class Provisioner(threading.Thread):
     def __init__(self, dag, estimates, interval, deadline, listener, publisher):
@@ -71,7 +80,7 @@ class Provisioner(threading.Thread):
 
         # Simulate the workflow to determine time remaining
         s = sim.Simulation(start=start)
-        wfe = sim.WorkflowEngine('Engine', s, newdag, slots)
+        wfe = sim.WorkflowEngine("Engine", s, newdag, slots)
         s.simulate()
 
         return wfe.runtime
@@ -139,9 +148,5 @@ class Provisioner(threading.Thread):
         log.info("Requesting %d slots" % slots)
 
         self.publisher.send_modify_request(
-                self.deadline,
-                deadline_diff,
-                0, #util_max
-                current_slots,
-                slots)
-
+            self.deadline, deadline_diff, 0, current_slots, slots  # util_max
+        )

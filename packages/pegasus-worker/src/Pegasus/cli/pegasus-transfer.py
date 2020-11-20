@@ -41,8 +41,8 @@ import threading
 import time
 import traceback
 
-from Pegasus.tools import worker_utils as utils
 from Pegasus.tools import amqp
+from Pegasus.tools import worker_utils as utils
 
 try:
     import configparser
@@ -4043,9 +4043,11 @@ class Stats:
         # publish transfer statistics for Panorama to an AMQP endpoint if not 3rd party transfer
         # but make sure that failures do not stop us
         if publish_enabled and not self._detected_3rd_party:
-            try: 
+            try:
                 p = Panorama()
-                p.single_transfer(transfer, local_filename, was_successful, t_start, t_end, bytes)
+                p.single_transfer(
+                    transfer, local_filename, was_successful, t_start, t_end, bytes
+                )
             except Exception as e:
                 logger.warn("Panorama send failure: " + str(e))
 
@@ -4173,40 +4175,53 @@ class Stats:
                     iso_prefix_formatted(Bps * 8),
                 )
             )
-        
+
         # publish transfer statistics for Panorama to an AMQP endpoint if not 3rd party transfer
         # but make sure that failures do not stop us
         if publish_enabled and not self._detected_3rd_party:
-            try: 
+            try:
                 p = Panorama()
-                p.summary_transfer(self._total_count, self._t_start_global, self._t_end_global, self._total_bytes)
+                p.summary_transfer(
+                    self._total_count,
+                    self._t_start_global,
+                    self._t_end_global,
+                    self._total_bytes,
+                )
             except Exception as e:
                 logger.warn("Panorama send failure: " + str(e))
 
 
 class Panorama:
     """ Class for sending Panorama live stats"""
-    
+
     def __init__(self):
         """
         Publish transfer statistics for local transfer to an AMQP endpoint
         AMQP URL should look like: amqps://user:pass@host:port/vhost/exchange"
         Default exchange is "monitoring"
         """
-        self.EXCH_OPTS = {'exchange_type' : 'topic', 'durable' : True, 'auto_delete' : False}
+        self.EXCH_OPTS = {
+            "exchange_type": "topic",
+            "durable": True,
+            "auto_delete": False,
+        }
         self.amqp_env_var = "PEGASUS_AMQP_URL"
         self.amqp_url = os.getenv(self.amqp_env_var)
         self.exchange_name = None
 
-        if self.amqp_url is None: 
+        if self.amqp_url is None:
             logger.warning("'%s' is not set in the environment" % self.amqp_env_var)
         else:
             parsed_url = urlparse.urlparse(self.amqp_url)
 
-            if parsed_url.path.count("/") > 1 :
+            if parsed_url.path.count("/") > 1:
                 path_split = parsed_url.path.split("/")
-                self.exchange_name = path_split[2] if path_split[2] != "" else "monitoring"
-                self.amqp_url = parsed_url.scheme + "://" + parsed_url.netloc + "/" + path_split[1]
+                self.exchange_name = (
+                    path_split[2] if path_split[2] != "" else "monitoring"
+                )
+                self.amqp_url = (
+                    parsed_url.scheme + "://" + parsed_url.netloc + "/" + path_split[1]
+                )
             else:
                 self.exchange_name = "monitoring"
 
@@ -4214,20 +4229,26 @@ class Panorama:
         amqp_conn = amqp.connect(self.amqp_url)
         amqp_channel = amqp_conn.channel()
         amqp_channel.exchange_declare(self.exchange_name, **self.EXCH_OPTS)
-        
-        amqp_channel.basic_publish(exchange=self.exchange_name, routing_key=transfer_routing_key, body=json.dumps(event_payload, indent=2))
-    
+
+        amqp_channel.basic_publish(
+            exchange=self.exchange_name,
+            routing_key=transfer_routing_key,
+            body=json.dumps(event_payload, indent=2),
+        )
+
         amqp_conn.close()
 
-    def single_transfer(self, transfer, local_filename, was_successful, t_start, t_end, filesize):
-        if self.amqp_url is None: 
+    def single_transfer(
+        self, transfer, local_filename, was_successful, t_start, t_end, filesize
+    ):
+        if self.amqp_url is None:
             return
-        
+
         # status follows UNIX exit code convention
         status = 1
         if was_successful:
             status = 0
-        
+
         event_payload = {
             "ts": int(time.time()),
             "event": "transfer.inv.local.single",
@@ -4245,27 +4266,27 @@ class Panorama:
             "transfer_start_time": int(t_start),
             "transfer_completion_time": int(t_end),
             "transfer_duration": int(t_end - t_start),
-            "bytes_transferred": None
+            "bytes_transferred": None,
         }
 
         event_payload["wf_uuid"] = os.getenv("PEGASUS_WF_UUID")
         event_payload["dag_job_id"] = os.getenv("PEGASUS_DAG_JOB_ID")
         event_payload["condor_job_id"] = os.getenv("CONDOR_JOBID")
-        
+
         if filesize is not None and filesize > 0:
             event_payload["bytes_transferred"] = int(filesize)
 
         self.publish_transfer_metrics(event_payload["event"], event_payload)
         logger.info("Publish individual transfer statistics completed")
-    
+
     def summary_transfer(self, total_files, t_start_global, t_end_global, total_bytes):
         total_secs = t_end_global - t_start_global
         bytes_per_second = total_bytes / total_secs
-        
+
         event_payload = {
             "event": "transfer.inv.local",
             "level": "INFO",
-            #"status": status,
+            # "status": status,
             "hostname": socket.getfqdn(),
             "wf_uuid": None,
             "dag_job_id": None,
@@ -4273,29 +4294,33 @@ class Panorama:
             "total_files": total_files,
             "transfer_start_time": int(t_start_global),
             "transfer_completion_time": int(t_end_global),
-            "transfer_duration": int(total_secs),          
+            "transfer_duration": int(total_secs),
             "bytes_transferred": int(total_bytes),
-            "effective_bytes_per_second": int(bytes_per_second)
+            "effective_bytes_per_second": int(bytes_per_second),
         }
-        
+
         event_payload["wf_uuid"] = os.getenv("PEGASUS_WF_UUID")
         event_payload["dag_job_id"] = os.getenv("PEGASUS_DAG_JOB_ID")
         event_payload["condor_job_id"] = os.getenv("CONDOR_JOBID")
-        
+
         # If amqp_url is none try to use the generic monitoring event
         # to publish the statistics as a stampede event
-        if self.amqp_url is None: 
+        if self.amqp_url is None:
             data = {
                 "ts": int(time.time()),
-                "monitoring_event": event_payload["event"], 
-                "payload": [event_payload]
+                "monitoring_event": event_payload["event"],
+                "payload": [event_payload],
             }
-            logger.info('@@@MONITORING_PAYLOAD - START@@@' + json.dumps(data) + '@@@MONITORING_PAYLOAD - END@@@')
+            logger.info(
+                "@@@MONITORING_PAYLOAD - START@@@"
+                + json.dumps(data)
+                + "@@@MONITORING_PAYLOAD - END@@@"
+            )
         else:
             event_payload["ts"] = int(time.time())
             self.publish_transfer_metrics(event_payload["event"], event_payload)
             logger.info("Publish summary transfer statistics completed")
-        
+
 
 class SimilarWorkSet:
     """
@@ -5201,10 +5226,15 @@ def main():
         + " then the source file will be symlinked"
         + " to the destination rather than being copied.",
     )
-    parser.add_option("-p", "--publish", action = "store_true", dest = "publish",
-                      help = "Enables publishing of statistics to AMQP." +
-                             " This option can also be set via the" +
-                             " PEGASUS_TRANSFER_PUBLISH enviroment variable.")
+    parser.add_option(
+        "-p",
+        "--publish",
+        action="store_true",
+        dest="publish",
+        help="Enables publishing of statistics to AMQP."
+        + " This option can also be set via the"
+        + " PEGASUS_TRANSFER_PUBLISH enviroment variable.",
+    )
     parser.add_option(
         "-d",
         "--debug",
