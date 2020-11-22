@@ -440,7 +440,7 @@ class Triggers:
         q = self.session.query(db.schema.Trigger).filter(
             Ensemble.username == username,
             Ensemble.name == ensemble,
-            Ensemble.id == Trigger.ensemble_id,
+            Ensemble.id == db.schema.Trigger.ensemble_id,
         )
 
         return q.all()
@@ -524,6 +524,6 @@ class Triggers:
             "name": trigger.name,
             "state": trigger.state,
             "workflow": json.loads(trigger.workflow),
-            "args": json.loads(trigger.args),
+            "args": json.loads(trigger.args) if trigger.args else None,
             "type": trigger._type,
         }

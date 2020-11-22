@@ -2,7 +2,6 @@ import argparse
 import json
 import logging
 import os
-import re
 import sys
 import time
 from urllib import parse as urlparse
@@ -35,8 +34,7 @@ class EnsembleClientCommand(Command):
         defaults = {"auth": (self.username, self.password), "headers": headers}
         defaults.update(kwargs)
         url = urlparse.urljoin(self.endpoint, path)
-        # TODO: test this without **Defaults and pass everything as json
-        response = requests.request(method, url, json={"hello": "world"}, **defaults)
+        response = requests.request(method, url, **defaults)
 
         if 200 <= response.status_code < 300:
             return response
@@ -519,42 +517,6 @@ class PriorityCommand(EnsembleClientCommand):
 
 
 # --- Trigger Commands ---------------------------------------------------------
-def to_seconds(value: str) -> int:
-    """Convert time unit given as '<int> <s|m|h|d>` to seconds.
-    :param value: input str
-    :type value: str
-    :raises ValueError: value must be given as '<int> <s|m|h|d>
-    :raises ValueError: value must be > 0s
-    :return: value given in seconds
-    :rtype: int
-    """
-
-    value = value.strip()
-    pattern = re.compile(r"\d+ *[sSmMhHdD]")
-    if not pattern.fullmatch(value):
-        raise ValueError(
-            "invalid interval: {}, interval must be given as '<int> <s|m|h|d>".format(
-                value
-            )
-        )
-
-    num = int(value[0 : len(value) - 1])
-    unit = value[-1].lower()
-
-    as_seconds = {"s": 1, "m": 60, "h": 60 * 60, "d": 60 * 60 * 24}
-
-    result = as_seconds[unit] * num
-
-    if result <= 0:
-        raise ValueError(
-            "invalid interval: {}, interval must be greater than 0 seconds".format(
-                result
-            )
-        )
-
-    return result
-
-
 class CronTriggerCommand(EnsembleClientCommand):
     description = "Create a time based workflow trigger"
     usage = "Usage: pegasus-em cron-trigger ENSEMBLE TRIGGER INTERVAL WORKFLOW_SCRIPT [--timeout TIMEOUT] [--args ARG1 [ARG2 ...]]"
@@ -581,6 +543,10 @@ class CronTriggerCommand(EnsembleClientCommand):
         )
 
         self.parser.add_argument(
+            "workflow_script", type=str, help="path to workflow script"
+        )
+
+        self.parser.add_argument(
             "-t",
             "--timeout",
             type=str,
@@ -588,60 +554,33 @@ class CronTriggerCommand(EnsembleClientCommand):
         )
 
         self.parser.add_argument(
-            "workflow_script", type=str, help="path to workflow script"
-        )
-
-        self.parser.add_argument(
-            "-a", "--args", nargs="+", help="CLI args to be passed to WORKFLOW_SCRIPT",
+            "-a",
+            "--args",
+            default=None,
+            type=str,
+            help="CLI args to be passed to WORKFLOW_SCRIPT",
         )
 
     def parse(self, args):
         self.args = self.parser.parse_args(args)
 
     def run(self):
-        is_args_valid = True
-
-        # get interval as seconds
-        interval = to_seconds(self.args.interval)
-
-        if interval <= 0:
-            print(
-                "Invalid interval: {}, must be greater than 0 seconds".format(interval)
-            )
-            is_args_valid = False
-
-        # get timeout as seconds
-        timeout = None
-        if self.args.timeout:
-            timeout = to_seconds(self.args.timeout)
-
-            if timeout <= 0:
-                print(
-                    "Invalid timeout: {}, must be greater than 0 seconds".format(
-                        timeout
-                    )
-                )
-                is_args_valid = False
-
-        if not is_args_valid:
-            sys.exit(1)
-
         request = {
+            "trigger": self.args.trigger,
             "workflow_script": self.args.workflow_script,
-            "workflow_args": json.dumps(self.args.args),
-            "interval": interval,
-            "timeout": timeout,
+            "workflow_args": json.dumps(self.args.args.split(" "))
+            if self.args.args
+            else json.dumps([]),
+            "interval": self.args.interval,
+            "timeout": self.args.timeout,
             "type": TriggerType.CRON.value,
         }
 
         response = self.post(
-            "/ensembles/{e}/triggers/{t}".format(
-                e=self.args.ensemble, t=self.args.trigger
-            ),
-            data=request,
+            "/ensembles/{e}/triggers/cron".format(e=self.args.ensemble), data=request,
         )
 
-        # print("this is the response I got: {}".format(response))
+        print(response.json()["message"])
 
 
 class FilePatternTriggerCommand(EnsembleClientCommand):
@@ -689,8 +628,8 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
         self.parser.add_argument(
             "-a",
             "--args",
-            nargs="+",
-            default=[],
+            type=str,
+            default=None,
             help="CLI args to be passed to WORKFLOW_SCRIPT",
         )
 
@@ -698,63 +637,24 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
         self.args = self.parser.parse_args(args)
 
     def run(self):
-        is_args_valid = True
-
-        # get interval as seconds
-        interval = to_seconds(self.args.interval)
-
-        if interval <= 0:
-            print(
-                "Invalid interval: {}, must be greater than 0 seconds".format(interval)
-            )
-            is_args_valid = False
-
-        # get timeout as seconds
-        timeout = None
-        if self.args.timeout:
-            timeout = to_seconds(self.args.timeout)
-
-            if timeout <= 0:
-                print(
-                    "Invalid timeout: {}, must be greater than 0 seconds".format(
-                        timeout
-                    )
-                )
-
-                is_args_valid = False
-
-        # ensure that file patterns given as abspath
-        for fp in self.args.file_patterns:
-            if fp[0] != "/":
-                print(
-                    "Invalid file pattern: {}, must be an absolute path such as /home/scitech/*.txt".format(
-                        fp
-                    )
-                )
-
-                is_args_valid = False
-                break
-
-        if not is_args_valid:
-            sys.exit(1)
-
         request = {
+            "trigger": self.args.trigger,
             "workflow_script": self.args.workflow_script,
-            "workflow_args": json.dumps(self.args.args),
-            "interval": interval,
-            "timeout": timeout,
+            "workflow_args": json.dumps(self.args.args.split(" "))
+            if self.args.args
+            else json.dumps([]),
+            "interval": self.args.interval,
+            "timeout": self.args.timeout,
             "file_patterns": json.dumps(self.args.file_patterns),
             "type": TriggerType.FILE_PATTERN.value,
         }
 
         response = self.post(
-            "/ensembles/{e}/triggers/{t}".format(
-                e=self.args.ensemble, t=self.args.trigger
-            ),
+            "/ensembles/{e}/triggers/file_pattern".format(e=self.args.ensemble),
             data=request,
         )
 
-        # print("this is the response I got: {}".format(response))
+        print(response.json()["message"])
 
 
 # TODO: StopTriggerCommand

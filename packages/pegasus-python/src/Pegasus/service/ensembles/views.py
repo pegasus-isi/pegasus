@@ -1,7 +1,9 @@
 import json
 import logging
 import os
+import re
 import subprocess
+from pathlib import Path
 
 from flask import g, make_response, request, url_for
 
@@ -234,6 +236,7 @@ def analyze(workflow):
 def route_list_triggers(ensemble):
     dao = Triggers(g.session)
     triggers = dao.list_triggers_by_ensemble(g.user.username, ensemble)
+
     return api.json_response([Triggers.get_object(t) for t in triggers])
 
 
@@ -243,8 +246,6 @@ def route_get_trigger(ensemble, trigger):
 
 
 # TODO: checks for correct data should be done here on the backend
-# should be just /ensembles/<string:ensemble>/triggers, methods=["POST"]
-# possibly look into using jsonschema to validate incoming json requests
 """
 # error response format
 
@@ -265,47 +266,162 @@ def route_get_trigger(ensemble, trigger):
 """
 
 
-@emapp.route("/ensembles/<string:ensemble>/triggers/<string:trigger>", methods=["POST"])
-def route_create_trigger(ensemble, trigger):
+@emapp.route("/ensembles/<string:ensemble>/triggers/cron", methods=["POST"])
+def route_create_cron_trigger(ensemble):
     # verify that ensemble exists for user
     e_dao = Ensembles(g.session)
 
     # raises EMError code 404 if does not exist
     ensemble_id = e_dao.get_ensemble(g.user.username, ensemble).id
 
-    # create trigger entry in db
-    t_dao = Triggers(g.session)
+    # validate trigger
+    trigger = request.form.get("trigger", type=str)
+    if not trigger or len(trigger) == 0:
+        raise EMError("trigger name must be a non-empty string")
 
-    trigger_type = request.form.get("type")
+    # validate workflow_script
+    workflow_script = request.form.get("workflow_script", type=str)
+    if not workflow_script or len(workflow_script) == 0:
+        raise EMError("workflow_script name must be a non-empty string")
+
+    if not Path(workflow_script).is_absolute():
+        raise EMError("workflow_script must be given as an absolute path")
+
+    # validate workflow_args
+    can_decode = True
+    try:
+        workflow_args = json.loads(request.form.get("workflow_args"))
+    except json.JSONDecodeError:
+        can_decode = False
+
+    if not can_decode or not isinstance(workflow_args, list):
+        raise EMError("workflow_args must be given as a list serialized to json")
+
+    # validate interval
+    try:
+        interval = to_seconds(request.form.get("interval", type=str))
+    except ValueError:
+        raise EMError(
+            "interval must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
+
+    # validate timeout
+    try:
+        timeout = request.form.get("timeout", type=str, default=None)
+        if timeout is not None:
+            timeout = to_seconds(timeout)
+    except ValueError:
+        raise EMError(
+            "timeout must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
+
     kwargs = {
         "ensemble_id": ensemble_id,
         "trigger": trigger,
-        "trigger_type": trigger_type,
-        "workflow_script": request.form.get("workflow_script"),
-        "workflow_args": json.loads(request.form.get("workflow_args")),
+        "trigger_type": TriggerType.CRON.value,
+        "workflow_script": workflow_script,
+        "workflow_args": workflow_args,
+        "interval": interval,
+        "timeout": timeout,
     }
 
-    if trigger_type == TriggerType.CRON.value:
-        # add cron trigger specific parameters
-        kwargs["interval"] = request.form.get("interval")
-        kwargs["timeout"] = request.form.get("timeout")
-    elif trigger_type == TriggerType.FILE_PATTERN.value:
-        # add file pattern specific parameters
-        kwargs["interval"] = request.form.get("interval")
-        kwargs["timeout"] = request.form.get("timeout")
-        kwargs["file_patterns"] = json.loads(request.form.get("file_patterns"))
-    else:
-        raise NotImplementedError(
-            "encountered unsupported trigger type: {}".format(trigger_type)
-        )
-
+    # create trigger entry in db
+    t_dao = Triggers(g.session)
     t_dao.insert_trigger(**kwargs)
 
-    # TODO: what to return here
-    # return ID that was created, in this case trigger name is sufficient
-    # probably code 201
-    # use Flask response object and a json object representing an id of the entity
-    return "hello world from create_trigger!"
+    # return response success
+    return api.json_created(
+        url_for("route_get_trigger", ensemble=ensemble, trigger=trigger)
+    )
+
+
+@emapp.route("/ensembles/<string:ensemble>/triggers/file_pattern", methods=["POST"])
+def route_create_file_pattern_trigger(ensemble):
+    # verify that ensemble exists for user
+    e_dao = Ensembles(g.session)
+
+    # raises EMError code 404 if does not exist
+    ensemble_id = e_dao.get_ensemble(g.user.username, ensemble).id
+
+    # validate trigger
+    trigger = request.form.get("trigger", type=str)
+    if not trigger or len(trigger) == 0:
+        raise EMError("trigger name must be a non-empty string")
+
+    # validate workflow_script
+    workflow_script = request.form.get("workflow_script", type=str)
+    if not workflow_script or len(workflow_script) == 0:
+        raise EMError("workflow_script name must be a non-empty string")
+
+    if not Path(workflow_script).is_absolute():
+        raise EMError("workflow_script must be given as an absolute path")
+
+    # validate workflow_args
+    can_decode = True
+    try:
+        workflow_args = json.loads(request.form.get("workflow_args"))
+    except json.JSONDecodeError:
+        can_decode = False
+
+    if not can_decode or not isinstance(workflow_args, list):
+        raise EMError("workflow_args must be given as a list serialized to json")
+
+    # validate interval
+    try:
+        interval = to_seconds(request.form.get("interval", type=str))
+    except ValueError:
+        raise EMError(
+            "interval must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
+
+    # validate timeout
+    try:
+        timeout = request.form.get("timeout", type=str, default=None)
+        if timeout is not None:
+            timeout = to_seconds(timeout)
+    except ValueError:
+        raise EMError(
+            "timeout must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
+
+    # validate file_patterns
+    can_decode = True
+    try:
+        file_patterns = json.loads(request.form.get("file_patterns"))
+    except json.JSONDecodeError:
+        can_decode = False
+
+    if not can_decode or not isinstance(file_patterns, list):
+        raise EMError("file_patterns must be given as a list serialized to json")
+
+    if len(file_patterns) < 1:
+        raise EMError("file_patterns must contain at least one file pattern")
+
+    for fp in file_patterns:
+        if not Path(fp).is_absolute():
+            raise EMError(
+                "each file pattern must be given as an absolute path (e.g. '/inputs/*.txt"
+            )
+
+    kwargs = {
+        "ensemble_id": ensemble_id,
+        "trigger": trigger,
+        "trigger_type": TriggerType.FILE_PATTERN.value,
+        "workflow_script": workflow_script,
+        "workflow_args": workflow_args,
+        "interval": interval,
+        "timeout": timeout,
+        "file_patterns": file_patterns,
+    }
+
+    # create trigger entry in db
+    t_dao = Triggers(g.session)
+    t_dao.insert_trigger(**kwargs)
+
+    # return response success
+    return api.json_created(
+        url_for("route_get_trigger", ensemble=ensemble, trigger=trigger)
+    )
 
 
 @emapp.route(
@@ -323,11 +439,50 @@ def route_delete_trigger(ensemble, trigger):
     t_dao = Triggers(g.session)
 
     # make sure get_trigger raises 404 if nothing found
-    trigger_id = t_dao.get_trigger(ensemble_id, trigger).id
-    t_dao.update_state(ensemble_id, trigger_id)
+    trigger_id = t_dao.get_trigger(ensemble_id, trigger)._id
+    t_dao.update_state(ensemble_id, trigger_id, "STOPPED")
 
-    # TODO: what to return here
-    # return HTTP code that represents that it was successful and that nothing
-    # is to returned
-    # status code 204, nothing else to return
-    return "hello world from delete_trigger!"
+    return api.json_response(
+        {
+            "message": "ensemble: {}, trigger: {} marked for deletion".format(
+                ensemble, trigger
+            )
+        },
+        status_code=202,
+    )
+
+
+def to_seconds(value: str) -> int:
+    """Convert time unit given as '<int> <s|m|h|d>` to seconds.
+    :param value: input str
+    :type value: str
+    :raises ValueError: value must be given as '<int> <s|m|h|d>
+    :raises ValueError: value must be > 0s
+    :return: value given in seconds
+    :rtype: int
+    """
+
+    value = value.strip()
+    pattern = re.compile(r"\d+ *[sSmMhHdD]")
+    if not pattern.fullmatch(value):
+        raise ValueError(
+            "invalid interval: {}, interval must be given as '<int> <s|m|h|d>'".format(
+                value
+            )
+        )
+
+    num = int(value[0 : len(value) - 1])
+    unit = value[-1].lower()
+
+    as_seconds = {"s": 1, "m": 60, "h": 60 * 60, "d": 60 * 60 * 24}
+
+    result = as_seconds[unit] * num
+
+    if result <= 0:
+        raise ValueError(
+            "invalid interval: {}, interval must be greater than 0 seconds".format(
+                result
+            )
+        )
+
+    return result

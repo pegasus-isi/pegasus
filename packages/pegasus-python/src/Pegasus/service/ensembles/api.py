@@ -19,5 +19,5 @@ def json_created(location):
     return make_response(json.dumps(response), 201, headers)
 
 
-def json_response(obj):
-    return make_response(json.dumps(obj), 200, JSON_HEADERS)
+def json_response(obj, status_code=200):
+    return make_response(json.dumps(obj), status_code, JSON_HEADERS)
