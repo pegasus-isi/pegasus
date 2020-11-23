@@ -795,7 +795,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def plan(
         self,
         *,
-        conf: Optional[str] = None,
+        conf: Optional[Union[str, Path]] = None,
         basename: Optional[str] = None,
         job_prefix: Optional[str] = None,
         cluster: Optional[List[str]] = None,
@@ -806,9 +806,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         input_dirs: Optional[List[Union[str, Path]]] = None,
         output_dir: Optional[Union[str, Path]] = None,
         dir: Optional[Union[str, Path]] = None,
-        relative_dir: Optional[str] = None,
+        relative_dir: Optional[Union[str, Path]] = None,
         random_dir: Union[bool, str, Path] = False,
-        relative_submit_dir: Optional[str] = None,
+        relative_submit_dir: Optional[Union[str, Path]] = None,
         inherited_rc_files: Optional[List[Union[str, Path]]] = None,
         cleanup: str = "inplace",
         reuse: Optional[List[Union[str, Path]]] = None,
@@ -822,7 +822,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         **kwargs
     ):
         """
-        plan(self, conf: Optional[str] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[str] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[str] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **kwargs)
+        plan(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **kwargs)
         Plan the workflow.
 
         .. code-block:: python
@@ -833,7 +833,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                 print(e.output)
 
         :param conf:  the path to the properties file to use for planning, defaults to None
-        :type conf: Optional[str]
+        :type conf: Optional[Union[str, Path]]
         :param basename: the basename prefix while constructing the per workflow files like .dag etc., defaults to None
         :type basename: Optional[str]
         :param job_prefix: the prefix to be applied while construction job submit filenames, defaults to None
@@ -855,11 +855,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :param dir: the directory where to generate the executable workflow, defaults to None
         :type dir: Optional[Union[str, Path]]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
-        :type relative_dir: Optional[str]
+        :type relative_dir: Optional[Union[str, Path]]
         :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`pathlib.Path`, then that will be used as the basename of the directory that is to be created, defaults to False
         :type random_dir: Union[bool, str, Path], optional
         :param relative_submit_dir: the relative submit directory where to generate the concrete workflow. Overrides relative_dir, defaults to None
-        :type relative_submit_dir: Optional[str]
+        :type relative_submit_dir: Optional[Union[str, Path]]
         :param inherited_rc_files: comma separated list of replica files, defaults to None
         :type inherited_rc_files: Optional[List[Union[str, Path]]]
         :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
@@ -895,15 +895,17 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             job_prefix=job_prefix,
             cluster=cluster,
             cache=[str(c) for c in cache] if cache else None,
-            conf=conf,
+            conf=str(conf) if conf else None,
             sites=sites,
             output_sites=output_sites,
             staging_sites=staging_sites,
             input_dirs=[str(_dir) for _dir in input_dirs] if input_dirs else None,
             output_dir=str(output_dir) if output_dir else None,
             dir=str(dir) if dir else None,
-            relative_dir=relative_dir,
-            relative_submit_dir=relative_submit_dir,
+            relative_dir=str(relative_dir) if relative_dir else None,
+            relative_submit_dir=str(relative_submit_dir)
+            if relative_submit_dir
+            else None,
             inherited_rc_files=[str(p) for p in inherited_rc_files]
             if inherited_rc_files
             else None,

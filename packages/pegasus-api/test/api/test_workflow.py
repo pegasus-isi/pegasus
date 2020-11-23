@@ -1260,9 +1260,11 @@ class TestWorkflow:
 
         path = "wf.yml"
         wf.write(path).plan(
+            conf=Path("pegasus.properties"),
             input_dirs=["/path1", Path("/path2")],
             output_dir=Path("/output_dir"),
-            relative_dir="run1",
+            relative_dir=Path("run1"),
+            relative_submit_dir=Path("run1"),
             dir=Path("/dir"),
             reuse=["/submit_dir1", Path("/submit_dir2")],
             cache=["/cache", Path("/cache2")],
@@ -1277,7 +1279,7 @@ class TestWorkflow:
             cache=["/cache", "/cache2"],
             cleanup="inplace",
             cluster=None,
-            conf=None,
+            conf="pegasus.properties",
             dir="/dir",
             force=False,
             force_replan=False,
@@ -1291,7 +1293,7 @@ class TestWorkflow:
             quiet=0,
             random_dir=False,
             relative_dir="run1",
-            relative_submit_dir=None,
+            relative_submit_dir="run1",
             reuse=["/submit_dir1", "/submit_dir2"],
             sites=None,
             staging_sites=None,
