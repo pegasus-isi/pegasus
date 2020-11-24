@@ -26,10 +26,10 @@ class NoAuthFlaskTestCase:
         # create all tables in schema
         schema.Base.metadata.create_all(engine)
 
-        session = sessionmaker(bind=engine)()
+        g.session = sessionmaker(bind=engine)()
 
         # create an ensemble entry
-        session.add(
+        g.session.add(
             schema.Ensemble(
                 name="test-ensemble",
                 created=datetime.datetime.now(),
@@ -41,10 +41,10 @@ class NoAuthFlaskTestCase:
             )
         )
 
-        session.commit()
+        g.session.commit()
 
         # create a trigger entry
-        session.add(
+        g.session.add(
             schema.Trigger(
                 ensemble_id=1,
                 name="test-trigger",
@@ -54,9 +54,7 @@ class NoAuthFlaskTestCase:
             )
         )
 
-        session.commit()
-
-        g.session = session
+        g.session.commit()
 
 
 class TestTriggerRoutes(NoAuthFlaskTestCase):
@@ -80,7 +78,11 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
             ("nonexistent-ensemble", []),
         ],
     )
-    def test_list_triggers(self, emapp_client, ensemble, expected):
+    def test_list_triggers(self, mocker, emapp_client, ensemble, expected):
+        # patch so that the in-mem db defined in pre_callable can be used
+        # and also to avoid a db version check done in Pegasus.db.connection.connect
+        mocker.patch("Pegasus.db.connection.connect")
+
         rv = emapp_client.get_context(
             "/ensembles/{}/triggers".format(ensemble), pre_callable=self.pre_callable,
         )
@@ -91,7 +93,10 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
     def test_get_route(self, emapp_client):
         pass
 
-    def test_route_create_cron_trigger(self, emapp_client, emapp):
+    def test_route_create_cron_trigger(self, mocker, emapp_client, emapp):
+        # patch so that the in-mem db defined in pre_callable can be used
+        # and also to avoid a db version check done in Pegasus.db.connection.connect
+        mocker.patch("Pegasus.db.connection.connect")
 
         request_data = {
             "trigger": "test-trigger2",
@@ -233,8 +238,12 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         ],
     )
     def test_route_create_cron_trigger_invalid_request(
-        self, emapp_client, ensemble, request_data, exception_msg, status_code
+        self, mocker, emapp_client, ensemble, request_data, exception_msg, status_code
     ):
+        # patch so that the in-mem db defined in pre_callable can be used
+        # and also to avoid a db version check done in Pegasus.db.connection.connect
+        mocker.patch("Pegasus.db.connection.connect")
+
         rv = emapp_client.post_context(
             "/ensembles/{}/triggers/cron".format(ensemble),
             pre_callable=self.pre_callable,
@@ -244,7 +253,11 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         assert rv.status_code == status_code
         assert exception_msg in rv.json["message"]
 
-    def test_route_create_file_pattern_trigger(self, emapp_client, emapp):
+    def test_route_create_file_pattern_trigger(self, mocker, emapp_client, emapp):
+        # patch so that the in-mem db defined in pre_callable can be used
+        # and also to avoid a db version check done in Pegasus.db.connection.connect
+        mocker.patch("Pegasus.db.connection.connect")
+
         request_data = {
             "trigger": "test-trigger2",
             "workflow_script": "/workflow.py",
@@ -440,8 +453,12 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         ],
     )
     def test_route_create_file_pattern_trigger_invalid_request(
-        self, emapp_client, ensemble, request_data, exception_msg, status_code
+        self, mocker, emapp_client, ensemble, request_data, exception_msg, status_code
     ):
+        # patch so that the in-mem db defined in pre_callable can be used
+        # and also to avoid a db version check done in Pegasus.db.connection.connect
+        mocker.patch("Pegasus.db.connection.connect")
+
         rv = emapp_client.post_context(
             "/ensembles/{}/triggers/file_pattern".format(ensemble),
             pre_callable=self.pre_callable,
@@ -451,7 +468,11 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         assert rv.status_code == status_code
         assert exception_msg in rv.json["message"]
 
-    def test_route_delete_trigger(self, emapp_client):
+    def test_route_delete_trigger(self, mocker, emapp_client):
+        # patch so that the in-mem db defined in pre_callable can be used
+        # and also to avoid a db version check done in Pegasus.db.connection.connect
+        mocker.patch("Pegasus.db.connection.connect")
+
         rv = emapp_client.delete_context(
             "/ensembles/test-ensemble/triggers/test-trigger",
             pre_callable=self.pre_callable,
@@ -486,8 +507,12 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         ],
     )
     def test_route_delete_nonexistent_trigger(
-        self, emapp_client, ensemble, trigger, exception_msg, status_code
+        self, mocker, emapp_client, ensemble, trigger, exception_msg, status_code
     ):
+        # patch so that the in-mem db defined in pre_callable can be used
+        # and also to avoid a db version check done in Pegasus.db.connection.connect
+        mocker.patch("Pegasus.db.connection.connect")
+
         rv = emapp_client.delete_context(
             "/ensembles/{}/triggers/{}".format(ensemble, trigger),
             pre_callable=self.pre_callable,
