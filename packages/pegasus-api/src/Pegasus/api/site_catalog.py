@@ -287,6 +287,7 @@ class Grid:
 
         self.scheduler_type = scheduler_type.value
 
+        self.job_type = job_type
         if job_type is not None:
             if not isinstance(job_type, SupportedJobs):
                 raise TypeError(
@@ -296,8 +297,6 @@ class Grid:
                 )
             else:
                 self.job_type = job_type.value
-        else:
-            self.job_type = None
 
     def __json__(self):
         return _filter_out_nones(

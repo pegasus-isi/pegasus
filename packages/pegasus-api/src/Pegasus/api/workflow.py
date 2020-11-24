@@ -926,6 +926,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self._braindump = workflow_instance.braindump
 
     @_chained
+    @_needs_submit_dir
     @_needs_client
     def run(self, *, verbose: int = 0, grid: bool = False):
         """
