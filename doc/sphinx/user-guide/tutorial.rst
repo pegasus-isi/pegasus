@@ -8,12 +8,15 @@ The Pegasus WMS tutorial is now based on a Docker container running interactive 
 
 If you do not already have Docker installed, please find instructions in the `Docker documentation <https://docs.docker.com/get-docker/>`_.
 
-Once you have Docker running, download and start the tutorial container. Decide on an unused port on your computer for Jupyter to run on. In the example below, we pick **9999**. Leave the second port specification (8888) alone, as it specifies what the inside port number is. For example, if you want to run Jupyter on port 5000 on your machine, use 5000:8888.
+Once you have Docker running, download and start the tutorial container using the following command:
 
 .. parsed-literal::
 
     docker run --privileged --rm -p 9999:8888 pegasus/tutorial:|release|
 
+Decide on an unused port on your computer for Jupyter to run on. In the command above, we picked **9999**. 
+Leave the second port specification (8888) alone, as it specifies what the 
+inside port number is. For example, if you want to run Jupyter on port 5000 on your machine, use 5000:8888.
 
 Once the container has started, use your favorite web browser and go to http://localhost:9999. The password is: **scitech**
 
