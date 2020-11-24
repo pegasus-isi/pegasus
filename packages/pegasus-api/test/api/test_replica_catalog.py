@@ -13,6 +13,47 @@ from Pegasus.api.errors import DuplicateError
 from Pegasus.api.replica_catalog import _PFN, File, ReplicaCatalog, _ReplicaCatalogEntry
 
 
+class Test_PFN:
+    def test_valid_pfn(self):
+        assert _PFN(site="local", pfn="/file.txt")
+
+    @pytest.mark.parametrize(
+        "pfn,other,result",
+        [
+            (
+                _PFN(site="local", pfn="/file.txt"),
+                _PFN(site="local", pfn="/file.txt"),
+                True,
+            ),
+            (
+                _PFN(site="condorpool", pfn="/file.txt"),
+                _PFN(site="local", pfn="/file.txt"),
+                False,
+            ),
+            (
+                _PFN(site="local", pfn="/file1.txt"),
+                _PFN(site="local", pfn="/file.txt"),
+                False,
+            ),
+            (_PFN(site="local", pfn="/file.txt"), "pfn", False),
+        ],
+    )
+    def test_eq(self, pfn, other, result):
+        assert (pfn == other) == result
+
+    def test_hash(self):
+        pfn = _PFN(site="local", pfn="/file.txt")
+        assert hash(pfn) == hash(("local", "/file.txt"))
+
+    def test_repr(self):
+        pfn = _PFN(site="local", pfn="/file.txt")
+        assert repr(pfn) == "<_PFN site: local, pfn: /file.txt>"
+
+    def test_tojson(self):
+        pfn = _PFN(site="local", pfn="/file.txt")
+        assert pfn.__json__() == {"site": "local", "pfn": "/file.txt"}
+
+
 class TestFile:
     @pytest.mark.parametrize("lfn,size", [("a", None), ("例", 2048)])
     def test_valid_file(self, lfn: str, size: int):
@@ -39,6 +80,9 @@ class TestFile:
         assert File("a") == File("a")
         assert File("a") != File("b")
         assert File("a") != 1
+
+    def test_repr(self):
+        assert repr(File("a")) == "<File a>"
 
     def test_tojson_with_metdata(self, convert_yaml_schemas_to_json, load_schema):
         result = File("lfn", size=2048).add_metadata(key="value").__json__()

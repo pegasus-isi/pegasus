@@ -122,6 +122,7 @@ class TestTriggers:
                 username="test-user",
             )
         )
+        session.commit()
 
         # add a trigger assigned to test-ensemble2
         t = schema.Trigger(
