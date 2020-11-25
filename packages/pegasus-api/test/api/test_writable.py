@@ -1,6 +1,7 @@
 import getpass
 import json
 import os
+from io import StringIO
 from tempfile import TemporaryFile
 
 import pytest
@@ -56,6 +57,24 @@ class Test_CustomEncoder:
         del expected["x-pegasus"]
 
         assert result == expected
+
+    def test_json_attribute_not_callable(self, writable_obj):
+        writable_obj.__json__ = "not a callable"
+        with pytest.raises(TypeError) as e:
+            json.loads(json.dumps(writable_obj, cls=_CustomEncoder))
+
+        assert "__json__ is not callable" in str(e)
+
+    def test_json_default_encoder(self, mocker):
+        class NotJSONSerializableObj:
+            pass
+
+        # default implementation json.JSONEncoder.default should raise TypeError
+        with pytest.raises(TypeError) as e:
+            json.loads(json.dumps(NotJSONSerializableObj(), cls=_CustomEncoder))
+
+        # ensure we are not getting the TypeError raised by _CustomEncoder.default
+        assert "__json__ is not callable" not in str(e)
 
 
 class TestWritable:
@@ -137,12 +156,21 @@ class TestWritable:
 
     @pytest.mark.parametrize(
         "file, _format, loader",
-        [(TemporaryFile, "yml", yaml.safe_load), (TemporaryFile, "json", json.load)],
+        [
+            (TemporaryFile, "yml", yaml.safe_load),
+            (TemporaryFile, "json", json.load),
+            (StringIO, "yaml", yaml.safe_load),
+        ],
     )
     def test_write_stream_without_name(
         self, writable_obj, expected, file, _format, loader
     ):
-        with file(mode="w+") as f:
+
+        kwargs = {"mode": "w+"}
+        if type(file) == type(StringIO):
+            kwargs = {}
+
+        with file(**kwargs) as f:
             writable_obj.write(f, _format=_format)
             f.seek(0)
             result = loader(f)
@@ -151,6 +179,13 @@ class TestWritable:
             # and this is simpler than trying to mocker.patch datetime
             expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
             assert result == expected
+
+    def test_internal_write_invalid_format(self, writable_obj):
+        """Testing Writable._write"""
+        with pytest.raises(ValueError) as e:
+            writable_obj._write("file", "bad_format")
+
+        assert "invalid _ext: bad_format" in str(e)
 
 
 def test_filter_out_nones():

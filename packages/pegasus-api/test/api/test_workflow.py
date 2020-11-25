@@ -869,6 +869,18 @@ class TestWorkflow:
             job._id, {child._id for child in children}
         )
 
+    def test_add_dependency_single_parent_add_child_multiple_times(self):
+        wf = Workflow("wf")
+        jobs = [Job("t", _id="job1"), Job("t", _id="job2")]
+        parent = Job("t", _id="parent")
+
+        for job in jobs:
+            wf.add_dependency(job, parents=[parent])
+
+        assert wf.dependencies[parent._id] == _JobDependency(
+            parent._id, {job._id for job in jobs}
+        )
+
     def test_add_dependency_parents_and_children(self):
         wf = Workflow("wf")
         job = Job("t", _id="job")
@@ -1260,9 +1272,11 @@ class TestWorkflow:
 
         path = "wf.yml"
         wf.write(path).plan(
+            conf=Path("pegasus.properties"),
             input_dirs=["/path1", Path("/path2")],
             output_dir=Path("/output_dir"),
-            relative_dir="run1",
+            relative_dir=Path("run1"),
+            relative_submit_dir=Path("run1"),
             dir=Path("/dir"),
             reuse=["/submit_dir1", Path("/submit_dir2")],
             cache=["/cache", Path("/cache2")],
@@ -1277,7 +1291,7 @@ class TestWorkflow:
             cache=["/cache", "/cache2"],
             cleanup="inplace",
             cluster=None,
-            conf=None,
+            conf="pegasus.properties",
             dir="/dir",
             force=False,
             force_replan=False,
@@ -1291,7 +1305,7 @@ class TestWorkflow:
             quiet=0,
             random_dir=False,
             relative_dir="run1",
-            relative_submit_dir=None,
+            relative_submit_dir="run1",
             reuse=["/submit_dir1", "/submit_dir2"],
             sites=None,
             staging_sites=None,
@@ -1489,22 +1503,35 @@ class TestWorkflow:
         mocker.patch("Pegasus.client._client.Client.run", return_value={"key": "value"})
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
 
+        wf._submit_dir = "submit_dir"
         wf.run()
 
         assert wf.run_output == {"key": "value"}
 
         Pegasus.client._client.Client.run.assert_called_once_with(
-            None, verbose=0, grid=False
+            "submit_dir", verbose=0, grid=False
+        )
+
+    def test_wait(self, wf, mocker):
+        mocker.patch("Pegasus.client._client.Client.wait")
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        wf._submit_dir = "submit_dir"
+        wf.wait()
+
+        Pegasus.client._client.Client.wait.assert_called_once_with(
+            "wf㒀", "submit_dir", delay=5
         )
 
     def test_run_with_grid_checking(self, wf, mocker):
         mocker.patch("Pegasus.client._client.Client.run")
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
 
+        wf._submit_dir = "submit_dir"
         wf.run(grid=True)
 
         Pegasus.client._client.Client.run.assert_called_once_with(
-            None, verbose=0, grid=True
+            "submit_dir", verbose=0, grid=True
         )
 
     def test_access_run_output_before_workflow_run(self, wf):

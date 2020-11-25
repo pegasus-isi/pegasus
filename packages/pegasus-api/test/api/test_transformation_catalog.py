@@ -604,6 +604,17 @@ class TestContainer:
 
         assert "invalid checksum: md5" in str(e)
 
+    def test_invalid_container_metadata_not_yet_supported(self):
+        with pytest.raises(NotImplementedError) as e:
+            Container(
+                name="test",
+                container_type=Container.DOCKER,
+                image="image",
+                metadata={"not": "supported yet"},
+            )
+
+        assert "Metadata support for Containers is not yet supported" in str(e)
+
     def test_tojson_no_profiles(self, convert_yaml_schemas_to_json, load_schema):
         c = Container(
             "test",
