@@ -23,7 +23,7 @@ def get_slots():
         totals = output.split("\n")[-2]
         totals = totals.split()
         return int(totals[1])
-    except Exception, e:
+    except Exception as e:
         log.error("Unable to get total number of slots from condor_status")
         log.exception(e)
         return None
@@ -91,7 +91,7 @@ class Provisioner(threading.Thread):
         while True:
             try:
                 self.loop()
-            except Exception, e:
+            except Exception as e:
                 log.error("Unable to complete provisioning cycle...")
                 log.exception(e)
                 log.info("Trying again later...")

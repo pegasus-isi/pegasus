@@ -54,7 +54,7 @@ class OnlineMonitord:
         # Create the database for this workflow
         try:
             self.influx_client.create_database(self.wf_name)
-        except InfluxDBClientError, e:
+        except InfluxDBClientError as e:
             # Influx returns 409 if the database exists
             if e.code != 409:
                 raise
@@ -168,7 +168,7 @@ class OnlineMonitord:
             message = json.loads(body)
             self.write_influx(message)
             self.write_stampede(message)
-        except Exception, e:
+        except Exception as e:
             log.exception(e)
 
     def write_influx(self, message):
@@ -213,7 +213,7 @@ class OnlineMonitord:
                 }
             ]
             self.influx_client.write_points(point, time_precision="u")
-        except Exception, err:
+        except Exception as err:
             log.error(
                 "An error occured while sending monitoring measurement to InfluxDB: "
             )
@@ -260,7 +260,7 @@ class OnlineMonitord:
         try:
             log.debug("Sending record to DB: %s --> %s" % (event, value))
             self.event_sink.send(event, value)
-        except Exception, e:
+        except Exception as e:
             log.error("Error sending event: %s --> %s" % (event, value))
             log.exception(e)
 
