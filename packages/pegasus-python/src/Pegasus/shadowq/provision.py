@@ -4,7 +4,7 @@ import threading
 import time
 
 from Pegasus.shadowq import sim
-from Pegasus.shadowq.dag import JobState, JobType
+from Pegasus.shadowq.dag import JobType
 
 log = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def read_estimates(filename):
     estimates = {}
 
     # The estimates file is a two-column table with jobname and runtime
-    f = open(filename, "r")
+    f = open(filename)
     for l in f:
         l = l.strip()
         rec = l.split()
