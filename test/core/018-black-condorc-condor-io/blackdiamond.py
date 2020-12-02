@@ -9,11 +9,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # --- Dir Setup -----------------------------------------------------------
 TOP_DIR = Path.cwd().resolve()
-
-try:
-    Path.mkdir(TOP_DIR / "outputs")
-except FileExistsError:
-    pass
+Path.mkdir(TOP_DIR / "outputs", exist_ok=True)
 
 # --- Configuration ------------------------------------------------------------
 props = Properties()
