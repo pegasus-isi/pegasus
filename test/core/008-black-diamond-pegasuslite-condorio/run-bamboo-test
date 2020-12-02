@@ -3,11 +3,11 @@ set -e
 
 echo "Running blackdiamond.py"
 export PYTHONPATH=`pegasus-config --python`
-python3 blackdiamond.py | tee plan.out
+python3 blackdiamond.py
 
-WORK_DIR=`cat plan.out | grep pegasus-remove | sed -E 's/.*pegasus-remove[ ]+(.*)[ ]+/\1/'`
+SUBMIT_DIR=`cat submit_dir` 
 # account for deep submit directory structure                                                                                                                                                                                              
-cd $WORK_DIR/00/00
+cd $SUBMIT_DIR/00/00
 
 # PM-1192 make sure the env variable PEGASUS_LITE_ENV_SOURCE is set
 for sub in ` ls *sub | grep -E "analyze|findrange|preprocess"`; do
@@ -19,4 +19,4 @@ for sub in ` ls *sub | grep -E "analyze|findrange|preprocess"`; do
     fi
 done
 
-pegasus-run $WORK_DIR
+pegasus-run $SUBMIT_DIR

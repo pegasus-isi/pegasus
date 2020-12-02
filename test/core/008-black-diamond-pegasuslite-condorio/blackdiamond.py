@@ -131,13 +131,14 @@ wf.add_jobs(
     analyze_job
 )
 
-try:
-    wf.plan(
-        dir="work/dags",
-        sites=["condorpool"],
-        output_sites=["local"],
-        cleanup="leaf",
-        force=True
-    )
-except PegasusClientError as e:
-    print(e)
+wf.plan(
+    dir="work/dags",
+    sites=["condorpool"],
+    output_sites=["local"],
+    cleanup="leaf",
+    force=True,
+    submit=True
+)
+
+with open("submit_dir", "w") as f:
+    f.write(str(wf.braindump.submit_dir))
