@@ -12,7 +12,7 @@ props = Properties()
 props["pegasus.dir.useTimestamp"] = "true"
 props["pegasus.dir.storage.deep"] = "false"
 props["pegasus.condor.logs.symlink"] = "false"
-props["pegasus.data.configuration"] = "condorio"
+props["pegasus.data.configuration"] = "sharedfs"
 props["pegasus.transfer.worker.package"] = "true"
 
 # there are compute jobs that are not launched by kickstart, hence *disable* integrity checking
