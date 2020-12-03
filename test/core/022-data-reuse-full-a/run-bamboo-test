@@ -4,15 +4,15 @@ set -e
 
 echo "Running blackdiamond.py"
 export PYTHONPATH=`pegasus-config --python`
-python3 blackdiamond.py | tee plan.out
+python3 blackdiamond.py
 
-WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
+SUBMIT_DIR=`cat submit_dir`
 
-echo "WORK_DIR is $WORK_DIR"
+echo "SUBMIT_DIR is $SUBMIT_DIR"
 
 # check in the submit directory to make sure that only stage_out and register jobs are generated
 set +e
-ls $WORK_DIR/*sub | grep -v register | grep -v condor.sub | grep -v stage_out
+ls $SUBMIT_DIR/*sub | grep -v register | grep -v condor.sub | grep -v stage_out
 EC=$?
 set -e
 
@@ -22,4 +22,4 @@ if [ $EC -eq 0 ]; then
 fi
 
 #submit the workflow
-pegasus-run $WORK_DIR
+pegasus-run $SUBMIT_DIR
