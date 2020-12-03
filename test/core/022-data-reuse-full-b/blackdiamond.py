@@ -47,7 +47,7 @@ local_site.add_directories(
 )
 
 
-sc.add_sites(isi_condor_c_site, condorpool, local_site)
+sc.add_sites(isi_condor_c_site, condorpool_site, local_site)
 sc.write()
 
 # --- Replicas -----------------------------------------------------------------
@@ -56,7 +56,7 @@ with open("f.a", "w") as f_a, open("f.d", "w") as f_d:
     f_a.write("This is sample input to KEG\n")
 
 	# generate the final output file 
-	f_d.write("This is preexisitng output file for the workflow")
+    f_d.write("This is preexisitng output file for the workflow")
 
 rc = ReplicaCatalog()
 rc.add_replica(site="local", lfn="f.a", pfn=TOP_DIR / "f.a")
@@ -150,18 +150,12 @@ wf.add_jobs(
     analyze_job
 )
 
-try:
-    wf.plan(
-        dir="work",
-        sites=["condorpool"],
-        cluster=["horizontal"],
-        force=True
-    )
-except PegasusClientError as e:
-    print(e)
+wf.plan(
+    dir="work",
+    sites=["condorpool"],
+    cluster=["horizontal"],
+)
 
-
-
-
-
-
+# save submit dir so we can analyze it for certain jobs
+with open("submit_dir", "w") as f:
+        f.write(str(wf.braindump.submit_dir))
