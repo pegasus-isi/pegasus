@@ -2,12 +2,6 @@
 
 set -e
 
-echo "Running blackdiamond.py"
+echo "Running workflow_gen.py"
 export PYTHONPATH=`pegasus-config --python`
-python3 dax-generator.py 2>&1 | tee plan.out
-
-WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
-
-echo "WORK_DIR is $WORK_DIR"
-
-pegasus-run $WORK_DIR
+python3 workflow_gen.py

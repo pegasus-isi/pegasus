@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import logging
+import sys
 
 from pathlib import Path
 
@@ -96,7 +97,7 @@ for i in range(3):
 	a4 = File("dir/file.y")
 	b = File("f.b{}".format(i)) 
 
-	hello_job = Job(hello_tr)\
+	hello_job = Job(hello_tr, _id="ID_hello_{}".format(i))\
 					.add_args(b)\
 					.add_inputs(a1, a2, a3, a4)\
 					.add_outputs(b, stage_out=False)
@@ -106,80 +107,45 @@ for i in range(3):
 	for j in range(3):
 		# add world jobs (which depends on hello job)
 		c = File("f.c{}{}".format(i,j))
-		world_job = Job(world_tr)\
+		world_job = Job(world_tr, _id="ID_world_{}_{}".format(i,j))\
 						.add_args(c)\
 						.add_inputs(b)\
 						.add_outputs(c)
 		
 		wf.add_jobs(world_job)
 
-try:
-	wf.plan(
-		sites=["local"],
-		dir="work/submit",
-		output_sites=["local"],
-		cleanup="leaf",
-		verbose=3
-	)
-except PegasusClientError as e:
-	pass
+wf.plan(
+    sites=["local"],
+    dir="work/submit",
+    output_sites=["local"],
+    cleanup="leaf"
+)
 
+# --- Test ---------------------------------------------------------------------
+# Test that the appropriate jobs have been removed during the planning process.
+submit_dir = wf.braindump.submit_dir
 
+# submit files that should not be present
+should_have_been_removed = {
+            "hello_ID_hello_0.sub",
+            "hello_ID_hello_2.sub",
+            "world_ID_world_1_2.sub",
+            "world_ID_world_2_0.sub"
+            "world_ID_world_2_1.sub"
+            "world_ID_world_2_2.sub"
+        }
 
-################################################################################
-#!/usr/bin/env python
+found_submit_files = set()
 
-# from Pegasus.DAX3 import *
-# import sys
-# import os
+for f in (submit_dir / "00/00").iterdir():
+    if f.name.endswith(".sub"):
+        found_submit_files.add(f.name)
 
-# # Create a abstract dag
-# dax = ADAG("022-data-reuse-regexrc")
+if found_submit_files.isdisjoint(should_have_been_removed):
+    print("Test SUCCESS. Submit files for jobs for which data already exists were removed")
+else:
+    print("Test FAILURE. Submit files for jobs for which data already exists were NOT removed")
+    sys.exit(1)
 
-# # Add executables to the DAX-level replica catalog
-# e_hello = Executable(namespace="hello_world", name="hello", version="1.0", \
-#                      os="linux", osrelease="rhel", osversion="7", arch="x86_64",  installed=False)
-# e_hello.addPFN(PFN("file://" + os.getcwd() + "/hello.sh", "local"))
-# dax.addExecutable(e_hello)
-	
-# e_world = Executable(namespace="hello_world", name="world", version="1.0", \
-#                      os="linux",  osrelease="rhel", osversion="7", arch="x86_64", installed=False)
-# e_world.addPFN(PFN("file://" + os.getcwd() + "/world.sh", "local"))
-# dax.addExecutable(e_world)
-
-# for i in range(3):	
-# 	# Add the hello job
-# 	hello = Job(namespace="hello_world", name="hello", version="1.0")
-# 	a=File ("f.a")
-# 	aa=File ("f.x")
-# 	a2=File ("fax")
-# 	a3=File ('dir/file.x')
-# 	a4=File ('dir/file.y')
-# 	b = File("f.b" + str(i))
-# 	hello.addArguments (b)
-# 	hello.uses(a, link=Link.INPUT)
-# 	hello.uses(aa, link=Link.INPUT)
-# 	hello.uses(a2, link=Link.INPUT)
-# 	hello.uses(a3, link=Link.INPUT)
-# 	hello.uses(a4, link=Link.INPUT)
-
-# 	hello.uses(b, link=Link.OUTPUT, transfer=False)
-# 	dax.addJob(hello)
-
-# 	for j in range(3):
-# 		# Add the world job (depends on the hello job)
-# 		world = Job(namespace="hello_world", name="world", version="1.0")
-# 		c = File("f.c" + str(i) + str(j))
-# 		world.uses(b, link=Link.INPUT)
-# 		world.uses(c, link=Link.OUTPUT)
-# 		world.addArguments (c)
-# 		dax.addJob(world)
-
-# 		# Add control-flow dependencies
-# 		dax.addDependency(Dependency(parent=hello, child=world))
-
-# # Write the DAX to stdout
-# dax.writeXML(sys.stdout)
-
-
-
+# --- Run Workflow ------------------------------------------------------------
+wf.run()
