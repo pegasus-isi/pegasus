@@ -1,106 +1,18 @@
 #!/bin/bash
 
 set -e
-#set -v
 
-if [ X${testdir} = "X" ]; then
-    testdir=`dirname  $0`
-    export testdir
-fi
-
-TOPDIR=`pwd`
-
-# generate the input file
-echo "This is sample input to KEG" > f.a
-
-#generate the final output file
-echo "This is preexisitng output file for the workflow" > f.d
-
-cat > rc.data <<EOF
-f.a file://$TOPDIR/f.a pool="local"
-f.d file://$TOPDIR/f.d pool="local"
-EOF
-
-
-# output directory
-mkdir -p outputs
-
-# build the dax generator
+echo "Running blackdiamond.py"
 export PYTHONPATH=`pegasus-config --python`
-$testdir/blackdiamond.py /usr > blackdiamond.dax
+python3 blackdiamond.py
 
-# create the site catalog
-cat > sites.yml <<EOF
-pegasus: "5.0"
-sites:
- -
-  name: "isi-condorc"
-  arch: "x86"
-  os.type: "linux"
-  grids:
-   -
-    type: "condor"
-    contact: "ccg-testing1.isi.edu"
-    scheduler: "condor"
-    jobtype: "auxillary"
-   -
-    type: "condor"
-    contact: "ccg-testing1.isi.edu"
-    scheduler: "condor"
-    jobtype: "compute"
-  profiles:
-    condor:
-      universe: "vanilla"
-    pegasus:
-      clusters.num: "1"
-      style: "condorc"
- -
-  name: "condorpool"
-  arch: "x86_64"
-  os.type: "linux"
-  profiles:
-    condor:
-      universe: "vanilla"
-    pegasus:
-      style: "condor"
- -
-  name: "local"
-  arch: "x86_64"
-  os.type: "linux"
-  directories:
-   -
-    type: "sharedStorage"
-    path: "$TOPDIR/outputs"
-    fileServers:
-     -
-      operation: "all"
-      url: "file://$TOPDIR/outputs"
-   -
-    type: "sharedScratch"
-    path: "$TOPDIR/work"
-    fileServers:
-     -
-      operation: "all"
-      url: "file://$TOPDIR/work"
-EOF
+SUBMIT_DIR=`cat submit_dir`
 
-# plan and submit the  workflow
-pegasus-plan \
-    --conf $testdir/pegasusrc \
-    --sites condorpool \
-    --output-sites local \
-    --dir work \
-    --cluster horizontal \
-    blackdiamond.dax  | tee plan.out
-
-
-WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
-
-echo "WORK_DIR is $WORK_DIR"
+echo "SUBMIT_DIR is $SUBMIT_DIR"
 
 # check in the submit directory to make sure that only stage_out and register jobs are generated
 set +e
-ls $WORK_DIR/*sub | grep -v register | grep -v condor.sub | grep -v stage_out
+ls $SUBMIT_DIR/*sub | grep -v register | grep -v condor.sub | grep -v stage_out
 EC=$?
 set -e
 
@@ -110,4 +22,4 @@ if [ $EC -eq 0 ]; then
 fi
 
 #submit the workflow
-pegasus-run $WORK_DIR
+pegasus-run $SUBMIT_DIR
