@@ -356,7 +356,7 @@ def parse_yamlfile(fname, include_files):
                 if link_type == "input":
                     j.parents.append(f)
                     f.children.append(j)
-                elif link_type == "output":
+                elif link_type == "output" or link_type == "checkpoint":
                     j.children.append(f)
                     f.parents.append(j)
                 elif link_type == "inout":

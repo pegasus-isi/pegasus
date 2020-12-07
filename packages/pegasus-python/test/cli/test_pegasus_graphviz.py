@@ -16,9 +16,13 @@ def diamond_wf_file():
     fc1 = File("f.c1")
     fc2 = File("f.c2")
     fd = File("f.d")
+    preprocess_checkpoint = File("preprocess_checkpoint.pkl")
 
     Workflow("blackdiamond").add_jobs(
-        Job("preprocess").add_inputs(fa).add_outputs(fb1, fb2),
+        Job("preprocess")
+        .add_inputs(fa)
+        .add_outputs(fb1, fb2)
+        .add_checkpoint(preprocess_checkpoint),
         Job("findrage").add_inputs(fb1).add_outputs(fc1),
         Job("findrage").add_inputs(fb2).add_outputs(fc2),
         Job("analyze").add_inputs(fc1, fc2).add_outputs(fd),
@@ -114,7 +118,9 @@ class TestEmitDot:
             '    "f.c1" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.c1"]\n'
             '    "f.c2" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.c2"]\n'
             '    "f.d" [shape=rect,color="#000000",fillcolor="#ffed6f",label="f.d"]\n'
+            '    "preprocess_checkpoint.pkl" [shape=rect,color="#000000",fillcolor="#ffed6f",label="preprocess_checkpoint.pkl"]\n'
             '    "ID0000001" -> "f.b2" [color="#000000"]\n'
+            '    "ID0000001" -> "preprocess_checkpoint.pkl" [color="#000000"]\n'
             '    "ID0000001" -> "f.b1" [color="#000000"]\n'
             '    "ID0000002" -> "f.c1" [color="#000000"]\n'
             '    "ID0000003" -> "f.c2" [color="#000000"]\n'
