@@ -303,11 +303,11 @@ The workflow script used with the trigger should be as follows:
         sys.exit(1)
 
 
-Usage of the ``pegasus-em trigger`` command is as follows:
+Usage of the ``pegasus-em file-pattern-trigger`` command is as follows:
 
 ::
 
-    pegasus-em trigger ENSEMBLE \
+    pegasus-em file-pattern-trigger ENSEMBLE \
                         TRIGGER \
                         INTERVAL \
                         WORKFLOW_SCRIPT \
