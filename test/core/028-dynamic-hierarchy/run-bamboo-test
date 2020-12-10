@@ -2,7 +2,12 @@
 
 set -e
 
-echo "Running workflow.py"
 export PYTHONPATH=`pegasus-config --python`
-python3 workflow.py
 
+echo "Generating sleep workflow"
+# writes the file "inner_sleep_workflow.yml" which is referenced in
+# workflow.py 
+python3 generate_inner_sleep_workflow.py
+
+echo "Running workflow.py"
+python3 workflow.py

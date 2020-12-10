@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import logging
 
+from pathlib import Path
+
 from Pegasus.api import *
 
 logging.basicConfig(level=logging.DEBUG)
@@ -30,8 +32,8 @@ local_site.add_directories(
 # CCG site
 ccg_site = Site(name="CCG", arch=Arch.X86_64, os_type=OS.LINUX)
 ccg_site.add_grids(
-    Grid(grid_type=Grid.GT5, contact="obelix.isi.edu/jobmanager-fork", scheduler=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
-    Grid(grid_type=Grid.GT5, contact="obelix.isi.edu/jobmanager-condor", scheduler=Scheduler.CONDOR, job_type=SupportedJobs.COMPUTE),
+    Grid(grid_type=Grid.GT5, contact="obelix.isi.edu/jobmanager-fork", scheduler_type=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
+    Grid(grid_type=Grid.GT5, contact="obelix.isi.edu/jobmanager-condor", scheduler_type=Scheduler.CONDOR, job_type=SupportedJobs.COMPUTE),
 )
 ccg_site.add_directories(
     Directory(Directory.SHARED_SCRATCH, "/lizard/scratch-90-days/CCG/scratch")
@@ -46,7 +48,7 @@ sc.write()
 
 # --- Transformations ----------------------------------------------------------
 # create transformation catalog for the outer level workflow
-sleep_ = Transformation(
+sleep = Transformation(
                 name="sleep",
                 site="local",
                 pfn="/bin/sleep",
@@ -59,14 +61,13 @@ sleep_ = Transformation(
 
 generate_diamond_wf = Transformation(
                         name="generate_inner_diamond_workflow.py",
-                        namespace="blackdiamond",
                         site="local",
                         pfn=TOP_DIR / "generate_inner_diamond_workflow.py",
                         is_stageable=True,
                     )
 
 tc = TransformationCatalog()
-tc.add_transformations(sleep_lvl1, sleep_lvl2, generate_diamond_wf)
+tc.add_transformations(sleep, generate_diamond_wf)
 tc.write()
 
 # create transformation catalog for the inner diamond workflow
@@ -105,7 +106,7 @@ analyze = Transformation(
 
 inner_diamond_workflow_tc = TransformationCatalog()
 inner_diamond_workflow_tc.add_transformations(preprocess, findrange, analyze)
-inner_diamond_workflow_tc.write()
+inner_diamond_workflow_tc.write("inner_diamond_workflow_tc.yml")
 
 # --- Replicas -----------------------------------------------------------------
 with open("f.a", "w") as f:
@@ -119,7 +120,8 @@ inner_diamond_workflow_rc.write("inner_diamond_workflow_rc.yml")
 # replica catalog for the outer workflow
 rc = ReplicaCatalog()
 rc.add_replica(site="local", lfn="pegasus.properties", pfn=TOP_DIR / "pegasus.properties")
-rc.add_replica(site="local", lfn="inner_diamond_workflow_rc.yml", pfn = TOP_DIR / "inner_diamond_workflow_rc.yml")
+rc.add_replica(site="local", lfn="inner_diamond_workflow_rc.yml", pfn =TOP_DIR / "inner_diamond_workflow_rc.yml")
+rc.add_replica(site="local", lfn="inner_diamond_workflow_tc.yml", pfn=TOP_DIR / "inner_diamond_workflow_tc.yml")
 rc.add_replica(site="local", lfn="sites.yml", pfn=TOP_DIR / "sites.yml")
 rc.add_replica(site="local", lfn="inner_sleep_workflow.yml", pfn=TOP_DIR / "inner_sleep_workflow.yml")
 rc.write()
@@ -150,7 +152,7 @@ diamond_wf_job = SubWorkflow(file=diamond_wf_file, is_planned=False)\
                     )
 
 sleep_wf_file = File("inner_sleep_workflow.yml")
-sleep_wf_job = SubWorkflow(file=sleep_wf_file)\
+sleep_wf_job = SubWorkflow(file=sleep_wf_file, is_planned=False)\
                 .add_args(
                     "--output-sites",
                     "local",
@@ -159,15 +161,16 @@ sleep_wf_job = SubWorkflow(file=sleep_wf_file)\
 
 sleep_job = Job(sleep).add_args(5)
 
-wf.add_jobs(generate_diamond_wf, diamond_wf_job, sleep_wf_job, sleep)
-wf.add_dependency(generate_diamond_wf, children=[diamond_wf_job])
+wf.add_jobs(generate_diamond_wf_job, diamond_wf_job, sleep_wf_job, sleep_job)
+wf.add_dependency(generate_diamond_wf_job, children=[diamond_wf_job])
 wf.add_dependency(diamond_wf_job, children=[sleep_wf_job])
-wf.add_dependency(sleep_wf_job, children=[sleep])
+wf.add_dependency(sleep_wf_job, children=[sleep_job])
 
 wf.plan(
     sites=["local", "CCG"],
     output_sites=["local"],
     dir="work",
+    verbose=3,
     submit=True
 )
 
