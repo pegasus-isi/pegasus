@@ -10,12 +10,18 @@ logging.basicConfig(level=logging.DEBUG)
 TOP_DIR = Path(__file__).resolve().parent
 
 # --- Properties ---------------------------------------------------------------
-# properties that will be used by both the outer workflow and inner diamond workflow
+# properties that will be used by both the outer workflow  and inner diamond workflow
 props = Properties()
 props["pegasus.dir.storage.deep"] = "false"
 props["pegasus.condor.logs.symlink"] = "false"
 props["pegasus.data.configuration"] = "condorio"
+props["pegasus.mode"] = "development"
 props.write()
+
+# properties that will be used by inner diamond workflow
+props["pegasus.catalog.transformation.file"] = "inner_diamond_workflow_tc.yml"
+props["pegasus.catalog.replica.file"] = "inner_diamond_workflow_rc.yml"
+props.write("inner_diamond_workflow.pegasus.properties")
 
 # --- Sites --------------------------------------------------------------------
 sc = SiteCatalog()
@@ -41,7 +47,7 @@ ccg_site.add_directories(
     Directory(Directory.LOCAL_STORAGE, "/lizard/scratch-90-days/CCG/outputs")
         .add_file_servers(FileServer("gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/outputs", Operation.ALL))
 )
-ccg_site.add_env(PEGASUS_HOME="/usr")
+ccg_site.add_env(PEGASUS_HOME="/usr/bin")
 
 sc.add_sites(local_site, ccg_site)
 sc.write()
@@ -64,6 +70,10 @@ generate_diamond_wf = Transformation(
                         site="local",
                         pfn=TOP_DIR / "generate_inner_diamond_workflow.py",
                         is_stageable=True,
+                        arch=Arch.X86_64,
+                        os_type=OS.LINUX,
+                        os_release="rhel",
+                        os_version="7"
                     )
 
 tc = TransformationCatalog()
@@ -119,7 +129,7 @@ inner_diamond_workflow_rc.write("inner_diamond_workflow_rc.yml")
 
 # replica catalog for the outer workflow
 rc = ReplicaCatalog()
-rc.add_replica(site="local", lfn="pegasus.properties", pfn=TOP_DIR / "pegasus.properties")
+rc.add_replica(site="local", lfn="inner_diamond_workflow.pegasus.properties", pfn=TOP_DIR / "inner_diamond_workflow.pegasus.properties")
 rc.add_replica(site="local", lfn="inner_diamond_workflow_rc.yml", pfn =TOP_DIR / "inner_diamond_workflow_rc.yml")
 rc.add_replica(site="local", lfn="inner_diamond_workflow_tc.yml", pfn=TOP_DIR / "inner_diamond_workflow_tc.yml")
 rc.add_replica(site="local", lfn="sites.yml", pfn=TOP_DIR / "sites.yml")
@@ -131,14 +141,14 @@ wf = Workflow("hierarchical-workflow")
 
 # job to generate the diamond workflow
 diamond_wf_file = File("inner_diamond_workflow.yml")
-generate_diamond_wf_job = Job(generate_diamond_wf)\
+generate_diamond_wf_job = Job(generate_diamond_wf, _id="diamond_workflow_gen")\
                             .add_outputs(diamond_wf_file)
 
 # job to plan and run the diamond workflow
-diamond_wf_job = SubWorkflow(file=diamond_wf_file, is_planned=False)\
+diamond_wf_job = SubWorkflow(file=diamond_wf_file, is_planned=False, _id="diamond_subworkflow")\
                     .add_args(
                         "--conf",
-                        "pegasus.properties",
+                        "inner_diamond_workflow.pegasus.properties",
                         "--output-sites",
                         "local",
                         "-vvv",
@@ -146,20 +156,21 @@ diamond_wf_job = SubWorkflow(file=diamond_wf_file, is_planned=False)\
                         "inner"
                     )\
                     .add_inputs(
-                        File("pegasus.properties"),
+                        File("inner_diamond_workflow.pegasus.properties"),
                         File("inner_diamond_workflow_rc.yml"),
+                        File("inner_diamond_workflow_tc.yml"),
                         File("sites.yml"),
                     )
 
 sleep_wf_file = File("inner_sleep_workflow.yml")
-sleep_wf_job = SubWorkflow(file=sleep_wf_file, is_planned=False)\
+sleep_wf_job = SubWorkflow(file=sleep_wf_file, is_planned=False, _id="sleep_subworkflow")\
                 .add_args(
                     "--output-sites",
                     "local",
                     "-vvv"
                 )
 
-sleep_job = Job(sleep).add_args(5)
+sleep_job = Job(sleep, _id="sleep_job").add_args(5)
 
 wf.add_jobs(generate_diamond_wf_job, diamond_wf_job, sleep_wf_job, sleep_job)
 wf.add_dependency(generate_diamond_wf_job, children=[diamond_wf_job])

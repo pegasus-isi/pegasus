@@ -1,48 +1,6 @@
 #!/usr/bin/env python3
 from Pegasus.api import *
 
-rc = ReplicaCatalog()
-rc.add_replica(site="local", lfn="f.a", pfn=Path(args.submit_node_working_dir) / "f.a")
-rc.write()
-
-# --- Transformations ----------------------------------------------------------
-preprocess = Transformation(
-                name="preprocess",
-                site="local",
-                pfn="/usr/bin/pegasus-keg",
-                is_stageable=True,
-                arch=Arch.X86_64,
-                os_type=OS.LINUX,
-                os_release="rhel",
-                os_version="7"
-            )
-
-findrange = Transformation(
-                name="findrange",
-                site="local",
-                pfn="/usr/bin/pegasus-keg",
-                is_stageable=True,
-                arch=Arch.X86_64,
-                os_type=OS.LINUX,
-                os_release="rhel",
-                os_version="7"
-            )
-
-analyze = Transformation(
-                name="analyze",
-                site="local",
-                pfn="/usr/bin/pegasus-keg",
-                is_stageable=True,
-                arch=Arch.X86_64,
-                os_type=OS.LINUX,
-                os_release="rhel",
-                os_version="7"
-            )
-
-tc = TransformationCatalog()
-tc.add_transformations(preprocess, findrange, analyze)
-tc.write()
-
 # --- Workflow -----------------------------------------------------------------
 fa = File("f.a")
 fb1 = File("f.b1")
@@ -80,4 +38,4 @@ wf.add_jobs(
     analyze_job
 )
 
-wf.write(file="inner_diamond_worklow.yml")
+wf.write(file="inner_diamond_workflow.yml")
