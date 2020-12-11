@@ -6,7 +6,6 @@ from pathlib import Path
 from Pegasus.api import *
 
 logging.basicConfig(level=logging.DEBUG)
-
 TOP_DIR = Path(__file__).resolve().parent
 
 # --- Properties ---------------------------------------------------------------
@@ -67,8 +66,6 @@ sleep = Transformation(
                 is_stageable=False,
                 arch=Arch.X86_64,
                 os_type=OS.LINUX,
-                os_release="rhel",
-                os_version="7"
             )
 
 generate_diamond_wf = Transformation(
