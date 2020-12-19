@@ -43,7 +43,7 @@ condorpool_site.add_condor_profile(universe="vanilla")
 condorpool_site.add_pegasus_profile(style="condor")
 
 # cartman-data
-cartman_data_site = Site(name="cartman-data", arch=Arch.X86_64, os=OS.LINUX)
+cartman_data_site = Site(name="cartman-data", arch=Arch.X86_64, os_type=OS.LINUX)
 cartman_data_site.add_directories(
     Directory(directory_type=Directory.SHARED_SCRATCH, path=TOP_DIR / "staging-site/scratch")
         .add_file_servers(FileServer(url="gsiftp://bamboo.isi.edu/{}".format(TOP_DIR / "staging-site/scratch"), operation_type=Operation.ALL))
@@ -140,7 +140,7 @@ wf.plan(
     dir="work",
     sites=["condorpool"],
     output_sites=["local"],
-    staging_sites={"condorpool":"cartman-data"}
+    staging_sites={"condorpool":"cartman-data"},
     cleanup="leaf",
     random_dir=True,
     force=True
