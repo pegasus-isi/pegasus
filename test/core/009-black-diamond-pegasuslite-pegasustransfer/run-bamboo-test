@@ -1,75 +1,13 @@
 #!/bin/bash
-
 set -e
-#set -v
 
-
-if [ X${testdir} = "X" ]; then
-    testdir=`dirname  $0`
-    export testdir
-fi
-
-TOPDIR=`pwd`
-
-# generate the input file
-echo "This is sample input to KEG" > f.a
-
-# output directory
-mkdir -p outputs
-mkdir -p staging-site
-
-# build the dax generator
+echo "Running blackdiamond.py"
 export PYTHONPATH=`pegasus-config --python`
-$testdir/blackdiamond.py /usr > blackdiamond.dax
+python3 blackdiamond.py
 
-# create the site catalog
-cat > sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-<site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <directory  path="$TOPDIR/outputs" type="shared-storage" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/outputs">
-                </file-server>
-        </directory>
-        <directory  path="$TOPDIR/work" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/work">
-                </file-server>
-        </directory>
-	<profile namespace="pegasus" key="pegasus_lite_env_source">${TOPDIR}/job-setup.sh</profile> 
-</site>
-<site handle="condorpool" arch="x86_64" os="LINUX" >
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="pegasus" key="style" >condor</profile>
-</site>
-<site  handle="cartman-data" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
-        <directory  path="${TOPDIR}/staging-site/scratch" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch">
-                </file-server>
-        </directory>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu">
-        </replica-catalog>
-</site>
-</sitecatalog>
-
-EOF
-
-# plan and submit the  workflow
-pegasus-plan \
-    --conf $testdir/pegasusrc \
-    --sites condorpool \
-    --staging-site cartman-data \
-    --output-sites local \
-    --dir work \
-    --cleanup leaf \
-    --submit \
-    --randomdir \
-    blackdiamond.dax \
-    | tee plan.out
-
-WORK_DIR=`cat plan.out | grep pegasus-remove | sed -E 's/.*pegasus-remove[ ]+(.*)[ ]+/\1/'`
-# account for deep submit directory structure
-cd $WORK_DIR/00/00
+SUBMIT_DIR=`cat submit_dir` 
+# account for deep submit directory structure                                                                                                                                                                                              
+cd $SUBMIT_DIR/00/00
 
 # PM-1192 make sure the env variable PEGASUS_LITE_ENV_SOURCE is set
 for sub in ` ls *sub | grep -E "analyze|findrange|preprocess"`; do
@@ -80,6 +18,8 @@ for sub in ` ls *sub | grep -E "analyze|findrange|preprocess"`; do
         exit 1
     fi
 done
+
+pegasus-run $SUBMIT_DIR
 
 
 

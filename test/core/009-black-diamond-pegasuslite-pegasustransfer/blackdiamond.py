@@ -1,79 +1,153 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import logging
 
-from Pegasus.DAX3 import *
-import sys
-import os
+from pathlib import Path
 
-if len(sys.argv) != 2:
-	print "Usage: %s PEGASUS_HOME" % (sys.argv[0])
-	sys.exit(1)
+from Pegasus.api import *
 
-# Create a abstract dag
-diamond = ADAG("diamond")
+logging.basicConfig(level=logging.DEBUG)
 
-# Add input file to the DAX-level replica catalog
-a = File("f.a")
-a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
-diamond.addFile(a)
-	
-# Add executables to the DAX-level replica catalog
-# In this case the binary is pegasus-keg, which is shipped with Pegasus, so we use
-# the remote PEGASUS_HOME to build the path.
-e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
-e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
-diamond.addExecutable(e_preprocess)
-	
-e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=False)
-e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
-diamond.addExecutable(e_findrange)
-	
-e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=False)
-e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
-diamond.addExecutable(e_analyze)
+# --- Dir Setup -----------------------------------------------------------
+TOP_DIR = Path.cwd().resolve()
+Path.mkdir(TOP_DIR / "outputs", exist_ok=True)
+Path.mkdir(TOP_DIR / "staging-site", exist_ok=True)
 
-# Add a preprocess job
-preprocess = Job(namespace="diamond", name="preprocess", version="4.0")
-b1 = File("f.b1")
-b2 = File("f.b2")
-preprocess.addArguments("-a preprocess","-T5","-i",a,"-o",b1,b2)
-preprocess.uses(a, link=Link.INPUT)
-preprocess.uses(b1, link=Link.OUTPUT)
-preprocess.uses(b2, link=Link.OUTPUT)
-diamond.addJob(preprocess)
+# --- Configuration ------------------------------------------------------------
+props = Properties()
+props["pegasus.dir.useTimestamp"] = "true"
+props["pegasus.dir.storage.deep"] = "false"
+props["pegasus.condor.logs.symlink"] = "false"
+props["pegasus.data.configuration"] = "nonsharedfs"
 
-# Add left Findrange job
-frl = Job(namespace="diamond", name="findrange", version="4.0")
-c1 = File("f.c1")
-frl.addArguments("-a findrange","-T5","-i",b1,"-o",c1)
-frl.uses(b1, link=Link.INPUT)
-frl.uses(c1, link=Link.OUTPUT)
-diamond.addJob(frl)
+#PM-1192 always print out the job env
+props["pegasus.gridstart.arguments"] = "-f"
 
-# Add right Findrange job
-frr = Job(namespace="diamond", name="findrange", version="4.0")
-c2 = File("f.c2")
-frr.addArguments("-a findrange","-T5","-i",b2,"-o",c2)
-frr.uses(b2, link=Link.INPUT)
-frr.uses(c2, link=Link.OUTPUT)
-diamond.addJob(frr)
+props.write()
 
-# Add Analyze job
-analyze = Job(namespace="diamond", name="analyze", version="4.0")
-d = File("f.d")
-analyze.addArguments("-a analyze","-T5","-i",c1,c2,"-o",d)
-analyze.uses(c1, link=Link.INPUT)
-analyze.uses(c2, link=Link.INPUT)
-analyze.uses(d, link=Link.OUTPUT, register=True)
-diamond.addJob(analyze)
+# --- Sites --------------------------------------------------------------------
+sc = SiteCatalog()
 
-# Add control-flow dependencies
-diamond.addDependency(Dependency(parent=preprocess, child=frl))
-diamond.addDependency(Dependency(parent=preprocess, child=frr))
-diamond.addDependency(Dependency(parent=frl, child=analyze))
-diamond.addDependency(Dependency(parent=frr, child=analyze))
+# local
+local_site = Site(name="local", arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
+local_site.add_directories(
+    Directory(directory_type=Directory.SHARED_STORAGE, path=TOP_DIR / "outputs")
+        .add_file_servers(FileServer(url="file://" + str(TOP_DIR / "outputs"), operation_type=Operation.ALL)),
+    Directory(directory_type=Directory.SHARED_SCRATCH, path=TOP_DIR / "work")
+        .add_file_servers(FileServer(url="file://" + str(TOP_DIR / "work"), operation_type=Operation.ALL))
+)
+local_site.add_pegasus_profile(pegasus_lite_env_source=TOP_DIR / "job-setup.sh")
 
-# Write the DAX to stdout
-diamond.writeXML(sys.stdout)
+# condorpool
+condorpool_site = Site(name="condorpool", os_type=OS.LINUX)
+condorpool_site.add_condor_profile(universe="vanilla")
+condorpool_site.add_pegasus_profile(style="condor")
+
+# cartman-data
+cartman_data_site = Site(name="cartman-data", arch=Arch.X86_64, os=OS.LINUX)
+cartman_data_site.add_directories(
+    Directory(directory_type=Directory.SHARED_SCRATCH, path=TOP_DIR / "staging-site/scratch")
+        .add_file_servers(FileServer(url="gsiftp://bamboo.isi.edu/{}".format(TOP_DIR / "staging-site/scratch"), operation_type=Operation.ALL))
+)
+
+sc.add_sites(local_site, condorpool_site, cartman_data_site)
+sc.write()
+
+# --- Replicas -----------------------------------------------------------------
+with open("f.a", "w") as f:
+    f.write("This is sample input to KEG\n")
+
+rc = ReplicaCatalog()
+rc.add_replica("local", "f.a", TOP_DIR / "f.a")
+rc.write()
+
+# --- Transformations ----------------------------------------------------------
+preprocess = Transformation(
+                name="preprocess", 
+                namespace="diamond", 
+                version="4.0",
+                site="local",
+                pfn="/usr/bin/pegasus-keg",
+                is_stageable=True,
+                arch=Arch.X86_64,
+                os_type=OS.LINUX
+            )
+
+findrange = Transformation(
+                name="findrange", 
+                namespace="diamond", 
+                version="4.0",
+                site="local",
+                pfn="/usr/bin/pegasus-keg",
+                is_stageable=True,
+                arch=Arch.X86_64,
+                os_type=OS.LINUX
+            )
+
+analyze = Transformation(
+                name="analyze", 
+                namespace="diamond", 
+                version="4.0",
+                site="local",
+                pfn="/usr/bin/pegasus-keg",
+                is_stageable=True,
+                arch=Arch.X86_64,
+                os_type=OS.LINUX
+            )
+
+tc = TransformationCatalog()
+tc.add_transformations(preprocess, findrange, analyze)
+tc.write()
+
+# --- Workflow -----------------------------------------------------------------
+
+fa = File("f.a")
+fb1 = File("f.b1")
+fb2 = File("f.b2")
+fc1 = File("f.c1")
+fc2 = File("f.c2")
+fd = File("f.d")
+
+wf = Workflow("diamond")
+
+preprocess_job = Job(preprocess)\
+                    .add_args("-a", "preprocess", "-T", "10", "-i", fa, "-o", fb1, fb2)\
+                    .add_inputs(fa)\
+                    .add_outputs(fb1, fb2)
+
+findrange_1_job = Job(findrange)\
+                    .add_args("-a", "findrange", "-T", "5", "-i", fb1, "-o", fc1)\
+                    .add_inputs(fb1)\
+                    .add_outputs(fc1)
+
+findrange_2_job = Job(findrange)\
+                    .add_args("-a", "findrange", "-T", "5", "-i", fb2, "-o", fc2)\
+                    .add_inputs(fb2)\
+                    .add_outputs(fc2)
+
+analyze_job = Job(analyze)\
+                .add_args("-a", "analyze", "-T", "10", "-i", fc1, fc2, "-o", fd)\
+                .add_inputs(fc1, fc2)\
+                .add_outputs(fd)
+
+wf.add_jobs(
+    preprocess_job,
+    findrange_1_job,
+    findrange_2_job,
+    analyze_job
+)
+
+wf.plan(
+    dir="work",
+    sites=["condorpool"],
+    output_sites=["local"],
+    staging_sites={"condorpool":"cartman-data"}
+    cleanup="leaf",
+    random_dir=True,
+    force=True
+)
+
+with open("submit_dir", "w") as f:
+    f.write(str(wf.braindump.submit_dir))
 
 
 
