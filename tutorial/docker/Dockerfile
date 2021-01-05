@@ -5,7 +5,7 @@ RUN useradd --gid 808 --uid 550 --create-home --password '$6$ouJkMasm5X8E4Aye$QT
 
 RUN dnf -y update && \
     dnf -y install 'dnf-command(config-manager)' && \
-    dnf -y config-manager --set-enabled PowerTools && \
+    dnf -y config-manager --set-enabled powertools && \
     dnf -y config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo && \
     dnf -y install epel-release
 
