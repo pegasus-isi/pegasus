@@ -993,14 +993,22 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !customTask
-                  pluginKey: com.atlassian.bamboo.plugins.ant:task.builder.ant
-                  description: Build Documentation
-                  taskConfig:
-                    label: Ant
-                    target: dist-doc
-                    buildJdk: JDK
-                    workingSubDirectory: pegasus-source
+                - !script
+                  description: Doc Build
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      TAG=${bamboo_TAG_CENTOS_7}
+
+                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+
+                      /opt/docker/docker-bamboo-wrapper run \
+                      --rm \
+                      --env "LANG=en_US.utf8" \
+                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
+                      --entrypoint ant \
+                      pegasus/pegasus:${TAG} \
+                      dist-doc
               artifactDefinitions:
                 - name: pegasus-doc
                   copyPattern: "pegasus-doc-*.tar.gz"
@@ -1009,7 +1017,7 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: docbuild
+                - capabilityKey: system.docker.executable
                   matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
