@@ -354,6 +354,7 @@ class TestProfileMixin:
                 container_arguments="--shm-size",
                 label="nodeLabel",
                 pegasus_lite_env_source="/path",
+                SSH_PRIVATE_KEY="/path",
             )
         ) == id(obj)
 
@@ -402,6 +403,7 @@ class TestProfileMixin:
                 "container.arguments": "--shm-size",
                 "label": "nodeLabel",
                 "pegasus_lite_env_source": "/path",
+                "SSH_PRIVATE_KEY": "/path",
             }
         }
 
