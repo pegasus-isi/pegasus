@@ -31,13 +31,13 @@ parameters:
     in: query
     required: false
     type: string
-    description: "A query to filter out records. See: `Querying <#querying>`__"
+    description: "A query to filter out records."
   order:
     name: order
     in: query
     required: false
     type: string
-    description: "Result sorting criteria. See: `Ordering <#ordering>`__"
+    description: "Result sorting criteria."
   start-index:
     name: start-index
     in: query
@@ -45,24 +45,18 @@ parameters:
     minimum: 1
     type: integer
     description: Return results starting from record <start-index> (0 indexed)
-    x-nrgr-extension:
-      include: false
   max-results:
     name: max-results
     in: query
     minimum: 0
     description: Max no. of records to return
     type: integer
-    x-nrgr-extension:
-      include: false
   pretty-print:
     name: pretty-print
     in: query
     default: False
     type: boolean
     description: Enable or disable pretty printing of the output
-    x-nrgr-extension:
-      include: false
 
   em-name:
     name: em-name
@@ -354,8 +348,7 @@ paths:
               plan_command:
                 type: string
                 description: Command used to invoke workflow plan script
-                examples:
-                  - "/home/tanaka/workflow.py arg1 arg2"
+                example: "/home/tanaka/workflow.py arg1 arg2"
             required:
               - name
               - priority
@@ -564,6 +557,7 @@ paths:
     parameters:
       - $ref: "#/parameters/em-name"
       - $ref: "#/parameters/wf-name"
+      - $ref: "#/parameters/t-name"
       - $ref: "#/parameters/pretty-print"
     get:
       operationId: get-ensemble-trigger
@@ -619,40 +613,7 @@ paths:
           in: body
           description: Cron trigger parameters
           schema:
-            type: object
-            properties:
-              name:
-                type: string
-              workflow_script:
-                type: string
-                description: |
-                  An absolute path to the workflow planning script. This script
-                  should invoke pegasus-plan directly or through the Python API.
-                  The "submit" flag in pegasus-plan cannot be used here.
-                examples:
-                  - "/home/tanaka/workflow.py"
-              workflow_args:
-                type: array
-                items:
-                  anyOf:
-                    - type: number
-                    - type: string
-                minItems: 0
-              interval:
-                type: integer
-                minimum: 1
-                description: time in seconds
-              timeout:
-                type: integer
-                minimum: 0
-                description: time in seconds
-              type:
-                const: CRON
-            required:
-              - name
-              - workflow_script
-              - interval
-              - type
+            $ref: "#/definitions/CronTrigger"
       responses:
         "200":
           $ref: "#/responses/trigger"
@@ -682,53 +643,7 @@ paths:
           in: body
           description: File pattern trigger parameters
           schema:
-            type: object
-            properties:
-              name:
-                type: string
-              workflow_script:
-                type: string
-                description: |
-                  An absolute path to the workflow planning script. This script
-                  should invoke pegasus-plan directly or through the Python API.
-                  The "submit" flag in pegasus-plan cannot be used here.
-                examples:
-                  - "/home/tanaka/workflow.py"
-              workflow_args:
-                type: array
-                items:
-                  anyOf:
-                    - type: number
-                    - type: string
-                minItems: 0
-              interval:
-                type: integer
-                minimum: 1
-                description: time in seconds
-              timeout:
-                type: integer
-                minimum: 0
-                description: time in seconds
-              file_patterns:
-                type: array
-                items:
-                  type: string
-                  description: |
-                    The file pattern must be an absolute path and should be acceptable
-                    by Python3.5+ glob.glob.
-                  examples:
-                    - "/home/tanaka/inputs/*.txt"
-                    - "/images/?.gif"
-                    - "/images/[0-9].*"
-
-              type:
-                const: FILE_PATTERN
-            required:
-              - name
-              - workflow_script
-              - interval
-              - file_patterns
-              - type
+            $ref: "#/definitions/FilePatternTrigger"
       responses:
         "200":
           $ref: "#/responses/trigger"
@@ -832,12 +747,15 @@ definitions:
 
   Trigger:
     type: object
+    discriminator: trigger_type
     properties:
       id:
         type: integer
       ensemble_id:
         type: integer
       name:
+        type: string
+      trigger_type:
         type: string
       state:
         type: string
@@ -851,17 +769,66 @@ definitions:
         properties:
           script:
             type: string
+            description: |
+              An absolute path to the workflow planning script. This script
+              should invoke pegasus-plan directly or through the Python API.
+              The "submit" flag in pegasus-plan cannot be used here.
+            example: "/home/tanaka/workflow.py"
           args:
             type: string
-      args:
-        type: object
-        patternProperties:
-          "[a-zA-Z1-9_]+":
-            oneOf:
-              - type: string
-              - type: integer
-      type:
-        type: string
-        enum:
-          - CRON
-          - FILE_PATTERN
+    required:
+      - trigger_type
+      - name
+      - state
+      - workflow
+
+  CronTrigger:
+    type: object
+    allOf:
+      - $ref: "#/definitions/Trigger"
+      - type: object
+        properties:
+          args:
+            type: object
+            properties:
+              interval:
+                type: integer
+                minimum: 1
+                description: |
+                  Duration of each interval, in seconds, that this trigger will
+                  submit a new workflow to the ensemble manager.
+              timeout:
+                type: integer
+                minimum: 0
+                description: Timeout duration, specified in seconds.
+
+  FilePatternTrigger:
+    type: object
+    allOf:
+      - $ref: "#/definitions/Trigger"
+      - type: object
+        properties:
+          args:
+            type: object
+            properties:
+              interval:
+                type: integer
+                minimum: 1
+                description: |
+                  Duration of each interval, in seconds, that this trigger will
+                  submit a new workflow to the ensemble manager.
+              timeout:
+                type: integer
+                minimum: 0
+                description: Timeout duration, specified in seconds.
+              file_patterns:
+                type: array
+                items:
+                  type: string
+                  description: |
+                    The file pattern must be an absolute path and should be acceptable
+                    by Python3.5+ glob.glob.
+                  example:
+                    - "/home/tanaka/inputs/*.txt"
+                    - "/images/?.gif"
+                    - "/images/[0-9].*"
