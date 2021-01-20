@@ -304,7 +304,6 @@ paths:
       description: |
         Returns a list of workflows belonging to the given ensemble.
       tags:
-        - Ensemble
         - Workflow
       parameters:
         - $ref: "#/parameters/query"
@@ -328,7 +327,6 @@ paths:
       description: |
         Create/submit a workflow as part of the given ensemble.
       tags:
-        - Ensemble
         - Workflow
       parameters:
         - name: em-workflow
@@ -377,7 +375,6 @@ paths:
       summary: Get a specific workflow from the given ensemble
       description: Returns the requested workflow belonging to the given ensemble.
       tags:
-        - Ensemble
         - Workflow
       responses:
         "200":
@@ -395,7 +392,6 @@ paths:
       summary: Update workflow priority
       description: Update workflow priority.
       tags:
-        - Ensemble
         - Workflow
       parameters:
         - name: wf-config
@@ -432,7 +428,6 @@ paths:
         will then proceed to abort the workflow. This operation is asynchronous
         and does not happen immediately.
       tags:
-        - Ensemble
         - Workflow
       responses:
         "204":
@@ -458,7 +453,6 @@ paths:
         then proceed to replan the workflow. This operation is asynchronous
         and does not happen immediately.
       tags:
-        - Ensemble
         - Workflow
       responses:
         "204":
@@ -484,7 +478,6 @@ paths:
         then proceed to rerun the workflow. This operation is asynchronous
         and does not happen immediately.
       tags:
-        - Ensemble
         - Workflow
       responses:
         "204":
@@ -508,7 +501,6 @@ paths:
       description: |
         Returns pegasus-analyzer output as a string for the given workflow.
       tags:
-        - Ensemble
         - Workflow
       responses:
         "200":
@@ -534,7 +526,6 @@ paths:
       summary: Get triggers belonging to the given ensemble
       description: Returns a list of triggers belonging to the given ensemble.
       tags:
-        - Ensemble
         - Trigger
       parameters:
         - $ref: "#/parameters/query"
@@ -564,7 +555,6 @@ paths:
       summary: Get a specific trigger belonging to a given ensemble
       description: Returns a specific trigger belonging to the given ensemble
       tags:
-        - Ensemble
         - Trigger
       responses:
         "200":
@@ -583,7 +573,6 @@ paths:
       description: |
         Deletes a specific trigger belonging to a given ensemble.
       tags:
-        - Ensemble
         - Trigger
       responses:
         "204":
@@ -606,7 +595,6 @@ paths:
       summary: Create a cron based trigger for the given ensemble
       description: Create a cron based trigger for the given ensemble
       tags:
-        - Ensemble
         - Trigger
       parameters:
         - name: cron-trigger
@@ -636,7 +624,6 @@ paths:
       description: |
         Create a file pattern based cron trigger for the given ensemble.
       tags:
-        - Ensemble
         - Trigger
       parameters:
         - name: file-pattern-trigger
