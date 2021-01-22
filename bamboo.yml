@@ -1466,7 +1466,7 @@ project:
                       mkdir -p $DOWNLOADS/rhel/7/x86_64
                       cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/7/x86_64/
                       mkdir -p $DOWNLOADS/rhel/8/x86_64
-                      cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/8/x86_64/
+                      cp $DOWNLOADS/pegasus-*el8.x86_64.rpm $DOWNLOADS/rhel/8/x86_64/
 
                       # standard filenames for RPMs - used by tutorial VM
                       cd pegasus/$VERSION
