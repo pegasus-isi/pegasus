@@ -2333,6 +2333,11 @@ public class Job extends Data implements GraphNodeContent {
                         j.addMetadata(this.createMetadata(node.get(key)));
                         break;
 
+                    case NODE_LABEL:
+                        // PM-1722 do nothing. only used by pegasus-graphviz
+                        // for visualization purposes
+                        break;
+
                     case PROFILES:
                         JsonNode profilesNode = node.get(key);
                         if (profilesNode != null) {
