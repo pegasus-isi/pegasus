@@ -19,12 +19,12 @@ def diamond_wf_file():
     preprocess_checkpoint = File("preprocess_checkpoint.pkl")
 
     Workflow("blackdiamond").add_jobs(
-        Job("preprocess")
+        Job("preprocess", node_label="level1")
         .add_inputs(fa)
         .add_outputs(fb1, fb2)
         .add_checkpoint(preprocess_checkpoint),
-        Job("findrage").add_inputs(fb1).add_outputs(fc1),
-        Job("findrage").add_inputs(fb2).add_outputs(fc2),
+        Job("findrange").add_inputs(fb1).add_outputs(fc1),
+        Job("findrange").add_inputs(fb2).add_outputs(fc2),
         Job("analyze").add_inputs(fc1, fc2).add_outputs(fd),
     ).write("workflow.yml")
 
@@ -38,11 +38,11 @@ def hierarchical_wf_file():
     analysis_out_file = File("analysis_output")
     h_wf = Workflow("hierarchical-wf")
 
-    analysis_wf_job = SubWorkflow("analysis-wf.yml", is_planned=False).add_outputs(
-        analysis_out_file
-    )
+    analysis_wf_job = SubWorkflow(
+        "analysis-wf.yml", node_label="subwf1", is_planned=False
+    ).add_outputs(analysis_out_file)
 
-    sleep_wf_job = SubWorkflow("sleep-wf.yml", is_planned=False)
+    sleep_wf_job = SubWorkflow("sleep-wf.yml", node_label="subwf2", is_planned=False)
 
     ls_job = Job("ls", _id="ls").add_inputs(analysis_out_file).set_stdout("ls_out.txt")
 
@@ -64,7 +64,7 @@ class TestEmitDot:
         # invoke emit_dot on the diamond_wf_file
         dag = pegasus_graphviz.parse_yamlfile(diamond_wf_file, include_files=False)
         dag = pegasus_graphviz.transitivereduction(dag)
-        pegasus_graphviz.emit_dot(dag, outfile=str(dot_file))
+        pegasus_graphviz.emit_dot(dag, outfile=str(dot_file), label_type="label-xform")
 
         with dot_file.open("r") as f:
             result = f.read()
@@ -75,10 +75,10 @@ class TestEmitDot:
             "    ratio=fill\n"
             '    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n'
             "    edge [arrowhead=normal,arrowsize=1.0]\n\n"
-            '    "ID0000001" [shape=ellipse,color="#000000",fillcolor="#1b9e77",label="ID0000001"]\n'
-            '    "ID0000002" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="ID0000002"]\n'
-            '    "ID0000003" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="ID0000003"]\n'
-            '    "ID0000004" [shape=ellipse,color="#000000",fillcolor="#7570b3",label="ID0000004"]\n'
+            '    "ID0000001" [shape=ellipse,color="#000000",fillcolor="#1b9e77",label="level1\\npreprocess"]\n'
+            '    "ID0000002" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="findrange"]\n'
+            '    "ID0000003" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="findrange"]\n'
+            '    "ID0000004" [shape=ellipse,color="#000000",fillcolor="#7570b3",label="analyze"]\n'
             '    "ID0000001" -> "ID0000002" [color="#000000"]\n'
             '    "ID0000001" -> "ID0000003" [color="#000000"]\n'
             '    "ID0000002" -> "ID0000004" [color="#000000"]\n'
@@ -97,7 +97,7 @@ class TestEmitDot:
         # be included
         dag = pegasus_graphviz.parse_yamlfile(diamond_wf_file, include_files=True)
         dag = pegasus_graphviz.transitivereduction(dag)
-        pegasus_graphviz.emit_dot(dag, outfile=str(dot_file))
+        pegasus_graphviz.emit_dot(dag, outfile=str(dot_file), label_type="label-id")
 
         with dot_file.open("r") as f:
             result = f.read()
@@ -108,7 +108,7 @@ class TestEmitDot:
             "    ratio=fill\n"
             '    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n'
             "    edge [arrowhead=normal,arrowsize=1.0]\n\n"
-            '    "ID0000001" [shape=ellipse,color="#000000",fillcolor="#1b9e77",label="ID0000001"]\n'
+            '    "ID0000001" [shape=ellipse,color="#000000",fillcolor="#1b9e77",label="level1\\nID0000001"]\n'
             '    "ID0000002" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="ID0000002"]\n'
             '    "ID0000003" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="ID0000003"]\n'
             '    "ID0000004" [shape=ellipse,color="#000000",fillcolor="#7570b3",label="ID0000004"]\n'
@@ -142,7 +142,7 @@ class TestEmitDot:
         # invoke emit_dot on the diamond_wf_file
         dag = pegasus_graphviz.parse_yamlfile(hierarchical_wf_file, include_files=True)
         dag = pegasus_graphviz.transitivereduction(dag)
-        pegasus_graphviz.emit_dot(dag, outfile=str(dot_file))
+        pegasus_graphviz.emit_dot(dag, outfile=str(dot_file), label_type="label-xform")
 
         with dot_file.open("r") as f:
             result = f.read()
@@ -153,8 +153,8 @@ class TestEmitDot:
             "    ratio=fill\n"
             '    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n'
             "    edge [arrowhead=normal,arrowsize=1.0]\n\n"
-            '    "ID0000001" [shape=ellipse,color="#000000",fillcolor="#1b9e77",label="ID0000001"]\n'
-            '    "ID0000002" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="ID0000002"]\n'
+            '    "ID0000001" [shape=ellipse,color="#000000",fillcolor="#1b9e77",label="subwf1\\nanalysis-wf.yml"]\n'
+            '    "ID0000002" [shape=ellipse,color="#000000",fillcolor="#d95f02",label="subwf2\\nsleep-wf.yml"]\n'
             '    "analysis-wf.yml" [shape=rect,color="#000000",fillcolor="#ffed6f",label="analysis-wf.yml"]\n'
             '    "analysis_output" [shape=rect,color="#000000",fillcolor="#ffed6f",label="analysis_output"]\n'
             '    "ls" [shape=ellipse,color="#000000",fillcolor="#7570b3",label="ls"]\n'
