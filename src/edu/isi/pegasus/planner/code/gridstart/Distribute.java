@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.util.HashMap;
@@ -618,6 +619,10 @@ public class Distribute implements GridStart {
                 } else {
                     cs.apply(job);
                 }
+                // make sure that we unset any universe that might have been
+                // set, as that will be handled when style is applied for the
+                // who Distribute wrapped job
+                job.condorVariables.removeKey(Condor.UNIVERSE_KEY);
             }
         } catch (CondorStyleException ex) {
             throw new RuntimeException(
