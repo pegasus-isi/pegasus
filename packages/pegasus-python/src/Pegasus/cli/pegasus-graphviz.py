@@ -91,9 +91,15 @@ class Job(Node):
         elif renderer.label_type == "xform-id":
             label = "{}\\n{}".format(self.xform, self.id)
         elif renderer.label_type == "label-xform":
-            label = "{}\\n{}".format(self.label, self.xform)
+            if len(self.label) > 0:
+                label = "{}\\n{}".format(self.label, self.xform)
+            else:
+                label = self.xform
         elif renderer.label_type == "label-id":
-            label = "{}\\n{}".format(self.label, self.id)
+            if len(self.label) > 0:
+                label = "{}\\n{}".format(self.label, self.id)
+            else:
+                label = self.id
         else:
             label = self.label
         color = renderer.getcolor(self.xform)
@@ -341,6 +347,11 @@ def parse_yamlfile(fname, include_files):
         j.id = j.label = job["id"]
         dag.nodes[j.id] = j
 
+        if job.get("nodeLabel"):
+            j.label = job.get("nodeLabel")
+        else:
+            j.label = ""
+
         # parse uses (files)
         if include_files:
             for use in job["uses"]:
@@ -356,7 +367,7 @@ def parse_yamlfile(fname, include_files):
                 if link_type == "input":
                     j.parents.append(f)
                     f.children.append(j)
-                elif link_type == "output":
+                elif link_type == "output" or link_type == "checkpoint":
                     j.children.append(f)
                     f.parents.append(j)
                 elif link_type == "inout":

@@ -468,6 +468,7 @@ class ProfileMixin:
         container_arguments="container.arguments",
         label="label",
         pegasus_lite_env_source="pegasus_lite_env_source",
+        SSH_PRIVATE_KEY="SSH_PRIVATE_KEY",
     )
     def add_pegasus_profile(
         self,
@@ -516,7 +517,8 @@ class ProfileMixin:
         boto_config: str = None,
         container_arguments: str = None,
         label: str = None,
-        pegasus_lite_env_source: Union[str, Path] = None
+        pegasus_lite_env_source: Union[str, Path] = None,
+        SSH_PRIVATE_KEY: str = None
     ):
         """Add Pegasus profile(s).
 
@@ -610,6 +612,8 @@ class ProfileMixin:
         :type label: str, optional
         :param pegasus_lite_env_source: specify a path on the submit host to indicate the file that needs to be sourced, defaults to None
         :type pegasus_lite_env_source: Union[str, Path], optional
+        :param SSH_PRIVATE_KEY: path to the ssh private key which will be used in this workflow (it is recommended that a special set of keys are created specifically for workflow use)
+        :type SSH_PRIVATE_KEY: str, optional
         """
         ...
 

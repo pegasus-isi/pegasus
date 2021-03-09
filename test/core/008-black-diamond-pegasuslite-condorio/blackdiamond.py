@@ -136,8 +136,7 @@ wf.plan(
     sites=["condorpool"],
     output_sites=["local"],
     cleanup="leaf",
-    force=True,
-    submit=True
+    force=True
 )
 
 with open("submit_dir", "w") as f:

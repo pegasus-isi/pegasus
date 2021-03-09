@@ -77,6 +77,20 @@ public class JobTest {
     }
 
     @Test
+    public void testSimpleJobWithNodeLabel() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test = "id: ID000001\n" + "name: preprocess\n" + "nodeLabel: pre-process";
+
+        Job job = mapper.readValue(test, Job.class);
+        assertNotNull(job);
+        assertEquals("ID000001", job.getLogicalID());
+        assertEquals("preprocess", job.getTXName());
+        // nodeLabel is not parsed into by the planner. making sure no error is thrown
+    }
+
+    @Test
     public void testSimpleJobWithInput() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);

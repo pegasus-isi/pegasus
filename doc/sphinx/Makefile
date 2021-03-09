@@ -31,6 +31,7 @@ help:
 		| grep -v "HTTP status code must be an integer" \
 		| grep -v "reference-guide/configuration.rst" \
 		| grep -v "user-guide/_basic-properties.rst" \
+		| grep -v "python/Pegasus.rst" \
 		> warn.log || true
 	@if [ -s warn.log ]; then echo "Documentation build contained warnings, which we do not allow. Summary (more above):"; cat warn.log; exit 1; fi
 
