@@ -501,6 +501,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
           <include name="**/s3transfer/**/*"/>
           <include name="**/urllib3/**/*"/>
           <include name="**/globus_sdk/**/*"/>
+          <include name="**/pika/**/*"/>
           <include name="six"/>
           <include name="six.py"/>
       </fileset>
