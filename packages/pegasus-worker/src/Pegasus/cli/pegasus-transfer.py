@@ -61,6 +61,12 @@ except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
 
+try:
+    # Python 3.0 and later
+    from urllib import parse as urlparse
+except ImportError:
+    # Fall back to Python 2's urllib
+    import urlparse as urlparse
 
 # see https://www.python.org/dev/peps/pep-0469/
 try:
