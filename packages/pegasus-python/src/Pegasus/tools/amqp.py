@@ -22,11 +22,18 @@ def connect(amqp_url):
     url = urlparse.urlparse(amqp_url)
     creds = pika.PlainCredentials(url.username, url.password)
     virtual_host = urllib.unquote(url.path.lstrip("/"))  # Replace %2F with /
+
+    SSLOptions = None
+    if url.scheme == "amqps":
+        context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        SSLOptions = pika.SSLOptions(context)
+
     parameters = pika.ConnectionParameters(
         host=url.hostname,
         port=url.port,
-        ssl=(url.scheme == "amqps"),
-        ssl_options={"cert_reqs": ssl.CERT_NONE},
+        ssl_options=SSLOptions,
         virtual_host=virtual_host,
         credentials=creds,
     )
