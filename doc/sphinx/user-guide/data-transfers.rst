@@ -835,27 +835,36 @@ Staging of Job Checkpoint Files
 -------------------------------
 
 Pegasus has support for transferring job checkpoint files back to the
-staging site when a job exceeds its advertised running time. This can be done
-by marking file(s) as checkpoint(s) using one of the workflow APIs. The following
-describes how to do this, using the :ref:`api-python` API, for two different application scenarios:
-
-1. **The application regularly updates/overwrites a fixed number of checkpoint files.** 
+staging site when a job exceeds its advertised running time or fails due to some
+error. This can be done by marking file(s) as checkpoint(s) using one of the 
+workflow APIs. The following describes how to do this, using the :ref:`api-python` API. 
 
 .. code-block:: python
 
    job = Job(exe)\
-         .add_checkpoint(File("saved_state_a.txt"))\
-         .add_checkpoint(File("saved_state_b.txt"))\
-         .add_profiles(Namespace.PEGASUS, key="maxwalltime", value=2)
+            .add_checkpoint(File("saved_state_a.txt"))\
+            .add_checkpoint(File("saved_state_b.txt"))\
+            .add_profiles(Namespace.PEGASUS, key="maxwalltime", value=2)
 
+Here we have marked two files, ``saved_state_a.txt`` and ``saved_state_b.txt``
+as checkpoint files. This means that Pegasus will expect those two files to be
+present when the job completes or fails. The profile ``maxwalltime`` has been
+added to specify the maximum walltime of the job in minutes. If the job's walltime
+exceeds this duration it will be killed. After two minutes
+have elapsed, the job will be sent a ``SIGKILL`` and the two checkpoint files will 
+be transferred back to the staging site. When the job is restarted 
+(possibly on a different site), the two checkpoint files will be sent to that 
+site to be consumed by the job. 
 
-2. **The application needs a signal to begin writing a checkpoint file.** In this
-   scenario, a ``SIGTERM`` will be sent by **pegasus-kickstart** to the running
-   executable at time ``checkpoint.time`` minutes. The executable should then handle
-   the ``SIGTERM`` by starting to write out a checkpoint file. At time 
-   ``(checkpoint.time + (maxwalltime-checkpoint.time)/2)``, a ``KILL`` signal
+Next, we discuss how to address several common application checkpointing scenarios:
+
+1. **The application needs to be signaled to begin writing out checkpoint file(s).** In this
+   scenario we use the Pegasus profile, ``checkpoint.time``, to specify the time (in minutes) at 
+   which a ``SIGTERM`` is to be sent by ``pegsaus-kickstart`` to the running executable.
+   The executable should then handle the ``SIGTERM`` by starting to write out a checkpoint 
+   file. At time ``(checkpoint.time + (maxwalltime-checkpoint.time)/2)``, a ``KILL`` signal
    will be sent to the job. The given formula is used to allow the application
-   time to write the checkpoint file and have it staged out.
+   time to write the checkpoint file before being sending a ``SIGKILL``. 
 
 .. code-block:: python
 
@@ -867,17 +876,36 @@ describes how to do this, using the :ref:`api-python` API, for two different app
          .add_profiles(Namespace.PEGASUS, key="checkpoint.time", value=1)\
          .add_profiles(Namespace.PEGASUS, key="maxwalltime", value=2)
 
+.. figure:: ../images/checkpoint-time.png
+   :alt: Use of SIGTERM and SIGKILL when checkpointing a file
+   
+   What ``pegasus-kickstart`` will do based on
+   the profiles ``checkpoint.time`` and ``maxwalltime``, and how your application
+   should respond. 
+
+2. **The application is expected to run for a very long time and you would like to periodically save checkpoint files.**
+   Pegasus currently does not provide the means to asynchrounsly send checkpoint
+   files back to the staging site while a job is running. As such, if your job is expected
+   to run for a very long time (e.g. training a model), you can periodically save
+   checkpoint files by intentionally killing the job and restarting it. To do this,
+   follow the steps outlined above, and ensure that the Pegasus property
+   ``dagman.retry`` is set to some value high enough to allow your application
+   to run to completion. Another way to intentionlly kill the job is to have it
+   write out a checkpoint file, then return nonzero, at which point it will 
+   be restarted automatically by Pegasus.
+
 .. note::
 
-   When using the ``condorio`` data staging configuration, an empty checkpoint
-   file (placeholder) must be created and referenced in the replica catalog prior to submitting
-   the workflow. 
+      When using the ``condorio`` data staging configuration, an empty checkpoint
+      file (placeholder) must be created and referenced in the replica catalog prior to submitting
+      the workflow. 
 
 
 .. caution::
 
    - ``dagman.retry`` should be large enough to allow the job to run until completion
-   - ``maxwalltime`` should be large enough to allow the job to write a checkpoint file at least once
+   - ``maxwalltime`` should be large enough to allow the job to write a checkpoint file
+
 
 .. _bypass-input-staging:
 
