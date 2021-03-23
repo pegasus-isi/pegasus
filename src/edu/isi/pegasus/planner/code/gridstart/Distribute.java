@@ -30,9 +30,14 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.GridStart;
+import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.generator.condor.ClassADSGenerator;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.util.HashMap;
@@ -109,7 +114,7 @@ public class Distribute implements GridStart {
     protected boolean mEnablingPartOfAggregatedJob;
 
     /** Handle to kickstart GridStart implementation. */
-    private Kickstart mKickstartGridStartImpl;
+    private Kickstart mDefaultGridStartImplementation;
 
     /** Handle to Transformation Catalog. */
     private TransformationCatalog mTCHandle;
@@ -128,6 +133,11 @@ public class Distribute implements GridStart {
 
     private ENV mLocalENV;
     private PegasusConfiguration mPegasusConfiguration;
+
+    private GridStartFactory mGridStartFactory;
+
+    /** Handle to the Style factory, that is used for this workflow. */
+    protected CondorStyleFactory mStyleFactory;
 
     /**
      * Initializes the GridStart implementation.
@@ -165,8 +175,13 @@ public class Distribute implements GridStart {
         mPegasusConfiguration = new PegasusConfiguration(bag.getLogger());
 
         mEnablingPartOfAggregatedJob = false;
-        mKickstartGridStartImpl = new Kickstart();
-        mKickstartGridStartImpl.initialize(bag, dag);
+        mGridStartFactory = new GridStartFactory();
+        mGridStartFactory.initialize(bag, dag, null);
+        mDefaultGridStartImplementation = new Kickstart();
+        mDefaultGridStartImplementation.initialize(bag, dag);
+
+        mStyleFactory = new CondorStyleFactory();
+        mStyleFactory.initialize(bag);
 
         // initialize the SSH credential handler
         CredentialHandlerFactory factory = new CredentialHandlerFactory();
@@ -198,6 +213,8 @@ public class Distribute implements GridStart {
      */
     public boolean enable(AggregatedJob job, boolean isGlobusJob) {
 
+        GridStart jobGridStartImplementation = getJobGridStart(job);
+
         // in pegasus lite mode we dont want kickstart to change or create
         // worker node directories
         for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
@@ -219,11 +236,11 @@ public class Distribute implements GridStart {
             if (job.getSiteHandle().equals("local")) {
                 // all jobs scheduled to local site just get
                 // vanilla treatment from the kickstart enabling.
-                return mKickstartGridStartImpl.enable(job, isGlobusJob);
+                return jobGridStartImplementation.enable(job, isGlobusJob);
             } else {
                 // the clustered jobs are never lauched via kickstart
                 // as their constitutents are enabled
-                mKickstartGridStartImpl.enable(job, isGlobusJob);
+                jobGridStartImplementation.enable(job, isGlobusJob);
 
                 // now we enable the jobs with the distribute wrapper
                 wrapJobWithDistribute(job, isGlobusJob);
@@ -253,8 +270,9 @@ public class Distribute implements GridStart {
     public boolean enable(Job job, boolean isGlobusJob) {
         // take care of relative submit directory if specified
         String submitDir = mSubmitDir + mSeparator;
+        GridStart jobGridStartImplementation = getJobGridStart(job);
 
-        if (mPegasusConfiguration.jobSetupForWorkerNodeExecution(job)) {
+        /*if (mPegasusConfiguration.jobSetupForWorkerNodeExecution(job)) {
             // shared filesystem case.
             StringBuilder error = new StringBuilder();
             error.append("Job ")
@@ -263,20 +281,20 @@ public class Distribute implements GridStart {
                             " cannot be wrapped with Distribute. It works only in sharedfs case. Invalid data.configuration associated ")
                     .append(job.getDataConfiguration());
             throw new RuntimeException(error.toString());
-        }
+        }*/
 
         // shared filesystem case.
         if (job.getSiteHandle().equals("local")) {
             // all jobs scheduled to local site just get
             // vanilla treatment from the kickstart enabling.
-            return mKickstartGridStartImpl.enable(job, isGlobusJob);
+            return jobGridStartImplementation.enable(job, isGlobusJob);
         } else {
             // jobs scheduled to non local site are wrapped
             // with distribute after wrapping them with kickstart
             // we always want the kickstart -w option
             job.vdsNS.construct(Pegasus.CHANGE_DIR_KEY, "true");
             job.vdsNS.construct(Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false");
-            mKickstartGridStartImpl.enable(job, isGlobusJob);
+            jobGridStartImplementation.enable(job, isGlobusJob);
 
             // now we enable the jobs with the distribute wrapper
             wrapJobWithDistribute(job, isGlobusJob);
@@ -323,11 +341,15 @@ public class Distribute implements GridStart {
 
         job.setRemoteExecutable(distributePath);
 
+        // PM-1724
+        updateJobWithCredentialsForRemoteSites(job);
+
         // a lot of distribute arguments are picked up via the environment
         ENV distributeENV = this.getEnvironmentForDistribute(job);
 
         // we want want the generated classad to still point to the remote site
         job.condorVariables.construct(ClassADSGenerator.PLUS_RESOURCE_AD_KEY, job.getSiteHandle());
+
         // update the job to run on local site
         // and the style to condor
         job.setSiteHandle("local");
@@ -426,6 +448,20 @@ public class Distribute implements GridStart {
             env.construct("DISTRIBUTE_PER_PROCESS_MEMORY", (String) job.globusRSL.get("maxmemory"));
         }
 
+        // PM-1726 if a job is first enabled using PegasusLite, then we need to
+        // account for any condor file transfers PegasusLite wrapping might have
+        // introduced
+        String ipFiles = job.condorVariables.getIPFilesForTransfer();
+        if (ipFiles != null) {
+            env.construct("DISTRIBUTE_TRANSFER_INPUT_FILES", ipFiles);
+            job.condorVariables.removeIPFilesForTransfer();
+        }
+        String opFiles = job.condorVariables.getOutputFilesForTransfer();
+        if (opFiles != null) {
+            env.construct("DISTRIBUTE_TRANSFER_OUTPUT_FILES", opFiles);
+            job.condorVariables.removeOutputFilesForTransfer();
+        }
+
         return env;
     }
 
@@ -507,7 +543,7 @@ public class Distribute implements GridStart {
      * @see Kickstart#defaultPOSTScript()
      */
     public String defaultPOSTScript() {
-        return this.mKickstartGridStartImpl.defaultPOSTScript();
+        return this.mDefaultGridStartImplementation.defaultPOSTScript();
     }
 
     /**
@@ -517,7 +553,7 @@ public class Distribute implements GridStart {
      * @return boolean indicating whether can generate checksums or not
      */
     public boolean canGenerateChecksumsOfOutputs() {
-        return this.mKickstartGridStartImpl.canGenerateChecksumsOfOutputs();
+        return this.mDefaultGridStartImplementation.canGenerateChecksumsOfOutputs();
     }
 
     public void useFullPathToGridStarts(boolean fullPath) {
@@ -530,5 +566,69 @@ public class Distribute implements GridStart {
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
         // Templates.
+    }
+
+    /**
+     * Returns the GridStart Implementation to use to launch a job in PegasusLite
+     *
+     * @param job
+     * @return
+     */
+    private GridStart getJobGridStart(Job job) {
+        GridStart gs = this.mDefaultGridStartImplementation;
+        // PM-1726 see if we want to launch job by another Gridstart instead of Kickstart
+        // compute based on the data configuration associated with the job
+        // we first need to remove the prop value as that is specified as Distribute
+        // by the user. That is why we are in Distribute GridStart in the first place
+        String propValue = (String) job.vdsNS.removeKey(Pegasus.GRIDSTART_KEY);
+        gs = this.mGridStartFactory.loadGridStart(job, null);
+
+        // PM-1726 set the value back
+        if (propValue != null) {
+            job.vdsNS.construct(Pegasus.GRIDSTART_KEY, propValue);
+        }
+
+        return gs;
+    }
+
+    /**
+     * Updates jobs to associate any credentials that may be required for job to run remotely (site
+     * other than local).
+     *
+     * @param job job to be executed.
+     */
+    private void updateJobWithCredentialsForRemoteSites(Job job) {
+        // we need to associate credentials that maybe required for transfers in
+        // PegasusLite w.r.t the orignal execution site, before mapping the job to
+        // run locally. This is because credentials for jobs mapped tp remotes sites
+        // are handled differently comparted to jobs mapped to local site.
+        String originalSite = job.getSiteHandle();
+        try {
+
+            // for jobs mapped to local site, credentials are handled
+            // when the distirbute wrapped job goes to the code generator, and
+            // the condor style gets applied.
+            if (!originalSite.equalsIgnoreCase("local")) {
+                CondorStyle cs = mStyleFactory.loadInstance(job);
+                String style = (String) job.vdsNS.get(Pegasus.STYLE_KEY);
+
+                // apply the appropriate style on the job.
+                if (job instanceof AggregatedJob) {
+                    cs.apply((AggregatedJob) job);
+
+                } else {
+                    cs.apply(job);
+                }
+                // make sure that we unset any universe that might have been
+                // set, as that will be handled when style is applied for the
+                // who Distribute wrapped job
+                job.condorVariables.removeKey(Condor.UNIVERSE_KEY);
+            }
+        } catch (CondorStyleException ex) {
+            throw new RuntimeException(
+                    "Unable to associate credentials for job "
+                            + job
+                            + " for launching via Distribute");
+        }
     }
 }
