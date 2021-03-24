@@ -33,6 +33,7 @@ __author__ = "Mats Rynge"
 import logging
 import math
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -83,10 +84,29 @@ def dagman_launch(dagman_bin, arguments=[]):
     """Launches the condor_dagman program with all
     the arguments passed to pegasus-dagman"""
     if dagman_bin is not None:
+
+        # clean out some stuff from the env - we don't want Pegasus variables
+        # from the submit host to bleed to the compute environment if the user
+        # has getenv=true set
+        env = os.environ.copy()
+        # first saved values
+        for k, v in env.copy().items():
+            if re.search('^PEGASUS_ORIG_', k):
+                base_k = re.sub('^PEGASUS_ORIG_', '', k)
+                if env[k] == '':
+                    env.pop(base_k, None)
+                else:
+                    env[base_k] = env[k]
+        # now remove all PEGASUS_ ones
+        for k, v in env.copy().items():
+            if re.search('^PEGASUS_', k):
+                env.pop(k, None)
+
         arguments.insert(0, "condor_scheduniv_exec." + os.getenv("CONDOR_ID"))
         try:
             dagman_proc = subprocess.Popen(
-                arguments, stdout=sys.stdout, stderr=sys.stderr, executable=dagman_bin
+                arguments, stdout=sys.stdout, stderr=sys.stderr, executable=dagman_bin,
+                env=env
             )
             logger.info("Launched Dagman with Pid %d" % dagman_proc.pid)
         except OSError as err:
