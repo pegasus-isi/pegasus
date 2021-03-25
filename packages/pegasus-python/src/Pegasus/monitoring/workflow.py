@@ -1939,7 +1939,10 @@ class Workflow:
                     f_duration = float(kwargs["dur"])
                     # PM-1737 prevent divide by zero errors
                     if f_duration == 0.0:
-                        logger.debug("Duration of zero seconds encountered for job %s" %my_job._exec_job_id)
+                        logger.debug(
+                            "Duration of zero seconds encountered for job %s"
+                            % my_job._exec_job_id
+                        )
                     else:
                         kwargs["avg_cpu"] = kwargs["remote_cpu_time"] / f_duration
                 except ValueError:
