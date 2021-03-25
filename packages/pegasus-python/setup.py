@@ -17,7 +17,7 @@ install_requires = [
     "Flask",
     "Flask-Caching",
     "requests",
-    "sqlalchemy",
+    "sqlalchemy==1.3.15",
     "pegasus-wms.api",
     "pegasus-wms.dax",
     "pegasus-wms.common",
