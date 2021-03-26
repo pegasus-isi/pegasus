@@ -189,20 +189,17 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_9}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
+                      cd pegasus-source
+                      ant test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: debian
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 9
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D9JUT
@@ -218,16 +215,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_9}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-java
+                      cd pegasus-source
+                      ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -235,8 +224,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: debian
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 9
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D9PUT
@@ -252,17 +245,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_9}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --env "LANG=C.UTF-8" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-python
+                      cd pegasus-source
+                      ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -291,8 +275,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: debian
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 9
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D10CUT
@@ -308,20 +296,17 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_10}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer
+                      cd pegasus-source
+                      ant test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: debian
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 10
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D10JUT
@@ -337,16 +322,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_10}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-java
+                      cd pegasus-source
+                      ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -354,8 +331,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: debian
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 10
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D10PUT
@@ -371,16 +352,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_10}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-python
+                      cd pegasus-source
+                      ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -409,8 +382,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: debian
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 10
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: OCUT
@@ -666,20 +643,17 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_18}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer test-integrity
+                      cd pegasus-source
+                      ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: ubuntu
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 18
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUB
@@ -695,16 +669,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_18}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-java
+                      cd pegasus-source
+                      ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -714,6 +680,12 @@ project:
               requirements:
                 - capabilityKey: system.docker.executable
                   matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: ubuntu
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 18
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUB
@@ -729,17 +701,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_18}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --env "LANG=C.UTF-8" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-python
+                      cd pegasus-source
+                      ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -768,8 +731,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: ubuntu
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 18
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUF
@@ -785,15 +752,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_20}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} test-kickstart test-pmc test-transfer test-integrity
+                      cd pegasus-source
+                      ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -814,16 +774,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_20}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-java
+                      cd pegasus-source
+                      ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -831,8 +783,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: ubuntu
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 20
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUF
@@ -848,17 +804,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_20}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --env "LANG=C.UTF-8" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} test-python
+                      cd pegasus-source
+                      ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -887,8 +834,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: ubuntu
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 20
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
@@ -1074,16 +1025,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_8}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      dist-rpm dist-worker dist-release
+                      cd pegasus-source
+                      ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_8
                   copyPattern: "pegasus-binary-*-x86_64_rhel_8.tar.gz"
@@ -1104,8 +1047,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: centos
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 8
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR7
@@ -1121,17 +1068,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_7}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --env "LANG=en_US.utf8" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      dist-rpm dist-worker dist-release
+                      cd pegasus-source
+                      ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_7
                   copyPattern: "pegasus-binary-*-x86_64_rhel_7.tar.gz"
@@ -1148,8 +1086,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: centos
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 7
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR8
@@ -1165,16 +1107,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_8}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      dist-rpm dist-worker dist-release
+                      cd pegasus-source
+                      ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_8
                   copyPattern: "pegasus-binary-*-x86_64_rhel_8.tar.gz"
@@ -1195,8 +1129,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: centos
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 8
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXDS
@@ -1212,16 +1150,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_9}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
+                      cd pegasus-source
+                      ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_9
                   copyPattern: "pegasus-binary-*-x86_64_deb_9.tar.gz"
@@ -1238,8 +1168,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: debian
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 9
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
@@ -1256,16 +1190,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_DEBIAN_10}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
+                      cd pegasus-source
+                      ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_10
                   copyPattern: "pegasus-binary-*-x86_64_deb_10.tar.gz"
@@ -1282,8 +1208,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: debian
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 10
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXOSX
@@ -1339,16 +1269,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_18}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
+                      pegasus-source
+                      ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_18
                   copyPattern: "pegasus-binary-*-x86_64_ubuntu_18.tar.gz"
@@ -1365,8 +1287,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: ubuntu
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 18
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUF
@@ -1382,16 +1308,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_UBUNTU_20}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      clean dist-deb dist-worker dist-release
+                      cd pegasus-source
+                      ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_20
                   copyPattern: "pegasus-binary-*-x86_64_ubuntu_20.tar.gz"
@@ -1408,8 +1326,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: ubuntu
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 20
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
