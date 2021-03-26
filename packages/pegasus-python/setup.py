@@ -18,10 +18,10 @@ install_requires = [
     "Flask-Caching>1.8,<1.11",
     "requests>2.23,<2.26",
     "sqlalchemy>1.3,<1.4",
-    "pegasus-wms.api>=5.0,<5.1",
-    "pegasus-wms.dax>=5.0,<5.1",
-    "pegasus-wms.common>=5.0,<5.1",
-    "pegasus-wms.worker>=5.0,<5.1",
+    "pegasus-wms.api>=5.1,<5.2",
+    "pegasus-wms.dax>=5.1,<5.2",
+    "pegasus-wms.common>=5.1,<5.2",
+    "pegasus-wms.worker>=5.1,<5.2",
 ]
 
 #
