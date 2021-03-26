@@ -757,8 +757,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: ubuntu
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 20
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUF
