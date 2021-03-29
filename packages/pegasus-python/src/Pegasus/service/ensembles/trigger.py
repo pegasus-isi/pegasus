@@ -426,7 +426,6 @@ class WebFilePatternTrigger(TriggerThread):
         """WebFilePatternTrigger main loop."""
         try:
             self.log.debug("starting")
-            self.log.debug("Web location monitored is: {}".format(self.web_location))
 
             while not self.stop_event.isSet():
 
@@ -444,23 +443,23 @@ class WebFilePatternTrigger(TriggerThread):
                     ]
                     cmd.extend(self.workflow_cmd)
                     cmd.append("--inputs")
-                    cmd.extend(files)
-                    self.log.debug(print(cmd))
+                    for file_name in files:
+                        cmd.append(self.file_cache[file_name]["href"])
 
-                    #cp = subprocess.run(cmd, stderr=subprocess.PIPE)
+                    cp = subprocess.run(cmd, stderr=subprocess.PIPE)
 
-                    #if cp.returncode == 0:
-                    #    self.log.info("executed cmd: {}".format(cmd))
-                    #else:
-                    #    self.log.error(
-                    #        "encountered error executing cmd: {}".format(cmd)
-                    #    )
-                    #    stderr = (
-                    #        cp.stderr.decode()
-                    #        if isinstance(cp.stderr, bytes)
-                    #        else cp.stderr
-                    #    )
-                    #    raise RuntimeError(stderr)
+                    if cp.returncode == 0:
+                        self.log.info("executed cmd: {}".format(cmd))
+                    else:
+                        self.log.error(
+                            "encountered error executing cmd: {}".format(cmd)
+                        )
+                        stderr = (
+                            cp.stderr.decode()
+                            if isinstance(cp.stderr, bytes)
+                            else cp.stderr
+                        )
+                        raise RuntimeError(stderr)
 
                 time.sleep(self.interval)
                 if self.timeout:
@@ -546,7 +545,7 @@ class WebFilePatternTrigger(TriggerThread):
                         self.file_cache[file_name] = {
                             "last_edited": file_last_edited,
                             "size": file_size,
-                            "href": self.web_location + file_name,
+                            "href": os.path.join(self.web_location, file_name),
                         }
                         new_files.add(file_name)
 
