@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
+from urllib.parse import urlparse, urlunparse
 
 from flask import g, make_response, request, url_for
 
@@ -412,6 +413,99 @@ def route_create_file_pattern_trigger(ensemble):
         "interval": interval,
         "timeout": timeout,
         "file_patterns": file_patterns,
+    }
+
+    # create trigger entry in db
+    t_dao = Triggers(g.session)
+    t_dao.insert_trigger(**kwargs)
+
+    # return response success
+    return api.json_created(
+        url_for("route_get_trigger", ensemble=ensemble, trigger=trigger)
+    )
+
+
+@emapp.route("/ensembles/<string:ensemble>/triggers/web_file_pattern", methods=["POST"])
+def route_create_web_file_pattern_trigger(ensemble):
+    # verify that ensemble exists for user
+    e_dao = Ensembles(g.session)
+
+    # raises EMError code 404 if does not exist
+    ensemble_id = e_dao.get_ensemble(g.user.username, ensemble).id
+
+    # validate trigger
+    trigger = request.form.get("trigger", type=str)
+    if not trigger or len(trigger) == 0:
+        raise EMError("trigger name must be a non-empty string")
+
+    # validate workflow_script
+    workflow_script = request.form.get("workflow_script", type=str)
+    if not workflow_script or len(workflow_script) == 0:
+        raise EMError("workflow_script name must be a non-empty string")
+
+    if not Path(workflow_script).is_absolute():
+        raise EMError("workflow_script must be given as an absolute path")
+
+    # validate workflow_args
+    can_decode = True
+    try:
+        workflow_args = json.loads(request.form.get("workflow_args"))
+    except json.JSONDecodeError:
+        can_decode = False
+
+    if not can_decode or not isinstance(workflow_args, list):
+        raise EMError("workflow_args must be given as a list serialized to json")
+
+    # validate interval
+    try:
+        interval = to_seconds(request.form.get("interval", type=str))
+    except ValueError:
+        raise EMError(
+            "interval must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
+
+    # validate timeout
+    try:
+        timeout = request.form.get("timeout", type=str, default=None)
+        if timeout is not None:
+            timeout = to_seconds(timeout)
+    except ValueError:
+        raise EMError(
+            "timeout must be given as `<int> <s|m|h|d>` and be greater than 0 seconds"
+        )
+
+    # validate web_location
+    web_location = request.form.get("web_location", type=str, default=None)
+    if not web_location:
+        raise EMError("web_location must be a non-empty string and a valid URL")
+    parsed_web_location = urlparse(web_location)
+    if not parsed_web_location.scheme in ["http", "https"]:
+        raise EMError("web_location must start with ['http', 'https']")
+    web_location = urlunparse(parsed_web_location)
+
+    # validate file_patterns
+    can_decode = True
+    try:
+        file_patterns = json.loads(request.form.get("file_patterns"))
+    except json.JSONDecodeError:
+        can_decode = False
+
+    if not can_decode or not isinstance(file_patterns, list):
+        raise EMError("file_patterns must be given as a list serialized to json")
+
+    if len(file_patterns) < 1:
+        raise EMError("file_patterns must contain at least one file pattern")
+
+    kwargs = {
+        "ensemble_id": ensemble_id,
+        "trigger": trigger,
+        "trigger_type": TriggerType.WEB_FILE_PATTERN.value,
+        "workflow_script": workflow_script,
+        "workflow_args": workflow_args,
+        "interval": interval,
+        "timeout": timeout,
+        "file_patterns": file_patterns,
+        "web_location": web_location,
     }
 
     # create trigger entry in db

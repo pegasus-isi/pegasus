@@ -1,11 +1,14 @@
-import datetime
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import threading
 import time
+import urllib.error
+import urllib.request as request
+from datetime import datetime
 from glob import glob
 from pathlib import Path
 from typing import List, Optional
@@ -103,6 +106,9 @@ class TriggerManager(threading.Thread):
 
         elif trigger._type == TriggerType.FILE_PATTERN.value:
             t = FilePatternTrigger(**required_args, **trigger_specific_kwargs)
+
+        elif trigger._type == TriggerType.WEB_FILE_PATTERN.value:
+            t = WebFilePatternTrigger(**required_args, **trigger_specific_kwargs)
 
         else:
             raise NotImplementedError(
@@ -225,7 +231,7 @@ class CronTrigger(TriggerThread):
                     "{ens}.{tr}_{ts}".format(
                         ens=self.ensemble,
                         tr=self.trigger,
-                        ts=int(datetime.datetime.now().timestamp()),
+                        ts=int(datetime.now().timestamp()),
                     ),
                 ]
                 cmd.extend(self.workflow_cmd)
@@ -309,7 +315,7 @@ class FilePatternTrigger(TriggerThread):
                         "{ens}.{tr}_{ts}".format(
                             ens=self.ensemble,
                             tr=self.trigger,
-                            ts=int(datetime.datetime.now().timestamp()),
+                            ts=int(datetime.now().timestamp()),
                         ),
                     ]
                     cmd.extend(self.workflow_cmd)
@@ -374,3 +380,177 @@ class FilePatternTrigger(TriggerThread):
                 collected.append(str(dst))
 
         return collected
+
+
+class WebFilePatternTrigger(TriggerThread):
+    """
+    Collects files based on the given filepatterns that appear on a web location
+    and submits workflow to the ensemble manager at a specified interval.
+    """
+
+    def __init__(
+        self,
+        ensemble_id: str,
+        ensemble: str,
+        trigger: str,
+        interval: int,
+        workflow_script: str,
+        workflow_args: Optional[List[str]] = None,
+        timeout: Optional[int] = None,
+        **kwargs
+    ):
+        TriggerThread.__init__(
+            self,
+            ensemble_id=ensemble_id,
+            ensemble=ensemble,
+            trigger=trigger,
+            workflow_script=workflow_script,
+            workflow_args=workflow_args,
+        )
+
+        self.timeout = int(timeout) if timeout else None
+        self.interval = int(interval)
+        self.elapsed = 0
+
+        self.web_location = kwargs["web_location"]
+        self.file_patterns = kwargs["file_patterns"]
+        self.file_cache = {}
+        self.last_operated_ts = "0"
+
+    def __repr__(self):
+        return "<WebFilePatternTrigger {} interval={}s url={} patterns={}>".format(
+            self.name, self.interval, self.web_location, self.file_patterns
+        )
+
+    def run(self):
+        """WebFilePatternTrigger main loop."""
+        try:
+            self.log.debug("starting")
+            self.log.debug("Web location monitored is: {}".format(self.web_location))
+
+            while not self.stop_event.isSet():
+
+                files = self.retrieve_new_web_files()
+
+                if len(files) > 0:
+                    cmd = [
+                        "pegasus-em",
+                        "submit",
+                        "{ens}.{tr}_{ts}".format(
+                            ens=self.ensemble,
+                            tr=self.trigger,
+                            ts=int(datetime.now().timestamp()),
+                        ),
+                    ]
+                    cmd.extend(self.workflow_cmd)
+                    cmd.append("--inputs")
+                    cmd.extend(files)
+                    self.log.debug(print(cmd))
+
+                    #cp = subprocess.run(cmd, stderr=subprocess.PIPE)
+
+                    #if cp.returncode == 0:
+                    #    self.log.info("executed cmd: {}".format(cmd))
+                    #else:
+                    #    self.log.error(
+                    #        "encountered error executing cmd: {}".format(cmd)
+                    #    )
+                    #    stderr = (
+                    #        cp.stderr.decode()
+                    #        if isinstance(cp.stderr, bytes)
+                    #        else cp.stderr
+                    #    )
+                    #    raise RuntimeError(stderr)
+
+                time.sleep(self.interval)
+                if self.timeout:
+                    self.elapsed += self.interval
+
+                    if self.elapsed >= self.timeout:
+                        self.log.debug("timed out")
+                        break
+
+        except Exception:
+            self.log.exception("error")
+        finally:
+            self.log.debug("exited")
+
+    def retrieve_new_web_files(self) -> List[str]:
+        """
+        Collect web files that match the given file
+        pattern regular expression (no glob here),
+        then add them to the file cache. For example if 
+        ["inputs.*.txt", "inputs2.*.txt] are given, and "inputs-123.txt" and
+        "inputs2-123.txt" exist, the result will be that those two paths are returned
+        AND those two files will be added to the file cache.
+
+        :return: list of web locations ato matched files
+        :rtype: List[str]
+        """
+        new_files = set()
+
+        regex_file = '<a href="(.*)">.*</a>'
+        regex_date = '<td align="right">([0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])\\s[0-9:]*)\\s*</td>'
+        regex_size = '<td align="right">\\s*([0-9.]*?[KM]?)\\s*</td>'
+        datetime_string = "%Y-%m-%d %H:%M"
+        user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"
+        headers = {"User-Agent": user_agent}
+
+        # add GET parameters to sort based on the last updated field
+        url_get = self.web_location + "?C=M;O=D"
+
+        req = request.Request(url_get, headers=headers)
+        try:
+            with request.urlopen(req) as response:
+                the_page = response.read().decode("utf-8")
+                table_start = the_page.find("<table>")
+                table_end = the_page.find("</table>")
+                records = the_page[
+                    table_start + len("<table>") : table_end
+                ].splitlines()[4:-1]
+                for line in records:
+                    file_name = re.search(regex_file, line).group(1)
+                    file_last_edited = int(
+                        datetime.strptime(
+                            re.search(regex_date, line).group(1), datetime_string,
+                        ).timestamp()
+                    )
+                    file_size = re.search(regex_size, line).group(1)
+
+                    pattern_guard = False
+                    for pattern in self.file_patterns:
+                        if re.fullmatch(pattern, file_name):
+                            pattern_guard = True
+                            break
+
+                    if not pattern_guard:
+                        continue
+
+                    if file_name in self.file_cache:
+                        if (
+                            self.file_cache[file_name]["last_edited"]
+                            == file_last_edited
+                        ):
+                            break  # files are sorted based on last edit
+                        elif (
+                            self.file_cache[file_name]["last_edited"] < file_last_edited
+                        ):
+                            self.file_cache[file_name]["last_edited"] = file_last_edited
+                            self.file_cache[file_name]["size"] = file_size
+                            new_files.add(file_name)
+                        else:
+                            self.log.error(
+                                "Unexpected state: Last recorded update time is in the past."
+                            )
+                    else:
+                        self.file_cache[file_name] = {
+                            "last_edited": file_last_edited,
+                            "size": file_size,
+                            "href": self.web_location + file_name,
+                        }
+                        new_files.add(file_name)
+
+        except urllib.error.URLError as e:
+            self.log.exception(e.reason)
+
+        return list(new_files)

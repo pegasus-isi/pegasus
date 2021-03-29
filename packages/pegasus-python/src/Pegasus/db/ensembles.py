@@ -393,6 +393,7 @@ class TriggerType(Enum):
 
     CRON = "CRON"
     FILE_PATTERN = "FILE_PATTERN"
+    WEB_FILE_PATTERN = "WEB_FILE_PATTERN"
 
 
 class Triggers:

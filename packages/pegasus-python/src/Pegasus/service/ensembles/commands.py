@@ -657,6 +657,85 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
         print(response.json()["message"])
 
 
+class WebFilePatternTriggerCommand(EnsembleClientCommand):
+    description = "Create a web file pattern based and time based workflow trigger"
+    usage = "Usage: pegasus-em web-file-pattern-trigger ENSEMBLE TRIGGER INTERVAL WORKFLOW_SCRIPT WEB_LOCATION FILE_PATTERN [FILE_PATTERN ...] [--timeout TIMEOUT] [--args ARG1 [ARG2 ...]]"
+
+    def __init__(self):
+        EnsembleClientCommand.__init__(self)
+        self.parser = argparse.ArgumentParser(
+            usage=self.usage, description=self.description
+        )
+
+        self.parser.add_argument(
+            "ensemble", type=str, help="the ensemble to which this trigger belongs"
+        )
+
+        self.parser.add_argument(
+            "trigger", type=str, help="the name of the trigger to be added"
+        )
+
+        self.parser.add_argument(
+            "interval",
+            type=str,
+            help="Duration of each trigger interval. Must be given as '<int> <s|m|h|d>' "
+            "and be greater than 0 seconds",
+        )
+
+        self.parser.add_argument(
+            "workflow_script", type=str, help="path to workflow script"
+        )
+
+        self.parser.add_argument(
+            "web_location", type=str, help="web url of the file hosting location"
+        )
+
+        self.parser.add_argument(
+            "file_patterns",
+            nargs="+",
+            help="File pattern regex(s) that will be passed to math web files",
+        )
+
+        self.parser.add_argument(
+            "-t",
+            "--timeout",
+            type=str,
+            help="Trigger timeout. Must be given as `<int> <s|m|h|d>` and be greater than 0 seconds.",
+        )
+
+        self.parser.add_argument(
+            "-a",
+            "--args",
+            type=str,
+            default=None,
+            help="CLI args to be passed to WORKFLOW_SCRIPT",
+        )
+
+    def parse(self, args):
+        self.args = self.parser.parse_args(args)
+
+    def run(self):
+        request = {
+            "trigger": self.args.trigger,
+            "workflow_script": self.args.workflow_script,
+            "workflow_args": json.dumps(self.args.args.split(" "))
+            if self.args.args
+            else json.dumps([]),
+            "interval": self.args.interval,
+            "timeout": self.args.timeout,
+            "web_location": self.args.web_location,
+            "file_patterns": json.dumps(self.args.file_patterns),
+            "type": TriggerType.WEB_FILE_PATTERN.value,
+        }
+
+        response = self.post(
+            "/ensembles/{e}/triggers/web_file_pattern".format(e=self.args.ensemble),
+            data=request,
+        )
+
+        print(response.json()["message"])
+
+
 # TODO: StopTriggerCommand
 
 # TODO: ListTriggersCommand
@@ -683,6 +762,7 @@ class EnsembleCommand(CompoundCommand):
         ("priority", PriorityCommand),
         ("cron-trigger", CronTriggerCommand),
         ("file-pattern-trigger", FilePatternTriggerCommand),
+        ("web-file-pattern-trigger", WebFilePatternTriggerCommand),
     ]
     aliases = {
         "c": "create",
