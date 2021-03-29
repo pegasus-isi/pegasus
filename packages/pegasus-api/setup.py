@@ -7,7 +7,7 @@ src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 
 install_requires = [
-    "pegasus-wms.common>=5.1,<5.2",
+    "pegasus-wms.common<5.2",
 ]
 
 
