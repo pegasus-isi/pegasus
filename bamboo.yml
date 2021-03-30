@@ -678,8 +678,6 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
                 - capabilityKey: distro
                   matchType: !equals
                     matchValue: ubuntu
