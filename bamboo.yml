@@ -1245,7 +1245,7 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      pegasus-source
+                      cd pegasus-source
                       ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_18
