@@ -27,7 +27,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         :param _id: a unique id, if None is given then one will be assigned when this job is added to a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: Optional[str]
-        :param node_label: a short descriptive label that can be assined to this job, defaults to None
+        :param node_label: a short descriptive label that can be assigned to this job, defaults to None 
         :type node_label: Optional[str]
 
         **Note**: avoid using IDs such as :code:`'0000008'` or :code:`'00000009'` as these may end up being
@@ -391,7 +391,7 @@ class Job(AbstractJob):
         :type transformation: Union[str, Transformation]
         :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: Optional[str]
-        :param node_label: a brief job description, defaults to None
+        :param node_label: a short descriptive label that can be assigned to this job, defaults to None
         :type node_label: Optional[str]
         :param namespace: namespace to which the :py:class:`~Pegasus.api.transformation_catalog.Transformation` belongs, defaults to None
         :type namespace: Optional[str]
@@ -449,7 +449,7 @@ class SubWorkflow(AbstractJob):
         :type is_planned: bool
         :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: Optional[str]
-        :param node_label: a brief job description, defaults to None
+        :param node_label: a short descriptive label that can be assigned to this job, defaults to None
         :type node_label: Optional[str]
         :raises TypeError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         """
