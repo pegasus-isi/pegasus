@@ -28,7 +28,7 @@ Pegasus has a few dependencies:
 
    ::
 
-      # python3 -v
+      # python3 --version
       Python 3.6.9
 
    Python3 package ``yaml`` is also required, but it
