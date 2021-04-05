@@ -179,7 +179,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :type pfn: Union[str, Path]
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
         :type type: bool, optional
-        :param bypass_staging: whether or not to bypass the stage in job of this executable (Note that this only works for transformations where :code:`is_stageable=False`), defaults to False
+        :param bypass_staging: whether or not to bypass the stage in job of this executable (Note that this only works for transformations where :code:`is_stageable=True`), defaults to False
         :type bypass_staging: bool, optional
         :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
         :type arch: Optional[Arch], optional
