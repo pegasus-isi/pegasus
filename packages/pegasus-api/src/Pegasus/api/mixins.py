@@ -718,3 +718,11 @@ class ProfileMixin:
         :return: self
         """
         ...
+
+    # initially had add_<namespace>_profile for 5.0 release and in order not not
+    # break existing workflows, these functions have aliases that are plural
+    add_globus_profiles = add_globus_profile
+    add_pegasus_profiles = add_pegasus_profile
+    add_dagman_profiles = add_dagman_profile
+    add_condor_profiles = add_condor_profile
+    add_selector_profiles = add_selector_profile
