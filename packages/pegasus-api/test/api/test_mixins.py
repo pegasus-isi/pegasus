@@ -208,6 +208,10 @@ class TestProfileMixin:
             }
         }
 
+    def test_add_globus_profiles(self, obj):
+        assert id(obj.add_globus_profiles(count=1)) == id(obj)
+        assert dict(obj.profiles) == {"globus": {"count": 1}}
+
     def test_add_globus_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
             obj.add_globus_profile(aa=1)
@@ -250,6 +254,10 @@ class TestProfileMixin:
                 "POST.SCOPE": "ps",
             }
         }
+
+    def test_add_dagman_profiles(self, obj):
+        assert id(obj.add_dagman_profiles(pre="pre")) == id(obj)
+        assert dict(obj.profiles) == {"dagman": {"PRE": "pre"}}
 
     def test_add_dagman_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
@@ -301,6 +309,10 @@ class TestProfileMixin:
                 "cream_attributes": "key1=value1",
             }
         }
+
+    def test_add_condor_profiles(self, obj):
+        assert id(obj.add_condor_profiles(universe="vanilla")) == id(obj)
+        assert dict(obj.profiles) == {"condor": {"universe": "vanilla"}}
 
     def test_add_condor_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
@@ -407,6 +419,10 @@ class TestProfileMixin:
             }
         }
 
+    def test_add_pegasus_profiles(self, obj):
+        assert id(obj.add_pegasus_profiles(gpus=1)) == id(obj)
+        assert dict(obj.profiles) == {"pegasus": {"gpus": 1}}
+
     def test_add_pegasus_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
             obj.add_pegasus_profile(aa=1)
@@ -427,6 +443,10 @@ class TestProfileMixin:
                 "grid.jobtype": "compute",
             }
         }
+
+    def test_add_selector_profiles(self, obj):
+        assert id(obj.add_selector_profiles(pfn="/tmp")) == id(obj)
+        assert dict(obj.profiles) == {"selector": {"pfn": "/tmp"}}
 
     def test_add_selector_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
