@@ -334,7 +334,7 @@ class Client:
         )
 
         # indexes for info provided from status
-        # UNRDY = 0
+        UNRDY = 0
         READY = 1
         # PRE = 2
         IN_Q = 3
@@ -345,13 +345,14 @@ class Client:
         STATE = 8
 
         # color strings for terminal output
+        blue = lambda s: "\x1b[1;34m" + s + "\x1b[0m"
         green = lambda s: "\x1b[1;32m" + s + "\x1b[0m"
         yellow = lambda s: "\x1b[1;33m" + s + "\x1b[0m"
-        blue = lambda s: "\x1b[1;36m" + s + "\x1b[0m"
+        cyan = lambda s: "\x1b[1;36m" + s + "\x1b[0m"
         red = lambda s: "\x1b[1;31m" + s + "\x1b[0m"
 
         # progress bar length
-        bar_len = 36
+        bar_len = 25
 
         try:
             can_continue = True
@@ -375,13 +376,16 @@ class Client:
                         v.append(float(matched.group(3).strip()))
                         v.append(matched.group(4).strip())
 
+                        unready = blue("Unready: " + str(v[UNRDY]).replace(",", ""))
                         completed = green("Completed: " + str(v[DONE]).replace(",", ""))
                         queued = yellow("Queued: " + str(v[READY]).replace(",", ""))
-                        running = blue("Running: " + str(v[IN_Q]).replace(",", ""))
+                        running = cyan("Running: " + str(v[IN_Q]).replace(",", ""))
                         fail = red("Failed: " + str(v[FAIL]).replace(",", ""))
 
                         stats = (
                             "("
+                            + unready
+                            + ", "
                             + completed
                             + ", "
                             + queued
