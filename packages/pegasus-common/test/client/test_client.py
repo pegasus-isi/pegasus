@@ -338,7 +338,7 @@ class TestClient:
                 Summary: 1 DAG total (Success:1)
                 """
                 ).encode("utf8"),
-                "\r[\x1b[1;32m####################################\x1b[0m] 100.0% ..Success (\x1b[1;32mCompleted: 1000\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1000\x1b[0m)\n",
+                "\r[\x1b[1;32m#########################\x1b[0m] 100.0% ..Success (\x1b[1;34mUnready: 0\x1b[0m, \x1b[1;32mCompleted: 1000\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1000\x1b[0m)\n",
             ),
             (
                 dedent(
@@ -352,7 +352,7 @@ class TestClient:
                 Summary: 1 DAG total (Failure:1)
                 """
                 ).encode("utf8"),
-                "\r[\x1b[1;32m##############\x1b[0m----------------------]  37.5% ..Failure (\x1b[1;32mCompleted: 3\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1\x1b[0m)\n",
+                "\r[\x1b[1;32m#########\x1b[0m----------------]  37.5% ..Failure (\x1b[1;34mUnready: 4\x1b[0m, \x1b[1;32mCompleted: 3\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1\x1b[0m)\n",
             ),
             (
                 dedent(
@@ -365,7 +365,7 @@ class TestClient:
                 Summary: 3 DAGs total (Success:3)
                 """
                 ).encode("utf8"),
-                "\r[\x1b[1;32m####################################\x1b[0m] 100.0% ..Success (\x1b[1;32mCompleted: 11\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 0\x1b[0m)\n",
+                "\r[\x1b[1;32m#########################\x1b[0m] 100.0% ..Success (\x1b[1;34mUnready: 0\x1b[0m, \x1b[1;32mCompleted: 11\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 0\x1b[0m)\n",
             ),
         ],
     )
