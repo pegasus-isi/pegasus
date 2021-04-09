@@ -58,11 +58,14 @@ public class CondorStyleFactory {
     /** The name of the class implementing the CREAMCE Style. */
     private static final String CREAMCE_STYLE_IMPLEMENTING_CLASS = "CreamCE";
 
-    /** The name of the class implementing the CondorG Style. */
+    /** The name of the class implementing the Glite Style. */
     private static final String GLITE_STYLE_IMPLEMENTING_CLASS = "GLite";
 
-    /** The name of the class implementing the CondorG Style. */
+    /** The name of the class implementing the SSH Style. */
     private static final String SSH_STYLE_IMPLEMENTING_CLASS = "SSH";
+
+    /** The name of the class implementing the Panda Style. */
+    private static final String PANDA_STYLE_IMPLEMENTING_CLASS = "Panda";
 
     /**
      * Returns a table that maps, the Pegasus style keys to the names of implementing classes.
@@ -84,6 +87,7 @@ public class CondorStyleFactory {
             mImplementingClassNameTable.put(
                     Pegasus.CREAMCE_STYLE, CREAMCE_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(Pegasus.SSH_STYLE, SSH_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put(Pegasus.PANDA_STYLE, PANDA_STYLE_IMPLEMENTING_CLASS);
         }
         return mImplementingClassNameTable;
     }
@@ -272,7 +276,7 @@ public class CondorStyleFactory {
         // discover the implementing class
         String className = (String) CondorStyleFactory.implementingClassNameTable().get(style);
         if (className == null) {
-            throw new CondorStyleFactoryException("No class found corresponding to style ", style);
+            throw new CondorStyleFactoryException("No class found corresponding to style " + style);
         }
         CondorStyle cs = (CondorStyle) mImplementingClassTable.get(style);
         if (cs == null) {
