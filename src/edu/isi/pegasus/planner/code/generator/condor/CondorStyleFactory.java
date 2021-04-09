@@ -272,7 +272,7 @@ public class CondorStyleFactory {
         // discover the implementing class
         String className = (String) CondorStyleFactory.implementingClassNameTable().get(style);
         if (className == null) {
-            throw new CondorStyleFactoryException("No class found corresponding to style ", style);
+            throw new CondorStyleFactoryException("No class found corresponding to style " + style);
         }
         CondorStyle cs = (CondorStyle) mImplementingClassTable.get(style);
         if (cs == null) {
