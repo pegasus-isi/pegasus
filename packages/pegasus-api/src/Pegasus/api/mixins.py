@@ -249,10 +249,11 @@ class ProfileMixin:
             # Example 2
             job.add_profiles(Namespace.ENV, JAVA_HOME="/usr/bin/java", USER="ryan")
 
-        For :code:`add_globus_profile()`, :code:`add_condor_profile()`, :code:`add_dagman_profile()`,
-        :code:`add_selector_profile()`, and :code:`add_pegasus_profile()`, if a profile key that
+        For :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_globus_profiles`, :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_condor_profiles`,
+        :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_dagman_profiles`, :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_selector_profiles`,
+        and :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_pegasus_profiles`, if a profile key 
         you are trying to use is not listed as a key word argument, use this
-        function to add the profile.
+        function to add the profile. 
 
         :raises TypeError: namespace must be one of Namespace
         :return: self
