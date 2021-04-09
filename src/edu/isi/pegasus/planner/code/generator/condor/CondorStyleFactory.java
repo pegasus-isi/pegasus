@@ -63,7 +63,7 @@ public class CondorStyleFactory {
 
     /** The name of the class implementing the SSH Style. */
     private static final String SSH_STYLE_IMPLEMENTING_CLASS = "SSH";
-    
+
     /** The name of the class implementing the Panda Style. */
     private static final String PANDA_STYLE_IMPLEMENTING_CLASS = "Panda";
 
