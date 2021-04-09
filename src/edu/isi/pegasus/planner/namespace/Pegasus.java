@@ -305,6 +305,11 @@ public class Pegasus extends Namespace {
      * The style indicating that the submit files are to be generated for a direct ssh submission
      */
     public static final String SSH_STYLE = "ssh";
+    
+    /**
+     * The style indicating that the submit files are to be generated for a panda submission
+     */
+    public static String PANDA_STYLE = "panda";
 
     /** A key to designate the memory required by a job in MB by pegasus-mpi-cluster. */
     public static final String PMC_REQUEST_MEMORY_KEY = "pmc_request_memory";
