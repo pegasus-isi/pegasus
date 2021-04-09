@@ -19,12 +19,10 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 /**
- * Enables a job to be directly submitted to a remote compute cluster using a
- * Panda to a remote compute cluster. This is achieved by means of a HTCondor
- * Batch module for Panda similar to how HTCondor supports local resource 
- * managers such as PBS, SLURM, LSF.
+ * Enables a job to be directly submitted to a remote compute cluster using a Panda to a remote
+ * compute cluster. This is achieved by means of a HTCondor Batch module for Panda similar to how
+ * HTCondor supports local resource managers such as PBS, SLURM, LSF.
  *
- * 
  * @author Karan Vahi
  * @version $Revision$
  */
@@ -102,13 +100,13 @@ public class Panda extends GLite {
                     .append(job.getGridGatewayJobType());
             throw new RuntimeException(error.toString());
         }
-        
+
         // instead of batch system we hardcode it to panda
         // currently panda gahp does not require to specify
         // the scheduler on the compute site
         gridResource.append(STYLE_NAME.toLowerCase()).append(" ");
         gridResource.append(g.getContact()).append(" ");
-        
+
         return gridResource.toString();
     }
 }

@@ -274,13 +274,11 @@ public class GLite extends Abstract {
         }
 
         if (gridResource.startsWith(GLite.PANDA_GRID_RESOURCE_PREFIX)) {
-            // PM-1539 at the moment condor does not support grid resource of type
-            // panda . so we revert the grid resoure back to batch
-            gridResource =
-                    gridResource.replaceAll(
-                            "^" + GLite.PANDA_GRID_RESOURCE_PREFIX,
-                            GLite.BATCH_GRID_RESOURCE_PREFIX);
-            job.condorVariables.construct(Condor.GRID_RESOURCE_KEY, gridResource);
+            // PM-1739 the approach in PM-1539 is no longer supported.
+            // Point user to do the right thing
+            throw new CondorStyleException(
+                    "Malformed gridResource specified. Please use style panda to enable Panda submissions. Also please specify this information as a grid gateway for site "
+                            + job.getSiteHandle());
         }
 
         job.condorVariables.construct(
