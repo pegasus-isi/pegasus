@@ -161,8 +161,11 @@ public class MainEngine extends Engine {
                 abstractWFName);
         if (mOriginalDag.hasCycles()) {
             NameValue nv = mOriginalDag.getCyclicEdge();
-            throw new RuntimeException(
-                    "Cyclic dependency detected " + nv.getKey() + " -> " + nv.getValue());
+            String error =
+                    (nv == null)
+                            ? "Abstract Workflow has cycles"
+                            : "Cyclic dependency detected " + nv.getKey() + " -> " + nv.getValue();
+            throw new RuntimeException(error);
         }
         mLogger.logEventCompletion();
 
