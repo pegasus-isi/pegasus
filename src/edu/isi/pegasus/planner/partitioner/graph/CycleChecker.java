@@ -43,6 +43,11 @@ public class CycleChecker {
         mCyclicEdge = null;
         Stack<GraphNode> stack = new Stack();
 
+        if (!mDAG.nodeIterator().hasNext()) {
+            // PM-1748 sanity check for empty workflow
+            return false;
+        }
+
         // sanity intialization of all nodes to white color
         for (Iterator it = mDAG.nodeIterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
