@@ -32,35 +32,38 @@ int main(void) {
     if (result != NVML_SUCCESS)
       goto Error;
     
-    printf("============================== GPU ENV =============================\n");
+    printf("============================================= GPU ENV =====================================================\n");
     printGpuEnvironment(env);
-    printf("====================================================================\n\n\n");
+    printf("===========================================================================================================\n\n\n");
     
     while(exit_guard)
     {
         result = getGpuStatistics(&env.devices[0]);
         if (result != NVML_SUCCESS)
           goto Error;
-        printf("============================== GPU GENERAL STATS =============================\n");
+        printf("==================================== GPU GENERAL STATS ================================================\n");
         printGpuStatistics(env.devices[0]);
         
-        /*result = getGpuComputeStatistics(&env.devices[0]);
+        result = getGpuComputeProcesses(&env.devices[0]);
         if (result != NVML_SUCCESS)
           goto Error;
-        printf("============================== GPU COMPUTE STATS =============================\n");
-        printGpuComputeStatistics(env.devices[0]);
-        printf("==============================================================================\n");
-        */
+        printf("==================================== GPU COMPUTE PROCESSES ============================================\n");
+        printGpuComputeProcessInfos(env.devices[0]);
+        
         result = getGpuProcessStatistics(&env.devices[0]);
         if (result != NVML_SUCCESS)
           goto Error;
-        printf("============================== GPU PROCESS STATS =============================\n");
+        printf("==================================== GPU PROCESS STATS ================================================\n");
         printGpuProcessStatistics(env.devices[0]);
-        printf("==============================================================================\n\n");
+        printf("=======================================================================================================\n\n");
         
         sleep(2);
     }
 
+    printf("==================================== GPU MAX STATS ================================================\n");
+    printGpuMaxMeasurements(env.devices[0]);
+    printf("=======================================================================================================\n\n");
+    
     result = nvmlShutdown();
     if (result != NVML_SUCCESS)
         printf("Failed to shutdown NVML: %s\n", nvmlErrorString(result));
