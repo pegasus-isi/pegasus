@@ -1,6 +1,10 @@
 #ifndef NVIDIA_MONITOR_H
 #define NVIDIA_MONITOR_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <nvml.h>
+
 typedef struct {
     unsigned int index;
     nvmlPciInfo_t pci;
@@ -8,6 +12,9 @@ typedef struct {
     nvmlMemory_t memory;
     nvmlUtilization_t utilization;
     nvmlComputeMode_t compute_mode;
+    nvmlProcessUtilizationSample_t *proc_samples;
+    int proc_samples_size;
+    unsigned long long proc_samples_last_ts;
     int cuda_capability_major;
     int cuda_capability_minor;
     unsigned int temp;
@@ -19,28 +26,14 @@ typedef struct {
     char name[NVML_DEVICE_NAME_BUFFER_SIZE];
 } gpu_dev_info_struct;
 
+
 typedef struct {
     unsigned int device_count;
     int cuda_version;
     char driver_version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];
-    gpu_dev_info_struct devices[20];
+    gpu_dev_info_struct *devices;
 } gpu_env_struct;
 
-/*static const char * convertToComputeModeString(nvmlComputeMode_t mode) {
-    switch (mode)
-    {
-        case NVML_COMPUTEMODE_DEFAULT:
-            return "Default";
-        case NVML_COMPUTEMODE_EXCLUSIVE_THREAD:
-            return "Exclusive_Thread";
-        case NVML_COMPUTEMODE_PROHIBITED:
-            return "Prohibited";
-        case NVML_COMPUTEMODE_EXCLUSIVE_PROCESS:
-            return "Exclusive Process";
-        default:
-            return "Unknown";
-    }
-}*/
 
 nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
     nvmlReturn_t result;
@@ -68,10 +61,15 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
         printf("Failed to query device count: %s\n", nvmlErrorString(result));
         return result;
     }
+
+    env->devices = (gpu_dev_info_struct*) malloc(env->device_count * sizeof(gpu_dev_info_struct));
     
     for (i = 0; i < env->device_count; i++)
     {
         env->devices[i].index = i;
+        env->devices[i].proc_samples = NULL;
+        env->devices[i].proc_samples_size = -1;
+        env->devices[i].proc_samples_last_ts = 0;
         env->devices[i].cuda_capability_major = 0;
         env->devices[i].cuda_capability_minor = 0;
         env->devices[i].is_cuda_capable = 1;
@@ -227,6 +225,67 @@ nvmlReturn_t getGpuStatisticsAll(gpu_env_struct *env) {
 }
 
 
+nvmlReturn_t getGpuProcessStatistics(gpu_dev_info_struct *device) {
+    nvmlReturn_t result;
+    unsigned int i, tmp_samples_cnt;
+    nvmlProcessUtilizationSample_t *tmp_samples;
+    unsigned long long tmp_samples_last_ts = 0;
+    
+    //determine size of buffer
+    result = nvmlDeviceGetProcessUtilization(device->device, NULL, &tmp_samples_cnt, device->proc_samples_last_ts);
+    if (result != NVML_SUCCESS && result != NVML_ERROR_INSUFFICIENT_SIZE)
+    { 
+        printf("Failed to get num of process samples for device %u: %s\n", device->index, nvmlErrorString(result));
+        return result;
+    }
+
+    //allcate space to store them
+    tmp_samples = (nvmlProcessUtilizationSample_t*) malloc(tmp_samples_cnt * sizeof(nvmlProcessUtilizationSample_t));
+
+    result = nvmlDeviceGetProcessUtilization(device->device, tmp_samples, &tmp_samples_cnt, device->proc_samples_last_ts);
+    if (result != NVML_SUCCESS)
+    { 
+        printf("Failed to get process samples for device %u: %s\n", device->index, nvmlErrorString(result));
+        return result;
+    }
+
+    for (i = 0; i < tmp_samples_cnt; i++);
+        if (tmp_samples_last_ts < tmp_samples[i].timeStamp)
+            tmp_samples_last_ts = tmp_samples[i].timeStamp;
+
+    if (device->proc_samples != NULL)
+        free(device->proc_samples);
+    
+    device->proc_samples = tmp_samples;
+    device->proc_samples_size = tmp_samples_cnt;
+    device->proc_samples_last_ts = tmp_samples_last_ts;
+    
+    return result;
+}
+
+
+nvmlReturn_t getGpuProcessStatisticsByID(unsigned int i, gpu_env_struct *env) {
+    nvmlReturn_t result = getGpuProcessStatistics(&env->devices[i]);
+
+    return result;
+}
+
+
+nvmlReturn_t getGpuProcessStatisticsAll(gpu_env_struct *env) {
+    unsigned int i;
+    nvmlReturn_t result;
+
+    for (i = 0; i < env->device_count; i++)
+    {
+        result = getGpuProcessStatistics(&env->devices[i]);
+        if (result != NVML_SUCCESS)
+            break;
+    }
+
+    return result;
+}
+
+
 void printGpuStatistics(gpu_dev_info_struct device) {
     printf("%u. %s [%s]\n", device.index, device.name, device.pci.busId);
     printf("\t Tempearture %d C\n", device.temp);
@@ -239,11 +298,31 @@ void printGpuStatistics(gpu_dev_info_struct device) {
 }
 
 
+void printGpuProcessStatistics(gpu_dev_info_struct device) {
+    unsigned int i;
+
+    printf("%u. %s [%s]\n", device.index, device.name, device.pci.busId);
+    
+    for (i = 0; i < device.proc_samples_size; i++)
+        printf("\t PID %u (%llu): SM Util %u %% | Mem Util %u %% | Enc Util %u %% | Dec Util %u %%\n", 
+                  device.proc_samples[i].pid,
+                  device.proc_samples[i].timeStamp,
+                  device.proc_samples[i].smUtil,
+                  device.proc_samples[i].memUtil,
+                  device.proc_samples[i].encUtil, 
+                  device.proc_samples[i].decUtil
+              );
+
+    return;
+}
+
+
 void printGpuStatisticsByID(unsigned int i, gpu_env_struct env) {
     printGpuStatistics(env.devices[i]);
 
     return;
 }
+
 
 void printGpuEnvironment(gpu_env_struct env) {
     unsigned int i;
