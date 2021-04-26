@@ -804,7 +804,8 @@ REDIR:
     appinfo.status = result;
 
     /* append results to log file */
-    printAppInfo(&appinfo);
+    if (printAppInfo(&appinfo) != 0)
+        result = 1;
 
     /* clean up and close FDs */
     skip_atexit = 1;

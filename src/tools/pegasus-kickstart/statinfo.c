@@ -344,6 +344,7 @@ int addLFNToStatInfo(StatInfo* info, const char* lfn) {
 size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
                         const StatInfo* info, int includeData, int useCDATA,
                         int allowTruncate) {
+    /* return number of errors encountered - we still want to see the record */
     char *real = NULL;
 
     /* sanity check */
@@ -469,14 +470,16 @@ size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
      */
     if (id != NULL && info->error == 0 && strcmp(id, "final") == 0) {
          fprintf(out, "%*soutput: True\n", indent+2, "");
+        size_t result = 0;
         char chksum_xml[2048];
         real = realpath(info->file.name, NULL);
-        if (pegasus_integrity_yaml(real, chksum_xml)) {
+        result = pegasus_integrity_yaml(real, chksum_xml);
+        if (result == 1) {
             fprintf(out, "%s", chksum_xml);
         }
         else {
-            fprintf(out, "%*sintegrity_error: pegasus-integrity callout failed\n", indent+2, "");
-            return 0;
+            fprintf(out, "%*sintegrity_error: failed creating a checksum\n", indent+2, "");
+            return 1;
         }
         if (real) {
             free((void*) real);

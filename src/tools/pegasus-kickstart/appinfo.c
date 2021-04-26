@@ -121,6 +121,7 @@ static int comparator(const void* a, const void* b) {
 
 static size_t convert2YAML(FILE *out, const AppInfo* run) {
     size_t i;
+    size_t error_count = 0;
     struct passwd* user = getpwuid(getuid());
     struct group* group = getgrgid(getgid());
 
@@ -233,12 +234,12 @@ static size_t convert2YAML(FILE *out, const AppInfo* run) {
     /* User-specified initial and final arbitrary <statcall> records */
     if (run->icount && run->initial) {
         for (i=0; i<run->icount; ++i) {
-            printYAMLStatInfo(out, 4, "initial", &run->initial[i], includeData, useCDATA, 1);
+            error_count += printYAMLStatInfo(out, 4, "initial", &run->initial[i], includeData, useCDATA, 1);
         }
     }
     if (run->fcount && run->final) {
         for (i=0; i<run->fcount; ++i) {
-            printYAMLStatInfo(out, 4, "final", &run->final[i], includeData, useCDATA, 1);
+            error_count += printYAMLStatInfo(out, 4, "final", &run->final[i], includeData, useCDATA, 1);
         }
     }
 
@@ -246,13 +247,13 @@ static size_t convert2YAML(FILE *out, const AppInfo* run) {
     print_pegasus_integrity_yaml_blob(out, run->integritydata.file.name);
 
     /* Default <statcall> records */
-    printYAMLStatInfo(out, 4, "stdin", &run->input, includeData, useCDATA, 1);
+    error_count += printYAMLStatInfo(out, 4, "stdin", &run->input, includeData, useCDATA, 1);
     updateStatInfo(&(((AppInfo*) run)->output));
-    printYAMLStatInfo(out, 4, "stdout", &run->output, includeData, useCDATA, 1);
+    error_count += printYAMLStatInfo(out, 4, "stdout", &run->output, includeData, useCDATA, 1);
     updateStatInfo(&(((AppInfo*) run)->error));
-    printYAMLStatInfo(out, 4, "stderr", &run->error, includeData, useCDATA, 1);
+    error_count += printYAMLStatInfo(out, 4, "stderr", &run->error, includeData, useCDATA, 1);
     updateStatInfo(&(((AppInfo*) run)->metadata));
-    printYAMLStatInfo(out, 4, "metadata", &run->metadata, 1, useCDATA, 0);
+    error_count += printYAMLStatInfo(out, 4, "metadata", &run->metadata, 1, useCDATA, 0);
 
     /* If the job failed, or if the user requested the full kickstart record */
     if (any_failure(run) || run->fullInfo) {
@@ -260,9 +261,9 @@ static size_t convert2YAML(FILE *out, const AppInfo* run) {
         int N;
 
         /* Extra <statcall> records */
-        printYAMLStatInfo(out, 4, "kickstart", &run->kickstart, includeData, useCDATA, 1);
+        error_count += printYAMLStatInfo(out, 4, "kickstart", &run->kickstart, includeData, useCDATA, 1);
         updateStatInfo(&(((AppInfo*) run)->logfile));
-        printYAMLStatInfo(out, 4, "logfile", &run->logfile, includeData, useCDATA, 1);
+        error_count += printYAMLStatInfo(out, 4, "logfile", &run->logfile, includeData, useCDATA, 1);
 
         /* <environment> */
         fprintf(out, "  environment:\n");
@@ -294,6 +295,8 @@ static size_t convert2YAML(FILE *out, const AppInfo* run) {
 
     } /* run->status || run->fullInfo */
 
+    if (error_count > 0)
+        return -1;
     return 0;
 }
 
