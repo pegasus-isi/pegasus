@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
@@ -116,7 +117,7 @@ public class Named implements SubmitMapper {
         }
 
         if (relative == null) {
-            throw new RuntimeException(
+            throw new MapperException(
                     "Pegasus Profile Key "
                             + Pegasus.RELATIVE_SUBMIT_DIR_KEY
                             + " not specified. Unable to determine relative directory for job "
