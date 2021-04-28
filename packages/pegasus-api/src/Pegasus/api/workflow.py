@@ -743,6 +743,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         self._path = None
 
+        self._has_subworkflow_jobs = False
+
         # sequence unique to this workflow only
         self.sequence = 1
 
@@ -1124,6 +1126,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                     "Job with id {} already added to this workflow".format(job._id)
                 )
 
+            if isinstance(job, SubWorkflow):
+                self._has_subworkflow_jobs = True
+
             self.jobs[job._id] = job
 
     def get_job(self, _id: str):
@@ -1407,22 +1412,18 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type file: Optional[Union[str, TextIO]]
         :param _format: serialized format of the workflow object (this should be left as its default)
         :type _format: str, optional
-        :raises PegasusError: :py:class:`~Pegasus.api.site_catalog.SiteCatalog` and :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` must be written as a separate file for hierarchical workflows.
         :return: self
         """
 
-        # if subworkflow jobs exist,  tc and sc cannot be inlined
-        has_subworkflow_jobs = False
-        for _, job in self.jobs.items():
-            if isinstance(job, SubWorkflow):
-                has_subworkflow_jobs = True
-                break
-
-        if has_subworkflow_jobs:
-            if self.site_catalog or self.transformation_catalog:
-                raise PegasusError(
-                    "Site Catalog and Transformation Catalog must be written as a separate file for hierarchical workflows."
-                )
+        # ensure user is aware that SiteCatalog and TransformationCatalog are
+        # not inherited by SubWorkflows when those two catalogs are embedded
+        # into the root workflow
+        if (
+            self.site_catalog is not None or self.transformation_catalog is not None
+        ) and self._has_subworkflow_jobs:
+            print(
+                "WARNING: SiteCatalog and TransformationCatalog objects embedded into the root Workflow are not inherited by SubWorkflow jobs. To set SiteCatalog and TransformationCatalog objects in SubWorkflows, ensure that they are embedded into those SubWorkflows."
+            )
 
         # default file name
         if file is None:
