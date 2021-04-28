@@ -370,7 +370,7 @@ class EnsembleProcessor:
         def get_priority(w):
             return w.priority
 
-        self.workflows.sort(key=get_priority)
+        self.workflows.sort(key=get_priority, reverse=True)
 
         # Count the number of planning and running workflows
         for w in self.workflows:
