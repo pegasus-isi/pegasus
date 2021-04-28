@@ -398,6 +398,9 @@ public class Pegasus extends Namespace {
     public static final String PEGASUS_LITE_ENV_SOURCE_KEY =
             ENV.PEGASUS_LITE_ENV_SOURCE_KEY.toLowerCase();
 
+    /** profile key to identify the relative submit directory where submit files are written to. */
+    public static final String RELATIVE_SUBMIT_DIR_KEY = "relative.submit.dir";
+
     // credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
     private static final String SSH_PRIVATE_KEY_VARIABLE =
@@ -658,7 +661,8 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'r':
-                if (key.compareTo(RUNTIME_KEY) == 0) {
+                if (key.compareTo(RUNTIME_KEY) == 0
+                        || key.compareTo(RELATIVE_SUBMIT_DIR_KEY) == 0) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;
