@@ -48,25 +48,31 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.metadata = dict()
 
     @_chained
-    def add_inputs(self, *input_files: File, bypass_staging: bool = False):
+    def add_inputs(self, *input_files: Union[File, str], bypass_staging: bool = False):
         """
-        add_inputs(self, *input_files: File, bypass: bool = False)
-        Add one or more :py:class:`~Pegasus.api.replica_catalog.File` objects as input to this job
+        add_inputs(self, *input_files: Union[File, str], bypass: bool = False)
+        Add one or more :py:class:`~Pegasus.api.replica_catalog.File` objects as input to this job.
+        If :code:`input_file` is given as a str, a :py:class:`~Pegasus.api.replica_catalog.File` object is created for 
+        you internally with the given value as its lfn.
 
         :param input_files: the :py:class:`~Pegasus.api.replica_catalog.File` objects to be added as inputs to this job
+        :type input_files: Union[File, str]
         :param bypass_staging: whether or not to bypass the staging site when this file is fetched by the job, defaults to False
         :type bypass_staging: bool, optional
         :raises DuplicateError: all input files must be unique
-        :raises TypeError: job inputs must be of type :py:class:`~Pegasus.api.replica_catalog.File`
+        :raises TypeError: job inputs must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :return: self
         """
         for file in input_files:
-            if not isinstance(file, File):
+            if not isinstance(file, (File, str)):
                 raise TypeError(
-                    "invalid input_file: {file}; input_file(s) must be of type File".format(
+                    "invalid input_file: {file}; input_file(s) must be of type File or str".format(
                         file=file
                     )
                 )
+
+            if isinstance(file, str):
+                file = File(file)
 
             _input = _Use(
                 file,
@@ -94,29 +100,38 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
     @_chained
     def add_outputs(
-        self, *output_files: File, stage_out: bool = True, register_replica: bool = True
+        self,
+        *output_files: Union[File, str],
+        stage_out: bool = True,
+        register_replica: bool = True
     ):
         """
-        add_outputs(self, *output_files: File, stage_out: bool = True, register_replica: bool = True)
+        add_outputs(self, *output_files: Union[File, str], stage_out: bool = True, register_replica: bool = True)
         Add one or more :py:class:`~Pegasus.api.replica_catalog.File` objects as outputs to this job. :code:`stage_out` and :code:`register_replica`
         will be applied to all files given.
+        If :code:`output_file` is given as a str, a :py:class:`~Pegasus.api.replica_catalog.File` object is created for 
+        you internally with the given value as its lfn.
 
         :param output_files: the :py:class:`~Pegasus.api.replica_catalog.File` objects to be added as outputs to this job
+        :type output_files: Union[File, str]
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to True
         :type register_replica: bool, optional
         :raises DuplicateError: all output files must be unique
-        :raises TypeError: a job output must be of type File
+        :raises TypeError: job outputs must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :return: self
         """
         for file in output_files:
-            if not isinstance(file, File):
+            if not isinstance(file, (File, str)):
                 raise TypeError(
-                    "invalid output_file: {file}; output_file(s) must be of type File".format(
+                    "invalid output_file: {file}; output_file(s) must be of type File or str".format(
                         file=file
                     )
                 )
+
+            if isinstance(file, str):
+                file = File(file)
 
             output = _Use(
                 file,
@@ -144,31 +159,36 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_checkpoint(
         self,
-        checkpoint_file: File,
+        checkpoint_file: Union[File, str],
         stage_out: bool = True,
         register_replica: bool = True,
     ):
         """
-        add_checkpoint(self, checkpoint_file: File, stage_out: bool = True, register_replica: bool = True)
+        add_checkpoint(self, checkpoint_file: Union[File, str], stage_out: bool = True, register_replica: bool = True)
         Add an output :py:class:`~Pegasus.api.replica_catalog.File` of this job as a checkpoint file
+        If :code:`checkpoint_file` is given as a str, a :py:class:`~Pegasus.api.replica_catalog.File` object is created for 
+        you internally with the given value as its lfn.
 
         :param checkpoint_file: the :py:class:`~Pegasus.api.replica_catalog.File` to be added as a checkpoint file to this job
-        :type checkpoint_file: File
+        :type checkpoint_file: Union[File, str]
         :param stage_out: whether or not to send files back to an output directory, defaults to True
         :type stage_out: bool, optional
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to True
         :type register_replica: bool, optional
         :raises DuplicateError: all output files must be unique
-        :raises TypeError: a job output must be of type File
+        :raises TypeError: job inputs must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :return: self
         """
 
-        if not isinstance(checkpoint_file, File):
+        if not isinstance(checkpoint_file, (File, str)):
             raise TypeError(
-                "invalid checkpoint_file: {file}; checkpoint_file must be of type File".format(
+                "invalid checkpoint_file: {file}; checkpoint_file must be of type File or str".format(
                     file=checkpoint_file
                 )
             )
+
+        if isinstance(checkpoint_file, str):
+            checkpoint_file = File(checkpoint_file)
 
         checkpoint = _Use(
             checkpoint_file,

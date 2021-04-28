@@ -141,19 +141,21 @@ class TestAbstractJob:
     def test_get_inputs(self):
         job = AbstractJob()
         f1 = File("a")
+        f2 = File("b")
 
-        job.add_inputs(f1)
+        job.add_inputs(f1, "b")
 
-        assert job.get_inputs() == {f1}
+        assert job.get_inputs() == {f1, f2}
 
     def test_add_inputs(self):
         job = AbstractJob()
         f1 = File("a")
         f2 = File("b")
+        f3 = File("c")
 
-        job.add_inputs(f1, f2)
+        job.add_inputs(f1, f2, "c")
 
-        assert job.get_inputs() == {f1, f2}
+        assert job.get_inputs() == {f1, f2, f3}
 
     def test_add_duplicate_input(self):
         job = AbstractJob()
@@ -173,19 +175,21 @@ class TestAbstractJob:
     def test_get_outputs(self):
         job = AbstractJob()
         f1 = File("a")
+        f2 = File("b")
 
-        job.add_outputs(f1)
+        job.add_outputs(f1, "b")
 
-        assert job.get_outputs() == {f1}
+        assert job.get_outputs() == {f1, f2}
 
     def test_add_outputs(self):
         job = AbstractJob()
         f1 = File("a")
         f2 = File("b")
+        f3 = File("c")
 
-        job.add_outputs(f1, f2)
+        job.add_outputs(f1, f2, "c")
 
-        assert job.get_outputs() == {f1, f2}
+        assert job.get_outputs() == {f1, f2, f3}
 
     def test_add_duplicate_output(self):
         job = AbstractJob()
@@ -215,15 +219,17 @@ class TestAbstractJob:
     def test_add_checkpoint(self):
         job = AbstractJob()
         job.add_checkpoint(File("checkpoint"))
+        job.add_checkpoint("checkpoint2")
 
         assert _Use(File("checkpoint"), _LinkType.CHECKPOINT) in job.uses
+        assert _Use(File("checkpoint2"), _LinkType.CHECKPOINT) in job.uses
 
     def test_add_invalid_checkpoint(self):
         job = AbstractJob()
         with pytest.raises(TypeError) as e:
-            job.add_checkpoint("badfile")
+            job.add_checkpoint(123)
 
-        assert "invalid checkpoint_file: badfile" in str(e)
+        assert "invalid checkpoint_file: 123" in str(e)
 
     def test_add_duplicate_checkpoint(self):
         job = AbstractJob()
