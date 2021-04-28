@@ -458,14 +458,14 @@ class SubWorkflow(AbstractJob):
     def __init__(
         self,
         file: Union[str, File],
-        is_planned: bool,
+        is_planned: bool = False,
         _id: Optional[str] = None,
         node_label: Optional[str] = None,
     ):
         """
         :param file: :py:class:`~Pegasus.api.replica_catalog.File` object or name of the workflow file that will be used for this job
         :type file: Union[str, File]
-        :param is_planned: whether or not this subworkflow has already been planned by the Pegasus planner
+        :param is_planned: whether or not this subworkflow has already been planned by the Pegasus planner, defaults to False
         :type is_planned: bool
         :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: Optional[str]
