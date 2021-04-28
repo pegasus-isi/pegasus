@@ -1164,16 +1164,19 @@ class TestWorkflow:
         )
 
     @pytest.mark.parametrize(
-        "sc, tc",
+        "sc, tc, is_warning_msg_expected",
         [
-            (SiteCatalog(), None),
-            (None, TransformationCatalog()),
-            (SiteCatalog(), TransformationCatalog()),
+            (None, None, False),
+            (SiteCatalog(), None, True),
+            (None, TransformationCatalog(), True),
+            (SiteCatalog(), TransformationCatalog(), True),
         ],
     )
-    def test_write_hierarchical_workflow_when_catalogs_are_inlined(self, sc, tc):
+    def test_hierarchical_workflow_warning_message(
+        self, capsys, sc, tc, is_warning_msg_expected
+    ):
         wf = Workflow("test")
-        wf.add_jobs(SubWorkflow("file", False))
+        wf.add_jobs(SubWorkflow("subwf.yml", is_planned=False))
 
         if sc:
             wf.add_site_catalog(sc)
@@ -1181,13 +1184,19 @@ class TestWorkflow:
         if tc:
             wf.add_transformation_catalog(tc)
 
-        with pytest.raises(PegasusError) as e:
-            wf.write()
+        with NamedTemporaryFile(mode="w") as f:
+            wf.write(f)
 
-        assert (
-            "Site Catalog and Transformation Catalog must be written as a separate"
-            in str(e)
+        stdout = capsys.readouterr().out
+
+        expected_warning_msg = (
+            "WARNING: SiteCatalog and TransformationCatalog objects embedded into"
         )
+
+        if is_warning_msg_expected:
+            assert expected_warning_msg in stdout
+        else:
+            assert expected_warning_msg not in stdout
 
     def test_workflow_key_ordering_on_yml_write(self):
         tc = TransformationCatalog()
