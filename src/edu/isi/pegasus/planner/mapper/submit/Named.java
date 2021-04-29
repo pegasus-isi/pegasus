@@ -73,6 +73,15 @@ public class Named implements SubmitMapper {
      */
     public File getRelativeDir(Job job) {
         String relative = this.determineRelativeDirectory(job);
+       
+        // create the relative dir on the submit host if not created already
+        File fullDir = new File(mBaseSubmitDirectory, relative);
+        if (!fullDir.exists()){
+            if( !fullDir.mkdirs()){
+                throw new MapperException("Unable to create directory " + fullDir);
+            }
+        }
+       
         return new File(relative);
     }
 
@@ -110,9 +119,10 @@ public class Named implements SubmitMapper {
                 relative = job.vdsNS.getStringValue(Pegasus.RELATIVE_SUBMIT_DIR_KEY);
                 break;
 
-                // all other jobs use the associated transformation name
+                // all other jobs use . to indicate we generate in the base
+                // submit directory of the workflow
             default:
-                relative = job.getTXName();
+                relative = ".";
                 break;
         }
 
@@ -121,7 +131,7 @@ public class Named implements SubmitMapper {
                     "Pegasus Profile Key "
                             + Pegasus.RELATIVE_SUBMIT_DIR_KEY
                             + " not specified. Unable to determine relative directory for job "
-                            + job);
+                            + job.getName());
         }
         return relative;
     }
