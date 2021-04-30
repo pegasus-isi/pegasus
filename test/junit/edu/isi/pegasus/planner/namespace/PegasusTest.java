@@ -337,6 +337,13 @@ public class PegasusTest {
         mLogger.logEventCompletion();
     }
 
+    @Test
+    public void testRelativeSubmitDirKey() {
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
+        testKey(Pegasus.RELATIVE_SUBMIT_DIR_KEY, "true", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+    }
+
     @After
     public void tearDown() {
         mLogger = null;
