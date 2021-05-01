@@ -555,6 +555,203 @@ class TestSubWorkflow:
         assert "invalid file: 123" in str(e)
 
     @pytest.mark.parametrize(
+        "kwargs, expected_args_list",
+        [
+            ({}, ["--output-sites", "local", "--cleanup", "inplace",]),
+            (
+                {
+                    "conf": "conf",
+                    "basename": "basename",
+                    "job_prefix": "job_prefix",
+                    "cluster": ["one", "two"],
+                    "sites": ["local", "condorpool"],
+                    "output_sites": ["local", "other"],
+                    "staging_sites": {"condorpool": "staging"},
+                    "cache": ["cache", Path("cache2")],
+                    "input_dirs": ["input_dir1", Path("input_dir2")],
+                    "output_dir": "output_dir",
+                    "dir": "dir",
+                    "relative_dir": "relative_dir",
+                    "random_dir": True,
+                    "relative_submit_dir": "relative_submit_dir",
+                    "inherited_rc_files": ["f1", Path("f2")],
+                    "cleanup": "inplace",
+                    "reuse": ["reuse1", Path("reuse2")],
+                    "verbose": 3,
+                    "quiet": 3,
+                    "force": True,
+                    "force_replan": True,
+                    "forward": ["forward"],
+                    "submit": True,
+                    "java_options": ["opt"],
+                    "other": "other",
+                },
+                [
+                    "-Dother=other",
+                    "--basename",
+                    "basename",
+                    "--job-prefix",
+                    "job_prefix",
+                    "--conf",
+                    "conf",
+                    "--cluster",
+                    "one,two",
+                    "--sites",
+                    "local,condorpool",
+                    "--output-sites",
+                    "local,other",
+                    "--staging-site",
+                    "condorpool=staging",
+                    "--cache",
+                    "cache,cache2",
+                    "--input-dir",
+                    "input_dir1,input_dir2",
+                    "--output-dir",
+                    "output_dir",
+                    "--dir",
+                    "dir",
+                    "--relative-dir",
+                    "relative_dir",
+                    "--relative-submit-dir",
+                    "relative_submit_dir",
+                    "--randomdir",
+                    "--inherited-rc-files",
+                    "f1,f2",
+                    "--cleanup",
+                    "inplace",
+                    "--reuse",
+                    "reuse1,reuse2",
+                    "-vvv",
+                    "-qqq",
+                    "--force",
+                    "--force-replan",
+                    "--forward",
+                    "forward",
+                    "--submit",
+                    "-Xopt",
+                ],
+            ),
+            (
+                {
+                    "conf": Path("conf"),
+                    "basename": "basename",
+                    "job_prefix": "job_prefix",
+                    "cluster": ["one", "two"],
+                    "sites": ["local", "condorpool"],
+                    "output_sites": ["local", "other"],
+                    "staging_sites": {"condorpool": "staging"},
+                    "cache": ["cache", Path("cache2")],
+                    "input_dirs": ["input_dir1", Path("input_dir2")],
+                    "output_dir": "output_dir",
+                    "dir": Path("dir"),
+                    "relative_dir": Path("relative_dir"),
+                    "random_dir": Path("random_dir"),
+                    "relative_submit_dir": Path("relative_submit_dir"),
+                    "inherited_rc_files": ["f1", Path("f2")],
+                    "cleanup": "inplace",
+                    "reuse": ["reuse1", Path("reuse2")],
+                    "verbose": 3,
+                    "quiet": 3,
+                    "force": True,
+                    "force_replan": True,
+                    "forward": ["forward"],
+                    "submit": False,
+                    "java_options": ["opt"],
+                    "other": "other",
+                },
+                [
+                    "-Dother=other",
+                    "--basename",
+                    "basename",
+                    "--job-prefix",
+                    "job_prefix",
+                    "--conf",
+                    "conf",
+                    "--cluster",
+                    "one,two",
+                    "--sites",
+                    "local,condorpool",
+                    "--output-sites",
+                    "local,other",
+                    "--staging-site",
+                    "condorpool=staging",
+                    "--cache",
+                    "cache,cache2",
+                    "--input-dir",
+                    "input_dir1,input_dir2",
+                    "--output-dir",
+                    "output_dir",
+                    "--dir",
+                    "dir",
+                    "--relative-dir",
+                    "relative_dir",
+                    "--relative-submit-dir",
+                    "relative_submit_dir",
+                    "--randomdir=random_dir",
+                    "--inherited-rc-files",
+                    "f1,f2",
+                    "--cleanup",
+                    "inplace",
+                    "--reuse",
+                    "reuse1,reuse2",
+                    "-vvv",
+                    "-qqq",
+                    "--force",
+                    "--force-replan",
+                    "--forward",
+                    "forward",
+                    "-Xopt",
+                ],
+            ),
+        ],
+    )
+    def test_add_planner_args(self, kwargs, expected_args_list):
+        job = SubWorkflow("wf.yml", is_planned=False)
+        job.add_planner_args(**kwargs)
+
+        assert job.args == expected_args_list
+
+    @pytest.mark.parametrize(
+        "kwargs, expected_exception_msg",
+        [
+            ({"cluster": 1}, "invalid cluster"),
+            ({"sites": 1}, "invalid sites"),
+            ({"output_sites": 1}, "invalid output_sites"),
+            ({"staging_sites": 1}, "invalid staging_sites"),
+            ({"cache": 1}, "invalid cache"),
+            ({"input_dirs": 1}, "invalid input_dirs"),
+            ({"inherited_rc_files": 1}, "invalid inherited_rc_files"),
+            ({"forward": 1}, "invalid forward"),
+            ({"java_options": 1}, "invalid java_options"),
+        ],
+    )
+    def test_invalid_planner_arg_type(self, kwargs, expected_exception_msg):
+        with pytest.raises(TypeError) as e:
+            SubWorkflow("wf_file").add_planner_args(**kwargs)
+
+        assert expected_exception_msg in str(e)
+
+    def test_add_planner_args_when_subworkflow_is_planned(self):
+        with pytest.raises(PegasusError) as e:
+            job = SubWorkflow("wf.yml", is_planned=True)
+            job.add_planner_args()
+            job.add_planner_args()
+
+        assert (
+            "SubWorkflow.add_planner_args() can only be called by SubWorkflows"
+            in str(e)
+        )
+
+    def test_planner_args_already_set_error_thrown(self):
+        job = SubWorkflow("wf.yml", is_planned=False)
+        job.add_planner_args()
+
+        with pytest.raises(PegasusError) as e:
+            job.add_planner_args()
+
+        assert "can only be invoked once" in str(e)
+
+    @pytest.mark.parametrize(
         "subworkflow, expected",
         [
             (
@@ -1164,16 +1361,19 @@ class TestWorkflow:
         )
 
     @pytest.mark.parametrize(
-        "sc, tc",
+        "sc, tc, is_warning_msg_expected",
         [
-            (SiteCatalog(), None),
-            (None, TransformationCatalog()),
-            (SiteCatalog(), TransformationCatalog()),
+            (None, None, False),
+            (SiteCatalog(), None, True),
+            (None, TransformationCatalog(), True),
+            (SiteCatalog(), TransformationCatalog(), True),
         ],
     )
-    def test_write_hierarchical_workflow_when_catalogs_are_inlined(self, sc, tc):
+    def test_hierarchical_workflow_warning_message(
+        self, capsys, sc, tc, is_warning_msg_expected
+    ):
         wf = Workflow("test")
-        wf.add_jobs(SubWorkflow("file", False))
+        wf.add_jobs(SubWorkflow("subwf.yml", is_planned=False))
 
         if sc:
             wf.add_site_catalog(sc)
@@ -1181,13 +1381,19 @@ class TestWorkflow:
         if tc:
             wf.add_transformation_catalog(tc)
 
-        with pytest.raises(PegasusError) as e:
-            wf.write()
+        with NamedTemporaryFile(mode="w") as f:
+            wf.write(f)
 
-        assert (
-            "Site Catalog and Transformation Catalog must be written as a separate"
-            in str(e)
+        stdout = capsys.readouterr().out
+
+        expected_warning_msg = (
+            "WARNING: SiteCatalog and TransformationCatalog objects embedded into"
         )
+
+        if is_warning_msg_expected:
+            assert expected_warning_msg in stdout
+        else:
+            assert expected_warning_msg not in stdout
 
     def test_workflow_key_ordering_on_yml_write(self):
         tc = TransformationCatalog()
