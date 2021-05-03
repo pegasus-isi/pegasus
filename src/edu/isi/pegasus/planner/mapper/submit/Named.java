@@ -73,15 +73,15 @@ public class Named implements SubmitMapper {
      */
     public File getRelativeDir(Job job) {
         String relative = this.determineRelativeDirectory(job);
-       
+
         // create the relative dir on the submit host if not created already
         File fullDir = new File(mBaseSubmitDirectory, relative);
-        if (!fullDir.exists()){
-            if( !fullDir.mkdirs()){
+        if (!fullDir.exists()) {
+            if (!fullDir.mkdirs()) {
                 throw new MapperException("Unable to create directory " + fullDir);
             }
         }
-       
+
         return new File(relative);
     }
 
