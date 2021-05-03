@@ -449,7 +449,7 @@ class ProfileMixin:
         pmc_task_arguments="pmc_task_arguments",
         exitcode_failure_msg="exitcode.failuremsg",
         exitcode_success_msg="exitcode.successmsg",
-        checkpoint_time="checkpoint_time",
+        checkpoint_time="checkpoint.time",
         max_walltime="maxwalltime",
         glite_arguments="glite.arguments",
         auxillary_local="auxillary.local",
