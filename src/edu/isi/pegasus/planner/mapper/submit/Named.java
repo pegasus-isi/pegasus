@@ -121,6 +121,10 @@ public class Named implements SubmitMapper {
                 if (relative == null) {
                     // fall back to the transformation name
                     relative = job.getTXName();
+                    if (relative != null && relative.length() == 0) {
+                        // empty transformation we should throw an error
+                        relative = null;
+                    }
                 }
                 break;
 
