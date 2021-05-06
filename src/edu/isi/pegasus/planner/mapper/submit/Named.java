@@ -29,8 +29,9 @@ import java.util.Properties;
  * during Code Generation. The relative directory is specified by associated a Pegasus profile key
  * named {@link Pegasus#RELATIVE_SUBMIT_DIR_KEY}
  *
- * <p>For all auxiliary jobs that are added by the planner this mapper uses the associated
- * transformation name for the determining the relative submit directory.
+ * <p>For jobs that don't have the profile key associated, the mapper assigns the relative directory
+ * to be the logical transformation name for the job. All auxiliary jobs that are added by the
+ * planner go to the base submit directory of the workflow.
  *
  * @see Pegasus#RELATIVE_SUBMIT_DIR_KEY
  * @author Karan Vahi
@@ -66,7 +67,7 @@ public class Named implements SubmitMapper {
     }
 
     /**
-     * Returns the relative submit directory for the job
+     * Returns the relative submit directory for the job. The directory is also created if need be.
      *
      * @param job
      * @return the relative submit directory for the job
@@ -117,6 +118,14 @@ public class Named implements SubmitMapper {
                 // for compute jobs look for the profile
             case Job.COMPUTE_JOB:
                 relative = job.vdsNS.getStringValue(Pegasus.RELATIVE_SUBMIT_DIR_KEY);
+                if (relative == null) {
+                    // fall back to the transformation name
+                    relative = job.getTXName();
+                    if (relative != null && relative.length() == 0) {
+                        // empty transformation we should throw an error
+                        relative = null;
+                    }
+                }
                 break;
 
                 // all other jobs use . to indicate we generate in the base

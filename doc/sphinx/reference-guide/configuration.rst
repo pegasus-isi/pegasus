@@ -1049,6 +1049,13 @@ understands.
     | |                                          | | on the compute nodes, but just needs to be sourced when           |
     |                                            | | executing the job.                                                |
     +--------------------------------------------+---------------------------------------------------------------------+
+    | | Profile Key: relative.submit.dir         | | indicates the relative submit directory for the job, if the       |
+    | | Scope : TC, Workflow                     | | Named Submit Mapper is enabled.                                   |
+    | | Since : 5.0.1                            |                                                                     |
+    | | Type :String                             |                                                                     |
+    | | See Also :                               |                                                                     |
+    | |  pegasus.dir.submit.mapper               |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
 
 
 
@@ -1373,6 +1380,18 @@ In rare occasions, it may also pertain to locally run compute jobs.
     | | Values : Flat|Hashed                      | |   the planner options. This can result in too many files in         |
     | | Default : Hashed                          | |   one directory for large workflows, and was the only option        |
     |                                             | |   before Pegasus 4.7.0 release.                                     |
+    |                                             | | - **Named**: This mapper results in the creation of a deep          |
+    |                                             | |   directory structure rooted at the submit directory. The           |
+    |                                             | |   relative    directory for a compute job is determined based on a  |
+    |                                             | |   pegasus profile named relative.submit.dir associated with the job |
+    |                                             | |   If the profile is not associated then the relative directory is   |
+    |                                             | |   derived from the logical transformation name associated with the  |
+    |                                             | |   job. Auxillary files are placed in the base submit directory for  |
+    |                                             | |   the worklfow.   To control behavior of this                       |
+    |                                             | |   mapper, users can specify the following pegasus profiles          |
+    |                                             | |                                                                     |
+    |                                             | |   **relative.submit.dir** - relative submit dir to be used fo       |
+    |                                             | |     the job.                                                        |
     |                                             | | - **Hashed**: This mapper results in the creation of a deep         |
     |                                             | |   directory structure rooted at the submit directory. The           |
     |                                             | |   base directory is the submit directory as determined from         |
