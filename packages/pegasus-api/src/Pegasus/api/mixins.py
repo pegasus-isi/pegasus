@@ -521,7 +521,7 @@ class ProfileMixin:
         label: str = None,
         pegasus_lite_env_source: Union[str, Path] = None,
         SSH_PRIVATE_KEY: str = None,
-        relative_submit_dir: Union[str, Path] = None,
+        relative_submit_dir: Union[str, Path] = None
     ):
         """Add Pegasus profile(s).
 
