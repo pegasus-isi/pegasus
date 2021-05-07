@@ -137,6 +137,8 @@ class ReplicaCatalog(Writable):
     _SUPPORTED_CHECKSUMS = {"sha256"}
 
     def __init__(self):
+        Writable.__init__(self)
+
         # Using key = (<lfn or pattern>, <is_regex>) to preserve insertion
         # order of entries while distinguishing between regex and
         # non regex entries
