@@ -317,32 +317,143 @@ class Client:
         self._log.info("\n##################\n# pegasus-status #\n##################")
         self._exec(cmd)
 
-    def wait(self, root_wf_name: str, submit_dir: str, delay: int = 5):
-        """Prints progress bar and blocks until workflow completes or fails"""
-
-        # match output from pegasus-status
+    @staticmethod
+    def _parse_status_output(
+        status_output: str, root_wf_name: str
+    ) -> Union[dict, None]:
+        """
+        Internal method for parsing pegasus-status output. Returns None if pegasus-status
+        if pegasus-status output is not recognized
+        """
+        # TODO: account for hierarchical workflows
+        # match output from pegasus-status -l
         # for example, given the following output:
         #
         # UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
         #     0     0     0     0     0     8     0 100.0 Success *appends-0.dag
         #
         # the pattern would match the second line
-        p = re.compile(
+        pattern = re.compile(
             r"\s*(([\d,]+\s+){{7}})(\d+\.\d+\s+)(\w+\s+)(\*{wf_name}.*)".format(
                 wf_name=root_wf_name
             )
         )
+        # matched groups are as follows:
+        # group 1: first 7 digit values
+        # group 2: 7th digit value
+        # group 3: 8th digit value (%DONE)
+        # group 4: state
+        # group 5: dagname
 
         # indexes for info provided from status
         UNRDY = 0
         READY = 1
-        # PRE = 2
+        PRE = 2
         IN_Q = 3
-        # POST = 4
+        POST = 4
         DONE = 5
         FAIL = 6
         PCNT_DONE = 7
         STATE = 8
+        DAGNAME = 9
+
+        # key names to be used in returned dict
+        K_UNREADY = "unready"
+        K_READY = "ready"
+        K_PRE = "pre"
+        K_QUEUED = "queued"
+        K_POST = "post"
+        K_SUCCEEDED = "succeeded"
+        K_FAILED = "failed"
+        K_PERCENT_DONE = "percent_done"
+        K_STATE = "state"
+        K_DAGNAME = "dagname"
+        K_TOTALS = "totals"
+        K_TOTAL = "total"
+
+        # keys for which corresponding values are of type int
+        AGGREGATE_METRICS = [
+            K_UNREADY,
+            K_READY,
+            K_PRE,
+            K_QUEUED,
+            K_POST,
+            K_SUCCEEDED,
+            K_FAILED,
+        ]
+
+        parsed_status_output = None
+        for line in status_output.split("\n"):
+            matched = pattern.match(line)
+            if matched:
+                parsed_status_output = dict()
+
+                values = matched.group(1).split()
+                # remove all "," from each value and convert to int
+                for i in range(len(values)):
+                    values[i] = int(values[i].replace(",", ""))
+                values.append(float(matched.group(3).strip()))
+                values.append(matched.group(4).strip())
+                values.append(matched.group(5).strip().replace("*", "", 1))
+
+                parsed_status_output = {
+                    K_TOTALS: {
+                        K_UNREADY: 0,
+                        K_READY: 0,
+                        K_PRE: 0,
+                        K_QUEUED: 0,
+                        K_POST: 0,
+                        K_SUCCEEDED: 0,
+                        K_FAILED: 0,
+                        K_PERCENT_DONE: 0.0,
+                        K_TOTAL: 0,
+                    },
+                    "dags": {
+                        "root": {
+                            K_UNREADY: values[UNRDY],
+                            K_READY: values[READY],
+                            K_PRE: values[PRE],
+                            K_QUEUED: values[IN_Q],
+                            K_POST: values[POST],
+                            K_SUCCEEDED: values[DONE],
+                            K_FAILED: values[FAIL],
+                            K_PERCENT_DONE: values[PCNT_DONE],
+                            K_STATE: values[STATE],
+                            K_DAGNAME: values[DAGNAME],
+                        }
+                    },
+                }
+
+                # TODO: build up parsed_status_output["dags"]["subwfname"]...
+
+                # compute totals
+                # TODO: totals percent done will needed to be updated once we account for hierarchical workflows
+                parsed_status_output[K_TOTALS][K_PERCENT_DONE] = values[PCNT_DONE]
+                for _, stats in parsed_status_output["dags"].items():
+                    for key in AGGREGATE_METRICS:
+                        parsed_status_output[K_TOTALS][key] += stats[key]
+
+                # calculate overall totals
+                for key in AGGREGATE_METRICS:
+                    parsed_status_output[K_TOTALS][K_TOTAL] += parsed_status_output[
+                        K_TOTALS
+                    ][key]
+
+                break
+
+        return parsed_status_output
+
+    def get_status(self, root_wf_name: str, submit_dir: str) -> Union[dict, None]:
+        """Returns a dict containing pegasus-status output"""
+        cmd = [self._status, "--long", submit_dir]
+        result = self._exec(cmd, stream_stdout=False, stream_stderr=False)
+
+        return Client._parse_status_output(
+            status_output=result.stdout, root_wf_name=root_wf_name
+        )
+
+    def wait(self, root_wf_name: str, submit_dir: str, delay: int = 5):
+        """Prints progress bar and blocks until workflow completes or fails"""
 
         # color strings for terminal output
         blue = lambda s: "\x1b[1;34m" + s + "\x1b[0m"
@@ -357,71 +468,62 @@ class Client:
         try:
             can_continue = True
             while can_continue:
-                rv = subprocess.run(
-                    ["pegasus-status", "-l", submit_dir],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                stats = self.get_status(
+                    root_wf_name=root_wf_name, submit_dir=submit_dir
                 )
 
-                if rv.returncode != 0:
-                    raise Exception(rv.stderr)
+                if stats:
+                    unready = blue(
+                        "Unready: {}".format(stats["dags"]["root"]["unready"])
+                    )
+                    completed = green(
+                        "Completed: {}".format(stats["dags"]["root"]["succeeded"])
+                    )
+                    queued = yellow("Queued: {}".format(stats["dags"]["root"]["ready"]))
+                    running = cyan(
+                        "Running: {}".format(stats["dags"]["root"]["queued"])
+                    )
+                    fail = red("Failed: {}".format(stats["dags"]["root"]["failed"]))
 
-                found_match = False
-                for line in rv.stdout.decode("utf8").split("\n"):
-                    matched = p.match(line)
+                    stats_tuple = (
+                        "("
+                        + unready
+                        + ", "
+                        + completed
+                        + ", "
+                        + queued
+                        + ", "
+                        + running
+                        + ", "
+                        + fail
+                        + ")"
+                    )
 
-                    if matched:
-                        found_match = True
-                        v = matched.group(1).split()
-                        v.append(float(matched.group(3).strip()))
-                        v.append(matched.group(4).strip())
+                    percent_done = stats["dags"]["root"]["percent_done"]
+                    state = stats["dags"]["root"]["state"]
+                    filled_len = int(round(bar_len * (percent_done * 0.01)))
 
-                        unready = blue("Unready: " + str(v[UNRDY]).replace(",", ""))
-                        completed = green("Completed: " + str(v[DONE]).replace(",", ""))
-                        queued = yellow("Queued: " + str(v[READY]).replace(",", ""))
-                        running = cyan("Running: " + str(v[IN_Q]).replace(",", ""))
-                        fail = red("Failed: " + str(v[FAIL]).replace(",", ""))
-
-                        stats = (
-                            "("
-                            + unready
-                            + ", "
-                            + completed
-                            + ", "
-                            + queued
-                            + ", "
-                            + running
-                            + ", "
-                            + fail
-                            + ")"
+                    bar = (
+                        "\r["
+                        + green("#" * filled_len)
+                        + ("-" * (bar_len - filled_len))
+                        + "] {percent:>5}% ..{state} {stats}".format(
+                            percent=percent_done, state=state, stats=stats_tuple
                         )
+                    )
 
-                        filled_len = int(round(bar_len * (v[PCNT_DONE] * 0.01)))
+                    if state == "Running":
+                        print(bar, end="")
+                    elif state in ["Failure", "Success"]:
+                        can_continue = False
+                        print(bar, end="\n")
+                    else:
+                        # unknown
+                        print(bar, end="")
 
-                        bar = (
-                            "\r["
-                            + green("#" * filled_len)
-                            + ("-" * (bar_len - filled_len))
-                            + "] {percent:>5}% ..{state} {stats}".format(
-                                percent=v[PCNT_DONE], state=v[STATE], stats=stats
-                            )
-                        )
-
-                        if v[STATE] == "Running":
-                            print(bar, end="")
-                        elif v[STATE] in ["Failure", "Success"]:
-                            can_continue = False
-                            print(bar, end="\n")
-                        else:
-                            # unknown
-                            print(bar, end="")
-
-                        # skip the rest of the lines
-                        break
-
-                # When workflow is submitted, the pattern above may not be initially
-                # present when the workflow job is idle or has just started running.
-                if not found_match:
+                    # skip the rest of the lines
+                    break
+                else:
                     bar = (
                         "\r["
                         + ("-" * bar_len)
@@ -431,6 +533,7 @@ class Client:
                     print(bar, end="")
 
                 time.sleep(delay)
+
         except KeyboardInterrupt:
             print(
                 "\nCancelling Client.wait(). Your workflow is still running and can be monitored with pegasus-status"

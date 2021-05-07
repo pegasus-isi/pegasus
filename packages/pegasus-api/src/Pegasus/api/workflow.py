@@ -839,7 +839,7 @@ def _needs_client(f):
         if not self._client:
             self._client = from_env()
 
-        f(self, *args, **kwargs)
+        return f(self, *args, **kwargs)
 
     return wrapper
 
@@ -1234,6 +1234,64 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
 
         self._client.status(self._submit_dir, long=long, verbose=verbose)
+
+    @_needs_submit_dir
+    @_needs_client
+    def get_status(self) -> Union[dict, None]:
+        """
+        get_status(self)
+
+        Returns current status information of the workflow as a dict in the
+        following format:
+
+        .. code-block:: python
+
+            {
+                "totals": {
+                    "unready": <int>,
+                    "ready": <int>,
+                    "pre": <int>,
+                    "queued": <int>,
+                    "post": <int>,
+                    "succeeded": <int>,
+                    "failed": <int>,
+                    "percent_done": <float>,
+                    "total": <int>
+                },
+                "dags": {
+                    "root": {
+                        "unready": <int>,
+                        "ready": <int>,
+                        "pre": <int>,
+                        "queued": <int>,
+                        "post": <int>,
+                        "succeeded": <int>,
+                        "failed": <int>,
+                        "percent_done": <float>,
+                        "state": <"Running" | "Success" | "Failure">,
+                        "dagname": <str>
+                    }
+                }
+            }
+    
+        Keys are defined as follows
+            * :code:`unready`: Jobs blocked by dependencies 
+            * :code:`ready`: Jobs ready for submission 
+            * :code:`pre`: PRE-Scripts running 
+            * :code:`queued`: Submitted jobs 
+            * :code:`post`: POST-Scripts running 
+            * :code:`succeeded`: Job completed with success 
+            * :code:`failed`: Jobs completed with failure 
+            * :code:`percent_done`: Success percentage
+            * :code:`state`: Workflow state 
+            * :code:`dagname`: Name of workflow
+
+        :return: current status information
+        :rtype: Union[dict, None]
+        """
+        return self._client.get_status(
+            root_wf_name=self.name, submit_dir=self._submit_dir
+        )
 
     @_chained
     @_needs_submit_dir

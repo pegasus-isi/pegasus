@@ -1763,6 +1763,45 @@ class TestWorkflow:
             wf._submit_dir, long=0, verbose=0
         )
 
+    def test_get_status(self, wf, mocker):
+        expected = {
+            "totals": {
+                "unready": 1,
+                "ready": 1,
+                "pre": 1,
+                "queued": 1,
+                "post": 1,
+                "succeeded": 1,
+                "failed": 1,
+                "percent_done": 1.0,
+                "total": 7,
+            },
+            "dags": {
+                "root": {
+                    "unready": 1,
+                    "ready": 1,
+                    "pre": 1,
+                    "queued": 1,
+                    "post": 1,
+                    "succeeded": 1,
+                    "failed": 1,
+                    "percent_done": 1.0,
+                    "state": "Running",
+                    "dagname": "wf",
+                }
+            },
+        }
+
+        mocker.patch("Pegasus.client._client.Client.get_status", return_value=expected)
+
+        mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
+
+        wf._submit_dir = "submit_dir"
+        assert wf.get_status() == expected
+        Pegasus.client._client.Client.get_status.assert_called_once_with(
+            root_wf_name="wf㒀", submit_dir="submit_dir"
+        )
+
     def test_remove(self, wf, mocker):
         mocker.patch("Pegasus.client._client.Client.remove")
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
