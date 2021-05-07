@@ -2,11 +2,13 @@ import getpass
 import json
 import os
 from io import StringIO
-from tempfile import TemporaryFile
+from pathlib import Path
+from tempfile import NamedTemporaryFile, TemporaryFile
 
 import pytest
 import yaml
 
+from Pegasus.api.errors import PegasusError
 from Pegasus.api.writable import Writable, _CustomEncoder, _filter_out_nones
 
 
@@ -24,6 +26,8 @@ def writable_obj():
             _DEFAULT_FILENAME = "container.yml"
 
             def __init__(self):
+                Writable.__init__(self)
+
                 self.name = "container⽷"
                 self.items = [Item(i) for i in range(3)]
 
@@ -186,6 +190,31 @@ class TestWritable:
             writable_obj._write("file", "bad_format")
 
         assert "invalid _ext: bad_format" in str(e)
+
+    def test_get_path(self, writable_obj):
+        writable_obj.write()
+        assert writable_obj.path == Path(writable_obj._DEFAULT_FILENAME).resolve()
+        writable_obj._path = None
+        os.remove(Path(writable_obj._DEFAULT_FILENAME).resolve())
+
+        writable_obj.write("filename")
+        assert writable_obj.path == Path("filename").resolve()
+        writable_obj._path = None
+        os.remove("filename")
+
+        f = NamedTemporaryFile(mode="w")
+        writable_obj.write(f)
+        assert writable_obj.path == Path(f.name).resolve()
+        writable_obj._path = None
+        os.remove(Path(f.name).resolve())
+
+    def test_get_path_exception_message(self, writable_obj):
+        writable_obj.write(StringIO())
+
+        with pytest.raises(PegasusError) as e:
+            writable_obj.path
+
+        assert "Container.write(filename)" in str(e)
 
 
 def test_filter_out_nones():
