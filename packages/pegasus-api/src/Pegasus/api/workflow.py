@@ -980,6 +980,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                 )
             )
 
+        Writable.__init__(self)
+
         self.name = name
         self.infer_dependencies = infer_dependencies
 
@@ -991,8 +993,6 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self._run_output = None
 
         self._client = None
-
-        self._path = None
 
         self._has_subworkflow_jobs = False
 
