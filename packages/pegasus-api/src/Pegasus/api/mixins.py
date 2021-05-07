@@ -470,6 +470,7 @@ class ProfileMixin:
         label="label",
         pegasus_lite_env_source="pegasus_lite_env_source",
         SSH_PRIVATE_KEY="SSH_PRIVATE_KEY",
+        relative_submit_dir="relative.submit.dir",
     )
     def add_pegasus_profile(
         self,
@@ -519,7 +520,8 @@ class ProfileMixin:
         container_arguments: str = None,
         label: str = None,
         pegasus_lite_env_source: Union[str, Path] = None,
-        SSH_PRIVATE_KEY: str = None
+        SSH_PRIVATE_KEY: str = None,
+        relative_submit_dir: Union[str, Path] = None,
     ):
         """Add Pegasus profile(s).
 
@@ -615,6 +617,8 @@ class ProfileMixin:
         :type pegasus_lite_env_source: Union[str, Path], optional
         :param SSH_PRIVATE_KEY: path to the ssh private key which will be used in this workflow (it is recommended that a special set of keys are created specifically for workflow use)
         :type SSH_PRIVATE_KEY: str, optional
+        :param relative_submit_dir: specify the relative directory a job's submit files are written to, defaults to None
+        :type relative_submit_dir: Union[str, Path], optional
         """
         ...
 
