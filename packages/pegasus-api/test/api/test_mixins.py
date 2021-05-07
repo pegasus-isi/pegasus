@@ -367,6 +367,7 @@ class TestProfileMixin:
                 label="nodeLabel",
                 pegasus_lite_env_source="/path",
                 SSH_PRIVATE_KEY="/path",
+                relative_submit_dir="some-dir",
             )
         ) == id(obj)
 
@@ -416,6 +417,7 @@ class TestProfileMixin:
                 "label": "nodeLabel",
                 "pegasus_lite_env_source": "/path",
                 "SSH_PRIVATE_KEY": "/path",
+                "relative.submit.dir": "some-dir",
             }
         }
 
