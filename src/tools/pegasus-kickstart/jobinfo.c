@@ -284,8 +284,12 @@ int printYAMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job)
     fprintf(out, "%*s%s:\n", indent, "", tag);
     fprintf(out, "%*s  start: %s\n", indent, "", 
             fmtisodate(job->start.tv_sec, job->start.tv_usec));
-    fprintf(out, "%*s  duration: %.3f\n", indent, "", 
-            doubletime(job->finish) - doubletime(job->start));
+
+    /* ensure duration is always non-zero and greater than stime+utime */
+    double duration = doubletime(job->finish) - doubletime(job->start);
+    if (duration < 0.003) 
+        duration = 0.003;
+    fprintf(out, "%*s  duration: %.3f\n", indent, "", duration);
 
     /* optional attribute: application process id */
     if (job->child != 0) {

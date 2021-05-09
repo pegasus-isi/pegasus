@@ -556,10 +556,6 @@ public abstract class Abstract implements Implementation {
             arguments.append(new PegasusURL(destURL.getValue()).getPath());
         }
 
-        // PM-833 set the relative submit directory for the transfer
-        // job based on the associated file factory
-        xBitJob.setRelativeSubmitDirectory(this.mSubmitDirFactory.getRelativeDir(xBitJob));
-
         xBitJob.jobName = name;
         xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;
         xBitJob.namespace = Abstract.XBIT_TRANSFORMATION_NS;
@@ -569,6 +565,11 @@ public abstract class Abstract implements Implementation {
         xBitJob.dvVersion = Abstract.XBIT_DERIVATION_VERSION;
         xBitJob.executable = entry.getPhysicalTransformation();
         xBitJob.executionPool = eSiteHandle;
+
+        // PM-833 set the relative submit directory for the transfer
+        // job based on the associated file factory
+        xBitJob.setRelativeSubmitDirectory(this.mSubmitDirFactory.getRelativeDir(xBitJob));
+
         // PM-845 set staging site handle to same as execution site of compute job
         xBitJob.setStagingSiteHandle(computeSiteHandle);
         xBitJob.strargs = arguments.toString();

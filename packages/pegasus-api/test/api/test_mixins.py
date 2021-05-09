@@ -208,6 +208,10 @@ class TestProfileMixin:
             }
         }
 
+    def test_add_globus_profiles(self, obj):
+        assert id(obj.add_globus_profiles(count=1)) == id(obj)
+        assert dict(obj.profiles) == {"globus": {"count": 1}}
+
     def test_add_globus_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
             obj.add_globus_profile(aa=1)
@@ -250,6 +254,10 @@ class TestProfileMixin:
                 "POST.SCOPE": "ps",
             }
         }
+
+    def test_add_dagman_profiles(self, obj):
+        assert id(obj.add_dagman_profiles(pre="pre")) == id(obj)
+        assert dict(obj.profiles) == {"dagman": {"PRE": "pre"}}
 
     def test_add_dagman_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
@@ -302,6 +310,10 @@ class TestProfileMixin:
             }
         }
 
+    def test_add_condor_profiles(self, obj):
+        assert id(obj.add_condor_profiles(universe="vanilla")) == id(obj)
+        assert dict(obj.profiles) == {"condor": {"universe": "vanilla"}}
+
     def test_add_condor_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
             obj.add_condor_profile(aa=1)
@@ -334,7 +346,7 @@ class TestProfileMixin:
                 pmc_task_arguments="pmc_task_arguments",
                 exitcode_failure_msg="exitcode.failuremsg",
                 exitcode_success_msg="exitcode.successmsg",
-                checkpoint_time="checkpoint_time",
+                checkpoint_time=1,
                 max_walltime="maxwalltime",
                 glite_arguments="glite.arguments",
                 auxillary_local="auxillary.local",
@@ -355,6 +367,7 @@ class TestProfileMixin:
                 label="nodeLabel",
                 pegasus_lite_env_source="/path",
                 SSH_PRIVATE_KEY="/path",
+                relative_submit_dir="some-dir",
             )
         ) == id(obj)
 
@@ -383,7 +396,7 @@ class TestProfileMixin:
                 "pmc_task_arguments": "pmc_task_arguments",
                 "exitcode.failuremsg": "exitcode.failuremsg",
                 "exitcode.successmsg": "exitcode.successmsg",
-                "checkpoint_time": "checkpoint_time",
+                "checkpoint.time": 1,
                 "maxwalltime": "maxwalltime",
                 "glite.arguments": "glite.arguments",
                 "auxillary.local": "auxillary.local",
@@ -404,8 +417,13 @@ class TestProfileMixin:
                 "label": "nodeLabel",
                 "pegasus_lite_env_source": "/path",
                 "SSH_PRIVATE_KEY": "/path",
+                "relative.submit.dir": "some-dir",
             }
         }
+
+    def test_add_pegasus_profiles(self, obj):
+        assert id(obj.add_pegasus_profiles(gpus=1)) == id(obj)
+        assert dict(obj.profiles) == {"pegasus": {"gpus": 1}}
 
     def test_add_pegasus_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:
@@ -427,6 +445,10 @@ class TestProfileMixin:
                 "grid.jobtype": "compute",
             }
         }
+
+    def test_add_selector_profiles(self, obj):
+        assert id(obj.add_selector_profiles(pfn="/tmp")) == id(obj)
+        assert dict(obj.profiles) == {"selector": {"pfn": "/tmp"}}
 
     def test_add_selector_profile_invalid_profile(self, obj):
         with pytest.raises(TypeError) as e:

@@ -58,6 +58,21 @@ public class CycleCheckerTest {
     }
 
     @Test
+    public void testEmptyWorkflow() {
+
+        mLogger.logEventStart(
+                "test.planner.partitioner.graph.CycleChecker",
+                "set",
+                Integer.toString(mTestNumber++));
+        Graph g = new MapGraph();
+
+        CycleChecker c = new CycleChecker(g);
+        boolean cyclic = c.hasCycles();
+        assertEquals("Input Test Case should be determined cycle free", false, cyclic);
+        mLogger.logEventCompletion();
+    }
+
+    @Test
     public void testSingleNode() {
 
         mLogger.logEventStart(

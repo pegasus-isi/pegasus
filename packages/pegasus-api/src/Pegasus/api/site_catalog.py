@@ -474,6 +474,8 @@ class SiteCatalog(Writable):
     _DEFAULT_FILENAME = "sites.yml"
 
     def __init__(self):
+        Writable.__init__(self)
+
         self.sites = dict()
 
     @_chained

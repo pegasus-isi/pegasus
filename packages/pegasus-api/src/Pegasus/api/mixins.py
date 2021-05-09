@@ -249,10 +249,11 @@ class ProfileMixin:
             # Example 2
             job.add_profiles(Namespace.ENV, JAVA_HOME="/usr/bin/java", USER="ryan")
 
-        For :code:`add_globus_profile()`, :code:`add_condor_profile()`, :code:`add_dagman_profile()`,
-        :code:`add_selector_profile()`, and :code:`add_pegasus_profile()`, if a profile key that
+        For :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_globus_profiles`, :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_condor_profiles`,
+        :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_dagman_profiles`, :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_selector_profiles`,
+        and :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_pegasus_profiles`, if a profile key 
         you are trying to use is not listed as a key word argument, use this
-        function to add the profile.
+        function to add the profile. 
 
         :raises TypeError: namespace must be one of Namespace
         :return: self
@@ -448,7 +449,7 @@ class ProfileMixin:
         pmc_task_arguments="pmc_task_arguments",
         exitcode_failure_msg="exitcode.failuremsg",
         exitcode_success_msg="exitcode.successmsg",
-        checkpoint_time="checkpoint_time",
+        checkpoint_time="checkpoint.time",
         max_walltime="maxwalltime",
         glite_arguments="glite.arguments",
         auxillary_local="auxillary.local",
@@ -469,6 +470,7 @@ class ProfileMixin:
         label="label",
         pegasus_lite_env_source="pegasus_lite_env_source",
         SSH_PRIVATE_KEY="SSH_PRIVATE_KEY",
+        relative_submit_dir="relative.submit.dir",
     )
     def add_pegasus_profile(
         self,
@@ -518,7 +520,8 @@ class ProfileMixin:
         container_arguments: str = None,
         label: str = None,
         pegasus_lite_env_source: Union[str, Path] = None,
-        SSH_PRIVATE_KEY: str = None
+        SSH_PRIVATE_KEY: str = None,
+        relative_submit_dir: Union[str, Path] = None
     ):
         """Add Pegasus profile(s).
 
@@ -614,6 +617,8 @@ class ProfileMixin:
         :type pegasus_lite_env_source: Union[str, Path], optional
         :param SSH_PRIVATE_KEY: path to the ssh private key which will be used in this workflow (it is recommended that a special set of keys are created specifically for workflow use)
         :type SSH_PRIVATE_KEY: str, optional
+        :param relative_submit_dir: specify the relative directory a job's submit files are written to, defaults to None
+        :type relative_submit_dir: Union[str, Path], optional
         """
         ...
 
@@ -718,3 +723,11 @@ class ProfileMixin:
         :return: self
         """
         ...
+
+    # initially had add_<namespace>_profile for 5.0 release and in order not not
+    # break existing workflows, these functions have aliases that are plural
+    add_globus_profiles = add_globus_profile
+    add_pegasus_profiles = add_pegasus_profile
+    add_dagman_profiles = add_dagman_profile
+    add_condor_profiles = add_condor_profile
+    add_selector_profiles = add_selector_profile

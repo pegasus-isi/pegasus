@@ -32,8 +32,12 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.generator.condor.ClassADSGenerator;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.util.HashMap;
@@ -132,6 +136,9 @@ public class Distribute implements GridStart {
 
     private GridStartFactory mGridStartFactory;
 
+    /** Handle to the Style factory, that is used for this workflow. */
+    protected CondorStyleFactory mStyleFactory;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -172,6 +179,9 @@ public class Distribute implements GridStart {
         mGridStartFactory.initialize(bag, dag, null);
         mDefaultGridStartImplementation = new Kickstart();
         mDefaultGridStartImplementation.initialize(bag, dag);
+
+        mStyleFactory = new CondorStyleFactory();
+        mStyleFactory.initialize(bag);
 
         // initialize the SSH credential handler
         CredentialHandlerFactory factory = new CredentialHandlerFactory();
@@ -331,11 +341,15 @@ public class Distribute implements GridStart {
 
         job.setRemoteExecutable(distributePath);
 
+        // PM-1724
+        updateJobWithCredentialsForRemoteSites(job);
+
         // a lot of distribute arguments are picked up via the environment
         ENV distributeENV = this.getEnvironmentForDistribute(job);
 
         // we want want the generated classad to still point to the remote site
         job.condorVariables.construct(ClassADSGenerator.PLUS_RESOURCE_AD_KEY, job.getSiteHandle());
+
         // update the job to run on local site
         // and the style to condor
         job.setSiteHandle("local");
@@ -575,5 +589,46 @@ public class Distribute implements GridStart {
         }
 
         return gs;
+    }
+
+    /**
+     * Updates jobs to associate any credentials that may be required for job to run remotely (site
+     * other than local).
+     *
+     * @param job job to be executed.
+     */
+    private void updateJobWithCredentialsForRemoteSites(Job job) {
+        // we need to associate credentials that maybe required for transfers in
+        // PegasusLite w.r.t the orignal execution site, before mapping the job to
+        // run locally. This is because credentials for jobs mapped tp remotes sites
+        // are handled differently comparted to jobs mapped to local site.
+        String originalSite = job.getSiteHandle();
+        try {
+
+            // for jobs mapped to local site, credentials are handled
+            // when the distirbute wrapped job goes to the code generator, and
+            // the condor style gets applied.
+            if (!originalSite.equalsIgnoreCase("local")) {
+                CondorStyle cs = mStyleFactory.loadInstance(job);
+                String style = (String) job.vdsNS.get(Pegasus.STYLE_KEY);
+
+                // apply the appropriate style on the job.
+                if (job instanceof AggregatedJob) {
+                    cs.apply((AggregatedJob) job);
+
+                } else {
+                    cs.apply(job);
+                }
+                // make sure that we unset any universe that might have been
+                // set, as that will be handled when style is applied for the
+                // who Distribute wrapped job
+                job.condorVariables.removeKey(Condor.UNIVERSE_KEY);
+            }
+        } catch (CondorStyleException ex) {
+            throw new RuntimeException(
+                    "Unable to associate credentials for job "
+                            + job
+                            + " for launching via Distribute");
+        }
     }
 }

@@ -13,6 +13,10 @@ if [ -n "${CORES}" ]; then
     echo "#SBATCH --ntasks=$(strip_quotes $CORES)"
 fi
 
+if [ -n "${GPUS}" ]; then
+    echo "#SBATCH --gpus=$(strip_quotes $GPUS)"
+fi
+
 if [ -n "${WALLTIME}" ]; then
     echo "#SBATCH --time=$(strip_quotes $WALLTIME)"
 fi

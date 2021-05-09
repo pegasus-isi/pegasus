@@ -143,6 +143,12 @@ def check_kickstart_records(txt):
     succeeded = 0
     e = 0
 
+    # first check for integrity errors - there are rare cases where most
+    # of the jobs look successful, but kickstart was unable to calculate
+    # a checksum for an output file
+    if re.search(r"integrity_error: ", txt):
+        raise JobFailed("detected integrity creation errors in the job")
+
     # yaml
     for m in re.finditer(r"raw: ([0-9]+)", txt):
         raw = int(m.group(1))

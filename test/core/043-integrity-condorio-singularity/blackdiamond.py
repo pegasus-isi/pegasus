@@ -86,7 +86,7 @@ tools_container = Container(
     "osgvo-el7", 
     Container.SINGULARITY, 
     image="gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img",
-    checksum={"sha256": "dd78aaa88e1c6a8bf31c052eacfa03fba616ebfd903d7b2eb1b0ed6853b48713"}                
+    checksum={"sha256": "436d011302ce215433563f7118d73b0c9805339d3717b35a5e0f48f3ae85c437"}                
 )
 
 tc.add_containers(tools_container)

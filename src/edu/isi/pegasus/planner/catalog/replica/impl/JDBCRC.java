@@ -1220,7 +1220,7 @@ public class JDBCRC implements ReplicaCatalog {
 
             // check whether the pfns and metadata already exist
             query.setLength(0);
-            StringBuilder metadataQuery = new StringBuilder();
+            List<String> metadataToDelete = new ArrayList<String>();
             List<String> pfnsToInsert = new ArrayList<String>();
             List<String> metadataToInsert = new ArrayList<String>();
             Map<String, Map<String, String>> metadataMap =
@@ -1264,12 +1264,12 @@ public class JDBCRC implements ReplicaCatalog {
                             if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
                                 continue;
                             }
-                            metadataQuery.append(
-                                    metadataQuery.length() == 0
-                                            ? "DELETE FROM rc_meta WHERE "
-                                            : " OR ");
-                            metadataQuery.append(
-                                    "(lfn_id=" + lfnToID.get(lfn) + " AND `key`='" + name + "')");
+                            metadataToDelete.add(
+                                    "DELETE FROM rc_meta WHERE (lfn_id="
+                                            + lfnToID.get(lfn)
+                                            + " AND `key`='"
+                                            + name
+                                            + "')");
 
                             String val =
                                     tuple.getAttribute(name) == null
@@ -1302,9 +1302,11 @@ public class JDBCRC implements ReplicaCatalog {
             }
             state = 3;
             // delete existing metadata
-            if (metadataQuery.length() != 0) {
-                st.executeUpdate(metadataQuery.toString());
+            query = new StringBuilder("[METADATA DELETE BATCH]");
+            for (String md : metadataToDelete) {
+                st.addBatch(md);
             }
+            st.executeBatch();
             state = 4;
             // insert pfns
             query = new StringBuilder("[PFN INSERT BATCH]");

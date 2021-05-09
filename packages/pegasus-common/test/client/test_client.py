@@ -4,12 +4,13 @@ import shutil
 import subprocess
 from collections import namedtuple
 from pathlib import Path
-from subprocess import CompletedProcess, Popen
+from subprocess import Popen
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 
 import pytest
 
+import Pegasus
 from Pegasus import yaml
 from Pegasus.braindump import Braindump
 from Pegasus.client._client import (
@@ -327,18 +328,44 @@ class TestClient:
         )
 
     @pytest.mark.parametrize(
-        "pegasus_status_out, expected_wait_out",
+        "pegasus_status_out, expected_dict",
         [
             (
                 dedent(
                     """
                 (no matching jobs found in Condor Q)
                 UNRDY READY   PRE  IN_Q  POST  DONE   FAIL   %DONE STATE   DAGNAME
-                    0     0     0     0     0  1,000  1,000  100.0 Success *wf-name-0.dag
+                    1     2     3     4     5  1,000  1,000  100.0 Success *wf-name-0.dag
                 Summary: 1 DAG total (Success:1)
                 """
-                ).encode("utf8"),
-                "\r[\x1b[1;32m####################################\x1b[0m] 100.0% ..Success (\x1b[1;32mCompleted: 1000\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1000\x1b[0m)\n",
+                ),
+                {
+                    "totals": {
+                        "unready": 1,
+                        "ready": 2,
+                        "pre": 3,
+                        "queued": 4,
+                        "post": 5,
+                        "succeeded": 1000,
+                        "failed": 1000,
+                        "percent_done": 100.0,
+                        "total": 2015,
+                    },
+                    "dags": {
+                        "root": {
+                            "unready": 1,
+                            "ready": 2,
+                            "pre": 3,
+                            "queued": 4,
+                            "post": 5,
+                            "succeeded": 1000,
+                            "failed": 1000,
+                            "percent_done": 100.0,
+                            "state": "Success",
+                            "dagname": "wf-name-0.dag",
+                        }
+                    },
+                },
             ),
             (
                 dedent(
@@ -348,11 +375,37 @@ class TestClient:
                 Summary: 1 Condor job total (R:1)
 
                 UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
-                    4     0     0     0     0     3     1  37.5 Failure *wf-name-0.dag
+                    1     2     3     4     5     6     7  37.5 Failure *wf-name-0.dag
                 Summary: 1 DAG total (Failure:1)
                 """
-                ).encode("utf8"),
-                "\r[\x1b[1;32m##############\x1b[0m----------------------]  37.5% ..Failure (\x1b[1;32mCompleted: 3\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1\x1b[0m)\n",
+                ),
+                {
+                    "totals": {
+                        "unready": 1,
+                        "ready": 2,
+                        "pre": 3,
+                        "queued": 4,
+                        "post": 5,
+                        "succeeded": 6,
+                        "failed": 7,
+                        "percent_done": 37.5,
+                        "total": 28,
+                    },
+                    "dags": {
+                        "root": {
+                            "unready": 1,
+                            "ready": 2,
+                            "pre": 3,
+                            "queued": 4,
+                            "post": 5,
+                            "succeeded": 6,
+                            "failed": 7,
+                            "percent_done": 37.5,
+                            "state": "Failure",
+                            "dagname": "wf-name-0.dag",
+                        }
+                    },
+                },
             ),
             (
                 dedent(
@@ -360,25 +413,186 @@ class TestClient:
                 UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
                 0     0     0     0     0     6     0 100.0 Success 00/00/analysis-wf_ID0000001/analysis-wf-0.dag
                 0     0     0     0     0     3     0 100.0 Success 00/00/sleep-wf_ID0000002/sleep-wf-0.dag
-                0     0     0     0     0    11     0 100.0 Success *wf-name-0.dag
+                1     2     3     4     5     6     7 100.0 Success *wf-name-0.dag
                 0     0     0     0     0    20     0 100.0         TOTALS (20 jobs)
                 Summary: 3 DAGs total (Success:3)
                 """
-                ).encode("utf8"),
-                "\r[\x1b[1;32m####################################\x1b[0m] 100.0% ..Success (\x1b[1;32mCompleted: 11\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 0\x1b[0m)\n",
+                ),
+                {
+                    "totals": {
+                        "unready": 1,
+                        "ready": 2,
+                        "pre": 3,
+                        "queued": 4,
+                        "post": 5,
+                        "succeeded": 6,
+                        "failed": 7,
+                        "percent_done": 100.0,
+                        "total": 28,
+                    },
+                    "dags": {
+                        "root": {
+                            "unready": 1,
+                            "ready": 2,
+                            "pre": 3,
+                            "queued": 4,
+                            "post": 5,
+                            "succeeded": 6,
+                            "failed": 7,
+                            "percent_done": 100.0,
+                            "state": "Success",
+                            "dagname": "wf-name-0.dag",
+                        }
+                    },
+                },
+            ),
+            (
+                "get status should return None because this is invalid/unexpected status output",
+                None,
             ),
         ],
     )
-    def test_wait(self, mocker, capsys, client, pegasus_status_out, expected_wait_out):
+    def test__parse_status_output(self, pegasus_status_out, expected_dict):
+        assert (
+            Client._parse_status_output(pegasus_status_out, "wf-name") == expected_dict
+        )
+
+    @pytest.mark.parametrize(
+        "status_output_str, expected_dict",
+        [
+            (
+                dedent(
+                    """
+                (no matching jobs found in Condor Q)
+                UNRDY READY   PRE  IN_Q  POST  DONE   FAIL   %DONE STATE   DAGNAME
+                    1     2     3     4     5  1,000  1,000  100.0 Success *wf-name-0.dag
+                Summary: 1 DAG total (Success:1)
+                """
+                ).encode("utf-8"),
+                {
+                    "totals": {
+                        "unready": 1,
+                        "ready": 2,
+                        "pre": 3,
+                        "queued": 4,
+                        "post": 5,
+                        "succeeded": 1000,
+                        "failed": 1000,
+                        "percent_done": 100.0,
+                        "total": 2015,
+                    },
+                    "dags": {
+                        "root": {
+                            "unready": 1,
+                            "ready": 2,
+                            "pre": 3,
+                            "queued": 4,
+                            "post": 5,
+                            "succeeded": 1000,
+                            "failed": 1000,
+                            "percent_done": 100.0,
+                            "state": "Success",
+                            "dagname": "wf-name-0.dag",
+                        }
+                    },
+                },
+            ),
+            (
+                b"get status should return None because this is invalid/unexpected status output",
+                None,
+            ),
+        ],
+    )
+    def test_get_status(self, mocker, client, status_output_str, expected_dict):
         mocker.patch(
-            "subprocess.run",
-            return_value=CompletedProcess(
-                None, returncode=0, stdout=pegasus_status_out, stderr=""
+            "Pegasus.client._client.Client._exec",
+            return_value=Result(
+                cmd=["/path/bin/pegasus-status", "--long", "submit_dir"],
+                exit_code=0,
+                stdout_bytes=status_output_str,
+                stderr_bytes=b"",
             ),
         )
+        assert client.get_status("wf-name", "submit_dir") == expected_dict
+
+    @pytest.mark.parametrize(
+        "status_output, expected_progress_bar",
+        [
+            (
+                {
+                    "totals": {
+                        "unready": 0,
+                        "ready": 0,
+                        "pre": 0,
+                        "queued": 0,
+                        "post": 0,
+                        "succeeded": 1000,
+                        "failed": 1000,
+                        "percent_done": 100.0,
+                        "total": 2000,
+                    },
+                    "dags": {
+                        "root": {
+                            "unready": 0,
+                            "ready": 0,
+                            "pre": 0,
+                            "queued": 0,
+                            "post": 0,
+                            "succeeded": 1000,
+                            "failed": 1000,
+                            "percent_done": 100.0,
+                            "state": "Success",
+                            "dagname": "wf-name-0.dag",
+                        }
+                    },
+                },
+                "\r[\x1b[1;32m#########################\x1b[0m] 100.0% ..Success (\x1b[1;34mUnready: 0\x1b[0m, \x1b[1;32mCompleted: 1000\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1000\x1b[0m)\n",
+            ),
+            (
+                {
+                    "totals": {
+                        "unready": 4,
+                        "ready": 0,
+                        "pre": 0,
+                        "queued": 0,
+                        "post": 0,
+                        "succeeded": 3,
+                        "failed": 1,
+                        "percent_done": 37.5,
+                        "total": 8,
+                    },
+                    "dags": {
+                        "root": {
+                            "unready": 4,
+                            "ready": 0,
+                            "pre": 0,
+                            "queued": 0,
+                            "post": 0,
+                            "succeeded": 3,
+                            "failed": 1,
+                            "percent_done": 37.5,
+                            "state": "Failure",
+                            "dagname": "wf-name-0.dag",
+                        }
+                    },
+                },
+                "\r[\x1b[1;32m#########\x1b[0m----------------]  37.5% ..Failure (\x1b[1;34mUnready: 4\x1b[0m, \x1b[1;32mCompleted: 3\x1b[0m, \x1b[1;33mQueued: 0\x1b[0m, \x1b[1;36mRunning: 0\x1b[0m, \x1b[1;31mFailed: 1\x1b[0m)\n",
+            ),
+        ],
+    )
+    def test_wait(self, mocker, capsys, client, status_output, expected_progress_bar):
+        mocker.patch(
+            "Pegasus.client._client.Client.get_status", return_value=status_output
+        )
+
         client.wait(root_wf_name="wf-name", submit_dir="submit_dir")
+
+        Pegasus.client._client.Client.get_status.assert_called_once_with(
+            root_wf_name="wf-name", submit_dir="submit_dir"
+        )
+
         out, _ = capsys.readouterr()
-        assert out == expected_wait_out
+        assert out == expected_progress_bar
 
     def test_remove(self, mock_subprocess, client):
         client.remove("submit_dir", verbose=3)

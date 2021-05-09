@@ -404,6 +404,12 @@ public class CPlanner extends Executable {
                 "Parsed DAX with following metrics " + orgDag.getWorkflowMetrics().toJson(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
 
+        if (orgDag.isEmpty() && !options.partOfDeferredRun()) {
+            // PM-1748 for a root workflow; complain as a user passed an empty DAX
+            throw new RuntimeException(
+                    "No jobs found in the Abstract Workflow " + options.getDAX());
+        }
+
         // check if sites set by user. If user has not specified any sites then
         // load all sites from site catalog.
         Collection<String> eSites = mPOptions.getExecutionSites();

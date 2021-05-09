@@ -337,6 +337,13 @@ int procParentWait(pid_t main, int *main_status,  struct rusage *main_usage, Pro
             *main_status = -42;
         }
     }
+    /* ensure we have non-zero usage - our smallest unit is 0.001s */
+    if (main_usage->ru_stime.tv_sec == 0 && main_usage->ru_stime.tv_usec < 1000) {
+        main_usage->ru_stime.tv_usec = 1000;
+    }
+    if (main_usage->ru_utime.tv_sec == 0 && main_usage->ru_utime.tv_usec < 1000) {
+        main_usage->ru_utime.tv_usec = 1000;
+    }
     return *main_status;
 }
 

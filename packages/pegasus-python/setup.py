@@ -9,18 +9,19 @@ home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 install_requires = [
     # Utils
     # DAX/Workflow
-    "PyYAML",
+    "PyYAML>5.3,<5.5",
     # pegasus-init
-    "GitPython",
-    "pamela",
+    "GitPython>1.0,<3.2",
+    "pamela>=1.0,<1.1",
     "pika==1.1.0",
-    "Flask",
-    "Flask-Caching",
-    "requests",
-    "sqlalchemy",
-    "pegasus-wms.api",
-    "pegasus-wms.common",
-    "pegasus-wms.worker",
+    "Flask>1.1,<1.2",
+    "Flask-Caching>1.8,<1.11",
+    "requests>2.23,<2.26",
+    "sqlalchemy>1.3,<1.4",
+    "pegasus-wms.api<5.2",
+    "pegasus-wms.dax<5.2",
+    "pegasus-wms.common<5.2",
+    "pegasus-wms.worker<5.2",
 ]
 
 #
