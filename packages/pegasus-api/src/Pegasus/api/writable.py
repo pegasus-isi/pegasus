@@ -72,7 +72,7 @@ class Writable:
                 )
             )
 
-        return self._path
+        return Path(self._path)
 
     def _write(self, file, _format):
         """Internal function to dump to file in either yaml or json formats
@@ -152,9 +152,9 @@ class Writable:
         if file is None:
             file = self._DEFAULT_FILENAME
 
+        # do the write
         if isinstance(file, str):
             path = Path(file)
-            self._path = path.resolve()
             ext = path.suffix[1:].lower()
 
             with open(file, "w") as f:
@@ -163,13 +163,14 @@ class Writable:
                 else:
                     self._write(f, _format)
 
+            self._path = str(path.resolve())
+
         elif hasattr(file, "read"):
             try:
                 f = Path(str(file.name))
                 ext = f.suffix[1:]
-                self._path = f.resolve()
             except AttributeError:
-                # writing to a stream such as StringIO or TemporaryFile with
+                # writing to a stream such as StringIO with
                 # no attr "name"
                 self._write(file, _format)
             else:
@@ -177,6 +178,16 @@ class Writable:
                     self._write(file, ext)
                 else:
                     self._write(file, _format)
+    
+                # set path (if unable to resolve path, the given file might be
+                # a stream such as StringIO or TemporaryFile where a file descriptor
+                # in place of its name)
+                try:
+                    p = Path(str(file.name)).resolve()
+                    if p.exists():
+                        self._path = str(p)
+                except FileNotFoundError:
+                    pass
 
         else:
             raise TypeError(

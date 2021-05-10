@@ -193,20 +193,23 @@ class TestWritable:
 
     def test_get_path(self, writable_obj):
         writable_obj.write()
+        assert writable_obj._path == str(Path(writable_obj._DEFAULT_FILENAME).resolve())
         assert writable_obj.path == Path(writable_obj._DEFAULT_FILENAME).resolve()
         writable_obj._path = None
-        os.remove(Path(writable_obj._DEFAULT_FILENAME).resolve())
+        os.remove(str(Path(writable_obj._DEFAULT_FILENAME).resolve()))
 
         writable_obj.write("filename")
+        assert writable_obj._path == str(Path("filename").resolve())
         assert writable_obj.path == Path("filename").resolve()
         writable_obj._path = None
         os.remove("filename")
 
         f = NamedTemporaryFile(mode="w")
         writable_obj.write(f)
+        assert writable_obj._path == str(Path(f.name).resolve())
         assert writable_obj.path == Path(f.name).resolve()
         writable_obj._path = None
-        os.remove(Path(f.name).resolve())
+        os.remove(str(Path(f.name).resolve()))
 
     def test_get_path_exception_message(self, writable_obj):
         writable_obj.write(StringIO())
