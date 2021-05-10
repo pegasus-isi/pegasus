@@ -189,6 +189,16 @@ class Writable:
                 except FileNotFoundError:
                     pass
 
+                # set path (if unable to resolve path, the given file might be
+                # a stream such as StringIO or TemporaryFile where a file descriptor
+                # in place of its name)
+                try:
+                    p = Path(str(file.name)).resolve()
+                    if p.exists():
+                        self._path = str(p)
+                except FileNotFoundError:
+                    pass
+
         else:
             raise TypeError(
                 "{file} must be of type str or file object".format(file=file)
