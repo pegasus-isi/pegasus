@@ -191,22 +191,48 @@ class TestWritable:
 
         assert "invalid _ext: bad_format" in str(e)
 
-    def test_get_path(self, writable_obj):
+    def test_set_path_given_default_filename(self, writable_obj):
         writable_obj.write()
+        assert writable_obj._path == str(Path(writable_obj._DEFAULT_FILENAME).resolve())
         assert writable_obj.path == Path(writable_obj._DEFAULT_FILENAME).resolve()
         writable_obj._path = None
-        os.remove(Path(writable_obj._DEFAULT_FILENAME).resolve())
+        os.remove(str(Path(writable_obj._DEFAULT_FILENAME).resolve()))
 
+    def test_set_path_given_str_filename(self, writable_obj):
         writable_obj.write("filename")
+        assert writable_obj._path == str(Path("filename").resolve())
         assert writable_obj.path == Path("filename").resolve()
         writable_obj._path = None
         os.remove("filename")
 
+    def test_set_path_given_NamedTemporaryFile(self, writable_obj):
         f = NamedTemporaryFile(mode="w")
         writable_obj.write(f)
+        assert writable_obj._path == str(Path(f.name).resolve())
         assert writable_obj.path == Path(f.name).resolve()
         writable_obj._path = None
-        os.remove(Path(f.name).resolve())
+        f.close()
+
+    def test_set_path_given_TemporaryFile(self, writable_obj):
+        f = TemporaryFile(mode="w")
+        writable_obj.write(f)
+        assert writable_obj._path == None
+        with pytest.raises(PegasusError) as e:
+            writable_obj.path
+
+        assert "Container.write(filename)" in str(e)
+        writable_obj._path = None
+        f.close()
+
+    def test_set_path_given_StringIO(self, writable_obj):
+        f = StringIO()
+        writable_obj.write(f)
+        assert writable_obj._path == None
+        with pytest.raises(PegasusError) as e:
+            writable_obj.path
+
+        assert "Container.write(filename)" in str(e)
+        f.close()
 
     def test_get_path_exception_message(self, writable_obj):
         writable_obj.write(StringIO())
