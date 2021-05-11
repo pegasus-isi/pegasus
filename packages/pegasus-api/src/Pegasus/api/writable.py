@@ -178,26 +178,9 @@ class Writable:
                     self._write(file, ext)
                 else:
                     self._write(file, _format)
-    
-                # set path (if unable to resolve path, the given file might be
-                # a stream such as StringIO or TemporaryFile where a file descriptor
-                # in place of its name)
-                try:
-                    p = Path(str(file.name)).resolve()
-                    if p.exists():
-                        self._path = str(p)
-                except FileNotFoundError:
-                    pass
 
-                # set path (if unable to resolve path, the given file might be
-                # a stream such as StringIO or TemporaryFile where a file descriptor
-                # in place of its name)
-                try:
-                    p = Path(str(file.name)).resolve()
-                    if p.exists():
-                        self._path = str(p)
-                except FileNotFoundError:
-                    pass
+                if isinstance(file.name, str):
+                    self._path = str(Path(file.name).resolve())
 
         else:
             raise TypeError(
