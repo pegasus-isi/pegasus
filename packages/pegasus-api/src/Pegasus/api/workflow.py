@@ -453,18 +453,37 @@ class SubWorkflow(AbstractJob):
     """
     Job that represents a subworkflow.
     See :py:class:`~Pegasus.api.workflow.AbstractJob` for full list of available functions.
+    SubWorkflow jobs can be created using several different methods. These are outlined
+    below.
+
+    .. code-block:: python
+
+        root_wf = Workflow("root")
+        # "workflow.yml" must be added to the ReplicaCatalog
+        j1 = SubWorkflow(file="workflow.yml", is_planned=False)
+        root_wf.add_jobs(j1)
+
+        another_wf = Workflow("another-wf")
+        j2 = SubWorkflow(another_wf, _id="j2")
+        root_wf.add_jobs(j2)
+
+        # Upon invoking root_wf.write() or root_wf.plan(), another_wf will automatically
+        # be serialized to CWD / "another-wf_j2.yml" and added to an inline ReplicaCatalog;
+        # This means that you may define "another_wf" in a separate python script, and
+        # import it here where it would be used. 
+        root_wf.write()
     """
 
     def __init__(
         self,
-        file: Union[str, File],
+        file: Union[str, File, "Workflow"],
         is_planned: bool = False,
         _id: Optional[str] = None,
         node_label: Optional[str] = None,
     ):
         """
-        :param file: :py:class:`~Pegasus.api.replica_catalog.File` object or name of the workflow file that will be used for this job
-        :type file: Union[str, File]
+        :param file: :py:class:`~Pegasus.api.replica_catalog.File`, the name of the workflow file as a :code:`str`, or :py:class:`~Pegasus.api.workflow.Workflow`
+        :type file: Union[str, File, Workflow]
         :param is_planned: whether or not this subworkflow has already been planned by the Pegasus planner, defaults to False
         :type is_planned: bool
         :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
@@ -475,21 +494,26 @@ class SubWorkflow(AbstractJob):
         """
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
-        if not isinstance(file, (File, str)):
+        if not isinstance(file, (File, str, Workflow)):
             raise TypeError(
-                "invalid file: {file}; file must be of type File or str".format(
+                "invalid file: {file}; file must be of type File, str, or Workflow".format(
                     file=file
                 )
             )
 
         self.type = "condorWorkflow" if is_planned else "pegasusWorkflow"
-        self.file = file if isinstance(file, File) else File(file)
+
+        if isinstance(file, File):
+            self.file = file.lfn
+        else:
+            self.file = file
 
         # ensure that add_planner_args() is not invoked multiple times for each SubWorkflow
         # instance as this will create duplicate arguments
         self._planner_args_already_set = False
 
-        self.add_inputs(self.file)
+        if not isinstance(self.file, Workflow):
+            self.add_inputs(self.file)
 
     @_chained
     def add_planner_args(
@@ -739,7 +763,13 @@ class SubWorkflow(AbstractJob):
                 self.add_args("-X{}".format(opt))
 
     def __json__(self):
-        dax_json = {"type": self.type, "file": self.file.lfn}
+        # error should only be raised internally if SubWorkflow was given a Workflow
+        # object, then __json__() is invoked before a call to Workflow.write(),
+        # which is where the SubWorkflow would have been serialized to a file
+        if isinstance(self.file, Workflow):
+            raise PegasusError("the given SubWorkflow file must be a File object")
+
+        dax_json = {"type": self.type, "file": self.file}
         dax_json.update(AbstractJob.__json__(self))
 
         return dax_json
@@ -1739,6 +1769,31 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             file = self._DEFAULT_FILENAME
 
         self._infer_dependencies()
+
+        # serialize Workflow objects added as SubWorkflows
+        for _id, job in self.jobs.items():
+            if isinstance(job, SubWorkflow) and isinstance(job.file, Workflow):
+                # serialize job (Workflow instance) to be <wf-name>_<id>.yml
+                workflow_file = Path.cwd() / "{}_{}.yml".format(job.file.name, job._id)
+                job.file.write(str(workflow_file))
+
+                # update job.file to be the file name just created
+                job.file = workflow_file.name
+
+                # add job.file as an input to the SubWorkflow job
+                job.add_inputs(job.file)
+
+                # add to inline replica catalog (create one if none exists)
+                rc_kwargs = {
+                    "site": "local",
+                    "lfn": workflow_file.name,
+                    "pfn": workflow_file,
+                }
+                if not self.replica_catalog:
+                    self.replica_catalog = ReplicaCatalog()
+
+                self.replica_catalog.add_replica(**rc_kwargs)
+
         Writable.write(self, file, _format=_format)
 
         # save path so that it can be used by Client.plan()
@@ -1780,6 +1835,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         if len(self.metadata) > 0:
             metadata = self.metadata
 
+        jobs = [job for _, job in self.jobs.items()]
+        job_dependencies = [dependency for _id, dependency in self.dependencies.items()]
+
         return _filter_out_nones(
             OrderedDict(
                 [
@@ -1791,11 +1849,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                     ("siteCatalog", sc),
                     ("replicaCatalog", rc),
                     ("transformationCatalog", tc),
-                    ("jobs", [job for _id, job in self.jobs.items()]),
-                    (
-                        "jobDependencies",
-                        [dependency for _id, dependency in self.dependencies.items()],
-                    ),
+                    ("jobs", jobs),
+                    ("jobDependencies", job_dependencies),
                 ]
             )
         )

@@ -543,7 +543,8 @@ class Test_JobDependency:
 
 class TestSubWorkflow:
     @pytest.mark.parametrize(
-        "file, is_planned", [(File("wf-file"), False), ("wf-file", True)]
+        "file, is_planned",
+        [(File("wf-file"), False), ("wf-file", True), (Workflow("test"), False)],
     )
     def test_valid_subworkflow(self, file, is_planned):
         assert SubWorkflow(file, is_planned)
@@ -783,6 +784,13 @@ class TestSubWorkflow:
     def test_tojson(self, subworkflow, expected):
         result = json.loads(json.dumps(subworkflow, cls=_CustomEncoder))
         assert result == expected
+
+    def test_tojson_serialize_workflow_error(self):
+        job = SubWorkflow(Workflow("test"))
+        with pytest.raises(PegasusError) as e:
+            job.__json__()
+
+        assert "the given SubWorkflow file must be a File object" in str(e)
 
 
 @pytest.fixture
@@ -1394,6 +1402,110 @@ class TestWorkflow:
             assert expected_warning_msg in stdout
         else:
             assert expected_warning_msg not in stdout
+
+    @pytest.mark.parametrize(
+        "workflow, expected_json",
+        [
+            (
+                Workflow("abc")
+                .add_jobs(
+                    SubWorkflow(Workflow("subwf"), _id="testID")
+                    .add_args("arg1")
+                    .add_inputs(File("if.txt"))
+                )
+                .add_replica_catalog(
+                    ReplicaCatalog().add_replica("local", "lfn", "pfn")
+                ),
+                {
+                    "pegasus": "5.0",
+                    "name": "abc",
+                    "replicaCatalog": {
+                        "replicas": [
+                            {"lfn": "lfn", "pfns": [{"site": "local", "pfn": "pfn"}]},
+                            {
+                                "lfn": "subwf_testID.yml",
+                                "pfns": [
+                                    {
+                                        "site": "local",
+                                        "pfn": str(Path().cwd() / "subwf_testID.yml"),
+                                    }
+                                ],
+                            },
+                        ]
+                    },
+                    "jobs": [
+                        {
+                            "id": "testID",
+                            "type": "pegasusWorkflow",
+                            "file": "subwf_testID.yml",
+                            "arguments": ["arg1"],
+                            "uses": [
+                                {"lfn": "if.txt", "type": "input",},
+                                {"lfn": "subwf_testID.yml", "type": "input"},
+                            ],
+                        }
+                    ],
+                    "jobDependencies": [],
+                },
+            ),
+            (
+                Workflow("abc").add_jobs(
+                    SubWorkflow(Workflow("subwf"), _id="testID")
+                    .add_args("arg1")
+                    .add_inputs(File("if.txt"))
+                ),
+                {
+                    "pegasus": "5.0",
+                    "name": "abc",
+                    "replicaCatalog": {
+                        "replicas": [
+                            {
+                                "lfn": "subwf_testID.yml",
+                                "pfns": [
+                                    {
+                                        "site": "local",
+                                        "pfn": str(Path().cwd() / "subwf_testID.yml"),
+                                    }
+                                ],
+                            }
+                        ]
+                    },
+                    "jobs": [
+                        {
+                            "id": "testID",
+                            "type": "pegasusWorkflow",
+                            "file": "subwf_testID.yml",
+                            "arguments": ["arg1"],
+                            "uses": [
+                                {"lfn": "if.txt", "type": "input",},
+                                {"lfn": "subwf_testID.yml", "type": "input"},
+                            ],
+                        }
+                    ],
+                    "jobDependencies": [],
+                },
+            ),
+        ],
+    )
+    def test_workflow_to_subworkflow_conversion_in_write(
+        self, load_schema, workflow, expected_json
+    ):
+        serialized_subworkflow_file = Path().cwd() / "subwf_testID.yml"
+
+        with NamedTemporaryFile(mode="w+") as f:
+            workflow.write(f)
+            f.seek(0)
+            result = yaml.load(f)
+
+        # validate written workflow yaml
+        workflow_schema = load_schema("wf-5.0.json")
+        validate(instance=result, schema=workflow_schema)
+
+        del result["x-pegasus"]
+        assert result == expected_json
+
+        # cleanup
+        serialized_subworkflow_file.unlink()
 
     def test_workflow_key_ordering_on_yml_write(self):
         tc = TransformationCatalog()
