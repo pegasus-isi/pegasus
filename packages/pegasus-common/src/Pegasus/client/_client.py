@@ -520,9 +520,6 @@ class Client:
                     else:
                         # unknown
                         print(bar, end="")
-
-                    # skip the rest of the lines
-                    break
                 else:
                     bar = (
                         "\r["
