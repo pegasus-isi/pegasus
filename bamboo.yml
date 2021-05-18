@@ -1389,11 +1389,11 @@ project:
                       # no files should be left behind
                       ls -l
 
-                      scp -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
+                      scp -i ~/.ssh/deployment -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
 
                       # new wordpress site
                       ssh pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
-                      scp -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
+                      scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
                 - name: pegasus-binary-x86_64_alpine_3
                 - name: pegasus-binary-x86_64_deb_9
