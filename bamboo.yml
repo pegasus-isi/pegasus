@@ -1392,7 +1392,7 @@ project:
                       scp -i ~/.ssh/deployment -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
 
                       # new wordpress site
-                      ssh pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
+                      ssh -i ~/.ssh/deployment pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
                       scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
                 - name: pegasus-binary-x86_64_alpine_3
