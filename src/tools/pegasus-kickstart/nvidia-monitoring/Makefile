@@ -70,7 +70,7 @@ endif
 NVML_LIB_L := $(addprefix -L , $(NVML_LIB))
 
 CFLAGS  := -I ${CUDA_PATH}/include 
-LDFLAGS := -lnvidia-ml $(NVML_LIB_L)
+LDFLAGS := -lnvidia-ml -lpthread $(NVML_LIB_L)
 
 all: nvidia_monitor
 nvidia_monitor: nvidia_monitor.o

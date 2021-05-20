@@ -25,6 +25,7 @@ typedef struct {
     unsigned int max_power_usage;
     unsigned int max_gpu_utilization;
     unsigned long long max_mem_usage;
+    unsigned long long max_bar1mem_usage;
 } gpu_max_measurements;
 
 
@@ -33,6 +34,7 @@ typedef struct {
     nvmlPciInfo_t pci;
     nvmlDevice_t device;
     nvmlMemory_t memory;
+    nvmlBAR1Memory_t bar1memory;
     nvmlUtilization_t utilization;
     nvmlComputeMode_t compute_mode;
     gpu_process_infos compute_proc_infos;
@@ -40,6 +42,8 @@ typedef struct {
     gpu_max_measurements max_measurements;
     int cuda_capability_major;
     int cuda_capability_minor;
+    unsigned int pcie_tx;
+    unsigned int pcie_rx;
     unsigned int temp;
     unsigned int power_limit;
     unsigned int power_usage;
@@ -105,6 +109,7 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
         env->devices[i].max_measurements.max_temp = 0;
         env->devices[i].max_measurements.max_power_usage = 0;
         env->devices[i].max_measurements.max_mem_usage = 0;
+        env->devices[i].max_measurements.max_bar1mem_usage = 0;
         env->devices[i].max_measurements.max_gpu_utilization = 0;
 
         // Query for device handle to perform operations on a device
@@ -212,6 +217,15 @@ nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device) {
     if (device->power_usage > device->max_measurements.max_power_usage)
         device->max_measurements.max_power_usage = device->power_usage;
     
+    result = nvmlDeviceGetBAR1MemoryInfo (device->device, &device->bar1memory);
+    if (result != NVML_SUCCESS)
+    { 
+        printf("Failed to get bar1Memory info for device %u: %s\n", device->index, nvmlErrorString(result));
+        return result;
+    }
+    if (device->bar1memory.bar1Used > device->max_measurements.max_bar1mem_usage)
+        device->max_measurements.max_bar1mem_usage = device->bar1memory.bar1Used;
+
     result = nvmlDeviceGetMemoryInfo(device->device, &device->memory);
     if (result != NVML_SUCCESS)
     { 
@@ -239,7 +253,22 @@ nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device) {
             return result;
         }
     }
+  
     
+    result = nvmlDeviceGetPcieThroughput(device->device, NVML_PCIE_UTIL_TX_BYTES, &device->pcie_tx);
+    if (result != NVML_SUCCESS)
+    { 
+        printf("Failed to get pcie tx utilization rates for device %u: %s\n", device->index, nvmlErrorString(result));
+        return result;
+    }
+    
+    result = nvmlDeviceGetPcieThroughput(device->device, NVML_PCIE_UTIL_RX_BYTES, &device->pcie_rx);
+    if (result != NVML_SUCCESS)
+    { 
+        printf("Failed to get pcie rx utilization rates for device %u: %s\n", device->index, nvmlErrorString(result));
+        return result;
+    }
+
     return result;
 }
 
@@ -396,7 +425,9 @@ void printGpuStatistics(gpu_dev_info_struct device) {
     printf("\t Tempearture %d C\n", device.temp);
     printf("\t Power Usage %d Watt\n", device.power_usage/1000);
     printf("\t GPU Utilization %u%%, Memory Utilization %u%%\n", device.utilization.gpu, device.utilization.memory);
+    printf("\t PCIe RX Utilization %u KB/s, PCIe TX Utilization %u KB/s\n", device.pcie_rx, device.pcie_tx);
     printf("\t Memory Used %llu MBytes, Memory Total %llu MBytes\n", device.memory.used/(1024*1024), device.memory.total/(1024*1024));
+    printf("\t Bar1Memory Used %llu MBytes, Bar1Memory Total %llu MBytes\n", device.bar1memory.bar1Used/(1024*1024), device.bar1memory.bar1Total/(1024*1024));
     printf("\t GPU Clock %dMHz, SM Clock %dMHz, Mem Clock %dMHz, Video Clock %dMHz\n", device.clocks[NVML_CLOCK_GRAPHICS], device.clocks[NVML_CLOCK_SM], device.clocks[NVML_CLOCK_MEM], device.clocks[NVML_CLOCK_VIDEO]);
 
     return;
