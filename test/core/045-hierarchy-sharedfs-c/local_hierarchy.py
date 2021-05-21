@@ -41,32 +41,40 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days/CCG/scratch/{run_id}"
+    path: "/nfs/bamboo/scratch-90-days/CCG/scratch/{run_id}"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/scratch/{run_id}"
+      url: "scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch/{run_id}"
    -
     type: "localStorage"
-    path: "/lizard/scratch-90-days/CCG/outputs"
+    path: "/nfs/bamboo/scratch-90-days/CCG/outputs"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/outputs/{run_id}"
-  grids:
-   -
-    type: "gt5"
-    contact: "obelix.isi.edu/jobmanager-condor"
-    scheduler: "condor"
-    jobtype: "compute"
-   -
-    type: "gt5"
-    contact: "obelix.isi.edu/jobmanager-fork"
-    scheduler: "fork"
-    jobtype: "auxillary"
-  profiles:
-    env:
-      PEGASUS_HOME: "{condor_pool_pegasus_home}"
+      url: "scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/outputs/{run_id}"
+  grids: 
+   - 
+    type: "batch" 
+    contact: "corbusier.isi.edu" 
+    scheduler: "slurm" 
+    jobtype: "compute" 
+   - 
+    type: "batch" 
+    contact: "corbusier.isi.edu" 
+    scheduler: "slurm" 
+    jobtype: "compute" 
+  profiles: 
+    env: 
+      PEGASUS_HOME: "{cluster_pegasus_home}" 
+    pegasus: 
+      # SSH is the style to use for Bosco SSH submits. 
+      style: ssh 
+      # Works around bug in the HTCondor GAHP, that does not 
+      # set the remote directory 
+      change.dir: 'true' 
+      # the key to use for scp transfers 
+      SSH_PRIVATE_KEY: /scitech/home/bamboo/.ssh/workflow_id_rsa 
  -
   name: "local"
   arch: "x86_64"
@@ -89,7 +97,7 @@ sites:
       operation: "all"
       url: "file://{work_dir}/outputs/local-site"
 """.format(
-    run_id=RUN_ID, work_dir=str(WORK_DIR), condor_pool_pegasus_home="/usr"
+    run_id=RUN_ID, work_dir=str(WORK_DIR), cluster_pegasus_home="/usr"
 )
 
 with open("sites.yml", "w") as f:
