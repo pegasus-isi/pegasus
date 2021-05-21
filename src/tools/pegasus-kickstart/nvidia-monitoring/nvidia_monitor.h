@@ -188,14 +188,13 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
                 return result;
             }
         }
-
-
-        return result;
     }
+
+    return result;
 }
 
 
-nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device) {
+nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device, unsigned char monitor_pcie_usage) {
     nvmlReturn_t result;
     unsigned int k;
 
@@ -253,40 +252,41 @@ nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device) {
             return result;
         }
     }
-  
+
+    if (monitor_pcie_usage) {
+        result = nvmlDeviceGetPcieThroughput(device->device, NVML_PCIE_UTIL_TX_BYTES, &device->pcie_tx);
+        if (result != NVML_SUCCESS)
+        { 
+            printf("Failed to get pcie tx utilization rates for device %u: %s\n", device->index, nvmlErrorString(result));
+            return result;
+        }
     
-    result = nvmlDeviceGetPcieThroughput(device->device, NVML_PCIE_UTIL_TX_BYTES, &device->pcie_tx);
-    if (result != NVML_SUCCESS)
-    { 
-        printf("Failed to get pcie tx utilization rates for device %u: %s\n", device->index, nvmlErrorString(result));
-        return result;
-    }
-    
-    result = nvmlDeviceGetPcieThroughput(device->device, NVML_PCIE_UTIL_RX_BYTES, &device->pcie_rx);
-    if (result != NVML_SUCCESS)
-    { 
-        printf("Failed to get pcie rx utilization rates for device %u: %s\n", device->index, nvmlErrorString(result));
-        return result;
+        result = nvmlDeviceGetPcieThroughput(device->device, NVML_PCIE_UTIL_RX_BYTES, &device->pcie_rx);
+        if (result != NVML_SUCCESS)
+        { 
+            printf("Failed to get pcie rx utilization rates for device %u: %s\n", device->index, nvmlErrorString(result));
+            return result;
+        }
     }
 
     return result;
 }
 
 
-nvmlReturn_t getGpuStatisticsByID(unsigned int i, gpu_env_struct *env) {
-    nvmlReturn_t result = getGpuStatistics(&env->devices[i]);
+nvmlReturn_t getGpuStatisticsByID(unsigned int i, gpu_env_struct *env, unsigned char monitor_pcie_usage) {
+    nvmlReturn_t result = getGpuStatistics(&env->devices[i], monitor_pcie_usage);
 
     return result;
 }
 
 
-nvmlReturn_t getGpuStatisticsAll(gpu_env_struct *env) {
+nvmlReturn_t getGpuStatisticsAll(gpu_env_struct *env, unsigned char monitor_pcie_usage) {
     unsigned int i;
     nvmlReturn_t result;
 
     for (i = 0; i < env->device_count; i++)
     {
-        result = getGpuStatistics(&env->devices[i]);
+        result = getGpuStatistics(&env->devices[i], monitor_pcie_usage);
         if (result != NVML_SUCCESS)
             break;
     }
