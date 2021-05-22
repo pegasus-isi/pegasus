@@ -517,4 +517,19 @@ void printGpuEnvironment(gpu_env_struct env) {
     return;
 }
 
+void nvml_monitoring_cleanup(gpu_env_struct *env) {
+    unsigned int i;
+
+    for (i=0; i<env->device_count; i++) {   
+        if (env->devices[i].proc_samples.samples != NULL)
+            free(env->devices[i].proc_samples.samples);
+        if (env->devices[i].compute_proc_infos.infos != NULL)
+            free(env->devices[i].compute_proc_infos.infos);
+    }
+
+    if (env->devices != NULL) free(env->devices);
+
+    return;
+}
+
 #endif

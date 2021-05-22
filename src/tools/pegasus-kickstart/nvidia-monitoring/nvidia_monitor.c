@@ -31,7 +31,7 @@ void *collect_gpu_stats(void *args) {
     struct timeval begin, end;
     long seconds, microseconds;
     
-    pthread_detach(pthread_self());
+    //thread_detach(pthread_self());
     thread_data *data = (thread_data *)args;
     
     gettimeofday(&begin, 0);
@@ -77,9 +77,11 @@ nvmlReturn_t multi_threaded_collection(gpu_env_struct *env, pthread_t *threads, 
 
         sleep(interval);
 
-        for (i=0; i<env->device_count; i++)
+        for (i=0; i<env->device_count; i++) {
+            pthread_join(threads[i], NULL);
             if (threads_data[i].result != NVML_SUCCESS)
                 return threads_data[i].result;
+        }
     }
 
     return NVML_SUCCESS;
@@ -151,6 +153,8 @@ nvmlReturn_t single_threaded_collection(gpu_env_struct *env, unsigned char monit
 
 int main(int argc, char *argv[]) {
     unsigned int i;
+    nvmlReturn_t result;
+    gpu_env_struct env;
     unsigned int interval = 10;
     static unsigned char monitor_compute_procs = 0;
     static unsigned char monitor_graphics_procs = 0;
@@ -159,10 +163,8 @@ int main(int argc, char *argv[]) {
     char *output = NULL;
     char *publish_url = NULL;
 
-    nvmlReturn_t result;
-    gpu_env_struct env;
-    pthread_t *threads;
-    thread_data *threads_data;
+    pthread_t *threads = NULL;
+    thread_data *threads_data = NULL;
 
     signal(SIGINT, signal_handler);
 
@@ -235,12 +237,10 @@ int main(int argc, char *argv[]) {
     result = nvmlInit();
     if (result != NVML_SUCCESS) { 
         printf("Failed to initialize NVML: %s\n", nvmlErrorString(result));
-
-        printf("Press ENTER to continue...\n");
-        getchar();
         return 1;
     }
 
+    env.devices = NULL;
     result = getGpuEnvironment(&env);
     if (result != NVML_SUCCESS)
       goto Error;
@@ -252,6 +252,11 @@ int main(int argc, char *argv[]) {
     if (is_multi_threaded) {
         threads = (pthread_t*) malloc(env.device_count * sizeof(pthread_t));
         threads_data = (thread_data*) malloc(env.device_count * sizeof(thread_data));
+        
+        if (threads == NULL || threads_data == NULL) {
+            printf("Not enough memory for threads\n");
+            goto Error;
+        }
 
         for (i=0; i<env.device_count; i++) {
             threads_data[i].i = i;
@@ -266,6 +271,10 @@ int main(int argc, char *argv[]) {
         }
         
         result = multi_threaded_collection(&env, threads, threads_data, interval);
+        
+        if (threads != NULL) free(threads);
+        if (threads_data != NULL) free(threads_data);
+
         if (result != NVML_SUCCESS)
             goto Error;
     }
@@ -280,6 +289,10 @@ int main(int argc, char *argv[]) {
         printGpuMaxMeasurements(env.devices[i]);
     printf("=======================================================================================================\n\n");
     
+    if (output != NULL) free(output);
+    if (publish_url != NULL) free(publish_url);
+    nvml_monitoring_cleanup(&env);
+
     result = nvmlShutdown();
     if (result != NVML_SUCCESS)
         printf("Failed to shutdown NVML: %s\n", nvmlErrorString(result));
@@ -289,6 +302,10 @@ int main(int argc, char *argv[]) {
     return 0;
 
 Error:
+    if (output != NULL) free(output);
+    if (publish_url != NULL) free(publish_url);
+    nvml_monitoring_cleanup(&env);
+   
     result = nvmlShutdown();
     if (result != NVML_SUCCESS)
         printf("Failed to shutdown NVML: %s\n", nvmlErrorString(result));
