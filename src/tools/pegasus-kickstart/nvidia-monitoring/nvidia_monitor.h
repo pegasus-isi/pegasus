@@ -66,35 +66,38 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
     nvmlReturn_t result;
     unsigned int i, k;
 
+    env->devices = NULL;
+    
     /*CUDA Version*/
     result=nvmlSystemGetCudaDriverVersion_v2(&env->cuda_version);
-    if (result != NVML_SUCCESS)
-    { 
+    if (result != NVML_SUCCESS) { 
         printf("Failed to get cuda version: %s\n", nvmlErrorString(result));
         return result;
     }
     
     /*Driver Version*/
     result=nvmlSystemGetDriverVersion(env->driver_version, NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
-    if (result != NVML_SUCCESS)
-    { 
+    if (result != NVML_SUCCESS) { 
         printf("Failed to get system driver version: %s\n", nvmlErrorString(result));
         return result;
     }
 
     result = nvmlDeviceGetCount(&env->device_count);
-    if (result != NVML_SUCCESS)
-    { 
+    if (result != NVML_SUCCESS) { 
         printf("Failed to query device count: %s\n", nvmlErrorString(result));
         return result;
     }
 
     env->devices = (gpu_dev_info_struct*) malloc(env->device_count * sizeof(gpu_dev_info_struct));
-    
-    for (i = 0; i < env->device_count; i++)
-    {
-        env->devices[i].index = i;
+    if (env->devices == NULL) {
+        printf("Failed to allocate memory for devices\n");
+        return 1;
+    }
         
+    
+    for (i = 0; i < env->device_count; i++) {
+        env->devices[i].index = i;
+
         env->devices[i].compute_proc_infos.infos = NULL;
         env->devices[i].compute_proc_infos.count = -1;
       
@@ -117,15 +120,13 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
         // nvmlDeviceGetHandleBySerial
         // nvmlDeviceGetHandleByPciBusId
         result = nvmlDeviceGetHandleByIndex(i, &env->devices[i].device);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get handle for device %u: %s\n", i, nvmlErrorString(result));
             return result;
         }
 
         result = nvmlDeviceGetName(env->devices[i].device, env->devices[i].name, NVML_DEVICE_NAME_BUFFER_SIZE);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get name of device %u: %s\n", i, nvmlErrorString(result));
             return result;
         }
@@ -133,8 +134,7 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
         // pci.busId is very useful to know which device physically you're talking to
         // Using PCI identifier you can also match nvmlDevice handle to CUDA device.
         result = nvmlDeviceGetPciInfo(env->devices[i].device, &env->devices[i].pci);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get pci info for device %u: %s\n", i, nvmlErrorString(result));
             return result;
         }
@@ -142,14 +142,12 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
         result = nvmlDeviceGetComputeMode(env->devices[i].device, &env->devices[i].compute_mode);
         if (NVML_ERROR_NOT_SUPPORTED == result)
             env->devices[i].is_cuda_capable = 0;
-        else if (result != NVML_SUCCESS)
-        { 
+        else if (result != NVML_SUCCESS) { 
             printf("Failed to get compute mode for device %u: %s\n", i, nvmlErrorString(result));
             return result;
         }
 
-        if (env->devices[i].is_cuda_capable == 1)
-        {
+        if (env->devices[i].is_cuda_capable == 1) {
             result = nvmlDeviceGetCudaComputeCapability(env->devices[i].device, &env->devices[i].cuda_capability_major, &env->devices[i].cuda_capability_minor);
             if (result != NVML_SUCCESS)
             { 
@@ -159,31 +157,26 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
         }
 
         result = nvmlDeviceGetMemoryInfo(env->devices[i].device, &env->devices[i].memory);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get memory info for device %u: %s\n", i, nvmlErrorString(result));
             return result;
         }
         
         result = nvmlDeviceGetEnforcedPowerLimit(env->devices[i].device, &env->devices[i].power_limit);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get power limit for device %u: %s\n", i, nvmlErrorString(result));
             return result;
         }
         
         result = nvmlDeviceGetTemperature(env->devices[i].device, NVML_TEMPERATURE_GPU, &env->devices[i].temp);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get temperature for device %u: %s\n", i, nvmlErrorString(result));
             return result;
         }
         
-        for (k = 0; k < NVML_CLOCK_COUNT; k++)
-        {
+        for (k = 0; k < NVML_CLOCK_COUNT; k++) {
             result = nvmlDeviceGetMaxClockInfo(env->devices[i].device, k, &env->devices[i].max_clocks[k]);
-            if (result != NVML_SUCCESS)
-            { 
+            if (result != NVML_SUCCESS) { 
                 printf("Failed to get max clock speeds for device %u: %s\n", i, nvmlErrorString(result));
                 return result;
             }
@@ -199,8 +192,7 @@ nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device, unsigned char monitor
     unsigned int k;
 
     result = nvmlDeviceGetTemperature(device->device, NVML_TEMPERATURE_GPU, &device->temp);
-    if (result != NVML_SUCCESS)
-    { 
+    if (result != NVML_SUCCESS) { 
         printf("Failed to get temperature for device %u: %s\n", device->index, nvmlErrorString(result));
         return result;
     }
@@ -208,8 +200,7 @@ nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device, unsigned char monitor
         device->max_measurements.max_temp = device->temp;
         
     result = nvmlDeviceGetPowerUsage(device->device, &device->power_usage);
-    if (result != NVML_SUCCESS)
-    { 
+    if (result != NVML_SUCCESS) { 
         printf("Failed to get power usage for device %u: %s\n", device->index, nvmlErrorString(result));
         return result;
     }
@@ -217,8 +208,7 @@ nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device, unsigned char monitor
         device->max_measurements.max_power_usage = device->power_usage;
     
     result = nvmlDeviceGetBAR1MemoryInfo (device->device, &device->bar1memory);
-    if (result != NVML_SUCCESS)
-    { 
+    if (result != NVML_SUCCESS) { 
         printf("Failed to get bar1Memory info for device %u: %s\n", device->index, nvmlErrorString(result));
         return result;
     }
@@ -226,8 +216,7 @@ nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device, unsigned char monitor
         device->max_measurements.max_bar1mem_usage = device->bar1memory.bar1Used;
 
     result = nvmlDeviceGetMemoryInfo(device->device, &device->memory);
-    if (result != NVML_SUCCESS)
-    { 
+    if (result != NVML_SUCCESS) { 
         printf("Failed to get memory info for device %u: %s\n", device->index, nvmlErrorString(result));
         return result;
     }
@@ -235,19 +224,16 @@ nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device, unsigned char monitor
         device->max_measurements.max_mem_usage = device->memory.used;
         
     result = nvmlDeviceGetUtilizationRates(device->device, &device->utilization);
-    if (result != NVML_SUCCESS)
-    { 
+    if (result != NVML_SUCCESS) { 
         printf("Failed to get utilization rates for device %u: %s\n", device->index, nvmlErrorString(result));
         return result;
     }
     if (device->utilization.gpu > device->max_measurements.max_gpu_utilization)
         device->max_measurements.max_gpu_utilization = device->utilization.gpu;
 
-    for (k = 0; k < NVML_CLOCK_COUNT; k++)
-    {
+    for (k = 0; k < NVML_CLOCK_COUNT; k++) {
         result = nvmlDeviceGetClockInfo(device->device, k, &device->clocks[k]);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get max clock speeds for device %u: %s\n", device->index, nvmlErrorString(result));
             return result;
         }
@@ -255,15 +241,13 @@ nvmlReturn_t getGpuStatistics(gpu_dev_info_struct *device, unsigned char monitor
 
     if (monitor_pcie_usage) {
         result = nvmlDeviceGetPcieThroughput(device->device, NVML_PCIE_UTIL_TX_BYTES, &device->pcie_tx);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get pcie tx utilization rates for device %u: %s\n", device->index, nvmlErrorString(result));
             return result;
         }
     
         result = nvmlDeviceGetPcieThroughput(device->device, NVML_PCIE_UTIL_RX_BYTES, &device->pcie_rx);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get pcie rx utilization rates for device %u: %s\n", device->index, nvmlErrorString(result));
             return result;
         }
@@ -284,8 +268,7 @@ nvmlReturn_t getGpuStatisticsAll(gpu_env_struct *env, unsigned char monitor_pcie
     unsigned int i;
     nvmlReturn_t result;
 
-    for (i = 0; i < env->device_count; i++)
-    {
+    for (i = 0; i < env->device_count; i++) {
         result = getGpuStatistics(&env->devices[i], monitor_pcie_usage);
         if (result != NVML_SUCCESS)
             break;
@@ -304,8 +287,7 @@ nvmlReturn_t getGpuProcessStatistics(gpu_dev_info_struct *device) {
     
     //determine size of buffer
     result = nvmlDeviceGetProcessUtilization(device->device, NULL, &tmp_cnt, tmp_last_ts);
-    if (result != NVML_SUCCESS && result != NVML_ERROR_INSUFFICIENT_SIZE)
-    { 
+    if (result != NVML_SUCCESS && result != NVML_ERROR_INSUFFICIENT_SIZE) { 
         printf("Failed to get num of process samples for device %u: %s\n", device->index, nvmlErrorString(result));
         return result;
     }
@@ -313,11 +295,14 @@ nvmlReturn_t getGpuProcessStatistics(gpu_dev_info_struct *device) {
     if (tmp_cnt > 0) {
         //allocate space to store them
         tmp_samples = (nvmlProcessUtilizationSample_t*) malloc(tmp_cnt * sizeof(nvmlProcessUtilizationSample_t));
+        if (tmp_samples == NULL) {
+            printf("Failed to allocate memory for samples\n");
+            return 1;
+        }
     
         //retrieve new samples
         result = nvmlDeviceGetProcessUtilization(device->device, tmp_samples, &tmp_cnt, tmp_last_ts);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get process samples for device %u: %s\n", device->index, nvmlErrorString(result));
             return result;
         }
@@ -349,8 +334,7 @@ nvmlReturn_t getGpuProcessStatisticsAll(gpu_env_struct *env) {
     unsigned int i;
     nvmlReturn_t result;
 
-    for (i = 0; i < env->device_count; i++)
-    {
+    for (i = 0; i < env->device_count; i++) {
         result = getGpuProcessStatistics(&env->devices[i]);
         if (result != NVML_SUCCESS)
             break;
@@ -368,8 +352,7 @@ nvmlReturn_t getGpuComputeProcesses(gpu_dev_info_struct *device) {
     
     //determine size of buffer
     result = nvmlDeviceGetComputeRunningProcesses(device->device, &tmp_cnt, NULL);
-    if (result != NVML_SUCCESS && result != NVML_ERROR_INSUFFICIENT_SIZE)
-    { 
+    if (result != NVML_SUCCESS && result != NVML_ERROR_INSUFFICIENT_SIZE) { 
         printf("Failed to get num of compute processes for device %u: %s\n", device->index, nvmlErrorString(result));
         return result;
     }
@@ -377,11 +360,14 @@ nvmlReturn_t getGpuComputeProcesses(gpu_dev_info_struct *device) {
     if (tmp_cnt > 0) {
         //allocate space to store them
         tmp_infos = (nvmlProcessInfo_t*) malloc(tmp_cnt * sizeof(nvmlProcessInfo_t));
+        if (tmp_infos == NULL) {
+            printf("Failed to allocate memory for infos\n");
+            return 1;
+        }
     
         //retrieve compute processes
         result = nvmlDeviceGetComputeRunningProcesses(device->device, &tmp_cnt, tmp_infos);
-        if (result != NVML_SUCCESS)
-        { 
+        if (result != NVML_SUCCESS) { 
             printf("Failed to get compute processes for device %u: %s\n", device->index, nvmlErrorString(result));
             return result;
         }
@@ -409,8 +395,7 @@ nvmlReturn_t getGpuComputeProcessesAll(gpu_env_struct *env) {
     unsigned int i;
     nvmlReturn_t result;
 
-    for (i = 0; i < env->device_count; i++)
-    {
+    for (i = 0; i < env->device_count; i++) {
         result = getGpuComputeProcesses(&env->devices[i]);
         if (result != NVML_SUCCESS)
             break;
@@ -500,8 +485,7 @@ void printGpuEnvironment(gpu_env_struct env) {
     printf("Found %u device%s\n", env.device_count, env.device_count != 1 ? "s" : "");
 
     printf("Listing devices:\n");    
-    for (i = 0; i < env.device_count; i++)
-    {
+    for (i = 0; i < env.device_count; i++) {
         printf("%u. %s [%s]\n", i, env.devices[i].name, env.devices[i].pci.busId);
         if (env.devices[i].is_cuda_capable == 0)
             printf("\t This is not CUDA capable device\n");
@@ -520,14 +504,16 @@ void printGpuEnvironment(gpu_env_struct env) {
 void nvml_monitoring_cleanup(gpu_env_struct *env) {
     unsigned int i;
 
-    for (i=0; i<env->device_count; i++) {   
-        if (env->devices[i].proc_samples.samples != NULL)
-            free(env->devices[i].proc_samples.samples);
-        if (env->devices[i].compute_proc_infos.infos != NULL)
-            free(env->devices[i].compute_proc_infos.infos);
-    }
+    if (env->devices != NULL) {
+        for (i=0; i<env->device_count; i++) {   
+            if (env->devices[i].proc_samples.samples != NULL)
+                free(env->devices[i].proc_samples.samples);
+            if (env->devices[i].compute_proc_infos.infos != NULL)
+                free(env->devices[i].compute_proc_infos.infos);
+        }
 
-    if (env->devices != NULL) free(env->devices);
+        free(env->devices);
+    }
 
     return;
 }

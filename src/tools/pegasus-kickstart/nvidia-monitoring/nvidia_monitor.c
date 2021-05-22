@@ -240,7 +240,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    env.devices = NULL;
     result = getGpuEnvironment(&env);
     if (result != NVML_SUCCESS)
       goto Error;
