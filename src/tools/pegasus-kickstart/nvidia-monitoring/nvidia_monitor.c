@@ -18,16 +18,28 @@ typedef struct thread_data {
     unsigned int i;
     double last_collection_duration;
     unsigned long int last_collection_time;
-    unsigned char monitor_compute_procs;
-    unsigned char monitor_graphics_procs;
-    unsigned char monitor_pcie_usage;
+    unsigned short monitor_compute_procs;
+    unsigned short monitor_graphics_procs;
+    unsigned short monitor_pcie_usage;
+    unsigned short output_json;
     gpu_env_struct *env;
     char *output;
     char *publish_url;
+    char *doc_buffer;
+    size_t doc_buffer_size;
     nvmlReturn_t result;
 } thread_data;
 
-void *collect_gpu_stats(void *args) {
+void write_stats_to_file() {
+    return;
+}
+
+void publish_stats() {
+    return;
+}
+
+
+void* collect_gpu_stats(void *args) {
     struct timeval begin, end;
     long seconds, microseconds;
     
@@ -87,13 +99,18 @@ nvmlReturn_t multi_threaded_collection(gpu_env_struct *env, pthread_t *threads, 
     return NVML_SUCCESS;
 }
 
-nvmlReturn_t single_threaded_collection(gpu_env_struct *env, unsigned char monitor_compute_procs, unsigned char monitor_graphics_procs, unsigned char monitor_pcie_usage, unsigned int interval) {
+nvmlReturn_t single_threaded_collection(gpu_env_struct *env, unsigned short monitor_compute_procs, unsigned short monitor_graphics_procs, unsigned short monitor_pcie_usage, unsigned short output_json, unsigned int interval) {
     unsigned int i;
     unsigned long last_collection_time;
     double last_collection_duration;
     nvmlReturn_t result ;
     struct timeval begin, end;
     long seconds, microseconds;
+    char *doc_buffer = NULL;
+    size_t doc_buffer_size;
+
+    if (output_json)
+        doc_buffer = (char *) malloc(4096 * sizeof(char));
 
     while(exit_guard) {
         gettimeofday(&begin, 0);
@@ -124,18 +141,22 @@ nvmlReturn_t single_threaded_collection(gpu_env_struct *env, unsigned char monit
         
         for (i=0; i<env->device_count; i++)
         {
-            printf("==================================== GPU GENERAL STATS ================================================\n");
-            printGpuStatistics(env->devices[i]);
-            if (monitor_compute_procs) {
-                printf("==================================== GPU COMPUTE PROCESSES ============================================\n");
-                printGpuComputeProcessInfos(env->devices[i]);
+            if (output_json) {
+                doc_buffer_size = json_encode_device_stats(env->devices[i], last_collection_duration, doc_buffer, 4096);
+                if (doc_buffer_size < 0) {
+                    free(doc_buffer);
+                    return -1;
+                }
+                printf("%s\n", doc_buffer);
             }
-            if (monitor_graphics_procs){
-                printf("==================================== GPU PROCESS STATS ================================================\n");
+            else {
+                printGpuStatistics(env->devices[i]);
+                if (monitor_compute_procs)
+                    printGpuComputeProcessInfos(env->devices[i]);
+                if (monitor_graphics_procs)
                 printGpuProcessStatistics(env->devices[i]);
             }
             printf("Time took to finish sampling: %.3f seconds.\n\n", last_collection_duration);
-            printf("=======================================================================================================\n");
         }
 
         sleep(interval);
@@ -156,12 +177,16 @@ int main(int argc, char *argv[]) {
     nvmlReturn_t result;
     gpu_env_struct env;
     unsigned int interval = 10;
-    static unsigned char monitor_compute_procs = 0;
-    static unsigned char monitor_graphics_procs = 0;
-    static unsigned char monitor_pcie_usage = 0;
-    static unsigned char is_multi_threaded = 0;
+    static int monitor_compute_procs = 0;
+    static int monitor_graphics_procs = 0;
+    static int monitor_pcie_usage = 0;
+    static int is_multi_threaded = 0;
+    static int is_output_json = 0;
     char *output = NULL;
     char *publish_url = NULL;
+    char *doc_buffer = NULL;
+    size_t doc_buffer_size;
+    size_t doc_buffer_limit = 8192;
 
     pthread_t *threads = NULL;
     thread_data *threads_data = NULL;
@@ -175,6 +200,7 @@ int main(int argc, char *argv[]) {
         {"compute_procs", 0, &monitor_compute_procs, 1},
         {"graphics_procs", 0, &monitor_graphics_procs, 1},
         {"multi_threaded", 0, &is_multi_threaded, 1},
+        {"json", 0, &is_output_json, 1},
         {"output", 1, 0, 'o'},
         {"publish", 1, 0, 'p'},
         {"interval", 1, 0, 'i'},
@@ -182,42 +208,45 @@ int main(int argc, char *argv[]) {
         {0, 0, 0, 0}
     };
 
-    while((opt = getopt_long(argc, argv, ":o:p:i:bcgmh", long_options, &option_index)) != -1) { 
+    while((opt = getopt_long(argc, argv, ":o:p:i:bcgmjh", long_options, &option_index)) != -1) { 
         switch(opt) {
             case 0:
                 break;
             case 'i':
                 interval = atoi(optarg);
                 break;
-            case 'o': 
+            case 'o':
                 output = optarg;
                 break;
-            case 'p': 
+            case 'p':
                 publish_url = optarg;
-                break; 
-            case 'b': 
+                break;
+            case 'b':
                 monitor_pcie_usage = 1;
-                break; 
-            case 'c': 
+                break;
+            case 'c':
                 monitor_compute_procs = 1;
-                break; 
-            case 'g': 
+                break;
+            case 'g':
                 monitor_graphics_procs = 1;
-                break; 
-            case 'm': 
+                break;
+            case 'm':
                 is_multi_threaded = 1;
-                break; 
+                break;
+            case 'j':
+                is_output_json = 1;
+                break;
             case 'h': 
-                printf("Usage: ./nvidia-monitor [-bcgm] [-o <filename>] [-p <publish_url>] [-i <interval>]\n");
+                printf("Usage: ./nvidia-monitor [-bcgmj] [-o <filename>] [-p <publish_url>] [-i <interval>]\n");
                 return 0;
-                break; 
+                break;
             case ':': 
                 printf("Option needs a value\n"); 
-                printf("Usage: ./nvidia-monitor [-bcgm] [-o <filename>] [-p <publish_url>] [-i <interval>]\n");
+                printf("Usage: ./nvidia-monitor [-bcgmj] [-o <filename>] [-p <publish_url>] [-i <interval>]\n");
                 return 1;
             case '?': 
                 printf("Unknown option: %c\n", optopt);
-                printf("Usage: ./nvidia-monitor [-bcgm] [-o <filename>] [-p <publish_url>] [-i <interval>]\n");
+                printf("Usage: ./nvidia-monitor [-bcgmj] [-o <filename>] [-p <publish_url>] [-i <interval>]\n");
                 return 1;
         }
     }
@@ -244,10 +273,18 @@ int main(int argc, char *argv[]) {
     if (result != NVML_SUCCESS)
       goto Error;
     
-    printf("============================================= GPU ENV =====================================================\n");
-    printGpuEnvironment(env);
-    printf("===========================================================================================================\n\n");
+    if (is_output_json) {
+        doc_buffer = (char*) malloc(doc_buffer_limit * sizeof(char));
+        doc_buffer_size = json_encode_environment(env, doc_buffer, doc_buffer_limit);
+        if (doc_buffer_size < 0)
+            goto Error;
+
+        printf("%s\n", doc_buffer);
+    }
+    else
+        printGpuEnvironment(env);
     
+    //Sample gpus info
     if (is_multi_threaded) {
         threads = (pthread_t*) malloc(env.device_count * sizeof(pthread_t));
         threads_data = (thread_data*) malloc(env.device_count * sizeof(thread_data));
@@ -262,32 +299,46 @@ int main(int argc, char *argv[]) {
             threads_data[i].env = &env;
             threads_data[i].last_collection_time = 0;
             threads_data[i].last_collection_duration = 0;
-            threads_data[i].monitor_compute_procs = monitor_compute_procs;
-            threads_data[i].monitor_graphics_procs = monitor_graphics_procs;
-            threads_data[i].monitor_pcie_usage = monitor_pcie_usage;
+            threads_data[i].monitor_compute_procs = (unsigned short) monitor_compute_procs;
+            threads_data[i].monitor_graphics_procs = (unsigned short) monitor_graphics_procs;
+            threads_data[i].monitor_pcie_usage = (unsigned short) monitor_pcie_usage;
+            threads_data[i].output_json = (unsigned short) is_output_json;
             threads_data[i].output = output;
             threads_data[i].publish_url = publish_url;
+            threads_data[i].doc_buffer = (char*) malloc(4096 * sizeof(char));
         }
         
         result = multi_threaded_collection(&env, threads, threads_data, interval);
         
         if (threads != NULL) free(threads);
-        if (threads_data != NULL) free(threads_data);
+        if (threads_data != NULL) {
+            for (i=0; i<env.device_count; i++)
+                if (threads_data[i].doc_buffer != NULL) free(threads_data[i].doc_buffer);
+            free(threads_data);
+        }
 
         if (result != NVML_SUCCESS)
             goto Error;
     }
     else {
-        result = single_threaded_collection(&env, monitor_compute_procs, monitor_graphics_procs, monitor_pcie_usage, interval);
+        result = single_threaded_collection(&env, monitor_compute_procs, monitor_graphics_procs, monitor_pcie_usage, is_output_json, interval);
         if (result != NVML_SUCCESS)
             goto Error;
     }
 
-    printf("==================================== GPU MAX STATS ================================================\n");
-    for (i=0; i<env.device_count; i++)
-        printGpuMaxMeasurements(env.devices[i]);
-    printf("=======================================================================================================\n\n");
-    
+    //Output max measurements
+    if (is_output_json) {
+        doc_buffer_size = json_encode_device_stats_max(env, doc_buffer, doc_buffer_limit);
+        if (doc_buffer_size < 0)
+            goto Error;
+
+        printf("%s\n", doc_buffer);
+    }
+    else
+        printGpuMaxMeasurements(env);
+
+
+    if (doc_buffer != NULL) free(doc_buffer);
     if (output != NULL) free(output);
     if (publish_url != NULL) free(publish_url);
     nvml_monitoring_cleanup(&env);
@@ -301,6 +352,7 @@ int main(int argc, char *argv[]) {
     return 0;
 
 Error:
+    if (doc_buffer != NULL) free(doc_buffer);
     if (output != NULL) free(output);
     if (publish_url != NULL) free(publish_url);
     nvml_monitoring_cleanup(&env);

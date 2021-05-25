@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <nvml.h>
 
@@ -15,7 +16,7 @@ typedef struct {
 
 typedef struct {
     nvmlProcessUtilizationSample_t *samples;
-    int count;
+    unsigned int count;
     unsigned long long last_ts;
 } gpu_process_samples;
 
@@ -91,7 +92,7 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
     env->devices = (gpu_dev_info_struct*) malloc(env->device_count * sizeof(gpu_dev_info_struct));
     if (env->devices == NULL) {
         printf("Failed to allocate memory for devices\n");
-        return 1;
+        return -1;
     }
         
     
@@ -99,10 +100,10 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
         env->devices[i].index = i;
 
         env->devices[i].compute_proc_infos.infos = NULL;
-        env->devices[i].compute_proc_infos.count = -1;
+        env->devices[i].compute_proc_infos.count = 0;
       
         env->devices[i].proc_samples.samples = NULL;
-        env->devices[i].proc_samples.count = -1;
+        env->devices[i].proc_samples.count = 0;
         env->devices[i].proc_samples.last_ts = 0;
 
         env->devices[i].cuda_capability_major = 0;
@@ -297,7 +298,7 @@ nvmlReturn_t getGpuProcessStatistics(gpu_dev_info_struct *device) {
         tmp_samples = (nvmlProcessUtilizationSample_t*) malloc(tmp_cnt * sizeof(nvmlProcessUtilizationSample_t));
         if (tmp_samples == NULL) {
             printf("Failed to allocate memory for samples\n");
-            return 1;
+            return -1;
         }
     
         //retrieve new samples
@@ -362,7 +363,7 @@ nvmlReturn_t getGpuComputeProcesses(gpu_dev_info_struct *device) {
         tmp_infos = (nvmlProcessInfo_t*) malloc(tmp_cnt * sizeof(nvmlProcessInfo_t));
         if (tmp_infos == NULL) {
             printf("Failed to allocate memory for infos\n");
-            return 1;
+            return -1;
         }
     
         //retrieve compute processes
@@ -406,6 +407,7 @@ nvmlReturn_t getGpuComputeProcessesAll(gpu_env_struct *env) {
 
 
 void printGpuStatistics(gpu_dev_info_struct device) {
+    printf("==================================== GPU GENERAL STATS ====================================================\n");
     printf("%u. %s [%s]\n", device.index, device.name, device.pci.busId);
     printf("\t Tempearture %d C\n", device.temp);
     printf("\t Power Usage %d Watt\n", device.power_usage/1000);
@@ -422,6 +424,7 @@ void printGpuStatistics(gpu_dev_info_struct device) {
 void printGpuProcessStatistics(gpu_dev_info_struct device) {
     unsigned int i;
 
+    printf("==================================== GPU PROCESS STATS ===================================================\n");
     printf("%u. %s [%s]\n", device.index, device.name, device.pci.busId);
     
     for (i = 0; i < device.proc_samples.count; i++)
@@ -448,6 +451,7 @@ void printGpuStatisticsByID(unsigned int i, gpu_env_struct env) {
 void printGpuComputeProcessInfos(gpu_dev_info_struct device) {
     unsigned int i;
 
+    printf("==================================== GPU COMPUTE PROCESSES ===============================================\n");
     printf("%u. %s [%s]\n", device.index, device.name, device.pci.busId);
     
     for (i = 0; i < device.compute_proc_infos.count; i++)
@@ -464,14 +468,19 @@ void printGpuComputeProcessInfosByID(unsigned int i, gpu_env_struct env) {
 }
 
 
-void printGpuMaxMeasurements(gpu_dev_info_struct device) {
+void printGpuMaxMeasurements(gpu_env_struct env) {
     unsigned int i;
 
-    printf("%u. %s [%s]\n", device.index, device.name, device.pci.busId);
-    printf("\t Max Tempearture %d C\n", device.max_measurements.max_temp);
-    printf("\t Max Power Usage %d Watt\n", device.max_measurements.max_power_usage/1000);
-    printf("\t Max Memory Usage %llu MBytes\n", device.max_measurements.max_mem_usage/(1024*1024));
-    printf("\t Max GPU Utilizaion %u%%\n", device.max_measurements.max_gpu_utilization);
+    printf("==================================== GPU MAX STATS =======================================================\n");
+    for (i = 0; i < env.device_count; i++) {
+        printf("%u. %s [%s]\n", env.devices[i].index, env.devices[i].name, env.devices[i].pci.busId);
+        printf("\t Max Temperature %d C\n", env.devices[i].max_measurements.max_temp);
+        printf("\t Max Power Usage %d Watt\n", env.devices[i].max_measurements.max_power_usage/1000);
+        printf("\t Max Bar1 Memory Usage %llu MBytes\n", env.devices[i].max_measurements.max_bar1mem_usage/(1024*1024));
+        printf("\t Max Memory Usage %llu MBytes\n", env.devices[i].max_measurements.max_mem_usage/(1024*1024));
+        printf("\t Max GPU Utilizaion %u%%\n", env.devices[i].max_measurements.max_gpu_utilization);
+    }
+    printf("==========================================================================================================\n\n");
     
     return;
 }
@@ -480,6 +489,7 @@ void printGpuMaxMeasurements(gpu_dev_info_struct device) {
 void printGpuEnvironment(gpu_env_struct env) {
     unsigned int i;
 
+    printf("============================================= GPU ENV =====================================================\n");
     printf("Cuda version is %d.%d\n", env.cuda_version/1000, env.cuda_version%1000/10);
     printf("System driver version is %s\n", env.driver_version);
     printf("Found %u device%s\n", env.device_count, env.device_count != 1 ? "s" : "");
@@ -492,11 +502,12 @@ void printGpuEnvironment(gpu_env_struct env) {
         else {
             printf("\t Cuda Capability %d.%d\n", env.devices[i].cuda_capability_major, env.devices[i].cuda_capability_minor);
         }
-        printf("\t Tempearture %d C\n", env.devices[i].temp);
+        printf("\t Temperature %d C\n", env.devices[i].temp);
         printf("\t Power limit %d Watt\n", env.devices[i].power_limit/1000);
         printf("\t Total Memory %llu MBytes\n", env.devices[i].memory.total/(1024*1024));
         printf("\t Max GPU Clock %dMHz, Max SM Clock %dMHz, Max Mem Clock %dMHz, Max Video Clock %dMHz\n", env.devices[i].max_clocks[NVML_CLOCK_GRAPHICS], env.devices[i].max_clocks[NVML_CLOCK_SM], env.devices[i].max_clocks[NVML_CLOCK_MEM], env.devices[i].max_clocks[NVML_CLOCK_VIDEO]);
     }
+    printf("===========================================================================================================\n\n");
 
     return;
 }
@@ -516,6 +527,266 @@ void nvml_monitoring_cleanup(gpu_env_struct *env) {
     }
 
     return;
+}
+
+static size_t json_encode_environment(gpu_env_struct env, char *doc_buffer, size_t maxsize) {
+    unsigned int i;
+    size_t dev_size;
+    char dev_buffer[1024];
+
+    size_t size = snprintf(doc_buffer, maxsize,
+            "{\"event\":\"kickstart.inv.gpu.environment\","
+            "\"timestamp\":%llu,"
+            "\"cuda_version\":%d.%d,"
+            "\"nvidia_driver_version\":\"%s\","
+            "\"gpu_device_count\":%u,"
+            "\"gpu_devices\":[",
+            (unsigned long long) time(NULL),
+            env.cuda_version/1000,
+            env.cuda_version%1000/10,
+            env.driver_version,
+            env.device_count
+    );
+    
+    for (i = 0; i < env.device_count; i++) {
+        dev_size = snprintf(dev_buffer, 1024,
+                    "{\"gpu_id\":%u,"
+                    "\"gpu_name\":\"%s\","
+                    "\"gpu_pci_bus_id\":\"%s\","
+                    "\"is_cuda_capable\":%s,"
+                    "\"cuda_capability\":%d.%d,"
+                    "\"power_limit\":%d,"
+                    "\"total_bar1_memory\":%llu,"
+                    "\"total_memory\":%llu,"
+                    "\"max_gpu_clock\":%d,"
+                    "\"max_sm_clock\":%d,"
+                    "\"max_mem_clock\":%d,"
+                    "\"max_video_clock\":%d"
+                    "%s",
+                    env.devices[i].index,
+                    env.devices[i].name,
+                    env.devices[i].pci.busId,
+                    (env.devices[i].is_cuda_capable) ? "true" : "false",
+                    env.devices[i].cuda_capability_major, env.devices[i].cuda_capability_minor,
+                    env.devices[i].power_limit,
+                    env.devices[i].bar1memory.bar1Total,
+                    env.devices[i].memory.total,
+                    env.devices[i].max_clocks[NVML_CLOCK_GRAPHICS],
+                    env.devices[i].max_clocks[NVML_CLOCK_SM],
+                    env.devices[i].max_clocks[NVML_CLOCK_MEM],
+                    env.devices[i].max_clocks[NVML_CLOCK_VIDEO],
+                    (i == (env.device_count - 1)) ? "}" : "},"
+        );
+        
+        if ((dev_size < 0) || (dev_size >= 1024)) {
+            fprintf(stderr, "An encoding error occured or JSON too large for buffer: %ld > %d", dev_size, 1024);
+            return -1;
+        }
+        
+        //append device at the end of the string
+        if ((size + dev_size) < maxsize) {
+            strncat(doc_buffer, dev_buffer, dev_size);
+            size += dev_size;
+        }
+        else {
+            fprintf(stderr, "JSON too large for buffer: %ld >= %ld", size+dev_size, maxsize);
+            return -1;
+        }
+    }
+
+    if ((size + 2) >= maxsize) {
+        fprintf(stderr, "JSON too large for buffer: %ld > %ld", size + 2, maxsize);
+        return -1;
+    }
+    else {
+        strncat(doc_buffer, "]}", 2);
+        size += 2;
+    }
+
+    return size;
+}
+
+static size_t json_encode_device_stats_max(gpu_env_struct env, char *doc_buffer, size_t maxsize) {
+    unsigned int i;
+    size_t dev_size;
+    char dev_buffer[1024];
+
+    size_t size = snprintf(doc_buffer, maxsize,
+            "{\"event\":\"kickstart.inv.gpu.stats.max\","
+            "\"timestamp\":%llu,"
+            "\"gpu_devices\":[",
+            (unsigned long long) time(NULL)
+    );
+    
+    for (i = 0; i < env.device_count; i++) {
+        dev_size = snprintf(dev_buffer, 1024,
+                    "{\"gpu_id\":%u,"
+                    "\"gpu_name\":\"%s\","
+                    "\"gpu_pci_bus_id\":\"%s\","
+                    "\"max_temp\":%d,"
+                    "\"max_power_usage\":%d,"
+                    "\"max_bar1_mem_usage\":%llu,"
+                    "\"max_mem_usage\":%llu,"
+                    "\"max_gpu_usage\":%u"
+                    "%s",
+                    env.devices[i].index,
+                    env.devices[i].name,
+                    env.devices[i].pci.busId,
+                    env.devices[i].max_measurements.max_temp,
+                    env.devices[i].max_measurements.max_power_usage,
+                    env.devices[i].max_measurements.max_bar1mem_usage,
+                    env.devices[i].max_measurements.max_mem_usage,
+                    env.devices[i].max_measurements.max_gpu_utilization,
+                    (i == (env.device_count - 1)) ? "}" : "},"
+        );
+        
+        if ((dev_size < 0) || (dev_size >= 1024)) {
+            fprintf(stderr, "An encoding error occured or JSON too large for buffer: %ld > %d", dev_size, 1024);
+            return -1;
+        }
+        
+        //append device at the end of the string
+        if ((size + dev_size) < maxsize) {
+            strncat(doc_buffer, dev_buffer, dev_size);
+            size += dev_size;
+        }
+        else {
+            fprintf(stderr, "JSON too large for buffer: %ld >= %ld", size + dev_size, maxsize);
+            return -1;
+        }
+    }
+
+    if ((size + 2) >= maxsize) {
+        fprintf(stderr, "JSON too large for buffer: %ld > %ld", size + 2, maxsize);
+        return -1;
+    }
+    else {
+        strncat(doc_buffer, "]}", 2);
+        size += 2;
+    }
+
+    return size;
+}
+
+static size_t json_encode_device_stats(gpu_dev_info_struct device, unsigned long long timestamp, char *doc_buffer, size_t maxsize) {
+    unsigned int i;
+    size_t tmp_size;
+    char tmp_buffer[256];
+
+    size_t size = snprintf(doc_buffer, maxsize,
+            "{\"event\":\"kickstart.inv.gpu.stats\","
+            "\"timestamp\":%llu,"
+            "\"gpu_id\":%u,"
+            "\"gpu_name\":\"%s\","
+            "\"gpu_pci_bus_id\":\"%s\","
+            "\"temp\":%d,"
+            "\"power_usage\":%d,"
+            "\"pcie_rx\":%u,"
+            "\"pcie_tx\":%u,"
+            "\"bar1_mem_usage\":%llu,"
+            "\"mem_usage\":%llu,"
+            "\"mem_utilization\":%u,"
+            "\"gpu_utilization\":%u,"
+            "\"gpu_clock\":%d,"
+            "\"sm_clock\":%d,"
+            "\"mem_clock\":%d,"
+            "\"video_clock\":%d,"
+            "\"compute_tasks\":[",
+            timestamp,
+            device.index,
+            device.name,
+            device.pci.busId,
+            device.temp,
+            device.power_usage,
+            device.pcie_rx,
+            device.pcie_tx,
+            device.bar1memory.bar1Used,
+            device.memory.used,
+            device.utilization.memory,
+            device.utilization.gpu,
+            device.clocks[NVML_CLOCK_GRAPHICS],
+            device.clocks[NVML_CLOCK_SM],
+            device.clocks[NVML_CLOCK_MEM],
+            device.clocks[NVML_CLOCK_VIDEO]
+    );
+    
+    for (i = 0; i < device.compute_proc_infos.count; i++) {
+        tmp_size = snprintf(tmp_buffer, 256,
+                    "{\"pid\":%u,"
+                    "\"mem_usage\":%llu"
+                    "%s",
+                    device.compute_proc_infos.infos[i].pid,
+                    device.compute_proc_infos.infos[i].usedGpuMemory,
+                    (i == (device.compute_proc_infos.count - 1)) ? "}" : "},"
+        );
+        
+        if ((tmp_size < 0) || (tmp_size >= 256)) {
+            fprintf(stderr, "An encoding error occured or JSON too large for buffer: %ld > %d", tmp_size, 256);
+            return -1;
+        }
+        
+        //append compute task at the end of the string
+        if ((size + tmp_size) < maxsize) {
+            strncat(doc_buffer, tmp_buffer, tmp_size);
+            size += tmp_size;
+        }
+        else {
+            fprintf(stderr, "JSON too large for buffer: %ld >= %ld", size + tmp_size, maxsize);
+            return -1;
+        }
+    }
+    
+    if (size + 19 >= maxsize) {
+        fprintf(stderr, "JSON too large for buffer: %ld > %ld", size + 19, maxsize);
+        return -1;
+    }
+    else {
+        strncat(doc_buffer, "],\"graphic_tasks\":[", 19);
+        size += 19;
+    }
+
+    for (i = 0; i < device.proc_samples.count; i++) {
+        tmp_size = snprintf(tmp_buffer, 256,
+                    "{\"pid\":%u,"
+                    "\"sm_util\":%u,"
+                    "\"mem_util\":%u,"
+                    "\"enc_util\":%u,"
+                    "\"dec_util\":%u"
+                    "%s",
+                    device.proc_samples.samples[i].pid,
+                    device.proc_samples.samples[i].smUtil,
+                    device.proc_samples.samples[i].memUtil,
+                    device.proc_samples.samples[i].encUtil,
+                    device.proc_samples.samples[i].decUtil,
+                    (i == (device.proc_samples.count - 1)) ? "}" : "},"
+        );
+        
+        if ((tmp_size < 0) || (tmp_size >= 256)) {
+            fprintf(stderr, "An encoding error occured or JSON too large for buffer: %ld > %d", tmp_size, 256);
+            return -1;
+        }
+        
+        //append compute task at the end of the string
+        if ((size + tmp_size) < maxsize) {
+            strncat(doc_buffer, tmp_buffer, tmp_size);
+            size += tmp_size;
+        }
+        else {
+            fprintf(stderr, "JSON too large for buffer: %ld >= %ld", size + tmp_size, maxsize);
+            return -1;
+        }
+    }
+
+    if (size + 2 >= maxsize) {
+        fprintf(stderr, "JSON too large for buffer: %ld > %ld", size + 2, maxsize);
+        return -1;
+    }
+    else {
+        strncat(doc_buffer, "]}", 2);
+        size += 2;
+    }
+    
+    return size;
 }
 
 #endif
