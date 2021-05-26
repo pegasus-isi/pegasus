@@ -8,11 +8,24 @@
 #include <pthread.h>
 #include "nvidia_monitor.h"
 
+
+#define BUFFER_DEFAULT_LIMIT 1024
+#define BUFFER_HARD_LIMIT 32768
+
 static volatile int exit_guard = 1;
+
 
 void signal_handler(int signum) {
     exit_guard = 0;
 }
+
+
+typedef struct json_doc {
+    int buffer_size;
+    size_t buffer_limit;
+    char* buffer;
+} json_doc;
+
 
 typedef struct thread_data {
     unsigned int i;
@@ -26,19 +39,15 @@ typedef struct thread_data {
     gpu_env_struct *env;
     char *output;
     char *publish_url;
-    char *doc_buffer;
-    size_t doc_buffer_size;
+    json_doc doc;
     nvmlReturn_t result;
 } thread_data;
 
 
-void write_to_file(FILE *out, char *format, char *buffer) {
-    return;
-}
-
 void publish_stats() {
     return;
 }
+
 
 void* collect_gpu_stats(void *args) {
     struct timeval begin, end;
@@ -82,18 +91,21 @@ void* collect_gpu_stats(void *args) {
 
 nvmlReturn_t multi_threaded_collection(FILE *out, gpu_env_struct *env, pthread_t *threads, thread_data *threads_data, unsigned char output_json, unsigned int interval) {
     unsigned int i;
-    char *doc_buffer = NULL;
-    size_t doc_buffer_size;
-    size_t doc_buffer_limit = 8192;
+    json_doc doc;
 
-    if (output_json)
-        doc_buffer = (char *) malloc(doc_buffer_limit * sizeof(char));
+    if (output_json) {
+        doc.buffer_limit = BUFFER_DEFAULT_LIMIT;
+        doc.buffer = (char *) malloc(BUFFER_DEFAULT_LIMIT * sizeof(char));
+    }
+    else {
+        doc.buffer_size = 0;
+        doc.buffer_limit = 0;
+        doc.buffer = NULL;
+    }
     
     while(exit_guard) {
         for (i=0; i<env->device_count; i++)
             pthread_create(&threads[i], NULL, collect_gpu_stats, &threads_data[i]);
-
-        sleep(interval);
 
         for (i=0; i<env->device_count; i++) {
             pthread_join(threads[i], NULL);
@@ -101,12 +113,15 @@ nvmlReturn_t multi_threaded_collection(FILE *out, gpu_env_struct *env, pthread_t
                 return threads_data[i].result;
 
             if (output_json) {
-                doc_buffer_size = json_encode_device_stats(threads_data[i].env->devices[i], threads_data[i].last_collection_duration, doc_buffer, doc_buffer_limit);
-                if (doc_buffer_size < 0) {
-                    free(doc_buffer);
-                    return -1;
+                while ((doc.buffer_size = json_encode_device_stats(threads_data[i].env->devices[i], threads_data[i].last_collection_duration, doc.buffer, doc.buffer_limit)) < 0) {
+                    free(doc.buffer);
+                    if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
+                        return -1;
+                    doc.buffer_limit *= 2;
+                    doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
+                    continue;
                 }
-                fprintf(out, ",%s\n", doc_buffer);
+                fprintf(out, "%s,\n", doc.buffer);
             }
             else {
                 printGpuStatistics(out, threads_data[i].env->devices[i]);
@@ -118,9 +133,11 @@ nvmlReturn_t multi_threaded_collection(FILE *out, gpu_env_struct *env, pthread_t
                     printGpuProcessSamples(out, threads_data[i].env->devices[i]);
             }
         }
+        
+        sleep(interval);
     }
 
-    free(doc_buffer);
+    free(doc.buffer);
     return NVML_SUCCESS;
 }
 
@@ -130,12 +147,17 @@ nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, unsigned
     nvmlReturn_t result ;
     struct timeval begin, end;
     long seconds, microseconds;
-    char *doc_buffer = NULL;
-    size_t doc_buffer_size;
-    size_t doc_buffer_limit = 8192;
+    json_doc doc;
 
-    if (output_json)
-        doc_buffer = (char *) malloc(doc_buffer_limit * sizeof(char));
+    if (output_json) {
+        doc.buffer_limit = BUFFER_DEFAULT_LIMIT;
+        doc.buffer = (char *) malloc(BUFFER_DEFAULT_LIMIT * sizeof(char));
+    }
+    else {
+        doc.buffer_size = 0;
+        doc.buffer_limit = 0;
+        doc.buffer = NULL;
+    }
 
     while(exit_guard) {
         gettimeofday(&begin, 0);
@@ -168,16 +190,18 @@ nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, unsigned
         seconds = end.tv_sec - begin.tv_sec;
         microseconds = end.tv_usec - begin.tv_usec;
         last_collection_duration = seconds + microseconds*1e-6;
-        
+            
         for (i=0; i<env->device_count; i++)
         {
             if (output_json) {
-                doc_buffer_size = json_encode_device_stats(env->devices[i], last_collection_duration, doc_buffer, doc_buffer_limit);
-                if (doc_buffer_size < 0) {
-                    free(doc_buffer);
-                    return -1;
+                while ((doc.buffer_size = json_encode_device_stats(env->devices[i], last_collection_duration, doc.buffer, doc.buffer_limit)) < 0) {
+                    if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
+                        return -1;
+                    doc.buffer_limit = doc.buffer_limit * 2;
+                    doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
+                    continue;
                 }
-                fprintf(out, ",%s\n", doc_buffer);
+                fprintf(out, "%s,\n", doc.buffer);
             }
             else {
                 printGpuStatistics(out, env->devices[i]);
@@ -194,7 +218,7 @@ nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, unsigned
         sleep(interval);
     }
 
-    free(doc_buffer);
+    free(doc.buffer);
     return NVML_SUCCESS;
 }
 
@@ -212,9 +236,7 @@ int main(int argc, char *argv[]) {
     FILE *out = NULL;
     char *output_file = NULL;
     char *publish_url = NULL;
-    char *doc_buffer = NULL;
-    size_t doc_buffer_size;
-    size_t doc_buffer_limit = 8192;
+    json_doc doc;
 
     pthread_t *threads = NULL;
     thread_data *threads_data = NULL;
@@ -288,6 +310,16 @@ int main(int argc, char *argv[]) {
         out = stdout;
     else
         out = fopen(output_file, "w+");
+    
+    if (is_output_json) {
+        doc.buffer_limit = BUFFER_DEFAULT_LIMIT;
+        doc.buffer = (char *) malloc(BUFFER_DEFAULT_LIMIT * sizeof(char));
+    }
+    else {
+        doc.buffer_size = 0;
+        doc.buffer_limit = 0;
+        doc.buffer = NULL;
+    }
 
     // First initialize NVML library
     result = nvmlInit();
@@ -301,12 +333,13 @@ int main(int argc, char *argv[]) {
       goto Error;
     
     if (is_output_json) {
-        doc_buffer = (char*) malloc(doc_buffer_limit * sizeof(char));
-        doc_buffer_size = json_encode_environment(env, doc_buffer, doc_buffer_limit);
-        if (doc_buffer_size < 0)
-            goto Error;
-
-        fprintf(out, "[%s\n", doc_buffer);
+        while ((doc.buffer_size = json_encode_environment(env, doc.buffer, doc.buffer_limit)) < 0) {
+            if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
+                goto Error;
+            doc.buffer_limit = doc.buffer_limit * 2;
+            doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
+        }
+        fprintf(out, "[%s,\n", doc.buffer);
     }
     else
         printGpuEnvironment(out, env);
@@ -333,7 +366,10 @@ int main(int argc, char *argv[]) {
             threads_data[i].output_json = (unsigned short) is_output_json;
             threads_data[i].output = output_file;
             threads_data[i].publish_url = publish_url;
-            threads_data[i].doc_buffer = (char*) malloc(4096 * sizeof(char));
+            if (is_output_json) {
+                threads_data[i].doc.buffer_limit = BUFFER_DEFAULT_LIMIT;
+                threads_data[i].doc.buffer = (char*) malloc(BUFFER_DEFAULT_LIMIT * sizeof(char));
+            }
         }
         
         result = multi_threaded_collection(out, &env, threads, threads_data, is_output_json, interval);
@@ -341,7 +377,7 @@ int main(int argc, char *argv[]) {
         if (threads != NULL) free(threads);
         if (threads_data != NULL) {
             for (i=0; i<env.device_count; i++)
-                if (threads_data[i].doc_buffer != NULL) free(threads_data[i].doc_buffer);
+                if (threads_data[i].doc.buffer != NULL) free(threads_data[i].doc.buffer);
             free(threads_data);
         }
 
@@ -356,17 +392,19 @@ int main(int argc, char *argv[]) {
 
     //Output max measurements
     if (is_output_json) {
-        doc_buffer_size = json_encode_device_stats_max(env, doc_buffer, doc_buffer_limit);
-        if (doc_buffer_size < 0)
-            goto Error;
-
-        fprintf(out, ",%s]\n", doc_buffer);
+        while ((doc.buffer_size = json_encode_device_stats_max(env, doc.buffer, doc.buffer_limit)) < 0) {
+            if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
+                goto Error;
+            doc.buffer_limit = doc.buffer_limit * 2;
+            doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
+        }
+        fprintf(out, "%s]\n", doc.buffer);
     }
     else
         printGpuMaxMeasurements(out, env);
 
     if (output_file != NULL) fclose(out);
-    if (doc_buffer != NULL) free(doc_buffer);
+    if (doc.buffer != NULL) free(doc.buffer);
     nvml_monitoring_cleanup(&env);
 
     result = nvmlShutdown();
@@ -377,7 +415,7 @@ int main(int argc, char *argv[]) {
 
 Error:
     if (output_file != NULL) fclose(out);
-    if (doc_buffer != NULL) free(doc_buffer);
+    if (doc.buffer != NULL) free(doc.buffer);
     nvml_monitoring_cleanup(&env);
    
     result = nvmlShutdown();

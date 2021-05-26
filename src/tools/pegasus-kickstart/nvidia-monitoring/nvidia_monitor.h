@@ -121,6 +121,9 @@ nvmlReturn_t getGpuEnvironment(gpu_env_struct *env) {
         env->devices[i].index = i;
         env->devices[i].last_ts = 0;
 
+        env->devices[i].pcie_rx = 0;
+        env->devices[i].pcie_tx = 0;
+
         env->devices[i].compute_proc_infos.infos = NULL;
         env->devices[i].compute_proc_infos.count = 0;
         env->devices[i].compute_proc_infos.last_ts = 0;
@@ -337,9 +340,10 @@ nvmlReturn_t getGpuProcessUtilization(gpu_dev_info_struct *device) {
             return result;
         }
 
-        for (i = 0; i < tmp_cnt; i++);
-            if (tmp_last_ts < tmp_samples[i].timeStamp)
+        for (i = 0; i < tmp_cnt; i++){
+            if ((tmp_samples[i].pid > 0) && (tmp_last_ts < tmp_samples[i].timeStamp))
                 tmp_last_ts = tmp_samples[i].timeStamp;
+        }
     }
 
     if (device->proc_samples.samples != NULL)
@@ -664,7 +668,7 @@ void nvml_monitoring_cleanup(gpu_env_struct *env) {
     return;
 }
 
-static size_t json_encode_environment(gpu_env_struct env, char *doc_buffer, size_t maxsize) {
+int json_encode_environment(gpu_env_struct env, char *doc_buffer, size_t maxsize) {
     unsigned int i;
     size_t dev_size;
     char dev_buffer[1024];
@@ -716,7 +720,7 @@ static size_t json_encode_environment(gpu_env_struct env, char *doc_buffer, size
         );
         
         if ((dev_size < 0) || (dev_size >= 1024)) {
-            fprintf(stderr, "An encoding error occured or JSON too large for buffer: %ld > %d", dev_size, 1024);
+            fprintf(stderr, "An encoding error occured or JSON too large for local buffer: %ld > %d\n", dev_size, 1024);
             return -1;
         }
         
@@ -726,13 +730,13 @@ static size_t json_encode_environment(gpu_env_struct env, char *doc_buffer, size
             size += dev_size;
         }
         else {
-            fprintf(stderr, "JSON too large for buffer: %ld >= %ld", size+dev_size, maxsize);
+            fprintf(stderr, "JSON too large for buffer: %ld >= %ld\n", size+dev_size, maxsize);
             return -1;
         }
     }
 
     if ((size + 2) >= maxsize) {
-        fprintf(stderr, "JSON too large for buffer: %ld > %ld", size + 2, maxsize);
+        fprintf(stderr, "JSON too large for buffer: %ld > %ld\n", size + 2, maxsize);
         return -1;
     }
     else {
@@ -743,7 +747,7 @@ static size_t json_encode_environment(gpu_env_struct env, char *doc_buffer, size
     return size;
 }
 
-static size_t json_encode_device_stats_max(gpu_env_struct env, char *doc_buffer, size_t maxsize) {
+int json_encode_device_stats_max(gpu_env_struct env, char *doc_buffer, size_t maxsize) {
     unsigned int i;
     size_t dev_size;
     char dev_buffer[1024];
@@ -780,7 +784,7 @@ static size_t json_encode_device_stats_max(gpu_env_struct env, char *doc_buffer,
         );
         
         if ((dev_size < 0) || (dev_size >= 1024)) {
-            fprintf(stderr, "An encoding error occured or JSON too large for buffer: %ld > %d", dev_size, 1024);
+            fprintf(stderr, "An encoding error occured or JSON too large for local buffer: %ld > %d\n", dev_size, 1024);
             return -1;
         }
         
@@ -807,7 +811,7 @@ static size_t json_encode_device_stats_max(gpu_env_struct env, char *doc_buffer,
     return size;
 }
 
-static size_t json_encode_device_stats(gpu_dev_info_struct device, double sampling_duration, char *doc_buffer, size_t maxsize) {
+int json_encode_device_stats(gpu_dev_info_struct device, double sampling_duration, char *doc_buffer, size_t maxsize) {
     unsigned int i;
     size_t tmp_size;
     char tmp_buffer[256];
@@ -864,7 +868,7 @@ static size_t json_encode_device_stats(gpu_dev_info_struct device, double sampli
         );
         
         if ((tmp_size < 0) || (tmp_size >= 256)) {
-            fprintf(stderr, "An encoding error occured or JSON too large for buffer: %ld > %d", tmp_size, 256);
+            fprintf(stderr, "An encoding error occured or JSON too large for local buffer: %ld > %d\n", tmp_size, 256);
             return -1;
         }
         
@@ -874,13 +878,13 @@ static size_t json_encode_device_stats(gpu_dev_info_struct device, double sampli
             size += tmp_size;
         }
         else {
-            fprintf(stderr, "JSON too large for buffer: %ld >= %ld", size + tmp_size, maxsize);
+            fprintf(stderr, "JSON too large for buffer: %ld >= %ld\n", size + tmp_size, maxsize);
             return -1;
         }
     }
     
     if (size + 20 >= maxsize) {
-        fprintf(stderr, "JSON too large for buffer: %ld > %ld", size + 20, maxsize);
+        fprintf(stderr, "JSON too large for buffer: %ld > %ld\n", size + 20, maxsize);
         return -1;
     }
     else {
@@ -899,7 +903,7 @@ static size_t json_encode_device_stats(gpu_dev_info_struct device, double sampli
         );
         
         if ((tmp_size < 0) || (tmp_size >= 256)) {
-            fprintf(stderr, "An encoding error occured or JSON too large for buffer: %ld > %d", tmp_size, 256);
+            fprintf(stderr, "An encoding error occured or JSON too large for local buffer: %ld > %d\n", tmp_size, 256);
             return -1;
         }
         
@@ -909,13 +913,13 @@ static size_t json_encode_device_stats(gpu_dev_info_struct device, double sampli
             size += tmp_size;
         }
         else {
-            fprintf(stderr, "JSON too large for buffer: %ld >= %ld", size + tmp_size, maxsize);
+            fprintf(stderr, "JSON too large for buffer: %ld >= %ld\n", size + tmp_size, maxsize);
             return -1;
         }
     }
   
     if (size + 18 >= maxsize) {
-        fprintf(stderr, "JSON too large for buffer: %ld > %ld", size + 18, maxsize);
+        fprintf(stderr, "JSON too large for buffer: %ld > %ld\n", size + 18, maxsize);
         return -1;
     }
     else {
@@ -924,14 +928,19 @@ static size_t json_encode_device_stats(gpu_dev_info_struct device, double sampli
     }
 
     for (i = 0; i < device.proc_samples.count; i++) {
+        if (device.proc_samples.samples[i].pid == 0)
+            continue;
+
         tmp_size = snprintf(tmp_buffer, 256,
                     "{\"pid\":%u,"
+                    "\"sample_ts\":%llu,"
                     "\"sm_util\":%u,"
                     "\"mem_util\":%u,"
                     "\"enc_util\":%u,"
                     "\"dec_util\":%u"
                     "%s",
                     device.proc_samples.samples[i].pid,
+                    device.proc_samples.samples[i].timeStamp,
                     device.proc_samples.samples[i].smUtil,
                     device.proc_samples.samples[i].memUtil,
                     device.proc_samples.samples[i].encUtil,
@@ -940,7 +949,7 @@ static size_t json_encode_device_stats(gpu_dev_info_struct device, double sampli
         );
         
         if ((tmp_size < 0) || (tmp_size >= 256)) {
-            fprintf(stderr, "An encoding error occured or JSON too large for buffer: %ld > %d", tmp_size, 256);
+            fprintf(stderr, "An encoding error occured or JSON too large for local buffer: %ld > %d\n", tmp_size, 256);
             return -1;
         }
         
@@ -950,13 +959,13 @@ static size_t json_encode_device_stats(gpu_dev_info_struct device, double sampli
             size += tmp_size;
         }
         else {
-            fprintf(stderr, "JSON too large for buffer: %ld >= %ld", size + tmp_size, maxsize);
+            fprintf(stderr, "JSON too large for buffer: %ld >= %ld\n", size + tmp_size, maxsize);
             return -1;
         }
     }
 
     if (size + 2 >= maxsize) {
-        fprintf(stderr, "JSON too large for buffer: %ld > %ld", size + 2, maxsize);
+        fprintf(stderr, "JSON too large for buffer: %ld > %ld\n", size + 2, maxsize);
         return -1;
     }
     else {
