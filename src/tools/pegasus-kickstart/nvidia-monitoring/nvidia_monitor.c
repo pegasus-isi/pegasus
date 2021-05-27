@@ -119,7 +119,6 @@ nvmlReturn_t multi_threaded_collection(FILE *out, gpu_env_struct *env, pthread_t
                         return -1;
                     doc.buffer_limit *= 2;
                     doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
-                    continue;
                 }
                 fprintf(out, "%s,\n", doc.buffer);
             }
@@ -195,11 +194,11 @@ nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, unsigned
         {
             if (output_json) {
                 while ((doc.buffer_size = json_encode_device_stats(env->devices[i], last_collection_duration, doc.buffer, doc.buffer_limit)) < 0) {
+                    free(doc.buffer);
                     if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
                         return -1;
                     doc.buffer_limit = doc.buffer_limit * 2;
                     doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
-                    continue;
                 }
                 fprintf(out, "%s,\n", doc.buffer);
             }
@@ -334,6 +333,7 @@ int main(int argc, char *argv[]) {
     
     if (is_output_json) {
         while ((doc.buffer_size = json_encode_environment(env, doc.buffer, doc.buffer_limit)) < 0) {
+            free(doc.buffer);
             if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
                 goto Error;
             doc.buffer_limit = doc.buffer_limit * 2;
@@ -393,6 +393,7 @@ int main(int argc, char *argv[]) {
     //Output max measurements
     if (is_output_json) {
         while ((doc.buffer_size = json_encode_device_stats_max(env, doc.buffer, doc.buffer_limit)) < 0) {
+            free(doc.buffer);
             if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
                 goto Error;
             doc.buffer_limit = doc.buffer_limit * 2;
