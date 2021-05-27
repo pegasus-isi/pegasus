@@ -30,7 +30,7 @@ java BlackDiamondDAX /usr blackdiamond.dax
 # create the site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.2.xsd" version="4.2">
     <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
         <directory type="shared-scratch" path="$TOPDIR/scratch">
             <file-server operation="all" url="file://$TOPDIR/scratch"/>
@@ -48,8 +48,8 @@ cat >sites.xml <<EOF
     </site>
 
      <site  handle="CCG" arch="x86_64" os="LINUX">
-        <grid  type="batch" contact="corbusier.isi.edu" scheduler="Slurm" jobtype="auxillary"/>
-        <grid  type="batch" contact="corbusier.isi.edu" scheduler="Slurm" jobtype="compute"/>
+        <grid  type="batch" contact="corbusier.isi.edu" scheduler="slurm" jobtype="auxillary"/>
+        <grid  type="batch" contact="corbusier.isi.edu" scheduler="slurm" jobtype="compute"/>
 
         <directory type="shared-scratch" path="/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/scratch">
             <file-server operation="all" url="scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/scratch"/>
