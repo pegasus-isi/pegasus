@@ -31,29 +31,38 @@ sites:
   arch: "x86_64"
   os.type: "linux"
   directories:
-   -
-    type: "sharedScratch"
-    path: "/lizard/scratch-90-days/ptesting"
-    fileServers:
-     -
-      operation: "all"
-      url: "gsiftp://obelix.isi.edu/lizard/scratch-90-days/ptesting"
-  grids:
-   -
-    type: "gt5"
-    contact: "obelix.isi.edu/jobmanager-condor"
-    scheduler: "condor"
-    jobtype: "compute"
-   -
-    type: "gt5"
-    contact: "obelix.isi.edu/jobmanager-fork"
-    scheduler: "fork"
-    jobtype: "auxillary"
-  profiles:
-    env:
-      MONTAGE_HOME: "/ccg/software/montage/current"
-      PEGASUS_HOME: "/usr"
+  - 
+    type: "sharedScratch" 
+    path: "/nfs/bamboo/scratch-90-days/CCG/scratch/ptesting" 
+    fileServers: 
+     - 
+      operation: "all" 
+      url: "scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch/ptesting" 
+  grids: 
+   - 
+    type: "batch" 
+    contact: "corbusier.isi.edu" 
+    scheduler: "slurm" 
+    jobtype: "compute" 
+   - 
+    type: "batch" 
+    contact: "corbusier.isi.edu" 
+    scheduler: "slurm" 
+    jobtype: "compute" 
+  profiles: 
+    env: 
+      PEGASUS_HOME: "/opt/pegasus" 
+      MONTAGE_HOME: /opt/software/montage/current
       http_proxy: "workflow.isi.edu:3128"
+    pegasus: 
+      # SSH is the style to use for Bosco SSH submits. 
+      style: ssh 
+      # Works around bug in the HTCondor GAHP, that does not 
+      # set the remote directory 
+      change.dir: 'true' 
+      # the key to use for scp transfers 
+      SSH_PRIVATE_KEY: /scitech/home/bamboo/.ssh/workflow_id_rsa 
+
  -
   name: "local"
   arch: "x86_64"
