@@ -201,7 +201,7 @@ class _QueryEvaluator(ast.NodeVisitor):
         return [self.visit(n) for n in n.elts]
 
     def visit_Tuple(self, n):
-        return tuple([self.visit(e) for e in n.elts])
+        return tuple(self.visit(e) for e in n.elts)
 
     def visit_Set(self, n):
         return {self.visit(n) for n in n.elts}
