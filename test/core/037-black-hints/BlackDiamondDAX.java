@@ -102,7 +102,7 @@ public class BlackDiamondDAX {
 	j2.addProfile( "hints", "grid.jobtype", "auxillary");
 	//use the new keys introduced for 4.5
 	j2.addProfile( "hints" , "execution.site", "CCG");
-	j2.addProfile( "hints" , "pfn", "/usr/bin/pegasus-keg");
+	j2.addProfile( "hints" , "pfn", "/opt/pegasus/bin/pegasus-keg");
         dax.addJob(j2);
 
         // Add right Findrange job
@@ -127,7 +127,7 @@ public class BlackDiamondDAX {
         j4.uses(fd, File.LINK.OUTPUT);
 	//use the new keys introduced for 4.5
 	j4.addProfile( "hints" , "execution.site", "CCG");
-	j4.addProfile( "hints" , "pfn", "/usr/bin/pegasus-keg");
+	j4.addProfile( "hints" , "pfn", "/opt/pegasus/bin/pegasus-keg");
 	j4.addProfile( "hints", "grid.jobtype", "auxillary");
         dax.addJob(j4);
 	
