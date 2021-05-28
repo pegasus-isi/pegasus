@@ -114,7 +114,7 @@ public class BlackDiamondDAX {
 	j3.addProfile( "hints", "grid.jobtype", "auxillary");
 	//use the new keys introduced for 4.5
 	j3.addProfile( "hints" , "execution.site", "CCG");
-	j3.addProfile( "hints" , "pfn", "/usr/bin/pegasus-keg");
+	j3.addProfile( "hints" , "pfn", "/opt/pegasus/bin/pegasus-keg");
         dax.addJob(j3);
 
         // Add analyze job
