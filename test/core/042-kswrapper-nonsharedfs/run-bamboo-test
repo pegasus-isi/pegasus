@@ -32,7 +32,7 @@ export PYTHONPATH=`pegasus-config --python`
 ./blackdiamond.py $BIN_DIR > blackdiamond.dax
 
 # kickstart wrapper location
-KS_WRAPPER=/nfs/ccg3/software/bamboo/kickstart-wrapper
+KS_WRAPPER=/lizard/software/bamboo/kickstart-wrapper
 export KS_WRAPPER
 
 # plan and submit the  workflow
