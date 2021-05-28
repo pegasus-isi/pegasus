@@ -23,7 +23,7 @@ export PYTHONPATH=`pegasus-config --python`
 $testdir/blackdiamond.py /usr > blackdiamond.dax
 
 #set the local scratch for the jobs                                                                                                                                                        
-LOCALSCRATCH=/nfs/ccg3/scratch/bamboo/local-scratch
+LOCALSCRATCH=/lizard/scratch-90-days/bamboo/local-scratch
 mkdir -p $LOCALSCRATCH
 
 # create the site catalog
