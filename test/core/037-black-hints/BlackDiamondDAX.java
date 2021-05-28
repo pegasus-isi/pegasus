@@ -90,7 +90,7 @@ public class BlackDiamondDAX {
 	j1.addProfile( "selector", "grid.jobtype", "auxillary");
 	//deprecated keys should work
 	j1.addProfile( "selector" , "execution.site", "CCG");
-	j1.addProfile( "selector" , "pfn", "/usr/bin/pegasus-keg");
+	j1.addProfile( "selector" , "pfn", "/opt/pegasus/bin/pegasus-keg");
         dax.addJob(j1);
 
         // Add left Findrange job
