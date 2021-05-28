@@ -335,7 +335,7 @@ class BaseParser(ProcessInterface, DoesLogging):
         self._const_nvp.update(kw)
         # cache string-valued version, will be empty string if kw == {}
         self._const_nvp_str = " ".join(
-            ["{}={}".format(k, v) for k, v in self._const_nvp.items()]
+            "{}={}".format(k, v) for k, v in self._const_nvp.items()
         )
         self.parse_date = parse_date
 

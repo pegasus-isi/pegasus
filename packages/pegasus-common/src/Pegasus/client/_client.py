@@ -144,7 +144,7 @@ class Client:
             cmd.extend(
                 (
                     "--staging-site",
-                    ",".join([s + "=" + ss for s, ss in staging_sites.items()]),
+                    ",".join(s + "=" + ss for s, ss in staging_sites.items()),
                 )
             )
 

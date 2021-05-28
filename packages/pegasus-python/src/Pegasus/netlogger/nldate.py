@@ -187,7 +187,7 @@ def makeISO(value, is_gmt=False, set_gmt=False):
     tz_str = "Z"  # assume GMT
     if isinstance(value, tuple) or isinstance(value, list):
         fmt = ("%04d", "-%02d", "-%02d", "T%02d", ":%02d", ":%02d")
-        s = "".join([f % v for f, v in zip(fmt, value)])
+        s = "".join(f % v for f, v in zip(fmt, value))
         if not gmt:
             tz_str = getLocaltimeISO(value)
         iso = s + tz_str
