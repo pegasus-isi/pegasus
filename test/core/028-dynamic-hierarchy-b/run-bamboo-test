@@ -11,6 +11,10 @@ CONDOR_POOL_PEGASUS_HOME=/usr
 PYTHONPATH=`pegasus-config --python`
 export PYTHONPATH=".:$PYTHONPATH"
 
+# determine TEST_NAME to setup site catalog
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+
 
 # generate the dax
 ./local_hierarchy.py $CONDOR_POOL_PEGASUS_HOME  > outer.dax
@@ -160,16 +164,19 @@ cat >sites.xml <<EOF
         </directory>
     </site>
 
+    
     <site  handle="CCG" arch="x86_64" os="LINUX">
-        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
-
-        <directory type="shared-scratch" path="/lizard/scratch-90-days/CCG/scratch">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/scratch"/>
+        <grid  type="batch" contact="corbusier.isi.edu" scheduler="slurm" jobtype="auxillary"/>
+        <grid  type="batch" contact="corbusier.isi.edu" scheduler="slurm" jobtype="compute"/>
+        <directory type="shared-scratch" path="/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/scratch">
+            <file-server operation="all" url="scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/scratch"/>
         </directory>
-        <directory type="local-storage" path="/lizard/scratch-90-days/CCG/outputs">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/outputs"/>
+        <directory type="local-storage" path="/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/outputs">
+            <file-server operation="all" url="scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/outputs"/>
         </directory>
+        <profile namespace="pegasus" key="style">ssh</profile>
+        <profile namespace="pegasus" key="change.dir">true</profile>                                                                                                                     
+        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/scitech/home/bamboo/.ssh/workflow_id_rsa</profile> 
 
     </site>
 
