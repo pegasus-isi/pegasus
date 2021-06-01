@@ -75,7 +75,7 @@ rc = ReplicaCatalog().add_replica(
 
 # --- Transformations ----------------------------------------------------------
 # compute the initial hash for the container
-with open("/lfs1/bamboo-tests/data/osgvo-el7.img", "rb+") as f:
+with open("/lfs1/bamboo-tests/data/osgvo-el7.img", "rb") as f:
     readable_hash = hashlib.sha256(f.read()).hexdigest()
     
 print("Generating transformation catalog")
