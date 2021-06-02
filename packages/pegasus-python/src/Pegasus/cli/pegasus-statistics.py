@@ -2060,7 +2060,7 @@ def main():
                     )
                 else:
                     # int(True) -> 1
-                    tmp = sum([int(use_pmc(dir)) for dir in submit_dir])
+                    tmp = sum(int(use_pmc(dir)) for dir in submit_dir)
 
                     # All workflow are either PMC or non PMC workflows?
                     if tmp == len(submit_dir) or tmp == 0:
