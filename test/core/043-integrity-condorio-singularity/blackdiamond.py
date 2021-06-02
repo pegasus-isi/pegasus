@@ -81,12 +81,17 @@ rc = ReplicaCatalog().add_replica(
 
 print("Generating transformation catalog")
 tc = TransformationCatalog()
+
+# compute the initial hash for the container
+with open("/lfs1/bamboo-tests/data/osgvo-el7.img", "rb") as f:
+    readable_hash = hashlib.sha256(f.read()).hexdigest()
+
 # A container that will be used to execute the following transformations.
 tools_container = Container(
     "osgvo-el7", 
     Container.SINGULARITY, 
     image="gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img",
-    checksum={"sha256": "436d011302ce215433563f7118d73b0c9805339d3717b35a5e0f48f3ae85c437"}                
+    checksum={"sha256": readable_hash}
 )
 
 tc.add_containers(tools_container)
