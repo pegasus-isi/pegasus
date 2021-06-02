@@ -739,10 +739,8 @@ class Section(dict):
     def __repr__(self):
         """x.__repr__() <==> repr(x)"""
         return "{%s}" % ", ".join(
-            [
-                ("{}: {}".format(repr(key), repr(self[key])))
-                for key in (self.scalars + self.sections)
-            ]
+            ("{}: {}".format(repr(key), repr(self[key])))
+            for key in (self.scalars + self.sections)
         )
 
     __str__ = __repr__
@@ -1382,10 +1380,8 @@ class ConfigObj(Section):
 
     def __repr__(self):
         return "ConfigObj({%s})" % ", ".join(
-            [
-                ("{}: {}".format(repr(key), repr(self[key])))
-                for key in (self.scalars + self.sections)
-            ]
+            ("{}: {}".format(repr(key), repr(self[key])))
+            for key in (self.scalars + self.sections)
         )
 
     def _handle_bom(self, infile):
@@ -1787,7 +1783,7 @@ class ConfigObj(Section):
                 return ","
             elif len(value) == 1:
                 return self._quote(value[0], multiline=False) + ","
-            return ", ".join([self._quote(val, multiline=False) for val in value])
+            return ", ".join(self._quote(val, multiline=False) for val in value)
         if not isinstance(value, StringTypes):
             if self.stringify:
                 value = str(value)

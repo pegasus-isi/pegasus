@@ -406,7 +406,7 @@ class Log:
             else:
                 msg = None
             remainder = ",".join(
-                ["{}={}".format(key, value) for key, value in kw.items()]
+                "{}={}".format(key, value) for key, value in kw.items()
             )
             if msg:
                 buf = "{} {:<6} {} | {}. {}".format(ts, level, event, msg, remainder)

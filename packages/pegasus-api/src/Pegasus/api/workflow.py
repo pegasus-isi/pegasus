@@ -666,10 +666,8 @@ class SubWorkflow(AbstractJob):
             self.add_args(
                 "--staging-site",
                 ",".join(
-                    [
-                        "{site}={staging_site}".format(site=s, staging_site=ss)
-                        for s, ss in staging_sites.items()
-                    ]
+                    "{site}={staging_site}".format(site=s, staging_site=ss)
+                    for s, ss in staging_sites.items()
                 ),
             )
 
@@ -679,7 +677,7 @@ class SubWorkflow(AbstractJob):
                     "invalid cache: {}; list of str must be given".format(cache)
                 )
 
-            self.add_args("--cache", ",".join([str(c) for c in cache]))
+            self.add_args("--cache", ",".join(str(c) for c in cache))
 
         if input_dirs:
             if not isinstance(input_dirs, list):
@@ -689,7 +687,7 @@ class SubWorkflow(AbstractJob):
                     )
                 )
 
-            self.add_args("--input-dir", ",".join([str(_id) for _id in input_dirs]))
+            self.add_args("--input-dir", ",".join(str(_id) for _id in input_dirs))
 
         if output_dir:
             self.add_args("--output-dir", str(output_dir))
@@ -718,14 +716,14 @@ class SubWorkflow(AbstractJob):
                 )
 
             self.add_args(
-                "--inherited-rc-files", ",".join([str(f) for f in inherited_rc_files])
+                "--inherited-rc-files", ",".join(str(f) for f in inherited_rc_files)
             )
 
         if cleanup:
             self.add_args("--cleanup", cleanup)
 
         if reuse:
-            self.add_args("--reuse", ",".join([str(p) for p in reuse]))
+            self.add_args("--reuse", ",".join(str(p) for p in reuse))
 
         if verbose > 0:
             self.add_args("-" + ("v" * verbose))
