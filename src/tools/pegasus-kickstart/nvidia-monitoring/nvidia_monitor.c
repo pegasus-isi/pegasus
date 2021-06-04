@@ -6,8 +6,8 @@
 #include <nvml.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include "nvml_wrapper.h"
 #include "nvidia_monitor.h"
-
 
 #define BUFFER_DEFAULT_LIMIT 1024
 #define BUFFER_HARD_LIMIT 32768
@@ -18,30 +18,6 @@ static volatile int exit_guard = 1;
 void signal_handler(int signum) {
     exit_guard = 0;
 }
-
-
-typedef struct json_doc {
-    int buffer_size;
-    size_t buffer_limit;
-    char* buffer;
-} json_doc;
-
-
-typedef struct thread_data {
-    unsigned int i;
-    double last_collection_duration;
-    unsigned long int last_collection_time;
-    unsigned short monitor_compute_procs;
-    unsigned short monitor_graphics_procs;
-    unsigned short monitor_process_util;
-    unsigned short monitor_pcie_usage;
-    unsigned short output_json;
-    gpu_env_struct *env;
-    char *output;
-    char *publish_url;
-    json_doc doc;
-    nvmlReturn_t result;
-} thread_data;
 
 
 void publish_stats() {
@@ -140,7 +116,7 @@ nvmlReturn_t multi_threaded_collection(FILE *out, gpu_env_struct *env, pthread_t
     return NVML_SUCCESS;
 }
 
-nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, unsigned short monitor_compute_procs, unsigned short monitor_graphics_procs, unsigned short monitor_pcie_usage, unsigned short monitor_process_util, unsigned short output_json, unsigned int interval) {
+nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, int monitor_compute_procs, int monitor_graphics_procs, int monitor_pcie_usage, int monitor_process_util, int output_json, unsigned int interval) {
     unsigned int i;
     double last_collection_duration;
     nvmlReturn_t result ;
@@ -232,6 +208,7 @@ int main(int argc, char *argv[]) {
     static int monitor_pcie_usage = 0;
     static int is_multi_threaded = 0;
     static int is_output_json = 0;
+    static int suppress_output = 0;
     FILE *out = NULL;
     char *output_file = NULL;
     char *publish_url = NULL;
@@ -250,6 +227,7 @@ int main(int argc, char *argv[]) {
         {"graphics-procs", 0, &monitor_graphics_procs, 1},
         {"process-util", 0, &monitor_process_util, 1},
         {"multi-threaded", 0, &is_multi_threaded, 1},
+        {"suppress", 0, &suppress_output, 1},
         {"json", 0, &is_output_json, 1},
         {"output", 1, 0, 'o'},
         {"publish", 1, 0, 'p'},
@@ -285,6 +263,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'm':
                 is_multi_threaded = 1;
+                break;
+            case 's':
+                suppress_output = 1;
                 break;
             case 'j':
                 is_output_json = 1;
@@ -359,11 +340,11 @@ int main(int argc, char *argv[]) {
             threads_data[i].env = &env;
             threads_data[i].last_collection_time = 0;
             threads_data[i].last_collection_duration = 0;
-            threads_data[i].monitor_compute_procs = (unsigned short) monitor_compute_procs;
-            threads_data[i].monitor_graphics_procs = (unsigned short) monitor_graphics_procs;
-            threads_data[i].monitor_process_util = (unsigned short) monitor_process_util;
-            threads_data[i].monitor_pcie_usage = (unsigned short) monitor_pcie_usage;
-            threads_data[i].output_json = (unsigned short) is_output_json;
+            threads_data[i].monitor_compute_procs = monitor_compute_procs;
+            threads_data[i].monitor_graphics_procs = monitor_graphics_procs;
+            threads_data[i].monitor_process_util = monitor_process_util;
+            threads_data[i].monitor_pcie_usage = monitor_pcie_usage;
+            threads_data[i].output_json = is_output_json;
             threads_data[i].output = output_file;
             threads_data[i].publish_url = publish_url;
             if (is_output_json) {

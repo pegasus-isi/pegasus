@@ -73,10 +73,12 @@ CFLAGS  := -I ${CUDA_PATH}/include
 LDFLAGS := -lnvidia-ml -lpthread $(NVML_LIB_L)
 
 all: nvidia_monitor
-nvidia_monitor: nvidia_monitor.o
-	$(CC) $^ $(CFLAGS) $(LDFLAGS) -o $@
-#nvidia_monitor.o: nvidia_monitor.c nvidia_monitor.h
-#	$(CC) $< $(CFLAGS) $(LDFLAGS) -o $@
+nvidia_monitor: nvml_wrapper.o nvidia_monitor.o
+	$(CC) $^ $(LDFLAGS) -o $@
+nvidia_monitor.o: nvidia_monitor.c nvidia_monitor.h
+	$(CC) -c $< $(CFLAGS) -o $@
+nvml_wrapper.o: nvml_wrapper.c nvml_wrapper.h
+	$(CC) -c $< $(CFLAGS) -o $@
 clean:
 	-@rm -f *.o
 distclean: clean
