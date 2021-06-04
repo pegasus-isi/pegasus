@@ -814,7 +814,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="tutorial-image-build" depends="setup" description="Builds the Docker based tutorial container image">
       <exec executable="docker" dir="tutorial/docker" failonerror="true">
-          <arg line="build --build-arg CACHEBUST=${ISODATE.utc} --build-arg PEGASUS_VERSION=${pegasus.version} -t pegasus/tutorial:${pegasus.version} ."/>
+          <arg line="build --no-cache --build-arg CACHEBUST=${ISODATE.utc} --build-arg PEGASUS_VERSION=${pegasus.version} -t pegasus/tutorial:${pegasus.version} ."/>
     </exec>
   </target>
 
