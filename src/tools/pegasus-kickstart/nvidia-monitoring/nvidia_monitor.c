@@ -6,6 +6,8 @@
 #include <nvml.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <poll.h>
+#include <sys/timerfd.h>
 #include "nvml_wrapper.h"
 #include "nvidia_monitor.h"
 
@@ -124,6 +126,24 @@ nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, int moni
     long seconds, microseconds;
     json_doc doc;
 
+    //
+    int ret;
+    int fd = -1;
+    struct itimerspec timeout;
+
+    /* Create timer for monitoring interval */
+    int timer = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
+    struct itimerspec timercfg;
+    timercfg.it_value.tv_sec = interval;
+    timercfg.it_value.tv_nsec = 0;
+    timercfg.it_interval.tv_sec = interval; /* Fire every interval seconds */
+    timercfg.it_interval.tv_nsec = 0;
+    if (timerfd_settime(timer, 0, &timercfg, NULL) < 0) {
+        fprintf(stderr, "Error setting timerfd time");
+        return -1;
+    }
+    //
+
     if (output_json) {
         doc.buffer_limit = BUFFER_DEFAULT_LIMIT;
         doc.buffer = (char *) malloc(BUFFER_DEFAULT_LIMIT * sizeof(char));
@@ -190,9 +210,29 @@ nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, int moni
             //printf("Time took to finish sampling: %.3f seconds.\n\n", last_collection_duration);
         }
 
-        sleep(interval);
+        struct pollfd fd_t[1];
+        fd_t[0].fd = timer;
+        fd_t[0].events = POLLIN;
+        //sleep(interval);
+        if (poll(fd_t, 1, -1) <= 0) {
+            fprintf(stderr, "Error polling:");
+            return -1;
+        }
+        if ((fd_t[0].revents & POLLIN) == 0) {
+            fprintf(stderr, "TIMER IS NOT READY");
+            return -1;
+        }
+        else {
+            unsigned long long expirations = 0;
+            if (read(timer, &expirations, sizeof(expirations)) < 0) {
+                fprintf(stderr, "timerfd read failed");
+            } else if (expirations > 1) {
+                fprintf(stderr, "timer expired %llu times\n", expirations);
+            }
+        }
     }
 
+    close(timer);
     free(doc.buffer);
     return NVML_SUCCESS;
 }
