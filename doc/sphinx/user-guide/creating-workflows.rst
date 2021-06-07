@@ -13,7 +13,7 @@ The Abstract Workflow is a description of an user workflow, usually in
 **YAML** format (before 5.0 release, it was a XML based format called the DAX)
 that is used as the primary input into Pegasus. The workflow schema is
 described using JSON schemas in
-`wf-5.0.yml <schemas/5.0/wf-5.0.yml>`__ .
+:download:`wf-5.0.yml <../../schemas/5.0/wf-5.0.yml>`.
 We recommend that users  use the Workflow API to generate the abstract
 workflows. The documentation of the API's can be found at
 :ref:`api-reference` . The Workflow API is available for users to use in

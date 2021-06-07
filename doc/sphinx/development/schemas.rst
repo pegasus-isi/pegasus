@@ -8,10 +8,10 @@ DAX XML Schema
 ==============
 
 The DAX format is described by the XML schema instance document
-`dax-3.6.xsd <schemas/dax-3.6/dax-3.6.xsd>`__. A local copy of the
+:download:`dax-3.6.xsd <../../schemas/dax-3.6/dax-3.6.xsd>`. A local copy of the
 schema definition is provided in the “etc” directory. The documentation
 of the XML schema and its elements can be found in
-`dax-3.6.html <schemas/dax-3.6/dax-3.6.html>`__ as well as locally in
+:download:`dax-3.6.html <../../schemas/dax-3.6/dax-3.6.html>` as well as locally in
 ``doc/schemas/dax-3.6/dax-3.6.html`` in your Pegasus distribution.
 
 DAX XML Schema In Detail

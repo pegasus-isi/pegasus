@@ -62,7 +62,7 @@ YAML
 Starting 5.0 release, this is the default Replica Catalog backend in
 Pegasus, replacing the old File format. In this format, you describe
 the locations of your files in a YAML format that is described
-using JSON schemas in `rc-5.0.yml <schemas/5.0/rc-5.0.yml>`__ .
+using JSON schemas in :download:`../../schemas/5.0/rc-5.0.yml`.
 
 The YAML mode is the Default mode, and by default Pegasus picks up a
 file named **replicas.yml** in the current working directory ( from
@@ -545,10 +545,10 @@ The rest of this section shows how to configure the site catalog.
 Pegasus supports the following implementations of the Site Catalog.
 
 1. **YAML** (Default) Corresponds to the schema described
-   `here <schemas/5.0/sc-5.0.yml>`__.
+   :download:`here <../../schemas/5.0/sc-5.0.yml>`.
 
 2. **XML** Corresponds to the schema described
-   `here <schemas/sc-4.0/sc-4.0.html>`__.
+   :download:`here <../../schemas/sc-4.0/sc-4.0.html>`.
 
 The above two formats are functionally equivalent
 
