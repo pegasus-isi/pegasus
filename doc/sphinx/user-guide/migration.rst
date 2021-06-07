@@ -1241,7 +1241,7 @@ DAX Schema
 ----------
 
 Pegasus 3.0 by default now parses DAX documents conforming to the DAX
-Schema 3.2 available `here <schemas/dax-3.2/dax-3.2.xsd>`__ and is
+Schema 3.2 available :download:`here <../../schemas/dax-3.2/dax-3.2.xsd>` and is
 explained in detail in the chapter on API references.
 
 Starting Pegasus 3.0 , DAX generation API's are provided in Java/Python
@@ -1262,7 +1262,7 @@ Site Catalog Format
 -------------------
 
 Pegasus 3.0 by default now parses Site Catalog format conforming to the
-SC schema 3.0 ( XML3 ) available `here <schemas/dax-3.2/dax-3.2.xsd>`__
+SC schema 3.0 ( XML3 ) available :download:`here <../../schemas/sc-3.0/sc-3.0.xsd>`
 and is explained in detail in the chapter on Catalogs.
 
 Pegasus 3.0 comes with a pegasus-sc-converter that will convert users
