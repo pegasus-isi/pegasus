@@ -1,8 +1,8 @@
-# src 1 Obelix
-gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/a.txt
+# src 1 Workflow
+gsiftp://workflow.isi.edu/local-scratch/ptesting/transfer-tests/medium-files/a.txt
 # dst 1 AmazonS3
 s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt
-# src 2 Obelix
-gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/a.txt
+# src 2 Workflow
+gsiftp://workflow.isi.edu/local-scratch/ptesting/transfer-tests/medium-files/a.txt
 # dst 2 AmazonS3
 s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a with spaces and%20url%20encoded.txt
