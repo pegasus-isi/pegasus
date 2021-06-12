@@ -32,8 +32,8 @@
 static char* identifier;
 struct utsname uname_cache;
 
-#define KS_FLAGS_ARG "ioelnNRBLTIwWSsKk"
-#define KS_FLAGS_NOARG "HVXFfqctzZ"
+#define KS_FLAGS_ARG "ioelnNRBLTIwWSsKkm"
+#define KS_FLAGS_NOARG "HVXFfqctzZG"
 
 static char* create_identifier() {
     char buffer[128];

@@ -18,6 +18,7 @@
 
 #include "error.h"
 #include "log.h"
+#include "monitoring_helpers.h"
 #include "monitoring.h"
 #include "procfs.h"
 
@@ -27,6 +28,7 @@ static int signal_pipe[2];
 static pthread_t monitoring_thread;
 static int monitor_running;
 
+/*
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values
 int initialize_monitoring_context(MonitoringContext *ctx) {
@@ -139,8 +141,8 @@ static void send_http_msg(char *url, char *msg) {
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_POST, 1);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0); /* FIXME Not secure */
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0); /* FIXME Not secure */
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0); // FIXME Not secure
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0); // FIXME Not secure
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg);
 
@@ -148,18 +150,19 @@ static void send_http_msg(char *url, char *msg) {
     http_header = curl_slist_append(http_header, "Content-Type: application/json");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_header);
 
-    /* Perform the request, res will get the return code */
+    // Perform the request, res will get the return code
     CURLcode res = curl_easy_perform(curl);
-    /* Check for errors */
+    // Check for errors
     if (res != CURLE_OK) {
         error("an error occured while sending measurement: %s\n",
               curl_easy_strerror(res));
     }
 
-    /* always cleanup */
+    // always cleanup
     curl_easy_cleanup(curl);
     curl_slist_free_all(http_header);
 }
+*/
 
 static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, size_t maxsize) {
     size_t size = snprintf(buf, maxsize,
@@ -249,8 +252,9 @@ static size_t json_encode(MonitoringContext *ctx, ProcStats *stats, char *buf, s
     return size;
 }
 
+/*
 static size_t base64_encode(const char *data, size_t input_length, char *encoded_data, size_t max_output) {
-    /* http://stackoverflow.com/questions/342409/how-do-i-base64-encode-decode-in-c */
+    // http://stackoverflow.com/questions/342409/how-do-i-base64-encode-decode-in-c
 
     size_t output_length = 4 * ((input_length + 2) / 3);
     if (output_length >= max_output) {
@@ -307,7 +311,7 @@ static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
         return;
     }
 
-    /* Need to construct a new URL */
+    // Need to construct a new URL
     char url[128];
     if (strstr(ctx->url, "rabbitmqs://") == ctx->url) {
         snprintf(url, 128, "https://%s", ctx->url + strlen("rabbitmqs://"));
@@ -318,6 +322,7 @@ static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
     send_http_msg(url, payload);
 }
 
+
 static void send_http(MonitoringContext *ctx, ProcStats *stats) {
     debug("Sending stats to http endpoint");
     char msg[1024];
@@ -327,6 +332,7 @@ static void send_http(MonitoringContext *ctx, ProcStats *stats) {
     }
     send_http_msg(ctx->url, msg);
 }
+*/
 
 static int send_msg_to_kickstart(char *host, char *port, ProcStats *stats) {
     if (host == NULL || port == NULL) {
@@ -381,7 +387,7 @@ static int send_msg_to_kickstart(char *host, char *port, ProcStats *stats) {
     return 0;
 }
 
-static void send_kickstart(MonitoringContext *ctx, ProcStats *stats) {
+static int send_kickstart(MonitoringContext *ctx, ProcStats *stats) {
     debug("Sending stats to kickstart endpoint");
 
     /* Get host and port from URL */
@@ -390,12 +396,13 @@ static void send_kickstart(MonitoringContext *ctx, ProcStats *stats) {
     /* FIXME We should probably just do this once */
     if (sscanf(ctx->url, "kickstart://%127[^:]:%15[0-9]", host, port) != 2) {
         error("Unable to parse kickstart URL: %s", ctx->url);
-        return;
+        return -1;
     }
 
-    send_msg_to_kickstart(host, port, stats);
+    return send_msg_to_kickstart(host, port, stats);
 }
 
+/*
 static void send_file(MonitoringContext *ctx, ProcStats *stats) {
 
     char msg[1024];
@@ -417,20 +424,24 @@ static void send_file(MonitoringContext *ctx, ProcStats *stats) {
 
     fclose(log);
 }
+*/
 
 int send_monitoring_report(MonitoringContext *ctx, ProcStats *stats) {
-    if (strstr(ctx->url, "rabbitmq://") == ctx->url ||
-        strstr(ctx->url, "rabbitmqs://") == ctx->url) {
-        send_rabbitmq(ctx, stats);
-    } else if (strstr(ctx->url, "http://") == ctx->url ||
-               strstr(ctx->url, "https://") == ctx->url) {
-        send_http(ctx, stats);
-    } else if (strstr(ctx->url, "kickstart://") == ctx->url) {
-        send_kickstart(ctx, stats);
-    } else if (strstr(ctx->url, "file://") == ctx->url) {
-        send_file(ctx, stats);
-    } else {
-        error("Unknown endpoint URL scheme: %s\n", ctx->url);
+    char doc_buffer[1024];
+    json_doc doc;
+    doc.buffer_size = 0;
+    doc.buffer_limit = 1024;
+    doc.buffer = doc_buffer;
+    
+    if (strstr(ctx->url, "kickstart://") == ctx->url) {
+        return send_kickstart(ctx, stats);
+    }
+    else {
+        if ((doc.buffer_size = json_encode(ctx, stats, doc.buffer, 1024)) < 0) {
+            error("Unable to json encode message");
+            return -1;
+        }
+        return send_monitoring_report_json(ctx, doc);
     }
 
     return 0;
@@ -439,6 +450,7 @@ int send_monitoring_report(MonitoringContext *ctx, ProcStats *stats) {
 /* Merge the stats we have and send them to the parent monitor */
 static int send_merged_monitoring_report(MonitoringContext *ctx, ProcStatsList *listptr) {
     ProcStats stats;
+    
     procfs_merge_stats_list(listptr, &stats, ctx->interval);
     return send_monitoring_report(ctx, &stats);
 }
@@ -542,7 +554,7 @@ void* monitoring_thread_func(void* arg) {
     debug("task id: %s", ctx->task_id);
     debug("process group: %d", getpgid(0));
 
-    curl_global_init(CURL_GLOBAL_ALL);
+    //curl_global_init(CURL_GLOBAL_ALL);
 
     /* Create timer for monitoring interval */
     int timer = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
@@ -622,7 +634,7 @@ void* monitoring_thread_func(void* arg) {
     procfs_free_stats_list(list);
     close(timer);
     close(ctx->socket);
-    curl_global_cleanup();
+    //curl_global_cleanup();
     release_monitoring_context(ctx);
     pthread_exit(NULL);
 }

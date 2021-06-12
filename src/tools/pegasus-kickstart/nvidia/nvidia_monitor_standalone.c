@@ -9,7 +9,7 @@
 #include <poll.h>
 #include <sys/timerfd.h>
 #include "nvml_wrapper.h"
-#include "nvidia_monitor.h"
+#include "nvidia_monitor_standalone.h"
 
 #define BUFFER_DEFAULT_LIMIT 1024
 #define BUFFER_HARD_LIMIT 32768
@@ -92,11 +92,10 @@ nvmlReturn_t multi_threaded_collection(FILE *out, gpu_env_struct *env, pthread_t
 
             if (output_json) {
                 while ((doc.buffer_size = json_encode_device_stats(threads_data[i].env->devices[i], threads_data[i].last_collection_duration, doc.buffer, doc.buffer_limit)) < 0) {
-                    free(doc.buffer);
                     if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
                         return -1;
                     doc.buffer_limit *= 2;
-                    doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
+                    doc.buffer = (char *) realloc(doc.buffer, doc.buffer_limit * sizeof(char));
                 }
                 fprintf(out, "%s,\n", doc.buffer);
             }
@@ -190,11 +189,10 @@ nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, int moni
         {
             if (output_json) {
                 while ((doc.buffer_size = json_encode_device_stats(env->devices[i], last_collection_duration, doc.buffer, doc.buffer_limit)) < 0) {
-                    free(doc.buffer);
                     if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
                         return -1;
                     doc.buffer_limit = doc.buffer_limit * 2;
-                    doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
+                    doc.buffer = (char *) realloc(doc.buffer, doc.buffer_limit * sizeof(char));
                 }
                 fprintf(out, "%s,\n", doc.buffer);
             }
@@ -237,7 +235,12 @@ nvmlReturn_t single_threaded_collection(FILE *out, gpu_env_struct *env, int moni
     return NVML_SUCCESS;
 }
 
-int main(int argc, char *argv[]) {
+void usage(char *argv) {
+    fprintf(stderr, "Usage: %s [-bcgmuj] [-o <filename>] [-p <publish_url>] [-i <interval>]\n", argv);
+    exit(1);
+}
+
+int main(int argc, char **argv) {
     unsigned int i;
     nvmlReturn_t result;
     gpu_env_struct env;
@@ -311,17 +314,17 @@ int main(int argc, char *argv[]) {
                 is_output_json = 1;
                 break;
             case 'h': 
-                printf("Usage: ./nvidia-monitor [-bcgmuj] [-o <filename>] [-p <publish_url>] [-i <interval>]\n");
-                return 0;
+                usage(argv[0]);
                 break;
             case ':': 
-                printf("Option needs a value\n"); 
-                printf("Usage: ./nvidia-monitor [-bcgmuj] [-o <filename>] [-p <publish_url>] [-i <interval>]\n");
-                return 1;
+                fprintf(stderr, "Option '%c' needs a value\n", optopt); 
+                usage(argv[0]);
+                break;
             case '?': 
-                printf("Unknown option: %c\n", optopt);
-                printf("Usage: ./nvidia-monitor [-bcgmuj] [-o <filename>] [-p <publish_url>] [-i <interval>]\n");
-                return 1;
+                fprintf(stderr, "Unknown option: %c\n", optopt);
+                break;
+            default: 
+                usage(argv[0]);
         }
     }
 
@@ -354,11 +357,10 @@ int main(int argc, char *argv[]) {
     
     if (is_output_json) {
         while ((doc.buffer_size = json_encode_environment(env, doc.buffer, doc.buffer_limit)) < 0) {
-            free(doc.buffer);
             if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
                 goto Error;
             doc.buffer_limit = doc.buffer_limit * 2;
-            doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
+            doc.buffer = (char *) realloc(doc.buffer, doc.buffer_limit * sizeof(char));
         }
         fprintf(out, "[%s,\n", doc.buffer);
     }
@@ -414,11 +416,10 @@ int main(int argc, char *argv[]) {
     //Output max measurements
     if (is_output_json) {
         while ((doc.buffer_size = json_encode_device_stats_max(env, doc.buffer, doc.buffer_limit)) < 0) {
-            free(doc.buffer);
             if (doc.buffer_limit >= BUFFER_HARD_LIMIT)
                 goto Error;
             doc.buffer_limit = doc.buffer_limit * 2;
-            doc.buffer = (char *) malloc(doc.buffer_limit * sizeof(char));
+            doc.buffer = (char *) realloc(doc.buffer, doc.buffer_limit * sizeof(char));
         }
         fprintf(out, "%s]\n", doc.buffer);
     }

@@ -59,10 +59,15 @@ endif
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
     OBJS += machine/linux.o
+    OBJS += nvidia/nvml_wrapper.o
     OBJS += syscall.o
     OBJS += procfs.o
+    OBJS += monitoring_helpers.o
     OBJS += monitoring.o
+    OBJS += nvidia_monitoring.o
 endif
+
+LDLIBS += -lnvidia-ml -L /usr/lib/nvidia-440 
 
 CFLAGS += -D${SYSTEM}
 
@@ -78,7 +83,7 @@ all: $(TARGET)
 pegasus-kickstart: $(OBJS)
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-pegasus-monitor: pegasus-monitor.o monitoring.o procfs.o log.o
+pegasus-monitor: pegasus-monitor.o monitoring_helpers.o monitoring.o nvidia_monitoring.o nvidia/nvml_wrapper.o procfs.o log.o
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 libinterpose.so: interpose.c interpose_monitoring.c procfs.c log.c monitoring.c
@@ -103,7 +108,7 @@ depends.mk: $(SRCS) version.h
 	$(CC) -MM $(SRCS) > $@
 
 clean:
-	$(RM) *.o *.so machine/*.o core core.* version.h depends.mk
+	$(RM) *.o *.so machine/*.o nvidia/*.o core core.* version.h depends.mk
 
 distclean: clean
 	$(RM) $(TARGET)

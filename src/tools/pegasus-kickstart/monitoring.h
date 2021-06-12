@@ -2,8 +2,9 @@
 #define _PEGASUS_MONITORING_H
 
 #include "procfs.h"
+#include "monitoring_helpers.h"
 
-typedef struct {
+/*typedef struct {
     char *url;
     char *wf_label;
     char *wf_uuid;
@@ -19,6 +20,7 @@ typedef struct {
 
 int initialize_monitoring_context(MonitoringContext *ctx);
 void release_monitoring_context(MonitoringContext* ctx);
+*/
 
 int start_monitoring_thread();
 int stop_monitoring_thread();

@@ -36,8 +36,13 @@
 #include "utils.h"
 #include "version.h"
 #include "ptrace.h"
+#include "monitoring_helpers.h"
 #include "monitoring.h"
+#include "nvidia_monitoring.h"
 #include "log.h"
+
+#include <curl/curl.h>
+
 
 #define show(s) (s ? s : "(undefined)")
 
@@ -224,6 +229,7 @@ static void helpMe(const AppInfo* run) {
             " -Z\tEnable library call interposition to get files and I/O\n"
             " -m I\tEnable an online monitoring with a I-seconds interval between measurements.\n"
             "     \tWorks only with the -Z option.\n"
+            " -G\tEnable an online monitoring for GPUs. This picks up the interval from the -m argument\n"
 #endif
             /* NOTE: If you add another flag to kickstart, please update
              * the argument skipping logic in
@@ -354,6 +360,7 @@ int main(int argc, char* argv[]) {
     int createDir = 0;
 #ifdef LINUX
     int monitoringInterval = 0;
+    MonitoringContext *ctx = NULL;
 #endif
     char* temp;
     char* end;
@@ -670,6 +677,9 @@ int main(int argc, char* argv[]) {
             case 'Z':
                 appinfo.enableLibTrace++;
                 break;
+            case 'G':
+                appinfo.enableGPUMonitoring++;
+                break;
             case 'm':
                 if (!argv[i][2] && argc <= i+1) {
                     fprintf(stderr, "ERROR: -m argument missing\n");
@@ -798,6 +808,11 @@ REDIR:
 #ifdef LINUX
     /* If monitoring is enabled, create new PG and start monitoring thread */
     if (monitoringInterval > 0) {
+        curl_global_init(CURL_GLOBAL_ALL);
+        if (appinfo.enableGPUMonitoring && start_nvidia_monitoring_thread()) {
+            printerr("ERROR: Unable to start GPU monitoring thread\n");
+            return 127;
+        }
         if (start_monitoring_thread()) {
             printerr("ERROR: Unable to start monitoring thread\n");
             return 127;
@@ -864,9 +879,13 @@ REDIR:
 #ifdef LINUX
     /* If monitoring, stop monitoring thead */
     if (monitoringInterval > 0) {
+        if (appinfo.enableGPUMonitoring && stop_nvidia_monitoring_thread()) {
+            printerr("WARNING: Unable to stop monitoring thread\n");
+        }
         if (stop_monitoring_thread()) {
             printerr("WARNING: Unable to stop monitoring thread\n");
         }
+        curl_global_cleanup();
     }
 #endif
 

@@ -72,14 +72,14 @@ NVML_LIB_L := $(addprefix -L , $(NVML_LIB))
 CFLAGS  := -I ${CUDA_PATH}/include 
 LDFLAGS := -lnvidia-ml -lpthread $(NVML_LIB_L)
 
-all: nvidia_monitor
-nvidia_monitor: nvml_wrapper.o nvidia_monitor.o
+all: nvidia_monitor_standalone
+nvidia_monitor_standalone: nvml_wrapper.o nvidia_monitor_standalone.o
 	$(CC) $^ $(LDFLAGS) -o $@
-nvidia_monitor.o: nvidia_monitor.c nvidia_monitor.h
+nvidia_monitor_standalone.o: nvidia_monitor_standalone.c nvidia_monitor_standalone.h
 	$(CC) -c $< $(CFLAGS) -o $@
 nvml_wrapper.o: nvml_wrapper.c nvml_wrapper.h
 	$(CC) -c $< $(CFLAGS) -o $@
 clean:
 	-@rm -f *.o
 distclean: clean
-	-@rm -f nvidia_monitor
+	-@rm -f nvidia_monitor_standalone

@@ -1,3 +1,22 @@
+#include <curl/curl.h>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdint.h>
+#include "error.h"
+#include "log.h"
+#include "monitoring_helpers.h"
+
+
+//IMPLEMENT THIS IN THE FUTURE TO PROVIDE MONITORING ENDPOINT TO ALL THREADS
+int setup_monitoring_endpoint() {
+    return 0;
+}
+
+// a util function for reading env variables by the main kickstart process
+// with monitoring endpoint data or set default values
 int initialize_monitoring_context(MonitoringContext *ctx) {
     char* envptr;
 
@@ -94,6 +113,34 @@ void release_monitoring_context(MonitoringContext* ctx) {
     free(ctx);
 }
 
+int json_encode_context(MonitoringContext *ctx, char *buf, size_t maxsize) {
+    size_t size = snprintf(buf, maxsize,
+            "{\"hostname\":\"%s\","
+            "\"site\":\"%s\","
+            "\"wf_uuid\":\"%s\","
+            "\"wf_label\":\"%s\","
+            "\"dag_job_id\":\"%s\","
+            "\"condor_job_id\":\"%s\","
+            "\"xformation\":\"%s\","
+            "\"task_id\":\"%s\"}",
+            ctx->hostname == NULL ? "" : ctx->hostname,
+            ctx->site == NULL ? "" : ctx->site,
+            ctx->wf_uuid == NULL ? "" : ctx->wf_uuid,
+            ctx->wf_label == NULL ? "" : ctx->wf_label,
+            ctx->dag_job_id == NULL ? "" : ctx->dag_job_id,
+            ctx->condor_job_id == NULL ? "" : ctx->condor_job_id,
+            ctx->xformation == NULL ? "" : ctx->xformation,
+            ctx->task_id == NULL ? "" : ctx->task_id
+    );
+
+    if (size >= maxsize) {
+        error("JSON too large for buffer: %d > %d", size, maxsize);
+        return -1;
+    }
+
+    return size;
+}
+
 static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
     //    we do nothing for now
     return size * nmemb;
@@ -162,30 +209,33 @@ static size_t base64_encode(const char *data, size_t input_length, char *encoded
     return output_length;
 }
 
-static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
+static void send_rabbitmq(MonitoringContext *ctx, json_doc doc) {
     debug("Sending stats to rabbitmq endpoint");
+    size_t b64msg_size = 0;
 
     char routing_key[] = "kickstart.inv.online";
 
-    char msg[1024];
-    if (json_encode(ctx, stats, msg, 1024) < 0) {
-        error("Unable to json encode message");
+    char *b64msg = (char*) malloc(doc.buffer_size * 2);
+    if (b64msg == NULL) {
+        error("Failed to allocate memory for base64 encoding");
         return;
     }
-
-    char b64msg[1024];
-    if (base64_encode(msg, strlen(msg), b64msg, 1024) < 0) {
+    b64msg_size = base64_encode(doc.buffer, strlen(doc.buffer), b64msg, doc.buffer_size * 2);
+    if (b64msg_size < 0) {
         error("Unable to base64 encode message");
+        free(b64msg);
         return;
     }
 
-    char payload[1024];
-    if (snprintf(payload, 1024,
+    char *payload = (char*) malloc(b64msg_size + 256);
+    if (snprintf(payload, (b64msg_size + 256),
         "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"base64\"}",
-        routing_key, b64msg) >= 1024) {
+        routing_key, b64msg) >= (b64msg_size + 256)) {
         error("RabbitMQ payload too large for buffer");
         return;
     }
+    
+    free(b64msg);
 
     /* Need to construct a new URL */
     char url[128];
@@ -196,94 +246,17 @@ static void send_rabbitmq(MonitoringContext *ctx, ProcStats *stats) {
     }
 
     send_http_msg(url, payload);
+    free(payload);
 }
 
-static void send_http(MonitoringContext *ctx, ProcStats *stats) {
+
+static void send_http(MonitoringContext *ctx, json_doc doc) {
     debug("Sending stats to http endpoint");
-    char msg[1024];
-    if (json_encode(ctx, stats, msg, 1024) < 0) {
-        error("Unable to json encode message");
-        return;
-    }
-    send_http_msg(ctx->url, msg);
+    send_http_msg(ctx->url, doc.buffer);
 }
 
-static int send_msg_to_kickstart(char *host, char *port, ProcStats *stats) {
-    if (host == NULL || port == NULL) {
-        return -1;
-    }
 
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-
-    struct addrinfo *servinfo;
-    int gaierr = getaddrinfo(host, port, &hints, &servinfo);
-    if (gaierr != 0) {
-        printerr("getaddrinfo: %s\n", gai_strerror(gaierr));
-        return -1;
-    }
-
-    int sockfd;
-    struct addrinfo *p;
-    for (p = servinfo; p != NULL; p = p->ai_next) {
-        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (sockfd == -1) {
-            printerr("socket: %s\n", strerror(errno));
-            continue;
-        }
-
-        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            printerr("connect: %s\n", strerror(errno));
-            close(sockfd);
-            continue;
-        }
-
-        // Successful connection
-        break;
-    }
-
-    freeaddrinfo(servinfo);
-
-    if (p == NULL) {
-        printerr("failed to connect to kickstart monitor: no suitable addr\n");
-        return -1;
-    }
-
-    if (send(sockfd, stats, sizeof(ProcStats), 0) < 0) {
-        printerr("Error during msg send: %s\n", strerror(errno));
-        return -1;
-    }
-
-    close(sockfd);
-
-    return 0;
-}
-
-static void send_kickstart(MonitoringContext *ctx, ProcStats *stats) {
-    debug("Sending stats to kickstart endpoint");
-
-    /* Get host and port from URL */
-    char host[128];
-    char port[16];
-    /* FIXME We should probably just do this once */
-    if (sscanf(ctx->url, "kickstart://%127[^:]:%15[0-9]", host, port) != 2) {
-        error("Unable to parse kickstart URL: %s", ctx->url);
-        return;
-    }
-
-    send_msg_to_kickstart(host, port, stats);
-}
-
-static void send_file(MonitoringContext *ctx, ProcStats *stats) {
-
-    char msg[1024];
-    if (json_encode(ctx, stats, msg, 1024) < 0) {
-        error("Unable to json encode message");
-        return;
-    }
-
+static void send_file(MonitoringContext *ctx, json_doc doc) {
     char *path = ctx->url + strlen("file://");
     debug("Writing monitoring data to %s", path);
 
@@ -293,22 +266,20 @@ static void send_file(MonitoringContext *ctx, ProcStats *stats) {
         return;
     }
 
-    fprintf(log, "%s\n", msg);
+    fprintf(log, "%s\n", doc.buffer);
 
     fclose(log);
 }
 
-int send_monitoring_report(MonitoringContext *ctx, ProcStats *stats) {
+int send_monitoring_report_json(MonitoringContext *ctx, json_doc doc) {
     if (strstr(ctx->url, "rabbitmq://") == ctx->url ||
         strstr(ctx->url, "rabbitmqs://") == ctx->url) {
-        send_rabbitmq(ctx, stats);
+        send_rabbitmq(ctx, doc);
     } else if (strstr(ctx->url, "http://") == ctx->url ||
                strstr(ctx->url, "https://") == ctx->url) {
-        send_http(ctx, stats);
-    } else if (strstr(ctx->url, "kickstart://") == ctx->url) {
-        send_kickstart(ctx, stats);
+        send_http(ctx, doc);
     } else if (strstr(ctx->url, "file://") == ctx->url) {
-        send_file(ctx, stats);
+        send_file(ctx, doc);
     } else {
         error("Unknown endpoint URL scheme: %s\n", ctx->url);
     }

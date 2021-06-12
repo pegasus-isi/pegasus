@@ -1,7 +1,8 @@
 #ifndef NVML_WRAPPER_H
 #define NVML_WRAPPER_H
 
-#include <nvml.h>
+//#include <nvml.h>
+#include "nvml.h"
 
 typedef struct {
     nvmlProcessInfo_t *infos;
@@ -44,8 +45,8 @@ typedef struct {
     unsigned int power_limit;
     unsigned int power_usage;
     unsigned short int is_cuda_capable;
-    int clocks[NVML_CLOCK_COUNT];
-    int max_clocks[NVML_CLOCK_COUNT];
+    unsigned int clocks[NVML_CLOCK_COUNT];
+    unsigned int max_clocks[NVML_CLOCK_COUNT];
     char name[NVML_DEVICE_NAME_BUFFER_SIZE];
 } gpu_dev_info_struct;
 

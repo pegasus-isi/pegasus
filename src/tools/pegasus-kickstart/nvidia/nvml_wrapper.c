@@ -318,7 +318,6 @@ nvmlReturn_t getGpuProcessUtilizationAll(gpu_env_struct *env) {
 
 nvmlReturn_t getGpuComputeProcesses(gpu_dev_info_struct *device) {
     nvmlReturn_t result;
-    unsigned int i;
     unsigned int tmp_cnt = 0;
     nvmlProcessInfo_t *tmp_infos = NULL;
     
@@ -379,7 +378,6 @@ nvmlReturn_t getGpuComputeProcessesAll(gpu_env_struct *env) {
 
 nvmlReturn_t getGpuGraphicsProcesses(gpu_dev_info_struct *device) {
     nvmlReturn_t result;
-    unsigned int i;
     unsigned int tmp_cnt = 0;
     nvmlProcessInfo_t *tmp_infos = NULL;
     
@@ -450,7 +448,7 @@ void printGpuStatistics(FILE *out, gpu_dev_info_struct device) {
     fprintf(out, "\t PCIe RX Utilization %u KB/s, PCIe TX Utilization %u KB/s\n", device.pcie_rx, device.pcie_tx);
     fprintf(out, "\t Memory Used %llu MBytes, Memory Total %llu MBytes\n", device.memory.used/(1024*1024), device.memory.total/(1024*1024));
     fprintf(out, "\t Bar1Memory Used %llu MBytes, Bar1Memory Total %llu MBytes\n", device.bar1memory.bar1Used/(1024*1024), device.bar1memory.bar1Total/(1024*1024));
-    fprintf(out, "\t GPU Clock %dMHz, SM Clock %dMHz, Mem Clock %dMHz, Video Clock %dMHz\n", device.clocks[NVML_CLOCK_GRAPHICS], device.clocks[NVML_CLOCK_SM], device.clocks[NVML_CLOCK_MEM], device.clocks[NVML_CLOCK_VIDEO]);
+    fprintf(out, "\t GPU Clock %dMHz, SM Clock %uMHz, Mem Clock %uMHz, Video Clock %uMHz\n", device.clocks[NVML_CLOCK_GRAPHICS], device.clocks[NVML_CLOCK_SM], device.clocks[NVML_CLOCK_MEM], device.clocks[NVML_CLOCK_VIDEO]);
 
     return;
 }
@@ -581,7 +579,7 @@ void printGpuEnvironment(FILE *out, gpu_env_struct env) {
         fprintf(out, "\t Temperature %d C\n", env.devices[i].temp);
         fprintf(out, "\t Power limit %d Watt\n", env.devices[i].power_limit/1000);
         fprintf(out, "\t Total Memory %llu MBytes\n", env.devices[i].memory.total/(1024*1024));
-        fprintf(out, "\t Max GPU Clock %dMHz, Max SM Clock %dMHz, Max Mem Clock %dMHz, Max Video Clock %dMHz\n", env.devices[i].max_clocks[NVML_CLOCK_GRAPHICS], env.devices[i].max_clocks[NVML_CLOCK_SM], env.devices[i].max_clocks[NVML_CLOCK_MEM], env.devices[i].max_clocks[NVML_CLOCK_VIDEO]);
+        fprintf(out, "\t Max GPU Clock %dMHz, Max SM Clock %uMHz, Max Mem Clock %uMHz, Max Video Clock %uMHz\n", env.devices[i].max_clocks[NVML_CLOCK_GRAPHICS], env.devices[i].max_clocks[NVML_CLOCK_SM], env.devices[i].max_clocks[NVML_CLOCK_MEM], env.devices[i].max_clocks[NVML_CLOCK_VIDEO]);
     }
 
     return;
@@ -636,10 +634,10 @@ int json_encode_environment(gpu_env_struct env, char *doc_buffer, size_t maxsize
                     "\"power_limit\":%d,"
                     "\"total_bar1_memory\":%llu,"
                     "\"total_memory\":%llu,"
-                    "\"max_gpu_clock\":%d,"
-                    "\"max_sm_clock\":%d,"
-                    "\"max_mem_clock\":%d,"
-                    "\"max_video_clock\":%d"
+                    "\"max_gpu_clock\":%u,"
+                    "\"max_sm_clock\":%u,"
+                    "\"max_mem_clock\":%u,"
+                    "\"max_video_clock\":%u"
                     "%s",
                     env.devices[i].index,
                     env.devices[i].name,
@@ -770,10 +768,10 @@ int json_encode_device_stats(gpu_dev_info_struct device, double sampling_duratio
             "\"mem_usage\":%llu,"
             "\"mem_utilization\":%u,"
             "\"gpu_utilization\":%u,"
-            "\"gpu_clock\":%d,"
-            "\"sm_clock\":%d,"
-            "\"mem_clock\":%d,"
-            "\"video_clock\":%d,"
+            "\"gpu_clock\":%u,"
+            "\"sm_clock\":%u,"
+            "\"mem_clock\":%u,"
+            "\"video_clock\":%u,"
             "\"compute_procs\":[",
             device.last_ts,
             device.index,
