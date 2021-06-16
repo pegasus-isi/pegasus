@@ -127,7 +127,13 @@ public class TransferEngine extends Engine {
      */
     private PlannerCache mPlannerCache;
 
-    /** A Replica Catalog, that tracks all the GET URL's for the files on the staging sites. */
+    /**
+     * A Replica Catalog, that tracks all the GET URL's for the files on the staging sites. This
+     * cache is used to do automatic data management between 2 sub workflow jobs that have a data
+     * dependency between them. For a workflow with two sub workflow jobs Sub1 -> Sub2, Pegasus
+     * passes the workflow cache file that is created when Sub1 workflow is planned as an argument
+     * to the planner when it is invoked to plan the Sub2 job.
+     */
     private ReplicaCatalog mWorkflowCache;
 
     /**
@@ -998,6 +1004,25 @@ public class TransferEngine extends Engine {
         Collection<FileTransfer> localTransfers = new LinkedList();
         Collection<FileTransfer> remoteTransfers = new LinkedList();
 
+        ReplicaCatalog jobInputCache =
+                (job instanceof DAXJob) ? this.getWorkflowCache((DAXJob) job) : null;
+
+        // tracks whether we can consider short circuit the interpool transfer
+        // for a job or not . we cannot shortcircuit for two cases
+        //       | Job      | Parent Job | Consider Short Circuit|
+        // Case 1| Compute  | Compute    |  Yes                  |
+        // Case 2| Compute  | DAX        |  No                   |
+        // Case 3| DAX      | Compute    |  No                   |
+        // Case 4| DAX      | DAX        |  Yes                  |
+
+        // Case 2 // PM-1676 if parent job is a sub workflow job, then we cannot
+        // short circuit the inter pool transfer, as the sub workflow job
+        // outputs need to be placed explicitly using the output map for
+        // the compute job to pick up
+        // Case 3 PM-1766 DAX job has some input files that are produced by a parent compute job
+        // Case 4 let the cache file between exchanged with parent dax job provide the info
+        boolean considerShortCircuit = job.getJobType() == Job.COMPUTE_JOB;
+
         // PM-1602 tracks input files for which to disable integrity
         Set<PegasusFile> integrityDisabledFiles = new HashSet();
         for (GraphNode parent : parents) {
@@ -1005,11 +1030,13 @@ public class TransferEngine extends Engine {
             Job pJob = (Job) parent.getContent();
             sourceSite = mSiteStore.lookup(pJob.getStagingSiteHandle());
 
-            if ( // PM-1676 if parent job is a sub workflow job, then we cannot
-            // short circuit the inter pool transfer, as the sub workflow job
-            // outputs need to be placed explicitly using the output map for
-            // the compute job to pick up
-            !(pJob instanceof DAXJob)
+            considerShortCircuit =
+                    (considerShortCircuit && pJob.getJobType() == Job.COMPUTE_JOB)
+                            ||
+                            // both the job and parent as pegasusWorkflow/DAXJobs
+                            (job instanceof DAXJob && pJob instanceof DAXJob);
+
+            if (considerShortCircuit
                     && sourceSite.getSiteHandle().equalsIgnoreCase(destSiteHandle)) {
                 // no need to add transfers, as the parent job and child
                 // job are run in the same directory on the pool
@@ -1122,7 +1149,13 @@ public class TransferEngine extends Engine {
 
                             sourceURL = sourceURI + File.separator + outFile;
 
-                            if (!(sourceURL.equalsIgnoreCase(thirdPartyDestPutURL))) {
+                            if (job instanceof DAXJob) {
+                                // Case 3 PM-1766 DAX job has some input files that are produced by
+                                // a parent compute job. track this URL in the cache file for
+                                // the job
+                                jobInputCache.insert(
+                                        outFile, sourceURL, pJob.getStagingSiteHandle());
+                            } else if (!(sourceURL.equalsIgnoreCase(thirdPartyDestPutURL))) {
                                 // add the source url only if it does not match to
                                 // the third party destination url
                                 ft.addSource(pJob.getStagingSiteHandle(), sourceURL);
@@ -1154,6 +1187,11 @@ public class TransferEngine extends Engine {
                                 + " for integrity checking",
                         LogManager.TRACE_MESSAGE_LEVEL);
             }
+        }
+
+        // close the job input cache if opened
+        if (jobInputCache != null) {
+            jobInputCache.close();
         }
 
         result[0] = localTransfers;
@@ -2238,5 +2276,42 @@ public class TransferEngine extends Engine {
         b.add(PegasusBag.PEGASUS_PROPERTIES, props);
 
         return OutputMapperFactory.loadInstance(dag, b);
+    }
+
+    /**
+     * Initializes a Replica Catalog Instance that is used to store the the GET url's of files
+     * generated in the current workflow (by parent jobs of this DAXJob) that are required when the
+     * sub workflow represented by this DAXJob executes.
+     *
+     * @param dag the workflow being planned
+     * @return handle to transient catalog
+     */
+    private ReplicaCatalog getWorkflowCache(DAXJob job) {
+        ReplicaCatalog rc = null;
+        mLogger.log(
+                "Initialising Workflow Cache File for job " + job.getID(),
+                LogManager.DEBUG_MESSAGE_LEVEL);
+
+        Properties cacheProps =
+                mProps.getVDSProperties().matchingSubset(ReplicaCatalog.c_prefix, false);
+
+        StringBuilder file = new StringBuilder();
+        file.append(mPOptions.getSubmitDirectory())
+                .append(File.separator)
+                .append(job.getRelativeSubmitDirectory())
+                .append(File.separator)
+                .append(job.getID())
+                .append(".cache");
+
+        // set the appropriate property to designate path to file
+        cacheProps.setProperty(WORKFLOW_CACHE_REPLICA_CATALOG_KEY, file.toString());
+
+        try {
+            rc = ReplicaFactory.loadInstance(WORKFLOW_CACHE_FILE_IMPLEMENTOR, mBag, cacheProps);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Unable to initialize Workflow Cache File in the Submit Directory  " + file, e);
+        }
+        return rc;
     }
 }

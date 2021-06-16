@@ -160,9 +160,6 @@ public class SUBDAXGenerator {
 
     private SiteStore mSiteStore;
 
-    /** Cache file for the current DAG */
-    private String mCurrentDAGCacheFile;
-
     /**
      * Handle to the metrics generator to determine if DAGMan metrics reporting needs to be turned
      * on or not.
@@ -189,7 +186,6 @@ public class SUBDAXGenerator {
      *
      * @param bag the bag of objects required for initialization
      * @param dag the dag for which code is being generated
-     * @param daxReplicaStore the dax replica store.
      * @param dagWriter handle to the dag writer
      */
     public void initialize(PegasusBag bag, ADag dag, PrintWriter dagWriter) {
@@ -203,8 +199,6 @@ public class SUBDAXGenerator {
         this.mPegasusPlanOptions = bag.getPlannerOptions();
         mCleanupScope = mProps.getCleanupScope();
 
-        mCurrentDAGCacheFile =
-                this.getCacheFile(mPegasusPlanOptions, dag.getLabel(), dag.getIndex());
         mDAXJobIDToSubmitDirectoryCacheFile = new HashMap();
 
         mUser = mProps.getProperty("user.name");
@@ -415,15 +409,21 @@ public class SUBDAXGenerator {
             cacheFiles.addAll(parentsTransientRCs);
         }
 
-        // we also add path to the cache file of the workflow
+        // PM-736 we also add path to the cache file of the workflow
         // currently being planned i.e the one that has the dax job
         // for the sub workflow. this is to ensure that if we have a DAXA
         // that has two jobs JOBA and DAXJobB in it, with JOBA parent of DAXJobB
         // i.e JOBA -> DAXJobB, then whatever JOBA generates is accessible
         // when we plan the DAXJob B. To ensure this we need to pass the cache
         // file generated when planning DAXA to DAXJobB
-        // PM-736
-        cacheFiles.add(mCurrentDAGCacheFile);
+        // PM-1766 instead of the workflow cache file, we now pass the cache
+        // file created specifically for the sub workflow job to ensure only
+        // those files that have a depedency are passed to the sub workflow
+        String jobCacheFile =
+                job.getFileFullPath(
+                        this.mPegasusPlanOptions.getSubmitDirectory(),
+                        SUBDAXGenerator.CACHE_FILE_SUFFIX);
+        cacheFiles.add(jobCacheFile);
 
         // do some sanitization of the path to the dax file.
         // if it is a relative path, then ???
@@ -1306,8 +1306,6 @@ public class SUBDAXGenerator {
      */
     public String[] constructPegasusPlanPrescript(
             Job job, PlannerOptions options, String rootUUID, String properties, String log) {
-        // StringBuffer prescript = new StringBuffer();
-
         String site = job.getSiteHandle();
         TransformationCatalogEntry entry = null;
         String[] result = new String[2];
