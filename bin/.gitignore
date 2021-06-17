@@ -1,6 +1,6 @@
 pegasus-cluster
 pegasus-invoke
-pegasus-kickstart
+# pegasus-kickstart
 pegasus-mpi-cluster
 pegasus-keg
 pegasus-integrity

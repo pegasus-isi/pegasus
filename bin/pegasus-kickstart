@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Always set PEGASUS_HOME based on where the tool was run from
+PEGASUS_HOME=`dirname $0`"/.."
+PEGASUS_HOME=`cd $PEGASUS_HOME && pwd`
+export PEGASUS_HOME
+
+# when running tools from /bin, / becomes a special case
+if [ "$PEGASUS_HOME" = "/" ]; then
+    PEGASUS_HOME=/usr
+    export PEGASUS_HOME
+fi
+
+NVIDIA_DRIVER=$(nvidia-smi | grep Driver | cut -f 3 -d' ' | cut -f 1 -d '.')
+
+if [ -z "$NVIDIA_DRIVER" ]; then
+  $PEGASUS_HOME/bin/pegasus-kickstart-cpu $@
+else
+  $PEGASUS_HOME/bin/pegasus-kickstart-cuda $@
+fi
