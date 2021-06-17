@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+echo "Running local_hierarchy.py"
+export PYTHONPATH=`pegasus-config --python`
+python3 local_hierarchy.py
+
