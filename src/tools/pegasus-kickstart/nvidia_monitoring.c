@@ -26,19 +26,19 @@ nvmlReturn_t update_gpu_stats(gpu_dev_info_struct *device, int monitor_pcie_usag
     
     if (monitor_graphics_procs) {
         result = getGpuGraphicsProcesses(device);
-        if (result != NVML_SUCCESS)
-            return result;
+    //    if (result != NVML_SUCCESS)
+    //        return result;
     }
     
     if (monitor_process_util) {
         result = getGpuProcessUtilization(device);
-        if (result != NVML_SUCCESS)
-            return result;
+    //    if (result != NVML_SUCCESS)
+    //        return result;
     }
 
     result = getGpuComputeProcesses(device);
-    if (result != NVML_SUCCESS)
-        return result;
+    //if (result != NVML_SUCCESS)
+    //    return result;
     
     result = getGpuStatistics(device, monitor_pcie_usage);
     if (result != NVML_SUCCESS)
