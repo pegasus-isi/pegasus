@@ -124,6 +124,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="bin">
           <include name="pegasus-python-wrapper"/>
           <include name="pegasus-db-admin"/>
+          <include name="pegasus-kickstart"/>
       </fileset>
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>

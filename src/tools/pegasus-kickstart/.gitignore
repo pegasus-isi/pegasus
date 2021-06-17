@@ -1,5 +1,7 @@
-pegasus-kickstart
-pegasus-monitor
+pegasus-kickstart-cpu
+pegasus-monitor-cpu
+pegasus-kickstart-cuda
+pegasus-monitor-cuda
 version.h
 depends.mk
 .vagrant
