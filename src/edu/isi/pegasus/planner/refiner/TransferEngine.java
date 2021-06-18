@@ -411,7 +411,7 @@ public class TransferEngine extends Engine {
         // in a top down manner
         // PM-747 no need for conversion as ADag now implements Graph interface
         Graph workflow = mDag;
-        boolean stageOut = ((this.mOutputSites != null) && (!this.mOutputSites.isEmpty()));
+        boolean stageOut = this.mPOptions.doStageOut();
 
         for (Iterator it = workflow.iterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
