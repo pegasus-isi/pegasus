@@ -107,12 +107,12 @@ root_wf = Workflow("root")
 root_wf.add_replica_catalog(rc)
 
 j1 = SubWorkflow("subwf1.yml", _id="subwf1")\
-        .add_planner_args(force=True, verbose=3)\
+        .add_planner_args(verbose=3)\
         .add_inputs(input_file)\
         .add_outputs(k1_out)
 
 j2 = SubWorkflow("subwf2.yml", _id="subwf2")\
-        .add_planner_args(force=True, verbose=3)\
+        .add_planner_args(verbose=3)\
         .add_inputs(k1_out)\
         .add_outputs(k2_out)
 
