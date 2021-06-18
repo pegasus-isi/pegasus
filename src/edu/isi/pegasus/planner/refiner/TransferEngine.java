@@ -473,11 +473,14 @@ public class TransferEngine extends Engine {
                 }
                 mTXRefiner.addStageOutXFERNodes(
                         currentJob, transfersToOutputSites, rcb, localTransfer);
-            } else {
-                // create the cache file always
-                // Pegasus Bug PM-32 and PM-356
-                trackInCaches(currentJob);
             }
+
+            // PM-1765 even if staging outputs, locations for generated
+            // output files are tracked in this one function below uniformly
+
+            // create the cache file always
+            // Pegasus Bug PM-32 and PM-356
+            trackInCaches(currentJob);
         }
 
         // we are done with the traversal.
@@ -785,11 +788,6 @@ public class TransferEngine extends Engine {
                 this.getURLOnSharedScratch(stagingSite, job, OPERATION.get, addOn, lfn);
         String sharedScratchPutURL =
                 this.getURLOnSharedScratch(stagingSite, job, OPERATION.put, addOn, lfn);
-
-        // in the planner cache we track the output files put url on staging site
-        trackInPlannerCache(lfn, sharedScratchPutURL, stagingSiteHandle);
-        // in the workflow cache we track the output files get url on staging site
-        trackInWorkflowCache(lfn, sharedScratchGetURL, stagingSiteHandle);
 
         // if both transfer and registration
         // are transient return null
