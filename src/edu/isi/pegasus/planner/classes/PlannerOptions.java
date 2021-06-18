@@ -426,6 +426,21 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
+     * A convenience method to indicate if a user has specified in the planner command line whether
+     * stage out of outputs needs to be done or not.
+     *
+     * @return boolean
+     */
+    public boolean doStageOut() {
+        return ((this.mOutputSites != null) && (!this.mOutputSites.isEmpty()))
+                // output dir specified
+                || this.getOutputDirectory() != null
+                // PM-1765 we should trigger stageout even if output sites
+                // are not specified
+                || this.getOutputMap() != null;
+    }
+
+    /**
      * Returns whether to generate a random directory or not.
      *
      * @return boolean
