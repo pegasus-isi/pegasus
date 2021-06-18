@@ -524,7 +524,7 @@ class SubWorkflow(AbstractJob):
         job_prefix: Optional[str] = None,
         cluster: Optional[List[str]] = None,
         sites: Optional[List[str]] = None,
-        output_sites: List[str] = ["local"],
+        output_sites: Optional[List[str]] = None,
         staging_sites: Optional[Dict[str, str]] = None,
         cache: Optional[List[Union[str, Path]]] = None,
         input_dirs: Optional[List[Union[str, Path]]] = None,
@@ -534,7 +534,7 @@ class SubWorkflow(AbstractJob):
         random_dir: Union[bool, str, Path] = False,
         relative_submit_dir: Optional[Union[str, Path]] = None,
         inherited_rc_files: Optional[List[Union[str, Path]]] = None,
-        cleanup: str = "inplace",
+        cleanup: Optional[str] = None,
         reuse: Optional[List[Union[str, Path]]] = None,
         verbose: int = 0,
         quiet: int = 0,
@@ -546,7 +546,7 @@ class SubWorkflow(AbstractJob):
         **kwargs
     ):
         """
-        add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **kwargs)
+        add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: Optional[List[str]] = None, staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: Optional[str] = None, reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **kwargs)
         Add pegasus-planner arguments. This function can only be used when 
         :code:`is_planned=False` is set in :py:class:`~Pegasus.api.workflow.SubWorkflow` and
         may only be invoked once. 
@@ -561,8 +561,8 @@ class SubWorkflow(AbstractJob):
         :type cluster: Optional[List[str]]
         :param sites: list of execution sites on which to map the workflow, defaults to None
         :type sites: Optional[List[str]]
-        :param output_sites: the output sites where the data products during workflow execution are transferred to, defaults to :code:`["local"]`
-        :type output_sites: List[str]
+        :param output_sites: the output sites where the data products during workflow execution are transferred to, defaults to None
+        :type output_sites: Optional[List[str]]
         :param staging_sites: key, value pairs of execution site to staging site mappings such as :code:`{"condorpool": "staging-site"}`, defaults to None
         :type staging_sites: Optional[Dict[str,str]]
         :param cache: comma separated list of replica cache files, defaults to None
@@ -581,8 +581,8 @@ class SubWorkflow(AbstractJob):
         :type relative_submit_dir: Optional[Union[str, Path]]
         :param inherited_rc_files: comma separated list of replica files, defaults to None
         :type inherited_rc_files: Optional[List[Union[str, Path]]]
-        :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
-        :type cleanup: str, optional
+        :param cleanup: the cleanup strategy to use. Can be a :code:`str` :code:`none|inplace|leaf|constraint`, defaults to None (internally, pegasus-plan will use the default :code:`inplace` if :code:`None` is given)
+        :type cleanup: Optional[str]
         :param reuse: list of submit directories of previous runs from which to pick up for reuse (e.g. :code:`["/workflows/submit_dir1", "/workflows/submit_dir2"]`), defaults to None
         :type reuse: Optional[List[Union[str,Path]]]
         :param verbose: verbosity, defaults to 0
