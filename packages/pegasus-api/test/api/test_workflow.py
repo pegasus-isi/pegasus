@@ -558,7 +558,7 @@ class TestSubWorkflow:
     @pytest.mark.parametrize(
         "kwargs, expected_args_list",
         [
-            ({}, ["--output-sites", "local", "--cleanup", "inplace",]),
+            ({}, []),
             (
                 {
                     "conf": "conf",
