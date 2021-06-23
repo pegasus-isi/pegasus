@@ -32,6 +32,9 @@ public interface Refiner
         extends edu.isi.pegasus.planner.refiner
                 .Refiner { // need to extend it for the PASOA integration
 
+    /** The version number associated with this API */
+    public static final String VERSION = "1.3";
+
     /** The prefix for all local transfer jobs. */
     public static final String LOCAL_PREFIX = "local_";
 
@@ -131,18 +134,20 @@ public interface Refiner
             boolean deletedLeaf);
 
     /**
-     * Adds the stage in transfer nodes which transfer the input files for a job, from the location
-     * returned from the replica catalog to the job's execution pool.
+     * Adds the stage in transfer nodes which transfer the input localFileTransfers for a job, from
+     * the location returned from the replica catalog to the job's execution pool.
      *
-     * @param job <code>Job</code> object corresponding to the node to which the files are to be
-     *     transferred to.
-     * @param files Collection of <code>FileTransfer</code> objects containing the information about
-     *     source and destURL's.
-     * @param symLinkFiles Collection of <code>FileTransfer</code> objects containing source and
-     *     destination file url's for symbolic linking on compute site.
+     * @param job <code>Job</code> object corresponding to the node to which the localFileTransfers
+     *     are to be transferred to.
+     * @param localFileTransfers Collection of <code>FileTransfer</code> objects containing the
+     *     information about source and destURL's.
+     * @param remoteFileTransfers Collection of <code>FileTransfer</code> objects containing source
+     *     and destination file url's including those used for symbolic linking on compute site.
      */
     public void addStageInXFERNodes(
-            Job job, Collection<FileTransfer> files, Collection<FileTransfer> symLinkFiles);
+            Job job,
+            Collection<FileTransfer> localFileTransfers,
+            Collection<FileTransfer> remoteFileTransfers);
 
     /**
      * Signals that the traversal of the workflow is done. This would allow the transfer mechanisms

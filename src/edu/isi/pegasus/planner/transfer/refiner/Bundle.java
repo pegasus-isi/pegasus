@@ -255,23 +255,25 @@ public class Bundle extends Basic {
     }
 
     /**
-     * Adds the stage in transfer nodes which transfer the input files for a job, from the location
-     * returned from the replica catalog to the job's execution pool.
+     * Adds the stage in transfer nodes which transfer the input localFileTransfers for a job, from
+     * the location returned from the replica catalog to the job's execution pool.
      *
-     * @param job <code>Job</code> object corresponding to the node to which the files are to be
-     *     transferred to.
-     * @param files Collection of <code>FileTransfer</code> objects containing the information about
-     *     source and destURL's.
-     * @param symlinkFiles Collection of <code>FileTransfer</code> objects containing source and
-     *     destination file url's for symbolic linking on compute site.
+     * @param job <code>Job</code> object corresponding to the node to which the localFileTransfers
+     *     are to be transferred to.
+     * @param localFileTransfers Collection of <code>FileTransfer</code> objects containing the
+     *     information about source and destURL's.
+     * @param remoteFileTransfers Collection of <code>FileTransfer</code> objects containing source
+     *     and destination file url's including those used for symbolic linking on compute site.
      */
     public void addStageInXFERNodes(
-            Job job, Collection<FileTransfer> files, Collection<FileTransfer> symlinkFiles) {
+            Job job,
+            Collection<FileTransfer> localFileTransfers,
+            Collection<FileTransfer> remoteFileTransfers) {
 
         addStageInXFERNodes(
                 job,
                 true,
-                files,
+                localFileTransfers,
                 Job.STAGE_IN_JOB,
                 this.mStageInLocalMap,
                 this.mStageinLocalBundleValue,
@@ -280,7 +282,7 @@ public class Bundle extends Basic {
         addStageInXFERNodes(
                 job,
                 false,
-                symlinkFiles,
+                remoteFileTransfers,
                 Job.STAGE_IN_JOB,
                 this.mStageInRemoteMap,
                 this.mStageInRemoteBundleValue,
@@ -304,7 +306,7 @@ public class Bundle extends Basic {
     public void addStageInXFERNodes(
             Job job,
             boolean localTransfer,
-            Collection files,
+            Collection<FileTransfer> files,
             int type,
             Map<String, PoolTransfer> stageInMap,
             BundleValue bundleValue,

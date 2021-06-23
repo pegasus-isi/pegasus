@@ -92,28 +92,30 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
     }
 
     /**
-     * Adds the stage in transfer nodes which transfer the input files for a job, from the location
-     * returned from the replica catalog to the job's execution pool.
+     * Adds the stage in transfer nodes which transfer the input localFileTransfers for a job, from
+     * the location returned from the replica catalog to the job's execution pool.
      *
-     * @param job <code>Job</code> object corresponding to the node to which the files are to be
-     *     transferred to.
-     * @param files Collection of <code>FileTransfer</code> objects containing the information about
-     *     source and destURL's.
-     * @param symlinkFiles Collection of <code>FileTransfer</code> objects containing source and
-     *     destination file url's for symbolic linking on compute site.
+     * @param job <code>Job</code> object corresponding to the node to which the localFileTransfers
+     *     are to be transferred to.
+     * @param localFileTransfers Collection of <code>FileTransfer</code> objects containing the
+     *     information about source and destURL's.
+     * @param remoteFileTransfers Collection of <code>FileTransfer</code> objects containing source
+     *     and destination file url's including those used for symbolic linking on compute site.
      */
     public void addStageInXFERNodes(
-            Job job, Collection<FileTransfer> files, Collection<FileTransfer> symlinkFiles) {
+            Job job,
+            Collection<FileTransfer> localFileTransfers,
+            Collection<FileTransfer> remoteFileTransfers) {
 
         addStageInXFERNodes(
                 job,
-                files,
+                localFileTransfers,
                 Refiner.STAGE_IN_PREFIX + Refiner.LOCAL_PREFIX,
                 this.mTXStageInImplementation);
 
         addStageInXFERNodes(
                 job,
-                symlinkFiles,
+                remoteFileTransfers,
                 Refiner.STAGE_IN_PREFIX + Refiner.REMOTE_PREFIX,
                 this.mTXSymbolicLinkImplementation);
     }
