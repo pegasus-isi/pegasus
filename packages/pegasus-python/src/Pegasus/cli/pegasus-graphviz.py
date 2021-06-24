@@ -59,8 +59,8 @@ class DAG:
 
 
 class Node:
-    def __init__(self):
-        self.id = None
+    def __init__(self, _id=None):
+        self.id = _id
         self.label = None
         self.level = 0
         self.parents = []
@@ -76,6 +76,12 @@ class Node:
 
     def __repr__(self):
         return "({}, {})".format(self.id, self.label)
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 class Job(Node):
@@ -482,8 +488,10 @@ def transitivereduction(dag):
 
             w.mark += 1
 
-            if w in v.closure:
-                # If it is already in the closure, then it is not needed
+            if isinstance(w, Job) and isinstance(v, Job) and w in v.closure:
+                # If w is a Job, v is a Job, and w is in the closure, then it is not needed.
+                # The above condition prevents us from removing edges from file -> job as those
+                # edges should always be visible.
                 sys.stderr.write("Removing {} -> {}\n".format(v.label, w.label))
             else:
                 v.closure = v.closure.union(w.closure)

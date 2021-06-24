@@ -66,9 +66,9 @@ USER scitech
 
 WORKDIR /home/scitech
 
-# Set up config for ensemble manager
+# Set up config for ensemble manager and service
 RUN mkdir /home/scitech/.pegasus \
-    && echo -e "#!/usr/bin/env python3\nUSERNAME='scitech'\nPASSWORD='scitech123'\n" >> /home/scitech/.pegasus/service.py \
+    && echo -e "#!/usr/bin/env python3\nUSERNAME='scitech'\nPASSWORD='scitech123'\nAUTHENTICATION='NoAuthentication'\nSERVER_HOST='0.0.0.0'\n" >> /home/scitech/.pegasus/service.py \
     && chmod u+x /home/scitech/.pegasus/service.py
 
 # Set up pegasus database
@@ -85,4 +85,5 @@ RUN mkdir /home/scitech/.jupyter \
 # wrapdocker required for nested docker containers
 ENTRYPOINT ["sudo", "/usr/local/bin/wrapdocker"]
 CMD ["su", "-", "scitech", "-c", "jupyter notebook --notebook-dir=/home/scitech/notebooks --port=8888 --no-browser --ip=0.0.0.0 --allow-root"] 
+CMD ["su", "-", "scitech", "-c", "pegasus-service --host 0.0.0.0"] 
 
