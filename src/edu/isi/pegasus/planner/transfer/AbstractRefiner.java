@@ -103,18 +103,20 @@ public abstract class AbstractRefiner implements Refiner {
      * passed onto legacy implementations. Refiners that want to distinguish between symlink and
      * stagein jobs should over ride this method.
      *
-     * @param job <code>Job</code> object corresponding to the node to which the files are to be
-     *     transferred to.
-     * @param files Collection of <code>FileTransfer</code> objects containing the information about
-     *     source and destURL's.
-     * @param symlinkFiles Collection of <code>FileTransfer</code> objects containing source and
-     *     destination file url's for symbolic linking on compute site.
+     * @param job <code>Job</code> object corresponding to the node to which the localFileTransfers
+     *     are to be transferred to.
+     * @param localFileTransfers Collection of <code>FileTransfer</code> objects containing the
+     *     information about source and destURL's.
+     * @param remoteFileTransfers Collection of <code>FileTransfer</code> objects containing source
+     *     and destination file url's including those used for symbolic linking on compute site.
      */
     public void addStageInXFERNodes(
-            Job job, Collection<FileTransfer> files, Collection<FileTransfer> symlinkFiles) {
+            Job job,
+            Collection<FileTransfer> localFileTransfers,
+            Collection<FileTransfer> remoteFileTransfers) {
 
-        files.addAll(symlinkFiles);
-        addStageInXFERNodes(job, files);
+        localFileTransfers.addAll(remoteFileTransfers);
+        addStageInXFERNodes(job, localFileTransfers);
     }
 
     /**
