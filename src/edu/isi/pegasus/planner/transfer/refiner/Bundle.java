@@ -475,7 +475,7 @@ public class Bundle extends Basic {
      */
     public void addStageOutXFERNodes(
             Job job,
-            Collection files,
+            Collection<FileTransfer> files,
             ReplicaCatalogBridge rcb,
             boolean localTransfer,
             boolean deletedLeaf) {

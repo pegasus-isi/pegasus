@@ -425,20 +425,27 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
     }
 
     /**
-     * Adds the stageout transfer nodes, that stage data to an output site specified by the user.
+     * Adds the stage-out transfer nodes, that stage data to an output site specified by the user.
+     * Stage-out jobs can be added to run locally to manage the local FileTransfers or remotely on
+     * the staging site for remoteFileTransfers.
      *
      * @param job <code>Job</code> object corresponding to the node to which the files are to be
      *     transferred to.
-     * @param files Collection of <code>FileTransfer</code> objects containing the information about
-     *     source and destURL's.
+     * @param localFileTransfers Collection of <code>FileTransfer</code> objects containing the
+     *     information about source and destURL's that need to be managed from the submit host.
+     *     These are the transfers managed in third party mode on the submit note
+     * @param remoteFileTransfers Collection of <code>FileTransfer</code> objects containing source
+     *     and destination file url's that need to be handled remotely.
      * @param rcb bridge to the Replica Catalog. Used for creating registration nodes in the
      *     workflow.
-     * @param localTransfer boolean indicating that associated transfer job will run on local site.
      */
     public void addStageOutXFERNodes(
-            Job job, Collection files, ReplicaCatalogBridge rcb, boolean localTransfer) {
-
-        this.addStageOutXFERNodes(job, files, rcb, localTransfer, false);
+            Job job,
+            Collection<FileTransfer> localFileTransfers,
+            Collection<FileTransfer> remoteFileTransfers,
+            ReplicaCatalogBridge rcb) {
+        this.addStageOutXFERNodes(job, localFileTransfers, rcb, true, false);
+        this.addStageOutXFERNodes(job, remoteFileTransfers, rcb, false, false);
     }
 
     /**
@@ -456,7 +463,7 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
      */
     public void addStageOutXFERNodes(
             Job job,
-            Collection files,
+            Collection<FileTransfer> files,
             ReplicaCatalogBridge rcb,
             boolean localTransfer,
             boolean deletedLeaf) {
