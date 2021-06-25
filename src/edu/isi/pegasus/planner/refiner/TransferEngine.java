@@ -778,7 +778,7 @@ public class TransferEngine extends Engine {
      * @param path the path that a user specifies in the profile for key remote_initialdir that
      *     results in the workdir being changed for a job on a execution pool.
      * @return NameValue tuple that associates a boolean indicating whether transfer has to run on
-     *     submit site for the corresponding FileTransfer object
+     *     submit site for the corresponding FileTransfer object.
      */
     private NameValue<Boolean, FileTransfer> constructFileTX(
             PegasusFile pf,
@@ -924,9 +924,12 @@ public class TransferEngine extends Engine {
         String stagingSiteHandle = job.getStagingSiteHandle();
         String lfn = pf.getLFN();
         FileTransfer ft = null;
-        Collection[] result = new Collection[2];
-        Collection<FileTransfer> localTransfers = new LinkedList();
-        Collection<FileTransfer> remoteTransfers = new LinkedList();
+        Collection<FileTransfer>[] result = new Collection[2];
+        result[0] = new LinkedList(); // local transfers
+        result[1] = new LinkedList(); // remote transfers
+        // variables for code readability
+        Collection<FileTransfer> localTransfers = result[0];
+        Collection<FileTransfer> remoteTransfers = result[1];
 
         // List<FileTransfer> result = new LinkedList<FileTransfer>();
         SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
@@ -994,6 +997,8 @@ public class TransferEngine extends Engine {
             }
         }
 
+        // reassign back to account for a new linked list that might have been
+        // created during the function
         result[0] = localTransfers;
         result[1] = remoteTransfers;
         return result;
