@@ -35,8 +35,6 @@ import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.mapper.OutputMapper;
-import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
@@ -136,12 +134,6 @@ public class TransferEngine extends Engine {
     private ReplicaCatalog mWorkflowCache;
 
     /**
-     * Handle to an OutputMapper that tells where to place the files on the output sites. this
-     * output mapper is the one configured by the user via properties
-     */
-    private OutputMapper mOutputMapper;
-
-    /**
      * Handle to an Staging Mapper that tells where to place the files on the shared scratch space
      * on the staging site.
      */
@@ -231,8 +223,6 @@ public class TransferEngine extends Engine {
         mStageOutFileTransferGenerator = new StageOut();
         mStageOutFileTransferGenerator.initalize(reducedDag, bag, mTXRefiner);
 
-        mOutputMapper = OutputMapperFactory.loadInstance(reducedDag, bag);
-
         mWorkflowCache = this.initializeWorkflowCacheFile(reducedDag);
 
         // log some configuration messages
@@ -247,9 +237,6 @@ public class TransferEngine extends Engine {
                 LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log(
                 "Staging Mapper loaded is             [" + mStagingMapper.description() + "]",
-                LogManager.CONFIG_MESSAGE_LEVEL);
-        mLogger.log(
-                "Output Mapper loaded is              [" + mOutputMapper.description() + "]",
                 LogManager.CONFIG_MESSAGE_LEVEL);
     }
 
