@@ -32,7 +32,6 @@ import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -41,7 +40,6 @@ import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
-import edu.isi.pegasus.planner.mapper.output.Replica;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
@@ -143,7 +141,6 @@ public class TransferEngine extends Engine {
      */
     private OutputMapper mOutputMapper;
 
-
     /**
      * Handle to an Staging Mapper that tells where to place the files on the shared scratch space
      * on the staging site.
@@ -182,12 +179,12 @@ public class TransferEngine extends Engine {
 
     /** Whether to do any integrity checking or not. */
     protected boolean mDoIntegrityChecking;
-    
+
     /**
-     * The stage-out generator that generates the File Transfer pairs required to place outputs
-     * of a job to the various user defined locations
+     * The stage-out generator that generates the File Transfer pairs required to place outputs of a
+     * job to the various user defined locations
      */
-    protected StageOut mStageOutFileTransferGenerator; 
+    protected StageOut mStageOutFileTransferGenerator;
 
     /**
      * Overloaded constructor.
@@ -233,7 +230,7 @@ public class TransferEngine extends Engine {
         mOutputSites = (Set<String>) mPOptions.getOutputSites();
         mStageOutFileTransferGenerator = new StageOut();
         mStageOutFileTransferGenerator.initalize(reducedDag, bag, mTXRefiner);
-        
+
         mOutputMapper = OutputMapperFactory.loadInstance(reducedDag, bag);
 
         mWorkflowCache = this.initializeWorkflowCacheFile(reducedDag);
@@ -436,7 +433,7 @@ public class TransferEngine extends Engine {
                 Collection<FileTransfer> remoteTransfersToOutputSites = new LinkedList();
                 Set<String> outputSites = new HashSet();
                 outputSites.addAll(this.mOutputSites);
-                
+
                 if (this.mPOptions.getOutputMap() != null) {
                     // PM-1608 special null site notation to indicate that mapper should return
                     // locations of files without matching on site name
@@ -486,7 +483,9 @@ public class TransferEngine extends Engine {
                 // directly to the output sites
                 Collection<FileTransfer> deletedFileTransfers = new LinkedList();
                 for (String outputSite : this.mOutputSites) {
-                    deletedFileTransfers.addAll(this.mStageOutFileTransferGenerator.getDeletedFileTX(mRCBridge, mReplicaSelector, currentJob, outputSite));
+                    deletedFileTransfers.addAll(
+                            this.mStageOutFileTransferGenerator.getDeletedFileTX(
+                                    mRCBridge, mReplicaSelector, currentJob, outputSite));
                 }
                 if (!deletedFileTransfers.isEmpty()) {
                     // the job is deleted anyways. The files exist somewhere
@@ -522,7 +521,6 @@ public class TransferEngine extends Engine {
         return job.getStagingSiteHandle();
     }
 
-    
     /**
      * It processes a nodes parents and determines if nodes are to be added or not. All the input
      * files for the job are searched in the output files of the parent nodes and the Replica
@@ -584,7 +582,6 @@ public class TransferEngine extends Engine {
         }
     }
 
-    
     /**
      * This generates a error message for pool not found in the pool config file.
      *

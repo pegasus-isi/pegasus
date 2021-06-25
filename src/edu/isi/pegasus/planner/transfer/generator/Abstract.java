@@ -30,14 +30,14 @@ import java.io.File;
 
 /**
  * An Abstract Abstract class Class
- * 
+ *
  * @author vahi
  */
 public abstract class Abstract {
-    
-     /** The object holding all the properties pertaining to Pegasus. */
+
+    /** The object holding all the properties pertaining to Pegasus. */
     protected PegasusProperties mProps;
-    
+
     /** The handle to the parsed Site Catalog */
     protected SiteStore mSiteStore;
 
@@ -60,51 +60,49 @@ public abstract class Abstract {
 
     /** The bag of initialization objects */
     protected PegasusBag mBag;
-   
+
     /** The dial for integrity checking */
     protected PegasusProperties.INTEGRITY_DIAL mIntegrityDial;
 
     /** Whether to do any integrity checking or not. */
     protected boolean mDoIntegrityChecking;
-    
-     /** A boolean to track whether condor file io is used for the workflow or not. */
+
+    /** A boolean to track whether condor file io is used for the workflow or not. */
     // private final boolean mSetupForCondorIO;
     protected PegasusConfiguration mPegasusConfiguration;
-    
+
     /**
      * Handle to an Staging Mapper that tells where to place the files on the shared scratch space
      * on the staging site.
      */
     protected StagingMapper mStagingMapper;
-    
+
     /** The handle to the transfer refiner that adds the transfer nodes into the workflow. */
     protected Refiner mTXRefiner;
-    
-    public Abstract(){
-        
-    }
-    
+
+    public Abstract() {}
+
     /**
-     * Initializes the File Generator for transfers. 
-     * 
-     * @param dag    the workflow so far. 
-     * @param bag    bag of initialization objects 
+     * Initializes the File Generator for transfers.
+     *
+     * @param dag the workflow so far.
+     * @param bag bag of initialization objects
      * @param transferRefiner the transfer refiner being used
      */
-    protected void initalize(ADag dag, PegasusBag bag, Refiner transferRefiner){
+    protected void initalize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();
         mPOptions = bag.getPlannerOptions();
         mSiteStore = bag.getHandleToSiteStore();
         mPegasusConfiguration = new PegasusConfiguration(bag.getLogger());
         mStagingMapper = bag.getStagingMapper();
-        
+
         // PM-1375 we check if we need to do any integriy checking or not
         mIntegrityDial = mProps.getIntegrityDial();
         mDoIntegrityChecking = mProps.doIntegrityChecking();
         mTXRefiner = transferRefiner;
     }
-    
+
     /**
      * Returns whether to run a transfer job on local site or not.
      *
@@ -146,7 +144,7 @@ public abstract class Abstract {
 
         return result;
     }
-    
+
     /**
      * Returns a URL on the shared scratch of the staging site
      *
@@ -164,8 +162,7 @@ public abstract class Abstract {
             String lfn) {
         return mStagingMapper.map(job, addOn, entry, operation, lfn);
     }
-    
-    
+
     /**
      * This generates a error message for pool not found in the pool config file.
      *
@@ -182,7 +179,7 @@ public abstract class Abstract {
                         + "\n found in the pool configuration file ";
         return st;
     }
-    
+
     /**
      * Complains for head node url prefix not specified
      *
