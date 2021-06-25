@@ -727,11 +727,13 @@ public class TransferEngine extends Engine {
                 // construct file transfer to output site
                 NameValue<Boolean, FileTransfer> transfer =
                         this.constructFileTX(pf, job, destSiteHandle, path);
-                boolean localTransfer = transfer.getKey();
-                if (localTransfer) {
-                    result[0].add(transfer.getValue());
-                } else {
-                    result[1].add(transfer.getValue());
+                if (transfer != null) {
+                    boolean localTransfer = transfer.getKey();
+                    if (localTransfer) {
+                        result[0].add(transfer.getValue());
+                    } else {
+                        result[1].add(transfer.getValue());
+                    }
                 }
             }
 
@@ -778,7 +780,8 @@ public class TransferEngine extends Engine {
      * @param path the path that a user specifies in the profile for key remote_initialdir that
      *     results in the workdir being changed for a job on a execution pool.
      * @return NameValue tuple that associates a boolean indicating whether transfer has to run on
-     *     submit site for the corresponding FileTransfer object.
+     *     submit site for the corresponding FileTransfer object. A null return indicates no
+     *     FileTransfer object needed to be created
      */
     private NameValue<Boolean, FileTransfer> constructFileTX(
             PegasusFile pf,
@@ -813,6 +816,7 @@ public class TransferEngine extends Engine {
         // if both transfer and registration
         // are transient return null
         if (pf.getTransientRegFlag() && pf.getTransientTransferFlag()) {
+            // an output file has both register and stageOut flags to false
             return null;
         }
 
