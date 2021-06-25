@@ -353,7 +353,7 @@ public class TransferEngine extends Engine {
      * Returns whether to run a transfer job on local site or not.
      *
      * @param site the site entry associated with the destination URL.
-     * @param destPutURL the destination URL
+     * @param destinationURL the destination URL
      * @param type the type of transfer job for which the URL is being constructed.
      * @return true indicating if the associated transfer job should run on local site or not.
      */

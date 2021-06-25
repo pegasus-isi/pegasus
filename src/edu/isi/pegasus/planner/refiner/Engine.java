@@ -208,6 +208,7 @@ public abstract class Engine {
      *
      * @param refiner the name of the refiner
      * @param site the site handle
+     * @param operation the file server operation
      * @throws RuntimeException when URL Prefix cannot be determined for various reason.
      */
     protected void complainForHeadNodeURLPrefix(
