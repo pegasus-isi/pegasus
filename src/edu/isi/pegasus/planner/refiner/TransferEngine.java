@@ -49,6 +49,7 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
 import edu.isi.pegasus.planner.transfer.Refiner;
+import edu.isi.pegasus.planner.transfer.generator.StageOut;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 import java.io.File;
 import java.io.IOException;
@@ -174,20 +175,26 @@ public class TransferEngine extends Engine {
     // private boolean mWorkerNodeExecution;
 
     /** A boolean indicating whether to bypass first level staging for inputs */
-    private boolean mBypassStagingForInputs;
+    protected boolean mBypassStagingForInputs;
 
     /** A boolean to track whether condor file io is used for the workflow or not. */
     // private final boolean mSetupForCondorIO;
-    private PegasusConfiguration mPegasusConfiguration;
+    protected PegasusConfiguration mPegasusConfiguration;
 
     /** The output site where files need to be staged to. */
-    private final Set<String> mOutputSites;
+    protected final Set<String> mOutputSites;
 
     /** The dial for integrity checking */
     protected PegasusProperties.INTEGRITY_DIAL mIntegrityDial;
 
     /** Whether to do any integrity checking or not. */
     protected boolean mDoIntegrityChecking;
+    
+    /**
+     * The stage-out generator that generates the File Transfer pairs required to place outputs
+     * of a job to the various user defined locations
+     */
+    protected StageOut mStageOutFileTransferGenerator; 
 
     /**
      * Overloaded constructor.
@@ -231,6 +238,9 @@ public class TransferEngine extends Engine {
         }
 
         mOutputSites = (Set<String>) mPOptions.getOutputSites();
+        mStageOutFileTransferGenerator = new StageOut();
+        mStageOutFileTransferGenerator.initalize(reducedDag, bag, mTXRefiner);
+        
         mOutputMapper = OutputMapperFactory.loadInstance(reducedDag, bag);
 
         // PM-1608 load a mapper if required
@@ -450,7 +460,7 @@ public class TransferEngine extends Engine {
                 }
                 for (String outputSite : outputSites) {
                     Collection<FileTransfer>[] fileTransfers =
-                            this.getFileTX(outputSite, currentJob);
+                            mStageOutFileTransferGenerator.getFileTX(currentJob, outputSite);
                     localTransfersToOutputSites.addAll(fileTransfers[0]);
                     remoteTransfersToOutputSites.addAll(fileTransfers[1]);
                 }
@@ -492,7 +502,7 @@ public class TransferEngine extends Engine {
                 // directly to the output sites
                 Collection<FileTransfer> deletedFileTransfers = new LinkedList();
                 for (String outputSite : this.mOutputSites) {
-                    deletedFileTransfers.addAll(getDeletedFileTX(outputSite, currentJob));
+                    deletedFileTransfers.addAll(this.mStageOutFileTransferGenerator.getDeletedFileTX(mRCBridge, mReplicaSelector, currentJob, outputSite));
                 }
                 if (!deletedFileTransfers.isEmpty()) {
                     // the job is deleted anyways. The files exist somewhere
@@ -528,89 +538,7 @@ public class TransferEngine extends Engine {
         return job.getStagingSiteHandle();
     }
 
-    /**
-     * This gets the file transfer objects corresponding to the location of files found in the
-     * replica mechanism, and transfers it to the output pool asked by the user. If the output pool
-     * path and the one returned by the replica mechanism match then that object is not transferred.
-     *
-     * @param destSite this the output pool which the user specifies at runtime.
-     * @param job The Job object corresponding to the leaf job which was deleted by the Reduction
-     *     algorithm
-     * @return Collection of <code>FileTransfer</code> objects
-     */
-    private Collection<FileTransfer> getDeletedFileTX(String destSite, Job job) {
-        Collection<FileTransfer> fileTransfers = new LinkedList();
-        SiteCatalogEntry outputSite = mSiteStore.lookup(destSite);
-        for (Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ) {
-            PegasusFile pf = (PegasusFile) it.next();
-            String lfn = pf.getLFN();
-
-            // PM-739 all output files for deleted jobs should have their
-            // cleanup flag set to false. these output files are not
-            // generated during the workflow, but are retrieved from a
-            // location specified in the replica catalog.
-            pf.setForCleanup(false);
-
-            // we only have to get a deleted file that user wants to be transferred
-            if (pf.getTransientTransferFlag()) {
-                continue;
-            }
-
-            ReplicaLocation rl = mRCBridge.getFileLocs(lfn);
-            // sanity check
-            if (rl == null) {
-                throw new RuntimeException(
-                        "Unable to find a physical filename (PFN) in the Replica Catalog for output file with logical filename (LFN) as "
-                                + lfn);
-            }
-
-            String putDestURL =
-                    mOutputMapper.map(lfn, destSite, FileServer.OPERATION.put).getValue();
-            String getDestURL =
-                    mOutputMapper.map(lfn, destSite, FileServer.OPERATION.get).getValue();
-
-            // selLocs are all the locations found in ReplicaMechanism corr
-            // to the pool pool
-            ReplicaLocation selLocs =
-                    mReplicaSelector.selectAndOrderReplicas(
-                            rl,
-                            destSite,
-                            this.runTransferOnLocalSite(outputSite, putDestURL, Job.STAGE_OUT_JOB));
-
-            boolean flag = false;
-
-            FileTransfer ft = null;
-            // checking through all the pfn's returned on the pool
-            for (Iterator selIt = selLocs.pfnIterator(); selIt.hasNext(); ) {
-                ReplicaCatalogEntry selLoc = (ReplicaCatalogEntry) selIt.next();
-                String sourceURL = selLoc.getPFN();
-
-                // check if the URL's match
-                if (new PegasusURL(sourceURL).equals(new PegasusURL(putDestURL))) {
-                    String msg =
-                            "The leaf file " + lfn + " is already at the output site " + destSite;
-                    mLogger.log(msg, LogManager.INFO_MESSAGE_LEVEL);
-                    flag = true;
-                    break;
-                }
-
-                ft = new FileTransfer(lfn, job.getName());
-                ft.addSource(selLoc.getResourceHandle(), sourceURL);
-                ft.addDestination(destSite, putDestURL);
-                ft.setURLForRegistrationOnDestination(getDestURL);
-                ft.setSize(pf.getSize());
-                ft.setForCleanup(false); // PM-739
-
-                // System.out.println("Deleted Leaf Job File transfer object " + ft);
-
-            }
-            if (!flag) { //  adding the last pfn
-                fileTransfers.add(ft);
-            }
-        }
-        return fileTransfers;
-    }
-
+    
     /**
      * It processes a nodes parents and determines if nodes are to be added or not. All the input
      * files for the job are searched in the output files of the parent nodes and the Replica
@@ -672,358 +600,7 @@ public class TransferEngine extends Engine {
         }
     }
 
-    /**
-     * This gets the Vector of FileTransfer objects for the files which have to be transferred to an
-     * one destination pool. It checks for the transient flags for files. If the transfer transient
-     * flag is set, it means the file does not have to be transferred to the destination pool.
-     *
-     * @param destSiteHandle The pool to which the files are to be transferred to.
-     * @param job The <code>Job</code>object of the job whose output files are needed at the
-     *     destination pool.
-     * @param localTransfer boolean indicating that associated transfer job will run on local site.
-     * @return array of Collection of <code>FileTransfer</code> objects, with the first Collection
-     *     referring to transfers that need to happen on submit node, and the second Collection
-     *     referring to transfers that need to happen on destination node
-     */
-    private Collection<FileTransfer>[] getFileTX(
-            String destSiteHandle, Job job /*, boolean localTransfer*/) {
-        Collection<FileTransfer>[] result = new Collection[2];
-        result[0] = new LinkedList(); // local transfers
-        result[1] = new LinkedList(); // remote transfers
-
-        // sanity check on staging site once per job
-        SiteCatalogEntry stagingSite = mSiteStore.lookup(job.getStagingSiteHandle());
-        if (stagingSite == null) {
-            mLogMsg = this.poolNotFoundMsg(job.getSiteHandle(), "vanilla");
-            mLogger.log(mLogMsg, LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException(mLogMsg);
-        }
-
-        // PM-590 Stricter checks
-        String stagingSiteURLPrefix =
-                stagingSite.selectHeadNodeScratchSharedFileServerURLPrefix(
-                        FileServer.OPERATION.put);
-        if (stagingSiteURLPrefix == null) {
-            this.complainForHeadNodeURLPrefix(
-                    REFINER_NAME, stagingSite.getSiteHandle(), FileServer.OPERATION.put, job);
-        }
-
-        // check if there is a remote initialdir set
-        String path = job.vdsNS.getStringValue(Pegasus.REMOTE_INITIALDIR_KEY);
-
-        for (Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ) {
-            PegasusFile pf = (PegasusFile) it.next();
-            if (destSiteHandle == null) {
-                // PM-1608 construct file transfers to parent workflow scratch
-                // directories
-                // specified via --output-map option . can return multiple locations
-                // from the output map file
-                result = this.constructFileTXToParentWFScratchDirs(pf, job, path);
-            } else {
-                // construct file transfer to output site
-                NameValue<Boolean, FileTransfer> transfer =
-                        this.constructFileTX(pf, job, destSiteHandle, path);
-                if (transfer != null) {
-                    boolean localTransfer = transfer.getKey();
-                    if (localTransfer) {
-                        result[0].add(transfer.getValue());
-                    } else {
-                        result[1].add(transfer.getValue());
-                    }
-                }
-            }
-
-            Collection<FileTransfer> fts = new LinkedList();
-            // add all local and remote file transfers to a temp collection to be updated once
-            fts.addAll(result[0]);
-            fts.addAll(result[1]);
-
-            for (FileTransfer ft : fts) {
-                if (this.mDoIntegrityChecking
-                        && this.mPegasusConfiguration.jobSetupForWorkerNodeExecution(job)) {
-                    // PM-1252 for files generated in the workflow , the checksum will be
-                    // computed
-                    // in the PegasusLite invocation
-                    ft.setChecksumComputedInWF(true);
-
-                    // PM-1254 disable for time being for checkpoint files
-                    if (ft.isCheckpointFile()) {
-                        ft.setChecksumComputedInWF(false);
-                    }
-
-                    // PM-1608 disable integrity checking for files that transferred out of a
-                    // sub workflow as we don't transfer any meta files from the sub workflow
-                    if (job instanceof DAXJob) {
-                        ft.setChecksumComputedInWF(false);
-                    }
-                }
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Constructs the FileTransfer object on the basis of the transiency information. If the
-     * transient flag for transfer is set, the destPutURL for the FileTransfer object would be the
-     * execution directory, as this is the entry that has to be registered in the ReplicaMechanism
-     *
-     * @param pf the PegasusFile for which the transfer has to be done.
-     * @param job the name of the associated job.
-     * @param destSiteHandle the output pool where the job should be transferred
-     * @param path the path that a user specifies in the profile for key remote_initialdir that
-     *     results in the workdir being changed for a job on a execution pool.
-     * @return NameValue tuple that associates a boolean indicating whether transfer has to run on
-     *     submit site for the corresponding FileTransfer object. A null return indicates no
-     *     FileTransfer object needed to be created
-     */
-    private NameValue<Boolean, FileTransfer> constructFileTX(
-            PegasusFile pf,
-            Job job,
-            String destSiteHandle,
-            String path /*, boolean localTransfer*/) {
-
-        String stagingSiteHandle = job.getStagingSiteHandle();
-        String lfn = pf.getLFN();
-        FileTransfer ft = null;
-
-        SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
-        SiteCatalogEntry destinationSite = mSiteStore.lookup(destSiteHandle);
-        if (stagingSite == null || destinationSite == null) {
-            mLogMsg =
-                    (stagingSite == null)
-                            ? this.poolNotFoundMsg(stagingSiteHandle, "vanilla")
-                            : this.poolNotFoundMsg(destSiteHandle, "vanilla");
-            mLogger.log(mLogMsg, LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException(mLogMsg);
-        }
-
-        // PM-833 figure out the addOn component just once per lfn
-        File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSite, lfn);
-
-        // the get
-        String sharedScratchGetURL =
-                this.getURLOnSharedScratch(stagingSite, job, OPERATION.get, addOn, lfn);
-        String sharedScratchPutURL =
-                this.getURLOnSharedScratch(stagingSite, job, OPERATION.put, addOn, lfn);
-
-        // if both transfer and registration
-        // are transient return null
-        if (pf.getTransientRegFlag() && pf.getTransientTransferFlag()) {
-            // an output file has both register and stageOut flags to false
-            return null;
-        }
-
-        // if only transient transfer flag
-        // means destPutURL and sourceURL
-        // are same and are equal to
-        // execution directory on stagingSiteHandle
-        if (pf.getTransientTransferFlag()) {
-            // need to support this, as user may still opt for the file to be
-            // registered in the replica catalog.
-            ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
-            // set the transfer mode
-            ft.setSize(pf.getSize());
-            ft.setTransferFlag(pf.getTransferFlag());
-            ft.addSource(stagingSiteHandle, sharedScratchGetURL);
-            ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
-            ft.setURLForRegistrationOnDestination(sharedScratchGetURL);
-            ft.setMetadata(pf.getAllMetadata());
-            ft.setType(pf.getType());
-            return new NameValue<>(true, ft);
-        }
-        // the source dir is the exec dir
-        // on exec pool and dest dir
-        // would be on the output pool
-        // else {
-        ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
-        ft.setSize(pf.getSize());
-        // set the transfer mode
-        ft.setTransferFlag(pf.getTransferFlag());
-
-        /* PM-1779 not supported in new 5.0 schema. so removing code
-        ft.addSource(stagingSiteHandle, sourceURL);
-
-        // if the PegasusFile is already an instance of
-        // FileTransfer the user has specified the destination
-        // that they want to use in the DAX 3.0
-        if (pf instanceof FileTransfer) {
-            // not really supported in DAX 3.3?
-            ft.addDestination( ((FileTransfer) pf).removeDestURL() );
-            return ft;
-        }
-        */
-
-        ft.setMetadata(pf.getAllMetadata());
-        ft.setType(pf.getType());
-
-        boolean localTransfer = true;
-        for (NameValue<String, String> nv :
-                this.mOutputMapper.mapAll(lfn, destSiteHandle, OPERATION.put)) {
-            String destURL = nv.getValue();
-            localTransfer =
-                    this.runTransferOnLocalSite(destinationSite, destURL, Job.STAGE_OUT_JOB);
-            // construct the source url depending on whether third party tx
-            String sourceURL = sharedScratchGetURL;
-            if (!localTransfer) {
-                // job will be run remotely. So pick file URL path
-                sourceURL =
-                        constructFileURLToStagingSiteDirectory(stagingSiteHandle, path, addOn, lfn);
-            }
-            ft.addSource(stagingSiteHandle, sourceURL);
-
-            // if the paths match of dest URI
-            // and execDirURL we return null
-            if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
-                /*ft = new FileTransfer(file, job);
-                ft.addSource(stagingSiteHandle, sharedScratchGetURL);*/
-                ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
-                ft.setURLForRegistrationOnDestination(sharedScratchGetURL);
-                // make the transfer transient?
-                ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
-                return new NameValue<Boolean, FileTransfer>(localTransfer, ft);
-            }
-            ft.addDestination(destSiteHandle, destURL);
-        }
-
-        // construct a registration URL
-        ft.setURLForRegistrationOnDestination(
-                mOutputMapper.map(lfn, destSiteHandle, FileServer.OPERATION.get, true).getValue());
-
-        if (job instanceof DAXJob) {
-            // PM-1608 if the dax job itself wants to transfer the output
-            // then we log the put URL of the shared scratch in the output map
-            // so that when sub workflow runs, it can put the file to the source
-            // location required for this file transfer
-            FileTransfer scratchPutFT = new FileTransfer();
-            scratchPutFT.setLFN(lfn);
-            scratchPutFT.addDestination(stagingSiteHandle, sharedScratchPutURL);
-            ((DAXJob) job).addOutputFileLocation(mBag, scratchPutFT);
-        }
-        // }
-
-        return new NameValue<>(localTransfer, ft);
-    }
-
-    /**
-     * Constructs the FileTransfer to transfer outputs to enclosing parent workflow scratch
-     * directory, if the file is found in the corresponding output map file.
-     *
-     * @param pf the PegasusFile for which the transfer has to be done.
-     * @param job the name of the associated job.
-     * @param path the path that a user specifies in the profile for key remote_initialdir that
-     *     results in the workdir being changed for a job on a execution pool.
-     * @return array of Collection of <code>FileTransfer</code> objects, with the first Collection
-     *     referring to transfers that need to happen on submit node, and the second Collection
-     *     referring to transfers that need to happen on destination node
-     */
-    private Collection<FileTransfer>[] constructFileTXToParentWFScratchDirs(
-            PegasusFile pf, Job job, String path /*, boolean localTransfer*/) {
-        String stagingSiteHandle = job.getStagingSiteHandle();
-        String lfn = pf.getLFN();
-        FileTransfer ft = null;
-        Collection<FileTransfer>[] result = new Collection[2];
-        result[0] = new LinkedList(); // local transfers
-        result[1] = new LinkedList(); // remote transfers
-        // variables for code readability
-        Collection<FileTransfer> localTransfers = result[0];
-        Collection<FileTransfer> remoteTransfers = result[1];
-
-        // List<FileTransfer> result = new LinkedList<FileTransfer>();
-        SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
-        if (stagingSite == null) {
-            mLogMsg = this.poolNotFoundMsg(stagingSiteHandle, "vanilla");
-            mLogger.log(mLogMsg, LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException(mLogMsg);
-        }
-
-        // PM-833 figure out the addOn component just once per lfn
-        File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSite, lfn);
-
-        // the get
-        String sharedScratchGetURL =
-                this.getURLOnSharedScratch(stagingSite, job, OPERATION.get, addOn, lfn);
-
-        List<NameValue<String, String>> nvs =
-                this.mParentScratchOutputMapper.mapAll(lfn, null, OPERATION.put);
-        if (nvs == null) {
-            return result;
-        }
-        for (NameValue<String, String> nv : nvs) {
-            ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
-            // we are only transferring outputs to the scratch dir of parent workflow
-            // without registering them ever
-            ft.setTransferFlag(true);
-            ft.setRegisterFlag(false);
-            ft.setMetadata(pf.getAllMetadata());
-            ft.setType(pf.getType());
-            String destSiteHandle = nv.getKey();
-            String destURL = nv.getValue();
-            SiteCatalogEntry destinationSite = mSiteStore.lookup(destSiteHandle);
-            if (destinationSite == null) {
-                mLogger.log(
-                        this.poolNotFoundMsg(destSiteHandle, "vanilla"),
-                        LogManager.ERROR_MESSAGE_LEVEL);
-                throw new RuntimeException(mLogMsg);
-            }
-            boolean localTransfer =
-                    this.runTransferOnLocalSite(destinationSite, destURL, Job.STAGE_OUT_JOB);
-
-            // construct the source url depending on whether third party tx
-            String sourceURL = sharedScratchGetURL;
-            if (!localTransfer) {
-                // job will be run remotely. So pick file URL path
-                sourceURL =
-                        constructFileURLToStagingSiteDirectory(stagingSiteHandle, path, addOn, lfn);
-            }
-            ft.addSource(stagingSiteHandle, sourceURL);
-
-            // if the paths match of dest URI
-            // and execDirURL we return null
-            if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
-                ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
-                ft.setURLForRegistrationOnDestination(sharedScratchGetURL);
-                // make the transfer transient?
-                ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
-            } else {
-                ft.addDestination(destSiteHandle, destURL);
-            }
-            if (localTransfer) {
-                localTransfers.add(ft);
-            } else {
-                remoteTransfers.add(ft);
-            }
-        }
-
-        // reassign back to account for a new linked list that might have been
-        // created during the function
-        result[0] = localTransfers;
-        result[1] = remoteTransfers;
-        return result;
-    }
-
-    /**
-     * A convenience method to create a file URL to a file in scratch directory on the staging site
-     *
-     * @param stagingSiteHandle the staging site handle
-     * @param path the scratch dir path to the root directory for the workflow
-     * @param addOn the lfn specific addon
-     * @param lfn the lfn itself
-     * @return a file url constructed from these
-     */
-    private String constructFileURLToStagingSiteDirectory(
-            String stagingSiteHandle, String path, File addOn, String lfn) {
-        // job will be run remotely. So pick file URL path
-        StringBuilder url = new StringBuilder();
-        url.append("file://")
-                .append(mSiteStore.getInternalWorkDirectory(stagingSiteHandle, path))
-                .append(File.separator)
-                .append(addOn)
-                .append(File.separator)
-                .append(lfn);
-        return url.toString();
-    }
-
+    
     /**
      * This generates a error message for pool not found in the pool config file.
      *
