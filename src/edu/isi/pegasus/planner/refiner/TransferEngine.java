@@ -439,27 +439,6 @@ public class TransferEngine extends Engine {
             // transfer the nodes output files
             // to the output sites
             if (stageOut) {
-                SiteCatalogEntry stagingSite = mSiteStore.lookup(currentJob.getStagingSiteHandle());
-                if (stagingSite == null) {
-                    mLogMsg = this.poolNotFoundMsg(currentJob.getSiteHandle(), "vanilla");
-                    mLogger.log(mLogMsg, LogManager.ERROR_MESSAGE_LEVEL);
-                    throw new RuntimeException(mLogMsg);
-                }
-
-                // PM-590 Stricter checks
-                String stagingSiteURLPrefix =
-                        stagingSite.selectHeadNodeScratchSharedFileServerURLPrefix(
-                                FileServer.OPERATION.put);
-                if (stagingSiteURLPrefix == null) {
-                    this.complainForHeadNodeURLPrefix(
-                            REFINER_NAME,
-                            stagingSite.getSiteHandle(),
-                            FileServer.OPERATION.put,
-                            currentJob);
-                }
-                boolean localTransfer =
-                        runTransferOnLocalSite(
-                                stagingSite, stagingSiteURLPrefix, Job.STAGE_OUT_JOB);
                 Collection<FileTransfer> localTransfersToOutputSites = new LinkedList();
                 Collection<FileTransfer> remoteTransfersToOutputSites = new LinkedList();
                 Set<String> outputSites = new HashSet();
@@ -711,6 +690,23 @@ public class TransferEngine extends Engine {
         Collection<FileTransfer>[] result = new Collection[2];
         result[0] = new LinkedList(); // local transfers
         result[1] = new LinkedList(); // remote transfers
+
+        // sanity check on staging site once per job
+        SiteCatalogEntry stagingSite = mSiteStore.lookup(job.getStagingSiteHandle());
+        if (stagingSite == null) {
+            mLogMsg = this.poolNotFoundMsg(job.getSiteHandle(), "vanilla");
+            mLogger.log(mLogMsg, LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException(mLogMsg);
+        }
+
+        // PM-590 Stricter checks
+        String stagingSiteURLPrefix =
+                stagingSite.selectHeadNodeScratchSharedFileServerURLPrefix(
+                        FileServer.OPERATION.put);
+        if (stagingSiteURLPrefix == null) {
+            this.complainForHeadNodeURLPrefix(
+                    REFINER_NAME, stagingSite.getSiteHandle(), FileServer.OPERATION.put, job);
+        }
 
         // check if there is a remote initialdir set
         String path = job.vdsNS.getStringValue(Pegasus.REMOTE_INITIALDIR_KEY);
