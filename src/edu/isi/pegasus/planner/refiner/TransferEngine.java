@@ -143,13 +143,6 @@ public class TransferEngine extends Engine {
      */
     private OutputMapper mOutputMapper;
 
-    /**
-     * Handle to an OutputMapper that tells where to place the files on the scratch file system for
-     * compute jobs in the parent workflow (the workflow in which there is a DAX job that triggers
-     * the execution of the workflow currently planned as part of the pre script) This output mapper
-     * is the one set on the command line by Pegasus in case of hierarchal workflows.
-     */
-    private OutputMapper mParentScratchOutputMapper;
 
     /**
      * Handle to an Staging Mapper that tells where to place the files on the shared scratch space
@@ -243,9 +236,6 @@ public class TransferEngine extends Engine {
         
         mOutputMapper = OutputMapperFactory.loadInstance(reducedDag, bag);
 
-        // PM-1608 load a mapper if required
-        mParentScratchOutputMapper = getParentWFScratchMapper(reducedDag, bag);
-
         mWorkflowCache = this.initializeWorkflowCacheFile(reducedDag);
 
         // log some configuration messages
@@ -264,13 +254,6 @@ public class TransferEngine extends Engine {
         mLogger.log(
                 "Output Mapper loaded is              [" + mOutputMapper.description() + "]",
                 LogManager.CONFIG_MESSAGE_LEVEL);
-        if (mParentScratchOutputMapper != null) {
-            mLogger.log(
-                    "Output Scratch Mapper loaded is      ["
-                            + mParentScratchOutputMapper.description()
-                            + "]",
-                    LogManager.CONFIG_MESSAGE_LEVEL);
-        }
     }
 
     /**
@@ -453,7 +436,8 @@ public class TransferEngine extends Engine {
                 Collection<FileTransfer> remoteTransfersToOutputSites = new LinkedList();
                 Set<String> outputSites = new HashSet();
                 outputSites.addAll(this.mOutputSites);
-                if (this.mParentScratchOutputMapper != null) {
+                
+                if (this.mPOptions.getOutputMap() != null) {
                     // PM-1608 special null site notation to indicate that mapper should return
                     // locations of files without matching on site name
                     outputSites.add(null);
@@ -1878,41 +1862,6 @@ public class TransferEngine extends Engine {
                     .append(localSiteFileRCEs);
         }
         throw new RuntimeException(error.toString());
-    }
-
-    /**
-     * Returns an output mapper responsible for transferring some outputs to the scratch file system
-     * of the enclosing parent workflow.
-     *
-     * @param dag
-     * @param bag
-     * @return
-     */
-    private OutputMapper getParentWFScratchMapper(ADag dag, PegasusBag bag) {
-        PlannerOptions options = bag.getPlannerOptions();
-        String mapFile = options.getOutputMap();
-        if (mapFile == null) {
-            return null;
-        }
-
-        // PM-1608 always load a replica based output mapper corresponding to this file
-        PegasusProperties props = PegasusProperties.nonSingletonInstance();
-        String key = OutputMapperFactory.PROPERTY_KEY;
-        props.setProperty(key, "Replica");
-        // output map file is a file based rc
-        key += ".replica";
-        props.setProperty(key, "File");
-        // set path to output mapper
-        props.setProperty(key + ".file", mapFile);
-        // disable execption thrown by mapper
-        props.setProperty(key + "." + Replica.DISABLE_EXCEPTIONS_KEY, "true");
-
-        PegasusBag b = new PegasusBag();
-        b.add(PegasusBag.PLANNER_OPTIONS, options);
-        b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
-        b.add(PegasusBag.PEGASUS_PROPERTIES, props);
-
-        return OutputMapperFactory.loadInstance(dag, b);
     }
 
     /**
