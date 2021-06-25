@@ -457,9 +457,7 @@ public class TransferEngine extends Engine {
                             FileServer.OPERATION.put,
                             currentJob);
                 }
-                boolean localTransfer =
-                        runTransferOnLocalSite(
-                                stagingSite, stagingSiteURLPrefix, Job.STAGE_OUT_JOB);
+                
                 Collection<FileTransfer> localTransfersToOutputSites = new LinkedList();
                 Collection<FileTransfer> remoteTransfersToOutputSites = new LinkedList();
                 Set<String> outputSites = new HashSet();
