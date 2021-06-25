@@ -156,7 +156,9 @@ def configure_dashboard(app):
     from Pegasus.service.dashboard import blueprint
 
     if "PEGASUS_SERVICE_URL_PREFIX" in os.environ:
-        app.register_blueprint(blueprint, url_prefix=os.environ["PEGASUS_SERVICE_URL_PREFIX"])
+        app.register_blueprint(
+            blueprint, url_prefix=os.environ["PEGASUS_SERVICE_URL_PREFIX"]
+        )
     else:
         app.register_blueprint(blueprint)
 
