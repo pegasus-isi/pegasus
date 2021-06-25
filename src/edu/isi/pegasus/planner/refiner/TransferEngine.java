@@ -743,24 +743,22 @@ public class TransferEngine extends Engine {
             fts.addAll(result[1]);
 
             for (FileTransfer ft : fts) {
-                if (ft != null) {
-                    if (this.mDoIntegrityChecking
-                            && this.mPegasusConfiguration.jobSetupForWorkerNodeExecution(job)) {
-                        // PM-1252 for files generated in the workflow , the checksum will be
-                        // computed
-                        // in the PegasusLite invocation
-                        ft.setChecksumComputedInWF(true);
+                if (this.mDoIntegrityChecking
+                        && this.mPegasusConfiguration.jobSetupForWorkerNodeExecution(job)) {
+                    // PM-1252 for files generated in the workflow , the checksum will be
+                    // computed
+                    // in the PegasusLite invocation
+                    ft.setChecksumComputedInWF(true);
 
-                        // PM-1254 disable for time being for checkpoint files
-                        if (ft.isCheckpointFile()) {
-                            ft.setChecksumComputedInWF(false);
-                        }
+                    // PM-1254 disable for time being for checkpoint files
+                    if (ft.isCheckpointFile()) {
+                        ft.setChecksumComputedInWF(false);
+                    }
 
-                        // PM-1608 disable integrity checking for files that transferred out of a
-                        // sub workflow as we don't transfer any meta files from the sub workflow
-                        if (job instanceof DAXJob) {
-                            ft.setChecksumComputedInWF(false);
-                        }
+                    // PM-1608 disable integrity checking for files that transferred out of a
+                    // sub workflow as we don't transfer any meta files from the sub workflow
+                    if (job instanceof DAXJob) {
+                        ft.setChecksumComputedInWF(false);
                     }
                 }
             }
