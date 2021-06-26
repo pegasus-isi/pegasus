@@ -39,28 +39,28 @@ public class JobPlacer {
     }
 
     /**
-     * Returns whether to run a transfer job on local destinationSite or not.
+     * Returns whether to run a transfer job on local site or on the staging site.
      *
-     * @param destinationSite the destinationSite entry associated with the destination URL.
-     * @param destinationURL the destination URL
+     * @param stagingSite the stagingSite entry associated with the destination URL.
+     * @param stagingSiteURL the destination URL
      * @param type the type of transfer job for which the URL is being constructed.
-     * @return true indicating if the associated transfer job should run on local destinationSite or
+     * @return true indicating if the associated transfer job should run on local stagingSite or
      *     not.
      */
     public boolean runTransferOnLocalSite(
-            SiteCatalogEntry destinationSite, String destinationURL, int type) {
+            SiteCatalogEntry stagingSite, String stagingSiteURL, int type) {
         // check if user has specified any preference in config
         boolean result = true;
-        String siteHandle = destinationSite.getSiteHandle();
+        String siteHandle = stagingSite.getSiteHandle();
 
-        // short cut for local destinationSite
+        // short cut for local stagingSite
         if (siteHandle.equals("local")) {
-            // transfer to run on local destinationSite
+            // transfer to run on local stagingSite
             return result;
         }
 
-        // PM-1024 check if the filesystem on destinationSite visible to the local destinationSite
-        if (destinationSite.isVisibleToLocalSite()) {
+        // PM-1024 check if the filesystem on stagingSite visible to the local stagingSite
+        if (stagingSite.isVisibleToLocalSite()) {
             return true;
         }
 
@@ -74,8 +74,8 @@ public class JobPlacer {
             // always use user preference
             return !result;
         }
-        // check to see if destination URL is a file url
-        else if (destinationURL != null && destinationURL.startsWith(PegasusURL.FILE_URL_SCHEME)) {
+        // check to see if staging site URL is a file url
+        else if (stagingSiteURL != null && stagingSiteURL.startsWith(PegasusURL.FILE_URL_SCHEME)) {
             result = false;
         }
 

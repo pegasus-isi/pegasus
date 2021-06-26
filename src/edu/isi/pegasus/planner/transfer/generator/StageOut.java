@@ -412,7 +412,7 @@ public class StageOut extends Abstract {
             String destURL = nv.getValue();
             localTransfer =
                     mTransferJobPlacer.runTransferOnLocalSite(
-                            destinationSite, destURL, Job.STAGE_OUT_JOB);
+                            stagingSite, sharedScratchGetURL, Job.STAGE_OUT_JOB);
             // construct the source url depending on whether third party tx
             String sourceURL = sharedScratchGetURL;
             if (!localTransfer) {
@@ -510,6 +510,7 @@ public class StageOut extends Abstract {
             ft.setType(pf.getType());
             String destSiteHandle = nv.getKey();
             String destURL = nv.getValue();
+            /*
             SiteCatalogEntry destinationSite = mSiteStore.lookup(destSiteHandle);
             if (destinationSite == null) {
                 mLogger.log(
@@ -517,9 +518,10 @@ public class StageOut extends Abstract {
                         LogManager.ERROR_MESSAGE_LEVEL);
                 throw new RuntimeException(mLogMsg);
             }
+            */
             boolean localTransfer =
                     mTransferJobPlacer.runTransferOnLocalSite(
-                            destinationSite, destURL, Job.STAGE_OUT_JOB);
+                            stagingSite, sharedScratchGetURL, Job.STAGE_OUT_JOB);
 
             // construct the source url depending on whether third party tx
             String sourceURL = sharedScratchGetURL;

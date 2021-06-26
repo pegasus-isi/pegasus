@@ -1557,35 +1557,6 @@ public class TransferEngine extends Engine {
             String lfn) {
         return mStagingMapper.map(job, addOn, entry, operation, lfn);
     }
-    /**
-     * Returns a URL on the shared scratch of the staging site
-     *
-     * @param entry the SiteCatalogEntry for the associated stagingsite
-     * @param job the job
-     * @param operation the FileServer operation for which we need the URL
-     * @param lfn the LFN can be null to get the path to the directory
-     * @return the URL
-     */
-    private String getURLOnSharedScratchOriginal(
-            SiteCatalogEntry entry, Job job, FileServer.OPERATION operation, String lfn) {
-
-        StringBuffer url = new StringBuffer();
-
-        FileServer getServer = entry.selectHeadNodeScratchSharedFileServer(operation);
-
-        if (getServer == null) {
-            this.complainForScratchFileServer(job, operation, entry.getSiteHandle());
-        }
-
-        url.append(getServer.getURLPrefix())
-                .append(mSiteStore.getExternalWorkDirectory(getServer, entry.getSiteHandle()));
-
-        if (lfn != null) {
-            url.append(File.separatorChar).append(lfn);
-        }
-
-        return url.toString();
-    }
 
     /**
      * Complains for a missing head node file server on a site for a job
