@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
+import edu.isi.pegasus.planner.transfer.JobPlacer;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.generator.StageOut;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
@@ -173,6 +174,12 @@ public class TransferEngine extends Engine {
     protected boolean mDoIntegrityChecking;
 
     /**
+     * Handle to the placer that determines whether a file transfer needs to be handled locally or
+     * remotely on the staging site.
+     */
+    protected JobPlacer mTransferJobPlacer;
+
+    /**
      * The stage-out generator that generates the File Transfer pairs required to place outputs of a
      * job to the various user defined locations
      */
@@ -213,6 +220,7 @@ public class TransferEngine extends Engine {
 
         try {
             mTXRefiner = RefinerFactory.loadInstance(reducedDag, bag);
+            mTransferJobPlacer = new JobPlacer(mTXRefiner);
             mReplicaSelector = ReplicaSelectorFactory.loadInstance(mProps);
         } catch (Exception e) {
             // wrap all the exceptions into a factory exception
@@ -324,48 +332,6 @@ public class TransferEngine extends Engine {
             }
         }
         return remove;
-    }
-
-    /**
-     * Returns whether to run a transfer job on local site or not.
-     *
-     * @param site the site entry associated with the destination URL.
-     * @param destinationURL the destination URL
-     * @param type the type of transfer job for which the URL is being constructed.
-     * @return true indicating if the associated transfer job should run on local site or not.
-     */
-    public boolean runTransferOnLocalSite(SiteCatalogEntry site, String destinationURL, int type) {
-        // check if user has specified any preference in config
-        boolean result = true;
-        String siteHandle = site.getSiteHandle();
-
-        // short cut for local site
-        if (siteHandle.equals("local")) {
-            // transfer to run on local site
-            return result;
-        }
-
-        // PM-1024 check if the filesystem on site visible to the local site
-        if (site.isVisibleToLocalSite()) {
-            return true;
-        }
-
-        if (mTXRefiner.refinerPreferenceForTransferJobLocation()) {
-            // refiner is advertising a preference for where transfer job
-            // should be run. Use that.
-            return mTXRefiner.refinerPreferenceForLocalTransferJobs(type);
-        }
-
-        if (mTXRefiner.runTransferRemotely(siteHandle, type)) {
-            // always use user preference
-            return !result;
-        }
-        // check to see if destination URL is a file url
-        else if (destinationURL != null && destinationURL.startsWith(PegasusURL.FILE_URL_SCHEME)) {
-            result = false;
-        }
-
-        return result;
     }
 
     /**
@@ -664,7 +630,7 @@ public class TransferEngine extends Engine {
                     // definite inconsitency as url prefix and mount point
                     // are not picked up from the same server
                     boolean localTransfer =
-                            runTransferOnLocalSite(
+                            mTransferJobPlacer.runTransferOnLocalSite(
                                     destSite, thirdPartyDestPutURL, Job.INTER_POOL_JOB);
                     String destURL =
                             localTransfer
@@ -986,7 +952,8 @@ public class TransferEngine extends Engine {
 
             // check if the execution pool is third party or not
             boolean runTransferOnLocalSite =
-                    runTransferOnLocalSite(stagingSite, destPutURL, Job.STAGE_IN_JOB);
+                    mTransferJobPlacer.runTransferOnLocalSite(
+                            stagingSite, destPutURL, Job.STAGE_IN_JOB);
             String destDir =
                     (runTransferOnLocalSite)
                             ?
@@ -1012,7 +979,8 @@ public class TransferEngine extends Engine {
                 }
 
                 destPutURL =
-                        (runTransferOnLocalSite(stagingSite, destPutURL, Job.STAGE_IN_JOB))
+                        (mTransferJobPlacer.runTransferOnLocalSite(
+                                        stagingSite, destPutURL, Job.STAGE_IN_JOB))
                                 ?
                                 // the destination URL is already third party
                                 // enabled. use as it is

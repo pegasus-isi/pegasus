@@ -14,7 +14,6 @@
 package edu.isi.pegasus.planner.transfer.generator;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -25,6 +24,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
+import edu.isi.pegasus.planner.transfer.JobPlacer;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import java.io.File;
 
@@ -80,6 +80,12 @@ public abstract class Abstract {
     /** The handle to the transfer refiner that adds the transfer nodes into the workflow. */
     protected Refiner mTXRefiner;
 
+    /**
+     * Handle to the placer that determines whether a file transfer needs to be handled locally or
+     * remotely on the staging site.
+     */
+    protected JobPlacer mTransferJobPlacer;
+
     public Abstract() {}
 
     /**
@@ -101,48 +107,7 @@ public abstract class Abstract {
         mIntegrityDial = mProps.getIntegrityDial();
         mDoIntegrityChecking = mProps.doIntegrityChecking();
         mTXRefiner = transferRefiner;
-    }
-
-    /**
-     * Returns whether to run a transfer job on local site or not.
-     *
-     * @param site the site entry associated with the destination URL.
-     * @param destinationURL the destination URL
-     * @param type the type of transfer job for which the URL is being constructed.
-     * @return true indicating if the associated transfer job should run on local site or not.
-     */
-    public boolean runTransferOnLocalSite(SiteCatalogEntry site, String destinationURL, int type) {
-        // check if user has specified any preference in config
-        boolean result = true;
-        String siteHandle = site.getSiteHandle();
-
-        // short cut for local site
-        if (siteHandle.equals("local")) {
-            // transfer to run on local site
-            return result;
-        }
-
-        // PM-1024 check if the filesystem on site visible to the local site
-        if (site.isVisibleToLocalSite()) {
-            return true;
-        }
-
-        if (mTXRefiner.refinerPreferenceForTransferJobLocation()) {
-            // refiner is advertising a preference for where transfer job
-            // should be run. Use that.
-            return mTXRefiner.refinerPreferenceForLocalTransferJobs(type);
-        }
-
-        if (mTXRefiner.runTransferRemotely(siteHandle, type)) {
-            // always use user preference
-            return !result;
-        }
-        // check to see if destination URL is a file url
-        else if (destinationURL != null && destinationURL.startsWith(PegasusURL.FILE_URL_SCHEME)) {
-            result = false;
-        }
-
-        return result;
+        mTransferJobPlacer = new JobPlacer(transferRefiner);
     }
 
     /**

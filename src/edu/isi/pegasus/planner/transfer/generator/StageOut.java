@@ -37,7 +37,6 @@ import edu.isi.pegasus.planner.mapper.output.Replica;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
-import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import java.io.File;
 import java.util.Collection;
@@ -71,9 +70,6 @@ public class StageOut extends Abstract {
      */
     private OutputMapper mParentScratchOutputMapper;
 
-    /** The handle to the replica selector that is to used to select the various replicas. */
-    private ReplicaSelector mReplicaSelector;
-
     public StageOut() {}
 
     /**
@@ -86,7 +82,6 @@ public class StageOut extends Abstract {
     public void initalize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
         super.initalize(dag, bag, transferRefiner);
         mOutputMapper = OutputMapperFactory.loadInstance(dag, bag);
-        mReplicaSelector = ReplicaSelectorFactory.loadInstance(mProps);
 
         // PM-1608 load a mapper if required
         mParentScratchOutputMapper = getParentWFScratchMapper(dag, bag);
@@ -189,7 +184,8 @@ public class StageOut extends Abstract {
                     replicaSelector.selectAndOrderReplicas(
                             rl,
                             destSite,
-                            this.runTransferOnLocalSite(outputSite, putDestURL, Job.STAGE_OUT_JOB));
+                            mTransferJobPlacer.runTransferOnLocalSite(
+                                    outputSite, putDestURL, Job.STAGE_OUT_JOB));
 
             boolean flag = false;
 
@@ -415,7 +411,8 @@ public class StageOut extends Abstract {
                 this.mOutputMapper.mapAll(lfn, destSiteHandle, FileServerType.OPERATION.put)) {
             String destURL = nv.getValue();
             localTransfer =
-                    this.runTransferOnLocalSite(destinationSite, destURL, Job.STAGE_OUT_JOB);
+                    mTransferJobPlacer.runTransferOnLocalSite(
+                            destinationSite, destURL, Job.STAGE_OUT_JOB);
             // construct the source url depending on whether third party tx
             String sourceURL = sharedScratchGetURL;
             if (!localTransfer) {
@@ -521,7 +518,8 @@ public class StageOut extends Abstract {
                 throw new RuntimeException(mLogMsg);
             }
             boolean localTransfer =
-                    this.runTransferOnLocalSite(destinationSite, destURL, Job.STAGE_OUT_JOB);
+                    mTransferJobPlacer.runTransferOnLocalSite(
+                            destinationSite, destURL, Job.STAGE_OUT_JOB);
 
             // construct the source url depending on whether third party tx
             String sourceURL = sharedScratchGetURL;
