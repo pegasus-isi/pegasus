@@ -113,7 +113,7 @@ public abstract class Abstract {
     /**
      * Returns a URL on the shared scratch of the staging site
      *
-     * @param entry the SiteCatalogEntry for the associated stagingsite
+     * @param entry the SiteCatalogEntry for the associated staging site
      * @param job the job
      * @param operation the FileServer operation for which we need the URL
      * @param lfn the LFN can be null to get the path to the directory
@@ -129,19 +129,19 @@ public abstract class Abstract {
     }
 
     /**
-     * This generates a error message for pool not found in the pool config file.
+     * This generates a error message for site not found in the site catalog file.
      *
-     * @param poolName the name of pool that is not found.
+     * @param siteName the name of site that is not found.
      * @param universe the condor universe
      * @return the message.
      */
-    protected String poolNotFoundMsg(String poolName, String universe) {
+    protected String siteNotFoundMsg(String siteName, String universe) {
         String st =
-                "Error: No matching entry to pool = "
-                        + poolName
+                "Error: No matching entry to site = "
+                        + siteName
                         + " ,universe = "
                         + universe
-                        + "\n found in the pool configuration file ";
+                        + "\n found in the Site Catalog ";
         return st;
     }
 

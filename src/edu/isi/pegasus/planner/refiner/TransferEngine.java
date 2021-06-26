@@ -394,7 +394,7 @@ public class TransferEngine extends Engine {
                 }
                 for (String outputSite : outputSites) {
                     Collection<FileTransfer>[] fileTransfers =
-                            mStageOutFileTransferGenerator.getFileTX(currentJob, outputSite);
+                            mStageOutFileTransferGenerator.constructFileTX(currentJob, outputSite);
                     localTransfersToOutputSites.addAll(fileTransfers[0]);
                     remoteTransfersToOutputSites.addAll(fileTransfers[1]);
                 }
@@ -437,7 +437,7 @@ public class TransferEngine extends Engine {
                 Collection<FileTransfer> deletedFileTransfers = new LinkedList();
                 for (String outputSite : this.mOutputSites) {
                     deletedFileTransfers.addAll(
-                            this.mStageOutFileTransferGenerator.getDeletedFileTX(
+                            this.mStageOutFileTransferGenerator.constructDeletedFileTX(
                                     mRCBridge, mReplicaSelector, currentJob, outputSite));
                 }
                 if (!deletedFileTransfers.isEmpty()) {

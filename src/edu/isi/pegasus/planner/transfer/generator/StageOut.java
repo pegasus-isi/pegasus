@@ -133,21 +133,22 @@ public class StageOut extends Abstract {
     }
     /**
      * This gets the file transfer objects corresponding to the location of files found in the
-     * replica mechanism, and transfers it to the output pool asked by the user. If the output pool
+     * replica mechanism, and transfers it to the output site asked by the user. If the output site
      * path and the one returned by the replica mechanism match then that object is not transferred.
      *
      * @param rcBridge ReplicaCatalogBridge
      * @param replicaSelector the replica selector
      * @param job The Job object corresponding to the leaf job which was deleted by the Reduction
      *     algorithm
-     * @param destSite this the output pool which the user specifies at runtime.
+     * @param destSite this the output site which the user specifies at runtime.
      * @return Collection of <code>FileTransfer</code> objects
      */
-    public Collection<FileTransfer> getDeletedFileTX(
+    public Collection<FileTransfer> constructDeletedFileTX(
             ReplicaCatalogBridge rcBridge,
             ReplicaSelector replicaSelector,
             Job job,
             String destSite) {
+
         Collection<FileTransfer> fileTransfers = new LinkedList();
         SiteCatalogEntry outputSite = mSiteStore.lookup(destSite);
         for (Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ) {
@@ -179,7 +180,7 @@ public class StageOut extends Abstract {
                     mOutputMapper.map(lfn, destSite, FileServer.OPERATION.get).getValue();
 
             // selLocs are all the locations found in ReplicaMechanism corr
-            // to the pool pool
+            // to the site site
             ReplicaLocation selLocs =
                     replicaSelector.selectAndOrderReplicas(
                             rl,
@@ -190,7 +191,7 @@ public class StageOut extends Abstract {
             boolean flag = false;
 
             FileTransfer ft = null;
-            // checking through all the pfn's returned on the pool
+            // checking through all the pfn's returned on the site
             for (Iterator selIt = selLocs.pfnIterator(); selIt.hasNext(); ) {
                 ReplicaCatalogEntry selLoc = (ReplicaCatalogEntry) selIt.next();
                 String sourceURL = selLoc.getPFN();
@@ -227,13 +228,13 @@ public class StageOut extends Abstract {
      * output site.
      *
      * @param job The <code>Job</code>object of the job whose output files are needed at the
-     *     destination pool.
-     * @param destSiteHandle The pool to which the files are to be transferred to.
+     *     destination site.
+     * @param destSiteHandle The site to which the files are to be transferred to.
      * @return array of Collection of <code>FileTransfer</code> objects, with the first Collection
      *     referring to transfers that need to happen on submit node, and the second Collection
      *     referring to transfers that need to happen on destination node
      */
-    public Collection<FileTransfer>[] getFileTX(Job job, String destSiteHandle) {
+    public Collection<FileTransfer>[] constructFileTX(Job job, String destSiteHandle) {
         Collection<FileTransfer>[] result = new Collection[2];
         result[0] = new LinkedList(); // local transfers
         result[1] = new LinkedList(); // remote transfers
@@ -241,7 +242,7 @@ public class StageOut extends Abstract {
         // sanity check on staging site once per job
         SiteCatalogEntry stagingSite = mSiteStore.lookup(job.getStagingSiteHandle());
         if (stagingSite == null) {
-            mLogMsg = this.poolNotFoundMsg(job.getSiteHandle(), "vanilla");
+            mLogMsg = this.siteNotFoundMsg(job.getSiteHandle(), "vanilla");
             mLogger.log(mLogMsg, LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException(mLogMsg);
         }
@@ -317,18 +318,15 @@ public class StageOut extends Abstract {
      *
      * @param pf the PegasusFile for which the transfer has to be done.
      * @param job the name of the associated job.
-     * @param destSiteHandle the output pool where the job should be transferred
+     * @param destSiteHandle the output site where the job should be transferred
      * @param path the path that a user specifies in the profile for key remote_initialdir that
-     *     results in the workdir being changed for a job on a execution pool.
+     *     results in the workdir being changed for a job on a execution site.
      * @return NameValue tuple that associates a boolean indicating whether transfer has to run on
      *     submit site for the corresponding FileTransfer object. A null return indicates no
      *     FileTransfer object needed to be created
      */
     private NameValue<Boolean, FileTransfer> constructFileTX(
-            PegasusFile pf,
-            Job job,
-            String destSiteHandle,
-            String path /*, boolean localTransfer*/) {
+            PegasusFile pf, Job job, String destSiteHandle, String path) {
 
         String stagingSiteHandle = job.getStagingSiteHandle();
         String lfn = pf.getLFN();
@@ -339,8 +337,8 @@ public class StageOut extends Abstract {
         if (stagingSite == null || destinationSite == null) {
             mLogMsg =
                     (stagingSite == null)
-                            ? this.poolNotFoundMsg(stagingSiteHandle, "vanilla")
-                            : this.poolNotFoundMsg(destSiteHandle, "vanilla");
+                            ? this.siteNotFoundMsg(stagingSiteHandle, "vanilla")
+                            : this.siteNotFoundMsg(destSiteHandle, "vanilla");
             mLogger.log(mLogMsg, LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException(mLogMsg);
         }
@@ -382,8 +380,8 @@ public class StageOut extends Abstract {
             return new NameValue<>(true, ft);
         }
         // the source dir is the exec dir
-        // on exec pool and dest dir
-        // would be on the output pool
+        // on exec site and dest dir
+        // would be on the output site
         // else {
         ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
         ft.setSize(pf.getSize());
@@ -462,13 +460,13 @@ public class StageOut extends Abstract {
      * @param pf the PegasusFile for which the transfer has to be done.
      * @param job the name of the associated job.
      * @param path the path that a user specifies in the profile for key remote_initialdir that
-     *     results in the workdir being changed for a job on a execution pool.
+     *     results in the workdir being changed for a job on a execution site.
      * @return array of Collection of <code>FileTransfer</code> objects, with the first Collection
      *     referring to transfers that need to happen on submit node, and the second Collection
      *     referring to transfers that need to happen on destination node
      */
     private Collection<FileTransfer>[] constructFileTXToParentWFScratchDirs(
-            PegasusFile pf, Job job, String path /*, boolean localTransfer*/) {
+            PegasusFile pf, Job job, String path) {
         String stagingSiteHandle = job.getStagingSiteHandle();
         String lfn = pf.getLFN();
         FileTransfer ft = null;
@@ -482,7 +480,7 @@ public class StageOut extends Abstract {
         // List<FileTransfer> result = new LinkedList<FileTransfer>();
         SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
         if (stagingSite == null) {
-            mLogMsg = this.poolNotFoundMsg(stagingSiteHandle, "vanilla");
+            mLogMsg = this.siteNotFoundMsg(stagingSiteHandle, "vanilla");
             mLogger.log(mLogMsg, LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException(mLogMsg);
         }
@@ -514,7 +512,7 @@ public class StageOut extends Abstract {
             SiteCatalogEntry destinationSite = mSiteStore.lookup(destSiteHandle);
             if (destinationSite == null) {
                 mLogger.log(
-                        this.poolNotFoundMsg(destSiteHandle, "vanilla"),
+                        this.siteNotFoundMsg(destSiteHandle, "vanilla"),
                         LogManager.ERROR_MESSAGE_LEVEL);
                 throw new RuntimeException(mLogMsg);
             }
