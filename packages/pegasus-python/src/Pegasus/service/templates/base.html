@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock %}</title>
-    <link rel="shortcut icon" href="{{ url_for ('static', filename='favicon.ico') }}">
+    <link rel="shortcut icon" href="{{ url_for ('dashboard.static', filename='favicon.ico') }}">
 
     {% block head %}
     <!-- Stylesheets -->
@@ -14,8 +14,8 @@
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/redmond/jquery-ui.css"/>
     <link rel="stylesheet" href="//cdn.datatables.net/plug-ins/f2c75b7247b/integration/jqueryui/dataTables.jqueryui.css"/>
-    <link rel="stylesheet" href="{{ url_for ('static', filename='css/style.css') }}"/>
-    <link rel="stylesheet" href="{{ url_for ('static', filename='css/pe-icon-7-stroke.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for ('dashboard.static', filename='css/style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for ('dashboard.static', filename='css/pe-icon-7-stroke.css') }}"/>
     {% block css_includes %}{% endblock %}
     {% endblock %}
 
@@ -64,7 +64,7 @@ $.fn.tooltip = bootstrapTooltip;
 </script>
 <script type="text/javascript" src="//cdn.datatables.net/1.10.5/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="//cdn.datatables.net/plug-ins/f2c75b7247b/integration/jqueryui/dataTables.jqueryui.js"></script>
-<script type="text/javascript" src="{{ url_for ('static', filename='js/script.js') }}"></script>
+<script type="text/javascript" src="{{ url_for ('dashboard.static', filename='js/script.js') }}"></script>
 {% block javascript_includes %}{% endblock %}
 {% block javascript_init %}{% endblock %}
 </body>
