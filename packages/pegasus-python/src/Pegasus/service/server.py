@@ -4,9 +4,9 @@ import random
 
 import click
 import flask
-from werkzeug.serving import run_simple
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from OpenSSL import crypto
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from werkzeug.serving import run_simple
 
 from Pegasus.service import cache
 from Pegasus.service._encoder import PegasusJsonEncoder
@@ -65,9 +65,13 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
     if debug:
         app.config.update(DEBUG=True)
         logging.getLogger().setLevel(logging.DEBUG)
-    
+
     if "PEGASUS_SERVICE_URL_PREFIX" in os.environ:
-        logging.info("Using non-standard URL prefix: {}".format(os.environ["PEGASUS_SERVICE_URL_PREFIX"]))
+        logging.info(
+            "Using non-standard URL prefix: {}".format(
+                os.environ["PEGASUS_SERVICE_URL_PREFIX"]
+            )
+        )
         app.config["APPLICATION_ROOT"] = os.environ["PEGASUS_SERVICE_URL_PREFIX"]
 
     pegasusdir = os.path.expanduser("~/.pegasus")
@@ -87,10 +91,17 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
         log.warning("Service not running as root: Will not be able to switch users")
 
     if "PEGASUS_SERVICE_URL_PREFIX" in os.environ:
-        application = DispatcherMiddleware(flask.Flask('dummy_app'), {
-            app.config['APPLICATION_ROOT']: app
-        })
-        run_simple(host, port, application, threaded=True, ssl_context=ssl_context, use_reloader=True)
+        application = DispatcherMiddleware(
+            flask.Flask("dummy_app"), {app.config["APPLICATION_ROOT"]: app}
+        )
+        run_simple(
+            host,
+            port,
+            application,
+            threaded=True,
+            ssl_context=ssl_context,
+            use_reloader=True,
+        )
     else:
         app.run(
             host=host, port=port, threaded=True, ssl_context=ssl_context,
@@ -121,7 +132,7 @@ def create_app(config=None, env="development"):
 
     if "PEGASUS_ENV" in os.environ:
         app.config.from_envvar("PEGASUS_ENV")
-    
+
     # Initialize Extensions
     cache.init_app(app)
     # db.init_app(app)
