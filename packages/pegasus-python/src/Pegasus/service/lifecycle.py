@@ -66,7 +66,7 @@ def is_xhr():
 
 def authenticate():
     # Static files do not need to be authenticated.
-    if (request.script_root + request.path).startswith(url_for("dashboard.static", filename="")):
+    if (request.script_root + request.path).startswith(url_for("static", filename="")):
         return
 
     #
@@ -104,7 +104,7 @@ def authenticate():
 
 def authorization():
     # Static files do not need to be authorized.
-    if (request.script_root + request.path).startswith(url_for("dashboard.static", filename="")):
+    if (request.script_root + request.path).startswith(url_for("static", filename="")):
         return
 
     # Root user is off limits.
