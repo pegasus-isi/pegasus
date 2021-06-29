@@ -72,10 +72,10 @@ sites:
     fileServers:
      -
       operation: "get"
-      url: "http://obelix.isi.edu/scratch"
+      url: "http://workflow.isi.edu/scratch"
      -
       operation: "put"
-      url: "scp://ptesting@obelix.isi.edu/data/scratch/http"
+      url: "scp://ptesting@workflow.isi.edu/local-scratch/http"
  -
   name: "local"
   arch: "x86_64"

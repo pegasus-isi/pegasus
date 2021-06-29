@@ -82,7 +82,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://obelix.isi.edu/data/scratch/ptesting"
+      url: "gsiftp://workflow.isi.edu/local-scratch/ptesting"
 EOF
 
 cp ../pegasus.properties .
