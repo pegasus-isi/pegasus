@@ -350,9 +350,6 @@ public class StageOut extends Abstract {
         String sharedScratchGetURL =
                 this.getURLOnSharedScratch(
                         stagingSite, job, FileServerType.OPERATION.get, addOn, lfn);
-        String sharedScratchPutURL =
-                this.getURLOnSharedScratch(
-                        stagingSite, job, FileServerType.OPERATION.put, addOn, lfn);
 
         // if both transfer and registration
         // are transient return null
@@ -445,6 +442,9 @@ public class StageOut extends Abstract {
             // location required for this file transfer
             FileTransfer scratchPutFT = new FileTransfer();
             scratchPutFT.setLFN(lfn);
+            String sharedScratchPutURL =
+                    this.getURLOnSharedScratch(
+                            stagingSite, job, FileServerType.OPERATION.put, addOn, lfn);
             scratchPutFT.addDestination(stagingSiteHandle, sharedScratchPutURL);
             ((DAXJob) job).addOutputFileLocation(mBag, scratchPutFT);
         }
