@@ -250,10 +250,10 @@ public class StageOut extends Abstract {
         // PM-590 Stricter checks
         String stagingSiteURLPrefix =
                 stagingSite.selectHeadNodeScratchSharedFileServerURLPrefix(
-                        FileServer.OPERATION.put);
+                        FileServer.OPERATION.get);
         if (stagingSiteURLPrefix == null) {
             this.complainForHeadNodeURLPrefix(
-                    REFINER_NAME, stagingSite.getSiteHandle(), FileServer.OPERATION.put, job);
+                    REFINER_NAME, stagingSite.getSiteHandle(), FileServer.OPERATION.get, job);
         }
 
         // check if there is a remote initialdir set
