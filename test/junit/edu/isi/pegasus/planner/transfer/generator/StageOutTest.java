@@ -41,6 +41,7 @@ import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
+import java.io.File;
 import java.util.Collection;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -299,7 +300,10 @@ public class StageOutTest {
         ReplicaCatalog rc = this.loadMapperBackend(mapperPath);
         assertNotNull(rc);
         assertEquals(expectedSource, rc.lookup("f.d", computeSite));
-        System.err.println();
+
+        // make sure the mapper file is deleted
+        File mapperFile = new File(mapperPath);
+        mapperFile.delete();
 
         mLogger.logEventCompletion();
     }
