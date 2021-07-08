@@ -267,7 +267,10 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
         StringBuilder error = new StringBuilder();
         error.append(getErrorMessagePrefix());
 
-        error.append(" File Server not specified for shared-storage filesystem for site: ")
+        error.append(
+                        " File Server not specified for shared-storage filesystem for operation "
+                                + operation
+                                + " against site: ")
                 .append(site);
         throw new MapperException(error.toString());
     }
