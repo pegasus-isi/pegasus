@@ -20,7 +20,9 @@ import static org.junit.Assert.assertNotNull;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
@@ -28,6 +30,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -38,6 +41,8 @@ import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -139,9 +144,10 @@ public class StageOutTest {
         expectedOutput.setLFN("f.out");
         expectedOutput.setRegisterFlag(true);
         expectedOutput.setTransferFlag(false);
-        expectedOutput.addSource("compute", "file:///workflows/compute/shared-scratch/./f.out");
+        expectedOutput.addSource(
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
         expectedOutput.addDestination(
-                "compute", "file:///workflows/compute/shared-scratch/./f.out");
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
 
         testFileTransfer(expectedOutput, actualOutput);
         mLogger.logEventCompletion();
@@ -155,6 +161,24 @@ public class StageOutTest {
         String outputSite = "output";
         // make sure planner options are set also to the output site
         mBag.getPlannerOptions().addOutputSite(outputSite);
+
+        SiteStore s = mBag.getHandleToSiteStore();
+        SiteCatalogEntry computeSite = s.lookup("compute");
+
+        // remove the existing shared scratch dir and instead setup a new one
+        // with file based server
+        computeSite.remove(Directory.TYPE.shared_scratch);
+        Directory dir = new Directory();
+        dir.setType(Directory.TYPE.shared_scratch);
+        dir.setInternalMountPoint(new InternalMountPoint("/workflows/compute/shared-scratch"));
+        FileServer fs = new FileServer();
+        fs.setSupportedOperation(FileServerType.OPERATION.get);
+        PegasusURL url = new PegasusURL("/workflows/compute/shared-scratch");
+        fs.setURLPrefix(url.getURLPrefix());
+        fs.setProtocol(url.getProtocol());
+        fs.setMountPoint(url.getPath());
+        dir.addFileServer(fs);
+        computeSite.addDirectory(dir);
 
         StageOut so = new StageOut();
         so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
@@ -185,6 +209,191 @@ public class StageOutTest {
         mLogger.logEventCompletion();
     }
 
+    /** The default case where the compute site has a remotely accessible server such as Gridftp. */
+    @Test
+    public void testSharedFSStageOutToOutputSite() {
+        mLogger.logEventStart(
+                "test.transfer.generator.stageout", "set", Integer.toString(mTestNumber++));
+
+        String outputSite = "output";
+        // make sure planner options are set also to the output site
+        mBag.getPlannerOptions().addOutputSite(outputSite);
+
+        StageOut so = new StageOut();
+        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+
+        // staging site in this case is same as compute site
+        job.setStagingSiteHandle(job.getSiteHandle());
+
+        Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
+        assertEquals(soFTX.length, 2);
+
+        // compute site has a gridftp (non file) server and output site a gsiftp
+        // So stageout transfers will happen locally
+        assertTrue(soFTX[1].isEmpty());
+        assertNotNull(soFTX[0]);
+        Collection<FileTransfer> localStageOutFtxs = soFTX[0];
+        assertEquals(1, localStageOutFtxs.size());
+
+        FileTransfer actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.out");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+        expectedOutput.addSource(
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
+        expectedOutput.addDestination("output", "gsiftp://output.isi.edu/workflows/output/f.out");
+
+        testFileTransfer(expectedOutput, actualOutput);
+        mLogger.logEventCompletion();
+    }
+
+    /**
+     * For PM-1608 For a pegasusWorkflow/DAXJob A there is an output file specified with transfer
+     * set to true. The output file is generated by some job X in the sub workflow referred to by
+     * the DAXJob A . So in addition to a File Transfer being generated, the output map file created
+     * for the sub workflow should log the source URL location in the FileTransfer that is
+     * generated.
+     */
+    @Test
+    public void testPegasusWorkflowJobStageOutToOutputSite() {
+        mLogger.logEventStart(
+                "test.transfer.generator.stageout", "set", Integer.toString(mTestNumber++));
+
+        String outputSite = "output";
+        String computeSite = "local";
+        // make sure planner options are set also to the output site
+        mBag.getPlannerOptions().addOutputSite(outputSite);
+
+        StageOut so = new StageOut();
+        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        DAXJob job = (DAXJob) mDAG.getNode("pegasus-plan_ID2").getContent();
+
+        // staging site in this case is same as compute site
+        job.setStagingSiteHandle(job.getSiteHandle());
+
+        Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
+        job.closeOutputMapper();
+        assertEquals(soFTX.length, 2);
+
+        // compute site has a gridftp (non file) server and output site a gsiftp
+        // So stageout transfers will happen locally
+        assertTrue(soFTX[1].isEmpty());
+        assertNotNull(soFTX[0]);
+        Collection<FileTransfer> localStageOutFtxs = soFTX[0];
+        assertEquals(1, localStageOutFtxs.size());
+
+        FileTransfer actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
+        FileTransfer expectedOutput = new FileTransfer();
+        String expectedSource = "gsiftp://local.isi.edu/workflows/local/shared-scratch/./f.d";
+        expectedOutput.setLFN("f.d");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+        expectedOutput.addSource(computeSite, expectedSource);
+        expectedOutput.addDestination("output", "gsiftp://output.isi.edu/workflows/output/f.d");
+
+        testFileTransfer(expectedOutput, actualOutput);
+
+        // additional check for the output map file
+        String mapperPath = job.getOutputMapperBackendPath();
+        assertNotNull(mapperPath);
+        ReplicaCatalog rc = this.loadMapperBackend(mapperPath);
+        assertNotNull(rc);
+        assertEquals(expectedSource, rc.lookup("f.d", computeSite));
+
+        // make sure the mapper file is deleted
+        File mapperFile = new File(mapperPath);
+        mapperFile.delete();
+
+        mLogger.logEventCompletion();
+    }
+
+    /**
+     * For PM-1608 this test simulates the case when a sub workflow is planned, and is given an
+     * output map file that contains locations of where the output files of a compute job should be
+     * placed.
+     */
+    @Test
+    public void testStageOutToOutputMapperLocation() throws IOException {
+        mLogger.logEventStart(
+                "test.transfer.generator.stageout", "set", Integer.toString(mTestNumber++));
+
+        String outputSite = "output";
+        // make sure planner options are set also to the output site
+        mBag.getPlannerOptions().addOutputSite(outputSite);
+
+        String expectedMapSite = "random";
+        String expectedMapPFN = "gsiftp://random.isi.edu/f.out";
+        // create a temporary map file for this test and insert an entry in there
+        File mapFile = File.createTempFile("pegasus", "output.map", new File("."));
+        ReplicaCatalog rc = this.loadMapperBackend(mapFile.getAbsolutePath());
+        rc.insert("f.out", expectedMapPFN, expectedMapSite);
+        rc.close();
+        mBag.getPlannerOptions().setOutputMap(mapFile.getAbsolutePath());
+
+        try {
+            StageOut so = new StageOut();
+            so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+            Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+
+            // staging site in this case is same as compute site
+            job.setStagingSiteHandle(job.getSiteHandle());
+
+            // test for location of f.out that is staged to output site
+            Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
+            assertEquals(soFTX.length, 2);
+
+            // compute site has a gridftp (non file) server and output site a gsiftp
+            // So stageout transfers will happen locally
+            assertTrue(soFTX[1].isEmpty());
+            assertNotNull(soFTX[0]);
+            Collection<FileTransfer> localStageOutFtxs = soFTX[0];
+            assertEquals(1, localStageOutFtxs.size());
+
+            FileTransfer actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
+            FileTransfer expectedOutput = new FileTransfer();
+            expectedOutput.setLFN("f.out");
+            expectedOutput.setRegisterFlag(true);
+            expectedOutput.setTransferFlag(true);
+            expectedOutput.addSource(
+                    "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
+            expectedOutput.addDestination(
+                    "output", "gsiftp://output.isi.edu/workflows/output/f.out");
+
+            testFileTransfer(expectedOutput, actualOutput);
+
+            // test for location of f.out that is staged to output map location
+            // achieved by setting output site to null
+            soFTX = so.constructFileTX(job, null);
+            assertEquals(soFTX.length, 2);
+
+            // compute site has a gridftp (non file) server and output site a gsiftp
+            // So stageout transfers will happen locally
+            assertTrue(soFTX[1].isEmpty());
+            assertNotNull(soFTX[0]);
+            localStageOutFtxs = soFTX[0];
+            assertEquals(1, localStageOutFtxs.size());
+
+            actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
+            expectedOutput = new FileTransfer();
+            expectedOutput.setLFN("f.out");
+            expectedOutput.setRegisterFlag(false);
+            expectedOutput.setTransferFlag(true);
+            expectedOutput.addSource(
+                    "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
+            expectedOutput.addDestination(expectedMapSite, expectedMapPFN);
+
+            testFileTransfer(expectedOutput, actualOutput);
+        } finally {
+
+            // delete the map file generated in the test
+            mapFile.delete();
+        }
+
+        mLogger.logEventCompletion();
+    }
+
     /** For PM-1779 */
     @Test
     public void testFileSharedFSStageOutToComputeSite() {
@@ -198,6 +407,7 @@ public class StageOutTest {
         // for this test, we need to first add a shared-storage to the compute site since
         // that is where we are transferring outputs to
         SiteStore s = mBag.getHandleToSiteStore();
+        // compute and output site are same
         SiteCatalogEntry computeSite = s.lookup(outputSite);
         Directory dir = new Directory();
         dir.setType(Directory.TYPE.shared_storage);
@@ -205,6 +415,21 @@ public class StageOutTest {
         FileServer fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.all);
         PegasusURL url = new PegasusURL("/workflows/compute/shared-storage");
+        fs.setURLPrefix(url.getURLPrefix());
+        fs.setProtocol(url.getProtocol());
+        fs.setMountPoint(url.getPath());
+        dir.addFileServer(fs);
+        computeSite.addDirectory(dir);
+
+        // remove the existing shared scratch dir and instead setup a new one
+        // with file based server
+        computeSite.remove(Directory.TYPE.shared_scratch);
+        dir = new Directory();
+        dir.setType(Directory.TYPE.shared_scratch);
+        dir.setInternalMountPoint(new InternalMountPoint("/workflows/compute/shared-scratch"));
+        fs = new FileServer();
+        fs.setSupportedOperation(FileServerType.OPERATION.get);
+        url = new PegasusURL("/workflows/compute/shared-scratch");
         fs.setURLPrefix(url.getURLPrefix());
         fs.setProtocol(url.getProtocol());
         fs.setMountPoint(url.getPath());
@@ -281,7 +506,19 @@ public class StageOutTest {
         output.setLinkage(PegasusFile.LINKAGE.output);
         j.addOutputFile(output);
 
+        DAXJob dJob = new DAXJob();
+        dJob.setDAXFile("blackdiamond.yml");
+        dJob.setTXName("pegasus-plan");
+        dJob.setSiteHandle("local");
+        dJob.setLogicalID("ID2");
+        dJob.setName("pegasus-plan_ID2");
+        output = new PegasusFile("f.d");
+        output.setLinkage(PegasusFile.LINKAGE.output);
+        dJob.addOutputFile(output);
+
         dag.add(j);
+        dag.add(dJob);
+        dag.addEdge(j.getID(), dJob.getID());
         return dag;
     }
 
@@ -296,7 +533,8 @@ public class StageOutTest {
         dir.setInternalMountPoint(new InternalMountPoint("/workflows/compute/shared-scratch"));
         FileServer fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.get);
-        PegasusURL url = new PegasusURL("/workflows/compute/shared-scratch");
+        PegasusURL url =
+                new PegasusURL("gsiftp://compute.isi.edu/workflows/compute/shared-scratch");
         fs.setURLPrefix(url.getURLPrefix());
         fs.setProtocol(url.getProtocol());
         fs.setMountPoint(url.getPath());
@@ -336,6 +574,46 @@ public class StageOutTest {
         stagingSite.addDirectory(dir);
         store.addEntry(stagingSite);
 
+        // add a default local site
+        SiteCatalogEntry localSite = new SiteCatalogEntry("local");
+        localSite.setArchitecture(SysInfo.Architecture.x86_64);
+        localSite.setOS(SysInfo.OS.linux);
+        dir = new Directory();
+        dir.setType(Directory.TYPE.shared_scratch);
+        dir.setInternalMountPoint(new InternalMountPoint("/workflows/local/shared-scratch"));
+        fs = new FileServer();
+        fs.setSupportedOperation(FileServerType.OPERATION.all);
+        url = new PegasusURL("gsiftp://local.isi.edu/workflows/local/shared-scratch");
+        fs.setURLPrefix(url.getURLPrefix());
+        fs.setProtocol(url.getProtocol());
+        fs.setMountPoint(url.getPath());
+        dir.addFileServer(fs);
+        localSite.addDirectory(dir);
+        store.addEntry(localSite);
+
         return store;
+    }
+
+    /** */
+    private ReplicaCatalog loadMapperBackend(String mapperPath) {
+        PegasusBag b = new PegasusBag();
+        b.add(PegasusBag.PEGASUS_LOGMANAGER, this.mLogger);
+
+        // set the properties for initialization
+        PegasusProperties p = PegasusProperties.nonSingletonInstance();
+        // set the appropriate property to designate path to file
+        p.setProperty(ReplicaCatalog.c_prefix, ReplicaFactory.FILE_CATALOG_IMPLEMENTOR);
+        p.setProperty(ReplicaCatalog.c_prefix + "." + ReplicaCatalog.FILE_KEY, mapperPath);
+
+        b.add(PegasusBag.PEGASUS_PROPERTIES, p);
+        ReplicaCatalog rc = null;
+        try {
+            rc = ReplicaFactory.loadInstance(b);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Unable to initialize job output mapper in the test Directory  " + mapperPath,
+                    e);
+        }
+        return rc;
     }
 }
