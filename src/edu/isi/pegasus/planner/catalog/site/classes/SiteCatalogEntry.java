@@ -317,6 +317,16 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
+     * Removes a directory of said type from the site catalog entry.
+     *
+     * @param type
+     * @return the directory if associated, else null
+     */
+    public Directory remove(Directory.TYPE type) {
+        return this.mDirectories.remove(type);
+    }
+
+    /**
      * Sets a siteEntry corresponding to a particular type
      *
      * @param directory the siteEntry to be set

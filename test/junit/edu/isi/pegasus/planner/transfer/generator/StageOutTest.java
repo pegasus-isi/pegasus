@@ -139,9 +139,10 @@ public class StageOutTest {
         expectedOutput.setLFN("f.out");
         expectedOutput.setRegisterFlag(true);
         expectedOutput.setTransferFlag(false);
-        expectedOutput.addSource("compute", "file:///workflows/compute/shared-scratch/./f.out");
+        expectedOutput.addSource(
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
         expectedOutput.addDestination(
-                "compute", "file:///workflows/compute/shared-scratch/./f.out");
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
 
         testFileTransfer(expectedOutput, actualOutput);
         mLogger.logEventCompletion();
@@ -155,6 +156,24 @@ public class StageOutTest {
         String outputSite = "output";
         // make sure planner options are set also to the output site
         mBag.getPlannerOptions().addOutputSite(outputSite);
+
+        SiteStore s = mBag.getHandleToSiteStore();
+        SiteCatalogEntry computeSite = s.lookup("compute");
+
+        // remove the existing shared scratch dir and instead setup a new one
+        // with file based server
+        computeSite.remove(Directory.TYPE.shared_scratch);
+        Directory dir = new Directory();
+        dir.setType(Directory.TYPE.shared_scratch);
+        dir.setInternalMountPoint(new InternalMountPoint("/workflows/compute/shared-scratch"));
+        FileServer fs = new FileServer();
+        fs.setSupportedOperation(FileServerType.OPERATION.get);
+        PegasusURL url = new PegasusURL("/workflows/compute/shared-scratch");
+        fs.setURLPrefix(url.getURLPrefix());
+        fs.setProtocol(url.getProtocol());
+        fs.setMountPoint(url.getPath());
+        dir.addFileServer(fs);
+        computeSite.addDirectory(dir);
 
         StageOut so = new StageOut();
         so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
@@ -185,6 +204,46 @@ public class StageOutTest {
         mLogger.logEventCompletion();
     }
 
+    /** The default case where the compute site has a remotely accessible server such as Gridftp. */
+    @Test
+    public void testSharedFSStageOutToOutputSite() {
+        mLogger.logEventStart(
+                "test.transfer.generator.stageout", "set", Integer.toString(mTestNumber++));
+
+        String outputSite = "output";
+        // make sure planner options are set also to the output site
+        mBag.getPlannerOptions().addOutputSite(outputSite);
+
+        StageOut so = new StageOut();
+        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+
+        // staging site in this case is same as compute site
+        job.setStagingSiteHandle(job.getSiteHandle());
+
+        Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
+        assertEquals(soFTX.length, 2);
+
+        // compute site has a gridftp (non file) server and output site a gsiftp
+        // So stageout transfers will happen locally
+        assertTrue(soFTX[1].isEmpty());
+        assertNotNull(soFTX[0]);
+        Collection<FileTransfer> localStageOutFtxs = soFTX[0];
+        assertEquals(1, localStageOutFtxs.size());
+
+        FileTransfer actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.out");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+        expectedOutput.addSource(
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
+        expectedOutput.addDestination("output", "gsiftp://output.isi.edu/workflows/output/f.out");
+
+        testFileTransfer(expectedOutput, actualOutput);
+        mLogger.logEventCompletion();
+    }
+
     /** For PM-1779 */
     @Test
     public void testFileSharedFSStageOutToComputeSite() {
@@ -198,6 +257,7 @@ public class StageOutTest {
         // for this test, we need to first add a shared-storage to the compute site since
         // that is where we are transferring outputs to
         SiteStore s = mBag.getHandleToSiteStore();
+        // compute and output site are same
         SiteCatalogEntry computeSite = s.lookup(outputSite);
         Directory dir = new Directory();
         dir.setType(Directory.TYPE.shared_storage);
@@ -205,6 +265,21 @@ public class StageOutTest {
         FileServer fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.all);
         PegasusURL url = new PegasusURL("/workflows/compute/shared-storage");
+        fs.setURLPrefix(url.getURLPrefix());
+        fs.setProtocol(url.getProtocol());
+        fs.setMountPoint(url.getPath());
+        dir.addFileServer(fs);
+        computeSite.addDirectory(dir);
+
+        // remove the existing shared scratch dir and instead setup a new one
+        // with file based server
+        computeSite.remove(Directory.TYPE.shared_scratch);
+        dir = new Directory();
+        dir.setType(Directory.TYPE.shared_scratch);
+        dir.setInternalMountPoint(new InternalMountPoint("/workflows/compute/shared-scratch"));
+        fs = new FileServer();
+        fs.setSupportedOperation(FileServerType.OPERATION.get);
+        url = new PegasusURL("/workflows/compute/shared-scratch");
         fs.setURLPrefix(url.getURLPrefix());
         fs.setProtocol(url.getProtocol());
         fs.setMountPoint(url.getPath());
@@ -296,7 +371,8 @@ public class StageOutTest {
         dir.setInternalMountPoint(new InternalMountPoint("/workflows/compute/shared-scratch"));
         FileServer fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.get);
-        PegasusURL url = new PegasusURL("/workflows/compute/shared-scratch");
+        PegasusURL url =
+                new PegasusURL("gsiftp://compute.isi.edu/workflows/compute/shared-scratch");
         fs.setURLPrefix(url.getURLPrefix());
         fs.setProtocol(url.getProtocol());
         fs.setMountPoint(url.getPath());
