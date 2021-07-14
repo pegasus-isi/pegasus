@@ -912,6 +912,7 @@ public class TransferEngine extends Engine {
         String eRemoteDir = job.vdsNS.getStringValue(Pegasus.REMOTE_INITIALDIR_KEY);
 
         SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
+        SiteCatalogEntry executionSite = mSiteStore.lookup(executionSiteHandle);
         // we are using the pull mode for data transfer
         String scheme = "file";
         String containerLFN = null;
@@ -1178,7 +1179,7 @@ public class TransferEngine extends Engine {
 
                 // add locations of input data on the remote site to the transient RC
                 bypassFirstLevelStagingForCandidateLocation =
-                        this.bypassStagingForInputFile(selLoc, pf, job);
+                        this.bypassStagingForInputFile(selLoc, pf, job, executionSite);
                 if (bypassFirstLevelStagingForCandidateLocation) {
                     // PM-1250 if no checksum exists in RC
                     // then make sure checksum computation is set to false
@@ -1648,10 +1649,14 @@ public class TransferEngine extends Engine {
      * @param entry a ReplicaCatalogEntry matching the selected replica location.
      * @param file the corresponding Pegasus File object
      * @param job the associated job
+     * @param computeSiteEntry the compute site
      * @return boolean indicating whether we need to enable bypass or not
      */
     private boolean bypassStagingForInputFile(
-            ReplicaCatalogEntry entry, PegasusFile file, Job job) {
+            ReplicaCatalogEntry entry,
+            PegasusFile file,
+            Job job,
+            SiteCatalogEntry computeSiteEntry) {
         boolean bypass = false;
         String computeSite = job.getSiteHandle();
         // check if user has it configured for bypassing the staging or user has bypass flag set
@@ -1671,13 +1676,24 @@ public class TransferEngine extends Engine {
                     bypass = entry.getPFN().endsWith(file.getLFN());
                 }
             } else {
-                // for non shared fs case we can bypass all url's safely
+                // Non Shared FS case: we can bypass all url's safely
                 // other than file urls
-                bypass =
-                        isFileURL
-                                ? fileSite.equalsIgnoreCase(computeSite)
-                                : // file site is same as the compute site
-                                true;
+                if (isFileURL) {
+                    // PM-1783 for file url's bypass staging can be triggered only
+                    // if file site is same as the compute site OR
+                    // auxillary.local  is set to true for the compute site and file site is local
+                    bypass = fileSite.equalsIgnoreCase(computeSite);
+                    if (!bypass) {
+                        // check for auxillary.local for the compute site only if a file
+                        // URL is for local site
+                        if (fileSite.equalsIgnoreCase("local")) {
+                            bypass = computeSiteEntry.isVisibleToLocalSite();
+                        }
+                    }
+                } else {
+                    // for non shared fs case
+                    bypass = true;
+                }
             }
         }
 
