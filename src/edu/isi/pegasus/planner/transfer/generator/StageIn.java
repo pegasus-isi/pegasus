@@ -80,13 +80,10 @@ public class StageIn extends Abstract {
      * symlink:// url if the pool attributed associated with the pfn is same as a particular jobs
      * execution pool.
      */
-    protected boolean mUseSymLinks;
-
-    /** A boolean indicating whether we are doing worker node execution or not. */
-    // private boolean mWorkerNodeExecution;
+    private boolean mUseSymLinks;
 
     /** A boolean indicating whether to bypass first level staging for inputs */
-    protected boolean mBypassStagingForInputs;
+    private boolean mBypassStagingForInputs;
 
     /**
      * A SimpleFile Replica Catalog, that tracks all the files that are being materialized as part
@@ -136,12 +133,23 @@ public class StageIn extends Abstract {
     }
 
     /**
-     * Special Handling for a DAGJob for retrieving files from the Replica Catalog.
+     * Constructs FileTransfer required for staging in raw inputs of a DAGJob. Raw inputs are files
+     * whose locations need to be retrieved from the various Replica Catalog backends. The generated
+     * FileTransfers are binned according to whether they need to be put in a StageIn job that runs
+     * locally on the submit host, or remotely on the staging site.
      *
      * @param job the DAGJob
      * @param searchFiles file that need to be looked in the Replica Catalog.
+     * @return array of Collection of <code>FileTransfer</code> objects, with the first Collection
+     *     referring to transfers that need to happen on submit node, and the second Collection
+     *     referring to transfers that need to happen on staging site
      */
-    public void getFilesFromRC(DAGJob job, Collection searchFiles) {
+    public Collection<FileTransfer>[] constructFileTX(
+            DAGJob job, Collection<PegasusFile> searchFiles) {
+        Collection<FileTransfer>[] result = new Collection[2];
+        result[0] = new LinkedList(); // local transfers
+        result[1] = new LinkedList(); // remote transfers
+
         // dax appears in adag element
         String dag = null;
 
@@ -184,15 +192,23 @@ public class StageIn extends Abstract {
 
         // set the directory if specified
         job.setDirectory((String) job.dagmanVariables.removeKey(Dagman.DIRECTORY_EXTERNAL_KEY));
+        return result;
     }
 
     /**
-     * Special Handling for a DAXJob for retrieving files from the Replica Catalog.
+     * Constructs FileTransfer required for staging in raw inputs of a DAXJob. Raw inputs are files
+     * whose locations need to be retrieved from the various Replica Catalog backends. The generated
+     * FileTransfers are binned according to whether they need to be put in a StageIn job that runs
+     * locally on the submit host, or remotely on the staging site.
      *
      * @param job the DAXJob
      * @param searchFiles file that need to be looked in the Replica Catalog.
+     * @return array of Collection of <code>FileTransfer</code> objects, with the first Collection
+     *     referring to transfers that need to happen on submit node, and the second Collection
+     *     referring to transfers that need to happen on staging site
      */
-    public void getFilesFromRC(DAXJob job, Collection searchFiles) {
+    public Collection<FileTransfer>[] constructFileTX(
+            DAXJob job, Collection<PegasusFile> searchFiles) {
         // dax appears in adag element
         String dax = null;
         String lfn = job.getDAXLFN();
@@ -251,24 +267,30 @@ public class StageIn extends Abstract {
                 "Set arguments for DAX job " + job.getID() + " to " + arguments.toString(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
 
-        this.getFilesFromRC((Job) job, searchFiles);
+        return this.constructFileTX((Job) job, searchFiles);
     }
 
     /**
-     * It looks up the RCEngine Hashtable to lookup the locations for the files and add nodes to
-     * transfer them. If a file is not found to be in the Replica Catalog the Transfer Engine flags
-     * an error and exits
+     * Constructs FileTransfer required for staging in raw inputs of a compute Job. Raw inputs are
+     * files whose locations need to be retrieved from the various Replica Catalog backends. The
+     * generated FileTransfers are binned according to whether they need to be put in a StageIn job
+     * that runs locally on the submit host, or remotely on the staging site.
      *
      * @param job the <code>Job</code>object for whose ipfile have to search the Replica Mechanism
      *     for.
-     * @param searchFiles Vector containing the PegasusFile objects corresponding to the files that
-     *     need to have their mapping looked up from the Replica Mechanism.
+     * @param searchFiles Collection containing the PegasusFile objects corresponding to the files
+     *     that need to have their mapping looked up from the Replica Mechanism.
+     * @return array of Collection of <code>FileTransfer</code> objects, with the first Collection
+     *     referring to transfers that need to happen on submit node, and the second Collection
+     *     referring to transfers that need to happen on staging site
      */
-    public void getFilesFromRC(Job job, Collection searchFiles) {
-        // Vector fileTransfers = new Vector();
-        // Collection<FileTransfer> symLinkFileTransfers = new LinkedList();
+    public Collection<FileTransfer>[] constructFileTX(
+            Job job, Collection<PegasusFile> searchFiles) {
+        Collection<FileTransfer>[] result = new Collection[2];
         Collection<FileTransfer> localFileTransfers = new LinkedList();
         Collection<FileTransfer> remoteFileTransfers = new LinkedList();
+        result[0] = localFileTransfers; // local transfers
+        result[1] = remoteFileTransfers; // remote transfers
 
         String jobName = job.logicalName;
         String stagingSiteHandle = job.getStagingSiteHandle();
@@ -548,7 +570,7 @@ public class StageIn extends Abstract {
 
                 // add locations of input data on the remote site to the transient RC
                 bypassFirstLevelStagingForCandidateLocation =
-                        this.bypassStagingForInputFile(selLoc, pf, job, executionSite);
+                        this.bypassStaging(selLoc, pf, job, executionSite);
                 if (bypassFirstLevelStagingForCandidateLocation) {
                     // PM-1250 if no checksum exists in RC
                     // then make sure checksum computation is set to false
@@ -649,10 +671,7 @@ public class StageIn extends Abstract {
             destPutURL = null;
         }
 
-        // call addTransferNode
-        if (!localFileTransfers.isEmpty() || !remoteFileTransfers.isEmpty()) {
-            mTXRefiner.addStageInXFERNodes(job, localFileTransfers, remoteFileTransfers);
-        }
+        return result;
     }
 
     /**
@@ -664,7 +683,7 @@ public class StageIn extends Abstract {
      * @param computeSiteEntry the compute site
      * @return boolean indicating whether we need to enable bypass or not
      */
-    private boolean bypassStagingForInputFile(
+    public boolean bypassStaging(
             ReplicaCatalogEntry entry,
             PegasusFile file,
             Job job,

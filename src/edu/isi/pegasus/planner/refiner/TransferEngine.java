@@ -408,17 +408,30 @@ public class TransferEngine extends Engine {
             }
         }
 
+        Collection<FileTransfer>[] fileTransfers = null;
+
         if (job instanceof DAXJob) {
             // for the DAX jobs we should always call the method
             // as DAX may just be referred as the LFN
-            mStageInFileTransferGenerator.getFilesFromRC((DAXJob) job, vRCSearchFiles);
+            fileTransfers =
+                    mStageInFileTransferGenerator.constructFileTX((DAXJob) job, vRCSearchFiles);
         } else if (!vRCSearchFiles.isEmpty()) {
             if (job instanceof DAGJob) {
-                mStageInFileTransferGenerator.getFilesFromRC((DAGJob) job, vRCSearchFiles);
+                fileTransfers =
+                        mStageInFileTransferGenerator.constructFileTX((DAGJob) job, vRCSearchFiles);
             } else {
                 // get the locations from the RC
-                mStageInFileTransferGenerator.getFilesFromRC(job, vRCSearchFiles);
+                fileTransfers = mStageInFileTransferGenerator.constructFileTX(job, vRCSearchFiles);
             }
+        }
+        Collection<FileTransfer> localFileTransfersToStagingSite = fileTransfers[0];
+        Collection<FileTransfer> remoteFileTransfersToStagingSite = fileTransfers[1];
+
+        // add the stage in transfer nodes if required
+        if (!localFileTransfersToStagingSite.isEmpty()
+                || !remoteFileTransfersToStagingSite.isEmpty()) {
+            mTXRefiner.addStageInXFERNodes(
+                    job, localFileTransfersToStagingSite, remoteFileTransfersToStagingSite);
         }
     }
 
