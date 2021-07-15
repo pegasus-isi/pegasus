@@ -108,6 +108,20 @@ public class StageIn extends Abstract {
      * @param dag the workflow so far.
      * @param bag bag of initialization objects
      * @param refiner
+     */
+    public void initalize(ADag dag, PegasusBag bag, Refiner refiner) {
+        super.initalize(dag, bag, refiner);
+        mUseSymLinks = mProps.getUseOfSymbolicLinks();
+        mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
+        mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap(mProps);
+    }
+
+    /**
+     * Initializes the Stageout generator
+     *
+     * @param dag the workflow so far.
+     * @param bag bag of initialization objects
+     * @param refiner
      * @param rcb
      * @param rs
      * @param plannerCache
@@ -121,7 +135,7 @@ public class StageIn extends Abstract {
             ReplicaSelector rs,
             PlannerCache plannerCache,
             ReplicaCatalog workflowCache) {
-        super.initalize(dag, bag, refiner);
+        this.initalize(dag, bag, refiner);
         mRCBridge = rcb;
         mReplicaSelector = rs;
 
