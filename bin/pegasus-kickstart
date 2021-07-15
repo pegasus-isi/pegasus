@@ -12,7 +12,7 @@ if [ "$PEGASUS_HOME" = "/" ]; then
 fi
 
 NVIDIA_DRIVER=""
-if command -v nvidia-smi; then
+if command -v nvidia-smi 2>&1 >/dev/null; then
   NVIDIA_DRIVER=$(nvidia-smi | grep Driver | cut -f 3 -d' ' | cut -f 1 -d '.')
 fi
 
