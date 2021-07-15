@@ -5,6 +5,8 @@ import random
 import click
 import flask
 from OpenSSL import crypto
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from werkzeug.serving import run_simple
 
 from Pegasus.service import cache
 from Pegasus.service._encoder import PegasusJsonEncoder
@@ -64,6 +66,14 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
         app.config.update(DEBUG=True)
         logging.getLogger().setLevel(logging.DEBUG)
 
+    if "PEGASUS_SERVICE_URL_PREFIX" in os.environ:
+        logging.info(
+            "Using non-standard URL prefix: {}".format(
+                os.environ["PEGASUS_SERVICE_URL_PREFIX"]
+            )
+        )
+        app.config["APPLICATION_ROOT"] = os.environ["PEGASUS_SERVICE_URL_PREFIX"]
+
     pegasusdir = os.path.expanduser("~/.pegasus")
     if not os.path.isdir(pegasusdir):
         os.makedirs(pegasusdir, mode=0o744)
@@ -80,9 +90,22 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
     if os.getuid() != 0:
         log.warning("Service not running as root: Will not be able to switch users")
 
-    app.run(
-        host=host, port=port, threaded=True, ssl_context=ssl_context,
-    )
+    if "PEGASUS_SERVICE_URL_PREFIX" in os.environ:
+        application = DispatcherMiddleware(
+            flask.Flask("dummy_app"), {app.config["APPLICATION_ROOT"]: app}
+        )
+        run_simple(
+            host,
+            port,
+            application,
+            threaded=True,
+            ssl_context=ssl_context,
+            use_reloader=True,
+        )
+    else:
+        app.run(
+            host=host, port=port, threaded=True, ssl_context=ssl_context,
+        )
 
     log.info("Exiting")
 

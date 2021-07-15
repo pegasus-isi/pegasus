@@ -194,7 +194,7 @@ class BPLogger(logging.Logger):
 
     def exception(self, event, err, **kwargs):
         estr = traceback.format_exc()
-        estr = " | ".join([e.strip() for e in estr.split("\n")])
+        estr = " | ".join(e.strip() for e in estr.split("\n"))
         self.log(
             logging.ERROR,
             Level.ERROR,

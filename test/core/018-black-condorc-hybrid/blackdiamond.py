@@ -74,14 +74,12 @@ preprocess = Transformation(
                 os_version="7"
             )
 
-# In this case the binary is 32 bit version of pegasus-keg
-# that is stored at file:///nfs/ccg3/software/bamboo/x86/pegasus-keg
 findrange = Transformation(
                 name="findrange", 
                 namespace="diamond", 
                 version="4.0",
                 site="local",
-                pfn="/nfs/ccg3/software/bamboo/x86/pegasus-keg",
+                pfn="/usr/bin/pegasus-keg",
                 is_stageable=True,
                 arch=Arch.X86_64,
                 os_type=OS.LINUX,

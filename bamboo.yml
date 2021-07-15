@@ -1241,11 +1241,11 @@ project:
                       # no files should be left behind
                       ls -l
 
-                      scp -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
+                      scp -i ~/.ssh/deployment -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
 
                       # new wordpress site
-                      ssh pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
-                      scp -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
+                      ssh -i ~/.ssh/deployment pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
+                      scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
                 - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_deb_10
@@ -3828,35 +3828,6 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
-            - key: T044E
-              name: 044-singularity-nonsharedfs-hub
-              description: Singularity test case, using shub images
-              tasks:
-                - !script
-                  description: Cleanup
-                  enabled: false
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "rm -rf pegasus/ test/"
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xf tests.tar"
-                - !script
-                  description: Run Test
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
-                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
-              requirements:
-                - capabilityKey: condor
-                  matchType: !exists exists
-              artifactDependencies:
-                - name: tests
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
             - key: T044F
               name: 044-docker-nonsharedfs-symlink
               description: Docker in nonsharedfs with a shared filesystem and symlinking
@@ -3948,35 +3919,6 @@ project:
               name: 044-singularity-nonsharedfs-minimal
               description: Singularity in nonsharedfs, with a minimal image
               tasks:
-              - !script
-                description: Cleanup
-                enabled: true
-                inlineScript:
-                  interpreter: !scriptInterpreter LEGACY_SH_BAT
-                  scriptBody: "rm -rf pegasus/ test/"
-              - !script
-                description: Untar source
-                inlineScript:
-                  interpreter: !scriptInterpreter LEGACY_SH_BAT
-                  scriptBody: "tar xf tests.tar"
-              - !script
-                description: Run Test
-                inlineScript:
-                  interpreter: !scriptInterpreter LEGACY_SH_BAT
-                  scriptBody: |
-                    export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
-                    test/scripts/launch-bamboo-test ${bamboo_shortJobName}
-              requirements:
-              - capabilityKey: condor
-                matchType: !exists exists
-              artifactDependencies:
-              - name: tests
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
-            - key: T045A
-              name: 045-hierarchy-sharedfs
-              description: Baseline hierarchal workflow
-              tasks:
                 - !script
                   description: Cleanup
                   enabled: true
@@ -4000,6 +3942,35 @@ project:
                   matchType: !exists exists
               artifactDependencies:
                 - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false
+            - key: T045A
+              name: 045-hierarchy-sharedfs
+              description: Baseline hierarchal workflow
+              tasks:
+              - !script
+                description: Cleanup
+                enabled: true
+                inlineScript:
+                  interpreter: !scriptInterpreter LEGACY_SH_BAT
+                  scriptBody: "rm -rf pegasus/ test/"
+              - !script
+                description: Untar source
+                inlineScript:
+                  interpreter: !scriptInterpreter LEGACY_SH_BAT
+                  scriptBody: "tar xf tests.tar"
+              - !script
+                description: Run Test
+                inlineScript:
+                  interpreter: !scriptInterpreter LEGACY_SH_BAT
+                  scriptBody: |
+                    export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                    test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+              - capabilityKey: condor
+                matchType: !exists exists
+              artifactDependencies:
+              - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T045B
@@ -4060,6 +4031,35 @@ project:
                 - name: tests
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
+            - key: T045D
+              name: 045-hierarchy-sharedfs-d
+              description: Hierarchical Workflow with 2 sub workflows in condorio, and each listing what files it requires and generates.
+              tasks:
+                - !script
+                  description: Cleanup
+                  enabled: true
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "rm -rf pegasus/ test/"
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xf tests.tar"
+                - !script
+                  description: Run Test
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+              requirements:
+                - capabilityKey: condor
+                  matchType: !exists exists
+              artifactDependencies:
+                - name: tests
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: false		
             - key: T046A
               name: 046-aws-batch-black
               description: Blackdiamond workflow with horizontal clustering and clusters run on AWS Batch

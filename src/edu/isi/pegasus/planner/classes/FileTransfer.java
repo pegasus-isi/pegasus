@@ -359,6 +359,37 @@ public class FileTransfer extends PegasusFile {
     }
 
     /**
+     * Returns all the destination sites where the LFN exists
+     *
+     * @return Collection of site names
+     */
+    public Collection<String> getDestSites() {
+        return mDestMap.keySet();
+    }
+
+    /**
+     * Returns all the destination URLS associated with the transfer object for a particular site
+     *
+     * @return List<ReplicaCatalogEntry> urls
+     */
+    public List<ReplicaCatalogEntry> getDestURLs(String site) {
+        return (mDestMap.containsKey(site)) ? mDestMap.get(site) : new ArrayList();
+    }
+
+    /**
+     * Returns number of destination URL's associated with the FileTransfer
+     *
+     * @return count
+     */
+    public int getDestURLCount() {
+        int count = 0;
+        for (String site : getDestSites()) {
+            count += this.getDestURLs(site).size();
+        }
+        return count;
+    }
+
+    /**
      * Removes a single source url associated with the transfer. The source url removed is first
      * entry from the key set of the underlying map.
      *

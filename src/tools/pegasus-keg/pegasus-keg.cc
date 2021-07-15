@@ -488,11 +488,10 @@ identify( char *result, size_t size, const char *arg0,
     free( static_cast<void *>(line) );
 }
 
-void
-helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
-        const char *prefix )
+void helpMe(const char *ptr, unsigned long timeout, unsigned long spinout,
+            unsigned long sleeptime, const char *prefix)
 {
-    printf( "Usage:\t%s [-a appname] [(-t|-T) thinktime] [-l fn] [-o fn [..]]\n"
+    printf( "Usage:\t%s [-a appname] [(-s|-t|-T) thinktime] [-l fn] [-o fn [..]]\n"
             "\t[-i fn [..] | -G size] [-e env [..]] [-p p [..]] [-P ps] [-h]\n",
             ptr );
     printf( " -a app\tset name of application to something else, default %s\n", ptr );
@@ -501,6 +500,7 @@ helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
     printf( " -r \tallocate memory specified with the '-m' switch only in the root process\n" );
 #endif
     printf( " -t to\tsleep for 'to' seconds during execution, default %lu\n", timeout );
+    printf( " -s to\tsleep for 'to' seconds after the I/O phase, default %lu\n", sleeptime);
     printf( " -T to\tspin for 'to' seconds during execution, default %lu\n", spinout );
     printf( " -l fn\tappend own information atomically to a logfile\n" );
     printf( " -o ..\tenumerate space-separated list output files to create\n\
@@ -696,7 +696,10 @@ main( int argc, char *argv[] )
     unsigned long spinout = 0;
     // required wall time
     unsigned long timeout = 0;
-    // buffer for mock memory or input files content 
+    // required sleep time
+    unsigned long sleeptime = 0;
+
+    // buffer for mock memory or input files content
     char *memory_buffer = NULL;
     // auxiliary variables for memory management
     unsigned long memory_size = 0;
@@ -726,7 +729,7 @@ main( int argc, char *argv[] )
     // complain, if no parameters were given
     if ( rank == 0 && argc == 1 )
     {
-        helpMe( ptr, timeout, spinout, prefix );
+        helpMe( ptr, timeout, spinout, sleeptime, prefix );
         return 0;
     }
 
@@ -738,7 +741,7 @@ main( int argc, char *argv[] )
         char *s = argv[i];
         if ( s[0] == '-' && s[1] != 0 )
         {
-            if ( strchr( "iotTGaepPlCmruh\0", s[1] ) != NULL )
+            if ( strchr( "iotTGaepPlCmruhs\0", s[1] ) != NULL )
             {
                 switch (s[1])
                 {
@@ -778,6 +781,9 @@ main( int argc, char *argv[] )
                 case 'u':
                     state = 17;
                     break;
+                case 's':
+                    state = 19;
+                    break;
 #ifdef WITH_MPI
                 case 'r':
                     root_only_memory_allocation = true;
@@ -788,7 +794,7 @@ main( int argc, char *argv[] )
                     continue;
 
                 case 'h':
-                    helpMe( ptr, timeout, spinout, prefix );
+                    helpMe( ptr, timeout, spinout, sleeptime, prefix );
                     return 0;
                 }
                 s += 2;
@@ -826,6 +832,9 @@ main( int argc, char *argv[] )
             case 17:
                 data_unit = s[0];
                 break;
+            case 19:
+                sleeptime = strtoul(s, 0, 10);
+                break;
             }
             state = 0;
         }
@@ -833,6 +842,21 @@ main( int argc, char *argv[] )
         {
             iox[state].push_back(s);
         }
+    }
+
+    if (sleeptime > 0 && timeout > 0) 
+    {
+        sleeptime = fabs(sleeptime - timeout);
+    }
+
+    if (sleeptime > 0 && spinout > 0)
+    {
+        sleeptime = fabs(sleeptime - spinout);
+    }
+
+    if (timeout > sleeptime || spinout > sleeptime)
+    {
+        sleeptime = 0;
     }
 
     if ( memory_size )
@@ -981,6 +1005,11 @@ main( int argc, char *argv[] )
             // printf( "[debug] you specified %lu [s] to sleep so we will sleep for %d [s]\n", timeout, time_diff );
             sleep(time_diff);
         }
+    }
+
+    if ( sleeptime )
+    {
+        sleep(sleeptime);
     }
 
     // append atomically to logfile

@@ -25,12 +25,15 @@ RUN dnf -y install --allowerasing --nobest \
      python3-PyYAML \
      python3-setuptools \
      sudo \
+     supervisor \
      tar \
      vim \ 
      wget
 
+ADD ./config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD ./config/wrapdocker /usr/local/bin/wrapdocker
-RUN chmod +x /usr/local/bin/wrapdocker
+ADD ./config/htcondor-wrapper /usr/local/bin/htcondor-wrapper
+RUN chmod +x /usr/local/bin/wrapdocker /usr/local/bin/htcondor-wrapper
 RUN usermod -aG docker scitech
 
 # Python packages
@@ -66,9 +69,9 @@ USER scitech
 
 WORKDIR /home/scitech
 
-# Set up config for ensemble manager
+# Set up config for ensemble manager and service
 RUN mkdir /home/scitech/.pegasus \
-    && echo -e "#!/usr/bin/env python3\nUSERNAME='scitech'\nPASSWORD='scitech123'\n" >> /home/scitech/.pegasus/service.py \
+    && echo -e "#!/usr/bin/env python3\nUSERNAME='scitech'\nPASSWORD='scitech123'\nAUTHENTICATION='NoAuthentication'\nSERVER_HOST='0.0.0.0'\n" >> /home/scitech/.pegasus/service.py \
     && chmod u+x /home/scitech/.pegasus/service.py
 
 # Set up pegasus database
@@ -83,6 +86,10 @@ RUN mkdir /home/scitech/.jupyter \
     && echo "{ \"NotebookApp\": { \"password\": \"sha1:30a323540baa:6eec8eaf3b4e0f44f2f2aa7b504f80d5bf0ad745\" } }" >> /home/scitech/.jupyter/jupyter_notebook_config.json
 
 # wrapdocker required for nested docker containers
-ENTRYPOINT ["sudo", "/usr/local/bin/wrapdocker"]
-CMD ["su", "-", "scitech", "-c", "jupyter notebook --notebook-dir=/home/scitech/notebooks --port=8888 --no-browser --ip=0.0.0.0 --allow-root"] 
+#ENTRYPOINT ["sudo", "/usr/local/bin/wrapdocker"]
+#CMD ["su", "-", "scitech", "-c", "/usr/local/bin/start-services"] 
+
+USER root
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
 

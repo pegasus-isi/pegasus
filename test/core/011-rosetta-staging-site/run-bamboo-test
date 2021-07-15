@@ -49,19 +49,27 @@ sites:
   name: "CCG"
   arch: "x86_64"
   os.type: "linux"
-  grids:
-   -
-    type: "gt5"
-    contact: "obelix.isi.edu/jobmanager-fork"
-    scheduler: "fork"
-    jobtype: "auxillary"
-   -
-    type: "gt5"
-    contact: "obelix.isi.edu/jobmanager-condor"
-    scheduler: "unknown"
-    jobtype: "compute"
-  profiles:
-    env:
+  grids: 
+   - 
+    type: "batch" 
+    contact: "corbusier.isi.edu" 
+    scheduler: "slurm" 
+    jobtype: "compute" 
+   - 
+    type: "batch" 
+    contact: "corbusier.isi.edu" 
+    scheduler: "slurm" 
+    jobtype: "compute" 
+  profiles: 
+     pegasus: 
+      # SSH is the style to use for Bosco SSH submits. 
+      style: ssh 
+      # Works around bug in the HTCondor GAHP, that does not 
+      # set the remote directory 
+      change.dir: 'true' 
+      # the key to use for scp transfers 
+      SSH_PRIVATE_KEY: /scitech/home/bamboo/.ssh/workflow_id_rsa 
+     env:
       PEGASUS_FORCE_GUC: "1"
  -
   name: "local"
@@ -102,7 +110,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://obelix.isi.edu/data/scratch/ptesting"
+      url: "gsiftp://workflow.isi.edu/local-scratch/ptesting"
 EOF
 
 echo

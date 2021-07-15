@@ -87,10 +87,10 @@ public class BlackDiamondDAX {
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
 
-	j1.addProfile( "hints", "grid.jobtype", "auxillary");
+	j1.addProfile( "selector", "grid.jobtype", "auxillary");
 	//deprecated keys should work
-	j1.addProfile( "hints" , "executionPool", "CCG");
-	j1.addProfile( "hints" , "pfnHint", "/usr/bin/pegasus-keg");
+	j1.addProfile( "selector" , "execution.site", "CCG");
+	j1.addProfile( "selector" , "pfn", "/opt/pegasus/bin/pegasus-keg");
         dax.addJob(j1);
 
         // Add left Findrange job
@@ -99,10 +99,10 @@ public class BlackDiamondDAX {
         j2.addArgument("-o ").addArgument(fc1);
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
-	j2.addProfile( "hints", "grid.jobtype", "auxillary");
+	j2.addProfile( "selector", "grid.jobtype", "auxillary");
 	//use the new keys introduced for 4.5
-	j2.addProfile( "hints" , "execution.site", "CCG");
-	j2.addProfile( "hints" , "pfn", "/usr/bin/pegasus-keg");
+	j2.addProfile( "selector" , "execution.site", "CCG");
+	j2.addProfile( "selector" , "pfn", "/opt/pegasus/bin/pegasus-keg");
         dax.addJob(j2);
 
         // Add right Findrange job
@@ -111,10 +111,10 @@ public class BlackDiamondDAX {
         j3.addArgument("-o ").addArgument(fc2);
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
-	j3.addProfile( "hints", "grid.jobtype", "auxillary");
+	j3.addProfile( "selector", "grid.jobtype", "auxillary");
 	//use the new keys introduced for 4.5
-	j3.addProfile( "hints" , "execution.site", "CCG");
-	j3.addProfile( "hints" , "pfn", "/usr/bin/pegasus-keg");
+	j3.addProfile( "selector" , "execution.site", "CCG");
+	j3.addProfile( "selector" , "pfn", "/opt/pegasus/bin/pegasus-keg");
         dax.addJob(j3);
 
         // Add analyze job
@@ -126,9 +126,9 @@ public class BlackDiamondDAX {
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
 	//use the new keys introduced for 4.5
-	j4.addProfile( "hints" , "execution.site", "CCG");
-	j4.addProfile( "hints" , "pfn", "/usr/bin/pegasus-keg");
-	j4.addProfile( "hints", "grid.jobtype", "auxillary");
+	j4.addProfile( "selector" , "execution.site", "CCG");
+	j4.addProfile( "selector" , "pfn", "/opt/pegasus/bin/pegasus-keg");
+	j4.addProfile( "selector", "grid.jobtype", "auxillary");
         dax.addJob(j4);
 	
         dax.addDependency("j1", "j2");

@@ -453,18 +453,37 @@ class SubWorkflow(AbstractJob):
     """
     Job that represents a subworkflow.
     See :py:class:`~Pegasus.api.workflow.AbstractJob` for full list of available functions.
+    SubWorkflow jobs can be created using several different methods. These are outlined
+    below.
+
+    .. code-block:: python
+
+        root_wf = Workflow("root")
+        # "workflow.yml" must be added to the ReplicaCatalog
+        j1 = SubWorkflow(file="workflow.yml", is_planned=False)
+        root_wf.add_jobs(j1)
+
+        another_wf = Workflow("another-wf")
+        j2 = SubWorkflow(another_wf, _id="j2")
+        root_wf.add_jobs(j2)
+
+        # Upon invoking root_wf.write() or root_wf.plan(), another_wf will automatically
+        # be serialized to CWD / "another-wf_j2.yml" and added to an inline ReplicaCatalog;
+        # This means that you may define "another_wf" in a separate python script, and
+        # import it here where it would be used. 
+        root_wf.write()
     """
 
     def __init__(
         self,
-        file: Union[str, File],
+        file: Union[str, File, "Workflow"],
         is_planned: bool = False,
         _id: Optional[str] = None,
         node_label: Optional[str] = None,
     ):
         """
-        :param file: :py:class:`~Pegasus.api.replica_catalog.File` object or name of the workflow file that will be used for this job
-        :type file: Union[str, File]
+        :param file: :py:class:`~Pegasus.api.replica_catalog.File`, the name of the workflow file as a :code:`str`, or :py:class:`~Pegasus.api.workflow.Workflow`
+        :type file: Union[str, File, Workflow]
         :param is_planned: whether or not this subworkflow has already been planned by the Pegasus planner, defaults to False
         :type is_planned: bool
         :param _id: a unique id; if none is given then one will be assigned when the job is added by a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
@@ -475,21 +494,26 @@ class SubWorkflow(AbstractJob):
         """
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
 
-        if not isinstance(file, (File, str)):
+        if not isinstance(file, (File, str, Workflow)):
             raise TypeError(
-                "invalid file: {file}; file must be of type File or str".format(
+                "invalid file: {file}; file must be of type File, str, or Workflow".format(
                     file=file
                 )
             )
 
         self.type = "condorWorkflow" if is_planned else "pegasusWorkflow"
-        self.file = file if isinstance(file, File) else File(file)
+
+        if isinstance(file, File):
+            self.file = file.lfn
+        else:
+            self.file = file
 
         # ensure that add_planner_args() is not invoked multiple times for each SubWorkflow
         # instance as this will create duplicate arguments
         self._planner_args_already_set = False
 
-        self.add_inputs(self.file)
+        if not isinstance(self.file, Workflow):
+            self.add_inputs(self.file)
 
     @_chained
     def add_planner_args(
@@ -500,7 +524,7 @@ class SubWorkflow(AbstractJob):
         job_prefix: Optional[str] = None,
         cluster: Optional[List[str]] = None,
         sites: Optional[List[str]] = None,
-        output_sites: List[str] = ["local"],
+        output_sites: Optional[List[str]] = None,
         staging_sites: Optional[Dict[str, str]] = None,
         cache: Optional[List[Union[str, Path]]] = None,
         input_dirs: Optional[List[Union[str, Path]]] = None,
@@ -510,7 +534,7 @@ class SubWorkflow(AbstractJob):
         random_dir: Union[bool, str, Path] = False,
         relative_submit_dir: Optional[Union[str, Path]] = None,
         inherited_rc_files: Optional[List[Union[str, Path]]] = None,
-        cleanup: str = "inplace",
+        cleanup: Optional[str] = None,
         reuse: Optional[List[Union[str, Path]]] = None,
         verbose: int = 0,
         quiet: int = 0,
@@ -522,7 +546,7 @@ class SubWorkflow(AbstractJob):
         **kwargs
     ):
         """
-        add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **kwargs)
+        add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: Optional[List[str]] = None, staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: Optional[str] = None, reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **kwargs)
         Add pegasus-planner arguments. This function can only be used when 
         :code:`is_planned=False` is set in :py:class:`~Pegasus.api.workflow.SubWorkflow` and
         may only be invoked once. 
@@ -537,8 +561,8 @@ class SubWorkflow(AbstractJob):
         :type cluster: Optional[List[str]]
         :param sites: list of execution sites on which to map the workflow, defaults to None
         :type sites: Optional[List[str]]
-        :param output_sites: the output sites where the data products during workflow execution are transferred to, defaults to :code:`["local"]`
-        :type output_sites: List[str]
+        :param output_sites: the output sites where the data products during workflow execution are transferred to, defaults to None
+        :type output_sites: Optional[List[str]]
         :param staging_sites: key, value pairs of execution site to staging site mappings such as :code:`{"condorpool": "staging-site"}`, defaults to None
         :type staging_sites: Optional[Dict[str,str]]
         :param cache: comma separated list of replica cache files, defaults to None
@@ -557,8 +581,8 @@ class SubWorkflow(AbstractJob):
         :type relative_submit_dir: Optional[Union[str, Path]]
         :param inherited_rc_files: comma separated list of replica files, defaults to None
         :type inherited_rc_files: Optional[List[Union[str, Path]]]
-        :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
-        :type cleanup: str, optional
+        :param cleanup: the cleanup strategy to use. Can be a :code:`str` :code:`none|inplace|leaf|constraint`, defaults to None (internally, pegasus-plan will use the default :code:`inplace` if :code:`None` is given)
+        :type cleanup: Optional[str]
         :param reuse: list of submit directories of previous runs from which to pick up for reuse (e.g. :code:`["/workflows/submit_dir1", "/workflows/submit_dir2"]`), defaults to None
         :type reuse: Optional[List[Union[str,Path]]]
         :param verbose: verbosity, defaults to 0
@@ -642,10 +666,8 @@ class SubWorkflow(AbstractJob):
             self.add_args(
                 "--staging-site",
                 ",".join(
-                    [
-                        "{site}={staging_site}".format(site=s, staging_site=ss)
-                        for s, ss in staging_sites.items()
-                    ]
+                    "{site}={staging_site}".format(site=s, staging_site=ss)
+                    for s, ss in staging_sites.items()
                 ),
             )
 
@@ -655,7 +677,7 @@ class SubWorkflow(AbstractJob):
                     "invalid cache: {}; list of str must be given".format(cache)
                 )
 
-            self.add_args("--cache", ",".join([str(c) for c in cache]))
+            self.add_args("--cache", ",".join(str(c) for c in cache))
 
         if input_dirs:
             if not isinstance(input_dirs, list):
@@ -665,7 +687,7 @@ class SubWorkflow(AbstractJob):
                     )
                 )
 
-            self.add_args("--input-dir", ",".join([str(_id) for _id in input_dirs]))
+            self.add_args("--input-dir", ",".join(str(_id) for _id in input_dirs))
 
         if output_dir:
             self.add_args("--output-dir", str(output_dir))
@@ -694,14 +716,14 @@ class SubWorkflow(AbstractJob):
                 )
 
             self.add_args(
-                "--inherited-rc-files", ",".join([str(f) for f in inherited_rc_files])
+                "--inherited-rc-files", ",".join(str(f) for f in inherited_rc_files)
             )
 
         if cleanup:
             self.add_args("--cleanup", cleanup)
 
         if reuse:
-            self.add_args("--reuse", ",".join([str(p) for p in reuse]))
+            self.add_args("--reuse", ",".join(str(p) for p in reuse))
 
         if verbose > 0:
             self.add_args("-" + ("v" * verbose))
@@ -739,7 +761,13 @@ class SubWorkflow(AbstractJob):
                 self.add_args("-X{}".format(opt))
 
     def __json__(self):
-        dax_json = {"type": self.type, "file": self.file.lfn}
+        # error should only be raised internally if SubWorkflow was given a Workflow
+        # object, then __json__() is invoked before a call to Workflow.write(),
+        # which is where the SubWorkflow would have been serialized to a file
+        if isinstance(self.file, Workflow):
+            raise PegasusError("the given SubWorkflow file must be a File object")
+
+        dax_json = {"type": self.type, "file": self.file}
         dax_json.update(AbstractJob.__json__(self))
 
         return dax_json
@@ -1739,6 +1767,31 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             file = self._DEFAULT_FILENAME
 
         self._infer_dependencies()
+
+        # serialize Workflow objects added as SubWorkflows
+        for _id, job in self.jobs.items():
+            if isinstance(job, SubWorkflow) and isinstance(job.file, Workflow):
+                # serialize job (Workflow instance) to be <wf-name>_<id>.yml
+                workflow_file = Path.cwd() / "{}_{}.yml".format(job.file.name, job._id)
+                job.file.write(str(workflow_file))
+
+                # update job.file to be the file name just created
+                job.file = workflow_file.name
+
+                # add job.file as an input to the SubWorkflow job
+                job.add_inputs(job.file)
+
+                # add to inline replica catalog (create one if none exists)
+                rc_kwargs = {
+                    "site": "local",
+                    "lfn": workflow_file.name,
+                    "pfn": workflow_file,
+                }
+                if not self.replica_catalog:
+                    self.replica_catalog = ReplicaCatalog()
+
+                self.replica_catalog.add_replica(**rc_kwargs)
+
         Writable.write(self, file, _format=_format)
 
         # save path so that it can be used by Client.plan()
@@ -1780,6 +1833,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         if len(self.metadata) > 0:
             metadata = self.metadata
 
+        jobs = [job for _, job in self.jobs.items()]
+        job_dependencies = [dependency for _id, dependency in self.dependencies.items()]
+
         return _filter_out_nones(
             OrderedDict(
                 [
@@ -1791,11 +1847,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                     ("siteCatalog", sc),
                     ("replicaCatalog", rc),
                     ("transformationCatalog", tc),
-                    ("jobs", [job for _id, job in self.jobs.items()]),
-                    (
-                        "jobDependencies",
-                        [dependency for _id, dependency in self.dependencies.items()],
-                    ),
+                    ("jobs", jobs),
+                    ("jobDependencies", job_dependencies),
                 ]
             )
         )

@@ -1,11 +1,13 @@
 import importlib
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import pytest
 
 from Pegasus.api import *
 
 pegasus_graphviz = importlib.import_module("Pegasus.cli.pegasus-graphviz")
+graph_node = pegasus_graphviz.Node
 
 
 @pytest.fixture(scope="module")
@@ -54,6 +56,76 @@ def hierarchical_wf_file():
     yield "h_workflow.yml"
 
     Path("h_workflow.yml").unlink()
+
+
+@pytest.mark.parametrize(
+    "wf, expected_node_children",
+    [
+        (
+            Workflow("test").add_jobs(
+                Job("test", _id="j1").add_inputs("f1").add_outputs("f2")
+            ),
+            {"j1": [graph_node("f2")], "f1": [graph_node("j1")], "f2": []},
+        ),
+        (
+            Workflow("test").add_jobs(
+                Job("test", _id="j1").add_outputs("f1"),
+                Job("test", _id="j2").add_inputs("f1"),
+            ),
+            {"j1": [graph_node("f1")], "f1": [graph_node("j2")], "j2": []},
+        ),
+        (
+            Workflow("test").add_jobs(
+                Job("test", _id="j1").add_outputs("f1"),
+                Job("test", _id="j2").add_inputs("f1").add_outputs("f2"),
+                Job("test", _id="j3").add_inputs("f1", "f2"),
+            ),
+            {
+                "j1": [graph_node("f1")],
+                "f1": [graph_node("j2"), graph_node("j3")],
+                "j2": [graph_node("f2")],
+                "j3": [],
+            },
+        ),
+        (
+            Workflow("test").add_jobs(
+                Job("test", _id="j1").add_outputs("f1"),
+                Job("test", _id="j2").add_inputs("f1").add_outputs("f2"),
+                Job("test", _id="j3").add_inputs("f1", "f2").add_outputs("f3"),
+                Job("test", _id="j4").add_inputs("f1", "f3"),
+            ),
+            {
+                "j1": [graph_node("f1")],
+                "f1": [graph_node("j2"), graph_node("j3"), graph_node("j4")],
+                "j2": [graph_node("f2")],
+                "f2": [graph_node("j3")],
+                "j3": [graph_node("f3")],
+                "f3": [graph_node("j4")],
+                "j4": [],
+            },
+        ),
+    ],
+)
+def test_transitivereduction(wf, expected_node_children):
+    with NamedTemporaryFile(mode="w+") as f:
+        wf.write(f)
+        f.seek(0)
+
+        dag = pegasus_graphviz.parse_yamlfile(f.name, include_files=True)
+
+    dag = pegasus_graphviz.transitivereduction(dag)
+
+    # sort each node children list in dag
+    for k, n in dag.nodes.items():
+        n.children.sort(key=lambda c: c.id)
+
+    # sort each node children list in expected_node_children
+    for _id, children in expected_node_children.items():
+        children.sort(key=lambda c: c.id)
+
+    # ensure that each node has the expected (reduced) list of children
+    for _id, children in expected_node_children.items():
+        assert dag.nodes[_id].children == children
 
 
 class TestEmitDot:

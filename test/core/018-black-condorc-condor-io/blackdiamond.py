@@ -60,9 +60,7 @@ rc.add_replica("local", "f.a", TOP_DIR / "f.a")
 rc.write()
 
 # --- Transformations ----------------------------------------------------------
-# Using the binary is 32 bit version of pegasus-keg
-# that is stored at file:///nfs/ccg3/software/bamboo/x86/pegasus-keg
-keg_path = "/nfs/ccg3/software/bamboo/x86/pegasus-keg"
+keg_path = "/usr/bin/pegasus-keg"
 preprocess = Transformation(
                 name="preprocess", 
                 namespace="diamond", 

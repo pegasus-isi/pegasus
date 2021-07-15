@@ -73,7 +73,7 @@ sites:
     fileServers:
      -
       operation: "get"
-      url: "http://obelix.isi.edu/shared-scratch/bamboo"
+      url: "http://workflow.isi.edu/shared-scratch/bamboo"
      -
       operation: "put"
       url: "file:///lizard/scratch-90-days/http-scratch/bamboo"

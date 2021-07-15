@@ -28,7 +28,7 @@ SiteCatalog()\
         Site("scitech-gridftp")
             .add_directories(
                 Directory(Directory.SHARED_SCRATCH, "/lizard/scratch-90-days/http-scratch/ptesting")
-                    .add_file_servers(FileServer("gsiftp://obelix.isi.edu/lizard/scratch-90-days/http-scratch/ptesting", Operation.ALL))
+                    .add_file_servers(FileServer("gsiftp://workflow.isi.edu/lizard/scratch-90-days/http-scratch/ptesting", Operation.ALL))
             )
     ).write()
 

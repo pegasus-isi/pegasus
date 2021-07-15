@@ -35,24 +35,22 @@ NL_HOME = "NETLOGGER_HOME"
 EOF_EVENT = "netlogger.EOF"
 
 MAGICDATE_EXAMPLES = ", ".join(
-    [
-        "%s" % s
-        for s in (
-            "<N> weeks|days|hours|minutes|seconds time ago",
-            "Today",
-            "Now",
-            "Tomorrow",
-            "Yesterday",
-            "4th [[Jan] 2003]",
-            "Jan 4th 2003",
-            "mm/dd/yyyy (first)",
-            "dd/mm/yyyy (second)",
-            "yyyy-mm-dd",
-            "yyyymmdd",
-            "next Tuesday",
-            "last Tuesday",
-        )
-    ]
+    "%s" % s
+    for s in (
+        "<N> weeks|days|hours|minutes|seconds time ago",
+        "Today",
+        "Now",
+        "Tomorrow",
+        "Yesterday",
+        "4th [[Jan] 2003]",
+        "Jan 4th 2003",
+        "mm/dd/yyyy (first)",
+        "dd/mm/yyyy (second)",
+        "yyyy-mm-dd",
+        "yyyymmdd",
+        "next Tuesday",
+        "last Tuesday",
+    )
 )
 
 DATA_DIR = os.path.join(os.path.dirname(Pegasus.netlogger.__file__), "data")

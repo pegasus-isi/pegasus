@@ -40,7 +40,7 @@ pegasus_statfs( char* buffer, size_t capacity )
 
   if ( n > 1 ) { 
     for ( i=0; i<n; ++i ) { 
-      struct statfs* e = mtab + i; 
+      // struct statfs* e = mtab + i; 
       if ( mtab[i].f_mntfromname[0] == '/' && mtab[i].f_blocks > 0 ) {
 	char total[16], avail[16]; 
 	unsigned long long size = mtab[i].f_bsize; 
@@ -116,7 +116,7 @@ pegasus_cpuinfo( char* buffer, size_t capacity )
 {
   int i;
   size_t len;
-  unsigned long freq; 
+  // unsigned long freq; 
   char model[128]; 
 
   unsigned short cpu_online = 0; 

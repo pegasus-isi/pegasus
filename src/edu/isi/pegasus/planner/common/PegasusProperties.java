@@ -95,6 +95,9 @@ public class PegasusProperties implements Cloneable {
 
     public static final String PEGASUS_INTEGRITY_CHECKING_KEY = "pegasus.integrity.checking";
 
+    public static final String PEGASUS_TRANSFER_BYPASS_INPUT_STAGING_PROPERTY_KEY =
+            "pegasus.transfer.bypass.input.staging";
+
     // Replica Catalog Constants
     public static final String DEFAULT_RC_COLLECTION = "GriphynData";
 
@@ -1017,7 +1020,8 @@ public class PegasusProperties implements Cloneable {
      * @return boolean value specified , else false
      */
     public boolean bypassFirstLevelStagingForInputs() {
-        return Boolean.parse(mProps.getProperty("pegasus.transfer.bypass.input.staging"), false);
+        return Boolean.parse(
+                mProps.getProperty(PEGASUS_TRANSFER_BYPASS_INPUT_STAGING_PROPERTY_KEY), false);
     }
 
     /**
