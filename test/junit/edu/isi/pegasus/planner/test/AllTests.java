@@ -69,6 +69,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.parser.dax.DAXParser3Test.class,
     edu.isi.pegasus.planner.parser.dax.DAXParser5Test.class,
     edu.isi.pegasus.planner.dax.ADAGTest.class,
-    edu.isi.pegasus.planner.transfer.generator.StageOutTest.class
+    edu.isi.pegasus.planner.transfer.generator.StageOutTest.class,
+    edu.isi.pegasus.planner.transfer.generator.StageInTest.class
 })
 public class AllTests {}
