@@ -32,7 +32,7 @@ from datetime import datetime, timedelta
 
 import globus_sdk
 
-from Pegasus.tools import amqp
+from Pegasus.tools import amqp_simple as amqp
 
 # --- global variables ----------------------------------------------------------------
 
@@ -361,10 +361,6 @@ def retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url):
     else:
         exchange_name = "monitoring"
 
-    amqp_conn = amqp.connect(amqp_url)
-    amqp_channel = amqp_conn.channel()
-    amqp_channel.exchange_declare(exchange_name, **EXCH_OPTS)
-
     task_show = transfer_client.get_task(task_id)
     task_events = transfer_client.task_event_list(task_id, None)
 
@@ -383,6 +379,10 @@ def retrieveGlobusTransferLogs(transfer_client, task_id, amqp_url):
 
     if "PEGASUS_DAG_JOB_ID" in os.environ:
         task_show["dag_job_id"] = os.environ["PEGASUS_DAG_JOB_ID"]
+
+    amqp_conn = amqp.connect(amqp_url)
+    amqp_channel = amqp_conn.channel()
+    amqp_channel.exchange_declare(exchange_name, **EXCH_OPTS)
 
     task_show["event"] = "transfer.inv.go"
     amqp_channel.basic_publish(

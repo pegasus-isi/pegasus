@@ -7,7 +7,7 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 
 from Pegasus.monitoring import event_output
-from Pegasus.tools import amqp
+from Pegasus.tools import amqp_simple as amqp
 
 log = logging.getLogger(__name__)
 

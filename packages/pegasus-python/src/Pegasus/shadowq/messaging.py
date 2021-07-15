@@ -2,7 +2,7 @@ import json
 import logging
 import threading
 
-from Pegasus.tools import amqp
+from Pegasus.tools import amqp_simple as amqp
 
 log = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ import logging
 import os
 
 from Pegasus.monitoring import event_output as eo
-from Pegasus.tools import amqp
+from Pegasus.tools import amqp_simple as amqp
 
 log = logging.getLogger(__name__)
 

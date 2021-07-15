@@ -10,7 +10,7 @@ install_requires = [
     "six>=1.9.0",
     "boto3>1.12,<1.18",
     "globus-sdk==1.4.1",
-    "pika==1.1.0"
+    "pika==1.1.0",
 ]
 
 

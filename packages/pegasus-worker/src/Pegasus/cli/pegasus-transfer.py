@@ -63,10 +63,10 @@ except ImportError:
 
 try:
     # Python 3.0 and later
-    from urllib import parse as urlparse
+    pass
 except ImportError:
     # Fall back to Python 2's urllib
-    import urlparse as urlparse
+    pass
 
 # see https://www.python.org/dev/peps/pep-0469/
 try:
@@ -4050,8 +4050,7 @@ class Stats:
         # but make sure that failures do not stop us
         if publish_enabled and not self._detected_3rd_party:
             try:
-                p = Panorama()
-                p.single_transfer(
+                panorama_stats.single_transfer(
                     transfer, local_filename, was_successful, t_start, t_end, bytes
                 )
             except Exception as e:
@@ -4186,8 +4185,7 @@ class Stats:
         # but make sure that failures do not stop us
         if publish_enabled and not self._detected_3rd_party:
             try:
-                p = Panorama()
-                p.summary_transfer(
+                panorama_stats.summary_transfer(
                     self._total_count,
                     self._t_start_global,
                     self._t_end_global,
@@ -4206,48 +4204,23 @@ class Panorama:
         AMQP URL should look like: amqps://user:pass@host:port/vhost/exchange"
         Default exchange is "monitoring"
         """
-        self.EXCH_OPTS = {
-            "exchange_type": "topic",
-            "durable": True,
-            "auto_delete": False,
-        }
         self.amqp_env_var = "PEGASUS_AMQP_URL"
         self.amqp_url = os.getenv(self.amqp_env_var)
-        self.exchange_name = None
+        self.amqp_handle = None
 
         if self.amqp_url is None:
             logger.warning("'%s' is not set in the environment" % self.amqp_env_var)
         else:
-            parsed_url = urlparse.urlparse(self.amqp_url)
-
-            if parsed_url.path.count("/") > 1:
-                path_split = parsed_url.path.split("/")
-                self.exchange_name = (
-                    path_split[2] if path_split[2] != "" else "monitoring"
-                )
-                self.amqp_url = (
-                    parsed_url.scheme + "://" + parsed_url.netloc + "/" + path_split[1]
-                )
-            else:
-                self.exchange_name = "monitoring"
-
-    def publish_transfer_metrics(self, transfer_routing_key, event_payload):
-        amqp_conn = amqp.connect(self.amqp_url)
-        amqp_channel = amqp_conn.channel()
-        amqp_channel.exchange_declare(self.exchange_name, **self.EXCH_OPTS)
-
-        amqp_channel.basic_publish(
-            exchange=self.exchange_name,
-            routing_key=transfer_routing_key,
-            body=json.dumps(event_payload, indent=2),
-        )
-
-        amqp_conn.close()
+            try:
+                self.amqp_handle = amqp.AMQP(self.amqp_url)
+            except Exception:
+                logger.warn("Couldn't initialize AMQP Handle")
+                self.amqp_handle = None
 
     def single_transfer(
         self, transfer, local_filename, was_successful, t_start, t_end, filesize
     ):
-        if self.amqp_url is None:
+        if self.amqp_handle is None:
             return
 
         # status follows UNIX exit code convention
@@ -4282,8 +4255,8 @@ class Panorama:
         if filesize is not None and filesize > 0:
             event_payload["bytes_transferred"] = int(filesize)
 
-        self.publish_transfer_metrics(event_payload["event"], event_payload)
-        logger.info("Publish individual transfer statistics completed")
+        self.amqp_handle.send(event_payload["event"], event_payload)
+        logger.debug("Publish individual transfer statistics completed")
 
     def summary_transfer(self, total_files, t_start_global, t_end_global, total_bytes):
         total_secs = t_end_global - t_start_global
@@ -4311,7 +4284,7 @@ class Panorama:
 
         # If amqp_url is none try to use the generic monitoring event
         # to publish the statistics as a stampede event
-        if self.amqp_url is None:
+        if self.amqp_handle is None:
             data = {
                 "ts": int(time.time()),
                 "monitoring_event": event_payload["event"],
@@ -4324,8 +4297,8 @@ class Panorama:
             )
         else:
             event_payload["ts"] = int(time.time())
-            self.publish_transfer_metrics(event_payload["event"], event_payload)
-            logger.info("Publish summary transfer statistics completed")
+            self.amqp_handle.send(event_payload["event"], event_payload)
+            logger.debug("Publish summary transfer statistics completed")
 
 
 class SimilarWorkSet:
@@ -4774,6 +4747,9 @@ gsiftp_failures = 0
 
 # stats
 stats = Stats()
+
+# panorama live stats
+panorama_stats = None
 
 # singleton - but should we make it a global instead?
 tools = utils.Tools()
@@ -5266,6 +5242,7 @@ def main():
 
     if options.publish or "PEGASUS_TRANSFER_PUBLISH" in os.environ:
         publish_enabled = True
+        panorama_stats = Panorama()
     else:
         publish_enabled = False
 
@@ -5465,6 +5442,10 @@ def main():
 
     # end the stats timer and show summary
     stats.stats_summary()
+
+    # drain amqp queue before exiting if not None
+    if publish_enabled and panorama_stats.amqp_handle:
+        panorama_stats.amqp_handle.close()
 
     if not failed_q.empty():
         logger.critical("Some transfers failed! See above," + " and possibly stderr.")

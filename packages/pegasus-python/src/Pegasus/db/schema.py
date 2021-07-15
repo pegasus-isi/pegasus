@@ -1111,7 +1111,7 @@ class Trigger(Base):
     args = Column("args", Text())
     _type = Column(
         "type",
-        Enum(*[t.value for t in list(TriggerType)], name="trigger_type"),
+        Enum(*(t.value for t in list(TriggerType)), name="trigger_type"),
         nullable=False,
     )
 

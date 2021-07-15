@@ -138,7 +138,7 @@ class _QueryEvaluator(ast.NodeVisitor):
     def visit_BoolOp(self, n):
         # boolop = And | Or
         op = BOOLEAN_OPERATORS[n.op.__class__]
-        return op(*[self.visit(i) for i in n.values])
+        return op(*(self.visit(i) for i in n.values))
 
     # BinOp
     def visit_BinOp(self, n):
@@ -201,7 +201,7 @@ class _QueryEvaluator(ast.NodeVisitor):
         return [self.visit(n) for n in n.elts]
 
     def visit_Tuple(self, n):
-        return tuple([self.visit(e) for e in n.elts])
+        return tuple(self.visit(e) for e in n.elts)
 
     def visit_Set(self, n):
         return {self.visit(n) for n in n.elts}
