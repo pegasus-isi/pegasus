@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KICKSTART=$PEGASUS_BIN_DIR/pegasus-kickstart
+KICKSTART=$PEGASUS_BIN_DIR/pegasus-kickstart-cpu
 
 function run_test {
     echo "Running" "$@"
@@ -395,7 +395,7 @@ function test_failure_environment {
 
 function test_quote_env_var {
     KICKSTART_SAVE=$KICKSTART
-    KICKSTART="env GIDEON\"=juve $KICKSTART-cpu"
+    KICKSTART="env GIDEON\"=juve $KICKSTART"
     kickstart -f /bin/date
     rc=$?
     KICKSTART=$KICKSTART_SAVE
@@ -415,7 +415,7 @@ function test_quote_env_var {
 
 function test_prepend_path {
     KICKSTART_SAVE=$KICKSTART
-    KICKSTART="env PATH=/bar KICKSTART_PREPEND_PATH=/foo $KICKSTART-cpu"
+    KICKSTART="env PATH=/bar KICKSTART_PREPEND_PATH=/foo $KICKSTART"
     kickstart /usr/bin/env
     rc=$?
     KICKSTART=$KICKSTART_SAVE
