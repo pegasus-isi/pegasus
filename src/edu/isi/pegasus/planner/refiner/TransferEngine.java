@@ -408,7 +408,9 @@ public class TransferEngine extends Engine {
             }
         }
 
-        Collection<FileTransfer>[] fileTransfers = null;
+        Collection<FileTransfer>[] fileTransfers = new Collection[2];
+        fileTransfers[0] = new LinkedList();
+        fileTransfers[1] = new LinkedList();
 
         if (job instanceof DAXJob) {
             // for the DAX jobs we should always call the method
@@ -424,12 +426,13 @@ public class TransferEngine extends Engine {
                 fileTransfers = mStageInFileTransferGenerator.constructFileTX(job, vRCSearchFiles);
             }
         }
+
         Collection<FileTransfer> localFileTransfersToStagingSite = fileTransfers[0];
         Collection<FileTransfer> remoteFileTransfersToStagingSite = fileTransfers[1];
 
         // add the stage in transfer nodes if required
-        if (!localFileTransfersToStagingSite.isEmpty()
-                || !remoteFileTransfersToStagingSite.isEmpty()) {
+        if (!(localFileTransfersToStagingSite.isEmpty()
+                && remoteFileTransfersToStagingSite.isEmpty())) {
             mTXRefiner.addStageInXFERNodes(
                     job, localFileTransfersToStagingSite, remoteFileTransfersToStagingSite);
         }
