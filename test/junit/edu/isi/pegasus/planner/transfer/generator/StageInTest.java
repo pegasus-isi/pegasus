@@ -31,9 +31,11 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
@@ -110,7 +112,12 @@ public class StageInTest {
     }
 
     @Test
-    public void testBypassForCondorIOWithNonFileURL() {}
+    public void testBypassForCondorIOWithNonFileURL() {
+        testBypass(
+                new ReplicaCatalogEntry("http://example.isi.edu/input/f.in", "compute"),
+                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
+                false);
+    }
 
     /**
      * Test to ensure there is no bypass in condor io mode , if the replica catalog location is a
@@ -141,12 +148,83 @@ public class StageInTest {
      * file URL on the local site, but the PFN does not end in the basename of the LFN
      */
     @Test
-    public void testBypassForCondorIOWithFileURLOnLocalSiteB() {
+    public void testBypassForCondorIOWithFileURLOnLocalSiteWithRandomBasename() {
 
         testBypass(
                 new ReplicaCatalogEntry("file:///input/f.random", "local"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
                 false);
+    }
+
+    /** Test to ensure there is bypass in nonsharedfs mode for file URL's on compute site */
+    @Test
+    public void testBypassForNonSharedFSWithFileURLOnCompute() {
+
+        testBypass(
+                new ReplicaCatalogEntry("file:///input/f.in", "compute"),
+                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
+                true);
+    }
+
+    /**
+     * Test to ensure there is bypass in nonsharedfs mode we dont care about the basename of the
+     * PFN. The rename happens when pegasus-transfer is invoked
+     */
+    @Test
+    public void testBypassForNonSharedFSWithRandomeBasenameOnCompute() {
+
+        testBypass(
+                new ReplicaCatalogEntry("file:///input/f.random", "compute"),
+                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
+                true);
+    }
+
+    /** Test to ensure there is bypass in nonsharedfs mode for non file URL's */
+    @Test
+    public void testBypassForNonSharedFSWithNonFileURLOnCompute() {
+
+        testBypass(
+                new ReplicaCatalogEntry("http://example.isi.edu/input/f.in", "compute"),
+                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
+                true);
+    }
+
+    /** Test to ensure there is bypass in nonsharedfs mode for file URL's on local site */
+    @Test
+    public void testBypassForNonSharedFSWithFileURLOnLocal() {
+
+        testBypass(
+                new ReplicaCatalogEntry("file:///input/f.in", "local"),
+                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
+                false);
+    }
+
+    /**
+     * Test to ensure there is bypass in nonsharedfs mode for file URL's on local site, when compute
+     * site has auxillary.local set to true PM-1783
+     */
+    @Test
+    public void testBypassForNonSharedFSWithFileURLOnLocalWithAuxillaryLocal() {
+        SiteStore s = mBag.getHandleToSiteStore();
+        SiteCatalogEntry computeSite = s.lookup("compute");
+
+        // add the profile
+        computeSite.addProfile(new Profile("pegasus", Pegasus.LOCAL_VISIBLE_KEY, "true"));
+
+        testBypass(
+                new ReplicaCatalogEntry("file:///input/f.in", "local"),
+                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
+                true);
+    }
+
+    /** Test to ensure there is bypass in nonsharedfs mode for non file URL's */
+    @Test
+    public void testBypassForNonSharedFSWithNonFileURLOnLocal() {
+
+        testBypass(
+                new ReplicaCatalogEntry("http://example.isi.edu/input/f.in", "local"),
+                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
+                true);
     }
 
     /**
