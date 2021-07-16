@@ -5159,6 +5159,7 @@ def main():
     global stats_end
     global symlink_file_transfer
     global publish_enabled
+    global panorama_stats
 
     # dup stderr onto stdout
     sys.stderr = sys.stdout
