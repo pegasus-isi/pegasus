@@ -715,7 +715,16 @@ public class StageIn extends Abstract {
                 // additional check for condor io
                 // we need to inspect the URL and it's location
                 // only file urls for input files are eligible for bypass
-                if (isFileURL && fileSite.equals("local")) {
+                if (isFileURL) {
+                    if (fileSite.equals("local")) {
+                        bypass = true;
+                    } else if (fileSite.equals(computeSiteEntry.getSiteHandle())) {
+                        // PM-1783 allow for compute site file URLs to be bypassed
+                        // if the compute site is visible to the submit host
+                        bypass = computeSiteEntry.isVisibleToLocalSite();
+                    }
+                }
+                if (bypass) {
                     // in condor io  we cannot remap the destination URL
                     // we need to make sure the PFN ends with lfn to enable bypass
                     bypass = entry.getPFN().endsWith(file.getLFN());
