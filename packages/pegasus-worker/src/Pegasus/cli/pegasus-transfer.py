@@ -4054,7 +4054,7 @@ class Stats:
                     transfer, local_filename, was_successful, t_start, t_end, bytes
                 )
             except Exception as e:
-                logger.warn("Panorama send failure: " + str(e))
+                logger.warning("Panorama send failure: " + str(e))
 
     def all_transfers_done(self):
         self._t_end_global = time.time()
@@ -4192,7 +4192,7 @@ class Stats:
                     self._total_bytes,
                 )
             except Exception as e:
-                logger.warn("Panorama send failure: " + str(e))
+                logger.warning("Panorama send failure: " + str(e))
 
 
 class Panorama:
@@ -4214,7 +4214,7 @@ class Panorama:
             try:
                 self.amqp_handle = amqp.AMQP(self.amqp_url)
             except Exception:
-                logger.warn("Couldn't initialize AMQP Handle")
+                logger.warning("Couldn't initialize AMQP Handle")
                 self.amqp_handle = None
 
     def single_transfer(
@@ -5444,8 +5444,9 @@ def main():
     stats.stats_summary()
 
     # drain amqp queue before exiting if not None
-    if publish_enabled and panorama_stats.amqp_handle:
-        panorama_stats.amqp_handle.close()
+    if publish_enabled and panorama_stats:
+        if panorama_stats.amqp_handle:
+            panorama_stats.amqp_handle.close()
 
     if not failed_q.empty():
         logger.critical("Some transfers failed! See above," + " and possibly stderr.")

@@ -1,5 +1,6 @@
 import logging
 import ssl
+import queue
 from threading import Thread
 
 import pika
@@ -25,21 +26,22 @@ class AMQP:
 
     def __init__(self, amqp_url):
         self.params = {}
+        self._conn = None
         self._msg_queue = queue.Queue()
         self._stopping = False
 
-        set_logger()
+        self._set_logger()
 
         url = urlparse.urlparse(amqp_url)
-        self.params["host"] = url.host
-        set_port(url)
-        set_exchange_vhost(url)
-        set_ssl_options(url)
-        set_connection_timeout(url)
-        set_heartbeat(url)
+        self.params["host"] = url.hostname
+        self._set_port(url)
+        self._set_exchange_vhost(url)
+        self._set_ssl_options(url)
+        self._set_connection_timeout(url)
+        self._set_heartbeat(url)
 
-        creds = amqp.PlainCredentials(url.username, url.password)
-        self._params = amqp.ConnectionParameters(
+        creds = pika.PlainCredentials(url.username, url.password)
+        self._params = pika.ConnectionParameters(
             host=self.params["host"],
             port=self.params["port"],
             ssl_options=self.params["SSLOptions"],
@@ -50,10 +52,10 @@ class AMQP:
         )  # heartbeat: None -> negotiate heartbeat with the AMQP server
 
         # initialize worker thread in daemon and start it
-        self._worker_thread = Thread(target=self.event_publisher, daemon=True)
+        self._worker_thread = Thread(target=self._event_publisher, daemon=True)
         self._worker_thread.start()
 
-    def set_logger(self, debug_flag=False):
+    def _set_logger(self, debug_flag=False):
         logger = logging.getLogger("AMQP_Handle")
         # log to the console
         console = logging.StreamHandler()
@@ -74,7 +76,7 @@ class AMQP:
 
         self._logger = logger
 
-    def set_port(self, url):
+    def _set_port(self, url):
         if url.port is None:
             if url.scheme == "amqps":
                 self.params["port"] = 5671  # RabbitMQ default TLS
@@ -83,7 +85,7 @@ class AMQP:
         else:
             self.params["port"] = url.port
 
-    def set_exchange_vhost(self, url):
+    def _set_exchange_vhost(self, url):
         exchange = None
         virtual_host = None
         path_comp = url.path.split("/")
@@ -96,7 +98,7 @@ class AMQP:
         self.params["virtual_host"] = virtual_host
         self.params["exchange"] = exchange
 
-    def set_ssl_options(self, url):
+    def _set_ssl_options(self, url):
         SSLOptions = None
         if url.scheme == "amqps":
             context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
@@ -106,14 +108,14 @@ class AMQP:
 
         self.params["SSLOptions"] = SSLOptions
 
-    def set_connection_timeout(self, url):
+    def _set_connection_timeout(self, url):
         connection_timeout = None
         query_params = urlparse.parse_qs(url.query)
         if "connection_timeout" in query_params:
             connection_timeout = int(query_params["connection_timeout"][0])
         self.params["connection_timeout"] = connection_timeout
 
-    def set_heartbeat(self, url):
+    def _set_heartbeat(self, url):
         heartbeat = None
         query_params = urlparse.parse_qs(url.query)
         if "heartbeat" in query_params:
@@ -134,24 +136,24 @@ class AMQP:
         self._worker_thread.join()
         self._logger.debug("Publisher thread exited.")
 
-    def event_publisher(self):
+    def _event_publisher(self):
         event, data = (None, None)
         reconnect_attempts = 0
         while not self._stopping:
             try:
-                self.logger.info(
+                self._logger.info(
                     "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s"
                     % (
                         self._params.host,
                         self._params.port,
                         self._params.virtual_host,
-                        self.exchange,
+                        self.params["exchange"],
                         self._params.credentials.username,
                         not self._params.ssl_options is None,
                     )
                 )
 
-                self._conn = amqp.BlockingConnection(self._params)
+                self._conn = pika.BlockingConnection(self._params)
                 self._channel = self._conn.channel()
                 self._channel.exchange_declare(
                     self.params["exchange"], **self.EXCH_OPTS
@@ -181,7 +183,7 @@ class AMQP:
                         continue
 
             # Do not recover if connection was closed by broker
-            except amqp.exceptions.ConnectionClosedByBroker as err:
+            except pika.exceptions.ConnectionClosedByBroker as err:
                 self._logger.error(
                     "Connection to %s:%s was closed by Broker - Not Recovering"
                     % (self._params.host, self._params.port)
@@ -192,7 +194,7 @@ class AMQP:
                 self._conn = None
                 break
             # Do not recover on channel errors
-            except amqp.exceptions.AMQPChannelError as err:
+            except pika.exceptions.AMQPChannelError as err:
                 self._logger.error(
                     "Channel error at %s:%s - Not Recovering"
                     % (self._params.host, self._params.port)
@@ -201,7 +203,7 @@ class AMQP:
                 self._conn = None
                 break
             # Recover on all other connection errors if reconnect attempts is less than 5
-            except amqp.exceptions.AMQPConnectionError:
+            except pika.exceptions.AMQPConnectionError:
                 reconnect_attempts += 1
                 if reconnect_attempts > 5:
                     self._logger.info(
