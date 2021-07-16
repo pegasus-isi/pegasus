@@ -159,8 +159,6 @@ class AMQP:
                     self.params["exchange"], **self.EXCH_OPTS
                 )
 
-                reconnect_attempts = 0
-
                 while not self._stopping:
                     try:
                         # if variables are initialized we haven't sent them yet.
