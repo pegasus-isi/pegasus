@@ -158,6 +158,8 @@ class AMQP:
                 self._channel.exchange_declare(
                     self.params["exchange"], **self.EXCH_OPTS
                 )
+                
+                reconnect_attempts = 0
 
                 while not self._stopping:
                     try:
