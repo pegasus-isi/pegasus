@@ -57,6 +57,10 @@ class AMQP:
 
     def _set_logger(self, debug_flag=False):
         logger = logging.getLogger("AMQP_Handle")
+        if logger.handlers:
+            self._logger = logger
+            return
+
         # log to the console
         console = logging.StreamHandler()
 
