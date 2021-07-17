@@ -4255,7 +4255,7 @@ class Panorama:
         if filesize is not None and filesize > 0:
             event_payload["bytes_transferred"] = int(filesize)
 
-        self.amqp_handle.send(event_payload["event"], event_payload)
+        self.amqp_handle.send(event_payload["event"], json.dumps(event_payload))
         logger.debug("Publish individual transfer statistics completed")
 
     def summary_transfer(self, total_files, t_start_global, t_end_global, total_bytes):
@@ -4297,7 +4297,7 @@ class Panorama:
             )
         else:
             event_payload["ts"] = int(time.time())
-            self.amqp_handle.send(event_payload["event"], event_payload)
+            self.amqp_handle.send(event_payload["event"], json.dumps(event_payload))
             logger.debug("Publish summary transfer statistics completed")
 
 
