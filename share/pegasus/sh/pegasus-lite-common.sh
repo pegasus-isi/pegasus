@@ -619,6 +619,18 @@ pegasus_lite_get_system()
                 "sles") osname="suse" ;;
                 *) osname="$osname" ;;
             esac
+	    
+	    if [ "$osname" = "deb" -a -z "$osversion" ]
+	    then
+	    	oscodename=`cat /etc/debian_version | cut -d/ -f1`
+		case $oscodename in
+		    "buster")	osversion="10" ;;
+		    "bullseye")	osversion="11" ;;
+		    "bookworm")	osversion="12" ;;
+		    "trixie")	osversion="13" ;;
+		esac
+	    fi
+
         elif [ -e /etc/issue ]; then
             osname=`cat /etc/issue | head -n1 | awk '{print $1;}' | tr '[:upper:]' '[:lower:]'`
 
