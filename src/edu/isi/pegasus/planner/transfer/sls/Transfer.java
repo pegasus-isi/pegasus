@@ -542,12 +542,12 @@ public class Transfer implements SLS {
             // are same
             // OR
             // staging site is local and the compute site is visible to the local site
-            boolean useFileURLAsSource =
+            boolean useFileURLAsDest =
                     stagingSite.equals(computeSite)
                             || (stagingSite.equals("local")
                                     && computeSiteEntry.isVisibleToLocalSite());
 
-            if (useFileURLAsSource) {
+            if (useFileURLAsDest) {
                 // PM-1787 auxillary.local is what determines whether we use file URL as destination
                 // or not
                 // PM-1108 symlinking is turned on and the compute site for
