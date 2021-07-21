@@ -547,7 +547,9 @@ public class Transfer implements SLS {
                             || (stagingSite.equals("local")
                                     && computeSiteEntry.isVisibleToLocalSite());
 
-            if (mUseSymLinks && useFileURLAsSource) {
+            if (useFileURLAsSource) {
+                // PM-1787 auxillary.local is what determines whether we use file URL as destination
+                // or not
                 // PM-1108 symlinking is turned on and the compute site for
                 // the job is the same the staging site. This means that
                 // the shared-scratch directory used on the staging site is locally
