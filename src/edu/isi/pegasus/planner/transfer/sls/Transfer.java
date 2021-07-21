@@ -309,6 +309,9 @@ public class Transfer implements SLS {
             }
         }
 
+        String computeSite = job.getSiteHandle();
+        SiteCatalogEntry computeSiteEntry = this.mSiteStore.lookup(computeSite);
+
         // To do. distinguish the sls file from the other input files
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
@@ -333,8 +336,6 @@ public class Transfer implements SLS {
             Collection<ReplicaCatalogEntry> cacheLocations = null;
             Collection<ReplicaCatalogEntry> sources = new LinkedList();
             boolean symlink = false;
-            String computeSite = job.getSiteHandle();
-            SiteCatalogEntry computeSiteEntry = this.mSiteStore.lookup(computeSite);
             if (pf.doBypassStaging()) {
                 // PM-698
                 // we retrieve the URL from the Planner Cache as a get URL
@@ -517,6 +518,7 @@ public class Transfer implements SLS {
         PegasusFile pf;
         String stagingSite = job.getStagingSiteHandle();
         String computeSite = job.getSiteHandle();
+        SiteCatalogEntry computeSiteEntry = this.mSiteStore.lookup(computeSite);
 
         // To do. distinguish the sls file from the other input files
         for (Iterator it = files.iterator(); it.hasNext(); ) {
@@ -536,7 +538,16 @@ public class Transfer implements SLS {
             // destination
             url = new StringBuffer();
 
-            if (mUseSymLinks && computeSite.equals(stagingSite)) {
+            // PM-1787 the destination URL can be a file URL if the compute site and staging site
+            // are same
+            // OR
+            // staging site is local and the compute site is visible to the local site
+            boolean useFileURLAsSource =
+                    stagingSite.equals(computeSite)
+                            || (stagingSite.equals("local")
+                                    && computeSiteEntry.isVisibleToLocalSite());
+
+            if (mUseSymLinks && useFileURLAsSource) {
                 // PM-1108 symlinking is turned on and the compute site for
                 // the job is the same the staging site. This means that
                 // the shared-scratch directory used on the staging site is locally
