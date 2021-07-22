@@ -1189,17 +1189,22 @@ public class JDBCRC implements ReplicaCatalog {
                 // insert new lfns
                 List<String> lfnsInDB = new ArrayList<String>((Set<String>) lfnToID.keySet());
                 List<String> lfnsToInsert = new ArrayList<String>();
+                PreparedStatement ps =
+                        mConnection.prepareStatement(
+                                "INSERT INTO rc_lfn(lfn) VALUES(?)",
+                                Statement.RETURN_GENERATED_KEYS);
                 int countInserts = 0;
                 for (String lfn : lfns) {
                     if (!lfnsInDB.contains(lfn)) {
-                        st.addBatch("INSERT INTO rc_lfn(lfn) VALUES('" + lfn + "')");
+                        ps.setString(1, lfn);
+                        ps.addBatch();
                         lfnsToInsert.add(lfn);
                         countInserts++;
                     }
                 }
-                st.executeBatch();
+                ps.executeBatch();
                 int index = 0;
-                rs = st.getGeneratedKeys();
+                rs = ps.getGeneratedKeys();
                 while (rs.next()) {
                     if (mUsingSQLiteBackend) {
                         for (String lfn : lfnsToInsert) {
