@@ -526,6 +526,7 @@ public class Transfer implements SLS {
             String lfn = pf.getLFN();
 
             FileTransfer ft = new FileTransfer();
+            ft.setLFN(lfn);
             // ensure that right type gets associated, especially
             // whether a file is a checkpoint file or not
             ft.setType(pf.getType());

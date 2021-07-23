@@ -98,6 +98,8 @@ public class PegasusProperties implements Cloneable {
     public static final String PEGASUS_TRANSFER_BYPASS_INPUT_STAGING_PROPERTY_KEY =
             "pegasus.transfer.bypass.input.staging";
 
+    public static final String PEGASUS_TRANSFER_LINKS_PROPERTY_KEY = "pegasus.transfer.links";
+
     // Replica Catalog Constants
     public static final String DEFAULT_RC_COLLECTION = "GriphynData";
 
@@ -1154,7 +1156,7 @@ public class PegasusProperties implements Cloneable {
      *     value being specified or property not being set.
      */
     public boolean getUseOfSymbolicLinks() {
-        String value = mProps.getProperty("pegasus.transfer.links");
+        String value = mProps.getProperty(PEGASUS_TRANSFER_LINKS_PROPERTY_KEY);
         return Boolean.parse(value, false);
     }
 
