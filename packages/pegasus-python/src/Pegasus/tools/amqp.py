@@ -1,8 +1,7 @@
 import logging
 import queue
 import ssl
-import time
-from threading import Thread
+from threading import Thread, Event
 
 import pika
 
@@ -29,7 +28,7 @@ class AMQP:
         self.params = {}
         self._conn = None
         self._msg_queue = queue.Queue()
-        self._stopping = False
+        self._stopping = Event()
 
         self._set_logger()
 
@@ -133,10 +132,10 @@ class AMQP:
         self._msg_queue.put((event, data))
 
     def close(self):
-        if self._worker_thread.is_alive():
+        if self._conn and self._worker_thread.is_alive():
             self._logger.debug("Waiting for queue to emtpy.")
             self._msg_queue.join()  # wait for queue to empty if worker is alive
-        self._stopping = True
+        self._stopping.set()
         self._logger.debug("Waiting for publisher thread to exit.")
         self._worker_thread.join()
         self._logger.debug("Publisher thread exited.")
@@ -144,7 +143,7 @@ class AMQP:
     def _event_publisher(self):
         event, data = (None, None)
         reconnect_attempts = 0
-        while not self._stopping:
+        while not self._stopping.is_set():
             try:
                 self._logger.info(
                     "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s"
@@ -166,7 +165,7 @@ class AMQP:
 
                 reconnect_attempts = 0
 
-                while not self._stopping:
+                while not self._stopping.is_set():
                     try:
                         # if variables are initialized we haven't sent them yet.
                         # don't retrieve a new event, send the old one
@@ -209,6 +208,7 @@ class AMQP:
                 break
             # Recover on all other connection errors if reconnect attempts is less than 5
             except pika.exceptions.AMQPConnectionError:
+                self._conn = None
                 reconnect_attempts += 1
                 if reconnect_attempts > 5:
                     self._logger.info(
@@ -221,8 +221,12 @@ class AMQP:
                         "Connection to %s:%s was closed - Will try to recover the connection"
                         % (self._params.host, self._params.port)
                     )
-                    time.sleep((2 ** reconnect_attempts) * 10)
-                    continue
+                    exp_timeout = (2 ** reconnect_attempts) * 10
+                    stopping_flag = self._stopping.wait(exp_timeout)
+                    if stopping_flag:
+                        break
+                    else:
+                        continue
 
         if not self._conn is None:
             self._logger.debug("connection - close.start")
