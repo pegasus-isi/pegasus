@@ -330,6 +330,7 @@ class AMQPEventSink(EventSink):
         self._msg_queue = queue.Queue()
         self._stopping = False
         self._exch = exch
+        self._conn = None
 
         if connect_timeout is None:
             # pick timeout from properties
