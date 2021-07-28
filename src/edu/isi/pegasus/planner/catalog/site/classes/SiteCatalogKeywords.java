@@ -50,7 +50,8 @@ public enum SiteCatalogKeywords {
     RUNNING_JOBS("runningJobs"),
     JOBS_IN_QUEUE("jobsInQueue"),
     IDLE_NODES("idleNodes"),
-    TOTAL_NODES("totalNodes");
+    TOTAL_NODES("totalNodes"),
+    SHARED_FILESYSTEM("sharedFileSystem");
 
     private String mName;
 

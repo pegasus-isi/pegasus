@@ -819,6 +819,22 @@ public class SiteCatalogEntry extends AbstractSiteData {
         return pegasusProfiles.getBooleanValue(Pegasus.LOCAL_VISIBLE_KEY);
     }
 
+    /**
+     * Returns a boolean indicating whether the shared scratch space is accessible to the worker
+     * nodes via a shared filesystem.
+     *
+     * @return
+     * @throws RuntimeException in case directory of type shared scratch is not associated
+     */
+    public boolean hasSharedFileSystem() {
+        Directory dir = this.getDirectory(Directory.TYPE.shared_scratch);
+        if (dir == null) {
+            throw new RuntimeException(
+                    "Directory of type shared_scratch is not associated with the site " + this.mID);
+        }
+        return dir.hasSharedFileSystemAccess();
+    }
+
     public static void main(String[] args) {
         ObjectMapper mapper =
                 new ObjectMapper(
