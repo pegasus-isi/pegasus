@@ -55,7 +55,7 @@ class TestFileServer:
 class TestDirectory:
     def test_valid_directory(self):
         assert Directory(Directory.LOCAL_SCRATCH, "/path")
-        assert Directory(Directory.SHARED_SCRATCH, Path("/abs/path"))
+        assert Directory(Directory.SHARED_SCRATCH, Path("/abs/path"), shared_file_system=True)
 
     def test_invalid_directory_type(self):
         with pytest.raises(TypeError) as e:
@@ -89,7 +89,7 @@ class TestDirectory:
         assert id(a) == id(b)
 
     def test_tojson(self):
-        directory = Directory(Directory.LOCAL_SCRATCH, "/path").add_file_servers(
+        directory = Directory(Directory.LOCAL_SCRATCH, "/path", True).add_file_servers(
             FileServer("url", Operation.PUT)
         )
 
@@ -98,6 +98,7 @@ class TestDirectory:
         expected = {
             "type": "localScratch",
             "path": "/path",
+            "sharedFileSystem": True,
             "fileServers": [{"url": "url", "operation": "put"}],
         }
 
@@ -284,6 +285,7 @@ class TestSite:
                 {
                     "type": "localScratch",
                     "path": "/path",
+                    "sharedFileSystem": False,
                     "fileServers": [{"url": "url", "operation": "get"}],
                 }
             ],
@@ -314,6 +316,7 @@ def expected_json():
                     {
                         "type": "sharedScratch",
                         "path": "/tmp/workflows/scratch",
+                        "sharedFileSystem": False,
                         "fileServers": [
                             {
                                 "url": "file:///tmp/workflows/scratch",
@@ -324,6 +327,7 @@ def expected_json():
                     {
                         "type": "localStorage",
                         "path": "/tmp/workflows/outputs",
+                        "sharedFileSystem": False,
                         "fileServers": [
                             {
                                 "url": "file:///tmp/workflows/outputs",
@@ -341,6 +345,7 @@ def expected_json():
                     {
                         "type": "sharedScratch",
                         "path": "/lustre",
+                        "sharedFileSystem": False,
                         "fileServers": [
                             {
                                 "url": "gsiftp://smarty.isi.edu/lustre",
@@ -373,6 +378,7 @@ def expected_json():
                     {
                         "type": "sharedScratch",
                         "path": "/data",
+                        "sharedFileSystem": False,
                         "fileServers": [
                             {"url": "scp://obelix.isi.edu/data", "operation": "put",},
                             {"url": "http://obelix.isi.edu/data", "operation": "get",},
