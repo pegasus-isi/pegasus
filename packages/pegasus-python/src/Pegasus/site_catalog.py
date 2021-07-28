@@ -77,10 +77,10 @@ def _to_sc(d: dict) -> SiteCatalog:
                         break
 
                 directory = Directory(
-                                directory_type=getattr(Directory, dir_type), 
-                                path=_dir["path"], 
-                                shared_file_system=_dir["sharedFileSystem"]
-                            )
+                    directory_type=getattr(Directory, dir_type),
+                    path=_dir["path"],
+                    shared_file_system=_dir["sharedFileSystem"],
+                )
 
                 # add file servers
                 for fs in _dir["fileServers"]:
