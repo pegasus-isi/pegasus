@@ -76,7 +76,11 @@ def _to_sc(d: dict) -> SiteCatalog:
                         dir_type = enum_name
                         break
 
-                directory = Directory(getattr(Directory, dir_type), _dir["path"])
+                directory = Directory(
+                    directory_type=getattr(Directory, dir_type),
+                    path=_dir["path"],
+                    shared_file_system=_dir["sharedFileSystem"],
+                )
 
                 # add file servers
                 for fs in _dir["fileServers"]:

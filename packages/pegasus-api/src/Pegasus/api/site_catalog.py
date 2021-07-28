@@ -157,12 +157,14 @@ class Directory:
     # the site catalog schema lists freeSize and totalSize as an attribute
     # however this appears to not be used; removing it as a parameter
     # def __init__(self, directory_type, path, free_size=None, total_size=None):
-    def __init__(self, directory_type: _DirectoryType, path: Union[str, Path]):
+    def __init__(self, directory_type: _DirectoryType, path: Union[str, Path], shared_file_system: bool = False):
         """
         :param directory_type: directory type defined in :py:class:`~Pegasus.api.site_catalog.DirectoryType` (e.g. :code:`Directory.SHARED_SCRATCH` or :code:`Directory.LOCAL_STORAGE`)
         :type directory_type: _DirectoryType
         :param path: directory path
         :type path: Union[str, Path]
+        :param shared_file_system: indicate whether the shared scratch space is accessible to the worker nodes via a shared filesystem, defaults to False
+        :type shared_file_system: bool
         :raises ValueError: directory_type must be one of :py:class:`~Pegasus.api.site_catalog.DirectoryType`
         :raises ValueError: path must be given as an absolute path
         """
@@ -188,6 +190,8 @@ class Directory:
         self.path = str(path)
         # self.free_size = free_size
         # self.total_size = total_size
+
+        self.shared_file_system = shared_file_system
 
         self.file_servers = list()
 
@@ -216,6 +220,7 @@ class Directory:
             {
                 "type": self.directory_type,
                 "path": self.path,
+                "sharedFileSystem": self.shared_file_system,
                 "fileServers": [fs for fs in self.file_servers],
                 "freeSize": None,
                 "totalSize": None,
