@@ -155,7 +155,8 @@ public class TransferTest {
         sharedScratch.setSharedFileSystemAccess(true);
 
         // since compute and staging site are the same, source is a file url not a gsiftp
-        expectedOutput.addSource("compute", "file:///workflows/compute/shared-scratch/./f.in");
+        expectedOutput.addSource(
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.in");
         expectedOutput.addDestination("compute", "file://$PWD/f.in");
 
         this.testStageIn("compute", expectedOutput);
@@ -201,7 +202,8 @@ public class TransferTest {
         sharedScratch.setSharedFileSystemAccess(true);
 
         // since compute and staging site are the same, source is a file url not a gsiftp
-        expectedOutput.addSource("compute", "file:///workflows/compute/shared-scratch/./f.in");
+        expectedOutput.addSource(
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.in");
         expectedOutput.addDestination("compute", "symlink://$PWD/f.in");
 
         this.testStageIn("compute", expectedOutput);
@@ -239,7 +241,7 @@ public class TransferTest {
 
         // source and destination site are different. symlink is triggered
         // as symlink is on auxillary local is set to true
-        expectedOutput.addSource("local", "file:///workflows/local/shared-scratch/./f.in");
+        expectedOutput.addSource("local", "file:///internal/workflows/local/shared-scratch/./f.in");
         expectedOutput.addDestination("compute", "symlink://$PWD/f.in");
 
         this.testStageIn("local", expectedOutput);
@@ -258,7 +260,7 @@ public class TransferTest {
 
         // source and destination site are different.
         // auxillary.local is true . so source url is file instead of gsiftp
-        expectedOutput.addSource("local", "file:///workflows/local/shared-scratch/./f.in");
+        expectedOutput.addSource("local", "file:///internal/workflows/local/shared-scratch/./f.in");
         expectedOutput.addDestination("compute", "file://$PWD/f.in");
 
         this.testStageIn("local", expectedOutput);
@@ -302,7 +304,8 @@ public class TransferTest {
         expectedOutput.setTransferFlag(true);
         expectedOutput.addSource("compute", "file://$PWD/f.out");
         // destination is a file url instead of gsiftp
-        expectedOutput.addDestination("local", "file:///workflows/local/shared-scratch/./f.out");
+        expectedOutput.addDestination(
+                "local", "file:///internal/workflows/local/shared-scratch/./f.out");
 
         this.testStageOut("local", expectedOutput);
     }
@@ -341,7 +344,7 @@ public class TransferTest {
         expectedOutput.addSource("compute", "file://$PWD/f.out");
         // destination is a file url instead of gsiftp
         expectedOutput.addDestination(
-                "compute", "file:///workflows/compute/shared-scratch/./f.out");
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.out");
 
         this.testStageOut("compute", expectedOutput);
     }
@@ -447,7 +450,8 @@ public class TransferTest {
         computeSite.setOS(SysInfo.OS.linux);
         Directory dir = new Directory();
         dir.setType(Directory.TYPE.shared_scratch);
-        dir.setInternalMountPoint(new InternalMountPoint("/workflows/compute/shared-scratch"));
+        dir.setInternalMountPoint(
+                new InternalMountPoint("/internal/workflows/compute/shared-scratch"));
         FileServer fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.get);
         PegasusURL url =
@@ -480,7 +484,8 @@ public class TransferTest {
         stagingSite.setOS(SysInfo.OS.linux);
         dir = new Directory();
         dir.setType(Directory.TYPE.shared_scratch);
-        dir.setInternalMountPoint(new InternalMountPoint("/workflows/staging/shared-scratch"));
+        dir.setInternalMountPoint(
+                new InternalMountPoint("/internal/workflows/staging/shared-scratch"));
         fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.all);
         url = new PegasusURL("gsiftp://staging.isi.edu/workflows/staging/shared-scratch");
@@ -497,7 +502,8 @@ public class TransferTest {
         localSite.setOS(SysInfo.OS.linux);
         dir = new Directory();
         dir.setType(Directory.TYPE.shared_scratch);
-        dir.setInternalMountPoint(new InternalMountPoint("/workflows/local/shared-scratch"));
+        dir.setInternalMountPoint(
+                new InternalMountPoint("/internal/workflows/local/shared-scratch"));
         fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.all);
         url = new PegasusURL("gsiftp://local.isi.edu/workflows/local/shared-scratch");
