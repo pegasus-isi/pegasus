@@ -357,7 +357,9 @@ public class Decaf implements JobAggregator {
     private void writeOutLaunchScript(DataFlowJob job, Writer writer) {
         PrintWriter pw = new PrintWriter(writer);
         pw.println("#!/bin/bash");
+        pw.println("set -e");
 
+        
         pw.println("echo \" Launched from directory `pwd` \" ");
 
         // mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
