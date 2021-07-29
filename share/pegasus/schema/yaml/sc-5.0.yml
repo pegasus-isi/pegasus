@@ -72,7 +72,6 @@ $defs:
     required:
       - type
       - fileServers
-      - sharedFileSystem
     additionalProperties: false
     patternProperties:
       ^x-:
