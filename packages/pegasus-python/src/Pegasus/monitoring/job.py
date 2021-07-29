@@ -60,7 +60,7 @@ re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
 re_parse_job_class = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
 re_parse_pegasuslite_hostname = re.compile(
-    r"^.*Executing on host\s*(\S+)(?:\s*IP=(\S+))*$", re.MULTILINE
+    r"^.*Executing on host\s*(\S+)(?:\s*IP=(\S+))*.*$", re.MULTILINE
 )
 
 
