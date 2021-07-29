@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.code.generator.condor.style.Condor;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -359,6 +360,10 @@ public class Decaf implements JobAggregator {
         pw.println("#!/bin/bash");
         pw.println("set -e");
 
+        // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
+        // PEGASUS_SCRATCH_DIR is always set as an environment variable in
+        // generated condor submit file
+        pw.println("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY);
         
         pw.println("echo \" Launched from directory `pwd` \" ");
 
