@@ -289,6 +289,9 @@ public class Decaf implements JobAggregator {
         for (Job j : nodes) {
             // decaf attributes are stored as selector profiles
             Namespace decafAttrs = j.getSelectorProfiles();
+            // PM-1794 inject job args to cmdline parameters
+            decafAttrs.construct("cmdline", j.getRemoteExecutable() + " " + j.getArguments());
+
             generator.writeStartObject();
             for (Iterator profileIt = decafAttrs.getProfileKeyIterator(); profileIt.hasNext(); ) {
                 String key = (String) profileIt.next();
@@ -364,7 +367,7 @@ public class Decaf implements JobAggregator {
         // PEGASUS_SCRATCH_DIR is always set as an environment variable in
         // generated condor submit file
         pw.println("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY);
-        
+
         pw.println("echo \" Launched from directory `pwd` \" ");
 
         // mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
