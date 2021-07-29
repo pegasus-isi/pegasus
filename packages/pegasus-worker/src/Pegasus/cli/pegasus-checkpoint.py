@@ -11,7 +11,7 @@ import threading
 import time
 from typing import Iterable, List, Set
 
-log = logging.getLogger()
+log = logging.getLogger("pegasus-checkpoint")
 
 # name of archived & compressed checkpoints
 CHECKPOINT_FILENAME = "pegasus.checkpoint.tar.gz"
@@ -117,10 +117,21 @@ def configure_logging(level: int, log_to_file: bool):
 def write_pid():
     """Write PID to :code:`PEGASUS_CHECKPOINT_PID_FILE`"""
     with open(PEGASUS_CHECKPOINT_PID_FILE, "w") as f:
-        f.write(os.getpid())
+        pid = os.getpid()
+        f.write(pid)
+
+        log.debug("PID: {}".format(pid))
+
 
 
 class PeriodicCheckpointNotifier(threading.Thread):
+    """
+    Thread to periodically signal to the worker thread to start saving and
+    staging out checkpoint files.
+    """
+
+    log = logging.getLogger("pegasus-checkpoint.PeriodicCheckcpointNotifier")
+
     def __init__(self, interval: int, notify: threading.Event):
         """Constructor
 
@@ -139,13 +150,26 @@ class PeriodicCheckpointNotifier(threading.Thread):
         Repeatedly sleep for the given interval, then notify checkpoint worker
         thread to start working upon waking up.
         """
+        PeriodicCheckpointNotifier.log.debug("{} started with interval: {} seconds".format(self.name, self.interval))
         while True:
             time.sleep(interval)
             self.notify.set()
+            PeriodicCheckpointNotifier.log.debug("notify event set")
 
 
 class CheckpointWorker(threading.Thread):
+    """Thread to handle saving and staging out checkpoint files."""
+
+    log = logging.getLogger("pegasus-checkpoint.CheckpointWorker")
+
     def __init__(self, notify: threading.Event, patterns: List[str]):
+        """Constructor
+
+        :param notify: event to watch for, which will indicate that this thread needs to run
+        :type notify: threading.Event
+        :param patterns: regex file patterns to match
+        :type patterns: List[str]
+        """
         super().__init__(group=None, target=None, name="CheckpointWorker")
 
         self.notify = notify
@@ -157,6 +181,7 @@ class CheckpointWorker(threading.Thread):
         checkpoint archive file and transfer back to staging site with either
         pegasus-transfer or condor_chirp.
         """
+        CheckpointWorker.log.debug("{} started".format(self.name))
         while True:
             # wait till we are notified
             self.notify.wait(timeout=None)
@@ -193,9 +218,9 @@ class CheckpointWorker(threading.Thread):
                 if is_match:
                     matched.add(f)
 
-                log.debug("pattern: {}, file: {}, match: {}".format(p, f, is_match))
+                CheckpointWorker.log.debug("pattern: {}, file: {}, match: {}".format(p, f, is_match))
 
-        log.info("given patterns matched the following filenames: {}".format(matched))
+        CheckpointWorker.log.info("given patterns matched the following filenames: {}".format(matched))
 
         return matched
 
@@ -208,15 +233,17 @@ class CheckpointWorker(threading.Thread):
         :param filenames: list of filenames to archive and compress 
         :type filenames: Iterable[str]
         """
+        start = time.perf_counter()
         with tarfile.open(CHECKPOINT_FILENAME, "w|gz") as tar:
             for f in filenames:
                 tar.add(name=f, recursive=True)
+        end = time.perf_counter()
 
-        checkpoint_size = Path(CHECKPOINT_FILENAME).stat().st_size
+        checkpoint_size_in_mb = Path(CHECKPOINT_FILENAME).stat().st_size / (1 << 20)
 
-        log.info(
-            "created {} byte checkpoint file: {}".format(
-                checkpoint_size, CHECKPOINT_FILENAME
+        CheckpointWorker.log.info(
+            "created {} MB checkpoint file: {}; archive and gzip took {} seconds".format(
+                checkpoint_size_in_mb, CHECKPOINT_FILENAME, end - start
             )
         )
 
