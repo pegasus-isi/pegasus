@@ -314,16 +314,32 @@ public class Decaf implements JobAggregator {
         }
         generator.writeEnd(); // for nodes
 
+        // System.err.println(logicalIDToIndex);
         generator.writeStartArray("edges");
         for (DataFlowJob.Link j : links) {
             // decaf attributes are stored as selector profiles
             Namespace decafAttrs = j.getSelectorProfiles();
             generator.writeStartObject();
 
+            int source = logicalIDToIndex.get(j.getParentID());
+            int target = logicalIDToIndex.get(j.getChildID());
             // write out source and target
-            generator.write("source", logicalIDToIndex.get(j.getParentID()));
-            generator.write("target", logicalIDToIndex.get(j.getChildID()));
+            generator.write("source", source);
+            generator.write("target", target);
 
+            StringBuilder sb = new StringBuilder();
+            sb.append("Translated link edge to source target")
+                    .append(" ")
+                    .append(j.getParentID())
+                    .append("->")
+                    .append(j.getChildID());
+            sb.append(" ")
+                    .append(" to source,target")
+                    .append(" ")
+                    .append(source)
+                    .append("->")
+                    .append(target);
+            mLogger.log(sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
             for (Iterator profileIt = decafAttrs.getProfileKeyIterator(); profileIt.hasNext(); ) {
                 String key = (String) profileIt.next();
                 String value = (String) decafAttrs.get(key);
