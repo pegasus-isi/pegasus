@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.code.generator.condor.style.Condor;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -288,6 +289,9 @@ public class Decaf implements JobAggregator {
         for (Job j : nodes) {
             // decaf attributes are stored as selector profiles
             Namespace decafAttrs = j.getSelectorProfiles();
+            // PM-1794 inject job args to cmdline parameters
+            decafAttrs.construct("cmdline", j.getRemoteExecutable() + " " + j.getArguments());
+
             generator.writeStartObject();
             for (Iterator profileIt = decafAttrs.getProfileKeyIterator(); profileIt.hasNext(); ) {
                 String key = (String) profileIt.next();
@@ -310,16 +314,32 @@ public class Decaf implements JobAggregator {
         }
         generator.writeEnd(); // for nodes
 
+        // System.err.println(logicalIDToIndex);
         generator.writeStartArray("edges");
         for (DataFlowJob.Link j : links) {
             // decaf attributes are stored as selector profiles
             Namespace decafAttrs = j.getSelectorProfiles();
             generator.writeStartObject();
 
+            int source = logicalIDToIndex.get(j.getParentID());
+            int target = logicalIDToIndex.get(j.getChildID());
             // write out source and target
-            generator.write("source", logicalIDToIndex.get(j.getParentID()));
-            generator.write("target", logicalIDToIndex.get(j.getChildID()));
+            generator.write("source", source);
+            generator.write("target", target);
 
+            StringBuilder sb = new StringBuilder();
+            sb.append("Translated link edge to source target")
+                    .append(" ")
+                    .append(j.getParentID())
+                    .append("->")
+                    .append(j.getChildID());
+            sb.append(" ")
+                    .append(" to source,target")
+                    .append(" ")
+                    .append(source)
+                    .append("->")
+                    .append(target);
+            mLogger.log(sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
             for (Iterator profileIt = decafAttrs.getProfileKeyIterator(); profileIt.hasNext(); ) {
                 String key = (String) profileIt.next();
                 String value = (String) decafAttrs.get(key);
@@ -357,6 +377,12 @@ public class Decaf implements JobAggregator {
     private void writeOutLaunchScript(DataFlowJob job, Writer writer) {
         PrintWriter pw = new PrintWriter(writer);
         pw.println("#!/bin/bash");
+        pw.println("set -e");
+
+        // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
+        // PEGASUS_SCRATCH_DIR is always set as an environment variable in
+        // generated condor submit file
+        pw.println("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY);
 
         pw.println("echo \" Launched from directory `pwd` \" ");
 
