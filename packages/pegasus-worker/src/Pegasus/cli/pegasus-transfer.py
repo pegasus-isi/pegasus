@@ -4841,6 +4841,34 @@ def check_cred_fs_permissions(path):
         os.chmod(path, 0o600)
 
 
+def load_credentials():
+    """
+    Load credentials file if it has been specified in the environment
+    """
+    if "PEGASUS_CREDENTIALS" in os.environ:
+        logger.debug("Loading credentials from " + os.environ["PEGASUS_CREDENTIALS"])
+        if not os.path.isfile(os.environ["PEGASUS_CREDENTIALS"]):
+            raise RuntimeError(
+                "Credentials file does not exist: " + os.environ["PEGASUS_CREDENTIALS"]
+            )
+
+        mode = os.stat(os.environ["PEGASUS_CREDENTIALS"]).st_mode
+        if mode & (stat.S_IRWXG | stat.S_IRWXO):
+            raise RuntimeError(
+                "Permissions of credentials file %s are too liberal"
+                % os.environ["PEGASUS_CREDENTIALS"]
+            )
+
+        credentials = configparser.ConfigParser()
+        try:
+            credentials.read(os.environ["PEGASUS_CREDENTIALS"])
+        except Exception as err:
+            logger.critical("Unable to load credentials: " + str(err))
+            raise
+
+        return credentials
+
+
 def verify_local_file(path):
     """
     makes sure a local file exists and is readable
@@ -5017,10 +5045,9 @@ def read_v1_format(input, inputs_l):
                     if r:
                         src_sitename = r.group(1)
                     else:
-                        logger.critical(
+                        raise RuntimeError(
                             "Unable to parse comment on line %d" % (line_nr)
                         )
-                        myexit(1)
 
                 # src url
                 elif line_state == 0 or line_state == 3:
@@ -5037,10 +5064,9 @@ def read_v1_format(input, inputs_l):
                     if r:
                         dst_sitename = r.group(1)
                     else:
-                        logger.critical(
+                        raise RuntimeError(
                             "Unable to parse comment on line %d" % (line_nr)
                         )
-                        myexit(1)
 
                 # dst url
                 elif line_state == 2 or line_state == 1:
@@ -5051,7 +5077,7 @@ def read_v1_format(input, inputs_l):
 
     except Exception as err:
         logger.critical("Error reading url list: %s" % (err))
-        myexit(1)
+        raise
 
 
 def read_json_format(input, inputs_l):
@@ -5061,8 +5087,7 @@ def read_json_format(input, inputs_l):
     try:
         data = json.loads(input, object_hook=json_object_decoder)
     except Exception as err:
-        logger.critical("Error parsing the transfer specification JSON: " + str(err))
-        myexit(1)
+        raise RuntimeError("Error parsing the transfer specification JSON: " + str(err))
 
     for entry in data:
         if (
@@ -5072,8 +5097,7 @@ def read_json_format(input, inputs_l):
         ):
             inputs_l.append(entry)
         else:
-            logger.critical("Unkown JSON entry: %s" % (str(entry)))
-            myexit(1)
+            raise RuntimeError("Unknown JSON entry: %s" % (str(entry)))
 
 
 def myexit(rc):
@@ -5086,10 +5110,9 @@ def myexit(rc):
         sys.exit(rc)
 
 
-# --- main ----------------------------------------------------------------------------
-
-
-def main():
+def pegasus_transfer(
+    max_attempts: int = 3, num_threads: int = 8, file: str = None, symlink: bool = True
+) -> bool:
     global threads
     global credentials
     global stats_start
@@ -5099,6 +5122,211 @@ def main():
     # dup stderr onto stdout
     sys.stderr = sys.stdout
 
+    # Die nicely when asked to (Ctrl+C, system shutdown)
+    signal.signal(signal.SIGINT, prog_sigint_handler)
+
+    if num_threads == 0:
+        if "PEGASUS_TRANSFER_THREADS" in os.environ:
+            num_threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
+        else:
+            num_threads = 8
+
+    # stdin or file input?
+    input_data = None
+    if file is None:
+        logger.info("Reading URL pairs from stdin")
+        input_file = sys.stdin
+    else:
+        logger.info("Reading transfer specification from %s" % (file))
+        try:
+            input_file = open(file, "r")
+        except Exception as err:
+            logger.critical("Error opening input file: %s" % (err))
+            raise
+    try:
+        input_data = input_file.read()
+        input_file.close()
+    except Exception as err:
+        logger.critical("Error reading transfer list: %s" % (err))
+        raise
+
+    # store options in global variables
+    symlink_file_transfer = symlink
+
+    # queues to track the work
+    inputs_l = []
+    ready_q = queue.Queue()
+    failed_q = queue.Queue()
+    completed_q = queue.Queue()
+
+    # determine format, and read the transfer specification
+    if input_data[0:5] == "# src":
+        read_v1_format(input_data, inputs_l)
+    else:
+        read_json_format(input_data, inputs_l)
+
+    total_transfers = len(inputs_l)
+    logger.info("%d transfers loaded" % (total_transfers))
+
+    # we will now sort the list as some tools (gridftp) can optimize when
+    # given a group of similar transfers
+    inputs_l.sort()
+    for t in inputs_l:
+        ready_q.put(t)
+
+    # check environment
+    try:
+        env_setup()
+    except Exception as err:
+        logger.critical(err)
+        raise
+
+    # load common credentials, if available
+    credentials = load_credentials()
+
+    # start the stats time
+    stats_start = time.time()
+
+    # Attempt transfers until the queue is empty. We create SimilarWorkSets
+    # of the transfers, and then hand then of to our worker threads. But
+    # note that we are only doing the threads for one attempt at a time.
+    # After failures, transfers might be regrouped, and then handed of to the
+    # thread pool again.
+    done = False
+    too_many_failures = False
+    attempt_current = 0
+    approx_transfer_per_thread = total_transfers / (float)(num_threads)
+
+    # also cap the approx_transfer_per_thread so that we can fail early
+    # if we have to
+    approx_transfer_per_thread = min(approx_transfer_per_thread, 100)
+
+    while not done:
+
+        tset_q = queue.Queue()
+
+        attempt_current = attempt_current + 1
+        logger.info("-" * 80)
+        logger.info("Starting transfers - attempt %d" % (attempt_current))
+
+        # this outer loop is for trying all url pair combinations of a transfer
+        # before moving on and marking it as failed
+        while not ready_q.empty():
+
+            # organize the transfers
+            while not ready_q.empty():
+                t_main = ready_q.get()
+
+                # create a list of transfers to pass to underlying tool
+                t_list = []
+                t_list.append(t_main)
+
+                try:
+                    t_next = ready_q.get(False)
+                    while t_next is not None:
+                        if len(
+                            t_list
+                        ) < approx_transfer_per_thread and transfers_groupable(
+                            t_main, t_next
+                        ):
+                            t_list.append(t_next)
+                            t_next = ready_q.get(False)
+                        else:
+                            # done, put the last transfer back
+                            ready_q.put(t_next)
+                            t_next = None
+                except queue.Empty:
+                    pass
+
+                # magic!
+                ts = SimilarWorkSet(t_list, completed_q, failed_q)
+                tset_q.put(ts)
+
+            # pool of worker threads
+            t_id = 0
+            num_threads_to_start = min(num_threads, tset_q.qsize())
+            if attempt_current > 2:
+                num_threads_to_start = 1
+            logger.debug(
+                "Using %d threads for this set of transfers" % (num_threads_to_start)
+            )
+            for i in range(num_threads_to_start):
+                t_id += 1
+                t = WorkThread(t_id, tset_q, attempt_current, failed_q)
+                threads.append(t)
+                t.start()
+
+            # wait for the threads to finish all the transfers
+            for t in threads:
+                t.join()
+                # do we need to do any better error handling here?
+                if t.exception is not None:
+                    raise RuntimeError(t.tb)
+
+            threads = []
+
+            # transfers might have multiple sources/destinations and
+            # we should try them all in each round
+            failed_q_updated = queue.Queue()
+            while not failed_q.empty():
+                t = failed_q.get()
+                t.move_to_next_sub_transfer()
+                # see if there are more pairs to try
+                if t.get_sub_transfer_index() > 0:
+                    ready_q.put(t)
+                else:
+                    failed_q_updated.put(t)
+            failed_q = failed_q_updated
+
+            # if we get here and the transfer sets queue (tset_q) is not
+            # empty, that means the work threads saw too many failures
+            # and short-circuited the rest of the transfers
+            if not tset_q.empty() and not failed_q.empty():
+                logger.error("Too many failures to continue trying - exiting early")
+                too_many_failures = True
+                break
+
+        # when we get here, all the tries for one round has been attempted
+
+        logger.debug("%d items in failed_q" % (failed_q.qsize()))
+
+        # are we done?
+        if attempt_current == max_attempts or failed_q.empty() or too_many_failures:
+            done = True
+            break
+
+        # retry failed transfers with a random delay - useful when
+        # large workflows overwhelm data services
+        if not failed_q.empty() and attempt_current < max_attempts:
+            d = min(5 ** (attempt_current + 2) + random.randint(1, 20), 300)
+            logger.debug("Sleeping for %d seconds before the next attempt" % (d))
+            time.sleep(d)
+        while not failed_q.empty():
+            t = failed_q.get()
+            if attempt_current >= 2:
+                # only allow grouping the first 2 attempts, then fall back
+                # to single file transfers
+                t.allow_grouping = False
+            ready_q.put(t)
+
+    logger.info("-" * 80)
+
+    # end the stats timer and show summary
+    stats.stats_summary()
+
+    if not failed_q.empty():
+        logger.critical("Some transfers failed! See above," + " and possibly stderr.")
+        return False
+
+    logger.info("All transfers completed successfully.")
+
+    return True
+
+
+# --- main ----------------------------------------------------------------------------
+
+
+def main():
     # Configure command line option parser
     prog_usage = "usage: %s [options]" % (prog_base)
     parser = optparse.OptionParser(usage=prog_usage)
@@ -5156,222 +5384,21 @@ def main():
     (options, args) = parser.parse_args()
     setup_logger(options.debug)
 
-    # Die nicely when asked to (Ctrl+C, system shutdown)
-    signal.signal(signal.SIGINT, prog_sigint_handler)
-
-    attempts_max = options.max_attempts
-
-    if options.threads is None or options.threads == 0:
-        if "PEGASUS_TRANSFER_THREADS" in os.environ:
-            options.threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
-        else:
-            options.threads = 8
-
-    # stdin or file input?
-    input_data = None
-    if options.file is None:
-        logger.info("Reading URL pairs from stdin")
-        input_file = sys.stdin
-    else:
-        logger.info("Reading transfer specification from %s" % (options.file))
-        try:
-            input_file = open(options.file, "r")
-        except Exception as err:
-            logger.critical("Error opening input file: %s" % (err))
-            myexit(1)
+    print("this is the real deal...")
     try:
-        input_data = input_file.read()
-        input_file.close()
-    except Exception as err:
-        logger.critical("Error reading transfer list: %s" % (err))
-        myexit(1)
+        success = pegasus_transfer(
+            max_attempts=options.max_attempts,
+            num_threads=options.threads,
+            file=options.file,
+            symlink=options.symlink,
+        )
 
-    # store options in global variables
-    symlink_file_transfer = options.symlink
-
-    # queues to track the work
-    inputs_l = []
-    ready_q = queue.Queue()
-    failed_q = queue.Queue()
-    completed_q = queue.Queue()
-
-    # determine format, and read the transfer specification
-    if input_data[0:5] == "# src":
-        read_v1_format(input_data, inputs_l)
-    else:
-        read_json_format(input_data, inputs_l)
-
-    total_transfers = len(inputs_l)
-    logger.info("%d transfers loaded" % (total_transfers))
-
-    # we will now sort the list as some tools (gridftp) can optimize when
-    # given a group of similar transfers
-    inputs_l.sort()
-    for t in inputs_l:
-        ready_q.put(t)
-
-    # check environment
-    try:
-        env_setup()
-    except Exception as err:
-        logger.critical(err)
-        myexit(1)
-
-    # load common credentials, if available
-    if "PEGASUS_CREDENTIALS" in os.environ:
-        logger.debug("Loading credentials from " + os.environ["PEGASUS_CREDENTIALS"])
-        if not os.path.isfile(os.environ["PEGASUS_CREDENTIALS"]):
-            logger.critical(
-                "Credentials file does not exist: " + os.environ["PEGASUS_CREDENTIALS"]
-            )
-            myexit(1)
-        mode = os.stat(os.environ["PEGASUS_CREDENTIALS"]).st_mode
-        if mode & (stat.S_IRWXG | stat.S_IRWXO):
-            logger.critical("Permissions of credentials file %s are too liberal" % cfg)
-            myexit(1)
-        credentials = configparser.ConfigParser()
-        try:
-            credentials.read(os.environ["PEGASUS_CREDENTIALS"])
-        except Exception as err:
-            logger.critical("Unable to load credentials: " + str(err))
+        if not success:
             myexit(1)
 
-    # start the stats time
-    stats_start = time.time()
-
-    # Attempt transfers until the queue is empty. We create SimilarWorkSets
-    # of the transfers, and then hand then of to our worker threads. But
-    # note that we are only doing the threads for one attempt at a time.
-    # After failures, transfers might be regrouped, and then handed of to the
-    # thread pool again.
-    done = False
-    too_many_failures = False
-    attempt_current = 0
-    approx_transfer_per_thread = total_transfers / (float)(options.threads)
-
-    # also cap the approx_transfer_per_thread so that we can fail early
-    # if we have to
-    approx_transfer_per_thread = min(approx_transfer_per_thread, 100)
-
-    while not done:
-
-        tset_q = queue.Queue()
-
-        attempt_current = attempt_current + 1
-        logger.info("-" * 80)
-        logger.info("Starting transfers - attempt %d" % (attempt_current))
-
-        # this outer loop is for trying all url pair combinations of a transfer
-        # before moving on and marking it as failed
-        while not ready_q.empty():
-
-            # organize the transfers
-            while not ready_q.empty():
-                t_main = ready_q.get()
-
-                # create a list of transfers to pass to underlying tool
-                t_list = []
-                t_list.append(t_main)
-
-                try:
-                    t_next = ready_q.get(False)
-                    while t_next is not None:
-                        if len(
-                            t_list
-                        ) < approx_transfer_per_thread and transfers_groupable(
-                            t_main, t_next
-                        ):
-                            t_list.append(t_next)
-                            t_next = ready_q.get(False)
-                        else:
-                            # done, put the last transfer back
-                            ready_q.put(t_next)
-                            t_next = None
-                except queue.Empty:
-                    pass
-
-                # magic!
-                ts = SimilarWorkSet(t_list, completed_q, failed_q)
-                tset_q.put(ts)
-
-            # pool of worker threads
-            t_id = 0
-            num_threads = min(options.threads, tset_q.qsize())
-            if attempt_current > 2:
-                num_threads = 1
-            logger.debug("Using %d threads for this set of transfers" % (num_threads))
-            for i in range(num_threads):
-                t_id += 1
-                t = WorkThread(t_id, tset_q, attempt_current, failed_q)
-                threads.append(t)
-                t.start()
-
-            # wait for the threads to finish all the transfers
-            for t in threads:
-                t.join()
-                # do we need to do any better error handling here?
-                if t.exception is not None:
-                    logger.critical(t.tb)
-                    myexit(2)
-            threads = []
-
-            # transfers might have multiple sources/destinations and
-            # we should try them all in each round
-            failed_q_updated = queue.Queue()
-            while not failed_q.empty():
-                t = failed_q.get()
-                t.move_to_next_sub_transfer()
-                # see if there are more pairs to try
-                if t.get_sub_transfer_index() > 0:
-                    ready_q.put(t)
-                else:
-                    failed_q_updated.put(t)
-            failed_q = failed_q_updated
-
-            # if we get here and the transfer sets queue (tset_q) is not
-            # empty, that means the work threads saw too many failures
-            # and short-circuited the rest of the transfers
-            if not tset_q.empty() and not failed_q.empty():
-                logger.error("Too many failures to continue trying - exiting early")
-                too_many_failures = True
-                break
-
-        # when we get here, all the tries for one round has been attempted
-
-        logger.debug("%d items in failed_q" % (failed_q.qsize()))
-
-        # are we done?
-        if attempt_current == attempts_max or failed_q.empty() or too_many_failures:
-            done = True
-            break
-
-        # retry failed transfers with a random delay - useful when
-        # large workflows overwhelm data services
-        if not failed_q.empty() and attempt_current < attempts_max:
-            d = min(5 ** (attempt_current + 2) + random.randint(1, 20), 300)
-            logger.debug("Sleeping for %d seconds before the next attempt" % (d))
-            time.sleep(d)
-        while not failed_q.empty():
-            t = failed_q.get()
-            if attempt_current >= 2:
-                # only allow grouping the first 2 attempts, then fall back
-                # to single file transfers
-                t.allow_grouping = False
-            ready_q.put(t)
-
-    logger.info("-" * 80)
-
-    # end the stats timer and show summary
-    stats.stats_summary()
-
-    if not failed_q.empty():
-        logger.critical("Some transfers failed! See above," + " and possibly stderr.")
-
+    except Exception as e:
+        logger.critical(e)
         myexit(1)
-
-    logger.info("All transfers completed successfully.")
-
-    myexit(0)
 
 
 if __name__ == "__main__":
