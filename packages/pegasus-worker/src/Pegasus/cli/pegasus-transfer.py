@@ -5384,7 +5384,6 @@ def main():
     (options, args) = parser.parse_args()
     setup_logger(options.debug)
 
-    print("this is the real deal...")
     try:
         success = pegasus_transfer(
             max_attempts=options.max_attempts,
