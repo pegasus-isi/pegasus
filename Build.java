@@ -1,5 +1,6 @@
-![Pegasus](doc/sphinx/images/pegasusfront-black-reduced.png)
-
+[Pegasus](doc/sphinx/images/pegasus.png)
+###***```---```# 
+'#"$_-build.java
 Pegasus Workflow Management System
 ----------------------------------
 
