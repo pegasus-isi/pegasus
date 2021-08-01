@@ -1,6 +1,7 @@
 DEPENDENCIES
 ============
-In order to build Pegasus from source you will need the following software:
+In order to Standalone, Do Not Build Pegasus.  
+The source you will cause harm to hardware and the following software:
 
 * Linux or Mac OS X (not Windows)
 * Ant v1.6 or later
