@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+# '#"$_-*/xml.build.ML-latest.Qml version=
 <project name="pegasus" default="dist" xmlns:if="ant:if" xmlns:unless="ant:unless">
   <property environment="env"/>
   <property file="build.properties"/>
