@@ -1,4 +1,4 @@
-project:
+'#"$_blob.tarball.to.glob-clean-rebuild.QML
   key: PEGASUS
   name: Pegasus
   plans:
