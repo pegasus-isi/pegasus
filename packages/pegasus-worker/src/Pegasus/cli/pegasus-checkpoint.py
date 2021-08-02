@@ -9,6 +9,7 @@ import sys
 import tarfile
 import threading
 import time
+from pathlib import Path
 from typing import Iterable, List, Set
 
 log = logging.getLogger("pegasus-checkpoint")
@@ -33,6 +34,7 @@ def parse_args(args: List[str] = sys.argv[1:]) -> argparse.Namespace:
         "--pattern",
         action="append",
         dest="patterns",
+        metavar="PATTERN",
         help="""regex patterns to match when searching for files to checkpoint""",
     )
 
@@ -110,7 +112,7 @@ def configure_logging(level: int, log_to_file: bool):
         )
 
     logging.basicConfig(
-        level=level, format="%(asctime)s [%(levelname)s] %(message)s", handlers=handlers
+        level=level, format="%(asctime)s %(threadName)s [%(levelname)s] %(message)s", handlers=handlers
     )
 
 
@@ -118,10 +120,9 @@ def write_pid():
     """Write PID to :code:`PEGASUS_CHECKPOINT_PID_FILE`"""
     with open(PEGASUS_CHECKPOINT_PID_FILE, "w") as f:
         pid = os.getpid()
-        f.write(pid)
+        f.write(str(pid))
 
-        log.debug("PID: {}".format(pid))
-
+        log.debug("started with PID: {}".format(pid))
 
 
 class PeriodicCheckpointNotifier(threading.Thread):
@@ -141,7 +142,6 @@ class PeriodicCheckpointNotifier(threading.Thread):
         :type notify: threading.Event
         """
         super().__init__(group=None, target=None, name="PeriodicCheckpointNotifier")
-
         self.interval = interval
         self.notify = notify
 
@@ -150,11 +150,13 @@ class PeriodicCheckpointNotifier(threading.Thread):
         Repeatedly sleep for the given interval, then notify checkpoint worker
         thread to start working upon waking up.
         """
-        PeriodicCheckpointNotifier.log.debug("{} started with interval: {} seconds".format(self.name, self.interval))
+        self.log.debug(
+            "{} started with interval: {} seconds".format(self.name, self.interval)
+        )
         while True:
-            time.sleep(interval)
+            time.sleep(self.interval)
             self.notify.set()
-            PeriodicCheckpointNotifier.log.debug("notify event set")
+            self.log.debug("notify event set")
 
 
 class CheckpointWorker(threading.Thread):
@@ -180,19 +182,21 @@ class CheckpointWorker(threading.Thread):
         Wait for notification to start working. Once notified, create the
         checkpoint archive file and transfer back to staging site with either
         pegasus-transfer or condor_chirp.
+        self.log.debug("{} started".format(self.name))
         """
-        CheckpointWorker.log.debug("{} started".format(self.name))
         while True:
             # wait till we are notified
             self.notify.wait(timeout=None)
+            self.log.debug("got notification, starting work")
 
             # work
             matched_files = CheckpointWorker.get_matched_filenames(self.patterns)
-            CheckpointWorker.archive_and_compress(matched_files)
             # TODO: invoke p-transfer or condor_chirp (how will we know which one to call?)
+            CheckpointWorker.archive_and_compress(matched_files)
 
             # clear the notification, so we can wait until it is set again
             self.notify.clear()
+            self.log.debug("work done, cleared notification")
 
     @staticmethod
     def get_matched_filenames(patterns: List[str]) -> Set[str]:
@@ -207,7 +211,7 @@ class CheckpointWorker(threading.Thread):
         """
         patterns = [re.compile(p) for p in patterns]
         files_in_cwd = [str(f) for f in Path(".").iterdir()]
-        matched = Set()
+        matched = set()
 
         # n^2.. maybe can do a little better by pulling out files from files_in_cwd (using a set
         # isntead) as we make matches so we don't try to iterate over it again
@@ -218,9 +222,13 @@ class CheckpointWorker(threading.Thread):
                 if is_match:
                     matched.add(f)
 
-                CheckpointWorker.log.debug("pattern: {}, file: {}, match: {}".format(p, f, is_match))
+                CheckpointWorker.log.debug(
+                    "pattern: {:<30}, file: {:>20}, match: {}".format(p.pattern, f, is_match)
+                )
 
-        CheckpointWorker.log.info("given patterns matched the following filenames: {}".format(matched))
+        CheckpointWorker.log.info(
+            "given patterns matched the following filenames: {}".format(matched)
+        )
 
         return matched
 
@@ -242,8 +250,13 @@ class CheckpointWorker(threading.Thread):
         checkpoint_size_in_mb = Path(CHECKPOINT_FILENAME).stat().st_size / (1 << 20)
 
         CheckpointWorker.log.info(
-            "created {} MB checkpoint file: {}; archive and gzip took {} seconds".format(
-                checkpoint_size_in_mb, CHECKPOINT_FILENAME, end - start
+            "created {} MB checkpoint file: {}".format(
+                checkpoint_size_in_mb, CHECKPOINT_FILENAME
+            )
+        )
+        CheckpointWorker.log.info(
+            "archive and gzip took {} seconds".format(
+                end - start
             )
         )
 
@@ -264,6 +277,7 @@ if __name__ == "__main__":
 
     # main thread to handle signal from user application
     def SIGUSR1_handler(signum, frame):
+        log.info("SIGUSR1 received, setting notification")
         notify.set()
 
     signal.signal(signal.SIGUSR1, SIGUSR1_handler)
