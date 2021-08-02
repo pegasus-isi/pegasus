@@ -5113,6 +5113,28 @@ def myexit(rc):
 def pegasus_transfer(
     max_attempts: int = 3, num_threads: int = 8, file: str = None, symlink: bool = True
 ) -> bool:
+    """
+    Main function that:
+    1. reads in transfer specification from stdin or a file
+    2. loads credentials
+    3. starts threads to handle transfers
+
+    pegasus-transfer may be directly invoked using this as an alternative to the 
+    pegasus-tranfser CLI tool.
+
+
+    :param max_attempts: number of attempts allowed for each transfer, defaults to 3
+    :type max_attempts: int, optional
+    :param num_threads: number of threads to process transfers, defaults to 8
+    :type num_threads: int, optional
+    :param file: file containing URL pairs to be transferred (if not give, list is read from stdin), defaults to None
+    :type file: str, optional
+    :param symlink: allow symlinking of file URLs, defaults to True
+    :type symlink: bool, optional
+    :raises RuntimeError: an error was encountered at any point
+    :return: whether or not all transfers succeeded
+    :rtype: bool
+    """
     global threads
     global credentials
     global stats_start
