@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import importlib
 import logging
 import logging.handlers
 import os
@@ -11,6 +12,9 @@ import threading
 import time
 from pathlib import Path
 from typing import Iterable, List, Set
+
+ptransfer_module = importlib.import_module("Pegasus.cli.pegasus-transfer")
+pegasus_transfer = ptransfer_module.pegasus_transfer
 
 log = logging.getLogger("pegasus-checkpoint")
 
@@ -71,6 +75,8 @@ def parse_args(args: List[str] = sys.argv[1:]) -> argparse.Namespace:
                 """,
     )
 
+    # TODO: add --once to indicate pegasus-checkpoint is to run CheckpointWorker.run once
+
     parser.add_argument(
         "-d", "--debug", action="store_true", default=False, help="enable debug logging"
     )
@@ -112,7 +118,9 @@ def configure_logging(level: int, log_to_file: bool):
         )
 
     logging.basicConfig(
-        level=level, format="%(asctime)s %(threadName)s [%(levelname)s] %(message)s", handlers=handlers
+        level=level,
+        format="%(asctime)s %(threadName)s [%(levelname)s] %(message)s",
+        handlers=handlers,
     )
 
 
@@ -191,8 +199,16 @@ class CheckpointWorker(threading.Thread):
 
             # work
             matched_files = CheckpointWorker.get_matched_filenames(self.patterns)
-            # TODO: invoke p-transfer or condor_chirp (how will we know which one to call?)
+
             CheckpointWorker.archive_and_compress(matched_files)
+
+            # TODO: add exception handling
+            pegasus_transfer(
+                max_attempts=3,
+                num_threads=8,
+                file=PEGASUS_TRANSFER_URL_FILE,
+                symlink=True,
+            )
 
             # clear the notification, so we can wait until it is set again
             self.notify.clear()
@@ -223,7 +239,9 @@ class CheckpointWorker(threading.Thread):
                     matched.add(f)
 
                 CheckpointWorker.log.debug(
-                    "pattern: {:<30}, file: {:>20}, match: {}".format(p.pattern, f, is_match)
+                    "pattern: {:<30}, file: {:>20}, match: {}".format(
+                        p.pattern, f, is_match
+                    )
                 )
 
         CheckpointWorker.log.info(
@@ -255,9 +273,7 @@ class CheckpointWorker(threading.Thread):
             )
         )
         CheckpointWorker.log.info(
-            "archive and gzip took {} seconds".format(
-                end - start
-            )
+            "archive and gzip took {} seconds".format(end - start)
         )
 
 
