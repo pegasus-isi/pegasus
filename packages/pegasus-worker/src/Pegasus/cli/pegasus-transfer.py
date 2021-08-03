@@ -5144,9 +5144,6 @@ def pegasus_transfer(
     # dup stderr onto stdout
     sys.stderr = sys.stdout
 
-    # Die nicely when asked to (Ctrl+C, system shutdown)
-    signal.signal(signal.SIGINT, prog_sigint_handler)
-
     if num_threads == 0:
         if "PEGASUS_TRANSFER_THREADS" in os.environ:
             num_threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
@@ -5405,6 +5402,9 @@ def main():
     # Parse command line options
     (options, args) = parser.parse_args()
     setup_logger(options.debug)
+
+    # Die nicely when asked to (Ctrl+C, system shutdown)
+    signal.signal(signal.SIGINT, prog_sigint_handler)
 
     try:
         success = pegasus_transfer(
