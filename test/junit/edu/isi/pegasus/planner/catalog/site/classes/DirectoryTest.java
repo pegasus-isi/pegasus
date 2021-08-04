@@ -50,6 +50,23 @@ public class DirectoryTest {
     public void tearDown() {}
 
     @Test
+    public void testDirectorySharedFileSystemSerialization() throws IOException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        Directory dir = new Directory();
+        dir.setType(Directory.TYPE.shared_scratch);
+        dir.setSharedFileSystemAccess(true);
+
+        String expected = "---\n" + "type: \"sharedScratch\"\n" + "sharedFileSystem: true\n";
+        String actual = mapper.writeValueAsString(dir);
+        // System.err.println(actual);
+        assertEquals(expected, actual);
+    }
+
+    @Test
     public void testDirectorySerialization() throws IOException {
         ObjectMapper mapper =
                 new ObjectMapper(
@@ -74,6 +91,7 @@ public class DirectoryTest {
                         + "path: \"/mount/workflows/scratch\"\n"
                         + "freeSize: \"1GB\"\n"
                         + "totalSize: \"122GB\"\n"
+                        + "sharedFileSystem: false\n"
                         + "fileServers:\n"
                         + " -\n"
                         + "  operation: \"get\"\n"
@@ -81,6 +99,19 @@ public class DirectoryTest {
         String actual = mapper.writeValueAsString(dir);
         // System.err.println(actual);
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testDirectorySharedFSDeserialization() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test = "  type: sharedScratch\n" + "  sharedFileSystem: true\n";
+
+        Directory dir = mapper.readValue(test, Directory.class);
+        assertNotNull(dir);
+        assertEquals(Directory.TYPE.shared_scratch, dir.getType());
+        assertEquals(true, dir.hasSharedFileSystemAccess());
     }
 
     @Test
@@ -103,6 +134,7 @@ public class DirectoryTest {
         assertEquals(
                 new InternalMountPoint("/mount/workflows/scratch", "122GB", "1GB").toString(),
                 dir.getInternalMountPoint().toString());
+        assertEquals(false, dir.hasSharedFileSystemAccess());
 
         List<FileServer> expectedFS = new LinkedList();
         FileServer fs = new FileServer();

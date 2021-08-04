@@ -130,13 +130,42 @@ public class TransferTest {
         expectedOutput.setLFN("f.in");
         expectedOutput.setRegisterFlag(true);
         expectedOutput.setTransferFlag(true);
-        // since compute and staging site are the same, source is a file url not a gsiftp
-        expectedOutput.addSource("compute", "file:///workflows/compute/shared-scratch/./f.in");
+        //  compute and staging site are the same, but shared fs attribute is not
+        // set on compute directory . so no file url substitution
+        expectedOutput.addSource(
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.in");
         expectedOutput.addDestination("compute", "file://$PWD/f.in");
 
         this.testStageIn("compute", expectedOutput);
     }
 
+    /**
+     * PM-1789 file url substitution should be triggered only if compute site has a sharedFileSystem
+     * attribute set to true on the shared scratch directory
+     */
+    @Test
+    public void testComputeStagingSiteSameStageInWithSharedFSAttributeSpecified() {
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.in");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+
+        SiteCatalogEntry computeSiteEntry = this.mBag.getHandleToSiteStore().lookup("compute");
+        Directory sharedScratch = computeSiteEntry.getDirectory(Directory.TYPE.shared_scratch);
+        sharedScratch.setSharedFileSystemAccess(true);
+
+        // since compute and staging site are the same, source is a file url not a gsiftp
+        expectedOutput.addSource(
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.in");
+        expectedOutput.addDestination("compute", "file://$PWD/f.in");
+
+        this.testStageIn("compute", expectedOutput);
+    }
+
+    /**
+     * PM-1789 symlink should be triggered only if compute site has a sharedFileSystem attribute set
+     * to true on the shared scratch directory
+     */
     @Test
     public void testSymlinkForStageIn() {
         FileTransfer expectedOutput = new FileTransfer();
@@ -146,8 +175,35 @@ public class TransferTest {
 
         this.mProps.setProperty(PegasusProperties.PEGASUS_TRANSFER_LINKS_PROPERTY_KEY, "true");
 
+        // shared fs attribute not set on the directory. so no file url as source and symlink as
+        // dest
+        expectedOutput.addSource(
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.in");
+        expectedOutput.addDestination("compute", "file://$PWD/f.in");
+
+        this.testStageIn("compute", expectedOutput);
+    }
+
+    /**
+     * PM-1789 symlink should be triggered only if compute site has a sharedFileSystem attribute set
+     * to true on the shared scratch directory
+     */
+    @Test
+    public void testSymlinkForStageInWithSharedFSAttributeSpecified() {
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.in");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+
+        this.mProps.setProperty(PegasusProperties.PEGASUS_TRANSFER_LINKS_PROPERTY_KEY, "true");
+
+        SiteCatalogEntry computeSiteEntry = this.mBag.getHandleToSiteStore().lookup("compute");
+        Directory sharedScratch = computeSiteEntry.getDirectory(Directory.TYPE.shared_scratch);
+        sharedScratch.setSharedFileSystemAccess(true);
+
         // since compute and staging site are the same, source is a file url not a gsiftp
-        expectedOutput.addSource("compute", "file:///workflows/compute/shared-scratch/./f.in");
+        expectedOutput.addSource(
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.in");
         expectedOutput.addDestination("compute", "symlink://$PWD/f.in");
 
         this.testStageIn("compute", expectedOutput);
@@ -185,7 +241,7 @@ public class TransferTest {
 
         // source and destination site are different. symlink is triggered
         // as symlink is on auxillary local is set to true
-        expectedOutput.addSource("local", "file:///workflows/local/shared-scratch/./f.in");
+        expectedOutput.addSource("local", "file:///internal/workflows/local/shared-scratch/./f.in");
         expectedOutput.addDestination("compute", "symlink://$PWD/f.in");
 
         this.testStageIn("local", expectedOutput);
@@ -204,7 +260,7 @@ public class TransferTest {
 
         // source and destination site are different.
         // auxillary.local is true . so source url is file instead of gsiftp
-        expectedOutput.addSource("local", "file:///workflows/local/shared-scratch/./f.in");
+        expectedOutput.addSource("local", "file:///internal/workflows/local/shared-scratch/./f.in");
         expectedOutput.addDestination("compute", "file://$PWD/f.in");
 
         this.testStageIn("local", expectedOutput);
@@ -248,9 +304,49 @@ public class TransferTest {
         expectedOutput.setTransferFlag(true);
         expectedOutput.addSource("compute", "file://$PWD/f.out");
         // destination is a file url instead of gsiftp
-        expectedOutput.addDestination("local", "file:///workflows/local/shared-scratch/./f.out");
+        expectedOutput.addDestination(
+                "local", "file:///internal/workflows/local/shared-scratch/./f.out");
 
         this.testStageOut("local", expectedOutput);
+    }
+
+    /**
+     * PM-1789 file url substitution does not happen if sharedfs attribute is not set Even though
+     * staging and compute site are same
+     */
+    @Test
+    public void testDefaultStageOutToCompute() {
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.out");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+        expectedOutput.addSource("compute", "file://$PWD/f.out");
+        expectedOutput.addDestination(
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
+
+        this.testStageOut("compute", expectedOutput);
+    }
+
+    /**
+     * PM-1789 file url substitution only happens if sharedfs attribute is set and staging and
+     * compute site are same
+     */
+    @Test
+    public void testDefaultStageOutToComputeWithSharedFSAttributeSpecified() {
+        SiteCatalogEntry computeSiteEntry = this.mBag.getHandleToSiteStore().lookup("compute");
+        Directory sharedScratch = computeSiteEntry.getDirectory(Directory.TYPE.shared_scratch);
+        sharedScratch.setSharedFileSystemAccess(true);
+
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.out");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+        expectedOutput.addSource("compute", "file://$PWD/f.out");
+        // destination is a file url instead of gsiftp
+        expectedOutput.addDestination(
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.out");
+
+        this.testStageOut("compute", expectedOutput);
     }
 
     private void testStageOut(String stagingSite, FileTransfer expected) {
@@ -354,7 +450,8 @@ public class TransferTest {
         computeSite.setOS(SysInfo.OS.linux);
         Directory dir = new Directory();
         dir.setType(Directory.TYPE.shared_scratch);
-        dir.setInternalMountPoint(new InternalMountPoint("/workflows/compute/shared-scratch"));
+        dir.setInternalMountPoint(
+                new InternalMountPoint("/internal/workflows/compute/shared-scratch"));
         FileServer fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.get);
         PegasusURL url =
@@ -387,7 +484,8 @@ public class TransferTest {
         stagingSite.setOS(SysInfo.OS.linux);
         dir = new Directory();
         dir.setType(Directory.TYPE.shared_scratch);
-        dir.setInternalMountPoint(new InternalMountPoint("/workflows/staging/shared-scratch"));
+        dir.setInternalMountPoint(
+                new InternalMountPoint("/internal/workflows/staging/shared-scratch"));
         fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.all);
         url = new PegasusURL("gsiftp://staging.isi.edu/workflows/staging/shared-scratch");
@@ -404,7 +502,8 @@ public class TransferTest {
         localSite.setOS(SysInfo.OS.linux);
         dir = new Directory();
         dir.setType(Directory.TYPE.shared_scratch);
-        dir.setInternalMountPoint(new InternalMountPoint("/workflows/local/shared-scratch"));
+        dir.setInternalMountPoint(
+                new InternalMountPoint("/internal/workflows/local/shared-scratch"));
         fs = new FileServer();
         fs.setSupportedOperation(FileServerType.OPERATION.all);
         url = new PegasusURL("gsiftp://local.isi.edu/workflows/local/shared-scratch");

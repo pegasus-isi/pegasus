@@ -356,11 +356,12 @@ public class Transfer implements SLS {
             }
             if (cacheLocations == null || cacheLocations.isEmpty()) {
                 String stagingSite = job.getStagingSiteHandle();
-                // PM-1787 the source URL can be a file URL if source URL logically on the same site
-                // where job OR
+                // PM-1787 PM-1789 the source URL can be a file URL if source URL logically on the
+                // same site
+                // where job and also the compute site has a shared filesystem access OR
                 // staging site is local and the compute site is visible to the local site
                 boolean useFileURLAsSource =
-                        stagingSite.equals(computeSite)
+                        (stagingSite.equals(computeSite) && computeSiteEntry.hasSharedFileSystem())
                                 || (stagingSite.equals("local")
                                         && computeSiteEntry.isVisibleToLocalSite());
                 if (useFileURLAsSource) {
@@ -539,12 +540,13 @@ public class Transfer implements SLS {
             // destination
             url = new StringBuffer();
 
-            // PM-1787 the destination URL can be a file URL if the compute site and staging site
-            // are same
+            // PM-1787 PM-1789 the destination URL can be a file URL if the compute site and staging
+            // site
+            // are same, and also compute site has a shared filesystem
             // OR
             // staging site is local and the compute site is visible to the local site
             boolean useFileURLAsDest =
-                    stagingSite.equals(computeSite)
+                    (stagingSite.equals(computeSite) && computeSiteEntry.hasSharedFileSystem())
                             || (stagingSite.equals("local")
                                     && computeSiteEntry.isVisibleToLocalSite());
 

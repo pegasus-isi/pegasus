@@ -469,6 +469,39 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Accessor: Overwrite any system properties from within the program.
+     *
+     * @param key is the key to look up
+     * @param value is the new property value to place in the system.
+     * @return the old value, or null if it didn't exist before.
+     */
+    public Object setSystemProperty(String key, String value) {
+        return System.getProperties().setProperty(key, value);
+    }
+
+    /**
+     * Extracts a specific property key subset from the System properties.
+     *
+     * @param prefix is the key prefix to filter the properties by.
+     * @return a property dictionary matching the filter key. May be an empty dictionary, if no
+     *     prefix matches were found.
+     */
+    public Properties matchingSubsetFromSystemProperties(String prefix) {
+        Properties result = new Properties();
+        Properties system = System.getProperties();
+
+        java.util.Enumeration e = system.propertyNames();
+        while (e.hasMoreElements()) {
+            String key = (String) e.nextElement();
+            if (key.startsWith(prefix)) {
+                result.setProperty(key, system.getProperty(key));
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Extracts a specific property key subset from the known properties. The prefix may be removed
      * from the keys in the resulting dictionary, or it may be kept. In the latter case, exact
      * matches on the prefix will also be copied into the resulting dictionary.
@@ -558,6 +591,16 @@ public class PegasusProperties implements Cloneable {
      */
     public String removeProperty(String key) {
         return mProps.removeProperty(key);
+    }
+
+    /**
+     * Removes a System property from the soft state.
+     *
+     * @param key the key
+     * @return the corresponding value if key exits, else null
+     */
+    public String removeSystemProperty(String key) {
+        return (String) System.getProperties().remove(key);
     }
 
     // PROPERTIES RELATED TO SCHEMAS
