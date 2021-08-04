@@ -107,7 +107,7 @@ def activate_endpoint(transfer_client, endpoint):
             sys.exit(1)
     except globus_sdk.TransferAPIError as e:
         logger.critical('Endpoint "%s" auto-activation ERROR' % endpoint)
-        logger.critical(e.message)
+        logger.critical(str(e))
         sys.exit(1)
 
 
@@ -187,7 +187,7 @@ def mkdir(request):
                 )
             except globus_sdk.TransferAPIError as e:
                 logger.warn("Finding existing parent dir for mkdir " + f)
-                logger.warn(e.message)
+                logger.warn(str(e))
                 found = False
 
         child_dirs.reverse()
@@ -204,7 +204,7 @@ def mkdir(request):
                 if e.code == "ExternalError.MkdirFailed.Exists":
                     logger.warn("Directory already exists: " + path)
                 else:
-                    raise RuntimeError(e.message)
+                    raise RuntimeError(str(e))
     logger.info("Mkdir complete")
 
 
