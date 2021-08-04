@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
@@ -305,6 +306,51 @@ public class StageOutTest {
         // make sure the mapper file is deleted
         File mapperFile = new File(mapperPath);
         mapperFile.delete();
+
+        mLogger.logEventCompletion();
+    }
+
+    /**
+     * For PM-1795 a test where a system property is set indicating a path to a non existent mapper
+     * replica file. Test ensures that the correct mapper file specified in the planner options is
+     * loaded.
+     */
+    @Test
+    public void testStageOutToOutputMapperLocationWithSystemPropertySet() throws IOException {
+        mLogger.logEventStart(
+                "test.transfer.generator.stageout", "set", Integer.toString(mTestNumber++));
+
+        String outputSite = "output";
+        // make sure planner options are set also to the output site
+        mBag.getPlannerOptions().addOutputSite(outputSite);
+
+        String expectedMapSite = "random";
+        String expectedMapPFN = "gsiftp://random.isi.edu/f.out";
+        // create a temporary map file for this test and insert an entry in there
+        File mapFile = File.createTempFile("pegasus", ".output.map", new File("."));
+        String key =
+                OutputMapperFactory.PROPERTY_KEY
+                        + "."
+                        + "replica.file"; // pegasus.dir.storage.mapper.replica.file
+        try {
+            ReplicaCatalog rc = this.loadMapperBackend(mapFile.getAbsolutePath());
+            rc.insert("f.out", expectedMapPFN, expectedMapSite);
+            rc.close();
+            mBag.getPlannerOptions().setOutputMap(mapFile.getAbsolutePath());
+
+            // PM-1795 set a system property to override the output mapper replica back
+            System.setProperty(key, "/does/not/exist/file");
+            mLogger.log(
+                    "Set incorrect System property " + key + "->" + System.getProperty(key),
+                    LogManager.INFO_MESSAGE_LEVEL);
+
+            this.testStageOutToOutputMapperLocation(outputSite, expectedMapSite, expectedMapPFN);
+        } finally {
+            // delete the map file generated in the test
+            mapFile.delete();
+            // remove the set properties
+            System.getProperties().remove(key);
+        }
 
         mLogger.logEventCompletion();
     }
