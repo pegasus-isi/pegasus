@@ -327,64 +327,12 @@ public class StageOutTest {
         String expectedMapPFN = "gsiftp://random.isi.edu/f.out";
         // create a temporary map file for this test and insert an entry in there
         File mapFile = File.createTempFile("pegasus", "output.map", new File("."));
-        ReplicaCatalog rc = this.loadMapperBackend(mapFile.getAbsolutePath());
-        rc.insert("f.out", expectedMapPFN, expectedMapSite);
-        rc.close();
-        mBag.getPlannerOptions().setOutputMap(mapFile.getAbsolutePath());
-
         try {
-            StageOut so = new StageOut();
-            so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
-            Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
-
-            // staging site in this case is same as compute site
-            job.setStagingSiteHandle(job.getSiteHandle());
-
-            // test for location of f.out that is staged to output site
-            Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
-            assertEquals(soFTX.length, 2);
-
-            // compute site has a gridftp (non file) server and output site a gsiftp
-            // So stageout transfers will happen locally
-            assertTrue(soFTX[1].isEmpty());
-            assertNotNull(soFTX[0]);
-            Collection<FileTransfer> localStageOutFtxs = soFTX[0];
-            assertEquals(1, localStageOutFtxs.size());
-
-            FileTransfer actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
-            FileTransfer expectedOutput = new FileTransfer();
-            expectedOutput.setLFN("f.out");
-            expectedOutput.setRegisterFlag(true);
-            expectedOutput.setTransferFlag(true);
-            expectedOutput.addSource(
-                    "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
-            expectedOutput.addDestination(
-                    "output", "gsiftp://output.isi.edu/workflows/output/f.out");
-
-            testFileTransfer(expectedOutput, actualOutput);
-
-            // test for location of f.out that is staged to output map location
-            // achieved by setting output site to null
-            soFTX = so.constructFileTX(job, null);
-            assertEquals(soFTX.length, 2);
-
-            // compute site has a gridftp (non file) server and output site a gsiftp
-            // So stageout transfers will happen locally
-            assertTrue(soFTX[1].isEmpty());
-            assertNotNull(soFTX[0]);
-            localStageOutFtxs = soFTX[0];
-            assertEquals(1, localStageOutFtxs.size());
-
-            actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
-            expectedOutput = new FileTransfer();
-            expectedOutput.setLFN("f.out");
-            expectedOutput.setRegisterFlag(false);
-            expectedOutput.setTransferFlag(true);
-            expectedOutput.addSource(
-                    "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
-            expectedOutput.addDestination(expectedMapSite, expectedMapPFN);
-
-            testFileTransfer(expectedOutput, actualOutput);
+            ReplicaCatalog rc = this.loadMapperBackend(mapFile.getAbsolutePath());
+            rc.insert("f.out", expectedMapPFN, expectedMapSite);
+            rc.close();
+            mBag.getPlannerOptions().setOutputMap(mapFile.getAbsolutePath());
+            this.testStageOutToOutputMapperLocation(outputSite, expectedMapSite, expectedMapPFN);
         } finally {
 
             // delete the map file generated in the test
@@ -392,6 +340,70 @@ public class StageOutTest {
         }
 
         mLogger.logEventCompletion();
+    }
+
+    /**
+     * A general unit test to test output mapper specified on the command line
+     *
+     * @param outputSite the output site
+     * @param expectedMapSite the map site in the map file
+     * @param expectedMapPFN the expected pfn
+     * @throws IOException
+     */
+    private void testStageOutToOutputMapperLocation(
+            String outputSite, String expectedMapSite, String expectedMapPFN) throws IOException {
+
+        StageOut so = new StageOut();
+        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+
+        // staging site in this case is same as compute site
+        job.setStagingSiteHandle(job.getSiteHandle());
+
+        // test for location of f.out that is staged to output site
+        Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
+        assertEquals(soFTX.length, 2);
+
+        // compute site has a gridftp (non file) server and output site a gsiftp
+        // So stageout transfers will happen locally
+        assertTrue(soFTX[1].isEmpty());
+        assertNotNull(soFTX[0]);
+        Collection<FileTransfer> localStageOutFtxs = soFTX[0];
+        assertEquals(1, localStageOutFtxs.size());
+
+        FileTransfer actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.out");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+        expectedOutput.addSource(
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
+        expectedOutput.addDestination("output", "gsiftp://output.isi.edu/workflows/output/f.out");
+
+        testFileTransfer(expectedOutput, actualOutput);
+
+        // test for location of f.out that is staged to output map location
+        // achieved by setting output site to null
+        soFTX = so.constructFileTX(job, null);
+        assertEquals(soFTX.length, 2);
+
+        // compute site has a gridftp (non file) server and output site a gsiftp
+        // So stageout transfers will happen locally
+        assertTrue(soFTX[1].isEmpty());
+        assertNotNull(soFTX[0]);
+        localStageOutFtxs = soFTX[0];
+        assertEquals(1, localStageOutFtxs.size());
+
+        actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
+        expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.out");
+        expectedOutput.setRegisterFlag(false);
+        expectedOutput.setTransferFlag(true);
+        expectedOutput.addSource(
+                "compute", "gsiftp://compute.isi.edu/workflows/compute/shared-scratch/./f.out");
+        expectedOutput.addDestination(expectedMapSite, expectedMapPFN);
+
+        testFileTransfer(expectedOutput, actualOutput);
     }
 
     /** For PM-1779 */
