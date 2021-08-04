@@ -75,6 +75,20 @@ public class Decaf implements JobAggregator {
      */
     public void makeAbstractAggregatedJobConcrete(AggregatedJob job) {
 
+        if (!(job instanceof DataFlowJob)) {
+            throw new RuntimeException(
+                    "Decaf job aggregator only aggregates DataFlowJobs currently");
+        }
+        this.makeAbstractAggregatedJobConcrete((DataFlowJob) job);
+    }
+
+    /**
+     * Converts a DataFlowJob to the corresponding DECAF json description.
+     *
+     * @param job the abstract clustered job as a data flow job
+     */
+    public void makeAbstractAggregatedJobConcrete(DataFlowJob job) {
+
         // figure out name and directory
         // String name = job.getID() + ".json";
 
