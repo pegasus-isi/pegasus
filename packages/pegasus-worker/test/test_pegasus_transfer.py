@@ -1,5 +1,4 @@
 import configparser
-import importlib
 import io
 import json
 import logging
@@ -11,12 +10,7 @@ from pathlib import Path
 
 import pytest
 
-pegasus_transfer = importlib.import_module("Pegasus.cli.pegasus-transfer")
-pegasus_transfer_func = pegasus_transfer.pegasus_transfer
-load_credentials = pegasus_transfer.load_credentials
-read_json_format = pegasus_transfer.read_json_format
-Transfer = pegasus_transfer.Transfer
-PegasusURL = pegasus_transfer.PegasusURL
+from Pegasus import transfer
 
 
 class TestReadJSONFormat:
@@ -32,14 +26,18 @@ class TestReadJSONFormat:
 
         data_str = json.dumps(data)
         inputs_loaded = list()
-        read_json_format(input=data_str, inputs_l=inputs_loaded)
+        transfer.read_json_format(input=data_str, inputs_l=inputs_loaded)
 
-        expected_transfer_obj = Transfer()
+        expected_transfer_obj = transfer.Transfer()
         expected_transfer_obj._src_urls = [
-            PegasusURL(url="http://pegasus.isi.edu", file_type="x", site_label="web")
+            transfer.PegasusURL(
+                url="http://pegasus.isi.edu", file_type="x", site_label="web"
+            )
         ]
         expected_transfer_obj._dst_urls = [
-            PegasusURL(url="file:///tmp/index.html", file_type="x", site_label="local")
+            transfer.PegasusURL(
+                url="file:///tmp/index.html", file_type="x", site_label="local"
+            )
         ]
 
         assert inputs_loaded[0] == expected_transfer_obj
@@ -57,7 +55,7 @@ class TestReadJSONFormat:
         data_str = json.dumps(data)
         inputs_loaded = list()
         with pytest.raises(RuntimeError) as e:
-            read_json_format(input=data_str, inputs_l=inputs_loaded)
+            transfer.read_json_format(input=data_str, inputs_l=inputs_loaded)
 
         assert "Error parsing the transfer" in str(e)
 
@@ -74,7 +72,7 @@ class TestReadJSONFormat:
         data_str = json.dumps(data)
         inputs_loaded = list()
         with pytest.raises(RuntimeError) as e:
-            read_json_format(input=data_str, inputs_l=inputs_loaded)
+            transfer.read_json_format(input=data_str, inputs_l=inputs_loaded)
 
         assert "Unknown JSON entry:" in str(e)
 
@@ -103,7 +101,7 @@ class TestLoadCredentials:
 
             os.environ["PEGASUS_CREDENTIALS"] = f.name
 
-            credentials = load_credentials()
+            credentials = transfer.load_credentials()
             assert credentials["amazon"]["endpoint"] == "https://s3.amazonaws.com/"
             assert credentials["joe@amazon"]["access_key"] == "99001122"
             assert (
@@ -116,7 +114,7 @@ class TestLoadCredentials:
     ):
         os.environ["PEGASUS_CREDENTIALS"] = "bad_credentials_file..."
         with pytest.raises(RuntimeError) as e:
-            load_credentials()
+            transfer.load_credentials()
 
         assert "Credentials file does not exist" in str(e)
 
@@ -132,7 +130,7 @@ class TestLoadCredentials:
             os.chmod(path=f.name, mode=stat.S_IRWXG)
 
             with pytest.raises(RuntimeError) as e:
-                load_credentials()
+                transfer.load_credentials()
 
             assert "Permissions of credentials file" in str(e)
 
@@ -146,7 +144,7 @@ class TestLoadCredentials:
             os.environ["PEGASUS_CREDENTIALS"] = f.name
 
             with pytest.raises(configparser.MissingSectionHeaderError) as e:
-                load_credentials()
+                transfer.load_credentials()
 
             assert "Unable to load credentials" in str(caplog.record_tuples)
 
@@ -154,7 +152,7 @@ class TestLoadCredentials:
 class TestPegasusTransferInvocation:
     def test_error_opening_input_file(self):
         with pytest.raises(FileNotFoundError) as e:
-            pegasus_transfer_func(
+            transfer.pegasus_transfer(
                 max_attempts=3, num_threads=8, file="badfile", symlink=True
             )
 
@@ -187,7 +185,7 @@ class TestPegasusTransferInvocation:
 
             sys.stdin = io.StringIO(json.dumps(xfers))
 
-            is_successful = pegasus_transfer_func(
+            is_successful = transfer.pegasus_transfer(
                 max_attempts=1, num_threads=8, file=None, symlink=True
             )
 
@@ -231,7 +229,7 @@ class TestPegasusTransferInvocation:
                 f.write(json.dumps(xfers))
                 f.seek(0)
 
-                is_successful = pegasus_transfer_func(
+                is_successful = transfer.pegasus_transfer(
                     max_attempts=1, num_threads=8, file=f.name, symlink=True
                 )
 
@@ -268,7 +266,7 @@ class TestPegasusTransferInvocation:
             f.write(json.dumps(data))
             f.seek(0)
 
-            is_successful = pegasus_transfer_func(
+            is_successful = transfer.pegasus_transfer(
                 max_attempts=1, num_threads=8, file=f.name, symlink=True
             )
 
