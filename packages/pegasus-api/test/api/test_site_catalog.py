@@ -55,7 +55,9 @@ class TestFileServer:
 class TestDirectory:
     def test_valid_directory(self):
         assert Directory(Directory.LOCAL_SCRATCH, "/path")
-        assert Directory(Directory.SHARED_SCRATCH, Path("/abs/path"), shared_file_system=True)
+        assert Directory(
+            Directory.SHARED_SCRATCH, Path("/abs/path"), shared_file_system=True
+        )
 
     def test_invalid_directory_type(self):
         with pytest.raises(TypeError) as e:

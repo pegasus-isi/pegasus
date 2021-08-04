@@ -157,7 +157,12 @@ class Directory:
     # the site catalog schema lists freeSize and totalSize as an attribute
     # however this appears to not be used; removing it as a parameter
     # def __init__(self, directory_type, path, free_size=None, total_size=None):
-    def __init__(self, directory_type: _DirectoryType, path: Union[str, Path], shared_file_system: bool = False):
+    def __init__(
+        self,
+        directory_type: _DirectoryType,
+        path: Union[str, Path],
+        shared_file_system: bool = False,
+    ):
         """
         :param directory_type: directory type defined in :py:class:`~Pegasus.api.site_catalog.DirectoryType` (e.g. :code:`Directory.SHARED_SCRATCH` or :code:`Directory.LOCAL_STORAGE`)
         :type directory_type: _DirectoryType
