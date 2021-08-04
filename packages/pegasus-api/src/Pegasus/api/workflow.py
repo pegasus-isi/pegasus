@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import wraps
@@ -19,6 +20,7 @@ PEGASUS_VERSION = "5.0"
 
 __all__ = ["AbstractJob", "Job", "SubWorkflow", "Workflow"]
 
+log = logging.getLogger(__name__)
 
 class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     """An abstract representation of a workflow job"""
@@ -447,6 +449,25 @@ class Job(AbstractJob):
         job_json.update(AbstractJob.__json__(self))
 
         return _filter_out_nones(job_json)
+    
+    def __repr__(self):
+        args = ""
+
+        if self._id:
+            args += "_id={}, ".format(self._id)
+
+        if self.namespace:
+            args += "namespace={}, ".format(self.namespace)
+        
+        args += "transformation={}".format(self.transformation)
+
+        if self.version:
+            args += ", version={}".format(self.version)
+
+        if self.node_label:
+            args += ", node_label={}".format(self.node_label)
+
+        return "Job({})".format(args)
 
 
 class SubWorkflow(AbstractJob):
@@ -771,6 +792,25 @@ class SubWorkflow(AbstractJob):
         dax_json.update(AbstractJob.__json__(self))
 
         return dax_json
+    
+    def __repr__(self):
+
+        args = ""
+
+        if self._id:
+            args += "_id={}, ".format(self._id)
+
+        args += "file={}".format(self.file)
+
+        if self.type == "condorWorkflow":
+            args += ", is_planned=True"
+        else:
+            args += ", is_planned=False"
+        
+        if self.node_label:
+            args += ", node_label={}".format(self.node_label)
+        
+        return "SubWorkflow({})".format(args)
 
 
 class _LinkType(Enum):
@@ -1468,6 +1508,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
             self.jobs[job._id] = job
 
+            log.info("{workflow} added {job}".format(workflow=self.name, job=job))
+
     def get_job(self, _id: str):
         """Retrieve the job with the given id
 
@@ -1522,6 +1564,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             )
 
         self.site_catalog = sc
+        log.info("{workflow} added inline SiteCatalog".format(workflow=self.name))
 
     @_chained
     def add_replica_catalog(self, rc: ReplicaCatalog):
@@ -1548,6 +1591,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             )
 
         self.replica_catalog = rc
+        log.info("{workflow} added inline ReplicaCatalog".format(workflow=self.name))
 
     @_chained
     def add_transformation_catalog(self, tc: TransformationCatalog):
@@ -1576,6 +1620,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             )
 
         self.transformation_catalog = tc
+        log.info("{workflow} added inline TransformationCatalog".format(workflow=self.name))
 
     @_chained
     def add_dependency(
@@ -1669,6 +1714,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
 
         if self.infer_dependencies:
+            log.info("inferring {workflow} dependencies".format(workflow=self.name))
             mapping = dict()
 
             """
@@ -1758,8 +1804,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         if (
             self.site_catalog is not None or self.transformation_catalog is not None
         ) and self._has_subworkflow_jobs:
-            print(
-                "WARNING: SiteCatalog and TransformationCatalog objects embedded into the root Workflow are not inherited by SubWorkflow jobs. To set SiteCatalog and TransformationCatalog objects in SubWorkflows, ensure that they are embedded into those SubWorkflows."
+            log.warning(
+                "SiteCatalog and TransformationCatalog objects embedded into the root Workflow are not inherited by SubWorkflow jobs. To set SiteCatalog and TransformationCatalog objects in SubWorkflows, ensure that they are embedded into those SubWorkflows."
             )
 
         # default file name
@@ -1793,6 +1839,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                 self.replica_catalog.add_replica(**rc_kwargs)
 
         Writable.write(self, file, _format=_format)
+
+        log.info("workflow {workflow} with {num_jobs} jobs generated and written to {dst}".format(workflow=self.name, num_jobs=len(self.jobs), dst=file))
 
         # save path so that it can be used by Client.plan()
         if isinstance(file, str):
