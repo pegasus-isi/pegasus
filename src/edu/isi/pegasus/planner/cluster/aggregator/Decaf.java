@@ -271,14 +271,21 @@ public class Decaf implements JobAggregator {
         LinkedList<DataFlowJob.Link> links = new LinkedList();
         // maps tasks logical id to index in the nodes array of json
         Map<String, Integer> logicalIDToIndex = new HashMap();
-        int index = 0;
+        // int index = 0;
         for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
             GraphNode n = (GraphNode) it.next();
             Job j = (Job) n.getContent();
             if (j instanceof DataFlowJob.Link) {
                 links.add((DataFlowJob.Link) j);
             } else {
-                logicalIDToIndex.put(j.getLogicalID(), index++);
+                // logicalIDToIndex.put(j.getLogicalID(), index++);
+                // pick up the id from the selector namespace
+                String id = (String) j.getSelectorProfiles().get("id");
+                if (id == null) {
+                    throw new RuntimeException(
+                            "decaf id not associated for the job " + j.getLogicalID());
+                }
+                logicalIDToIndex.put(j.getLogicalID(), Integer.parseInt(id));
                 nodes.add(j);
             }
         }
