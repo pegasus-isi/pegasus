@@ -1005,8 +1005,14 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         this.mCallback.cbJob((Job) child);
                         return true;
                     } else if (parent instanceof DataFlowJob) {
+                        Job j = (Job) child;
                         DataFlowJob dflow = (DataFlowJob) parent;
-                        dflow.add((Job) child);
+                        // PM-1794 decaf assigns id's as integers and order in
+                        // which they are specified in the workflow. also id's
+                        // start from 0.
+                        int id = dflow.numberOfConsitutentJobs();
+                        dflow.add(j);
+                        j.addProfile(new Profile("selector", "id", Integer.toString(id)));
                         return true;
                     }
                     return false;
