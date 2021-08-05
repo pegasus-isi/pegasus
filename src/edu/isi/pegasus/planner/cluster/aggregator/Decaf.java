@@ -19,9 +19,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.code.generator.condor.style.Condor;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -35,7 +33,6 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
@@ -47,7 +44,7 @@ import javax.json.stream.JsonGeneratorFactory;
  *
  * @author Karan Vahi
  */
-public class Decaf implements JobAggregator {
+public class Decaf extends Abstract {
 
     /** The key indicating the number of processors to run the job on. */
     private static final String NPROCS_KEY = "nprocs";
@@ -56,15 +53,13 @@ public class Decaf implements JobAggregator {
     protected String mWFSubmitDirectory;
 
     /** The object holding all the properties pertaining to Pegasus. */
-    protected PegasusProperties mProps;
+    // protected PegasusProperties mProps;
 
     /** The handle to the LogManager that logs all the messages. */
-    protected LogManager mLogger;
+    // protected LogManager mLogger;
 
     public void initialize(ADag dag, PegasusBag bag) {
-
-        mLogger = bag.getLogger();
-        mProps = bag.getPegasusProperties();
+        super.initialize(dag, bag);
         mWFSubmitDirectory = bag.getPlannerOptions().getSubmitDirectory();
     }
 
@@ -76,6 +71,7 @@ public class Decaf implements JobAggregator {
     public void makeAbstractAggregatedJobConcrete(AggregatedJob job) {
 
         if (!(job instanceof DataFlowJob)) {
+            DataFlowJob j = convertToDataFlow(job);
             throw new RuntimeException(
                     "Decaf job aggregator only aggregates DataFlowJobs currently");
         }
@@ -150,20 +146,6 @@ public class Decaf implements JobAggregator {
     }
 
     /**
-     * The aggregated job is already constructed during parsing of the DAX. Not implemented.
-     *
-     * @param jobs the list of <code>SubInfo</code> objects that need to be collapsed. All the jobs
-     *     being collapsed should be scheduled at the same pool, to maintain correct semantics.
-     * @param name the logical name of the jobs in the list passed to this function.
-     * @param id the id that is given to the new job.
-     * @return the <code>SubInfo</code> object corresponding to the aggregated job containing the
-     *     jobs passed as List in the input, null if the list of jobs is empty
-     */
-    public AggregatedJob constructAbstractAggregatedJob(List jobs, String name, String id) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    /**
      * A boolean indicating whether ordering is important while traversing through the aggregated
      * job.
      *
@@ -206,8 +188,9 @@ public class Decaf implements JobAggregator {
      * @return boolean true if an entry does not exists, false otherwise.
      */
     public boolean entryNotInTC(String site) {
-        throw new UnsupportedOperationException(
-                "Not supported yet."); // To change body of generated methods, choose Tools |
+        // PM-1798 decaf does not map to a clustering executable
+        // however return a false to allow for planning
+        return false;
         // Templates.
     }
 
@@ -217,9 +200,8 @@ public class Decaf implements JobAggregator {
      * @return the the logical name of the collapser executable.
      */
     public String getClusterExecutableLFN() {
-        throw new UnsupportedOperationException(
-                "Not supported yet."); // To change body of generated methods, choose Tools |
-        // Templates.
+        // return random basename
+        return "decaf";
     }
 
     /**
@@ -457,5 +439,23 @@ public class Decaf implements JobAggregator {
             throw new RuntimeException("Unable to open file " + jsonFile + " for writing ", ex);
         }
         return writer;
+    }
+
+    /**
+     * An adapter function that converts a Pegasus clustered job to a DataFlowJob that can be
+     * executed using Decaf
+     *
+     * @param job the job to be converted
+     * @return DataFlowJob
+     */
+    private DataFlowJob convertToDataFlow(AggregatedJob job) {
+        throw new UnsupportedOperationException(
+                "Not supported yet."); // To change body of generated methods, choose Tools |
+                                       // Templates.
+    }
+
+    @Override
+    public String aggregatedJobArguments(AggregatedJob job) {
+        return "";
     }
 }
