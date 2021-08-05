@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.cluster.aggregator;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
@@ -80,10 +81,10 @@ public class Decaf extends Abstract {
         // PM-1798 at this point we only have clustered job with the jobs making them up
         // but no edges between the constituent jobs. those are visible only when
         // the clustered job is made concrete
-        // This function is called only if we are getting Pegasus to cluster jobs into a 
+        // This function is called only if we are getting Pegasus to cluster jobs into a
         // DECAF job. For the case, where the workflow description has a data flow job,
-        // the data flow job is already there and does not go through job clustering 
-        return this.convertToDataFlow(clusteredJob);
+        // the data flow job is already there and does not go through job clustering
+        return this.createPartialDataFlowJob(clusteredJob);
     }
 
     /**
@@ -97,23 +98,14 @@ public class Decaf extends Abstract {
             throw new RuntimeException(
                     "Decaf job aggregator requires jobs of type DataFlowJob for job" + job.getID());
         }
-        // lets write out the edges
-        for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); ) {
-            GraphNode gn = (GraphNode) it.next();
 
-            // get a list of parents of the node
-            for (GraphNode child : gn.getChildren()) {
-                StringBuffer edge = new StringBuffer();
-                edge.append("EDGE")
-                        .append(" ")
-                        .append(gn.getID())
-                        .append(" ")
-                        .append(child.getID())
-                        .append("\n");
-                // System.err.println(edge.toString());
-            }
+        DataFlowJob j = (DataFlowJob) job;
+        if (j.isPartiallyCreated()) {
+            this.addLinksToDataFlowJob(j);
+            j.setPartiallyCreated(false);
         }
-        this.makeAbstractAggregatedJobConcrete((DataFlowJob) job);
+
+        this.makeAbstractAggregatedJobConcrete(j);
     }
 
     /**
@@ -486,7 +478,7 @@ public class Decaf extends Abstract {
      * @param job the job to be converted
      * @return DataFlowJob
      */
-    private DataFlowJob convertToDataFlow(AggregatedJob job) {
+    private DataFlowJob createPartialDataFlowJob(AggregatedJob job) {
         DataFlowJob d = new DataFlowJob();
 
         // pick some things from aggregated job
@@ -522,16 +514,110 @@ public class Decaf extends Abstract {
             d.add(constitutentJob);
         }
 
+        d.setPartiallyCreated();
+
         return d;
-        /*
-        throw new UnsupportedOperationException(
-                "Not supported yet."); // To change body of generated methods, choose Tools |
-                                       // Templates.
-        */
     }
 
     @Override
     public String aggregatedJobArguments(AggregatedJob job) {
         return "";
+    }
+
+    /**
+     * Adds LinkJobs to the job corresponding to the edges in the DAG
+     *
+     * @param job the data flow job
+     */
+    private void addLinksToDataFlowJob(DataFlowJob job) {
+        int jobNum = job.size();
+        // lets write out the edges
+        List<DataFlowJob.Link> linkJobs = new LinkedList();
+        for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); ) {
+            GraphNode gn = (GraphNode) it.next();
+            Job parentJob = (Job) gn.getContent();
+
+            // get a list of parents of the node
+            for (GraphNode child : gn.getChildren()) {
+                Job childJob = (Job) child.getContent();
+                StringBuffer edge = new StringBuffer();
+                edge.append("Creating a LinkJob for EDGE")
+                        .append(" ")
+                        .append(gn.getID())
+                        .append(" ")
+                        .append(child.getID());
+                mLogger.log(edge.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
+
+                DataFlowJob.Link link = new DataFlowJob.Link();
+
+                // set the logical id to be the current number of jobs in DataFlowJob
+                link.setLogicalID("ID" + ++jobNum);
+                link.setUniverse(GridGateway.JOB_TYPE.compute.toString());
+                link.setJobType(Job.COMPUTE_JOB);
+                link.setSiteHandle(parentJob.getSiteHandle());
+                link.setStagingSiteHandle(parentJob.getStagingSiteHandle());
+
+                // generates source and target attributes
+                link.setLink(gn.getID(), child.getID());
+
+                // some hardcoded stuff for time being
+                /**
+                 * "start_proc": 0, "nprocs": 0, "prod_dflow_redist": "count", "name":
+                 * "interm1_interm2", "sourcePort": "out", "targetPort": "in", "tokens": 0,
+                 * "transport": "mpi", "func": "dflow", "dflow_con_redist": "count"
+                 */
+
+                // we are running link jobs on zero cores?
+                Namespace decafKeys = link.getSelectorProfiles();
+                decafKeys.construct("start_proc", "0");
+                decafKeys.construct(Decaf.NPROCS_KEY, "0");
+                decafKeys.construct("tokens", "0");
+                decafKeys.construct("transport", "mpi");
+                decafKeys.construct("func", "dflow");
+                decafKeys.construct("prod_dflow_redist", "count");
+                decafKeys.construct("dflow_con_redist", "count");
+                decafKeys.construct("sourcePort", "out");
+                decafKeys.construct("targetPort", "in");
+
+                // make the name based on edge in question based on func attribute
+                // for the parent and child
+                String name = getDecafFunc(parentJob) + "_" + getDecafFunc(childJob);
+                decafKeys.construct("name", name);
+                job.addEdge(link);
+                linkJobs.add(link);
+            }
+        }
+
+        // add all the data link jobs to the DataFlowJob
+        for (DataFlowJob.Link link : linkJobs) {
+            job.add(link);
+        }
+    }
+
+    /**
+     * Returns the decaf id for the job
+     *
+     * @return the decaf id (usually an int)
+     */
+    private String getDecafJobID(Job j) {
+        String id = (String) j.getSelectorProfiles().get("id");
+        if (id == null) {
+            throw new RuntimeException("Job not associated with a decaf int id " + j.getID());
+        }
+        return id;
+    }
+
+    /**
+     * Returns the decaf id for the job
+     *
+     * @return the decaf id (usually an int)
+     */
+    private String getDecafFunc(Job j) {
+        String id = (String) j.getSelectorProfiles().get("func");
+        if (id == null) {
+            throw new RuntimeException(
+                    "Job not associated with a decaf func attribute " + j.getID());
+        }
+        return id;
     }
 }
