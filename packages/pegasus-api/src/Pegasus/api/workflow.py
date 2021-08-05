@@ -22,6 +22,7 @@ __all__ = ["AbstractJob", "Job", "SubWorkflow", "Workflow"]
 
 log = logging.getLogger(__name__)
 
+
 class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     """An abstract representation of a workflow job"""
 
@@ -449,7 +450,7 @@ class Job(AbstractJob):
         job_json.update(AbstractJob.__json__(self))
 
         return _filter_out_nones(job_json)
-    
+
     def __repr__(self):
         args = ""
 
@@ -458,7 +459,7 @@ class Job(AbstractJob):
 
         if self.namespace:
             args += "namespace={}, ".format(self.namespace)
-        
+
         args += "transformation={}".format(self.transformation)
 
         if self.version:
@@ -564,10 +565,10 @@ class SubWorkflow(AbstractJob):
         forward: Optional[List[str]] = None,
         submit: bool = False,
         java_options: Optional[List[str]] = None,
-        **kwargs
+        **properties: str
     ):
-        """
-        add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: Optional[List[str]] = None, staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: Optional[str] = None, reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **kwargs)
+        r"""
+        add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: Optional[List[str]] = None, staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: Optional[str] = None, reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: str)
         Add pegasus-planner arguments. This function can only be used when 
         :code:`is_planned=False` is set in :py:class:`~Pegasus.api.workflow.SubWorkflow` and
         may only be invoked once. 
@@ -620,6 +621,7 @@ class SubWorkflow(AbstractJob):
         :type submit: bool, optional
         :param java_options: pass to jvm a non standard option (e.g. :code:`["mx1024m", "ms512m"]`), defaults to None
         :type java_options: Optional[List[str]]
+        :param \*\*properties: configuration properties (e.g. :code:`**{"pegasus.mode": "development"}`, which would be passed to pegasus-plan as :code:`-Dpegasus.mode=development`). Note that configuration properties set here take precedance over the properties file property with the same key.
         :raises TypeError: an invalid type was given for one or more arguments
         :raises PegasusError: SubWorkflow.add_planner_args() can only be called by SubWorkflows that have not yet been planned (i.e. SubWorkflow('wf_file', is_planned=False))
         :raises PegasusError: SubWorkflow.add_planner_args() can only be invoked once
@@ -639,7 +641,7 @@ class SubWorkflow(AbstractJob):
 
         self._planner_args_already_set = True
 
-        for k, v in kwargs.items():
+        for k, v in properties.items():
             self.add_args("-D{}={}".format(k, v))
 
         if basename:
@@ -792,7 +794,7 @@ class SubWorkflow(AbstractJob):
         dax_json.update(AbstractJob.__json__(self))
 
         return dax_json
-    
+
     def __repr__(self):
 
         args = ""
@@ -806,10 +808,10 @@ class SubWorkflow(AbstractJob):
             args += ", is_planned=True"
         else:
             args += ", is_planned=False"
-        
+
         if self.node_label:
             args += ", node_label={}".format(self.node_label)
-        
+
         return "SubWorkflow({})".format(args)
 
 
@@ -1160,16 +1162,19 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         forward: Optional[List[str]] = None,
         submit: bool = False,
         java_options: Optional[List[str]] = None,
-        **kwargs
+        **properties: str
     ):
-        """
-        plan(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **kwargs)
+        r"""
+        plan(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: str)
         Plan the workflow.
 
         .. code-block:: python
 
             try:
-                wf.plan(verbose=3, submit=True)
+                # configuration properties
+                properties = {"pegasus.mode": "development}
+
+                wf.plan(verbose=3, submit=True, **properties)
             except PegasusClientError as e:
                 print(e.output)
 
@@ -1221,6 +1226,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type submit: bool, optional
         :param java_options: pass to jvm a non standard option (e.g. :code:`["mx1024m", "ms512m"]`), defaults to None
         :type java_options: Optional[List[str]]
+        :param \*\*properties: configuration properties (e.g. :code:`**{"pegasus.mode": "development"}`, which would be passed to pegasus-plan as :code:`-Dpegasus.mode=development`). Note that configuration properties set here take precedance over the properties file property with the same key.
         :raises PegasusClientError: pegasus-plan encountered an error
         :return: self
         """
@@ -1260,7 +1266,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             forward=forward,
             submit=submit,
             java_options=java_options,
-            **kwargs,
+            **properties,
         )
 
         self._submit_dir = workflow_instance._submit_dir
@@ -1620,7 +1626,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             )
 
         self.transformation_catalog = tc
-        log.info("{workflow} added inline TransformationCatalog".format(workflow=self.name))
+        log.info(
+            "{workflow} added inline TransformationCatalog".format(workflow=self.name)
+        )
 
     @_chained
     def add_dependency(
@@ -1840,7 +1848,11 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         Writable.write(self, file, _format=_format)
 
-        log.info("workflow {workflow} with {num_jobs} jobs generated and written to {dst}".format(workflow=self.name, num_jobs=len(self.jobs), dst=file))
+        log.info(
+            "workflow {workflow} with {num_jobs} jobs generated and written to {dst}".format(
+                workflow=self.name, num_jobs=len(self.jobs), dst=file
+            )
+        )
 
         # save path so that it can be used by Client.plan()
         if isinstance(file, str):
