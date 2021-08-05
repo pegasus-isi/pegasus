@@ -190,7 +190,7 @@ class TestClient:
             staging_sites={"es1": "ss1", "es2": "ss2"},
             submit=True,
             verbose=3,
-            **{"pegasus.mode": "development"}
+            **{"pegasus.mode": "development"},
         )
         subprocess.Popen.assert_called_once_with(
             [
