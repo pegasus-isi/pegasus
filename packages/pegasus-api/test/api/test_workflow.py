@@ -526,20 +526,47 @@ class TestJob:
         "job, expected_repr_str",
         [
             (Job(Transformation(name="test")), "Job(transformation=test)"),
-            (Job(Transformation(name="test", namespace="namespace")), "Job(namespace=namespace, transformation=test)"),
-            (Job(Transformation(name="test", namespace="namespace", version="version")), "Job(namespace=namespace, transformation=test, version=version)"),
+            (
+                Job(Transformation(name="test", namespace="namespace")),
+                "Job(namespace=namespace, transformation=test)",
+            ),
+            (
+                Job(
+                    Transformation(
+                        name="test", namespace="namespace", version="version"
+                    )
+                ),
+                "Job(namespace=namespace, transformation=test, version=version)",
+            ),
             (Job(transformation="test"), "Job(transformation=test)"),
-            (Job(transformation="test", namespace="namespace"), "Job(namespace=namespace, transformation=test)"),
-            (Job(transformation="test", namespace="namespace", version="version"), "Job(namespace=namespace, transformation=test, version=version)"),
-            (Job(transformation="test", _id="jid"), "Job(_id=jid, transformation=test)"),
-            (Job(transformation="test", node_label="label"), "Job(transformation=test, node_label=label)"),
-            (Job(transformation="test", version="version", node_label="label"), "Job(transformation=test, version=version, node_label=label)"),
-            (Job(Transformation(name="test"), _id="jid", node_label="label"), "Job(_id=jid, transformation=test, node_label=label)")
-        ]
+            (
+                Job(transformation="test", namespace="namespace"),
+                "Job(namespace=namespace, transformation=test)",
+            ),
+            (
+                Job(transformation="test", namespace="namespace", version="version"),
+                "Job(namespace=namespace, transformation=test, version=version)",
+            ),
+            (
+                Job(transformation="test", _id="jid"),
+                "Job(_id=jid, transformation=test)",
+            ),
+            (
+                Job(transformation="test", node_label="label"),
+                "Job(transformation=test, node_label=label)",
+            ),
+            (
+                Job(transformation="test", version="version", node_label="label"),
+                "Job(transformation=test, version=version, node_label=label)",
+            ),
+            (
+                Job(Transformation(name="test"), _id="jid", node_label="label"),
+                "Job(_id=jid, transformation=test, node_label=label)",
+            ),
+        ],
     )
     def test_repr(self, job, expected_repr_str):
         assert repr(job) == expected_repr_str
-
 
 
 class Test_JobDependency:
@@ -604,10 +631,10 @@ class TestSubWorkflow:
                     "forward": ["forward"],
                     "submit": True,
                     "java_options": ["opt"],
-                    "other": "other",
+                    "property.key": "property.value",
                 },
                 [
-                    "-Dother=other",
+                    "-Dproperty.key=property.value",
                     "--basename",
                     "basename",
                     "--job-prefix",
@@ -677,10 +704,10 @@ class TestSubWorkflow:
                     "forward": ["forward"],
                     "submit": False,
                     "java_options": ["opt"],
-                    "other": "other",
+                    "other.property": "other.property.value",
                 },
                 [
-                    "-Dother=other",
+                    "-Dother.property=other.property.value",
                     "--basename",
                     "basename",
                     "--job-prefix",
@@ -811,16 +838,30 @@ class TestSubWorkflow:
 
         assert "the given SubWorkflow file must be a File object" in str(e)
 
-
     @pytest.mark.parametrize(
         "subworkflow, expected_repr_str",
         [
-            (SubWorkflow(file="file.yml"), "SubWorkflow(file=file.yml, is_planned=False)"),
-            (SubWorkflow(file="file.yml", is_planned=True), "SubWorkflow(file=file.yml, is_planned=True)"),
-            (SubWorkflow(file="file.yml", is_planned=False), "SubWorkflow(file=file.yml, is_planned=False)"),
-            (SubWorkflow(file="file.yml", _id="sid"), "SubWorkflow(_id=sid, file=file.yml, is_planned=False)"),
-            (SubWorkflow(file="file.yml", _id="sid", node_label="label"), "SubWorkflow(_id=sid, file=file.yml, is_planned=False, node_label=label)"),
-        ]
+            (
+                SubWorkflow(file="file.yml"),
+                "SubWorkflow(file=file.yml, is_planned=False)",
+            ),
+            (
+                SubWorkflow(file="file.yml", is_planned=True),
+                "SubWorkflow(file=file.yml, is_planned=True)",
+            ),
+            (
+                SubWorkflow(file="file.yml", is_planned=False),
+                "SubWorkflow(file=file.yml, is_planned=False)",
+            ),
+            (
+                SubWorkflow(file="file.yml", _id="sid"),
+                "SubWorkflow(_id=sid, file=file.yml, is_planned=False)",
+            ),
+            (
+                SubWorkflow(file="file.yml", _id="sid", node_label="label"),
+                "SubWorkflow(_id=sid, file=file.yml, is_planned=False, node_label=label)",
+            ),
+        ],
     )
     def test_repr(self, subworkflow, expected_repr_str):
         assert repr(subworkflow) == expected_repr_str
@@ -914,6 +955,7 @@ def expected_json():
     )
 
     return expected
+
 
 @pytest.fixture(scope="function")
 def wf():
@@ -1586,7 +1628,7 @@ class TestWorkflow:
         mocker.patch("Pegasus.client._client.Client.plan")
 
         path = "wf.yml"
-        wf.write(path).plan()
+        wf.write(path).plan(**{"+property.key-_": "value"})
 
         assert wf._path == path
 
@@ -1616,6 +1658,7 @@ class TestWorkflow:
             staging_sites=None,
             submit=False,
             verbose=0,
+            **{"+property.key-_": "value"},
         )
 
         os.remove(path)
@@ -1635,6 +1678,7 @@ class TestWorkflow:
             reuse=["/submit_dir1", Path("/submit_dir2")],
             cache=["/cache", Path("/cache2")],
             inherited_rc_files=["/rc_file", Path("/rc_file2")],
+            **{"pegasus.mode": "development"},
         )
 
         assert wf._path == path
@@ -1665,6 +1709,7 @@ class TestWorkflow:
             staging_sites=None,
             submit=False,
             verbose=0,
+            **{"pegasus.mode": "development"},
         )
 
         os.remove(path)
