@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.code.generator.condor.style.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Namespace;
@@ -33,6 +34,7 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
@@ -52,15 +54,36 @@ public class Decaf extends Abstract {
     /** The base submit directory for the workflow. */
     protected String mWFSubmitDirectory;
 
-    /** The object holding all the properties pertaining to Pegasus. */
-    // protected PegasusProperties mProps;
-
-    /** The handle to the LogManager that logs all the messages. */
-    // protected LogManager mLogger;
+    private ADag mDAG;
 
     public void initialize(ADag dag, PegasusBag bag) {
         super.initialize(dag, bag);
+        this.mDAG = dag;
         mWFSubmitDirectory = bag.getPlannerOptions().getSubmitDirectory();
+    }
+
+    /**
+     * Constructs a new aggregated job that contains all the jobs passed to it. The new aggregated
+     * job, appears as a single job in the workflow and replaces the jobs it contains in the
+     * workflow.
+     *
+     * @param jobs the list of <code>Job</code> objects that need to be collapsed. All the jobs
+     *     being collapsed should be scheduled at the same pool, to maintain correct semantics.
+     * @param name the logical name of the jobs in the list passed to this function.
+     * @param id the id that is given to the new job.
+     * @return the <code>Job</code> object corresponding to the aggregated job containing the jobs
+     *     passed as List in the input, null if the list of jobs is empty
+     */
+    public AggregatedJob constructAbstractAggregatedJob(List jobs, String name, String id) {
+        // create a normal clustered aggregated job and then convert it to a DataFlowJob
+        AggregatedJob clusteredJob = super.constructAbstractAggregatedJob(jobs, name, id);
+        // PM-1798 at this point we only have clustered job with the jobs making them up
+        // but no edges between the constituent jobs. those are visible only when
+        // the clustered job is made concrete
+        // This function is called only if we are getting Pegasus to cluster jobs into a 
+        // DECAF job. For the case, where the workflow description has a data flow job,
+        // the data flow job is already there and does not go through job clustering 
+        return this.convertToDataFlow(clusteredJob);
     }
 
     /**
@@ -69,11 +92,26 @@ public class Decaf extends Abstract {
      * @param job the abstract clustered job
      */
     public void makeAbstractAggregatedJobConcrete(AggregatedJob job) {
-
         if (!(job instanceof DataFlowJob)) {
-            DataFlowJob j = convertToDataFlow(job);
+            // sanity check
             throw new RuntimeException(
-                    "Decaf job aggregator only aggregates DataFlowJobs currently");
+                    "Decaf job aggregator requires jobs of type DataFlowJob for job" + job.getID());
+        }
+        // lets write out the edges
+        for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); ) {
+            GraphNode gn = (GraphNode) it.next();
+
+            // get a list of parents of the node
+            for (GraphNode child : gn.getChildren()) {
+                StringBuffer edge = new StringBuffer();
+                edge.append("EDGE")
+                        .append(" ")
+                        .append(gn.getID())
+                        .append(" ")
+                        .append(child.getID())
+                        .append("\n");
+                // System.err.println(edge.toString());
+            }
         }
         this.makeAbstractAggregatedJobConcrete((DataFlowJob) job);
     }
@@ -449,9 +487,47 @@ public class Decaf extends Abstract {
      * @return DataFlowJob
      */
     private DataFlowJob convertToDataFlow(AggregatedJob job) {
+        DataFlowJob d = new DataFlowJob();
+
+        // pick some things from aggregated job
+        d.setTXName(job.getTXName());
+        d.setRemoteExecutable(job.getName() + ".json");
+        d.setName(job.getID());
+        d.setRelativeSubmitDirectory(job.getRelativeSubmitDirectory());
+        d.setArguments(job.getArguments());
+        d.setJobType(Job.COMPUTE_JOB);
+        d.setSiteHandle(job.getSiteHandle());
+        d.setStagingSiteHandle(job.getStagingSiteHandle());
+        d.setJobAggregator(job.getJobAggregator());
+        int taskid = 0;
+        for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); taskid++) {
+            GraphNode node = it.next();
+            Job constitutentJob = (Job) node.getContent();
+            mLogger.log(
+                    "Assigning decaf id " + taskid + " to job " + constitutentJob.getID(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+
+            // each job in the cluster run on it's own proc
+            // make start_proc same as taskid
+            constitutentJob.addProfile(new Profile("selector", "id", Integer.toString(taskid)));
+            constitutentJob.addProfile(
+                    new Profile("selector", "start_proc", Integer.toString(taskid)));
+            // each job runs on a single proc
+            constitutentJob.addProfile(new Profile("selector", "nprocs", "1"));
+            constitutentJob.addProfile(new Profile("selector", "inports", "in"));
+            constitutentJob.addProfile(new Profile("selector", "outports", "out"));
+            // func is tricky. just map it to job transformation id with taskid
+            constitutentJob.addProfile(
+                    new Profile("selector", "func", constitutentJob.getTXName() + taskid));
+            d.add(constitutentJob);
+        }
+
+        return d;
+        /*
         throw new UnsupportedOperationException(
                 "Not supported yet."); // To change body of generated methods, choose Tools |
                                        // Templates.
+        */
     }
 
     @Override
