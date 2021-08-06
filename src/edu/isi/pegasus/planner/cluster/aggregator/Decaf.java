@@ -103,6 +103,20 @@ public class Decaf extends Abstract {
         if (j.isPartiallyCreated()) {
             this.addLinksToDataFlowJob(j);
             j.setPartiallyCreated(false);
+
+            // for root jobs in the clustered job  we have no inports
+            // and for leaf jobs in the clustered job we have no outports
+            for (GraphNode node : job.getRoots()) {
+                Job root = (Job) node.getContent();
+                Namespace decafAttributes = root.getSelectorProfiles();
+                decafAttributes.construct("inports", "");
+            }
+
+            for (GraphNode node : job.getLeaves()) {
+                Job root = (Job) node.getContent();
+                Namespace decafAttributes = root.getSelectorProfiles();
+                decafAttributes.construct("outports", "");
+            }
         }
 
         this.makeAbstractAggregatedJobConcrete(j);
