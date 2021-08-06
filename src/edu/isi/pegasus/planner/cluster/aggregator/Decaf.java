@@ -101,6 +101,8 @@ public class Decaf extends Abstract {
 
         DataFlowJob j = (DataFlowJob) job;
         if (j.isPartiallyCreated()) {
+            // PM-1798 in the case where you are getting Pegasus to do job clustering
+            // and run the clustered job via DECAF.
             this.addLinksToDataFlowJob(j);
             j.setPartiallyCreated(false);
 
@@ -509,13 +511,26 @@ public class Decaf extends Abstract {
         for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); taskid++) {
             GraphNode node = it.next();
             Job constitutentJob = (Job) node.getContent();
-            mLogger.log(
-                    "Assigning decaf id " + taskid + " to job " + constitutentJob.getID(),
-                    LogManager.DEBUG_MESSAGE_LEVEL);
+            StringBuilder sb = new StringBuilder();
+            sb.append("Assigning decaf id")
+                    .append(" ")
+                    .append(taskid)
+                    .append(" ")
+                    .append("to job")
+                    .append(" ")
+                    .append(constitutentJob.getID())
+                    .append(" ")
+                    .append("with logical id")
+                    .append(" ")
+                    .append(constitutentJob.getLogicalID());
+            mLogger.log(sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
 
             // each job in the cluster run on it's own proc
             // make start_proc same as taskid
             constitutentJob.addProfile(new Profile("selector", "id", Integer.toString(taskid)));
+            constitutentJob.addProfile(
+                    new Profile(
+                            "selector", "pegasus_job_logical_id", constitutentJob.getLogicalID()));
             constitutentJob.addProfile(
                     new Profile("selector", "start_proc", Integer.toString(taskid)));
             // each job runs on a single proc
