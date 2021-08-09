@@ -428,6 +428,17 @@ public class Decaf extends Abstract {
         pw.println("#!/bin/bash");
         pw.println("set -e");
 
+        // PM-1794 source the env script to setup various modules and library paths
+        String decafEnvSource = (String) job.envVariables.get(ENV.DECAF_ENV_SOURCE_KEY);
+        if (decafEnvSource == null) {
+            throw new RuntimeException(
+                    "Please specify path to the decaf source script as an env profile "
+                            + ENV.DECAF_ENV_SOURCE_KEY
+                            + " "
+                            + "with transformation dataflow::decaf");
+        }
+        pw.println("source " + ENV.DECAF_ENV_SOURCE_KEY);
+
         // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
         // PEGASUS_SCRATCH_DIR is always set as an environment variable in
         // generated condor submit file

@@ -70,6 +70,9 @@ public class ENV extends Namespace {
     /** the env variable that indicates the file that is to be sourced in pegasus lite */
     public static final String PEGASUS_LITE_ENV_SOURCE_KEY = "PEGASUS_LITE_ENV_SOURCE";
 
+    /** Key to source the decaf libraries */
+    public static final String DECAF_ENV_SOURCE_KEY = "DECAF_ENV_SOURCE";
+
     /**
      * The name of the implementing namespace. It should be one of the valid namespaces always.
      *
