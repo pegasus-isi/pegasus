@@ -436,6 +436,8 @@ public class Decaf extends Abstract {
         pw.println("#!/bin/bash");
         pw.println("set -e");
 
+        pw.println("echo \"Job Launched in directory `pwd`\"");
+
         // PM-1794 source the env script to setup various modules and library paths
         String decafEnvSource = (String) job.envVariables.get(ENV.DECAF_ENV_SOURCE_KEY);
         if (decafEnvSource == null) {
@@ -452,7 +454,7 @@ public class Decaf extends Abstract {
         // generated condor submit file
         pw.println("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY);
 
-        pw.println("echo \" Launched from directory `pwd` \" ");
+        pw.println("echo \"Invoking decaf executable from directory `pwd`\"");
 
         // PM-1794 srun invocation always. should be determined based on grid gateway
         // for the site on which the job runs in the site catalog
