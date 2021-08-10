@@ -444,8 +444,9 @@ public class Decaf extends Abstract {
         PrintWriter pw = new PrintWriter(writer);
         pw.println("#!/bin/bash");
         pw.println("set -e");
-
-        pw.println("echo \"Job Launched in directory `pwd`\"");
+        pw.println("");
+        pw.println("set LAUNCH_DIR=`pwd`");
+        pw.println("echo \"Job Launched in directory $LAUNCH_DIR\"");
 
         // PM-1794 source the env script to setup various modules and library paths
         String decafEnvSource = (String) job.envVariables.get(ENV.DECAF_ENV_SOURCE_KEY);
@@ -460,6 +461,7 @@ public class Decaf extends Abstract {
                             + Decaf.TRANSFORMATION_NAME);
         }
         pw.println("source $" + ENV.DECAF_ENV_SOURCE_KEY);
+        pw.println("");
 
         // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
         // PEGASUS_SCRATCH_DIR is always set as an environment variable in
@@ -468,7 +470,7 @@ public class Decaf extends Abstract {
 
         pw.println("echo \"Invoking decaf executable from directory `pwd`\"");
 
-        // PM-1794 srun invocation always. should be determined based on grid gateway
+        // PM-1794, PM-1792 srun invocation always. should be determined based on grid gateway
         // for the site on which the job runs in the site catalog
         boolean useSRUN = true;
         String wrap = useSRUN ? wrapWithSRun(job) : wrapWithMPIRun(job);
@@ -491,6 +493,15 @@ public class Decaf extends Abstract {
         // and create the mpmd.conf file
         String confFile = job.getName() + ".conf";
         sb.append("\n");
+
+        // copy the json file for the job into the directory
+        // where we are going to launch decaf
+        // the json file is specified as the remote executable for the job
+        sb.append("# copy the json file for the job into the directory").append("\n");
+        sb.append("# where we are going to launch decaf").append("\n");
+        sb.append("cp $LAUNCH_DIR/" + job.getRemoteExecutable() + " .").append("\n");
+        sb.append("\n");
+
         sb.append("cat <<EOF > ").append(confFile).append("\n");
 
         for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
@@ -620,11 +631,8 @@ public class Decaf extends Abstract {
         // also ensure profiles are copied over
         // some cheating here
         // FIXME: consider using the copy constructor instead
-        d.vdsNS = job.vdsNS;
-        d.envVariables = job.envVariables;
-        d.condorVariables = job.condorVariables;
-        d.globusRSL = job.globusRSL;
-        d.dagmanVariables = job.dagmanVariables;
+        // merge the profiles into the DataFlowJob
+        d.mergeProfiles(job);
 
         // PM-1794 make sure we have the env profiles also associated
         for (Object key : job.envVariables.keySet()) {
