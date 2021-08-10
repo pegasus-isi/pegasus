@@ -137,9 +137,16 @@ public class Decaf extends Abstract {
      * @param job the abstract clustered job as a data flow job
      */
     public void makeAbstractAggregatedJobConcrete(DataFlowJob job) {
+        // the executable that clustered job refers to is collapser
+        TransformationCatalogEntry entry = this.getTCEntry(job);
+        // the profile information from the transformation
+        // catalog needs to be assimilated into the job
+        // overriding the one from pool catalog.
+        job.updateProfiles(entry);
 
         // figure out name and directory
         // String name = job.getID() + ".json";
+        job.setRemoteExecutable(entry.getPhysicalTransformation());
 
         // we cannot give any name because of hardcoded nature
         // in decaf. instead pick up the name as defined in the
@@ -153,13 +160,6 @@ public class Decaf extends Abstract {
                             + " should be mapped to a json file in Transformation Catalog. Is mapped to "
                             + name);
         }
-
-        // the executable that fat job refers to is collapser
-        TransformationCatalogEntry entry = this.getTCEntry(job);
-        // the profile information from the transformation
-        // catalog needs to be assimilated into the job
-        // overriding the one from pool catalog.
-        job.updateProfiles(entry);
 
         // traverse through the nodes making up the Data flow job
         // and update resource requirements
@@ -608,7 +608,7 @@ public class Decaf extends Abstract {
         // pick some things from aggregated job
         d.setTXNamespace(TRANSFORMATION_NAMESPACE);
         d.setTXName(job.getTXName());
-        d.setRemoteExecutable(job.getName() + ".json");
+        // d.setRemoteExecutable(job.getName() + ".json");
         d.setName(job.getID());
         d.setRelativeSubmitDirectory(job.getRelativeSubmitDirectory());
         d.setArguments(job.getArguments());
