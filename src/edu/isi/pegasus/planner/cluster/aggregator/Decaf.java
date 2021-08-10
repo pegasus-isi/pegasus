@@ -444,8 +444,9 @@ public class Decaf extends Abstract {
         PrintWriter pw = new PrintWriter(writer);
         pw.println("#!/bin/bash");
         pw.println("set -e");
-
-        pw.println("echo \"Job Launched in directory `pwd`\"");
+        pw.println("");
+        pw.println("set LAUNCH_DIR=`pwd`");
+        pw.println("echo \"Job Launched in directory $LAUNCH_DIR\"");
 
         // PM-1794 source the env script to setup various modules and library paths
         String decafEnvSource = (String) job.envVariables.get(ENV.DECAF_ENV_SOURCE_KEY);
@@ -460,11 +461,19 @@ public class Decaf extends Abstract {
                             + Decaf.TRANSFORMATION_NAME);
         }
         pw.println("source $" + ENV.DECAF_ENV_SOURCE_KEY);
+        pw.println("");
 
         // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
         // PEGASUS_SCRATCH_DIR is always set as an environment variable in
         // generated condor submit file
         pw.println("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY);
+
+        // copy the json file for the job into the directory
+        // where we are going to launch decaf
+        // the json file is specified as the remote executable for the job
+        pw.println("# copy the json file for the job into the directory");
+        pw.println("# where we are going to launch decaf");
+        pw.println("cp $LAUNCH_DIR/" + job.getRemoteExecutable() + " .");
 
         pw.println("echo \"Invoking decaf executable from directory `pwd`\"");
 
