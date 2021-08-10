@@ -38,6 +38,7 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PegasusFile.LINKAGE;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.cluster.aggregator.Decaf;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Executable.ARCH;
@@ -361,7 +362,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     } else if (element.equals("dflow")) {
                         DataFlowJob dflowJob = new DataFlowJob(j);
                         // add default name and namespace information
-                        dflowJob.setTransformation("dataflow", "decaf", null);
+                        dflowJob.setTransformation(
+                                Decaf.TRANSFORMATION_NAMESPACE, Decaf.TRANSFORMATION_NAME, null);
 
                         // set the internal primary id for job
                         // PM-1513 no longer set in parser per master branch
