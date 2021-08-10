@@ -468,16 +468,9 @@ public class Decaf extends Abstract {
         // generated condor submit file
         pw.println("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY);
 
-        // copy the json file for the job into the directory
-        // where we are going to launch decaf
-        // the json file is specified as the remote executable for the job
-        pw.println("# copy the json file for the job into the directory");
-        pw.println("# where we are going to launch decaf");
-        pw.println("cp $LAUNCH_DIR/" + job.getRemoteExecutable() + " .");
-
         pw.println("echo \"Invoking decaf executable from directory `pwd`\"");
 
-        // PM-1794 srun invocation always. should be determined based on grid gateway
+        // PM-1794, PM-1792 srun invocation always. should be determined based on grid gateway
         // for the site on which the job runs in the site catalog
         boolean useSRUN = true;
         String wrap = useSRUN ? wrapWithSRun(job) : wrapWithMPIRun(job);
@@ -500,6 +493,15 @@ public class Decaf extends Abstract {
         // and create the mpmd.conf file
         String confFile = job.getName() + ".conf";
         sb.append("\n");
+
+        // copy the json file for the job into the directory
+        // where we are going to launch decaf
+        // the json file is specified as the remote executable for the job
+        sb.append("# copy the json file for the job into the directory").append("\n");
+        sb.append("# where we are going to launch decaf").append("\n");
+        sb.append("cp $LAUNCH_DIR/" + job.getRemoteExecutable() + " .").append("\n");
+        sb.append("\n");
+
         sb.append("cat <<EOF > ").append(confFile).append("\n");
 
         for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
