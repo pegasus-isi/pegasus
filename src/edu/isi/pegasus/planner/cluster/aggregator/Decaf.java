@@ -50,6 +50,12 @@ import javax.json.stream.JsonGeneratorFactory;
  */
 public class Decaf extends Abstract {
 
+    /** The namespace that DECAF transformations are associated with */
+    public static final String TRANSFORMATION_NAMESPACE = "dataflow";
+
+    /** The namespace that DECAF transformations are associated with */
+    public static final String TRANSFORMATION_NAME = "decaf";
+
     /** The key indicating the number of processors to run the job on. */
     private static final String NPROCS_KEY = "nprocs";
 
@@ -264,9 +270,12 @@ public class Decaf extends Abstract {
      * @return the executable basename.
      */
     public String getClusterExecutableBasename() {
-        throw new UnsupportedOperationException(
-                "Not supported yet."); // To change body of generated methods, choose Tools |
-        // Templates.
+        throw new RuntimeException(
+                "DECAF job clusterer does not create default transformation catalog entries for decaf."
+                        + " Please specify an installed executable for transformation with namespace,name - "
+                        + Decaf.TRANSFORMATION_NAMESPACE
+                        + ","
+                        + Decaf.TRANSFORMATION_NAME);
     }
 
     /**
@@ -445,7 +454,10 @@ public class Decaf extends Abstract {
                     "Please specify path to the decaf source script as an env profile "
                             + ENV.DECAF_ENV_SOURCE_KEY
                             + " "
-                            + "with transformation dataflow::decaf");
+                            + "with transformation namespace,name - "
+                            + Decaf.TRANSFORMATION_NAMESPACE
+                            + ","
+                            + Decaf.TRANSFORMATION_NAME);
         }
         pw.println("source $" + ENV.DECAF_ENV_SOURCE_KEY);
 
@@ -594,7 +606,7 @@ public class Decaf extends Abstract {
         DataFlowJob d = new DataFlowJob();
 
         // pick some things from aggregated job
-        d.setTXNamespace("dataflow");
+        d.setTXNamespace(TRANSFORMATION_NAMESPACE);
         d.setTXName(job.getTXName());
         d.setRemoteExecutable(job.getName() + ".json");
         d.setName(job.getID());
