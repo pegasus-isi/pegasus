@@ -454,10 +454,73 @@ public class Decaf extends Abstract {
 
         pw.println("echo \" Launched from directory `pwd` \" ");
 
-        String wrap = wrapWithMPIRun(job);
+        // PM-1794 srun invocation always. should be determined based on grid gateway
+        // for the site on which the job runs in the site catalog
+        boolean useSRUN = true;
+        String wrap = useSRUN ? wrapWithSRun(job) : wrapWithMPIRun(job);
 
         pw.println(wrap);
         pw.close();
+    }
+
+    /**
+     * Wraps the job to run via SRUN as outlined in
+     * https://docs.nersc.gov/jobs/examples/#mpmd-multiple-program-multiple-data-jobs
+     *
+     * @param job the job to run via decaf
+     * @return the SRUN invocation
+     */
+    private String wrapWithSRun(DataFlowJob job) {
+        // srun --multi-prog ./mpmd.conf
+        StringBuilder sb = new StringBuilder();
+        // traverse through the nodes making up the DataFlow job
+        // and create the mpmd.conf file
+        String confFile = job.getName() + ".conf";
+        sb.append("\n");
+        sb.append("cat <<EOF > ").append(confFile).append("\n");
+
+        for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
+            GraphNode n = (GraphNode) it.next();
+            Job j = (Job) n.getContent();
+            int cores = j.vdsNS.getIntValue(Pegasus.CORES_KEY, -1);
+
+            if (cores == 0) {
+                if (j instanceof DataFlowJob.Link) {
+                    // PM-1602 skip the job in the mpirun invocation
+                    mLogger.log(
+                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                                    + j.getLogicalID(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    continue;
+                }
+                // log warning for non link job
+                mLogger.log(
+                        "Number of cores is 0 for job " + j.getLogicalID(),
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            }
+
+            // cori$ cat mpmd.conf
+            // 0-35 ./a.out
+            // 36-96 ./b.out
+            // first value is start_proc and then the invocation
+            String startProc = (String) j.getSelectorProfiles().get("start_proc");
+            if (startProc == null) {
+                throw new RuntimeException(
+                        "No start_proc associated for constituent job " + j.getID());
+            }
+            sb.append(startProc).append(" ").append(j.getRemoteExecutable());
+            String args = j.getArguments();
+            if (args != null && args.length() > 0) {
+                // PM-1602 set arguments associated with the job
+                sb.append(" ").append(args);
+            }
+            sb.append("\n");
+        }
+        sb.append("EOF\n");
+
+        // srun --multi-prog ./mpmd.conf
+        sb.append("srun --multi-prog ./").append(confFile).append("\n");
+        return sb.toString();
     }
 
     /**
