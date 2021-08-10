@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
@@ -101,6 +102,8 @@ public class Decaf extends Abstract {
 
         DataFlowJob j = (DataFlowJob) job;
         if (j.isPartiallyCreated()) {
+            // PM-1798 in the case where you are getting Pegasus to do job clustering
+            // and run the clustered job via DECAF.
             this.addLinksToDataFlowJob(j);
             j.setPartiallyCreated(false);
 
@@ -144,6 +147,13 @@ public class Decaf extends Abstract {
                             + " should be mapped to a json file in Transformation Catalog. Is mapped to "
                             + name);
         }
+
+        // the executable that fat job refers to is collapser
+        TransformationCatalogEntry entry = this.getTCEntry(job);
+        // the profile information from the transformation
+        // catalog needs to be assimilated into the job
+        // overriding the one from pool catalog.
+        job.updateProfiles(entry);
 
         // traverse through the nodes making up the Data flow job
         // and update resource requirements
@@ -426,6 +436,17 @@ public class Decaf extends Abstract {
         pw.println("#!/bin/bash");
         pw.println("set -e");
 
+        // PM-1794 source the env script to setup various modules and library paths
+        String decafEnvSource = (String) job.envVariables.get(ENV.DECAF_ENV_SOURCE_KEY);
+        if (decafEnvSource == null) {
+            throw new RuntimeException(
+                    "Please specify path to the decaf source script as an env profile "
+                            + ENV.DECAF_ENV_SOURCE_KEY
+                            + " "
+                            + "with transformation dataflow::decaf");
+        }
+        pw.println("source $" + ENV.DECAF_ENV_SOURCE_KEY);
+
         // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
         // PEGASUS_SCRATCH_DIR is always set as an environment variable in
         // generated condor submit file
@@ -433,6 +454,82 @@ public class Decaf extends Abstract {
 
         pw.println("echo \" Launched from directory `pwd` \" ");
 
+        // PM-1794 srun invocation always. should be determined based on grid gateway
+        // for the site on which the job runs in the site catalog
+        boolean useSRUN = true;
+        String wrap = useSRUN ? wrapWithSRun(job) : wrapWithMPIRun(job);
+
+        pw.println(wrap);
+        pw.close();
+    }
+
+    /**
+     * Wraps the job to run via SRUN as outlined in
+     * https://docs.nersc.gov/jobs/examples/#mpmd-multiple-program-multiple-data-jobs
+     *
+     * @param job the job to run via decaf
+     * @return the SRUN invocation
+     */
+    private String wrapWithSRun(DataFlowJob job) {
+        // srun --multi-prog ./mpmd.conf
+        StringBuilder sb = new StringBuilder();
+        // traverse through the nodes making up the DataFlow job
+        // and create the mpmd.conf file
+        String confFile = job.getName() + ".conf";
+        sb.append("\n");
+        sb.append("cat <<EOF > ").append(confFile).append("\n");
+
+        for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
+            GraphNode n = (GraphNode) it.next();
+            Job j = (Job) n.getContent();
+            int cores = j.vdsNS.getIntValue(Pegasus.CORES_KEY, -1);
+
+            if (cores == 0) {
+                if (j instanceof DataFlowJob.Link) {
+                    // PM-1602 skip the job in the mpirun invocation
+                    mLogger.log(
+                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                                    + j.getLogicalID(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    continue;
+                }
+                // log warning for non link job
+                mLogger.log(
+                        "Number of cores is 0 for job " + j.getLogicalID(),
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            }
+
+            // cori$ cat mpmd.conf
+            // 0-35 ./a.out
+            // 36-96 ./b.out
+            // first value is start_proc and then the invocation
+            String startProc = (String) j.getSelectorProfiles().get("start_proc");
+            if (startProc == null) {
+                throw new RuntimeException(
+                        "No start_proc associated for constituent job " + j.getID());
+            }
+            sb.append(startProc).append(" ").append(j.getRemoteExecutable());
+            String args = j.getArguments();
+            if (args != null && args.length() > 0) {
+                // PM-1602 set arguments associated with the job
+                sb.append(" ").append(args);
+            }
+            sb.append("\n");
+        }
+        sb.append("EOF\n");
+
+        // srun --multi-prog ./mpmd.conf
+        sb.append("srun --multi-prog ./").append(confFile).append("\n");
+        return sb.toString();
+    }
+
+    /**
+     * Wraps the job to run via mpirun
+     *
+     * @param job the job to run via decaf
+     * @return the mpirun invocation
+     */
+    private String wrapWithMPIRun(DataFlowJob job) {
         // mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
         StringBuilder sb = new StringBuilder();
         sb.append("mpirun").append(" ");
@@ -471,8 +568,7 @@ public class Decaf extends Abstract {
             }
             first = false;
         }
-        pw.println(sb);
-        pw.close();
+        return sb.toString();
     }
 
     private Writer getWriter(File jsonFile) {
@@ -496,6 +592,7 @@ public class Decaf extends Abstract {
         DataFlowJob d = new DataFlowJob();
 
         // pick some things from aggregated job
+        d.setTXNamespace("dataflow");
         d.setTXName(job.getTXName());
         d.setRemoteExecutable(job.getName() + ".json");
         d.setName(job.getID());
@@ -505,17 +602,36 @@ public class Decaf extends Abstract {
         d.setSiteHandle(job.getSiteHandle());
         d.setStagingSiteHandle(job.getStagingSiteHandle());
         d.setJobAggregator(job.getJobAggregator());
+
+        // PM-1794 make sure we have the env profiles also associated
+        for (Object key : job.envVariables.keySet()) {
+            d.envVariables.checkKey((String) key, (String) job.envVariables.get(key));
+        }
+
         int taskid = 0;
         for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); taskid++) {
             GraphNode node = it.next();
             Job constitutentJob = (Job) node.getContent();
-            mLogger.log(
-                    "Assigning decaf id " + taskid + " to job " + constitutentJob.getID(),
-                    LogManager.DEBUG_MESSAGE_LEVEL);
+            StringBuilder sb = new StringBuilder();
+            sb.append("Assigning decaf id")
+                    .append(" ")
+                    .append(taskid)
+                    .append(" ")
+                    .append("to job")
+                    .append(" ")
+                    .append(constitutentJob.getID())
+                    .append(" ")
+                    .append("with logical id")
+                    .append(" ")
+                    .append(constitutentJob.getLogicalID());
+            mLogger.log(sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
 
             // each job in the cluster run on it's own proc
             // make start_proc same as taskid
             constitutentJob.addProfile(new Profile("selector", "id", Integer.toString(taskid)));
+            constitutentJob.addProfile(
+                    new Profile(
+                            "selector", "pegasus_job_logical_id", constitutentJob.getLogicalID()));
             constitutentJob.addProfile(
                     new Profile("selector", "start_proc", Integer.toString(taskid)));
             // each job runs on a single proc

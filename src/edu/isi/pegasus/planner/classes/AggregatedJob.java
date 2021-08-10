@@ -54,7 +54,8 @@ public class AggregatedJob extends Job implements Graph {
         //        mConstituentJobs = new ArrayList(3);
         mHasBeenRenderedToExecutableForm = false;
         this.mJobAggregator = null;
-        mGraphImplementor = new MapGraph();
+        // PM-1798 always preserve insertion order for clustered jobs
+        mGraphImplementor = new MapGraph(true);
     }
 
     /**
