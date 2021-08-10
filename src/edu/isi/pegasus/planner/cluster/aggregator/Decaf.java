@@ -617,6 +617,15 @@ public class Decaf extends Abstract {
         d.setStagingSiteHandle(job.getStagingSiteHandle());
         d.setJobAggregator(job.getJobAggregator());
 
+        // also ensure profiles are copied over
+        // some cheating here
+        // FIXME: consider using the copy constructor instead
+        d.vdsNS = job.vdsNS;
+        d.envVariables = job.envVariables;
+        d.condorVariables = job.condorVariables;
+        d.globusRSL = job.globusRSL;
+        d.dagmanVariables = job.dagmanVariables;
+
         // PM-1794 make sure we have the env profiles also associated
         for (Object key : job.envVariables.keySet()) {
             d.envVariables.checkKey((String) key, (String) job.envVariables.get(key));
