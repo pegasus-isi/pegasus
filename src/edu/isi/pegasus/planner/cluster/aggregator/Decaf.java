@@ -620,11 +620,8 @@ public class Decaf extends Abstract {
         // also ensure profiles are copied over
         // some cheating here
         // FIXME: consider using the copy constructor instead
-        d.vdsNS = job.vdsNS;
-        d.envVariables = job.envVariables;
-        d.condorVariables = job.condorVariables;
-        d.globusRSL = job.globusRSL;
-        d.dagmanVariables = job.dagmanVariables;
+        // merge the profiles into the DataFlowJob
+        d.mergeProfiles(job);
 
         // PM-1794 make sure we have the env profiles also associated
         for (Object key : job.envVariables.keySet()) {
