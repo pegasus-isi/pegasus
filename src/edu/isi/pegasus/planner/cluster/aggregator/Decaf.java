@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
@@ -146,6 +147,13 @@ public class Decaf extends Abstract {
                             + " should be mapped to a json file in Transformation Catalog. Is mapped to "
                             + name);
         }
+
+        // the executable that fat job refers to is collapser
+        TransformationCatalogEntry entry = this.getTCEntry(job);
+        // the profile information from the transformation
+        // catalog needs to be assimilated into the job
+        // overriding the one from pool catalog.
+        job.updateProfiles(entry);
 
         // traverse through the nodes making up the Data flow job
         // and update resource requirements
@@ -437,7 +445,7 @@ public class Decaf extends Abstract {
                             + " "
                             + "with transformation dataflow::decaf");
         }
-        pw.println("source " + ENV.DECAF_ENV_SOURCE_KEY);
+        pw.println("source $" + ENV.DECAF_ENV_SOURCE_KEY);
 
         // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
         // PEGASUS_SCRATCH_DIR is always set as an environment variable in
@@ -446,45 +454,9 @@ public class Decaf extends Abstract {
 
         pw.println("echo \" Launched from directory `pwd` \" ");
 
-        // mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
-        StringBuilder sb = new StringBuilder();
-        sb.append("mpirun").append(" ");
-        // traverse through the nodes making up the Data flow job
-        // and update resource requirements
-        boolean first = true;
-        for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
-            GraphNode n = (GraphNode) it.next();
-            Job j = (Job) n.getContent();
-            int cores = j.vdsNS.getIntValue(Pegasus.CORES_KEY, -1);
+        String wrap = wrapWithMPIRun(job);
 
-            if (cores == 0) {
-                if (j instanceof DataFlowJob.Link) {
-                    // PM-1602 skip the job in the mpirun invocation
-                    mLogger.log(
-                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
-                                    + j.getLogicalID(),
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-                    continue;
-                }
-                // log warning for non link job
-                mLogger.log(
-                        "Number of cores is 0 for job " + j.getLogicalID(),
-                        LogManager.WARNING_MESSAGE_LEVEL);
-            }
-
-            if (!first) {
-                sb.append(" ").append(":").append(" ");
-            }
-            sb.append("-np").append(" ").append(cores).append(" ").append(j.getRemoteExecutable());
-
-            String args = j.getArguments();
-            if (args != null && args.length() > 0) {
-                // PM-1602 set arguments associated with the job
-                sb.append(" ").append(args);
-            }
-            first = false;
-        }
-        pw.println(sb);
+        pw.println(wrap);
         pw.close();
     }
 
@@ -509,6 +481,7 @@ public class Decaf extends Abstract {
         DataFlowJob d = new DataFlowJob();
 
         // pick some things from aggregated job
+        d.setTXNamespace("dataflow");
         d.setTXName(job.getTXName());
         d.setRemoteExecutable(job.getName() + ".json");
         d.setName(job.getID());
@@ -518,6 +491,12 @@ public class Decaf extends Abstract {
         d.setSiteHandle(job.getSiteHandle());
         d.setStagingSiteHandle(job.getStagingSiteHandle());
         d.setJobAggregator(job.getJobAggregator());
+
+        // PM-1794 make sure we have the env profiles also associated
+        for (Object key : job.envVariables.keySet()) {
+            d.envVariables.checkKey((String) key, (String) job.envVariables.get(key));
+        }
+
         int taskid = 0;
         for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); taskid++) {
             GraphNode node = it.next();
@@ -659,5 +638,53 @@ public class Decaf extends Abstract {
                     "Job not associated with a decaf func attribute " + j.getID());
         }
         return id;
+    }
+
+    /**
+     * Wraps the job to run via mpirun
+     *
+     * @param job the job to run via decaf
+     * @return the mpirun invocation
+     */
+    private String wrapWithMPIRun(DataFlowJob job) {
+        // mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
+        StringBuilder sb = new StringBuilder();
+        sb.append("mpirun").append(" ");
+        // traverse through the nodes making up the Data flow job
+        // and update resource requirements
+        boolean first = true;
+        for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
+            GraphNode n = (GraphNode) it.next();
+            Job j = (Job) n.getContent();
+            int cores = j.vdsNS.getIntValue(Pegasus.CORES_KEY, -1);
+
+            if (cores == 0) {
+                if (j instanceof DataFlowJob.Link) {
+                    // PM-1602 skip the job in the mpirun invocation
+                    mLogger.log(
+                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                                    + j.getLogicalID(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    continue;
+                }
+                // log warning for non link job
+                mLogger.log(
+                        "Number of cores is 0 for job " + j.getLogicalID(),
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            }
+
+            if (!first) {
+                sb.append(" ").append(":").append(" ");
+            }
+            sb.append("-np").append(" ").append(cores).append(" ").append(j.getRemoteExecutable());
+
+            String args = j.getArguments();
+            if (args != null && args.length() > 0) {
+                // PM-1602 set arguments associated with the job
+                sb.append(" ").append(args);
+            }
+            first = false;
+        }
+        return sb.toString();
     }
 }
