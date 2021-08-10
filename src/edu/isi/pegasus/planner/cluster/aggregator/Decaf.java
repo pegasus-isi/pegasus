@@ -460,6 +460,54 @@ public class Decaf extends Abstract {
         pw.close();
     }
 
+    /**
+     * Wraps the job to run via mpirun
+     *
+     * @param job the job to run via decaf
+     * @return the mpirun invocation
+     */
+    private String wrapWithMPIRun(DataFlowJob job) {
+        // mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
+        StringBuilder sb = new StringBuilder();
+        sb.append("mpirun").append(" ");
+        // traverse through the nodes making up the Data flow job
+        // and update resource requirements
+        boolean first = true;
+        for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
+            GraphNode n = (GraphNode) it.next();
+            Job j = (Job) n.getContent();
+            int cores = j.vdsNS.getIntValue(Pegasus.CORES_KEY, -1);
+
+            if (cores == 0) {
+                if (j instanceof DataFlowJob.Link) {
+                    // PM-1602 skip the job in the mpirun invocation
+                    mLogger.log(
+                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                                    + j.getLogicalID(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    continue;
+                }
+                // log warning for non link job
+                mLogger.log(
+                        "Number of cores is 0 for job " + j.getLogicalID(),
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            }
+
+            if (!first) {
+                sb.append(" ").append(":").append(" ");
+            }
+            sb.append("-np").append(" ").append(cores).append(" ").append(j.getRemoteExecutable());
+
+            String args = j.getArguments();
+            if (args != null && args.length() > 0) {
+                // PM-1602 set arguments associated with the job
+                sb.append(" ").append(args);
+            }
+            first = false;
+        }
+        return sb.toString();
+    }
+
     private Writer getWriter(File jsonFile) {
         Writer writer = null;
         try {
@@ -638,53 +686,5 @@ public class Decaf extends Abstract {
                     "Job not associated with a decaf func attribute " + j.getID());
         }
         return id;
-    }
-
-    /**
-     * Wraps the job to run via mpirun
-     *
-     * @param job the job to run via decaf
-     * @return the mpirun invocation
-     */
-    private String wrapWithMPIRun(DataFlowJob job) {
-        // mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
-        StringBuilder sb = new StringBuilder();
-        sb.append("mpirun").append(" ");
-        // traverse through the nodes making up the Data flow job
-        // and update resource requirements
-        boolean first = true;
-        for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
-            GraphNode n = (GraphNode) it.next();
-            Job j = (Job) n.getContent();
-            int cores = j.vdsNS.getIntValue(Pegasus.CORES_KEY, -1);
-
-            if (cores == 0) {
-                if (j instanceof DataFlowJob.Link) {
-                    // PM-1602 skip the job in the mpirun invocation
-                    mLogger.log(
-                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
-                                    + j.getLogicalID(),
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-                    continue;
-                }
-                // log warning for non link job
-                mLogger.log(
-                        "Number of cores is 0 for job " + j.getLogicalID(),
-                        LogManager.WARNING_MESSAGE_LEVEL);
-            }
-
-            if (!first) {
-                sb.append(" ").append(":").append(" ");
-            }
-            sb.append("-np").append(" ").append(cores).append(" ").append(j.getRemoteExecutable());
-
-            String args = j.getArguments();
-            if (args != null && args.length() > 0) {
-                // PM-1602 set arguments associated with the job
-                sb.append(" ").append(args);
-            }
-            first = false;
-        }
-        return sb.toString();
     }
 }
