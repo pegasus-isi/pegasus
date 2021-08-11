@@ -445,7 +445,7 @@ public class Decaf extends Abstract {
         pw.println("#!/bin/bash");
         pw.println("set -e");
         pw.println("");
-        pw.println("set LAUNCH_DIR=`pwd`");
+        pw.println("LAUNCH_DIR=`pwd`");
         pw.println("echo \"Job Launched in directory $LAUNCH_DIR\"");
 
         // PM-1794 source the env script to setup various modules and library paths
@@ -462,13 +462,6 @@ public class Decaf extends Abstract {
         }
         pw.println("source $" + ENV.DECAF_ENV_SOURCE_KEY);
         pw.println("");
-
-        // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
-        // PEGASUS_SCRATCH_DIR is always set as an environment variable in
-        // generated condor submit file
-        pw.println("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY);
-
-        pw.println("echo \"Invoking decaf executable from directory `pwd`\"");
 
         // PM-1794, PM-1792 srun invocation always. should be determined based on grid gateway
         // for the site on which the job runs in the site catalog
@@ -499,8 +492,16 @@ public class Decaf extends Abstract {
         // the json file is specified as the remote executable for the job
         sb.append("# copy the json file for the job into the directory").append("\n");
         sb.append("# where we are going to launch decaf").append("\n");
-        sb.append("cp $LAUNCH_DIR/" + job.getRemoteExecutable() + " .").append("\n");
+        sb.append("cp " + job.getRemoteExecutable())
+                .append(" $" + ENV.PEGASUS_SCRATCH_DIR_KEY + "/")
+                .append("\n");
         sb.append("\n");
+
+        // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
+        // PEGASUS_SCRATCH_DIR is always set as an environment variable in
+        // generated condor submit file
+        sb.append("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY).append("\n");
+        sb.append("echo \"Invoking decaf executable from directory `pwd`\"").append("\n");
 
         sb.append("cat <<EOF > ").append(confFile).append("\n");
 
@@ -557,6 +558,13 @@ public class Decaf extends Abstract {
     private String wrapWithMPIRun(DataFlowJob job) {
         // mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
         StringBuilder sb = new StringBuilder();
+
+        // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
+        // PEGASUS_SCRATCH_DIR is always set as an environment variable in
+        // generated condor submit file
+        sb.append("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY).append("\n");
+        sb.append("echo \"Invoking decaf executable from directory `pwd`\"").append("\n");
+
         sb.append("mpirun").append(" ");
         // traverse through the nodes making up the Data flow job
         // and update resource requirements
