@@ -34,10 +34,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
@@ -63,6 +65,11 @@ public class Decaf extends Abstract {
     protected String mWFSubmitDirectory;
 
     private ADag mDAG;
+
+    /**
+     * PM-1798 extra args that are added for decaf invocation to intermediate jobs in the cluster.
+     */
+    public static final String DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY = "decaf.args";
 
     public void initialize(ADag dag, PegasusBag bag) {
         super.initialize(dag, bag);
@@ -108,23 +115,63 @@ public class Decaf extends Abstract {
 
         DataFlowJob j = (DataFlowJob) job;
         if (j.isPartiallyCreated()) {
+            // track roots and leaves job id's to inject extra decaf specific
+            // args in non leaf/leaves nodes
+            Set<String> rootAndLeaves = new HashSet();
+
             // PM-1798 in the case where you are getting Pegasus to do job clustering
             // and run the clustered job via DECAF.
             this.addLinksToDataFlowJob(j);
             j.setPartiallyCreated(false);
 
-            // for root jobs in the clustered job  we have no inports
+            // for leaf jobs in the clustered job  we have no inports
             // and for leaf jobs in the clustered job we have no outports
             for (GraphNode node : job.getRoots()) {
                 Job root = (Job) node.getContent();
                 Namespace decafAttributes = root.getSelectorProfiles();
                 decafAttributes.construct("inports", "");
+                rootAndLeaves.add(root.getID());
             }
 
             for (GraphNode node : job.getLeaves()) {
-                Job root = (Job) node.getContent();
-                Namespace decafAttributes = root.getSelectorProfiles();
+                Job leaf = (Job) node.getContent();
+                Namespace decafAttributes = leaf.getSelectorProfiles();
                 decafAttributes.construct("outports", "");
+                rootAndLeaves.add(leaf.getID());
+            }
+
+            // traverse through all nodes to inject decaf specific arguments
+            // in the intermediate jobs in the cluster
+            for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
+                GraphNode n = (GraphNode) it.next();
+                Job constitutentJob = (Job) n.getContent();
+                if (!rootAndLeaves.contains(constitutentJob.getID())) {
+                    // inject decaf specfic args
+                    mLogger.log(
+                            "Associating additional decaf args with job " + constitutentJob.getID(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    String extraArgs =
+                            (String)
+                                    job.getSelectorProfiles()
+                                            .get(DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY);
+                    if (extraArgs == null) {
+                        // log a warning
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("No additional decaf extra arguments specified for job")
+                                .append(" ")
+                                .append(constitutentJob.getID())
+                                .append(". ")
+                                .append(
+                                        "Additional arguments can be specified by associating a selector profile named")
+                                .append(" ")
+                                .append(Decaf.DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY);
+                        mLogger.log(sb.toString(), LogManager.WARNING_MESSAGE_LEVEL);
+                    } else {
+                        // prepend it
+                        constitutentJob.setArguments(
+                                extraArgs + " " + constitutentJob.getArguments());
+                    }
+                }
             }
         }
 
@@ -445,7 +492,7 @@ public class Decaf extends Abstract {
         pw.println("#!/bin/bash");
         pw.println("set -e");
         pw.println("");
-        pw.println("set LAUNCH_DIR=`pwd`");
+        pw.println("LAUNCH_DIR=`pwd`");
         pw.println("echo \"Job Launched in directory $LAUNCH_DIR\"");
 
         // PM-1794 source the env script to setup various modules and library paths
@@ -462,13 +509,6 @@ public class Decaf extends Abstract {
         }
         pw.println("source $" + ENV.DECAF_ENV_SOURCE_KEY);
         pw.println("");
-
-        // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
-        // PEGASUS_SCRATCH_DIR is always set as an environment variable in
-        // generated condor submit file
-        pw.println("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY);
-
-        pw.println("echo \"Invoking decaf executable from directory `pwd`\"");
 
         // PM-1794, PM-1792 srun invocation always. should be determined based on grid gateway
         // for the site on which the job runs in the site catalog
@@ -499,8 +539,16 @@ public class Decaf extends Abstract {
         // the json file is specified as the remote executable for the job
         sb.append("# copy the json file for the job into the directory").append("\n");
         sb.append("# where we are going to launch decaf").append("\n");
-        sb.append("cp $LAUNCH_DIR/" + job.getRemoteExecutable() + " .").append("\n");
+        sb.append("cp " + job.getRemoteExecutable())
+                .append(" $" + ENV.PEGASUS_SCRATCH_DIR_KEY + "/")
+                .append("\n");
         sb.append("\n");
+
+        // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
+        // PEGASUS_SCRATCH_DIR is always set as an environment variable in
+        // generated condor submit file
+        sb.append("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY).append("\n");
+        sb.append("echo \"Invoking decaf executable from directory `pwd`\"").append("\n");
 
         sb.append("cat <<EOF > ").append(confFile).append("\n");
 
@@ -557,6 +605,13 @@ public class Decaf extends Abstract {
     private String wrapWithMPIRun(DataFlowJob job) {
         // mpirun  -np 4 ./linear_2nodes : -np 2 ./linear_2nodes : -np 2 ./linear_2nodes
         StringBuilder sb = new StringBuilder();
+
+        // PM-1792 ensure that the job is launched from PEGASUS_SCRATCH_DIR
+        // PEGASUS_SCRATCH_DIR is always set as an environment variable in
+        // generated condor submit file
+        sb.append("cd $" + ENV.PEGASUS_SCRATCH_DIR_KEY).append("\n");
+        sb.append("echo \"Invoking decaf executable from directory `pwd`\"").append("\n");
+
         sb.append("mpirun").append(" ");
         // traverse through the nodes making up the Data flow job
         // and update resource requirements
