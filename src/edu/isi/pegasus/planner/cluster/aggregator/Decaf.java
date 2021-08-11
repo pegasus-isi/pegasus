@@ -34,10 +34,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
@@ -63,6 +65,11 @@ public class Decaf extends Abstract {
     protected String mWFSubmitDirectory;
 
     private ADag mDAG;
+
+    /**
+     * PM-1798 extra args that are added for decaf invocation to intermediate jobs in the cluster.
+     */
+    public static final String DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY = "decaf.args";
 
     public void initialize(ADag dag, PegasusBag bag) {
         super.initialize(dag, bag);
@@ -108,23 +115,63 @@ public class Decaf extends Abstract {
 
         DataFlowJob j = (DataFlowJob) job;
         if (j.isPartiallyCreated()) {
+            // track roots and leaves job id's to inject extra decaf specific
+            // args in non leaf/leaves nodes
+            Set<String> rootAndLeaves = new HashSet();
+
             // PM-1798 in the case where you are getting Pegasus to do job clustering
             // and run the clustered job via DECAF.
             this.addLinksToDataFlowJob(j);
             j.setPartiallyCreated(false);
 
-            // for root jobs in the clustered job  we have no inports
+            // for leaf jobs in the clustered job  we have no inports
             // and for leaf jobs in the clustered job we have no outports
             for (GraphNode node : job.getRoots()) {
                 Job root = (Job) node.getContent();
                 Namespace decafAttributes = root.getSelectorProfiles();
                 decafAttributes.construct("inports", "");
+                rootAndLeaves.add(root.getID());
             }
 
             for (GraphNode node : job.getLeaves()) {
-                Job root = (Job) node.getContent();
-                Namespace decafAttributes = root.getSelectorProfiles();
+                Job leaf = (Job) node.getContent();
+                Namespace decafAttributes = leaf.getSelectorProfiles();
                 decafAttributes.construct("outports", "");
+                rootAndLeaves.add(leaf.getID());
+            }
+
+            // traverse through all nodes to inject decaf specific arguments
+            // in the intermediate jobs in the cluster
+            for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
+                GraphNode n = (GraphNode) it.next();
+                Job constitutentJob = (Job) n.getContent();
+                if (!rootAndLeaves.contains(constitutentJob.getID())) {
+                    // inject decaf specfic args
+                    mLogger.log(
+                            "Associating additional decaf args with job " + constitutentJob.getID(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    String extraArgs =
+                            (String)
+                                    job.getSelectorProfiles()
+                                            .get(DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY);
+                    if (extraArgs == null) {
+                        // log a warning
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("No additional decaf extra arguments specified for job")
+                                .append(" ")
+                                .append(constitutentJob.getID())
+                                .append(". ")
+                                .append(
+                                        "Additional arguments can be specified by associating a selector profile named")
+                                .append(" ")
+                                .append(Decaf.DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY);
+                        mLogger.log(sb.toString(), LogManager.WARNING_MESSAGE_LEVEL);
+                    } else {
+                        // prepend it
+                        constitutentJob.setArguments(
+                                extraArgs + " " + constitutentJob.getArguments());
+                    }
+                }
             }
         }
 
