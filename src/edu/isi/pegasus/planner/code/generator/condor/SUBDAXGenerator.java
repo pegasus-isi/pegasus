@@ -1676,11 +1676,24 @@ public class SUBDAXGenerator {
 
         // get the graph node corresponding to the jobs
         GraphNode node = this.mDAG.getNode(job.getID());
+        boolean isCleanupScopeDeferred =
+                this.mCleanupScope == PegasusProperties.CLEANUP_SCOPE.deferred;
 
         for (GraphNode parent : node.getParents()) {
             Job p = (Job) parent.getContent();
             if (p instanceof DAXJob) {
-                s.add(this.mDAXJobIDToSubmitDirectoryCacheFile.get(p.getID()));
+                DAXJob parentJob = (DAXJob) p;
+                if (isCleanupScopeDeferred) {
+                    // PM-1800 users have set cleanup scope to deferred meaning
+                    // cleanup should be triggered for sub workflows. In that case
+                    // instead of the cache files, we point to the output map of the
+                    // parent sub workflows
+                    s.add(parentJob.getOutputMapperBackendPath());
+                } else {
+                    // normally just add the parent's cache file (that contains locations
+                    // of files in the scratch dir of  the parent sub workflow)
+                    s.add(this.mDAXJobIDToSubmitDirectoryCacheFile.get(p.getID()));
+                }
             }
         }
 

@@ -149,7 +149,8 @@ public class Decaf extends Abstract {
                         LogManager.DEBUG_MESSAGE_LEVEL);
                 String extraArgs =
                         (String)
-                                job.getSelectorProfiles()
+                                constitutentJob
+                                        .getSelectorProfiles()
                                         .get(DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY);
                 if (extraArgs == null) {
                     // log a warning
