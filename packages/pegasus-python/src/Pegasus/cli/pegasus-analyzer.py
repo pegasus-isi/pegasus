@@ -1194,6 +1194,23 @@ def analyze_db(config_properties):
     held_jobs = workflow_stats.get_total_held_jobs()
     held = len(held_jobs)
 
+    # PM-1762 need to retrieve workflow states also, as you can
+    # have workflow with zero failed jobs, but still the workflow failed
+    # for example trying to run a workflow again from the same directory
+    # where an already existing workflow is running
+    workflow_states = workflow_stats.get_workflow_states()
+    workflow_failed = False
+    if workflow_states:
+        # workflow states are returned in ascending order. we need the last state
+        last_wf_state_record = workflow_states[-1]
+        # (1, 'WORKFLOW_TERMINATED', Decimal('1619144694.000000'), 2, 1)
+        last_wf_state_state = last_wf_state_record[1]
+        last_wf_state_status = last_wf_state_record[4]
+        if last_wf_state_state == "WORKFLOW_TERMINATED" and (
+            last_wf_state_status and last_wf_state_status > 0
+        ):
+            workflow_failed = True
+
     # PM-1039
     if success is None:
         success = 0
@@ -1209,7 +1226,7 @@ def analyze_db(config_properties):
 
     # Exit if summary mode is on
     if summary_mode:
-        if failed > 0:
+        if workflow_failed or failed > 0:
             # Workflow has failures, exit with exitcode 2
             sys.exit(2)
         # Workflow has no failures, exit with exitcode 0
@@ -1463,7 +1480,7 @@ def analyze_db(config_properties):
     # Done with the database
     workflow_stats.close()
 
-    if failed > 0:
+    if workflow_failed or failed > 0:
         # Workflow has failures, exit with exitcode 2
         sys.exit(2)
 
