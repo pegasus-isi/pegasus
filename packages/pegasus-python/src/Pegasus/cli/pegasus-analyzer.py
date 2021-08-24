@@ -1256,6 +1256,13 @@ def analyze_db(config_properties):
 
     unsubmitted = total - success - failed
 
+    # PM-1762 add a helpful message in case failed jobs are zero and workflow failed
+    if workflow_status is WORKFLOW_STATUS.FAILURE and failed == 0:
+        print_console(
+            "It seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in %s"
+            % (input_dir or top_dir)
+        )
+
     # Let's print the results
     print_top_summary(workflow_status)
     check_for_wf_start()
