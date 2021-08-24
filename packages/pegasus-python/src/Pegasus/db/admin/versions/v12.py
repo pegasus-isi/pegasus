@@ -291,8 +291,8 @@ class Version(BaseVersion):
             )
             self.db.execute("DROP TABLE _{}_old".format(tbl.__tablename__))
             self.db.execute("PRAGMA foreign_keys=on")
-            self.db.commit()
 
         except (OperationalError, ProgrammingError, Exception) as e:
-            self.db.rollback()
-            raise DBAdminError(e)
+            if not "no such table" in str(e):
+                self.db.rollback()
+                raise DBAdminError(e)
