@@ -1016,7 +1016,7 @@ def backticks(cmd_line):
         o = o.decode()
 
 
-def print_top_summary():
+def print_top_summary(workflow_status=None):
     """
     This function prints the summary for the analyzer report,
     which is the same for the long and short output versions
@@ -1026,6 +1026,9 @@ def print_top_summary():
     print_console(summary)
     print_console()
     print_console(" Submit Directory   : %s" % (input_dir or top_dir))
+    if workflow_status:
+        print_console(" Workflow Status    : %s" % (workflow_status.value))
+
     print_console(
         " Total jobs         : % 6d (%3.2f%%)"
         % (total, 100 * (1.0 * total / (total or 1)))
@@ -1171,7 +1174,8 @@ def analyze_files():
 
     # Print summary of our analysis
     if summary_mode:
-        print_top_summary()
+        # PM-1762 in the files mode we don't determine workflow status
+        print_top_summary(workflow_status=None)
     else:
         # This is non summary mode despite of the name (go figure)
         print_summary()
@@ -1253,7 +1257,7 @@ def analyze_db(config_properties):
     unsubmitted = total - success - failed
 
     # Let's print the results
-    print_top_summary()
+    print_top_summary(workflow_status)
     check_for_wf_start()
 
     # Exit if summary mode is on
