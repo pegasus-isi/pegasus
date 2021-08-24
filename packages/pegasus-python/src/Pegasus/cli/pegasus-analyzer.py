@@ -34,6 +34,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
+from enum import Enum
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
@@ -55,6 +56,13 @@ re_collapse_condor_subs = re.compile(r"\$\([^\)]*\)")
 re_ks_invocation = re.compile(r"^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b.*")
 
 # --- classes -------------------------------------------------------------------------
+class WORKFLOW_STATUS(Enum):
+    """Workflow Status"""
+
+    UNKNOWN = "unknown"
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILURE = "failure"
 
 
 class Job:
@@ -1199,7 +1207,7 @@ def analyze_db(config_properties):
     # for example trying to run a workflow again from the same directory
     # where an already existing workflow is running
     workflow_states = workflow_stats.get_workflow_states()
-    workflow_failed = False
+    workflow_status = WORKFLOW_STATUS.UNKNOWN
     if workflow_states:
         # workflow states are returned in ascending order. we need the last state
         last_wf_state_record = workflow_states[-1]
@@ -1209,7 +1217,11 @@ def analyze_db(config_properties):
         if last_wf_state_state == "WORKFLOW_TERMINATED" and (
             last_wf_state_status and last_wf_state_status > 0
         ):
-            workflow_failed = True
+            workflow_status = WORKFLOW_STATUS.FAILURE
+
+    logger.debug(
+        "Workflow state determined from workflow database is %s" % workflow_status.value
+    )
 
     # PM-1039
     if success is None:
@@ -1221,12 +1233,11 @@ def analyze_db(config_properties):
 
     # Let's print the results
     print_top_summary()
-
     check_for_wf_start()
 
     # Exit if summary mode is on
     if summary_mode:
-        if workflow_failed or failed > 0:
+        if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
             # Workflow has failures, exit with exitcode 2
             sys.exit(2)
         # Workflow has no failures, exit with exitcode 0
@@ -1480,7 +1491,7 @@ def analyze_db(config_properties):
     # Done with the database
     workflow_stats.close()
 
-    if workflow_failed or failed > 0:
+    if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
         # Workflow has failures, exit with exitcode 2
         sys.exit(2)
 
