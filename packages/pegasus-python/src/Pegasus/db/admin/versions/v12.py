@@ -18,8 +18,6 @@ import logging
 import os
 import subprocess
 
-from sqlalchemy import inspect
-
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
 from Pegasus.db.schema import *
@@ -39,7 +37,7 @@ class Version(BaseVersion):
         :param force:
         :return:
         """
-        log.debug("Updating to version %s" % DB_VERSION)
+        log.debug("Updating to version {}".format(DB_VERSION))
         try:
             self.db.execute("DROP TABLE sequences")
         except Exception:
@@ -168,7 +166,7 @@ class Version(BaseVersion):
 
     def downgrade(self, force=False):
         """."""
-        log.debug("Downgrading from version %s" % DB_VERSION)
+        log.debug("Downgrading from version {}".format(DB_VERSION))
 
     def _drop_indexes(self, index_list):
         """"."""
@@ -213,7 +211,7 @@ class Version(BaseVersion):
             (
                 Host,
                 "UNIQUE_HOST",
-                [Host.wf_id.name, Host.site.name, Host.hostname.name, Host.ip.name,],
+                [Host.wf_id.name, Host.site.name, Host.hostname.name, Host.ip.name],
             ),
             (Job, "UNIQUE_JOB", [Job.wf_id.name, Job.exec_job_id.name]),
             (
@@ -226,7 +224,7 @@ class Version(BaseVersion):
             (
                 Invocation,
                 "UNIQUE_INVOCATION",
-                [Invocation.job_instance_id.name, Invocation.task_submit_seq.name,],
+                [Invocation.job_instance_id.name, Invocation.task_submit_seq.name],
             ),
             (
                 IntegrityMetrics,
@@ -237,18 +235,14 @@ class Version(BaseVersion):
                     IntegrityMetrics.file_type.name,
                 ],
             ),
-            (MasterWorkflow, "UNIQUE_MASTER_WF_UUID", [MasterWorkflow.wf_uuid.name],),
+            (MasterWorkflow, "UNIQUE_MASTER_WF_UUID", [MasterWorkflow.wf_uuid.name]),
             (
                 EnsembleWorkflow,
                 "UNIQUE_ENSEMBLE_WORKFLOW",
                 [EnsembleWorkflow.ensemble_id.name, EnsembleWorkflow.name.name],
             ),
             (RCLFN, "UNIQUE_LFN", [RCLFN.lfn.name]),
-            (
-                RCPFN,
-                "UNIQUE_PFN",
-                [RCPFN.lfn_id.name, RCPFN.pfn.name, RCPFN.site.name],
-            ),
+            (RCPFN, "UNIQUE_PFN", [RCPFN.lfn_id.name, RCPFN.pfn.name, RCPFN.site.name]),
             (Ensemble, "UNIQUE_ENSEMBLE", [Ensemble.name.name, Ensemble.username.name]),
         ]
         for uc in uc_list:
@@ -279,17 +273,26 @@ class Version(BaseVersion):
             )
             tbl.__table__.create(self.db.get_bind(), checkfirst=True)
 
-            cols = ", ".join(inspect(tbl).column_attrs.keys())
+            resultproxy = self.db.execute(
+                "SELECT name FROM pragma_table_info('_{}_old')".format(
+                    tbl.__tablename__
+                )
+            )
+            cols = []
+            for rowproxy in resultproxy:
+                for column, value in rowproxy.items():
+                    cols.append(value)
+            cols = ", ".join(cols)
+
             self.db.execute(
                 "INSERT INTO {} ({}) SELECT {} FROM _{}_old".format(
                     tbl.__tablename__, cols, cols, tbl.__tablename__
                 )
             )
-            self.db.execute("DROP TABLE _%s_old" % tbl.__tablename__)
+            self.db.execute("DROP TABLE _{}_old".format(tbl.__tablename__))
             self.db.execute("PRAGMA foreign_keys=on")
             self.db.commit()
-        except (OperationalError, ProgrammingError):
-            pass
-        except Exception as e:
+
+        except (OperationalError, ProgrammingError, Exception) as e:
             self.db.rollback()
             raise DBAdminError(e)

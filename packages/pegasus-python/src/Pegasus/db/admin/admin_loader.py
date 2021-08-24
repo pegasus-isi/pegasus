@@ -165,7 +165,10 @@ def get_compatible_version(version):
 
 def get_class(version, db):
     """
-    Get
+    Get a database version class for update/downgrade.
+    :param version: version of the database
+    :param db: DB session object
+    :return: a database version class
     """
     module = "Pegasus.db.admin.versions.v{}".format(version)
     mod = __import__(module, fromlist=["Version"])
@@ -218,7 +221,7 @@ def db_create(
         raise DBAdminError(e, db=db, given_version=pegasus_version)
 
     if verbose and v > 0:
-        print("Your database has been updated: {}".format(dburi))
+        print("Database has been updated: {}".format(dburi))
 
     print_db_version(print_version, v if v > 0 else CURRENT_DB_VERSION, db, parse=True)
 
@@ -509,7 +512,9 @@ def _db_current_version(current_version, db, parse=False):
         if not current_version:
             raise DBAdminError(
                 "Your database is not compatible with any Pegasus version.\nRun 'pegasus-db-admin "
-                "update %s' to update it to the latest version." % db.get_bind().url
+                "update {}' to update it to the latest version.".format(
+                    db.get_bind().url
+                )
             )
 
     return current_version
@@ -517,26 +522,23 @@ def _db_current_version(current_version, db, parse=False):
 
 def _discover_version(db, pegasus_version=None, force=False, verbose=True):
     """
-
-    :param db:
-    :param pegasus_version:
-    :param force:
-    :param verbose:
-    :return:
+    Discover Pegasus database version and update it if not the latest.
+    :param db: DB session object
+    :param pegasus_version: version of the Pegasus software (e.g., 5.0.1)
+    :param force: whether operations should be performed despite conflicts
+    :param verbose: whether messages should be printed in the prompt
+    :return: database version
     """
     version = parse_pegasus_version(pegasus_version)
 
     current_version = 0
     if not force:
-        try:
-            current_version = get_version(db)
-        except NoResultFound:
-            pass
+        current_version = get_version(db)
 
     if current_version == version:
         try:
             _verify_tables(db, current_version)
-            log.debug("Your database is already updated.")
+            log.debug("Database is already updated: {}".format(db.get_bind().url))
             return 0
         except DBAdminError:
             current_version = 0
@@ -545,8 +547,9 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
 
     if current_version > version:
         raise DBAdminError(
-            "Unable to run update. Current database version is newer than specified version '%s'."
-            % (pegasus_version),
+            "Unable to run update. Current database version is newer than specified version '{}'.".format(
+                pegasus_version
+            ),
             db=db,
             db_version=current_version,
             given_version=pegasus_version,
@@ -577,7 +580,7 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
     if v > current_version:
         _update_version(db, v)
         if verbose:
-            print("Your database has been updated.")
+            print("Database has been updated: {}".format(db.get_bind().url))
     else:
         v = 0
     return v
@@ -603,7 +606,7 @@ def _backup_db(db):
     if url.drivername == "sqlite" and str(url).lower() != "sqlite://":
         dest_file = "{}-{}".format(url.database, time.strftime("%Y%m%d-%H%M%S"))
         shutil.copy(url.database, dest_file)
-        log.debug("Created backup database file at: %s" % dest_file)
+        log.debug("Created backup database file at: {}".format(dest_file))
 
     elif url.drivername == "mysql" or url.drivername == "postgresql":
         # Backup MySQL database
@@ -613,10 +616,10 @@ def _backup_db(db):
             command = (
                 "mysqldump"
                 if not url.password
-                else "export MYSQL_PWD=%s; mysqldump" % url.password
+                else "export MYSQL_PWD={}; mysqldump".format(url.password)
             )
             if url.username:
-                command += " -u %s" % url.username
+                command += " -u {}".format(url.username)
 
         # Backup PostgreSQL database
         elif url.drivername == "postgresql":
@@ -625,13 +628,13 @@ def _backup_db(db):
             command = (
                 "pg_dump"
                 if not url.password
-                else "export PGPASSWORD=%s; pg_dump" % url.password
+                else "export PGPASSWORD={}; pg_dump".format(url.password)
             )
             if url.username:
-                command += " -U %s" % url.username
+                command += " -U {}".format(url.username)
 
         if url.host:
-            command += " -h %s" % url.host
+            command += " -h {}".format(url.host)
 
         dest_file = "{}-{}.sql".format(url.database, time.strftime("%Y%m%d-%H%M%S"))
         command += " {} > {}".format(url.database, dest_file)
@@ -643,7 +646,7 @@ def _backup_db(db):
             if "Error 2013" in err:
                 err += "\nPlease, refer to the pegasus-db-admin troubleshooting for possible ways to fix this error."
             raise DBAdminError(err, db=db)
-        log.debug("Created backup database file at: %s" % dest_file)
+        log.debug("Created backup database file at: {}".format(dest_file))
 
 
 def _verify_tables(db, db_version=None):
