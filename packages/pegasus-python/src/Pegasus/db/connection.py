@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Copyright 2017-2020 University Of Southern California
+#  Copyright 2017-2021 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -118,9 +118,7 @@ def connect(
     dburi = _parse_jdbc_uri(dburi)
     _validate(dburi)
 
-    mask = None
-    if backup:
-        mask = _backup_db(dburi)
+    mask = _backup_db(dburi) if backup else None
     init = _db_is_file(dburi)
 
     try:

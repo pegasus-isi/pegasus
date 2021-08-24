@@ -634,11 +634,13 @@ pegasus_lite_get_system()
                 fi
             elif [ -e /etc/debian_version ]; then
                 osname="deb"
-                osversion=`cat /etc/debian_version`
-                # yet to be released Debian 10
-                if (echo "$osversion" | grep "buster") >/dev/null 2>&1; then
-                    osversion="10"
-                fi
+                osversion=`cat /etc/debian_version | cut -d/ -f1`
+                case $oscodename in
+                    "buster")    osversion="10" ;;
+                    "bullseye")  osversion="11" ;;
+                    "bookworm")  osversion="12" ;;
+                    "trixie")    osversion="13" ;;
+                esac
             elif [ -e /etc/fedora-release ]; then
                 osname="fc"
                 osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`
