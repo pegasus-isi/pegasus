@@ -360,6 +360,34 @@ def generate_pegasus_lite_debug_wrapper(pegasus_lite_wrapper):
     return debug_wrapper
 
 
+def get_workflow_status(last_wf_state_record):
+    """
+    Determines the workflow status from the last workflow state record for the workflow from the workflow database
+    :param last_wf_state_record: of form  (wf_id, state, timestamp, restart_count, status)
+    :return: the workflow status as value of type enum WORKFLOW_STATUS
+    """
+
+    workflow_status = WORKFLOW_STATUS.UNKNOWN
+    if last_wf_state_record is None:
+        return workflow_status
+
+    # (wf_id, state, timestamp, restart_count, status)
+    # (1, 'WORKFLOW_TERMINATED', Decimal('1619144694.000000'), 2, 1)
+    last_wf_state = last_wf_state_record[1]
+    last_wf_status = last_wf_state_record[4]
+
+    if last_wf_state == "WORKFLOW_STARTED":
+        workflow_status = WORKFLOW_STATUS.RUNNING
+    elif last_wf_state == "WORKFLOW_TERMINATED":
+        workflow_status = (
+            WORKFLOW_STATUS.SUCCESS if last_wf_status == 0 else WORKFLOW_STATUS.FAILURE
+        )
+    else:
+        raise ValueError("Invalid worklfow state %s" % last_wf_state)
+
+    return workflow_status
+
+
 def parse_submit_file(my_job):
     """
     This function opens a submit file and reads site
@@ -1210,14 +1238,7 @@ def analyze_db(config_properties):
     workflow_status = WORKFLOW_STATUS.UNKNOWN
     if workflow_states:
         # workflow states are returned in ascending order. we need the last state
-        last_wf_state_record = workflow_states[-1]
-        # (1, 'WORKFLOW_TERMINATED', Decimal('1619144694.000000'), 2, 1)
-        last_wf_state_state = last_wf_state_record[1]
-        last_wf_state_status = last_wf_state_record[4]
-        if last_wf_state_state == "WORKFLOW_TERMINATED" and (
-            last_wf_state_status and last_wf_state_status > 0
-        ):
-            workflow_status = WORKFLOW_STATUS.FAILURE
+        workflow_status = get_workflow_status(workflow_states[-1])
 
     logger.debug(
         "Workflow state determined from workflow database is %s" % workflow_status.value
