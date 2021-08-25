@@ -36,7 +36,6 @@ class Version(BaseVersion):
     def update(self, force=False):
         "Add plan_command field to ensemble_workflow table"
         log.info("Updating to version %s" % DB_VERSION)
-        # TODO We might need to check to see if the field already exists first
         try:
             self.db.execute(
                 "ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'"
