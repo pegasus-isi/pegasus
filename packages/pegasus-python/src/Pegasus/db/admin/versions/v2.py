@@ -54,20 +54,20 @@ class Version(BaseVersion):
             self.db.rollback()
             raise DBAdminError(e)
 
-        try:
-            Ensemble.__table__.create(self.db.get_bind(), checkfirst=True)
-        except (OperationalError, ProgrammingError):
-            pass
-        except Exception as e:
-            self.db.rollback()
-            raise DBAdminError(e)
-        try:
-            EnsembleWorkflow.__table__.create(self.db.get_bind(), checkfirst=True)
-        except (OperationalError, ProgrammingError):
-            pass
-        except Exception as e:
-            self.db.rollback()
-            raise DBAdminError(e)
+        #         try:
+        #             Ensemble.__table__.create(self.db.get_bind(), checkfirst=True)
+        #         except (OperationalError, ProgrammingError):
+        #             pass
+        #         except Exception as e:
+        #             self.db.rollback()
+        #             raise DBAdminError(e)
+        #         try:
+        #             EnsembleWorkflow.__table__.create(self.db.get_bind(), checkfirst=True)
+        #         except (OperationalError, ProgrammingError):
+        #             pass
+        #         except Exception as e:
+        #             self.db.rollback()
+        #             raise DBAdminError(e)
 
         try:
             self.db.execute("SELECT parent_wf_id FROM workflow")
@@ -125,7 +125,7 @@ class Version(BaseVersion):
         self._execute(
             "CREATE INDEX UNIQUE_MASTER_WORKFLOWSTATE ON master_workflowstate (wf_id, state, timestamp)"
         )
-        self._execute("ALTER TABLE workflow RENAME TO master_workflow")
+        #         self._execute("ALTER TABLE workflow RENAME TO master_workflow")
         self._execute("DROP INDEX wf_id_KEY")
         self._execute("DROP INDEX wf_uuid_UNIQUE")
         self._execute("CREATE INDEX UNIQUE_MASTER_WF_UUID ON master_workflow (wf_uuid)")
