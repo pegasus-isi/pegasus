@@ -103,7 +103,9 @@ public class PegasusConfiguration {
             PegasusProperties properties, PlannerOptions options) {
 
         this.loadConfigurationProperties(properties);
-        this.loadModeProperties(properties);
+
+        PEGASUS_MODE mode = this.getPegasusMode(properties);
+        this.loadModeProperties(properties, mode);
 
         // PM-1190 if integrity checking is turned on, turn on the stat of
         // files also
@@ -452,15 +454,14 @@ public class PegasusConfiguration {
     }
 
     /**
-     * Loads mode specific properties into PegasusProperties. There are the properties corresponding
+     * Loads mode specific properties into PegasusProperties.There are the properties corresponding
      * to the mode under which Pegasus is running under.
      *
      * @param properties the Pegasus Properties.
+     * @param mode the pegasus mode passed.
      * @see #PEGASUS_MODE
      */
-    protected void loadModeProperties(PegasusProperties properties) {
-        String mode = properties.getProperty(PegasusProperties.PEGASUS_MODE_PROPERTY_KEY);
-
+    protected void loadModeProperties(PegasusProperties properties, PEGASUS_MODE mode) {
         Properties props = this.getModeProperties(mode);
         for (Iterator it = props.keySet().iterator(); it.hasNext(); ) {
             String key = (String) it.next();
@@ -475,10 +476,13 @@ public class PegasusConfiguration {
      * @param mode the mode value.
      * @return Properties
      */
-    protected Properties getModeProperties(String mode) {
+    protected Properties getModeProperties(PEGASUS_MODE mode) {
+        if (mode == null) {
+            throw new NullPointerException("NULL value detected for pegasus mode");
+        }
+
         Properties p = new Properties();
-        PEGASUS_MODE m = (mode == null) ? PEGASUS_MODE.production : PEGASUS_MODE.valueOf(mode);
-        switch (m) {
+        switch (mode) {
             case development:
                 p.setProperty(PegasusProperties.PEGASUS_TRANSFER_ARGUMENTS_KEY, "--debug -m 1");
                 p.setProperty(
@@ -507,10 +511,21 @@ public class PegasusConfiguration {
                 break;
 
             default:
-                throw new RuntimeException("Unknown Pegasus mode specified " + m);
+                throw new RuntimeException("Unknown Pegasus mode specified " + mode);
         }
 
         return p;
+    }
+
+    /**
+     * Returns the pegasus mode as an enum value. Defaults to production value.
+     *
+     * @param properties the pegasus properties passed
+     * @return the pegasus mode
+     */
+    protected PEGASUS_MODE getPegasusMode(PegasusProperties properties) {
+        String mode = properties.getProperty(PegasusProperties.PEGASUS_MODE_PROPERTY_KEY);
+        return (mode == null) ? PEGASUS_MODE.production : PEGASUS_MODE.valueOf(mode);
     }
 
     /**
