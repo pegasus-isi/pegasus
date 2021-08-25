@@ -161,7 +161,7 @@ public class Docker extends Abstract {
         sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
 
         // remove the docker container
-        sb.append("docker rm $cont_name ").append(" 1>&2").append("\n");
+        sb.append("docker rm --force $cont_name ").append(" 1>&2").append("\n");
         sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
 
         return sb.toString();
