@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import org.apache.log4j.Level;
 
 /**
  * A utility class that returns JAVA Properties that need to be set based on a mode value
@@ -104,6 +105,7 @@ public class PegasusConfiguration {
 
         this.loadConfigurationProperties(properties);
         this.loadModeProperties(properties);
+        this.mLogger.setLevel(Level.DEBUG);
 
         // PM-1190 if integrity checking is turned on, turn on the stat of
         // files also
@@ -480,8 +482,10 @@ public class PegasusConfiguration {
         PEGASUS_MODE m = (mode == null) ? PEGASUS_MODE.production : PEGASUS_MODE.valueOf(mode);
         switch (m) {
             case development:
-                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_ARGUMENTS_KEY, "-m 1");
-                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY, "-m 1");
+                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_ARGUMENTS_KEY, "--debug -m 1");
+                p.setProperty(
+                        PegasusProperties.PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY, "--debug -m 1");
+                p.setProperty(PegasusProperties.PEGASUS_MONITORD_ARGUMENTS_PROPERTY_KEY, "-vvv");
                 p.setProperty(Dagman.NAMESPACE_NAME + "." + Dagman.RETRY_KEY, "0");
                 p.setProperty(
                         PegasusProperties.PEGASUS_INTEGRITY_CHECKING_KEY,

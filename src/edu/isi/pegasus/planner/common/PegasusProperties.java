@@ -93,6 +93,9 @@ public class PegasusProperties implements Cloneable {
     /** The property key for pegasus mode. */
     public static final String PEGASUS_MODE_PROPERTY_KEY = "pegasus.mode";
 
+    public static final String PEGASUS_MONITORD_ARGUMENTS_PROPERTY_KEY =
+            "pegasus.monitord.arguments";
+
     public static final String PEGASUS_INTEGRITY_CHECKING_KEY = "pegasus.integrity.checking";
 
     public static final String PEGASUS_TRANSFER_BYPASS_INPUT_STAGING_PROPERTY_KEY =
