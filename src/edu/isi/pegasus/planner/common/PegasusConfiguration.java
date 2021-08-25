@@ -45,7 +45,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.log4j.Level;
 
 /**
  * A utility class that returns JAVA Properties that need to be set based on a mode value
@@ -105,7 +104,6 @@ public class PegasusConfiguration {
 
         this.loadConfigurationProperties(properties);
         this.loadModeProperties(properties);
-        this.mLogger.setLevel(Level.DEBUG);
 
         // PM-1190 if integrity checking is turned on, turn on the stat of
         // files also
