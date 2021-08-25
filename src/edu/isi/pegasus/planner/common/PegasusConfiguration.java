@@ -107,6 +107,17 @@ public class PegasusConfiguration {
         PEGASUS_MODE mode = this.getPegasusMode(properties);
         this.loadModeProperties(properties, mode);
 
+        // set other mode knobs that are not handled via properties
+        switch (mode) {
+            case development:
+                // PM-1804 set the planner log level to debug
+                mLogger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+                break;
+
+            default:
+                break;
+        }
+
         // PM-1190 if integrity checking is turned on, turn on the stat of
         // files also
         if (properties.doIntegrityChecking()) {
