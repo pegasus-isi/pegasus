@@ -31,7 +31,11 @@ import java.io.File;
  */
 public class PegasusExitCode implements POSTScript {
 
-    /** The arguments for pegasus-exitcode when you only want the log files to be rotated. */
+    /**
+     * The arguments for pegasus-exitcode when you only want the log files to be rotated. A
+     * misnomer, as -r $RETURN means to use the dagman determined exitcode for the job which is
+     * populated in the $RETURN environment variable
+     */
     public static final String POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE = "-r $RETURN";
 
     /** The SHORTNAME for this implementation. */
@@ -131,6 +135,12 @@ public class PegasusExitCode implements POSTScript {
 
         // put in the postscript properties if any
         defaultOptions.append(this.mPostScriptProperties);
+
+        // PM-1746 add default option to take in the dagman provided exitcode
+        // for the job
+        defaultOptions
+                .append(" ")
+                .append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
 
         // check for existence of Pegasus profile key for exitcode.failuremsg and
         // exitcode.successmsg
