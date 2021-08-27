@@ -552,7 +552,7 @@ public class PegasusLite implements GridStart {
             job.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
             job.dagmanVariables.construct(
                     Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+                    PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
         }
         return this.defaultPOSTScript();
     }
