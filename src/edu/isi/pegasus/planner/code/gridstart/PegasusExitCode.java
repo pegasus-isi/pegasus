@@ -36,7 +36,7 @@ public class PegasusExitCode implements POSTScript {
      * misnomer, as -r $RETURN means to use the dagman determined exitcode for the job which is
      * populated in the $RETURN environment variable
      */
-    public static final String POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE = "-r $RETURN";
+    public static final String POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE = "-r $RETURN";
 
     /** The SHORTNAME for this implementation. */
     public static final String SHORT_NAME = "pegasus-exitcode";
@@ -140,7 +140,7 @@ public class PegasusExitCode implements POSTScript {
         // for the job
         defaultOptions
                 .append(" ")
-                .append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+                .append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
 
         // check for existence of Pegasus profile key for exitcode.failuremsg and
         // exitcode.successmsg
