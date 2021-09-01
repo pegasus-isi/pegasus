@@ -292,7 +292,7 @@ public class Regex extends Default {
             int maxRank = last.getRank();
             for (Rank r : result) {
                 r.computePriority(maxRank);
-                System.out.println("Rank  " + r);
+                mLogger.log("Rank  " + r, LogManager.DEBUG_MESSAGE_LEVEL);
             }
         }
 
