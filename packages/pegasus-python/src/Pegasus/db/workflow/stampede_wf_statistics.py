@@ -863,7 +863,7 @@ class StampedeWorkflowStatistics:
     def _get_host_filter(self):
         if self._host_filter is None:
             return None
-        elif isinstance(self._host_filter, type("str")):
+        elif isinstance(self._host_filter, str):
             return Host.hostname == self._host_filter
         elif isinstance(self._host_filter, type([])):
             return Host.hostname.in_(self._host_filter)
@@ -885,14 +885,14 @@ class StampedeWorkflowStatistics:
         ):
             return None
         elif self._xform_filter["include"] is not None:
-            if isinstance(self._xform_filter["include"], type("str")):
+            if isinstance(self._xform_filter["include"], str):
                 return Invocation.transformation == self._xform_filter["include"]
             elif isinstance(self._xform_filter["include"], type([])):
                 return Invocation.transformation.in_(self._xform_filter["include"])
             else:
                 return None
         elif self._xform_filter["exclude"] is not None:
-            if isinstance(self._xform_filter["exclude"], type("str")):
+            if isinstance(self._xform_filter["exclude"], str):
                 return Invocation.transformation != self._xform_filter["exclude"]
             elif isinstance(self._xform_filter["exclude"], type([])):
                 return not_(

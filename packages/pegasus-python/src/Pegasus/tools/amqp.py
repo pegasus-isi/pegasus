@@ -1,7 +1,7 @@
 import logging
 import queue
 import ssl
-from threading import Thread, Event
+from threading import Event, Thread
 
 import pika
 

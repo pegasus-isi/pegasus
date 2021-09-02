@@ -611,7 +611,7 @@ int json_encode_environment(gpu_env_struct env, char *doc_buffer, size_t maxsize
 
     size_t size = snprintf(doc_buffer, maxsize,
             "{\"event\":\"kickstart.inv.gpu.environment\","
-            "\"timestamp\":%llu,"
+            "\"ts\":%llu,"
             "\"cuda_version\":%d.%d,"
             "\"nvidia_driver_version\":\"%s\","
             "\"device_count\":%u,"
@@ -690,7 +690,7 @@ int json_encode_device_stats_max(gpu_env_struct env, char *doc_buffer, size_t ma
 
     size_t size = snprintf(doc_buffer, maxsize,
             "{\"event\":\"kickstart.inv.gpu.stats.max\","
-            "\"timestamp\":%llu,"
+            "\"ts\":%llu,"
             "\"devices\":[",
             (unsigned long long) time(NULL)
     );
@@ -754,7 +754,7 @@ int json_encode_device_stats(gpu_dev_info_struct device, double sampling_duratio
 
     size_t size = snprintf(doc_buffer, maxsize,
             "{\"event\":\"kickstart.inv.gpu.stats\","
-            "\"timestamp\":%llu,"
+            "\"ts\":%llu,"
             "\"id\":%u,"
             "\"name\":\"%s\","
             "\"pci_bus_id\":\"%s\","
