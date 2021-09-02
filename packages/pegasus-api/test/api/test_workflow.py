@@ -522,6 +522,52 @@ class TestJob:
 
         assert result == expected
 
+    @pytest.mark.parametrize(
+        "job, expected_repr_str",
+        [
+            (Job(Transformation(name="test")), "Job(transformation=test)"),
+            (
+                Job(Transformation(name="test", namespace="namespace")),
+                "Job(namespace=namespace, transformation=test)",
+            ),
+            (
+                Job(
+                    Transformation(
+                        name="test", namespace="namespace", version="version"
+                    )
+                ),
+                "Job(namespace=namespace, transformation=test, version=version)",
+            ),
+            (Job(transformation="test"), "Job(transformation=test)"),
+            (
+                Job(transformation="test", namespace="namespace"),
+                "Job(namespace=namespace, transformation=test)",
+            ),
+            (
+                Job(transformation="test", namespace="namespace", version="version"),
+                "Job(namespace=namespace, transformation=test, version=version)",
+            ),
+            (
+                Job(transformation="test", _id="jid"),
+                "Job(_id=jid, transformation=test)",
+            ),
+            (
+                Job(transformation="test", node_label="label"),
+                "Job(transformation=test, node_label=label)",
+            ),
+            (
+                Job(transformation="test", version="version", node_label="label"),
+                "Job(transformation=test, version=version, node_label=label)",
+            ),
+            (
+                Job(Transformation(name="test"), _id="jid", node_label="label"),
+                "Job(_id=jid, transformation=test, node_label=label)",
+            ),
+        ],
+    )
+    def test_repr(self, job, expected_repr_str):
+        assert repr(job) == expected_repr_str
+
 
 class Test_JobDependency:
     def test_eq(self):
@@ -585,10 +631,10 @@ class TestSubWorkflow:
                     "forward": ["forward"],
                     "submit": True,
                     "java_options": ["opt"],
-                    "other": "other",
+                    "property.key": "property.value",
                 },
                 [
-                    "-Dother=other",
+                    "-Dproperty.key=property.value",
                     "--basename",
                     "basename",
                     "--job-prefix",
@@ -658,10 +704,10 @@ class TestSubWorkflow:
                     "forward": ["forward"],
                     "submit": False,
                     "java_options": ["opt"],
-                    "other": "other",
+                    "other.property": "other.property.value",
                 },
                 [
-                    "-Dother=other",
+                    "-Dother.property=other.property.value",
                     "--basename",
                     "basename",
                     "--job-prefix",
@@ -791,6 +837,34 @@ class TestSubWorkflow:
             job.__json__()
 
         assert "the given SubWorkflow file must be a File object" in str(e)
+
+    @pytest.mark.parametrize(
+        "subworkflow, expected_repr_str",
+        [
+            (
+                SubWorkflow(file="file.yml"),
+                "SubWorkflow(file=file.yml, is_planned=False)",
+            ),
+            (
+                SubWorkflow(file="file.yml", is_planned=True),
+                "SubWorkflow(file=file.yml, is_planned=True)",
+            ),
+            (
+                SubWorkflow(file="file.yml", is_planned=False),
+                "SubWorkflow(file=file.yml, is_planned=False)",
+            ),
+            (
+                SubWorkflow(file="file.yml", _id="sid"),
+                "SubWorkflow(_id=sid, file=file.yml, is_planned=False)",
+            ),
+            (
+                SubWorkflow(file="file.yml", _id="sid", node_label="label"),
+                "SubWorkflow(_id=sid, file=file.yml, is_planned=False, node_label=label)",
+            ),
+        ],
+    )
+    def test_repr(self, subworkflow, expected_repr_str):
+        assert repr(subworkflow) == expected_repr_str
 
 
 @pytest.fixture
@@ -1378,7 +1452,7 @@ class TestWorkflow:
         ],
     )
     def test_hierarchical_workflow_warning_message(
-        self, capsys, sc, tc, is_warning_msg_expected
+        self, caplog, sc, tc, is_warning_msg_expected
     ):
         wf = Workflow("test")
         wf.add_jobs(SubWorkflow("subwf.yml", is_planned=False))
@@ -1392,16 +1466,14 @@ class TestWorkflow:
         with NamedTemporaryFile(mode="w") as f:
             wf.write(f)
 
-        stdout = capsys.readouterr().out
-
         expected_warning_msg = (
-            "WARNING: SiteCatalog and TransformationCatalog objects embedded into"
+            "SiteCatalog and TransformationCatalog objects embedded into"
         )
 
         if is_warning_msg_expected:
-            assert expected_warning_msg in stdout
+            assert expected_warning_msg in str(caplog.records)
         else:
-            assert expected_warning_msg not in stdout
+            assert expected_warning_msg not in str(caplog.records)
 
     @pytest.mark.parametrize(
         "workflow, expected_json",
@@ -1556,7 +1628,7 @@ class TestWorkflow:
         mocker.patch("Pegasus.client._client.Client.plan")
 
         path = "wf.yml"
-        wf.write(path).plan()
+        wf.write(path).plan(**{"+property.key-_": "value"})
 
         assert wf._path == path
 
@@ -1586,6 +1658,7 @@ class TestWorkflow:
             staging_sites=None,
             submit=False,
             verbose=0,
+            **{"+property.key-_": "value"},
         )
 
         os.remove(path)
@@ -1605,6 +1678,7 @@ class TestWorkflow:
             reuse=["/submit_dir1", Path("/submit_dir2")],
             cache=["/cache", Path("/cache2")],
             inherited_rc_files=["/rc_file", Path("/rc_file2")],
+            **{"pegasus.mode": "development"},
         )
 
         assert wf._path == path
@@ -1635,6 +1709,7 @@ class TestWorkflow:
             staging_sites=None,
             submit=False,
             verbose=0,
+            **{"pegasus.mode": "development"},
         )
 
         os.remove(path)

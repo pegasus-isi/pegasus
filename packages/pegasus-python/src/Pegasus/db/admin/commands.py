@@ -1,3 +1,19 @@
+#!/usr/bin/env python
+#
+#  Copyright 2017-2021 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 import logging
 
 from Pegasus.command import CompoundCommand, LoggingCommand
@@ -22,12 +38,10 @@ class CreateCommand(LoggingCommand):
 
     def run(self):
         _set_log_level(self.options.debug)
-
-        dburi = None
-        if len(self.args) > 0:
-            dburi = self.args[0]
+        dburi = self.args[0] if len(self.args) > 0 else None
 
         try:
+            # if properties are provided, ensure they are valid
             _validate_conf_type_options(
                 dburi,
                 self.options.properties,
@@ -35,6 +49,7 @@ class CreateCommand(LoggingCommand):
                 self.options.submit_dir,
                 self.options.db_type,
             )
+            # when attempting to connect, DB will be create if does not exist
             db = _get_connection(
                 dburi,
                 self.options.properties,
@@ -74,15 +89,13 @@ class UpdateCommand(LoggingCommand):
             action="store_true",
             dest="all",
             default=False,
-            help="Update all databases of completed workflows in MASTER.",
+            help="Update all databases: MASTER and completed workflows listed in MASTER.",
         )
 
     def run(self):
         _set_log_level(self.options.debug)
 
-        dburi = None
-        if len(self.args) > 0:
-            dburi = self.args[0]
+        dburi = self.args[0] if len(self.args) > 0 else None
 
         try:
             _validate_conf_type_options(
@@ -140,15 +153,13 @@ class DowngradeCommand(LoggingCommand):
             action="store_true",
             dest="all",
             default=False,
-            help="Downgrade all databases of completed workflows in MASTER.",
+            help="Downgrade all databases: MASTER and completed workflows listed in MASTER.",
         )
 
     def run(self):
         _set_log_level(self.options.debug)
 
-        dburi = None
-        if len(self.args) > 0:
-            dburi = self.args[0]
+        dburi = self.args[0] if len(self.args) > 0 else None
 
         try:
             _validate_conf_type_options(
@@ -216,9 +227,7 @@ class CheckCommand(LoggingCommand):
     def run(self):
         _set_log_level(self.options.debug)
 
-        dburi = None
-        if len(self.args) > 0:
-            dburi = self.args[0]
+        dburi = self.args[0] if len(self.args) > 0 else None
 
         try:
             _validate_conf_type_options(
@@ -256,9 +265,7 @@ class VersionCommand(LoggingCommand):
     def run(self):
         _set_log_level(self.options.debug)
 
-        dburi = None
-        if len(self.args) > 0:
-            dburi = self.args[0]
+        dburi = self.args[0] if len(self.args) > 0 else None
 
         try:
             _validate_conf_type_options(
@@ -296,6 +303,7 @@ def _validate_conf_type_options(
 ):
     """Validate DB type parameter
     :param dburi: database URI
+    :param properties: database specific properties
     :param config_properties: Pegasus configuration properties file
     :param submit_dir: workflow submit directory
     :param db_type: database type (workflow, master, or jdbcrc)
@@ -387,7 +395,18 @@ def _get_connection(
     force=False,
     print_version=True,
 ):
-    """ Get connection to the database based on the parameters"""
+    """ Get connection to the database based on the parameters
+    :param dburi: database URI
+    :param cl_properties: commandline properties
+    :param config_properties: Pegasus configuration properties file
+    :param submit_dir: workflow submit directory
+    :param db_type: database type (workflow, master, or jdbcrc)
+    :param pegasus_version: version of the Pegasus software (e.g., 5.0.1)
+    :param schema_check: whether a sanity check of the schema should be performed
+    :param create: whether to create a database if it does not exist
+    :param force: whether operations should be performed despite conflicts
+    :param print_version: whether to print the database version
+    """
     if dburi:
         return connection.connect(
             dburi,
@@ -410,7 +429,6 @@ def _get_connection(
             cl_properties=cl_properties,
             print_version=print_version,
         )
-
     elif config_properties or _has_connection_properties(cl_properties):
         return connection.connect_by_properties(
             config_properties,

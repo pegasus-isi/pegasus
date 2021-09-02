@@ -187,9 +187,19 @@ public class Directory extends DirectoryLayout {
         return yamlType;
     }
 
+    /** The yamlType of directory */
+    private TYPE mType;
+
+    /**
+     * a boolean indicating whether there is a shared filsystem access from the worker nodes in the
+     * site to this directory.
+     */
+    private boolean mHasSharedFileSystem;
+
     /** Default constructor */
     public Directory() {
         super();
+        mHasSharedFileSystem = false;
     }
 
     /**
@@ -201,6 +211,27 @@ public class Directory extends DirectoryLayout {
     public Directory(DirectoryLayout directory, TYPE type) {
         super(directory);
         this.setType(type);
+        mHasSharedFileSystem = false;
+    }
+
+    /**
+     * Returns a boolean indicating whether there is a shared filsystem access from the worker nodes
+     * in the site to this directory.
+     *
+     * @param value boolean value
+     */
+    public void setSharedFileSystemAccess(boolean value) {
+        this.mHasSharedFileSystem = value;
+    }
+
+    /**
+     * Returns a boolean indicating whether there is a shared filsystem access from the worker nodes
+     * in the site to this directory.
+     *
+     * @return
+     */
+    public boolean hasSharedFileSystemAccess() {
+        return this.mHasSharedFileSystem;
     }
 
     /**
@@ -227,9 +258,6 @@ public class Directory extends DirectoryLayout {
         // profiles are handled in the depart method
         visitor.depart(this);
     }
-
-    /** The yamlType of directory */
-    private TYPE mType;
 
     /**
      * Set the yamlType of directory
@@ -408,6 +436,10 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
                     directory.getInternalMountPoint().setMountPoint(node.get(key).asText());
                     break;
 
+                case SHARED_FILESYSTEM:
+                    directory.setSharedFileSystemAccess(node.get(key).asBoolean());
+                    break;
+
                 case FILESERVERS:
                     JsonNode fileServersNodes = node.get(key);
                     if (fileServersNodes != null) {
@@ -467,6 +499,9 @@ class DirectorySerializer extends PegasusJsonSerializer<Directory> {
         writeStringField(gen, SiteCatalogKeywords.PATH.getReservedName(), imp.getMountPoint());
         writeStringField(gen, SiteCatalogKeywords.FREE_SIZE.getReservedName(), imp.getFreeSize());
         writeStringField(gen, SiteCatalogKeywords.TOTAL_SIZE.getReservedName(), imp.getTotalSize());
+        gen.writeBooleanField(
+                SiteCatalogKeywords.SHARED_FILESYSTEM.getReservedName(),
+                directory.hasSharedFileSystemAccess());
 
         /*gen.writeArrayFieldStart(SiteCatalogKeywords.FILESERVERS.getReservedName());
         // iterate through all the file servers
