@@ -1,5 +1,4 @@
 import importlib
-import shutil
 import subprocess
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -249,10 +248,12 @@ class TestEmitDot:
 
 class TestInvokeDot:
     def test_invoke_dot(self, mocker):
+        dot_path = "/usr/local/bin/dot"
+        mocker.patch("shutil.which", return_value=dot_path)
         mocker.patch("subprocess.run")
         pegasus_graphviz.invoke_dot(dot_file="fake_dot", fmt="png", output="out.png")
         subprocess.run.assert_called_once_with(
-            [shutil.which("dot"), "-Tpng", "-o", "out.png", "fake_dot"]
+            [dot_path, "-Tpng", "-o", "out.png", "fake_dot"]
         )
 
     def test_invoke_dot_graphviz_not_installed(self, mocker):
