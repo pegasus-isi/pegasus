@@ -565,10 +565,10 @@ class SubWorkflow(AbstractJob):
         forward: Optional[List[str]] = None,
         submit: bool = False,
         java_options: Optional[List[str]] = None,
-        **properties: str
+        **properties: Dict[str, str]
     ):
         r"""
-        add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: Optional[List[str]] = None, staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: Optional[str] = None, reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: str)
+        add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: Optional[List[str]] = None, staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: Optional[str] = None, reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: Dict[str, str])
         Add pegasus-planner arguments. This function can only be used when 
         :code:`is_planned=False` is set in :py:class:`~Pegasus.api.workflow.SubWorkflow` and
         may only be invoked once. 
@@ -1162,10 +1162,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         forward: Optional[List[str]] = None,
         submit: bool = False,
         java_options: Optional[List[str]] = None,
-        **properties: str
+        **properties: Dict[str, str]
     ):
         r"""
-        plan(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: str)
+        plan(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: Dict[str,str])
         Plan the workflow.
 
         .. code-block:: python
@@ -1453,7 +1453,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type no_simplify: bool, optional
         :param label: what attribute to use for labels, defaults to "label"
         :type label: Literal["label", "xform", "id", "xform-id", "label-xform", "label-id"], optional
-        :param output: write output to a file; if none is given output is written to stdout, defaults to None
+        :param output: Write output to a file. If none is given dot output is written to stdout. If output is a file name with any of the following extensions: "jpg", "jpeg", "pdf", "gif", or "svg", :code:`dot -T<ext> -o <output>` will be invoked to draw the graph. If any other extension is given, the dot representation of the graph will be output. defaults to None
         :type output: Optional[str], optional
         :param remove: remove one or more nodes by transformation name, defaults to None
         :type remove: Optional[List[str]], optional
@@ -1470,7 +1470,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         if not self._path:
             raise PegasusError(
                 "Workflow must be written to a file prior to invoking Workflow.graph"
-                "using Workflow.write or Workflow.plan"
+                " using Workflow.write or Workflow.plan"
             )
 
         # check that correct label parameter is used
