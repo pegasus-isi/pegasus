@@ -717,6 +717,7 @@ dot representation is output.""",
                 invoke_dot(f.name, output_extension, options.outfile)
             except RuntimeError as e:
                 print("ERROR: {}".format(e))
+                sys.exit(1)
     else:
         emit_dot(dag, options.label, options.outfile, options.width, options.height)
 
