@@ -160,6 +160,9 @@ public class PegasusProperties implements Cloneable {
     // collapsing constants
     public static final String DEFAULT_JOB_AGGREGATOR = "SeqExec";
 
+    // code generator constants
+    public static final String DEFAULT_CODE_GENERATOR = "condor";
+
     // some tranformation catalog constants
     public static final String DEFAULT_TC_MAPPER_MODE = "All";
 
@@ -2095,9 +2098,10 @@ public class PegasusProperties implements Cloneable {
      * <p>Referred to by the "pegasus.code.generator" property.
      *
      * @return the submit mode specified in the property file, else the default i.e condor.
+     * @see #DEFAULT_CODE_GENERATOR
      */
     public String getSubmitMode() {
-        return mProps.getProperty("pegasus.code.generator", "condor");
+        return mProps.getProperty("pegasus.code.generator", DEFAULT_CODE_GENERATOR);
     }
 
     /**
