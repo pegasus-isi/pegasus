@@ -72,6 +72,9 @@ public class PegasusExitCode implements POSTScript {
     /** Whether to disable .meta file creation or not */
     protected boolean mDisablePerJobMetaFileCreation;
 
+    /** A boolean to track whether we are using the condor code generator or not */
+    protected boolean mUsingCondorCodeGenerator;
+
     /** The submit directory where the submit files are being generated for the workflow. */
     protected String mSubmitDir;
 
@@ -106,6 +109,8 @@ public class PegasusExitCode implements POSTScript {
         mWFCacheMetadataLog = basename + ".cache.meta";
         mDisablePerJobMetaFileCreation =
                 properties.getIntegrityDial() == PegasusProperties.INTEGRITY_DIAL.none;
+        mUsingCondorCodeGenerator =
+                properties.getCodeGenerator().equals(PegasusProperties.DEFAULT_CODE_GENERATOR);
     }
 
     /**
@@ -138,9 +143,12 @@ public class PegasusExitCode implements POSTScript {
 
         // PM-1746 add default option to take in the dagman provided exitcode
         // for the job
-        defaultOptions
-                .append(" ")
-                .append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+        // PM-1817 we dont want this option in case of non condor code generator
+        if (mUsingCondorCodeGenerator) {
+            defaultOptions
+                    .append(" ")
+                    .append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+        }
 
         // check for existence of Pegasus profile key for exitcode.failuremsg and
         // exitcode.successmsg
