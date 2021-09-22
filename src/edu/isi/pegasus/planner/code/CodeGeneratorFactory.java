@@ -66,7 +66,7 @@ public class CodeGeneratorFactory {
 
         if (className == null) {
             // pick up the basename/classname from the properties.
-            String submitMode = properties.getSubmitMode();
+            String submitMode = properties.getCodeGenerator();
             className =
                     (submitMode.equals(PegasusProperties.DEFAULT_CODE_GENERATOR))
                             ? CONDOR_CODE_GENERATOR_CLASS

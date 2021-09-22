@@ -2100,7 +2100,7 @@ public class PegasusProperties implements Cloneable {
      * @return the submit mode specified in the property file, else the default i.e condor.
      * @see #DEFAULT_CODE_GENERATOR
      */
-    public String getSubmitMode() {
+    public String getCodeGenerator() {
         return mProps.getProperty("pegasus.code.generator", DEFAULT_CODE_GENERATOR);
     }
 
