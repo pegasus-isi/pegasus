@@ -794,7 +794,7 @@ public class DeployWorkerPackage extends Engine {
                     Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
             setupTXJob.dagmanVariables.construct(
                     Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+                    POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
             */
 
             // PM-1552 after 5.0 worker package organization, we cannot just
@@ -958,7 +958,7 @@ public class DeployWorkerPackage extends Engine {
         setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
         // no empty postscript but arguments to exitcode to add -r $RETURN
         setupTXJob.dagmanVariables.construct(
-                Dagman.POST_SCRIPT_ARGUMENTS_KEY, POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+                Dagman.POST_SCRIPT_ARGUMENTS_KEY, POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
         */
         // PM-1552 after 5.0 worker package organization, we cannot just
         // transfer pegasus-transfer using transfer_executable. Instead we
