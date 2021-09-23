@@ -103,7 +103,7 @@ public class DeployWorkerPackage extends Engine {
     private static final String mRegexExpression =
             //
             // "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z]*)-x86.*";
-            "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
+            "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc|ppc64le)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
 
     /** The path to be set for create dir jobs. */
     public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";
@@ -794,7 +794,7 @@ public class DeployWorkerPackage extends Engine {
                     Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
             setupTXJob.dagmanVariables.construct(
                     Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+                    POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
             */
 
             // PM-1552 after 5.0 worker package organization, we cannot just
@@ -958,7 +958,7 @@ public class DeployWorkerPackage extends Engine {
         setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
         // no empty postscript but arguments to exitcode to add -r $RETURN
         setupTXJob.dagmanVariables.construct(
-                Dagman.POST_SCRIPT_ARGUMENTS_KEY, POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+                Dagman.POST_SCRIPT_ARGUMENTS_KEY, POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
         */
         // PM-1552 after 5.0 worker package organization, we cannot just
         // transfer pegasus-transfer using transfer_executable. Instead we
