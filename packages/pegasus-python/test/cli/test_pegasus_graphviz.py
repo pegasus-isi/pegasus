@@ -1,4 +1,5 @@
 import importlib
+import subprocess
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -243,3 +244,23 @@ class TestEmitDot:
 
         # cleanup
         dot_file.unlink()
+
+
+class TestInvokeDot:
+    def test_invoke_dot(self, mocker):
+        dot_path = "/usr/local/bin/dot"
+        mocker.patch("shutil.which", return_value=dot_path)
+        mocker.patch("subprocess.run")
+        pegasus_graphviz.invoke_dot(dot_file="fake_dot", fmt="png", output="out.png")
+        subprocess.run.assert_called_once_with(
+            [dot_path, "-Tpng", "-o", "out.png", "fake_dot"]
+        )
+
+    def test_invoke_dot_graphviz_not_installed(self, mocker):
+        mocker.patch("shutil.which", return_value="")
+        with pytest.raises(RuntimeError) as e:
+            pegasus_graphviz.invoke_dot(
+                dot_file="fake_dot", fmt="png", output="out.png"
+            )
+
+        assert "Unable to find 'dot'" in str(e)
