@@ -251,7 +251,7 @@ public class PegasusLite implements GridStart {
     /** path to a setup script on the submit host that needs to be sourced in PegasusLite. */
     protected String mSetupScriptOnTheSubmitHost;
 
-    private PegasusProperties.PEGASUS_MODE mPegasusMode;
+    protected PegasusProperties.PEGASUS_MODE mPegasusMode;
 
     /**
      * Initializes the GridStart implementation.
