@@ -125,7 +125,7 @@ pegasus_lite_internal_wp_in_env()
     fi
 
     # is there already a pegasus install in our path?
-    detected_pegasus_bin=`which pegasus-config 2>/dev/null || /bin/true`
+    detected_pegasus_bin=`which pegasus-config 2>/dev/null || true`
     if [ "x$detected_pegasus_bin" != "x" ]; then
         detected_pegasus_bin=`dirname $detected_pegasus_bin`
 
@@ -424,15 +424,15 @@ pegasus_lite_init()
         # PM-1134 - provide some details on where we are running
         # PM-1144 - do not use HOSTNAME from env, as it might have come form getenv=true
         out="Executing on"
-        my_hostname=`hostname -f 2>/dev/null || /bin/true`
+        my_hostname=`hostname -f 2>/dev/null || true`
         if [ "x$my_hostname" != "x" ]; then
             out="$out host $my_hostname"
 
             # also IP if we can figure it out
-            my_ip=`(host $my_hostname | grep "has address" | sed 's/.* has address //') 2>/dev/null || /bin/true`
+            my_ip=`(host $my_hostname | grep "has address" | sed 's/.* has address //') 2>/dev/null || true`
             if [ "x$my_ip" = "x" ]; then
                 # can also try hostname -I
-                my_ip=`(hostname -I | sed 's/ .*//') 2>/dev/null || /bin/true`
+                my_ip=`(hostname -I | sed 's/ .*//') 2>/dev/null || true`
             fi
             if [ "x$my_ip" != "x" ]; then
                 out="$out IP=$my_ip"
