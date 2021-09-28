@@ -104,7 +104,7 @@ public class PegasusConfiguration {
 
         this.loadConfigurationProperties(properties);
 
-        PEGASUS_MODE mode = this.getPegasusMode(properties);
+        PEGASUS_MODE mode = properties.getPegasusMode();
         this.loadModeProperties(properties, mode);
 
         // set other mode knobs that are not handled via properties
@@ -526,17 +526,6 @@ public class PegasusConfiguration {
         }
 
         return p;
-    }
-
-    /**
-     * Returns the pegasus mode as an enum value. Defaults to production value.
-     *
-     * @param properties the pegasus properties passed
-     * @return the pegasus mode
-     */
-    protected PEGASUS_MODE getPegasusMode(PegasusProperties properties) {
-        String mode = properties.getProperty(PegasusProperties.PEGASUS_MODE_PROPERTY_KEY);
-        return (mode == null) ? PEGASUS_MODE.production : PEGASUS_MODE.valueOf(mode);
     }
 
     /**
