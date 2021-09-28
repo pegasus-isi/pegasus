@@ -741,7 +741,7 @@ public class PegasusLite implements GridStart {
             StringBuffer sb = new StringBuffer();
             sb.append("#!/bin/bash").append('\n');
             sb.append("set -e").append('\n');
-            if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.development) {
+            if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
                 sb.append("set -x").append('\n');
             }
             sb.append("pegasus_lite_version_major=\"")

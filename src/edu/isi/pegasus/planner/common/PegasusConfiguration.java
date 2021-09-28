@@ -109,6 +109,11 @@ public class PegasusConfiguration {
 
         // set other mode knobs that are not handled via properties
         switch (mode) {
+            case debug:
+                // PM-1818 set the planner log level to trace
+                mLogger.setLevel(LogManager.TRACE_MESSAGE_LEVEL);
+                break;
+
             case development:
                 // PM-1804 set the planner log level to debug
                 mLogger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
@@ -494,11 +499,21 @@ public class PegasusConfiguration {
 
         Properties p = new Properties();
         switch (mode) {
-            case development:
+            case debug:
                 p.setProperty(PegasusProperties.PEGASUS_TRANSFER_ARGUMENTS_KEY, "--debug -m 1");
                 p.setProperty(
                         PegasusProperties.PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY, "--debug -m 1");
                 p.setProperty(PegasusProperties.PEGASUS_MONITORD_ARGUMENTS_PROPERTY_KEY, "-vvv");
+                p.setProperty(Dagman.NAMESPACE_NAME + "." + Dagman.RETRY_KEY, "0");
+                p.setProperty(
+                        PegasusProperties.PEGASUS_INTEGRITY_CHECKING_KEY,
+                        PegasusProperties.INTEGRITY_DIAL.none.toString());
+                p.setProperty(
+                        Condor.NAMESPACE_NAME + "." + Condor.PERIODIC_REMOVE_KEY,
+                        "(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 30)");
+                break;
+
+            case development:
                 p.setProperty(Dagman.NAMESPACE_NAME + "." + Dagman.RETRY_KEY, "0");
                 p.setProperty(
                         PegasusProperties.PEGASUS_INTEGRITY_CHECKING_KEY,
