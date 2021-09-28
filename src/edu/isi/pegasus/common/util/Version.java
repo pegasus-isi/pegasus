@@ -36,7 +36,8 @@ public class Version {
     /** Basename of the build stamp file. */
     public static final String STAMP_FILENAME = "stamp";
 
-    private static final String mPlatformRegex = "(x86|x86_64|ia64|ppc|ppc64le)_([a-zA-Z0-9]*)_([0-9]*)";
+    private static final String mPlatformRegex =
+            "(x86|x86_64|ia64|ppc|ppc64le)_([a-zA-Z0-9]*)_([0-9]*)";
 
     /** Stores compiled patterns at first use, quasi-Singleton. */
     private static Pattern mPlatformPattern = null;

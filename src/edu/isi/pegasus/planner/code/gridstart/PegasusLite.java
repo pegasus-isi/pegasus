@@ -251,6 +251,8 @@ public class PegasusLite implements GridStart {
     /** path to a setup script on the submit host that needs to be sourced in PegasusLite. */
     protected String mSetupScriptOnTheSubmitHost;
 
+    private PegasusProperties.PEGASUS_MODE mPegasusMode;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -314,6 +316,7 @@ public class PegasusLite implements GridStart {
                 mSiteStore.lookup("local").getProfiles().get(Profiles.NAMESPACES.pegasus);
         mSetupScriptOnTheSubmitHost =
                 (String) localSitePegasusProfiles.get(Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY);
+        mPegasusMode = mProps.getPegasusMode();
     }
 
     /**
@@ -738,6 +741,9 @@ public class PegasusLite implements GridStart {
             StringBuffer sb = new StringBuffer();
             sb.append("#!/bin/bash").append('\n');
             sb.append("set -e").append('\n');
+            if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.development) {
+                sb.append("set -x").append('\n');
+            }
             sb.append("pegasus_lite_version_major=\"")
                     .append(this.mMajorVersionLevel)
                     .append("\"")
