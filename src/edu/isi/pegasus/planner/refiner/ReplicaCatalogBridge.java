@@ -184,6 +184,8 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
     /** whether integrity checking is enabled */
     private boolean mIntegrityCheckingEnabled;
 
+    private PegasusProperties.PEGASUS_MODE mPegasusMode;
+
     /**
      * The overloaded constructor.
      *
@@ -209,6 +211,8 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
 
         mIntegrityCheckingEnabled =
                 this.mProps.getIntegrityDial() != PegasusProperties.INTEGRITY_DIAL.none;
+
+        mPegasusMode = mProps.getPegasusMode();
     }
 
     /**
@@ -755,7 +759,12 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
                 .append(" ");
 
         // single verbose flag
-        arguments.append("-v").append(" ");
+        arguments.append("-v");
+        if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
+            // PM-1818 for debug mode add extra debug flags
+            arguments.append("vv");
+        }
+        arguments.append(" ");
 
         // PM-1582 list all the associated meta files of the compute jobs
         // if integrity checking is enabled

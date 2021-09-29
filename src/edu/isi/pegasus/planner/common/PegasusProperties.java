@@ -184,7 +184,8 @@ public class PegasusProperties implements Cloneable {
     public static enum PEGASUS_MODE {
         production,
         development,
-        tutorial
+        tutorial,
+        debug
     };
 
     /** An enum defining The dial for cleanup algorithm */
