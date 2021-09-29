@@ -3219,7 +3219,7 @@ Miscellaneous Properties
     | | Profile Key: N/A                                | | operates. Currently the following modes are               |
     | | Scope : Properties                              | | supported                                                 |
     | | Since : 5.0                                     |                                                             |
-    | | Type : production|development|tutorial          | | **production**                                            |
+    | | Type : production|development|tutorial|debug    | | **production**                                            |
     | | Default : production                            | | default mode. jobs are retried 3 times, pegasus transfer  |
     |                                                   | | executable makes 3 attempts for each transfer, and jobs   |
     |                                                   | | remain in held state for 30 minutes, before being removed.|
@@ -3230,6 +3230,16 @@ Miscellaneous Properties
     |                                                   | | executable makes only one attempt for each transfer,and   |
     |                                                   | | jobs remain in held state for 30 seconds, before being    |
     |                                                   | | removed.                                                  |
+    |                                                   |                                                             |
+    |                                                   | | **debug**                                                 |
+    |                                                   | | In this mode, integrity checking is disabled; jobs are    |
+    |                                                   | | are not retried in case of failure; pegasus-transfer      |
+    |                                                   | | executable makes only one attempt for each transfer,and   |
+    |                                                   | | jobs remain in held state for 30 seconds, before being    |
+    |                                                   | | removed. It also increases logging for the various        |
+    |                                                   | | subcomponents of Pegasus such as the planner, monitoring  |
+    |                                                   | | daemon, transfers in jobs, PegasusLite jobs and the       |
+    |                                                   | | registration jobs                                         |
     |                                                   |                                                             |
     |                                                   | | **tutorial**                                              |
     |                                                   | | In this mode, jobs are not retried in case of failure;    |
