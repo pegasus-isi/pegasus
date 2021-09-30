@@ -2002,6 +2002,9 @@ def main():
     if "tf_stats" in sl:
         calc_tf_stats = True
 
+    if "ti_stats" in sl:
+        calc_ti_stats = True
+
     if "int_stats" in sl:
         calc_int_stats = True
 
