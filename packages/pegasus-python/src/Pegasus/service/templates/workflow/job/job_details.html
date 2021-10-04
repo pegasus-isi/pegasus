@@ -30,30 +30,18 @@
     {
         var invTmpl = "{{ url_for ('.invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id, invocation_id = '-55-') }}";
 
-        $('#invocations_tabs').tabs (
-        {
-            beforeLoad: function (event, ui)
-            {
-                var isInitialized = ui.panel.data ('initialized');
+        $("#invocations_tabs").on("show.bs.tab", function (e) {
+            var target = $(e.target);
+            var tab = target.attr("id");
+            var table = target.attr("href") + "_list";
 
-                if (isInitialized === true)
-                {
-                    return false;
-                }
+            if ($.fn.dataTable.isDataTable(table)) {
+                return;
+            }
 
-                ui.jqXHR.error (function ()
-                {
-                    ui.panel.html ('Error loading contents of this tab.');
-                })
-            },
-            create: function (event, ui) {
-                var tabIndex = ui.tab.index();
-
-                if (tabIndex == 0 && !tablesInitialized [tabIndex]) {
-                    tablesInitialized [tabIndex] = true;
-
-                    $('#failed_invocations_list').dataTable({
-                        "jQueryUI": true,
+            switch(tab) {
+                case "failed-invocations-tab":
+                    $(table).dataTable({
                         "pagingType": "full_numbers",
                         "ajax": {
                             "url": "{{ url_for ('.failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}",
@@ -77,19 +65,11 @@
                             {"data": "remote_duration"},
                         ]
                     });
-                }
-            },
-            activate: function (event, ui) {
-                var tabIndex = ui.newTab.index();
+                break;
 
-            if (tabIndex == 1 && !tablesInitialized [tabIndex]) {
-                tablesInitialized [tabIndex] = true;
-
-                    $('#successful_invocations_list').dataTable({
-                        "jQueryUI": true,
+                case "successful-invocations-tab":
+                    $(table).dataTable({
                         "pagingType": "full_numbers",
-                        "processing": true,
-                        "serverSide": true,
                         "ajax": {
                             "url": "{{ url_for ('.successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}",
                             "dataSrc": function (json) {
@@ -97,7 +77,7 @@
 
                                 for(var i = 0; i < data.length; i++) {
                                     console.log(data[i].invocation_id);
-                                    data[i].DT_RowClass = "succesful";
+                                    data[i].DT_RowClass = "successful";
                                     data[i].invocation = $("<a>" + (data[i].abs_task_id == null ? data[i].exec_job_id : data[i].abs_task_id) + "</a>")
                                         .attr("href",
                                             invTmpl.replace("-55-", data[i].invocation_id)
@@ -112,7 +92,7 @@
                             {"data": "remote_duration"},
                         ]
                     });
-                }
+                break;
             }
         });
 
@@ -120,7 +100,6 @@
         verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
 
         $('#job_instances_info').dataTable({
-            "jQueryUI": true,
             "pagingType": "full_numbers",
             "searching": false,
             "info": true,
@@ -137,6 +116,8 @@
         });
 
         clipboardTooltipInitialization();
+
+        $("#failed-invocations-tab").trigger("show.bs.tab");
     })
 </script>
 {% endblock %}
@@ -148,14 +129,14 @@
 </style>
 {% endblock %}
 {% block navigation_bar %}
-<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
-<li class="active">Job</li>
+<li class="breadcrumb-item"><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li class="breadcrumb-item active" aria-current="page">Job</li>
 {% endblock %}
 {% block title_header %}Job Details{% endblock %}
 {% block content %}
 <section class="row">
-    <div id="job_text" class="col-xs-12">
-        <table id="job_text_info" class="table-fixed">
+    <div id="job_text" class="col">
+        <table id="job_text_info" class="table table-striped w-100">
             <tr>
                 <th class="job_table_width">Label</th>
                 <td><strong>{{ job.exec_job_id }}</strong></td>
@@ -185,7 +166,7 @@
             <tr>
                 <th class="job_table_width">Kickstart Output</th>
                 <td class="text-nowrap">
-                    <span class="pe-7s-link"> </span>
+                    <span class="fas fa-link"> </span>
                     <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stdout_file }}"
                        data-toggle="tooltip" data-placement="top" title="View in file browser">
                         {{ job.stdout_file }}
@@ -195,7 +176,7 @@
             <tr>
                 <th class="job_table_width">Condor Stderr/Pegasus Lite Log</th>
                 <td class="text-nowrap">
-                    <span class="pe-7s-link"> </span>
+                    <span class="fas fa-link"> </span>
                     <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stderr_file }}"
                        data-toggle="tooltip" data-placement="top" title="View in file browser">
                         {{ job.stderr_file }}
@@ -205,7 +186,7 @@
             <tr>
                 <th class="job_table_width">Condor Submit File</th>
                 <td class="text-nowrap">
-                    <span class="pe-7s-link"> </span>
+                    <span class="fas fa-link"> </span>
                     {% set sub_file = (job.stderr_file[:job.stderr_file.rfind("/") + 1] if job.stderr_file and "/" in job.stderr_file  else "") ~ job.exec_job_id ~ ".sub" %}
                     <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ sub_file }}"
                        data-toggle="tooltip" data-placement="top" title="View in file browser">
@@ -227,11 +208,11 @@
 
 {% if job_states|length %}
 <section class="row">
-    <div class="col-xs-12">
+    <div class="col">
         <h3>Job States</h3>
         <hr>
         <div id="job_states">
-            <table id="job_states_info">
+            <table id="job_states_info" class="table table-striped w-100">
                 {% set previous = namespace(value=0) %}
                 {% for state in job_states %}
                 <tr>
@@ -254,11 +235,11 @@
 {% endif %}
 
 <section class="row">
-    <div class="col-xs-12">
+    <div class="col">
         <h3>Job Instances</h3>
         <hr>
         <div id="job_instances">
-            <table id="job_instances_info">
+            <table id="job_instances_info" class="table table-striped w-100">
                 <thead>
                 <tr>
                     <th>Try</th>
@@ -293,41 +274,44 @@
 </section>
 
 <section class="row">
-    <div class="col-xs-12">
+    <div class="col">
         <h3>Job Invocations</h3>
         <hr>
         <div id="invocations_tabs">
-            <ul>
-                <li>
-                    <a href="#failed_invocations" title="failed_invocations">Failed</a>
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active">
+                    <a class="nav-link active" id="failed-invocations-tab" data-toggle="tab" href="#failed_invocations" role="tab" aria-controls="failed_invocations" aria-selected="true">Failed</a>
                 </li>
-                <li>
-                    <a href="#successful_invocations" title="successful_invocations">Successful</a>
+                <li role="presentation">
+                    <a class="nav-link" id="successful-invocations-tab" data-toggle="tab" href="#successful_invocations" role="tab" aria-controls="successful_invocations" aria-selected="true">Successful</a>
                 </li>
             </ul>
-            <div id="failed_invocations">
-                <table id="failed_invocations_list">
-                    <thead>
-                    <tr>
-                        <th>Invocations</th>
-                        <th>Time Taken</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-            <div id="successful_invocations">
-                <table id="successful_invocations_list">
-                    <thead>
-                    <tr>
-                        <th>Invocations</th>
-                        <th>Time Taken</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
+            <div class="tab-content">
+                <br>
+                <div role="tabpanel" class="tab-pane active" id="failed_invocations" role="tabpanel" aria-labelledby="failed-invocations-tab">
+                    <table id="failed_invocations_list" class="table table-striped w-100">
+                        <thead>
+                        <tr>
+                            <th>Invocations</th>
+                            <th>Time Taken</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="successful_invocations" role="tabpanel" aria-labelledby="successful-invocations-tab">
+                    <table id="successful_invocations_list" class="table table-striped w-100">
+                        <thead>
+                        <tr>
+                            <th>Invocations</th>
+                            <th>Time Taken</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

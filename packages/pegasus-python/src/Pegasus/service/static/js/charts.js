@@ -68,19 +68,19 @@ function plotJobDistributionChart() {
       plotBackgroundColor: null,
       plotBorderWidth: null,
       plotShadow: false,
-      height: 600
+      height: 600,
     },
     title: {
-      text: "Invocation Distribution by Count"
+      text: "Invocation Distribution by Count",
     },
     exporting: {
-      enabled: true
+      enabled: true,
     },
     credits: {
-      enabled: false
+      enabled: false,
     },
     tooltip: {
-      formatter: jobDistributionTooltipFormat
+      formatter: jobDistributionTooltipFormat,
     },
     plotOptions: {
       pie: {
@@ -89,19 +89,19 @@ function plotJobDistributionChart() {
         showInLegend: true,
         dataLabels: {
           color: "#000000",
-          formatter: function() {
+          formatter: function () {
             return "<b>" + this.point.name + ":</b> " + this.point.y;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     series: [
       {
         type: "pie",
         name: "Browser share",
-        data: jobDistribution.data
-      }
-    ]
+        data: jobDistribution.data,
+      },
+    ],
   };
 
   jobDistribution.chart = new Highcharts.Chart(jobDistribution.opt);
@@ -174,82 +174,79 @@ function plotTimeChart(container) {
 
   timeChart.opt = {
     chart: {
-      renderTo: container
-        .children()
-        .first()
-        .attr("id")
+      renderTo: container.attr("id"),
     },
     credits: {
-      enabled: false
+      enabled: false,
     },
     title: {
-      text: "Time Chart by Jobs"
+      text: "Time Chart by Jobs",
     },
     exporting: {
-      enabled: true
+      enabled: true,
     },
     tooltip: {
-      formatter: function() {
+      formatter: function () {
         return (
           this.x + ": " + this.y + (this.series.name == "Count" ? "" : " secs")
         );
-      }
+      },
     },
     xAxis: [
       {
         categories: categories,
         title: {
-          text: "Time"
-        }
-      }
+          text: "Time",
+        },
+      },
     ],
     yAxis: [
       {
         labels: {
-          formatter: function() {
+          formatter: function () {
             return this.value;
           },
           style: {
-            color: "#4572A7"
-          }
+            color: "#4572A7",
+          },
         },
         title: {
           text: "Runtime (secs)",
           style: {
-            color: "#4572A7"
-          }
-        }
+            color: "#4572A7",
+          },
+        },
       },
       {
         title: {
           text: "Count",
           style: {
-            color: "#9A1919"
-          }
+            color: "#9A1919",
+          },
         },
         labels: {
           style: {
-            color: "#9A1919"
-          }
+            color: "#9A1919",
+          },
         },
-        opposite: true
-      }
+        opposite: true,
+      },
     ],
     series: [
       {
         name: "Runtime",
         color: Highcharts.getOptions().colors[0],
         type: "column",
-        data: init_job_time
+        data: init_job_time,
       },
       {
         name: "Count",
         color: Highcharts.getOptions().colors[1],
         type: "column",
         yAxis: 1,
-        data: init_job_count
-      }
-    ]
+        data: init_job_count,
+      },
+    ],
   };
 
   timeChart.chart = new Highcharts.Chart(timeChart.opt);
@@ -263,15 +260,10 @@ function getTimeChart(url, container) {
   var ajaxOpt = {
     url: url,
     dataType: "json",
-    error: function(xhr, textStatus, errorThrown) {
+    error: function (xhr, textStatus, errorThrown) {
       alert("Error occurred: " + textStatus + xhr.responseText);
     },
-    success: function(data, textStatus, xhr) {
-      container
-        .children()
-        .last()
-        .buttonset();
-
+    success: function (data, textStatus, xhr) {
       for (var i = 0; i < data.length; ++i) {
         var d = new Date(data[i].date_format * 1000 * 3600);
         data[i].date_format =
@@ -293,7 +285,7 @@ function getTimeChart(url, container) {
       timeChart.isLoaded = true;
 
       plotTimeChart(container);
-    }
+    },
   };
 
   $.ajax(ajaxOpt);
@@ -331,7 +323,7 @@ function getGanttChartSeries(data) {
     }
     job.push([
       data[i].jobS - start,
-      data[i].jobS - start + data[i].jobDuration
+      data[i].jobS - start + data[i].jobDuration,
     ]);
     //pre.push ([data [i].pre_start - start, data [i].pre_start - start + data [i].pre_duration]);
     //condor.push ([data [i].condor_start - start, data [i].condor_start - start + data [i].condor_duration]);
@@ -361,39 +353,39 @@ function plotGanttChart(container) {
       renderTo: container.attr("id"),
       type: "columnrange",
       zoomType: "y",
-      inverted: true
+      inverted: true,
     },
     credits: {
-      enabled: false
+      enabled: false,
     },
     title: {
-      text: "Workflow Execution Gantt Chart"
+      text: "Workflow Execution Gantt Chart",
     },
     tooltip: {
-      valueSuffix: " seconds"
+      valueSuffix: " seconds",
     },
     xAxis: {
-      categories: categories
+      categories: categories,
     },
     yAxis: {
       min: 0,
       //type: 'logarithmic',
       title: {
-        text: "Timeline (Seconds)"
-      }
+        text: "Timeline (Seconds)",
+      },
     },
     plotOptions: {
       columnrange: {
         //grouping: false, //Buggy
         dataLabels: {
-          enabled: false
-        }
-      }
+          enabled: false,
+        },
+      },
     },
     legend: {
-      enabled: true
+      enabled: true,
     },
-    series: series
+    series: series,
   };
 
   ganttChart.chart = new Highcharts.Chart(ganttChart.opt);
@@ -407,37 +399,34 @@ function getGanttChart(url, container) {
   var ajaxOpt = {
     url: url,
     dataType: "json",
-    error: function(xhr, textStatus, errorThrown) {
+    error: function (xhr, textStatus, errorThrown) {
       alert("Error occurred: " + textStatus + xhr.responseText);
     },
-    success: function(data, textStatus, xhr) {
-      container
-        .children()
-        .last()
-        .buttonset();
-
+    success: function (data, textStatus, xhr) {
       ganttChart.data = data;
       ganttChart.categories = getGanttChartCategories(data);
       ganttChart.series = getGanttChartSeries(data);
       ganttChart.isLoaded = true;
 
       plotGanttChart(container);
-    }
+    },
   };
 
   $.ajax(ajaxOpt);
 }
 
-function activateEventHandler(event, ui) {
-  var tabIndex = ui.newHeader.attr("title");
+function activateEventHandler(e) {
+  var target = $(e.target);
+  var id = target.attr("id");
+  var container = $("#" + id.replace("-", "_"));
 
-  if (tabIndex == "distribution_chart_container") {
+  if (id == "job-distribution") {
     return;
-  } else if (tabIndex == "time_chart_container") {
-    getTimeChart(ui.newHeader.attr("href"), ui.newPanel);
-  } else if (tabIndex == "gantt_chart") {
-    getGanttChart(ui.newHeader.attr("href"), ui.newPanel);
+  } else if (id == "time-chart") {
+    getTimeChart(target.attr("href"), container);
+  } else if (id == "gantt-chart") {
+    getGanttChart(target.attr("href"), container);
   } else {
-    alert("Invalid accordian option " + tabIndex);
+    alert("Invalid accordian option " + id);
   }
 }

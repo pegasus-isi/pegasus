@@ -16,21 +16,15 @@
     {
         initJobDistributionData(1);
         plotJobDistributionChart();
-
-        $ ("#job_distribution_options").buttonset ();
     }
 
     function init ()
     {
         highChartsInitialization();
-
-        var charts = $ ("#charts_container");
-        charts.accordion ({
-            heightStyle: "content",
-            autoHeight: false,
-            activate: activateEventHandler,
-            create : accordianCreate
-        });
+        accordianCreate();
+        $("#charts-accordion").on("show.bs.collapse", function (e) {
+            activateEventHandler(e);
+        })
     }
 
     $(function ()
@@ -40,46 +34,84 @@
 </script>
 {% endblock %}
 {% block navigation_bar %}
-<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
-<li class="active">Charts</li>
+<li class="breadcrumb-item"><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li class="breadcrumb-item active" aria-current="page">Charts</li>
 {% endblock %}
 {% block title_header %}Charts{% endblock %}
 {% block content %}
 <section class="row">
-    <div class="col-xs-12">
-        <div id="charts_container">
-            <h3 href="{{ url_for ('.workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}"
-                title="distribution_chart_container">Job Distribution
-            </h3>
+    <div class="col">
+        <div class="accordion" id="charts-accordion">
+            <div class="card">
+            <div class="card-header" id="headingOne">
+                <h2 class="mb-0">
+                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#job-distribution" aria-expanded="true" aria-controls="job-distribution">
+                    Job Distribution
+                </button>
+                </h2>
+            </div>
 
-            <div id="distribution_chart_container">
-                <div id="job_distribution">No information available.</div>
-                <div id="job_distribution_options" class="text-center">
-                    <input type="radio" id="by_count" name="job_dist" onclick="jobDistributionGraphToggle (1);"
-                           checked="checked"/><label for="by_count">By Count</label>
-                    <input type="radio" id="by_time" name="job_dist" onclick="jobDistributionGraphToggle (2);"/><label
-                        for="by_time">By Time</label>
+            <div id="job-distribution" class="collapse show" aria-labelledby="headingOne" data-parent="#charts-accordion">
+                <div class="card-body">
+                    <section class="row">
+                        <div class="col">
+                            <div id="job_distribution">No information available.</div>
+                        </div>
+                    </section>
+                    <section class="row">
+                        <div class="col text-center">
+                            <div id="job_distribution_options" class="btn-group" role="group" aria-label="Job Distribution Options">
+                                <a id="by_count" name="job_dist" class="btn btn-primary" onclick="jobDistributionGraphToggle(1);">By Count</a>
+                                <a id="by_time" name="job_dist" class="btn btn-primary" onclick="jobDistributionGraphToggle(2);">By Time</a>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
-            <h3 href="{{ url_for ('.time_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}"
-                title="time_chart_container">Time Chart
-            </h3>
+            </div>
 
-            <div id="time_chart_container">
-                <div id="time_chart">No information available.</div>
-                <div id="time_chart_options" class="text-center">
-                    <input type="radio" id="by_job" name="time_chart" onclick="timeChartToggle (1);"
-                           checked="checked"/><label
-                        for="by_job">By Jobs</label>
-                    <input type="radio" id="by_runtime" name="time_chart" onclick="timeChartToggle (2);"/><label
-                        for="by_runtime">By Invocations</label>
+            <div class="card">
+                <div class="card-header" id="headingTwo">
+                <h2 class="mb-0">
+                    <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#time-chart" aria-expanded="true" aria-controls="time-chart">
+                    Time Chart
+                    </button>
+                </h2>
+                </div>
+
+                <div id="time-chart" class="collapse" aria-labelledby="headingTwo" data-parent="#charts-accordion" href="{{ url_for ('.time_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="card-body">
+                        <section class="row">
+                            <div class="col">
+                                <div id="time_chart">No information available.</div>
+                            </div>
+                        </section>
+                        <section class="row">
+                            <div class="col text-center">
+                                <div id="time_chart_options" class="btn-group" role="group" aria-label="Time Chart Options">
+                                    <a id="by_job" name="by_job" class="btn btn-primary" onclick="timeChartToggle(1);">By Jobs</a>
+                                    <a id="by_runtime" name="by_runtime" class="btn btn-primary" onclick="timeChartToggle(2);">By Invocations</a>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
                 </div>
             </div>
-            <h3 href="{{ url_for ('.gantt_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="gantt_chart">
-                Gantt Chart
-            </h3>
 
-            <div id="gantt_chart" style="height: 800px;">
+            <div class="card">
+                <div class="card-header" id="headingThree">
+                <h2 class="mb-0">
+                    <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#gantt-chart" aria-expanded="true" aria-controls="gantt-chart">
+                        Gantt Chart
+                    </button>
+                </h2>
+                </div>
+
+                <div id="gantt-chart" class="collapse" aria-labelledby="headingThree" data-parent="#charts-accordion" href="{{ url_for ('.gantt_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="card-body">
+                        <div id="gantt_chart" style="height: 800px;"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
