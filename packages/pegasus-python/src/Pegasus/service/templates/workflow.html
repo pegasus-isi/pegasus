@@ -44,13 +44,23 @@
             {
               data: "state",
               createdCell: function (td, v) {
+                console.log(v)
                 switch (v) {
+                  case "Running":
+                    $(td)
+                      .addClass("bg-primary text-white text-center")
+                  break;
+                  case "Successful":
+                    $(td)
+                      .addClass("bg-success text-white text-center")
+                  break;
                   case "Failed":
                     $(td)
                       .addClass("bg-danger text-white text-center")
-                      .text("Failed");
-                    break;
+                  break;
                 }
+
+                $(td).text(v);
               },
             },
             {
