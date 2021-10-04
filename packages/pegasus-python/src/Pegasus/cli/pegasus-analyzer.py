@@ -110,7 +110,7 @@ debug_level = logging.WARNING  # For now
 
 # --- global variables ----------------------------------------------------------------
 
-prog_base = os.path.split(sys.argv[0])[1]  # Name of this program
+prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this program
 input_dir = None  # Directory given in -i command line option
 dag_path = None  # Path of the dag file
 tsdl_path = None  # Path to monitord's log file
