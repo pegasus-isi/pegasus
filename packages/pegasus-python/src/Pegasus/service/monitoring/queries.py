@@ -541,10 +541,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         q = (
             self.session.query(WorkflowFiles)
-            .options(
-                joinedload(WorkflowFiles.lfn).joinedload(RCLFN.pfns),
-                joinedload(WorkflowFiles.lfn).joinedload(RCLFN.meta),
-            )
+            .outerjoin(RCLFN)
+            .outerjoin(RCLFN.pfns)
+            .outerjoin(RCLFN.meta)
             .filter(WorkflowFiles.wf_id == wf_id)
         )
 

@@ -147,18 +147,18 @@ body {
     vertical-align: middle;
 }
 
-table.dataTable tr.successful td:first-child, table.dataTable tr.successful th:first-child {
+table.dataTable tr.successful > td:first-child, table.dataTable tr.successful > th:first-child {
     border-left: 2px solid #28a745;
 }
-table.dataTable tr.running td:first-child, table.dataTable tr.running td:first-child {
+table.dataTable tr.running > td:first-child, table.dataTable tr.running > th:first-child {
     border-left: 2px solid #007bff;
 }
-table.dataTable tr.failed td:first-child, table.dataTable tr.failed th:first-child {
+table.dataTable tr.failed > td:first-child, table.dataTable tr.failed > th:first-child {
     border-left: 2px solid #dc3545;
 }
-table.dataTable tr.failing td:first-child, table.dataTable tr.failing th:first-child {
+table.dataTable tr.failing > td:first-child, table.dataTable tr.failing > th:first-child {
     border-left: 2px solid #ffc107;
 }
-table.dataTable tr.archived td:first-child, table.dataTable tr.archived th:first-child {
+table.dataTable tr.archived > td:first-child, table.dataTable tr.archived > th:first-child {
     border-left: 2px solid #6c757d;
 }
