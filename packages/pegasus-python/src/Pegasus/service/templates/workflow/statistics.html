@@ -51,65 +51,63 @@
 <section class="row">
     <div class="col">
         <div class="accordion" id="stats-accordion">
-            <div class="card">
-                <div class="card-header" id="headingOne">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#workflow-stats" aria-expanded="true" aria-controls="workflow-stats">
-                            Workflow Statistics
-                        </button>
-                    </h2>
-                </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#workflow-stats" aria-expanded="true" aria-controls="workflow-stats">
+                        Workflow Statistics
+                    </button>
+                </h2>
 
-                <div id="workflow-stats" class="collapse show" aria-labelledby="headingOne" data-parent="#stats-accordion" href="{{ url_for ('.workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
-                    <div class="card-body">
+                <div id="workflow-stats" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#stats-accordion" href="{{ url_for ('.workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
                         <div id="workflow_stats"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header" id="headingTwo">
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingTwo">
                     <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#job-breakdown-stats" aria-expanded="true" aria-controls="job-breakdown-stats">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#job-breakdown-stats" aria-expanded="true" aria-controls="job-breakdown-stats">
                             Job Breakdown Statistics
                         </button>
                     </h2>
                 </div>
 
-                <div id="job-breakdown-stats" class="collapse" aria-labelledby="headingTwo" data-parent="#stats-accordion" href="{{ url_for ('.job_breakdown_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
-                    <div class="card-body">
+                <div id="job-breakdown-stats" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#stats-accordion" href="{{ url_for ('.job_breakdown_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
                         <div id="job_breakdown_stats"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header" id="headingThree">
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingThree">
                     <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#job-stats" aria-expanded="true" aria-controls="job-stats">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#job-stats" aria-expanded="true" aria-controls="job-stats">
                             Job Statistics
                         </button>
                     </h2>
                 </div>
 
-                <div id="job-stats" class="collapse" aria-labelledby="headingThree" data-parent="#stats-accordion" href="{{ url_for ('.job_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
-                    <div class="card-body">
+                <div id="job-stats" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#stats-accordion" href="{{ url_for ('.job_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
                         <div id="job_stats"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header" id="headingFour">
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingFour">
                     <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#int-stats" aria-expanded="true" aria-controls="int-stats">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#int-stats" aria-expanded="true" aria-controls="int-stats">
                             Integrity Statistics
                         </button>
                     </h2>
                 </div>
 
-                <div id="int-stats" class="collapse" aria-labelledby="headingFour" data-parent="#stats-accordion" href="{{ url_for ('.integrity_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
-                    <div class="card-body">
+                <div id="int-stats" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#stats-accordion" href="{{ url_for ('.integrity_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
                         <div id="int_stats"></div>
                     </div>
                 </div>

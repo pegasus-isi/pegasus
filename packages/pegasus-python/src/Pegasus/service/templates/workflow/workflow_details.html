@@ -156,9 +156,10 @@ $(document).ready(function () {
     highChartsInitialization();
 
     $("#jobs_tabs").on("show.bs.tab", function (e) {
+
         var target = $(e.target);
         var tab = target.attr("id");
-        var table = target.attr("href") + "_list";
+        var table = target.data("bs-target") + "_list";
 
         var urlTmpl = "{{ url_for('.job', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
         var stdOutTmpl = "{{ url_for('.stdout', root_wf_id='-11-', wf_id='-22-', job_id='-33-', job_instance_id='-44-') }}";
@@ -490,19 +491,19 @@ $(document).ready(function () {
     <div class="col">
         <div role="tabpanel">
             <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="active">
-                    <a class="nav-link active" id="summary-tab" data-toggle="tab" href="#wf_summary" role="tab" aria-controls="wf_summary" aria-selected="true">Summary</a>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#wf_summary" role="tab" aria-controls="wf_summary" aria-selected="true">Summary</a>
                 </li>
-                <li role="presentation">
-                    <a class="nav-link" id="files-tab" data-toggle="tab" href="#files" role="tab" aria-controls="files" aria-selected="true">Files <span class="badge badge-primary files-badge"></span></a>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" role="tab" aria-controls="files" aria-selected="true">Files <span class="badge bg-primary files-badge"></span></a>
                 </li>
-                <li role="presentation">
-                    <a class="nav-link" id="metadata-tab" data-toggle="tab" href="#metadata" role="tab" aria-controls="metadata" aria-selected="true">Metadata <span class="badge badge-primary metadata-badge"></span></a></a>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="metadata-tab" data-bs-toggle="tab" data-bs-target="#metadata" role="tab" aria-controls="metadata" aria-selected="true">Metadata <span class="badge bg-primary metadata-badge"></span></a></a>
                 </li>
             </ul>
             <div class="tab-content">
                 <br>
-                <div role="tabpanel" class="tab-pane active" id="wf_summary" role="tabpanel" aria-labelledby="summary-tab">
+                <div role="tabpanel" class="tab-pane fade show active" id="wf_summary" role="tabpanel" aria-labelledby="summary-tab">
                     <table id="workflow_text_info" class="table table-striped w-100">
                         <col width="30%">
                         <tr>
@@ -530,7 +531,7 @@ $(document).ready(function () {
                             <td class="text-nowrap">
                                 <a target="_blank"
                                    href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}"
-                                   class="file-browser" data-toggle="tooltip" data-placement="top"
+                                   class="file-browser" data-bs-toggle="tooltip" data-bs-placement="top"
                                    title="Browse directory">
                                 </a>
                                 <button class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
@@ -544,7 +545,7 @@ $(document).ready(function () {
                                 <span class="fas fa-link"> </span>
                                 <a target="_blank"
                                    href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ workflow.dax_label }}-0.dag.dagman.out"
-                                   data-toggle="tooltip" data-placement="top" title="View in file browser">
+                                   data-bs-toggle="tooltip" data-bs-placement="top" title="View in file browser">
                                     {{ workflow.dax_label }}-0.dag.dagman.out
                                 </a>
                             </td>
@@ -560,11 +561,11 @@ $(document).ready(function () {
                     </table>
                 </div>
 
-                <div role="tabpanel" class="tab-pane" id="files" role="tabpanel" aria-labelledby="files-tab">
+                <div role="tabpanel" class="tab-pane fade" id="files" role="tabpanel" aria-labelledby="files-tab">
                     Files
                 </div>
 
-                <div role="tabpanel" class="tab-pane" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
+                <div role="tabpanel" class="tab-pane fade" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
                     Metadata
                 </div>
             </div>
@@ -590,25 +591,25 @@ $(document).ready(function () {
         <div id="jobs_tabs_wrapper">
             <div id="jobs_tabs">
                 <ul class="nav nav-tabs" role="tablist">
-                    <li role="presentation" class="active">
-                        <a class="nav-link active" id="sub-workflows-tab" data-toggle="tab" href="#sub_workflows" role="tab" aria-controls="sub_workflows" aria-selected="true">Sub Workflows</a>
-                    </li>
                     <li role="presentation">
-                        <a class="nav-link" id="failed-jobs-tab" data-toggle="tab" href="#failed_jobs" role="tab" aria-controls="failed_jobs" aria-selected="true">Failed</a>
+                        <a class="nav-link active" id="sub-workflows-tab" data-bs-toggle="tab" data-bs-target="#sub_workflows" role="tab" aria-controls="sub_workflows" aria-selected="true">Sub Workflows</a>
                     </li>
-                    <li role="presentation">
-                        <a class="nav-link" id="running-jobs-tab" data-toggle="tab" href="#running_jobs" role="tab" aria-controls="running_jobs" aria-selected="true">Running</a>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="failed-jobs-tab" data-bs-toggle="tab" data-bs-target="#failed_jobs" role="tab" aria-controls="failed_jobs" aria-selected="true">Failed</a>
                     </li>
-                    <li role="presentation">
-                        <a class="nav-link" id="successful-jobs-tab" data-toggle="tab" href="#successful_jobs" role="tab" aria-controls="successful_jobs" aria-selected="true">Successful</a>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="running-jobs-tab" data-bs-toggle="tab" data-bs-target="#running_jobs" role="tab" aria-controls="running_jobs" aria-selected="true">Running</a>
                     </li>
-                    <li role="presentation">
-                        <a class="nav-link" id="failing-jobs-tab" data-toggle="tab" href="#failing_jobs" role="tab" aria-controls="failing_jobs" aria-selected="true">Failing</a>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="successful-jobs-tab" data-bs-toggle="tab" data-bs-target="#successful_jobs" role="tab" aria-controls="successful_jobs" aria-selected="true">Successful</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="failing-jobs-tab" data-bs-toggle="tab" data-bs-target="#failing_jobs" role="tab" aria-controls="failing_jobs" aria-selected="true">Failing</a>
                     </li>
                 </ul>
                 <div class="tab-content">
                     <br>
-                    <div role="tabpanel" class="tab-pane active" id="sub_workflows" role="tabpanel" aria-labelledby="sub-workflows-tab">
+                    <div role="tabpanel" class="tab-pane fade show active" id="sub_workflows" role="tabpanel" aria-labelledby="sub-workflows-tab">
                         <table id="sub_workflows_list" class="table table-striped w-100">
                             <thead>
                             <tr>
@@ -621,7 +622,7 @@ $(document).ready(function () {
                         </table>
                     </div>
 
-                    <div role="tabpanel" class="tab-pane" id="failed_jobs" role="tabpanel" aria-labelledby="failed-jobs-tab">
+                    <div role="tabpanel" class="tab-pane fade" id="failed_jobs" role="tabpanel" aria-labelledby="failed-jobs-tab">
                         <table id="failed_jobs_list" class="table table-striped w-100">
                             <thead>
                             <tr>
@@ -636,7 +637,7 @@ $(document).ready(function () {
                         </table>
                     </div>
 
-                    <div role="tabpanel" class="tab-pane" id="running_jobs" role="tabpanel" aria-labelledby="running-jobs-tab">
+                    <div role="tabpanel" class="tab-pane fade" id="running_jobs" role="tabpanel" aria-labelledby="running-jobs-tab">
                         <table id="running_jobs_list" class="table table-striped w-100">
                             <thead>
                             <tr>
@@ -648,7 +649,7 @@ $(document).ready(function () {
                         </table>
                     </div>
 
-                    <div role="tabpanel" class="tab-pane" id="successful_jobs" role="tabpanel" aria-labelledby="successful-jobs-tab">
+                    <div role="tabpanel" class="tab-pane fade" id="successful_jobs" role="tabpanel" aria-labelledby="successful-jobs-tab">
                         <table id="successful_jobs_list" class="table table-striped w-100">
                             <thead>
                             <tr>
@@ -661,7 +662,7 @@ $(document).ready(function () {
                         </table>
                     </div>
 
-                    <div role="tabpanel" class="tab-pane" id="failing_jobs" role="tabpanel" aria-labelledby="failing-jobs-tab">
+                    <div role="tabpanel" class="tab-pane fade" id="failing_jobs" role="tabpanel" aria-labelledby="failing-jobs-tab">
                         <table id="failing_jobs_list" class="table table-striped w-100">
                             <thead>
                             <tr>

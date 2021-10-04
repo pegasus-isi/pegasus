@@ -1,15 +1,16 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
-    <a class="navbar-brand logo" href="{{ url_for('dashboard.index') }}">pegasus-dashboard</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    <div class="container-fluid">
+        <a class="navbar-brand logo" href="{{ url_for('dashboard.index') }}">pegasus-dashboard</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-    <div class="collapse navbar-collapse" id="navbar-collapse">
-        <ul class="navbar-nav ml-md-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('dashboard.info') }}"><span class="fas fa-info-circle fa-lg"></span></a>
-            </li>
-        </ul>
+        <div class="collapse navbar-collapse" id="navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('dashboard.info') }}"><span class="fas fa-info-circle fa-lg"></span></a>
+                </li>
+            </ul>
+        </div>
     </div>
 </nav>
-

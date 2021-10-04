@@ -33,7 +33,7 @@
         $("#invocations_tabs").on("show.bs.tab", function (e) {
             var target = $(e.target);
             var tab = target.attr("id");
-            var table = target.attr("href") + "_list";
+            var table = target.data("bs-target") + "_list";
 
             if ($.fn.dataTable.isDataTable(table)) {
                 return;
@@ -168,7 +168,7 @@
                 <td class="text-nowrap">
                     <span class="fas fa-link"> </span>
                     <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stdout_file }}"
-                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                       data-bs-toggle="tooltip" data-bs-placement="top" title="View in file browser">
                         {{ job.stdout_file }}
                     </a>
                 </td>
@@ -178,7 +178,7 @@
                 <td class="text-nowrap">
                     <span class="fas fa-link"> </span>
                     <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stderr_file }}"
-                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                       data-bs-toggle="tooltip" data-bs-placement="top" title="View in file browser">
                         {{ job.stderr_file }}
                     </a>
                 </td>
@@ -189,7 +189,7 @@
                     <span class="fas fa-link"> </span>
                     {% set sub_file = (job.stderr_file[:job.stderr_file.rfind("/") + 1] if job.stderr_file and "/" in job.stderr_file  else "") ~ job.exec_job_id ~ ".sub" %}
                     <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ sub_file }}"
-                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                       data-bs-toggle="tooltip" data-bs-placement="top" title="View in file browser">
                        {{ sub_file }}
                     </a>
                 </td>
@@ -279,16 +279,16 @@
         <hr>
         <div id="invocations_tabs">
             <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="active">
-                    <a class="nav-link active" id="failed-invocations-tab" data-toggle="tab" href="#failed_invocations" role="tab" aria-controls="failed_invocations" aria-selected="true">Failed</a>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="failed-invocations-tab" data-bs-toggle="tab" data-bs-target="#failed_invocations" role="tab" aria-controls="failed_invocations" aria-selected="true">Failed</a>
                 </li>
-                <li role="presentation">
-                    <a class="nav-link" id="successful-invocations-tab" data-toggle="tab" href="#successful_invocations" role="tab" aria-controls="successful_invocations" aria-selected="true">Successful</a>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="successful-invocations-tab" data-bs-toggle="tab" data-bs-target="#successful_invocations" role="tab" aria-controls="successful_invocations" aria-selected="true">Successful</a>
                 </li>
             </ul>
             <div class="tab-content">
                 <br>
-                <div role="tabpanel" class="tab-pane active" id="failed_invocations" role="tabpanel" aria-labelledby="failed-invocations-tab">
+                <div role="tabpanel" class="tab-pane fade show active" id="failed_invocations" role="tabpanel" aria-labelledby="failed-invocations-tab">
                     <table id="failed_invocations_list" class="table table-striped w-100">
                         <thead>
                         <tr>
@@ -300,7 +300,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div role="tabpanel" class="tab-pane" id="successful_invocations" role="tabpanel" aria-labelledby="successful-invocations-tab">
+                <div role="tabpanel" class="tab-pane fade" id="successful_invocations" role="tabpanel" aria-labelledby="successful-invocations-tab">
                     <table id="successful_invocations_list" class="table table-striped w-100">
                         <thead>
                         <tr>

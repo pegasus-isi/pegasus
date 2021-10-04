@@ -9,7 +9,7 @@
     {% block head %}
     <!-- Stylesheets -->
     <link rel='stylesheet' href='//fonts.googleapis.com/css?family=Stardos+Stencil'>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.css"/>
     <link rel="stylesheet" href="{{ url_for ('static', filename='css/style.css') }}"/>
@@ -22,14 +22,16 @@
     <div class="container">
         <section class="row">
             <div class="col">
-                <ol class="breadcrumb" style="margin-bottom: 0px;">
-                    <li class="breadcrumb-item">
-                        <a href="{{ url_for ('.index') }}">
-                            <span class="fas fa-home fa-lg"></span>
-                        </a>
-                    </li>
-                    {% block navigation_bar %}{% endblock %}
-                </ol>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb" style="margin-bottom: 0px;">
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for ('.index') }}">
+                                <span class="fas fa-home fa-lg"></span>
+                            </a>
+                        </li>
+                        {% block navigation_bar %}{% endblock %}
+                    </ol>
+                </nav>
             </div>
         </section>
         <section>
@@ -42,7 +44,8 @@
 {% include "footer.html" %}
 <!-- JavaScript -->
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.min.js" integrity="sha384-skAcpIdS7UcVUC05LJ9Dxay8AXcDYfBJqt1CJ85S/CFujBsIzCIv+l9liuYLaMQ/" crossorigin="anonymous"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
 <script type="text/javascript" src="{{ url_for ('static', filename='js/script.js') }}"></script>
 {% block javascript_includes %}{% endblock %}
