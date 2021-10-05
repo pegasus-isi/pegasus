@@ -17,7 +17,7 @@ __author__ = "Rajiv Mayani"
 import hashlib
 import logging
 
-from sqlalchemy.orm import aliased, defer, joinedload
+from sqlalchemy.orm import aliased, defer
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_, desc, distinct, func
 
