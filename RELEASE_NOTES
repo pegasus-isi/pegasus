@@ -1,4 +1,178 @@
 ===============================
+Release Notes for Pegasus 5.0.1
+===============================
+We are happy to announce the release of Pegasus 5.0.1. Pegasus 5.0.1 is a
+minor bug fix release after Pegasus 5.0. We invite our users to give it
+a try.  
+
+The release features improvements to the Pegasus Python API including
+ability to visualize statically the abstract and generated executable
+workflows. It also has improved support for DECAF, including an ability to
+get clustered jobs in a workflow executed using DECAF. This release has
+improvements to data access in PegasusLite jobs, if data resides on local
+site, and job runs on a site where “auxiliary.local” profile is set to
+true. Users can now use a new Submit Mapper called Named that allows
+you to specify what sub directory a job’s submit files are placed in. 
+Release also features updated support for submission of jobs using
+HubZero Distribute to HPC Clusters and new pegasus.mode called "debug"
+to enable verbose logging throughout the Pegasus stack.
+
+The release can be downloaded from:
+https://pegasus.isi.edu/downloads
+
+JIRA items
+----------------------------
+Exhaustive list of features, improvements and bug fixes can be found below.
+
+New Features and Improvements
+-----------------------------
+
+1)  [PM-1726] – Update support for HubZero Distribute
+
+2)  [PM-1751] – Named Submit Directory Mapper
+
+3)  [PM-1798] – instead of the workflow having explicit data flow jobs,
+               get pegasus to automatically cluster jobs to a decaf
+	       representation
+	       
+4)  [PM-1753] – add Workflow.get_status()
+
+5)  [PM-1767] – remove the default arguments, output_sites and cleanup
+                in SubWorkflow.add_planner_args()
+		
+6)  [PM-1786] – update usage of threading.Thread.isAlive() to be
+                is_alive() in python scripts
+		
+7)  [PM-1788] – Add configuration documentation for hierarchical workflows
+
+8)  [PM-1429] – Introduce PEGASUS_ENV variable to define mode of workflow
+                 i.e. development, production, etc
+		 
+9)  [PM-1651] – Add more profile keys in the add_pegasus_profile
+
+10) [PM-1672] – override add_args for SubWorkflow so that args refer to planner args
+
+11) [PM-1706] – sphinx has hardcoded versios
+
+12) [PM-1730] – 5.0.1 Python Api improvements
+
+13) [PM-1733] – expand on checkpointing documentation
+
+14) [PM-1739] – expose panda job submissions similar to how we support BOSCO
+
+15) [PM-1742] – allow a tc to be empty without the planner failing
+
+16) [PM-1743] – allow catalogs to be embedded into workflow when workflow
+                contains sub workflows
+
+17) [PM-1747] – 031-montage-condor-io-jdbcrc failing
+
+18) [PM-1768] – replace GRAM workflow tests with bosco
+
+19) [PM-1769] – update tests since /nfs/ccg3 is gone now
+
+20) [PM-1771] – pegasus-db-admin upgrade
+
+21) [PM-1780] – Refactor Transfer Engine Code
+
+22) [PM-1787] – auxiliary.local is not considered when triggering symlink in
+                PegasusLite in nonsharedfs mode
+		
+23) [PM-1792] – decaf jobs over bosco
+
+24) [PM-1794] – put in support for additional keys required by decaf
+
+25) [PM-1796] – passing properties to be set for sub workflow jobs
+
+26) [PM-1800] – enable inplace cleanup for hierarchical workflows
+
+27) [PM-1802] – Add support for Debian 11
+
+28) [PM-1803] – use force option when doing a docker rm of the container image
+
+29) [PM-1810] – Extend debug capabilities for pegasus.mode
+
+30) [PM-1811] – add pegasus-keg to worker package
+
+31) [PM-1818] – new pegasus.mode debug
+
+32) [PM-1723] – add_<namespace>_profile() should be plural
+
+33) [PM-1731] – functions that take in File objects as input parameters should also accept strings for convenience
+
+34) [PM-1744] – progress bar from wf.wait() should include “UNRDY” as shown in status output
+
+35) [PM-1755] – catalog write location should be stored upon call to catalog.write()
+
+36) [PM-1757] – add pegasus profile relative.submit.dir
+
+37) [PM-1784] – Refactor Stagein Generator code out of Transfer Engine
+
+38) [PM-1790] – extend site catalog schema to indicate shared file system access for a directory
+
+39) [PM-1791] – update planner to parse sharedFileSystem attribute from site catalog
+
+40) [PM-1797] – use logging over print statements
+
+41) [PM-1804] – add verbose options for development mode
+
+Bugs Fixed
+----------
+
+1)  [PM-1709] – the yaml handler in pegasus-graphviz needs to handle ‘checkpoint’ link type
+
+2)  [PM-1722] – Job node_label attribute is not identified by the planner
+
+3)  [PM-1725] – nodeLabel for a job needs to be parsed in yaml handler if it is given
+
+4)  [PM-1736] – Pegasus pollutes the job env when getenv=true
+
+5)  [PM-1737] – monitord fails on divide by 0 error while computing avg cpu utilization
+
+6)  [PM-1745] – time.txt in stats is misformatted
+
+7)  [PM-1746] – jobs aborted by dagman, but with kickstart exitcode as 0 are not marked as failed job
+
+8)  [PM-1748] – planner fails with NPE on empty workflow
+
+9)  [PM-1750] – ensemble mgr workflow priorities need to be reversed
+
+10) [PM-1752] – fix checkpoint.time in add_pegasus_profile
+
+11) [PM-1754] – pegasus-db-admin fails to upgrade database
+
+12) [PM-1761] – pegasus-analyzer showing “failed to send files” error when root cause is exec format error
+
+13) [PM-1762] – pegasus-analyzer showing no error at all when workflow failed based on status output
+
+14) [PM-1764] – fix pegasus-analyzer output typo
+
+15) [PM-1765] – for SubWorkflow jobs, the planner argument, –output-sites, isn’t being set
+
+16) [PM-1766] – for SubWorkflow jobs, the planner argument, –force, isn’t being set
+
+17) [PM-1770] – 041-jdbcrc-performance failing
+
+18) [PM-1772] – db upgrade leaves transient tables
+
+19) [PM-1777] – pegasus-graphviz producing incorrect dot file when redundant edges removed
+
+20) [PM-1779] – Stage out job executed on local instead of remote site (donut)
+
+21) [PM-1783] – bypass input staging in nonsharedfs mode does not work for file URL and auxiliary.local set
+
+22) [PM-1785] – hostnames missing from elasticsearch job data
+
+23) [PM-1789] – Scratch dir GET/PUT operations get overridden
+
+24) [PM-1795] – Output Mapper in conjunction with data dependencies between sub workflow jobs
+
+25) [PM-1799] – json schema validation fails for selector profiles
+
+26) [PM-1820] – Deserializing a YAML transformation files always sets the os.type to linux
+
+
+===============================
 Release Notes for Pegasus 5.0.0
 ===============================
 We are happy to announce the release of Pegasus 5.0.  Pegasus 5.0
