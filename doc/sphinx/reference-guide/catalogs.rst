@@ -491,14 +491,14 @@ Described below are some of the entries in the site catalog.
    directory, you can use scp://hostname/var/www for the put element and
    http://hostname/staging for the get element.
 
-#. **arch,os,osrelease,osversion,** - The
+#. **arch,os.type,os.release,os.version,** - The
    arch/os/osrelease/osversion/ of the site.
 
    ARCH can have one of the following values with the default value of
    **x86_64**.
 
     * x86
-    * x86_64
+    * x86_64 (default value)
     * ppc
     * ppc_64
     * ppc64le
@@ -509,7 +509,7 @@ Described below are some of the entries in the site catalog.
 
    OS can have one of the following values
 
-    * linux
+    * linux (default value)
     * sunos
     * macosx
     * aix
@@ -836,14 +836,14 @@ The entries in this catalog have the following meaning
     * **container** - reference to a container in which this transformation
       is supposed to execute in. See :ref:`tc-container`
 
-    * **arch, os, osrelease, osversion** - The arch/os/osrelease/osversion
-      of the transformation. osrelease and osversion are optional.
+    * **arch, os.type, os.release, os.version** - The arch/os/osrelease/osversion
+      of the transformation. os.release and os.version are optional.
 
-      ARCH can have one of the following values with the default value of
+      arch can have one of the following values with the default value of
       **x86_64**.
 
         * x86
-        * x86_64
+        * x86_64 (default value)
         * ppc
         * ppc_64
         * ppc64le
@@ -852,9 +852,9 @@ The entries in this catalog have the following meaning
         * sparcv9
         * amd64
 
-      OS can have one of the following values
+      os.type can have one of the following values
 
-        * linux
+        * linux (default value)
         * sunos
         * macosx
         * aix
