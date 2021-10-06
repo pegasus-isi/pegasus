@@ -91,8 +91,7 @@ public class TransformationTest {
         TransformationCatalogEntry expected = new TransformationCatalogEntry(null, "keg", null);
         expected.setResourceId("isi");
         expected.setType(TCType.INSTALLED);
-        expected.setPhysicalTransformation("file:///path/to/keg");
-        expected.setForBypassStaging(true);
+        expected.setPhysicalTransformation("/path/to/keg");
         SysInfo sys = new SysInfo();
         sys.setArchitecture(SysInfo.Architecture.x86);
         sys.setOS(SysInfo.OS.macosx);
