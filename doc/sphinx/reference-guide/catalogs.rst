@@ -600,7 +600,7 @@ can be used to generate a new Site Catalog programatically.
         )
 
         # create and add a shared scratch directory to the site "condorpool"
-        condorpool_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/lustre")\
+        condorpool_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/lustre",shared_file_system=True)\
                                             .add_file_servers(FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL))
         condorpool.add_directories(condorpool_shared_scratch_dir)
 
@@ -648,6 +648,7 @@ can be used to generate a new Site Catalog programatically.
           directories:
           - type: sharedScratch
             path: /lustre
+            sharedFileSystem: True
             fileServers:
             - {url: 'gsiftp://smarty.isi.edu/lustre', operation: all}
           grids:
