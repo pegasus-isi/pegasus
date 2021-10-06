@@ -363,6 +363,10 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     break;
 
                 default:
+                    this.complainForUnsupportedKey(
+                            TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(),
+                            key,
+                            node);
                     break;
             }
         }
