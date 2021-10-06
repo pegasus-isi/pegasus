@@ -489,7 +489,12 @@ Described below are some of the entries in the site catalog.
    get. For each mehod, specify a URL including the protocol. For
    example, if you want share data via http using the /var/www/staging
    directory, you can use scp://hostname/var/www for the put element and
-   http://hostname/staging for the get element.
+   http://hostname/staging for the get element. Also for each shared-*
+   directory you can specify a boolean attribute *sharedFileSystem* to indicate
+   that the worker nodes actually share a filesystem. This is used to
+   trigger data optimizations whereby Pegasus may access a file for a job
+   on that site via the file system instead of retrieving them from the
+   file server endpoints of the directory. 
 
 #. **arch,os.type,os.release,os.version,** - The
    arch/os/osrelease/osversion/ of the site.
