@@ -951,29 +951,31 @@ strategy implemented
 Behaviour of the cleanup strategies implemented in the Pegasus Mapper
 can be controlled by properties described `here <#cleanup_props>`__.
 
-Data Cleanup in Hierarchal Workflows
-------------------------------------
+Data Cleanup in Hierarchical Workflows
+--------------------------------------
 
-By default, for hierarchal workflows the inplace cleanup is always
-turned off. This is because the cleanup algorithm ( InPlace ) does not
-work across the sub workflows. For example, if you have two
-pegasusWorkflow jobs in your top level workflow and the child
-pegasusWorkflow job refers to a file generated during the execution of
-the parent pegasusWorkflow job, the InPlace cleanup algorithm when applied
-to the parent pegasusWorkflow job will result in the file being deleted,
-when the sub workflow corresponding to parent pegasusWorkflow job is
-executed. This would result in failure of sub workflow corresponding to
-the child pegasusWorkflow job, as the file deleted is required to present during
-it's execution.
+By default, for hierarchical workflows the inplace cleanup is always
+turned off. However, you can enable cleanup for your workflows if either of
+the following two conditions hold true
 
-In case there are no data dependencies across the pegasusWorkflow jobs, then
-yes you can enable the InPlace algorithm for the sub workflows . To do this
-you can set the property
+* you have no data dependencies across the *pegasusWorkflow* jobs, OR
 
--  pegasus.file.cleanup.scope deferred
+* if you have data dependencies between two *pegasusWorkflow* jobs, they are
+  explicitly tracked by enumerating them as inputs and outputs when defining
+  the pegasusWorkflow jobs
+
+**AND**
+
+* you can set the property
+
+    -  pegasus.file.cleanup.scope deferred
 
 This will result in cleanup option to be picked up from the arguments
 for the pegasusWorkflow job in the top level Abstract Workflow .
+
+Before the 5.0.1 release, you could only enable inplace cleanup for your
+hierarchical workflows if there were no data dependencies between *pegasusWorkflow*
+jobs.
 
 Metadata
 ========

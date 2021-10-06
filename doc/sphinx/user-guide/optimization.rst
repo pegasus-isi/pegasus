@@ -1102,6 +1102,21 @@ executable workflow. In the example :ref:`above <pegasusWorkflow-job-example>`
 ``maxjobs`` is set to 10 for the sub workflow.
 
 
+Catalogs in Hierarchical Workflows
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When using hierarchical workflows, and you want to use the same catalog files
+for all the workflows making up your hierarchical workflow it is advisable
+to have the catalog files as standalone catalog files, and locations of those
+catalogued in your properties.
+
+Catalogs defined inline in the abstract workflow are not inherited by a
+sub-workflow. The only exception to this is the replica catalog that is
+inherited one level ( if in a worklfow W you have a replica catalog
+inlined, the worklfows corresponding to the pegasusWorkflow jobs defined
+in W will have access to replica catalog defined in W).
+
+
 Execution of the PRE script and HTCondor DAGMan instance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
