@@ -311,7 +311,7 @@ class TransformationDeserializer extends CatalogEntryJsonDeserializer<Transforma
                     sysInfo.setArchitecture(SysInfo.Architecture.valueOf(architecture));
                     break;
 
-                case SITE_OS:
+                case SITE_OS_TYPE:
                     String os = node.get(key).asText();
                     sysInfo.setOS(SysInfo.OS.valueOf(os));
                     break;
