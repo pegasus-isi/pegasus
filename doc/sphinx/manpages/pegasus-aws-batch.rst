@@ -1,3 +1,5 @@
+.. _pegasus-aws-batch:
+
 =================
 pegasus-aws-batch
 =================
