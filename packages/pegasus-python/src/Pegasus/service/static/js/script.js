@@ -64,13 +64,13 @@ function verticalTableInit(selector) {
   table.addClass("dataTable");
   table.attr("cellspacing", 0);
   table.attr("cellpadding", 5);
-  $(selector + "> tbody > tr > th").each(function (index) {
+  table.find("> tbody > tr > th").each(function (index) {
     $(this).addClass("nowrap");
   });
 
   var isOdd = true;
 
-  $(selector + "> tbody > tr").each(function (index) {
+  table.find("> tbody > tr").each(function (index) {
     if (isOdd) {
       $(this).addClass("odd");
     } else {
@@ -89,13 +89,13 @@ function verticalTableInitStatus(selector, status) {
   table.addClass("dataTable");
   table.attr("cellspacing", 0);
   table.attr("cellpadding", 5);
-  $(selector + "> tbody > tr > th").each(function (index) {
+  table.find("> tbody > tr > th").each(function (index) {
     $(this).addClass("nowrap");
   });
 
   var isOdd = true;
 
-  $(selector + "> tbody > tr").each(function (index) {
+  table.find("> tbody > tr").each(function (index) {
     if (isOdd) {
       $(this).addClass("odd");
     } else {
