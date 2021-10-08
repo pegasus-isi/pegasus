@@ -494,7 +494,7 @@ Described below are some of the entries in the site catalog.
    that the worker nodes actually share a filesystem. This is used to
    trigger data optimizations whereby Pegasus may access a file for a job
    on that site via the file system instead of retrieving them from the
-   file server endpoints of the directory. 
+   file server endpoints of the directory.
 
 #. **arch,os.type,os.release,os.version,** - The
    arch/os/osrelease/osversion/ of the site.
