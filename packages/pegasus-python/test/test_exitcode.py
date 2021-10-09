@@ -122,13 +122,13 @@ class ExitcodeTestCase(unittest.TestCase):
             success_messages=["Job succeeded", "Successfully finished"],
         )
 
-        # PM-927 Exitcode should fail in this case, even if status=0
+        # PM-927 Exitcode should fail in this case, even if dagman_job_status=0
         self.assertRaises(
             JobFailed,
             ec,
             "insufficient.out",
             success_messages=["End of program"],
-            status=0,
+            dagman_job_status=0,
         )
 
     def test_rename_noerrfile(self):
