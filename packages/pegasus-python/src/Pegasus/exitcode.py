@@ -276,6 +276,7 @@ def append_to_wf_metadata_log(files_metadata, logfile):
 
 def exitcode(
     outfile,
+    check_invocations=False,
     dagman_job_status=None,
     rename=True,
     failure_messages=[],
@@ -332,8 +333,8 @@ def exitcode(
     if cs is not None:
         check_cluster_summary(cs)
     else:
-        # PM-927 Only check kickstart records if -r is not supplied
-        if dagman_job_status is None:
+        # PM-927 , PM-1821 Only check kickstart records if -c is specified
+        if check_invocations:
             check_kickstart_records(stdout)
 
     # Next check if metadata file needs to be generated
@@ -409,6 +410,14 @@ def main(args):
     parser = OptionParser(usage)
 
     parser.add_option(
+        "-c",
+        "--check-invocations",
+        action="store_true",
+        dest="check_invocations",
+        default=False,
+        help="check for invocation records in the kickstart output in the job.out file",
+    )
+    parser.add_option(
         "-r",
         "--return",
         action="store",
@@ -424,7 +433,7 @@ def main(args):
         action="store_false",
         dest="rename",
         default=True,
-        help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. "
+        help="Don't rename job.out and .err to .out.XXX and .err.XXX. "
         "Useful for testing.",
     )
     parser.add_option(
@@ -497,6 +506,7 @@ def main(args):
         log["timestamp"] = datetime.datetime.now().isoformat()
         exitcode(
             outfile,
+            check_invocations=options.check_invocations,
             dagman_job_status=options.status,
             rename=options.rename,
             failure_messages=options.failure_messages,

@@ -63,7 +63,7 @@ class ExitcodeTestCase(unittest.TestCase):
     def test_exitcode(self):
         def ec(filename, **args):
             path = os.path.join(dirname, "exitcode", filename)
-            exitcode.exitcode(path, rename=False, **args)
+            exitcode.exitcode(path, rename=False, check_invocations=True, **args)
 
         # new yaml format
         ec("yaml-ok.out")
