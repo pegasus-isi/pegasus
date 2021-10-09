@@ -276,7 +276,7 @@ def append_to_wf_metadata_log(files_metadata, logfile):
 
 def exitcode(
     outfile,
-    status=None,
+    dagman_job_status=None,
     rename=True,
     failure_messages=[],
     success_messages=[],
@@ -299,10 +299,10 @@ def exitcode(
         outfile, errfile = rotate_file(outfile, errfile)
 
     # First, check exitcode supplied by DAGMan, if any
-    if status is not None:
-        log["app_exitcode"] = status
-        if status != 0:
-            raise JobFailed("dagman reported non-zero exitcode: %d" % status)
+    if dagman_job_status is not None:
+        log["app_exitcode"] = dagman_job_status
+        if dagman_job_status != 0:
+            raise JobFailed("dagman reported non-zero exitcode: %d" % dagman_job_status)
 
     # Next, read the output and error files
     stdout = readfile(outfile)
@@ -311,7 +311,7 @@ def exitcode(
     # Next, check the size of the output file
     # when a job is launched without kickstart stdout can be empty.
     # signified by non None status
-    if status is None and len(stdout) == 0:
+    if dagman_job_status is None and len(stdout) == 0:
         raise JobFailed("Empty stdout")
 
     # Next, if we have failure messages, then fail if we find one in the
@@ -330,7 +330,7 @@ def exitcode(
         check_cluster_summary(cs)
     else:
         # PM-927 Only check kickstart records if -r is not supplied
-        if status is None:
+        if dagman_job_status is None:
             check_kickstart_records(stdout)
 
     # Next check if metadata file needs to be generated
@@ -494,7 +494,7 @@ def main(args):
         log["timestamp"] = datetime.datetime.now().isoformat()
         exitcode(
             outfile,
-            status=options.status,
+            dagman_job_status=options.status,
             rename=options.rename,
             failure_messages=options.failure_messages,
             success_messages=options.success_messages,
