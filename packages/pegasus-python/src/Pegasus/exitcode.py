@@ -302,6 +302,9 @@ def exitcode(
     if dagman_job_status is not None:
         log["app_exitcode"] = dagman_job_status
         if dagman_job_status != 0:
+            # if dagman has flagged the job as a failure, then always flag the job as error
+            # PM-1746 highlights the case where jobs that get held are aborted eventually
+            # by dagman
             raise JobFailed("dagman reported non-zero exitcode: %d" % dagman_job_status)
 
     # Next, read the output and error files
