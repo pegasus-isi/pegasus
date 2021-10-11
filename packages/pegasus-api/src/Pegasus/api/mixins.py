@@ -214,7 +214,7 @@ def to_mb(value: str) -> int:
                 "eb": 1 << 60,
             }
 
-            return (amt * _bytes[unit]) / _bytes["mb"]
+            return int((amt * _bytes[unit]) / _bytes["mb"])
     except Exception:
         raise ValueError(
             "value: {} should be a str formatted as '<int> [MB | GB | TB | PB | EB]'".format(
@@ -251,9 +251,9 @@ class ProfileMixin:
 
         For :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_globus_profiles`, :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_condor_profiles`,
         :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_dagman_profiles`, :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_selector_profiles`,
-        and :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_pegasus_profiles`, if a profile key 
+        and :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_pegasus_profiles`, if a profile key
         you are trying to use is not listed as a key word argument, use this
-        function to add the profile. 
+        function to add the profile.
 
         :raises TypeError: namespace must be one of Namespace
         :return: self
