@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.code.gridstart;
 
+import static edu.isi.pegasus.planner.namespace.Dagman.POST_SCRIPT_ARGUMENTS_KEY;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Separator;
@@ -35,6 +37,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -658,8 +661,29 @@ public class Kickstart implements GridStart {
         // PM-1461 wrap job with launcher if specified
         wrapJobWithGridStartLauncher(job);
 
+        associatePostScriptArguments(job);
+
         // all finished successfully
         return true;
+    }
+
+    /**
+     * Associate postscript arguments specific to kickstart with the job
+     *
+     * @param job the job
+     */
+    protected void associatePostScriptArguments(Job job) {
+        // PM-1821 we have to explicitly set -c | --check-invocations for jobs
+        // enabled via kickstart to ensure that pegasus-exitcode parses the
+        // kickstart record
+        String defaultPostScriptArgs = this.defaultPostScriptArguments(job);
+        String args =
+                (job.dagmanVariables.containsKey(POST_SCRIPT_ARGUMENTS_KEY))
+                        ? defaultPostScriptArgs
+                                + " "
+                                + job.dagmanVariables.get(POST_SCRIPT_ARGUMENTS_KEY)
+                        : defaultPostScriptArgs;
+        job.dagmanVariables.construct(Dagman.POST_SCRIPT_ARGUMENTS_KEY, args);
     }
 
     /**
@@ -1006,6 +1030,16 @@ public class Kickstart implements GridStart {
      */
     public String defaultPOSTScript() {
         return PegasusExitCode.SHORT_NAME;
+    }
+
+    /**
+     * Return any post script arguments that need to be associated with the job
+     *
+     * @param job
+     * @return
+     */
+    protected String defaultPostScriptArguments(Job job) {
+        return "-c";
     }
 
     /**

@@ -276,7 +276,8 @@ def append_to_wf_metadata_log(files_metadata, logfile):
 
 def exitcode(
     outfile,
-    status=None,
+    check_invocations=False,
+    dagman_job_status=None,
     rename=True,
     failure_messages=[],
     success_messages=[],
@@ -299,10 +300,13 @@ def exitcode(
         outfile, errfile = rotate_file(outfile, errfile)
 
     # First, check exitcode supplied by DAGMan, if any
-    if status is not None:
-        log["app_exitcode"] = status
-        if status != 0:
-            raise JobFailed("dagman reported non-zero exitcode: %d" % status)
+    if dagman_job_status is not None:
+        log["app_exitcode"] = dagman_job_status
+        if dagman_job_status != 0:
+            # if dagman has flagged the job as a failure, then always flag the job as error
+            # PM-1746 highlights the case where jobs that get held are aborted eventually
+            # by dagman
+            raise JobFailed("dagman reported non-zero exitcode: %d" % dagman_job_status)
 
     # Next, read the output and error files
     stdout = readfile(outfile)
@@ -311,7 +315,7 @@ def exitcode(
     # Next, check the size of the output file
     # when a job is launched without kickstart stdout can be empty.
     # signified by non None status
-    if status is None and len(stdout) == 0:
+    if dagman_job_status is None and len(stdout) == 0:
         raise JobFailed("Empty stdout")
 
     # Next, if we have failure messages, then fail if we find one in the
@@ -329,8 +333,8 @@ def exitcode(
     if cs is not None:
         check_cluster_summary(cs)
     else:
-        # PM-927 Only check kickstart records if -r is not supplied
-        if status is None:
+        # PM-927 , PM-1821 Only check kickstart records if -c is specified
+        if check_invocations:
             check_kickstart_records(stdout)
 
     # Next check if metadata file needs to be generated
@@ -406,6 +410,14 @@ def main(args):
     parser = OptionParser(usage)
 
     parser.add_option(
+        "-c",
+        "--check-invocations",
+        action="store_true",
+        dest="check_invocations",
+        default=False,
+        help="check for invocation records in the kickstart output in the job.out file",
+    )
+    parser.add_option(
         "-r",
         "--return",
         action="store",
@@ -421,7 +433,7 @@ def main(args):
         action="store_false",
         dest="rename",
         default=True,
-        help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. "
+        help="Don't rename job.out and .err to .out.XXX and .err.XXX. "
         "Useful for testing.",
     )
     parser.add_option(
@@ -494,7 +506,8 @@ def main(args):
         log["timestamp"] = datetime.datetime.now().isoformat()
         exitcode(
             outfile,
-            status=options.status,
+            check_invocations=options.check_invocations,
+            dagman_job_status=options.status,
             rename=options.rename,
             failure_messages=options.failure_messages,
             success_messages=options.success_messages,

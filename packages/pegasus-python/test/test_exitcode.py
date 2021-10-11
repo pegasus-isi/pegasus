@@ -63,7 +63,7 @@ class ExitcodeTestCase(unittest.TestCase):
     def test_exitcode(self):
         def ec(filename, **args):
             path = os.path.join(dirname, "exitcode", filename)
-            exitcode.exitcode(path, rename=False, **args)
+            exitcode.exitcode(path, rename=False, check_invocations=True, **args)
 
         # new yaml format
         ec("yaml-ok.out")
@@ -122,13 +122,13 @@ class ExitcodeTestCase(unittest.TestCase):
             success_messages=["Job succeeded", "Successfully finished"],
         )
 
-        # PM-927 Exitcode should fail in this case, even if status=0
+        # PM-927 Exitcode should fail in this case, even if dagman_job_status=0
         self.assertRaises(
             JobFailed,
             ec,
             "insufficient.out",
             success_messages=["End of program"],
-            status=0,
+            dagman_job_status=0,
         )
 
     def test_rename_noerrfile(self):

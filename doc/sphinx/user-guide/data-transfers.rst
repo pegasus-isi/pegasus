@@ -444,7 +444,7 @@ file servers specified for the staging/compute site, and the scratch and
 storage directories mentioned for the compute site are locally mounted
 on the submit host), it is beneficial to have the remote transfer jobs
 run locally and hence bypass going through the local scheduler queue. In
-that case, users can set a boolean profile auxillary.local in pegasus
+that case, users can set a boolean profile *auxillary.local* in pegasus
 namespace in the site catalog for the compute/staging site to true.
 
 Users can specify the property **pegasus.transfer.*.remote.sites** to
@@ -1016,4 +1016,17 @@ catalog. As a result, if the lfn for the input file does not match the basename
 of the file location specified in the Replica Catalog for that LFN, Pegasus
 will automatically disable bypass for that file even if it is marked for bypass.
 
+Source URL's consideration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+In addition to setting explicitly what files need to be **bypassed**, Pegasus
+also does take into consideration the source URL location of the file, to
+determine whether the file can be actually bypassed (retrieved directly).
+If the source URL is a non file URL, then Pegasus does consider it to be a
+remotely accessible URL and hence allowable to be pulled directly for the job.
+
+For source URL's that are file URL's **bypass** only works if the
+* site attribute associated with the URL is the same as the compute site. OR
+
+* the file URL is at site "local" and the pegasus profile *auxillary.local*
+  is set to true for the compute site in the site catalog.
