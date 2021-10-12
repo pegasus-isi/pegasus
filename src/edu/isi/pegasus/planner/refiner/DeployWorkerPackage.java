@@ -818,9 +818,17 @@ public class DeployWorkerPackage extends Engine {
                                     ((NameValue<String, String>) ft.getSourceURL()).getValue()));
             untarJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
             untarJob.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
+            StringBuilder exitcodeArgs = new StringBuilder();
+            exitcodeArgs.append(
+                    PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+            // PM-1821 explicity indicate no kickstart records to parse
+            exitcodeArgs
+                    .append(" ")
+                    .append(
+                            PegasusExitCode
+                                    .POSTSCRIPT_ARGUMENTS_FOR_DISABLING_CHECKS_FOR_INVOCATIONS);
             untarJob.dagmanVariables.construct(
-                    Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+                    Dagman.POST_SCRIPT_ARGUMENTS_KEY, exitcodeArgs.toString());
 
             GraphNode untarNode = new GraphNode(untarJob.getName(), untarJob);
 
