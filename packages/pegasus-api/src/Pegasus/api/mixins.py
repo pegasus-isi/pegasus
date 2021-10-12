@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 from functools import partialmethod, wraps
 from pathlib import Path
@@ -191,33 +192,40 @@ def _profiles(ns, **map_p):
 def to_mb(value: str) -> int:
     """Convert the given value to MB
 
-    :param value: str formatted as str formatted as :code:`'<int> [MB | GB | TB | PB | EB]'`
+    :param value: str formatted as str formatted as :code:`'<int> [MB | GB | TB | PB | EB | ZB | YB]'`
     :type value: str
     :raises ValueError: invalid format
     :return: value in MB
     :rtype: int
     """
     try:
-        tokens = str(value).strip().split()
+        value = str(value).strip()
+        m = re.match(r"^\s*(\d+([Ee][+-]?\d+)?)\s*([MmGgPpEeZzYy][Bb])?\s*$", value)
 
-        if len(tokens) == 1:
-            return int(tokens[0])
-        elif len(tokens) == 2:
-            amt = int(tokens[0])
-            unit = tokens[1].lower()
+        if not m:
+            raise ValueError
 
+        # float(..) is required as int("1E1") raises a ValueError
+        amt = int(float(m.group(1)))
+        unit = m.group(3).lower() if m.group(3) else None
+
+        if unit is None:
+            return amt
+        else:
             _bytes = {
                 "mb": 1 << 20,
                 "gb": 1 << 30,
                 "tb": 1 << 40,
                 "pb": 1 << 50,
                 "eb": 1 << 60,
+                "zb": 1 << 70,
+                "yb": 1 << 80,
             }
 
             return int((amt * _bytes[unit]) / _bytes["mb"])
     except Exception:
         raise ValueError(
-            "value: {} should be a str formatted as '<int> [MB | GB | TB | PB | EB]'".format(
+            "value: {} should be a str formatted as '<int> [MB | GB | TB | PB | EB | ZB | YB]'".format(
                 value
             )
         )
