@@ -63,7 +63,7 @@ class ExitcodeTestCase(unittest.TestCase):
     def test_exitcode(self):
         def ec(filename, **args):
             path = os.path.join(dirname, "exitcode", filename)
-            exitcode.exitcode(path, rename=False, check_invocations=True, **args)
+            exitcode.exitcode(path, rename=False, **args)
 
         # new yaml format
         ec("yaml-ok.out")
@@ -130,6 +130,8 @@ class ExitcodeTestCase(unittest.TestCase):
             success_messages=["End of program"],
             dagman_job_status=0,
         )
+
+        
 
     def test_rename_noerrfile(self):
         inf = os.path.join(dirname, "exitcode", "ok.out")
