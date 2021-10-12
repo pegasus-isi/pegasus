@@ -276,7 +276,7 @@ def append_to_wf_metadata_log(files_metadata, logfile):
 
 def exitcode(
     outfile,
-    check_invocations=False,
+    check_invocations=True,
     dagman_job_status=None,
     rename=True,
     failure_messages=[],
@@ -410,14 +410,6 @@ def main(args):
     parser = OptionParser(usage)
 
     parser.add_option(
-        "-c",
-        "--check-invocations",
-        action="store_true",
-        dest="check_invocations",
-        default=False,
-        help="check for invocation records in the kickstart output in the job.out file",
-    )
-    parser.add_option(
         "-r",
         "--return",
         action="store",
@@ -443,6 +435,14 @@ def main(args):
         dest="generate_meta",
         default=True,
         help="disable generation of metadata file after parsing of kickstart records",
+    )
+    parser.add_option(
+        "-I",
+        "--no-invocations",
+        action="store_false",
+        dest="check_invocations",
+        default=True,
+        help="do not check for invocation records(present in kickstart output) output in the job.out file",
     )
     parser.add_option(
         "-f",

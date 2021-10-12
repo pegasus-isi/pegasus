@@ -553,9 +553,15 @@ public class PegasusLite implements GridStart {
             // PM-1360
             // no empty postscript but arguments to exitcode to add -r $RETURN
             job.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
-            job.dagmanVariables.construct(
-                    Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+
+            StringBuilder args = new StringBuilder();
+            args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+            // PM-1821 explicity indicate no kickstart records to parse
+            args.append(" ")
+                    .append(
+                            PegasusExitCode
+                                    .POSTSCRIPT_ARGUMENTS_FOR_DISABLING_CHECKS_FOR_INVOCATIONS);
+            job.dagmanVariables.construct(Dagman.POST_SCRIPT_ARGUMENTS_KEY, args.toString());
         }
         return this.defaultPOSTScript();
     }

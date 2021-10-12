@@ -673,9 +673,9 @@ public class Kickstart implements GridStart {
      * @param job the job
      */
     protected void associatePostScriptArguments(Job job) {
-        // PM-1821 we have to explicitly set -c | --check-invocations for jobs
-        // enabled via kickstart to ensure that pegasus-exitcode parses the
-        // kickstart record
+        // currently no default args are associated. this is just placeholder
+        // code for future, in case we need to associate default args for
+        // pegasus-exitcode invocation
         String defaultPostScriptArgs = this.defaultPostScriptArguments(job);
         String args =
                 (job.dagmanVariables.containsKey(POST_SCRIPT_ARGUMENTS_KEY))
@@ -1039,7 +1039,7 @@ public class Kickstart implements GridStart {
      * @return
      */
     protected String defaultPostScriptArguments(Job job) {
-        return "-c";
+        return "";
     }
 
     /**
