@@ -163,16 +163,9 @@ class TestProfileMixin:
         ],
     )
     def test_add_valid_profiles(self, obj, given_value, expected_value):
-        assert (
-            id(
-                obj.add_profiles(
-                    Namespace.ENV,
-                    ENV1="env1",
-                    ENV2=given_value,
-                )
-            )
-            == id(obj)
-        )
+        assert id(
+            obj.add_profiles(Namespace.ENV, ENV1="env1", ENV2=given_value,)
+        ) == id(obj)
 
         assert dict(obj.profiles) == {"env": {"ENV1": "env1", "ENV2": expected_value}}
 
@@ -187,22 +180,19 @@ class TestProfileMixin:
         assert dict(obj.profiles) == {"env": {"ENV1": "env1", "ENV2": "env2"}}
 
     def test_add_globus_profile(self, obj):
-        assert (
-            id(
-                obj.add_globus_profile(
-                    count=1,
-                    job_type="single",
-                    max_cpu_time=2,
-                    max_memory="3",
-                    max_time=4,
-                    max_wall_time=5,
-                    min_memory="2 GB",
-                    project="abc",
-                    queue="queue",
-                )
+        assert id(
+            obj.add_globus_profile(
+                count=1,
+                job_type="single",
+                max_cpu_time=2,
+                max_memory="3",
+                max_time=4,
+                max_wall_time=5,
+                min_memory="2 GB",
+                project="abc",
+                queue="queue",
             )
-            == id(obj)
-        )
+        ) == id(obj)
 
         assert dict(obj.profiles) == {
             "globus": {
@@ -229,26 +219,23 @@ class TestProfileMixin:
         assert "add_globus_profile() got an unexpected" in str(e)
 
     def test_add_dagman_profile(self, obj):
-        assert (
-            id(
-                obj.add_dagman_profile(
-                    pre="pre",
-                    pre_arguments="pre_args",
-                    post="post",
-                    post_arguments="post_args",
-                    retry=1,
-                    category="cat",
-                    priority="prio",
-                    abort_dag_on="abrt",
-                    max_pre="mp",
-                    max_post="mp",
-                    max_jobs="mj",
-                    max_idle="mi",
-                    post_scope="ps",
-                )
+        assert id(
+            obj.add_dagman_profile(
+                pre="pre",
+                pre_arguments="pre_args",
+                post="post",
+                post_arguments="post_args",
+                retry=1,
+                category="cat",
+                priority="prio",
+                abort_dag_on="abrt",
+                max_pre="mp",
+                max_post="mp",
+                max_jobs="mj",
+                max_idle="mi",
+                post_scope="ps",
             )
-            == id(obj)
-        )
+        ) == id(obj)
 
         assert dict(obj.profiles) == {
             "dagman": {
@@ -279,30 +266,27 @@ class TestProfileMixin:
         assert "add_dagman_profile() got an unexpected" in str(e)
 
     def test_add_condor_profile(self, obj):
-        assert (
-            id(
-                obj.add_condor_profile(
-                    universe="un",
-                    periodic_release="pr",
-                    periodic_remove="pr",
-                    filesystem_domain="fsd",
-                    stream_error="se",
-                    stream_output="so",
-                    priority="prio",
-                    request_cpus="rc",
-                    request_gpus="rg",
-                    request_memory="100 MB",
-                    request_disk="200 MB",
-                    requirements="(CUDACapability >= 1.2) && $(requirements:True)",
-                    should_transfer_files="YES",
-                    when_to_transfer_output="ON_EXIT",
-                    condor_collector="ccg-testing999.isi.edu",
-                    grid_resource="batch pbs",
-                    cream_attributes="key1=value1",
-                )
+        assert id(
+            obj.add_condor_profile(
+                universe="un",
+                periodic_release="pr",
+                periodic_remove="pr",
+                filesystem_domain="fsd",
+                stream_error="se",
+                stream_output="so",
+                priority="prio",
+                request_cpus="rc",
+                request_gpus="rg",
+                request_memory="100 MB",
+                request_disk="200 MB",
+                requirements="(CUDACapability >= 1.2) && $(requirements:True)",
+                should_transfer_files="YES",
+                when_to_transfer_output="ON_EXIT",
+                condor_collector="ccg-testing999.isi.edu",
+                grid_resource="batch pbs",
+                cream_attributes="key1=value1",
             )
-            == id(obj)
-        )
+        ) == id(obj)
 
         assert dict(obj.profiles) == {
             "condor": {
@@ -337,58 +321,55 @@ class TestProfileMixin:
         assert "add_condor_profile() got an unexpected" in str(e)
 
     def test_add_pegasus_profile(self, obj):
-        assert (
-            id(
-                obj.add_pegasus_profile(
-                    clusters_num="clusters.num",
-                    clusters_size="clusters.size",
-                    job_aggregator="job.aggregator",
-                    grid_start="gridstart",
-                    grid_start_path="gridstart.path",
-                    grid_start_arguments="gridstart.arguments",
-                    stagein_clusters="stagein.clusters",
-                    stagein_local_clusters="stagein.local.clusters",
-                    stagein_remote_clusters="stagein.remote.clusters",
-                    stageout_clusters="stageout.clusters",
-                    stageout_local_clusters="stageout.local.clusters",
-                    stageout_remote_clusters="stageout.remote.clusters",
-                    group="group",
-                    change_dir="change.dir",
-                    create_dir="create.dir",
-                    transfer_proxy="transfer.proxy",
-                    style="style",
-                    pmc_request_memory="512",
-                    pmc_request_cpus="pmc_request_cpus",
-                    pmc_priority="pmc_priority",
-                    pmc_task_arguments="pmc_task_arguments",
-                    exitcode_failure_msg="exitcode.failuremsg",
-                    exitcode_success_msg="exitcode.successmsg",
-                    checkpoint_time=1,
-                    max_walltime="maxwalltime",
-                    glite_arguments="glite.arguments",
-                    auxillary_local="auxillary.local",
-                    condor_arguments_quote="condor.arguments.quote",
-                    runtime="runtime",
-                    clusters_max_runtime="clusters.maxruntime",
-                    cores=1,
-                    gpus=1,
-                    nodes="nodes",
-                    ppn="ppn",
-                    memory="2 GB",
-                    diskspace="1 GB",
-                    data_configuration="condorio",
-                    queue="normal",
-                    project="-A project_name",
-                    boto_config="/home/myuser/.boto",
-                    container_arguments="--shm-size",
-                    label="nodeLabel",
-                    pegasus_lite_env_source="/path",
-                    SSH_PRIVATE_KEY="/path",
-                    relative_submit_dir="some-dir",
-                )
+        assert id(
+            obj.add_pegasus_profile(
+                clusters_num="clusters.num",
+                clusters_size="clusters.size",
+                job_aggregator="job.aggregator",
+                grid_start="gridstart",
+                grid_start_path="gridstart.path",
+                grid_start_arguments="gridstart.arguments",
+                stagein_clusters="stagein.clusters",
+                stagein_local_clusters="stagein.local.clusters",
+                stagein_remote_clusters="stagein.remote.clusters",
+                stageout_clusters="stageout.clusters",
+                stageout_local_clusters="stageout.local.clusters",
+                stageout_remote_clusters="stageout.remote.clusters",
+                group="group",
+                change_dir="change.dir",
+                create_dir="create.dir",
+                transfer_proxy="transfer.proxy",
+                style="style",
+                pmc_request_memory="512",
+                pmc_request_cpus="pmc_request_cpus",
+                pmc_priority="pmc_priority",
+                pmc_task_arguments="pmc_task_arguments",
+                exitcode_failure_msg="exitcode.failuremsg",
+                exitcode_success_msg="exitcode.successmsg",
+                checkpoint_time=1,
+                max_walltime="maxwalltime",
+                glite_arguments="glite.arguments",
+                auxillary_local="auxillary.local",
+                condor_arguments_quote="condor.arguments.quote",
+                runtime="runtime",
+                clusters_max_runtime="clusters.maxruntime",
+                cores=1,
+                gpus=1,
+                nodes="nodes",
+                ppn="ppn",
+                memory="2 GB",
+                diskspace="1 GB",
+                data_configuration="condorio",
+                queue="normal",
+                project="-A project_name",
+                boto_config="/home/myuser/.boto",
+                container_arguments="--shm-size",
+                label="nodeLabel",
+                pegasus_lite_env_source="/path",
+                SSH_PRIVATE_KEY="/path",
+                relative_submit_dir="some-dir",
             )
-            == id(obj)
-        )
+        ) == id(obj)
 
         assert dict(obj.profiles) == {
             "pegasus": {
