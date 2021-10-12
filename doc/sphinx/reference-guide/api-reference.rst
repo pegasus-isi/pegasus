@@ -6,7 +6,7 @@ Workflow API
 
 .. _api-python:
 
-Python 
+Python
 ======
 
 The Python API is the most powerful way of creating Pegasus workflows.
@@ -66,7 +66,7 @@ Example workflow generator using the Python API:
 
    # --- Workflow -----------------------------------------------------------------
    '''
-                        [f.b1] - (findrange) - [f.c1] 
+                        [f.b1] - (findrange) - [f.c1]
                         /                             \
    [f.a] - (preprocess)                               (analyze) - [f.d]
                         \                             /
@@ -315,7 +315,7 @@ below. This same code can be found in the Pegasus distribution in the
    }
 
 Of course, you will have to set up some catalogs and properties to run
-this example. 
+this example.
 
 
 .. _api-r:
@@ -822,7 +822,7 @@ Resource - Query Prefix
    **Task**              t            t.abs_task_id
    **Task Metadata**     tm           tm.value
    **Job Instance**      ji           ji.exitcode
-   **Job**               i            i.argv
+   **Invocation**        i            i.argv
    **RC LFN**            l            l.lfn
    **RC PFN**            p            p.pfn
    **RC Metadata**       rm           rm.key
