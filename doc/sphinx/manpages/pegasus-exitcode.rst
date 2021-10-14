@@ -119,6 +119,9 @@ Options
    Don’t rename *job.out* and *job.err* to *.out.XXX* and *.err.XXX*.
    This option is used primarily for testing.
 
+**-N**; \ **--no-metadata**
+   Disable generation of metadata file after parsing of kickstart records.
+
 **-I**; \ **--no-invocations**
    Do not check for invocation records(present in kickstart output)
    output in the job.out file
