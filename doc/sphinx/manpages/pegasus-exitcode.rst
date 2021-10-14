@@ -75,6 +75,18 @@ passed to **pegasus-exitcode** in a DAGMan post script by using the
 other checks. For GRAM jobs, the value of ``$RETURN`` will always be 0
 regardless of whether the job failed or not.
 
+Below is a matrix of how the HTCondor exitcode are reconciled with an
+exitcode found in the kickstart records
+
+kick-ec | -r | Reason
+0       | 0  | No error
+1       | 0  | Task failed
+0       | 1  | HTCondor failed it
+1       | 1  | Task failed
+
+For jobs launched without kickstart (--no-invocations flag) pegasus-exitcode
+does not fail a job, if there is empty stdout
+
 In addition to checking the success/failure of a job,
 **pegasus-exitcode** also renames the STDOUT and STDERR files of the job
 so that if the job is retried, the STDOUT and STDERR of the previous run
@@ -106,6 +118,10 @@ Options
 **-n**; \ **--no-rename**
    Don’t rename *job.out* and *job.err* to *.out.XXX* and *.err.XXX*.
    This option is used primarily for testing.
+
+**-I**; \ **--no-invocations**
+   Do not check for invocation records(present in kickstart output)
+   output in the job.out file
 
 **-f** *msg*; \ **--failure-message** *msg*
    Failure message to find in job stdout/stderr. If this message exists
