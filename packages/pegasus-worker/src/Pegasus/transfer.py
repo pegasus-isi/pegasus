@@ -2724,8 +2724,8 @@ class GFALHandler(TransferHandlerBase):
                 tc.run()
             except Exception as err:
                 logger.error(err)
-                failed_l.append(t)
-                continue
+                # gfal-rm is finicky when it comes to exit codes, let's
+                # just ignore errors during cleanup
 
             successful_l.append(t)
 

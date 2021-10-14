@@ -489,6 +489,7 @@ pegasus-plan. The values are in megabytes. As a rule of thumb,
 JAVA_HEAPMIN can be set to half of the value of JAVA_HEAPMAX.
 
 
+.. _pegasus-plan-properties:
 
 Pegasus Properties
 ==================

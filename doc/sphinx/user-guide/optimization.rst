@@ -1102,6 +1102,21 @@ executable workflow. In the example :ref:`above <pegasusWorkflow-job-example>`
 ``maxjobs`` is set to 10 for the sub workflow.
 
 
+Catalogs in Hierarchical Workflows
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When using hierarchical workflows, and you want to use the same catalog files
+for all the workflows making up your hierarchical workflow it is advisable
+to have the catalog files as standalone catalog files, and locations of those
+catalogued in your properties.
+
+Catalogs defined inline in the abstract workflow are not inherited by a
+sub-workflow. The only exception to this is the replica catalog that is
+inherited one level ( if in a worklfow W you have a replica catalog
+inlined, the worklfows corresponding to the pegasusWorkflow jobs defined
+in W will have access to replica catalog defined in W).
+
+
 Execution of the PRE script and HTCondor DAGMan instance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1226,6 +1241,16 @@ namely
 
 #. data dependency between a *pegasusWorkflow* job and a compute job
 
+.. note::
+
+    Starting with Pegasus 5.x releases, it is recommended that you list the file
+    dependencies for a *pegasusWorkflow* job as you would do with a normal compute
+    job. Additionally, the sub workflows no longer get passed the cache file
+    generated when the planning the enclosing workflow ( the workflow in which you
+    define the pegasusWorkflow jobs). Hence it is advisable to list any
+    file dependencies that a pegasusWorkflow job may have to a *compute* job
+    or other *pegasusWorkflow* jobs.
+
 File Dependencies Across pegasusWorkflow Jobs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1254,6 +1279,84 @@ files to a storage site, and you want the child sub workflow to stage
 these files from the storage output site instead of the workflow
 execution directory where the files were originally created.
 
+.. tabs::
+
+        .. code-tab:: python Code Snippet
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # define various transformations.
+            ...
+
+            # --- SubWorkflow1 ---------------------------------------------------------------
+            input_file = File("input.txt")
+            k1_out = File("k1.txt")
+            wf1 = Workflow("subworkflow-1")
+            k1 = Job(keg)\
+                    .add_args("-i", input_file, "-o", k1_out, "-T", 5)\
+                    .add_inputs(input_file)\
+                    .add_outputs(k1_out)
+
+            ls1 = Job(ls)\
+                    .add_args("-alh")
+
+            wf1.add_jobs(k1, ls1)
+            wf1.write("subwf1.yml")
+
+            # --- SubWorkflow2 ---------------------------------------------------------------
+            k2_out = File("k2.txt")
+            wf2 = Workflow("subworkflow-2")
+            k2 = Job(keg)\
+                    .add_args("-i", k1_out, "-o", k2_out, "-T", 5)\
+                    .add_inputs(k1_out)\
+                    .add_outputs(k2_out)
+
+            wf2.add_jobs(k2)
+            wf2.write("subwf2.yml")
+
+            # Root
+            root_wf = Workflow("root")
+
+
+            j1 = SubWorkflow("subwf1.yml", _id="subwf1")\
+                    .add_planner_args(verbose=3)\
+                    .add_outputs(k1_out)
+
+            j2 = SubWorkflow("subwf2.yml", _id="subwf2")\
+                    .add_planner_args(verbose=3)\
+                    .add_inputs(k1_out)\
+                    .add_outputs(k2_out)
+
+            root_wf.add_jobs(j1, j2)
+
+
+        .. code-tab:: yaml Abstract Workflow
+
+           x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '10-05-21T09:27:22Z'}
+            pegasus: '5.0'
+            name: root
+            jobs:
+            - type: pegasusWorkflow
+              file: subwf1.yml
+              id: subwf1
+              arguments: [-vvv]
+              uses:
+              - {lfn: subwf1.yml, type: input}
+              - {lfn: k1.txt, type: output, stageOut: true, registerReplica: true}
+            - type: pegasusWorkflow
+              file: subwf2.yml
+              id: subwf2
+              arguments: [-vvv]
+              uses:
+              - {lfn: k2.txt, type: output, stageOut: true, registerReplica: true}
+              - {lfn: subwf2.yml, type: input}
+              - {lfn: k1.txt, type: input}
+            jobDependencies:
+            - id: subwf1
+              children: [subwf2]
+
+
 File Dependencies between pegasusWorkflow and Compute Jobs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1269,6 +1372,91 @@ This is achieved by passing an *output.map* file to the *pegasusWorkflow*
 job that lists the location on the staging site (where job D will pickup
 from when it executes). The *output.map* file tells the *pegasusWorkflow*
 job as to where to place certain outputs.
+
+.. tabs::
+
+        .. code-tab:: python Code Snippet
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            fa = File("f.a")
+            fb1 = File("f.b1")
+            fb2 = File("f.b2")
+            fc1 = File("f.c1")
+            fc2 = File("f.c2")
+            fd = File("f.d")
+            fe = File("f.e")
+
+            # define various transformations.
+            ...
+
+            # --- Blackdiamond Sub Workflow -------------------------------------------------------
+            wf = (
+                Workflow("blackdiamond")
+                .add_jobs(
+                    Job("preprocess", namespace="diamond", version="4.0")
+                    .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+                    .add_inputs(fa)
+                    .add_outputs(fb1, fb2, register_replica=True),
+                    Job("findrange", namespace="diamond", version="4.0")
+                    .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
+                    .add_inputs(fb1)
+                    .add_outputs(fc1, register_replica=True),
+                    Job("findrange", namespace="diamond", version="4.0")
+                    .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
+                    .add_inputs(fb2)
+                    .add_outputs(fc2, register_replica=True),
+                    Job("analyze", namespace="diamond", version="4.0")
+                    .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
+                    .add_inputs(fc1, fc2)
+                    .add_outputs(fd, register_replica=False, stage_out=False),
+                )
+                .write(str(TOP_DIR / "input/blackdiamond.yml"))
+            )
+
+            # --- Top Root Level Workflow -------------------------------------------------------
+            wf = Workflow("local-hierarchy")
+
+            blackdiamond_wf = SubWorkflow("blackdiamond.yml", False).add_args(
+                "--input-dir", "input", "--output-sites", "local", "-vvv", "--force"
+            ).add_outputs(fd)
+
+            # --- Compute Job that is dependent on output f.d created by the  Sub Workflow-------
+            post_analyze_job = Job("post-analyze", namespace="diamond", version="4.0")\
+                               .add_args("-a", "post-analyze", "-T", "60", "-i", fd, "-o", fe)\
+                               .add_inputs(fd)\
+                               .add_outputs(fe, register_replica=True, stage_out=True)
+
+            wf.add_jobs(blackdiamond_wf, post_analyze_job)
+            wf.add_dependency(blackdiamond_wf, children=[post_analyze_job])
+
+
+        .. code-tab:: yaml Abstract Workflow
+
+            x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '10-05-21T09:27:21Z'}
+            pegasus: '5.0'
+            name: local-hierarchy
+            jobs:
+            - type: pegasusWorkflow
+              file: blackdiamond.yml
+              id: ID0000001
+              arguments: [--input-dir, input, --output-sites, local, -vvv, --force]
+              uses:
+              - {lfn: f.d, type: output, stageOut: true, registerReplica: true}
+              - {lfn: blackdiamond.yml, type: input}
+            - type: job
+              namespace: diamond
+              version: '4.0'
+              name: post-analyze
+              id: ID0000002
+              arguments: [-a, post-analyze, -T, '60', -i, f.d, -o, f.e]
+              uses:
+              - {lfn: f.d, type: input}
+              - {lfn: f.e, type: output, stageOut: true, registerReplica: true}
+            jobDependencies:
+            - id: ID0000001
+              children: [ID0000002]
 
 Recursion in Hierarchical Workflows
 -----------------------------------

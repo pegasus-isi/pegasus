@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -66,6 +67,11 @@ public class Singularity extends Abstract {
         StringBuilder sb = new StringBuilder();
 
         sb.append("set -e").append("\n");
+
+        // PM-1818 for the debug mode set -x
+        if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
+            sb.append("set -x").append('\n');
+        }
 
         // within the pegasus lite script create a wrapper
         // to launch job in the container. wrapper is required to

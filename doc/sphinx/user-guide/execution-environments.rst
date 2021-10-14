@@ -12,8 +12,8 @@ Localhost
 
 In this configuration, Pegasus schedules the jobs to run locally on the
 submit host. Running locally is a good approach for smaller workflows,
-testing workflows, and for demonstations such as the `Pegasus
-tutorial <#tutorial>`__. Pegasus supports two methods of local
+testing workflows, and for demonstations such as the :ref:`tutorial`. 
+Pegasus supports two methods of local
 execution: local HTCondor pool, and shell planner. The former is
 preferred as the latter does not support all Pegasus' features (such as
 notifications).
@@ -44,8 +44,8 @@ very simple in this case:
 The simplest execution environment does not involve HTCondor. Pegasus is
 capable of planning small workflows for local execution using a shell
 planner. Please refer to the ``share/pegasus/examples`` directory in
-your Pegasus installation, the shell planner's `documentation
-section <#local_shell_examples>`__, or the tutorials, for details.
+your Pegasus installation, the shell planner's :ref:`documentation
+section <pegasus-plan-properties>`, or the tutorials, for details.
 
 .. _condor-pool:
 
@@ -76,8 +76,8 @@ multiple resources associated with a single HTCondor pool, where each
 resource identifies a subset of machine (worker nodes) in the pool.
 
 When running on a HTCondor pool, the user has to decide how Pegasus
-should transfer data. Please see the `Data Staging
-Configuration <#data_staging_configuration>`__ for the options. The
+should transfer data. Please see :ref:`Data Staging Configuration <data-staging-configuration>` 
+for the options. The
 easiest is to use **condorio** as that mode does not require any extra
 setup - HTCondor will do the transfers using the existing HTCondor
 daemons. For an example of this mode see the example workflow in
@@ -157,23 +157,16 @@ AWS, or even another HTCondor cluster.
    As glideins are usually coming from different compute resource,
    and/or the glideins are running in an administrative domain different
    from the submit node, there is usually no shared filesystem
-   available. Thus the most common `data staging
-   modes <#data_staging_configuration>`__ are **condorio** and
+   available. Thus the most common :ref:`data staging
+   modes <data-staging-configuration>` are **condorio** and
    **nonsharedfs** .
 
-There are many useful tools which submits and manages glideins for you:
+`GlideinWMS <http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/>`__
+is a tool and host environment used mostly on the `Open Science Grid <http://www.opensciencegrid.org/>`__.
 
--  `GlideinWMS <http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/>`__
-   is a tool and host environment used mostly on the `Open Science
-   Grid <http://www.opensciencegrid.org/>`__.
-
--  `CorralWMS <http://pegasus.isi.edu/projects/corralwms>`__ is a
-   personal frontend for GlideinWMS. CorralWMS was developed by the
-   Pegasus team and works very well for high throughput workflows.
-
--  Glideins can also be created by hand or scripts. This is a useful
-   solution for example for cluster which have no external job submit
-   mechanisms or do not allow outside networking.
+Glideins can also be created by hand or scripts. This is a useful solution for 
+example for cluster which have no external job submit mechanisms or do not 
+allow outside networking.
 
 CondorC
 -------
@@ -249,7 +242,7 @@ Open Science Grid Using glideinWMS
 
 `glideinWMS <http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/>`__
 is a glidein system widely used on Open Science Grid. Running on top of
-glideinWMS is like running on a `Condor Pool <#condor_pool>`__ without a
+glideinWMS is like running on a condor pool without a
 shared filesystem.
 
 
@@ -259,14 +252,14 @@ HPC Clusters
 
 .. _glite:
 
-Submittin to Slurm, PBS, ...
-----------------------------
+Submitting to Slurm, PBS, ...
+-----------------------------
 
 Goal
 ~~~~
 
 This section describes the configuration required for Pegasus to
-use `HTCondor's batch type <https://htcondor.readthedocs.io/en/stable/grid-computing/grid-universe.html#the-batch-grid-type-for-pbs-lsf-sge-and-slurm>`_
+use `HTCondor's batch type <https://htcondor.readthedocs.io/en/latest/grid-computing/grid-universe.html>`_
 to submit to Slurm, PBS, LSF or SGE batch systems. A HTCondor
 scheduler daemon will run on a cluster login node and hand of
 jobs to the batch scheduler.
@@ -457,9 +450,8 @@ In order to submit to Summit, a *Summit login node* or a system that has
 access to the *Alpine* filesystem and the *batch scheduler* (eg. `OLCF's
 Kubernetes
 Deployment <https://www.olcf.ornl.gov/wp-content/uploads/2017/11/2018UM-Day3-Kincl.pdf>`__),
-must be used as the submit node. Submission style must be `Pegasus
-Glite <https://pegasus.isi.edu/documentation/glite.php>`__ and an
-example site calatog entry looks like this:
+must be used as the submit node. Submission style must be :ref:`glite <glite>`
+and an example site calatog entry looks like this:
 
 ::
 
@@ -644,8 +636,8 @@ HTCondor pool extends into the remote cluster. HTCondor can then
 schedule the jobs to the remote compute node in the same way it would
 schedule jobs to local compute nodes.
 
-Some infrastructures, such as `Open Science
-Grid <#open_science_grid>`__, provide infrastructure level glidein
+Some infrastructures, such as `Open Science Grid <http://www.opensciencegrid.org/>`__
+, provide infrastructure level glidein
 solutions, such as GlideinWMS. Another solution is `BOSCO <#bosco>`__.
 For some more custom setups,
 `pyglidein <https://github.com/WIPACrepo/pyglidein>`__ from the
@@ -661,7 +653,7 @@ To get started with pyglidein, check out a copy of the Git repository on
 both your submit host as well as the cluster you want to glidein to.
 Starting with the submit host, first make sure you have HTCondor
 configured for
-`PASSWORD <http://research.cs.wisc.edu/htcondor/manual/current/3_8Security.html#SECTION00483400000000000000>`__
+`PASSWORD <https://htcondor.readthedocs.io/en/latest/admin-manual/security.html#password-authentication>`__
 authentication. Make a copy of the HTCondor pool password file. You will
 need it later in the configuration, and it is a binary file, so make
 sure you cp instead of a copy-and-paste of the file contents.
@@ -907,9 +899,6 @@ directory. They can be used as a starting point to configure your setup.
 SDSC Comet with BOSCO glideins
 ------------------------------
 
-BOSCO documentation:
-https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO
-
 BOSCO is part of the HTCondor system which allows you to set up a
 personal pool of resources brought in from a remote cluster. In this
 section, we describe how to use BOSCO to run glideins (pilot jobs)
@@ -1024,10 +1013,15 @@ find the line reading:
 
 You should now have a functioning BOSCO setup. Submit a Pegasus
 workflow.
+
 .. _cloud:
 
 Cloud (AWS, Google, JetStream, ...)
 ========================================
+
+.. figure:: ../images/fg-pwms-prefio.3.png
+   :name: concepts-fig-cloud-layout
+   :align: center
 
 This figure shows a sample environment for executing Pegasus across
 multiple clouds. At this point, it is up to the user to provision the
@@ -1109,7 +1103,7 @@ configured to connect to the master running outside the cloud, and the
 workers also mount the NFS file system.
 
 The site catalog entry for this configuration is similar to what you
-would create for running on a local `Condor pool <#condor_pool>`__ with
+would create for running on a local with
 a shared file system.
 
 .. _google-cloud:
@@ -1184,7 +1178,7 @@ environment and a job queue that can submit jobs to those nodes.
 
 Starting 4.9 release, Pegasus has support for executing horizontally
 clustered jobs on Amazon AWS Batch Service using the command line tool
-`pegasus-aws-batch <#cli-pegasus-aws-batch>`__. In other words, you can
+:ref:`pegasus-aws-batch`. In other words, you can
 get Pegasus to cluster each level of your workflow into a bag of tasks
 and run those clustered jobs on Amazon Cloud using AWS Batch Service. In
 upcoming releases, we plan to add support to pegasus-aws-batch to do
@@ -1220,8 +1214,8 @@ To use AWS Batch for your workflows, we need two credential files
    tool to stage-in input data required by the tasks to S3 and push data
    output data generated to S3 when user application code runs. These
    credentials are specified in ~/.pegasus/credentials.conf .
-   This format of the file is described in the `pegaus-s3
-   command line client's man page <#cli-pegasus-s3>`__. A minimalistic
+   This format of the file is described in the :ref:`cli-pegasus-s3`
+   manpage. A minimalistic
    file is illustrated below
 
    ::

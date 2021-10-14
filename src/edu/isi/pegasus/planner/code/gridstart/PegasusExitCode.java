@@ -38,6 +38,13 @@ public class PegasusExitCode implements POSTScript {
      */
     public static final String POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE = "-r $RETURN";
 
+    /**
+     * The arguments that indicate that invocation records should not be parsed as job is not
+     * launched via kickstart
+     */
+    public static final String POSTSCRIPT_ARGUMENTS_FOR_DISABLING_CHECKS_FOR_INVOCATIONS =
+            "--no-invocations";
+
     /** The SHORTNAME for this implementation. */
     public static final String SHORT_NAME = "pegasus-exitcode";
 

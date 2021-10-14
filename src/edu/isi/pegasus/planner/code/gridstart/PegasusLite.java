@@ -251,6 +251,8 @@ public class PegasusLite implements GridStart {
     /** path to a setup script on the submit host that needs to be sourced in PegasusLite. */
     protected String mSetupScriptOnTheSubmitHost;
 
+    protected PegasusProperties.PEGASUS_MODE mPegasusMode;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -314,6 +316,7 @@ public class PegasusLite implements GridStart {
                 mSiteStore.lookup("local").getProfiles().get(Profiles.NAMESPACES.pegasus);
         mSetupScriptOnTheSubmitHost =
                 (String) localSitePegasusProfiles.get(Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY);
+        mPegasusMode = mProps.getPegasusMode();
     }
 
     /**
@@ -550,9 +553,15 @@ public class PegasusLite implements GridStart {
             // PM-1360
             // no empty postscript but arguments to exitcode to add -r $RETURN
             job.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
-            job.dagmanVariables.construct(
-                    Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+
+            StringBuilder args = new StringBuilder();
+            args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+            // PM-1821 explicity indicate no kickstart records to parse
+            args.append(" ")
+                    .append(
+                            PegasusExitCode
+                                    .POSTSCRIPT_ARGUMENTS_FOR_DISABLING_CHECKS_FOR_INVOCATIONS);
+            job.dagmanVariables.construct(Dagman.POST_SCRIPT_ARGUMENTS_KEY, args.toString());
         }
         return this.defaultPOSTScript();
     }
@@ -738,6 +747,9 @@ public class PegasusLite implements GridStart {
             StringBuffer sb = new StringBuffer();
             sb.append("#!/bin/bash").append('\n');
             sb.append("set -e").append('\n');
+            if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
+                sb.append("set -x").append('\n');
+            }
             sb.append("pegasus_lite_version_major=\"")
                     .append(this.mMajorVersionLevel)
                     .append("\"")

@@ -489,16 +489,21 @@ Described below are some of the entries in the site catalog.
    get. For each mehod, specify a URL including the protocol. For
    example, if you want share data via http using the /var/www/staging
    directory, you can use scp://hostname/var/www for the put element and
-   http://hostname/staging for the get element.
+   http://hostname/staging for the get element. Also for each shared-*
+   directory you can specify a boolean attribute *sharedFileSystem* to indicate
+   that the worker nodes actually share a filesystem. This is used to
+   trigger data optimizations whereby Pegasus may access a file for a job
+   on that site via the file system instead of retrieving them from the
+   file server endpoints of the directory.
 
-#. **arch,os,osrelease,osversion,** - The
+#. **arch,os.type,os.release,os.version,** - The
    arch/os/osrelease/osversion/ of the site.
 
    ARCH can have one of the following values with the default value of
    **x86_64**.
 
     * x86
-    * x86_64
+    * x86_64 (default value)
     * ppc
     * ppc_64
     * ppc64le
@@ -509,7 +514,7 @@ Described below are some of the entries in the site catalog.
 
    OS can have one of the following values
 
-    * linux
+    * linux (default value)
     * sunos
     * macosx
     * aix
@@ -600,7 +605,7 @@ can be used to generate a new Site Catalog programatically.
         )
 
         # create and add a shared scratch directory to the site "condorpool"
-        condorpool_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/lustre")\
+        condorpool_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/lustre",shared_file_system=True)\
                                             .add_file_servers(FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL))
         condorpool.add_directories(condorpool_shared_scratch_dir)
 
@@ -648,6 +653,7 @@ can be used to generate a new Site Catalog programatically.
           directories:
           - type: sharedScratch
             path: /lustre
+            sharedFileSystem: True
             fileServers:
             - {url: 'gsiftp://smarty.isi.edu/lustre', operation: all}
           grids:
@@ -836,14 +842,14 @@ The entries in this catalog have the following meaning
     * **container** - reference to a container in which this transformation
       is supposed to execute in. See :ref:`tc-container`
 
-    * **arch, os, osrelease, osversion** - The arch/os/osrelease/osversion
-      of the transformation. osrelease and osversion are optional.
+    * **arch, os.type, os.release, os.version** - The arch/os/osrelease/osversion
+      of the transformation. os.release and os.version are optional.
 
-      ARCH can have one of the following values with the default value of
+      arch can have one of the following values with the default value of
       **x86_64**.
 
         * x86
-        * x86_64
+        * x86_64 (default value)
         * ppc
         * ppc_64
         * ppc64le
@@ -852,9 +858,9 @@ The entries in this catalog have the following meaning
         * sparcv9
         * amd64
 
-      OS can have one of the following values
+      os.type can have one of the following values
 
-        * linux
+        * linux (default value)
         * sunos
         * macosx
         * aix

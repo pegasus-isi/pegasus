@@ -459,13 +459,30 @@ class TestProfileMixin:
 
 @pytest.mark.parametrize(
     "value, expected",
-    [("0", 0), (1, 1), ("1", 1), ("2 MB", 2), ("2 GB", 2048), ("10 GB", 10240)],
+    [
+        ("0", 0),
+        (1, 1),
+        ("1", 1),
+        ("2 MB", 2),
+        ("2 GB", 2048),
+        ("10 GB", 10240),
+        ("1MB", 1),
+        ("1mb", 1),
+        ("1E2", 100),
+        ("100E-2", 1),
+        ("1e2   MB", 100),
+        ("100e-2   Eb", 1099511627776),
+        ("1   zB   ", 1125899906842624),
+        ("  1   yb", 1.152921504606847e18),
+    ],
 )
 def test_to_mb(value, expected):
     assert to_mb(value) == expected
 
 
-@pytest.mark.parametrize("value", [("abc MB"), ("MB"), ("1 KB")])
+@pytest.mark.parametrize(
+    "value", [("abc MB"), ("MB"), ("1 KB"), "1M", "1m", "0.5E2", "1e-1000    Mm", "MB"]
+)
 def test_to_mb_invalid_input(value):
     with pytest.raises(ValueError) as e:
         to_mb(value)

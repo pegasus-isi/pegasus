@@ -184,7 +184,8 @@ public class PegasusProperties implements Cloneable {
     public static enum PEGASUS_MODE {
         production,
         development,
-        tutorial
+        tutorial,
+        debug
     };
 
     /** An enum defining The dial for cleanup algorithm */
@@ -2124,6 +2125,17 @@ public class PegasusProperties implements Cloneable {
      */
     public String getDataReuseScope() {
         return mProps.getProperty("pegasus.data.reuse.scope");
+    }
+
+    /**
+     * Returns the pegasus mode as an enum value. Defaults to production value.
+     *
+     * @return the pegasus mode
+     * @see #PEGASUS_MODE_PROPERTY_KEY
+     */
+    public PEGASUS_MODE getPegasusMode() {
+        String mode = this.getProperty(PegasusProperties.PEGASUS_MODE_PROPERTY_KEY);
+        return (mode == null) ? PEGASUS_MODE.production : PEGASUS_MODE.valueOf(mode);
     }
 
     // JOB COLLAPSING PROPERTIES
