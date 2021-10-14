@@ -2169,7 +2169,7 @@ public class PegasusProperties implements Cloneable {
      * Returns what job aggregator is to be used to aggregate multiple compute jobs into a single
      * condor job.
      *
-     * <p>Referred to by the "pegasus.cluster.job.aggregator" property.
+     * <p>Referred to by the "pegasus.clusterer.job.aggregator" property.
      *
      * @return the value specified in the properties file, else DEFAULT_JOB_AGGREGATOR
      * @see #DEFAULT_JOB_AGGREGATOR

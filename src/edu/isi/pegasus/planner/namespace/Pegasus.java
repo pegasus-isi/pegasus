@@ -78,7 +78,7 @@ public class Pegasus extends Namespace {
     public static final String MAX_RUN_TIME = "clusters.maxruntime";
 
     /**
-     * The name of the key that determines the clusterig executable to be used to run the
+     * The name of the key that determines the clustering executable to be used to run the
      * merged/collapsed job.
      */
     public static final String JOB_AGGREGATOR_KEY = "job.aggregator";
