@@ -21,7 +21,7 @@ a job to preserve them in case the job is retried.
 
 Pegasus uses **pegasus-exitcode** as the DAGMan postscript for jobs
 submitted via Globus GRAM. This tool exists as a workaround to a known
-problem with Globus and Condor-G where the exitcodes of GRAM jobs are
+problem with Globus and HTHTCondor-G where the exitcodes of GRAM jobs are
 not returned. This is a problem because Pegasus uses the exitcode of a
 job to determine if the job failed or not.
 
@@ -46,7 +46,7 @@ determine if any of the tasks in the clustered job failed.
 **pegasus-exitcode** performs several checks (some optional) to
 determine whether a job failed or not. These checks include:
 
-1. Is the Condor exitcode non-zero? If so, then the job failed.
+1. Is the HTCondor exitcode non-zero? If so, then the job failed.
 
 2. Is STDOUT empty? If it is empty, then the job failed.
 
@@ -68,7 +68,7 @@ determine whether a job failed or not. These checks include:
    be at least one successful invocation or the job has failed.
 
 In addition, **pegasus-exitcode** allows the caller to specify the
-exitcode returned by Condor using the **--return** argument. This can be
+exitcode returned by HTCondor using the **--return** argument. This can be
 passed to **pegasus-exitcode** in a DAGMan post script by using the
 ``$RETURN`` variable. If this value is non-zero, then
 **pegasus-exitcode** returns a non-zero result before performing any
