@@ -314,8 +314,7 @@ def exitcode(
 
     # Next, check the size of the output file
     # when a job is launched without kickstart stdout can be empty.
-    # signified by non None status
-    if dagman_job_status is None and len(stdout) == 0:
+    if check_invocations and len(stdout) == 0:
         raise JobFailed("Empty stdout")
 
     # Next, if we have failure messages, then fail if we find one in the
