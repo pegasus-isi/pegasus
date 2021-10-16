@@ -1628,7 +1628,8 @@ Database Drivers For All Relational Catalogs
     |                                                       | |   pegasus.catalog.*.db.capitalizeTypeNames                        |
     |                                                       | |   pegasus.catalog.*.db.ultraDevHack                               |
     |                                                       | |   pegasus.catalog.*.db.strictFloatingPoint                        |
-    |                                                       | |   pegasus.catalog.*.db.useSSL pegasus.catalog.*.db.useCompression |
+    |                                                       | |   pegasus.catalog.*.db.useSSL                                     |
+    |                                                       | |   pegasus.catalog.*.db.useCompression                             |
     |                                                       | |   pegasus.catalog.*.db.socketTimeout                              |
     |                                                       | |   pegasus.catalog.*.db.maxReconnects                              |
     |                                                       | |   pegasus.catalog.*.db.initialTimeout                             |
