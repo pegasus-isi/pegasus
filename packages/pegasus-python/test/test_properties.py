@@ -7,34 +7,58 @@ from Pegasus.properties import *
 
 def test_load():
     with TemporaryFile(mode="w+") as f:
-        f.write("a = b\nc = d\n\n")
+        f.write(
+            """env.PEGASUS_HOME = HOME
+env.pegasus_home = home
+"""
+        )
         f.seek(0)
         props = load(f)
 
-    assert props._conf[DEFAULTSECT] == {"a": "b", "c": "d"}
+    assert props._conf[DEFAULTSECT] == {
+        "env.PEGASUS_HOME": "HOME",
+        "env.pegasus_home": "home",
+    }
 
 
 def test_loads():
-    s = "a = b\nc = d\n\n"
+    s = """env.PEGASUS_HOME = HOME
+env.pegasus_home = home
+"""
     props = loads(s)
 
-    assert props._conf[DEFAULTSECT] == {"a": "b", "c": "d"}
+    assert props._conf[DEFAULTSECT] == {
+        "env.PEGASUS_HOME": "HOME",
+        "env.pegasus_home": "home",
+    }
 
 
 def test_dump():
     props = Properties()
-    props["a"] = "b"
-    props["c"] = "d"
+    props["env.PEGASUS_HOME"] = "HOME"
+    props["env.pegasus_home"] = "home"
 
     with TemporaryFile(mode="w+") as f:
         dump(props, f)
         f.seek(0)
-        assert f.read() == "a = b\nc = d\n\n"
+        assert (
+            f.read()
+            == """env.PEGASUS_HOME = HOME
+env.pegasus_home = home
+
+"""
+        )
 
 
 def test_dumps():
     props = Properties()
-    props["a"] = "b"
-    props["c"] = "d"
+    props["env.PEGASUS_HOME"] = "HOME"
+    props["env.pegasus_home"] = "home"
 
-    assert dumps(props) == "a = b\nc = d\n\n"
+    assert (
+        dumps(props)
+        == """env.PEGASUS_HOME = HOME
+env.pegasus_home = home
+
+"""
+    )
