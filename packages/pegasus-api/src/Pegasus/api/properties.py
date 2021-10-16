@@ -212,25 +212,27 @@ class Properties:
     def ls(prop: Optional[str] = None):
         """List property keys. Refer to
         `Configuration docs <https://pegasus.isi.edu/documentation/configuration.php>`_
-        for additional information. If :code:`prop` is given, all properties beginning with
-        prop will be printed, else all properties will be printed.
+        for additional information. If :code:`prop` is given, all properties
+        containing prop will be printed, else all properties will be printed.
 
         .. code-block:: python
 
             # Example
-            >>> Properties.ls("pegasus.pmc")
-            pegasus.pmc_priority
+            >>> P.ls("request")
+            condor.request_cpus
+            condor.request_disk
+            condor.request_gpus
+            condor.request_memory
             pegasus.pmc_request_cpus
             pegasus.pmc_request_memory
-            pegasus.pmc_task_arguments
 
-        :param prop: properties beginning with "prop" will be listed in alphabetical order, defaults to None
+        :param prop: properties containing "prop" will be listed in alphabetical order, defaults to None
         :type prop: Optional[str]
         """
         if prop:
             to_print = list()
             for p in Properties._props:
-                if p.startswith(prop):
+                if prop in p:
                     to_print.append(p)
 
             to_print.sort()
