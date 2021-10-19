@@ -338,7 +338,7 @@ public class MPIExec extends Abstract {
         if (!extraArgs.isEmpty()) {
             args.append(extraArgs).append(" ");
         }
-        
+
         args.append(stdin);
 
         return args.toString();
