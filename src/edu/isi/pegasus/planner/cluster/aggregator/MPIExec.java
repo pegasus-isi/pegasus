@@ -333,11 +333,12 @@ public class MPIExec extends Abstract {
         // Construct any extra arguments specified in profiles or properties
         // This should go last, otherwise we can't override any automatically-
         // generated arguments
-        String extraArgs = job.vdsNS.getStringValue(Pegasus.CLUSTER_ARGUMENTS);
-        if (extraArgs != null) {
+        // PM-1826 add any extra arguments associated as a profile
+        String extraArgs = this.getAddOnClusteredJobArguments(job);
+        if (!extraArgs.isEmpty()) {
             args.append(extraArgs).append(" ");
         }
-
+        
         args.append(stdin);
 
         return args.toString();
