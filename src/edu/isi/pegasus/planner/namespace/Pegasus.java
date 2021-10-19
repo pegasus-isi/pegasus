@@ -551,7 +551,6 @@ public class Pegasus extends Namespace {
                         || (key.compareTo(CHAIN_STAGE_IN_KEY) == 0)
                         || (key.compareTo(MAX_RUN_TIME) == 0)
                         || (key.compareTo(CREATE_AND_CHANGE_DIR_KEY) == 0)
-                        || (key.compareTo(CLUSTER_ARGUMENTS) == 0)
                         || (key.compareTo(CORES_KEY) == 0)
                         || (key.compareTo(Pegasus.CHECKPOINT_TIME_KEY) == 0)
                         || (key.compareTo(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0)
