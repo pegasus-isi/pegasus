@@ -84,6 +84,12 @@ public class Pegasus extends Namespace {
     public static final String JOB_AGGREGATOR_KEY = "job.aggregator";
 
     /**
+     * The name of the key that determines the clustering executable to be used to run the
+     * merged/collapsed job.
+     */
+    public static final String JOB_AGGREGATOR_ARGUMENTS_KEY = "job.aggregator.arguments";
+
+    /**
      * The name of the key that determines the collapser executable to be used to run the
      * merged/collapsed job.
      *
@@ -607,7 +613,8 @@ public class Pegasus extends Namespace {
             case 'j':
                 if (key.compareTo(DEPRECATED_RUNTIME_KEY) == 0) {
                     res = DEPRECATED_KEY;
-                } else if (key.compareTo(JOB_AGGREGATOR_KEY) == 0) {
+                } else if (key.compareTo(JOB_AGGREGATOR_KEY) == 0
+                        || key.compareTo(JOB_AGGREGATOR_ARGUMENTS_KEY) == 0) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;
