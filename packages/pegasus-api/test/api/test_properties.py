@@ -1,3 +1,4 @@
+import logging
 import os
 from configparser import DEFAULTSECT
 from pathlib import Path
@@ -50,6 +51,24 @@ def test_set_item(k, v, props):
 
 
 @pytest.mark.parametrize(
+    "property_list,expected_result",
+    [
+        (Properties._props, True),
+        (Properties._pattern_props, True),
+        (["invalid", "Pegasus.mode", "pegasus.catalog.replica.db."], False),
+    ],
+)
+def test__check_key(property_list, expected_result):
+    for property in property_list:
+        result = Properties._check_key(property)
+        assert (
+            result == expected_result
+        ), "Properties._check_key('{}') returned {} but {} was expected".format(
+            property, result, expected_result
+        )
+
+
+@pytest.mark.parametrize(
     "k, v",
     [
         ("invalid", "development"),
@@ -57,10 +76,18 @@ def test_set_item(k, v, props):
         ("pegasus.catalog.replica.db.", "alpha"),
     ],
 )
-def test_set_item_fail(k, v, props):
+def test_set_item_fail(caplog, k, v, props):
     props[k] = v
     # TODO
-    assert 1
+    print("hi", caplog.record_tuples)
+
+    assert caplog.record_tuples == [
+        (
+            "Pegasus.api.properties",
+            logging.WARNING,
+            "Unrecognized property key: '{}' has been set to '{}'".format(k, v),
+        )
+    ]
 
 
 @pytest.mark.parametrize(
