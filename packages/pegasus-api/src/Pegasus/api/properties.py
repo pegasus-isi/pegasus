@@ -97,6 +97,7 @@ class Properties:
         "pegasus.monitord.encoding",
         "pegasus.monitord.arguments",
         "pegasus.clusterer.job.aggregator",
+        "pegasus.clusterer.job.aggregator.arguments",
         "pegasus.clusterer.job.aggregator.seqexec.log",
         "pegasus.clusterer.job.aggregator.seqexec.firstjobfail",
         "pegasus.clusterer.allow.single",
