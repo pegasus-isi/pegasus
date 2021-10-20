@@ -1,8 +1,11 @@
+import logging
 from configparser import DEFAULTSECT, ConfigParser
 from io import StringIO
 from typing import Optional, TextIO, Union
 
 __all__ = ["Properties"]
+
+log = logging.getLogger(__name__)
 
 
 class Properties:
@@ -255,10 +258,14 @@ class Properties:
         self._conf[DEFAULTSECT] = {}
 
     def __setitem__(self, k, v):
-        if self._check_key(k):
-            self._conf[DEFAULTSECT][k] = self._escape(v)
-        else:
-            ...
+        self._conf[DEFAULTSECT][k] = self._escape(v)
+
+        if not self._check_key(k):
+            log.warning(
+                "Unrecognized property key: '{}' has been set to '{}'".format(
+                    k, self._escape(v)
+                )
+            )
 
     def __getitem__(self, k):
         return self._conf[DEFAULTSECT][k]
