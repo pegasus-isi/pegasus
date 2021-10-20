@@ -99,7 +99,7 @@ public class PegasusTest {
         mLogger.logEventCompletion();
 
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
-        testKey(Pegasus.CLUSTER_ARGUMENTS, "dummy", Namespace.VALID_KEY);
+        testKey(Pegasus.CLUSTER_ARGUMENTS, "dummy", Namespace.UNKNOWN_KEY);
         mLogger.logEventCompletion();
 
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
@@ -184,6 +184,10 @@ public class PegasusTest {
 
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.JOB_AGGREGATOR_KEY, "dummy", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
+        testKey(Pegasus.JOB_AGGREGATOR_ARGUMENTS_KEY, "dummy", Namespace.VALID_KEY);
         mLogger.logEventCompletion();
 
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));

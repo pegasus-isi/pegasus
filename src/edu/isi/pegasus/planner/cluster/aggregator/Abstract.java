@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -99,6 +100,9 @@ public abstract class Abstract implements JobAggregator {
     /** Bag of initialization objects. */
     protected PegasusBag mBag;
 
+    /** Default arguments to be added to the clustering executable */
+    protected String mDefaultArguments;
+
     /**
      * A convenience method to return the complete transformation name being used to construct jobs
      * in this class.
@@ -114,7 +118,7 @@ public abstract class Abstract implements JobAggregator {
     public Abstract() {}
 
     /**
-     * Initializes the JobAggregator impelementation
+     * Initializes the JobAggregator implementation
      *
      * @param dag the workflow that is being clustered.
      * @param bag the bag of objects that is useful for initialization.
@@ -125,6 +129,8 @@ public abstract class Abstract implements JobAggregator {
 
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();
+        mDefaultArguments = mProps.getJobAggregatorArguments();
+        mDefaultArguments = mDefaultArguments == null ? "" : mDefaultArguments;
 
         mTCHandle = bag.getHandleToTransformationCatalog();
         mSiteStore = bag.getHandleToSiteStore();
@@ -387,6 +393,25 @@ public abstract class Abstract implements JobAggregator {
                 .append(" ");
 
         return sb.toString();
+    }
+
+    /**
+     * Returns any additional arguments that need to be passed while invoking the clustering
+     * executable
+     *
+     * @param job the aggregated job
+     * @return additional arguments else an empty string if no additional arguments specified.
+     */
+    protected String getAddOnClusteredJobArguments(AggregatedJob job) {
+        StringBuffer arguments = new StringBuffer();
+        if (job.vdsNS.containsKey(Pegasus.JOB_AGGREGATOR_ARGUMENTS_KEY)) {
+            arguments.append(job.vdsNS.get(Pegasus.JOB_AGGREGATOR_ARGUMENTS_KEY));
+        } else {
+            // just pad the default arguments from properties. can be an
+            // empty string.
+            arguments.append(this.mDefaultArguments);
+        }
+        return arguments.toString();
     }
 
     /**

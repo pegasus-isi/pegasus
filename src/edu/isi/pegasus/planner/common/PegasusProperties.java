@@ -2179,6 +2179,18 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Returns the arguments with which the clustering executable needs to be invoked.
+     *
+     * <p>Referred to by "pegasus.clusterer.job.aggregator.arguments" property.
+     *
+     * @return the arguments specified in the properties file, else null if property is not
+     *     specified.
+     */
+    public String getJobAggregatorArguments() {
+        return mProps.getProperty("pegasus.clusterer.job.aggregator.arguments");
+    }
+
+    /**
      * Returns whether the seqexec job aggregator should log progress to a log or not.
      *
      * <p>Referred to by the "pegasus.clusterer.job.aggregator.seqexec.log" property.
