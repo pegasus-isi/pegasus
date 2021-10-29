@@ -41,8 +41,11 @@ your cluster.
 
 For more information see the mpidag.1 man page.
 
-## Warning:
+## Warnings
 
-The duration per job reported by `pegasus-mpi-cluster` includes integrity checking (if integrity checking is enabled). 
-Therefore, duration by PMC can be greater than the duration reported by `kickstart`.  
+### Integrity checking
+
+The duration per job reported by `pegasus-mpi-cluster` includes integrity checking runtime (checksum files). 
+Therefore, the duration by PMC **can be greater** than the duration reported by `kickstart` if integrity checking is enabled.
+
 
