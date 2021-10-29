@@ -1,4 +1,4 @@
-This is a workflow engine that runs as an MPI job.
+# This is a workflow engine that runs as an MPI job.
 
 The workflows are simple DAGs (Directed Acyclic Graphs) described with a
 file format similar to that used by Condor DAGMan. There are some example 
@@ -40,3 +40,9 @@ system administrator if you are unsure how to run MPI applications on
 your cluster.
 
 For more information see the mpidag.1 man page.
+
+## Warning:
+
+The duration per job reported by `pegasus-mpi-cluster` includes integrety checking (if integrety is enabled). 
+Therefore, duration by PMC can be greater than the duration reported by `kickstart`.  
+
