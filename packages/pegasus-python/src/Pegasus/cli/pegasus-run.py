@@ -139,10 +139,11 @@ def exec_dag(dag_sub_file, condor_log):
 
     salvage_log_file(condor_log)
     click.secho("Submitting to condor %s" % dag_sub_file, err=True)
-    cmd = (condor_submit, dag_sub_file)
+    cmd = (condor_submit, "-terse", dag_sub_file)
 
     rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     rv.check_returncode()
+    return float(rv.stdout.decode().split("-")[0].strip())
 
 
 def exec_script(script):
@@ -157,7 +158,7 @@ def exec_script(script):
     log.debug("# found %s" % script)
 
     cmd = ("/bin/bash", str(script))
-    rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    rv = subprocess.run(cmd)
     rv.check_returncode()
 
 
@@ -178,7 +179,11 @@ def exec_script(script):
     help="Output in JSON format.",
 )
 @click.option(
-    "-v", "--verbose", default=0, count=True, help="Raises debug level by 1.",
+    "-v",
+    "--verbose",
+    default=0,
+    count=True,
+    help="Raises debug level by 1.",
 )
 @click.argument(
     "submit-dir",
@@ -249,11 +254,19 @@ def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
                     ctx.exit(1)
 
             # PM-797 do condor_submit on dagman.condor.sub file if it exists
-            exec_dag(dag_sub_file, config["condor_log"])
+            job_id = exec_dag(dag_sub_file, config["condor_log"])
             log.debug("# dagman is running")
             if json:
                 click.echo(dumps(config))
             else:
+                click.secho(
+                    """Submitting job(s).
+1 job(s) submitted to cluster %(job_id)d."""
+                    % {
+                        "job_id": job_id,
+                    },
+                    err=True,
+                )
                 click.secho(
                     """
 Your workflow has been started and is running in the base directory:
@@ -283,6 +296,13 @@ pegasus-remove %(submit_dir)s"""
 
     elif config["type"] == "shell":
         try:
+            if json:
+                click.secho(
+                    click.style("Error: ", fg="red", bold=True)
+                    + "--json option is not supported for shell code"
+                )
+                ctx.exit(1)
+
             exec_script(config["script"])
             click.secho("✨ Success", fg="green")
         except (FileNotFoundError, PermissionError) as e:
