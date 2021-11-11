@@ -126,6 +126,6 @@ setup(
     extras_require={
         "postgresql": ["psycopg2"],
         "mysql": ["mysqlclient"],
-        "cwl": ["cwl-utils==0.3", "jsonschema==3.2.0"],
+        "cwl": ["cwl-utils==0.11", "jsonschema==3.2.0"],
     },
 )
