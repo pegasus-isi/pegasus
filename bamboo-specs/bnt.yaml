@@ -10,6 +10,11 @@ stages:
       final: false
       jobs:
         - Default Job
+  - Source Checkout:
+      manual: false
+      final: false
+      jobs:
+        - Source checkout and distribution
   - Unit Tests:
       description: Run Unit Tests on Code and Binaries
       manual: false
@@ -93,8 +98,21 @@ Default Job:
   key: JOB1
   tasks:
     - checkout:
+        path: pegasus-source
         force-clean-build: "false"
         description: Checkout Default Repository
+  artifact-subscriptions: []
+Source checkout and distribution:
+  key: DIST
+  description: Create the full distribution tarball
+  other:
+    clean-working-dir: true
+  tasks:
+    - checkout:
+        repository: Pegasus
+        path: pegasus-source
+        force-clean-build: "true"
+        description: Checks the Pegasus code out from our source repository
     - script:
         interpreter: BINSH_OR_CMDEXE
         scripts:
@@ -1600,3 +1618,22 @@ labels: []
 other:
   concurrent-build-plugin: system-default
 # Some plugin configurations are not supported by YAML Specs
+---
+version: 2
+plan:
+  key: PEGASUS-BNT51
+plan-permissions:
+  - users:
+      - mayani
+    permissions:
+      - admin
+  - groups:
+      - ccg-users
+    permissions:
+      - view
+      - build
+  - roles:
+      - logged-in
+      - anonymous
+    permissions:
+      - view
