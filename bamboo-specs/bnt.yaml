@@ -1,3 +1,4 @@
+---
 version: 2
 plan:
   project-key: PEGASUS
@@ -9,11 +10,6 @@ stages:
       final: false
       jobs:
         - Default Job
-  - Source Checkout:
-      manual: false
-      final: false
-      jobs:
-        - Source checkout and distribution
   - Unit Tests:
       description: Run Unit Tests on Code and Binaries
       manual: false
@@ -93,17 +89,12 @@ stages:
       final: false
       jobs:
         - Tutorial Docker Image
-Source checkout and distribution:
-  key: DIST
-  description: Create the full distribution tarball
-  other:
-    clean-working-dir: true
+Default Job:
+  key: JOB1
   tasks:
     - checkout:
-        repository: Pegasus
-        path: pegasus-source
-        force-clean-build: "true"
-        description: Checks the Pegasus code out from our source repository
+        force-clean-build: "false"
+        description: Checkout Default Repository
     - script:
         interpreter: BINSH_OR_CMDEXE
         scripts:

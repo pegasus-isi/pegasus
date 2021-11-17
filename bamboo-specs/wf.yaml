@@ -4,12 +4,11 @@ plan:
   key: WT51
   name: Workflow Tests (master)
 stages:
-  - Setup:
-      description: Setup
+  - Default Stage:
       manual: false
       final: false
       jobs:
-        - Build Pegasus
+        - Default Job
   - Workflow Tests:
       description: Workflow Tests
       manual: false
@@ -126,14 +125,12 @@ stages:
         - 014-planner-performance-hcc
         - 014-planner-performance-100k
         - 014-planner-performance
-Build Pegasus:
-  key: BP
-  description: Build Pegasus
+Default Job:
+  key: JOB1
   tasks:
     - checkout:
-        repository: Pegasus
-        force-clean-build: "true"
-        description: Checks the Pegasus code out from our source repository
+        force-clean-build: "false"
+        description: Checkout Default Repository
     - any-task:
         plugin-key: com.atlassian.bamboo.plugins.ant:task.builder.ant
         configuration:
