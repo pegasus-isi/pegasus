@@ -1,6 +1,6 @@
 version: 2
 plan:
-  key: PEGASUS-BNT50
+  key: PEGASUS-BNT51
 plan-permissions:
   - users:
       - mayani
