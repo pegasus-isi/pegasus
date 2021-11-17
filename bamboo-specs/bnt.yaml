@@ -4,11 +4,6 @@ plan:
   key: BNT51
   name: Build and Test (master)
 stages:
-  - Default Stage:
-      manual: false
-      final: false
-      jobs:
-        - Default Job
   - Source Checkout:
       manual: false
       final: false

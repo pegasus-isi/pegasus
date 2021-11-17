@@ -4,11 +4,6 @@ plan:
   key: WT51
   name: Workflow Tests (master)
 stages:
-  - Default Stage:
-      manual: false
-      final: false
-      jobs:
-        - Default Job
   - Setup:
       description: Setup
       manual: false
