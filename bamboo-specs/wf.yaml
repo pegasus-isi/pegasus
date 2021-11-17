@@ -1,0 +1,2885 @@
+version: 2
+plan:
+  project-key: PEGASUS
+  key: WT51
+  name: Workflow Tests (master)
+stages:
+  - Default Stage:
+      manual: false
+      final: false
+      jobs:
+        - Default Job
+  - Setup:
+      description: Setup
+      manual: false
+      final: false
+      jobs:
+        - Build Pegasus
+  - Workflow Tests:
+      description: Workflow Tests
+      manual: false
+      final: false
+      jobs:
+        - 022-data-reuse-regexrc
+        - 026-cache-url-check
+        - blackdiamond - sharedfs-symlink-nogridstart
+        - 048-ligo-getenv
+        - blackdiamond - sharedfs-worker-staging-cleanup
+        - 020-pmc-only
+        - 004-montage-universe-local
+        - 004-montage-shared-fs
+        - 031-montage-condor-io-jdbcrc
+        - 028-dynamic-hierarchy
+        - 032-black-chkpoint
+        - 013-pegasus-mpi-cluster
+        - 032-kickstart-chkpoint-signal-nonsharedfs
+        - 032-kickstart-chkpoint-signal-condorio
+        - 011-rosetta-staging-site
+        - 015-shell-hierarchic-workflow
+        - 001-black-diamond-vanilla-condor-5.0API
+        - 012-blackdiamond-invoke
+        - 042-kswrapper-nonsharedfs
+        - 042-kswrapper-sharedfs
+        - 038-halt-continue
+        - blackdiamond - vanilla-condor
+        - 027-montage-bypass-staging-site-condorio
+        - 027-montage-bypass-staging-site
+        - 039-black-metadata
+        - blackdiamond - pl-condorio
+        - blackdiamond - pl-pt
+        - blackdiamond - pl-condorio-local
+        - blackdiamond - pl-pt-local
+        - 009-black-diamond-pegasuslite-pegasustransfer-a
+        - 031-montage-jdbcrc-sqlite
+        - 004-montage-singularity
+        - 004-montage-staging-site
+        - 009-black-diamond-pegasuslite-pegasustransfer
+        - 047-cwl
+        - 007-black-diamond-pegasuslite-local
+        - 008-black-diamond-pegasuslite-condorio
+        - 047-cwl-docker-black-diamond
+        - 006-black-diamond-shell-code-generator
+        - 004-montage-grid
+        - 001-black-diamond-vanilla-condor
+        - 018-black-condorc-condor-io
+        - 030-pegasuslite-s3
+        - 040-multiple-input-sources-sharedfs
+        - 022-data-reuse-full-a
+        - 040-multiple-input-sources-nonsharedfs
+        - 018-black-condorc-hybrid
+        - 018-black-condorc-staging-site
+        - 034-recursive-cluster-condorio
+        - 010-runtime-clustering - CondorIO
+        - 034-recursive-cluster-nonsharedfs
+        - 030-pegasuslite-irods
+        - 034-recursive-cluster-sharedfs
+        - 010-runtime-clustering SharedFS Staging and No Kickstart
+        - 010-runtime-clustering - SharedFS
+        - 010-runtime-clustering - Non-SharedFS
+        - 033-pegasuslite-multi
+        - 036-condorio-no-outputs
+        - 037-black-hints
+        - 035-black-transfer
+        - 029-black-quiet
+        - 004-montage-condor-io
+        - 033-pegasuslite-multi-wp-b
+        - 021-black-dir
+        - 000-check-env
+        - 033-pegasuslite-multi-wp-a
+        - 033-pegasuslite-multi-wp-c
+        - 045-hierarchy-sharedfs
+        - 045-hierarchy-sharedfs-c
+        - 045-hierarchy-sharedfs-b
+        - 045-hierarchy-sharedfs-d
+        - 005-galactic-plane
+        - 044-docker-nonsharedfs-symlink
+        - 044-singularity-nonsharedfs-symlink-cvmfs
+        - 044-singularity-nonsharedfs-symlink
+        - 044-singularity-nonsharedfs-minimal
+        - 046-aws-batch-black
+        - 019-black-label
+        - 030-pegasuslite-gs
+        - 024-sc4-gridftp-http
+        - 043-integrity-condorio
+        - 023-sc4-ssh-http
+        - 043-integrity-nonsharedfs-nosymlink
+        - 043-integrity-nonsharedfs
+        - 025-sc4-file-http
+        - 004-montage-shared-fs-sc
+        - 022-data-reuse-full-b
+        - 002-hello-world
+        - 044-docker-nonsharedfs-shared
+        - 044-docker-nonsharedfs
+        - 043-integrity-synthetic-with-errors
+        - 044-singularity-nonsharedfs-shared
+        - 044-singularity-nonsharedfs
+        - 016-pegasus-transfer
+        - 028-dynamic-hierarchy-b
+        - 043-integrity-condorio-5.0API
+        - 043-integrity-condorio-nogs
+        - 043-integrity-condorio-singularity
+        - 043-integrity-bypass-staging
+        - 043-integrity-bypass-staging-b
+        - 030-pegasuslite-sshftp
+  - Performance Tests:
+      description: Performance Tests
+      manual: false
+      final: false
+      jobs:
+        - 041-jdbcrc-performance
+        - 014-planner-performance-ahope
+        - 014-planner-performance-hcc
+        - 014-planner-performance-100k
+        - 014-planner-performance
+Default Job:
+  key: JOB1
+  tasks:
+    - checkout:
+        force-clean-build: "false"
+        description: Checkout Default Repository
+  artifact-subscriptions: []
+Build Pegasus:
+  key: BP
+  description: Build Pegasus
+  tasks:
+    - checkout:
+        repository: Pegasus
+        force-clean-build: "true"
+        description: Checks the Pegasus code out from our source repository
+    - any-task:
+        plugin-key: com.atlassian.bamboo.plugins.ant:task.builder.ant
+        configuration:
+          environmentVariables: PATH=/usr/lib64/mpich/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+          testResultsDirectory: "**/test-reports/*.xml"
+          buildJdk: JDK
+          label: Ant
+          testChecked: "false"
+          target: clean dist-worker dist-common compile-pmc
+        description: Binary Packages
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            set -e
+            set -x
+
+            TARGET_DIR=/lizard/scratch-90-days/bamboo/installs
+
+            NAME=`cd dist && ls | grep -v tar | grep pegasus`
+            echo "Found $NAME"
+
+            mkdir -p $TARGET_DIR
+            rm -rf $TARGET_DIR/$NAME
+            cp -r dist/$NAME $TARGET_DIR
+        description: Install Binaries
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            set -e
+            set -x
+
+            rm -f tests.tar
+            tar cf tests.tar test/
+            cd dist
+            mv pegasus-*/ pegasus
+
+            # Later on we need to include the worker package
+            #tar rf ../tests.tar pegasus/ pegasus-worker-*.tar.gz
+            tar rf ../tests.tar pegasus/
+        description: Create Test Tarball
+  artifacts:
+    - name: tests
+      pattern: tests.tar
+      shared: true
+      required: false
+  requirements:
+    - condor
+  artifact-subscriptions: []
+022-data-reuse-regexrc:
+  key: T22
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-planner-only ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+026-cache-url-check:
+  key: T26
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+blackdiamond - sharedfs-symlink-nogridstart:
+  key: T1F
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test blackdiamond sharedfs-symlink-nogridstart
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+048-ligo-getenv:
+  key: T048
+  description: Tests if Pegasus pollutes the job environment when using getenv=true
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+blackdiamond - sharedfs-worker-staging-cleanup:
+  key: T1G
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test blackdiamond sharedfs-worker-staging-cleanup
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+020-pmc-only:
+  key: PMCONLY
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-no-status ${bamboo_shortJobName}
+        environment: PATH=/usr/lib64/mpich/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+004-montage-universe-local:
+  key: T4M2
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+004-montage-shared-fs:
+  key: T4M1
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+031-montage-condor-io-jdbcrc:
+  key: RC031MON
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+028-dynamic-hierarchy:
+  key: T28A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+032-black-chkpoint:
+  key: T32A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+013-pegasus-mpi-cluster:
+  key: TESTMPIDAG
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        environment: PATH=/usr/lib64/mpich/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+032-kickstart-chkpoint-signal-nonsharedfs:
+  key: T32C
+  description: Testing that kickstart sends SIGTERM to job executable for checkpointing
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+032-kickstart-chkpoint-signal-condorio:
+  key: T32B
+  description: Testing that kickstart sends SIGTERM to job executable for checkpointing
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+011-rosetta-staging-site:
+  key: T11
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+015-shell-hierarchic-workflow:
+  key: T15
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-no-status ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+001-black-diamond-vanilla-condor-5.0API:
+  key: T1V5
+  description: Black Diamond test with YAML format
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+012-blackdiamond-invoke:
+  key: T12
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+042-kswrapper-nonsharedfs:
+  key: T042B
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+042-kswrapper-sharedfs:
+  key: T042A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+038-halt-continue:
+  key: T038
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-no-jobs ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+blackdiamond - vanilla-condor:
+  key: T1A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test blackdiamond vanilla-condor
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+027-montage-bypass-staging-site-condorio:
+  key: T27B
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+027-montage-bypass-staging-site:
+  key: T27A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+039-black-metadata:
+  key: T39A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+blackdiamond - pl-condorio:
+  key: T1D
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test blackdiamond pl-condorio
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+blackdiamond - pl-pt:
+  key: T1E
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test blackdiamond pl-pt
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+blackdiamond - pl-condorio-local:
+  key: T1B
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test blackdiamond pl-condorio-local
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+blackdiamond - pl-pt-local:
+  key: T1C
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test blackdiamond pl-pt-local
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+009-black-diamond-pegasuslite-pegasustransfer-a:
+  key: T9A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+031-montage-jdbcrc-sqlite:
+  key: T31A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+004-montage-singularity:
+  key: T4N13
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+004-montage-staging-site:
+  key: T4N12
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+009-black-diamond-pegasuslite-pegasustransfer:
+  key: T9
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+047-cwl:
+  key: T047A
+  description: CWL workflow converted to pegasus yaml format, then run on condor pool
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+007-black-diamond-pegasuslite-local:
+  key: T7
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+008-black-diamond-pegasuslite-condorio:
+  key: T8
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+047-cwl-docker-black-diamond:
+  key: T047B
+  description: Blackdiamond workflow in CWL that uses containers converted to native Pegasus format
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+006-black-diamond-shell-code-generator:
+  key: T6
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-no-status ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+004-montage-grid:
+  key: T4
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+001-black-diamond-vanilla-condor:
+  key: T1
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+018-black-condorc-condor-io:
+  key: T18A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+030-pegasuslite-s3:
+  key: PEG030S3
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+040-multiple-input-sources-sharedfs:
+  key: T040N2
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+022-data-reuse-full-a:
+  key: BNT22A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+040-multiple-input-sources-nonsharedfs:
+  key: T040N1
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+018-black-condorc-hybrid:
+  key: T18C
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+018-black-condorc-staging-site:
+  key: T18B
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+034-recursive-cluster-condorio:
+  key: T34C
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+010-runtime-clustering - CondorIO:
+  key: T10A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test 010-runtime-clustering runtime-condorio
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+034-recursive-cluster-nonsharedfs:
+  key: T34B
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+030-pegasuslite-irods:
+  key: PEG030
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+034-recursive-cluster-sharedfs:
+  key: T34A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+010-runtime-clustering SharedFS Staging and No Kickstart:
+  key: T10D
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test 010-runtime-clustering runtime-sharedfs-all-staging-nogridstart
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+010-runtime-clustering - SharedFS:
+  key: T10C
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test 010-runtime-clustering runtime-sharedfs
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+010-runtime-clustering - Non-SharedFS:
+  key: T10B
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test 010-runtime-clustering runtime-nonsharedfs
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+033-pegasuslite-multi:
+  key: T33
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+036-condorio-no-outputs:
+  key: T36
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+037-black-hints:
+  key: T37
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+035-black-transfer:
+  key: T35
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+029-black-quiet:
+  key: T29A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-no-jobs ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+004-montage-condor-io:
+  key: T4N6
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+033-pegasuslite-multi-wp-b:
+  key: T33B
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+021-black-dir:
+  key: T21A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+000-check-env:
+  key: CHECKENV
+  description: TODO
+  other:
+    clean-working-dir: true
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - "#rm -rf /scitech/home/bamboo/.pegasus/workflow.db"
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-no-jobs ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+033-pegasuslite-multi-wp-a:
+  key: T33A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+033-pegasuslite-multi-wp-c:
+  key: T33C
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+045-hierarchy-sharedfs:
+  key: T045A
+  description: Baseline hierarchal workflow
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+045-hierarchy-sharedfs-c:
+  key: T045C
+  description: Baseline hierarchal workflow in nonsharedfs, with compute job dependent on outputs of a sub workflow
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+045-hierarchy-sharedfs-b:
+  key: T045B
+  description: Baseline hierarchal workflow in sharedfs and worker package staging turned on
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+045-hierarchy-sharedfs-d:
+  key: T045D
+  description: Hierarchical Workflow with 2 sub workflows in condorio, and each listing what files it requires and generates.
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+005-galactic-plane:
+  key: T005
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+044-docker-nonsharedfs-symlink:
+  key: T044F
+  description: Docker in nonsharedfs with a shared filesystem and symlinking
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+044-singularity-nonsharedfs-symlink-cvmfs:
+  key: T044H
+  description: Singularity in nonsharedfs with a shared filesystem and symlinking of container image from cvmfs
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+044-singularity-nonsharedfs-symlink:
+  key: T044G
+  description: Singularity in nonsharedfs with a shared filesystem and symlinking
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+044-singularity-nonsharedfs-minimal:
+  key: T044I
+  description: Singularity in nonsharedfs, with a minimal image
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+046-aws-batch-black:
+  key: T046A
+  description: Blackdiamond workflow with horizontal clustering and clusters run on AWS Batch
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+019-black-label:
+  key: T19A
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+030-pegasuslite-gs:
+  key: PEG030GS
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+024-sc4-gridftp-http:
+  key: T024
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+043-integrity-condorio:
+  key: T043A
+  description: Integrity checking on for the whole workflow
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+023-sc4-ssh-http:
+  key: T023
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+043-integrity-nonsharedfs-nosymlink:
+  key: T043C
+  description: Integrity checking with nonsharedfs with nosymlink dial
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+043-integrity-nonsharedfs:
+  key: T043B
+  description: Integrity checking with nonsharedfs
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+025-sc4-file-http:
+  key: T025
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+004-montage-shared-fs-sc:
+  key: SC004MON
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+022-data-reuse-full-b:
+  key: BNT022B
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+002-hello-world:
+  key: T2V1
+  description: Minimal Hello World API example
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+044-docker-nonsharedfs-shared:
+  key: T044B
+  description: Docker in nonsharedfs with a shared filesystem
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+044-docker-nonsharedfs:
+  key: T044A
+  description: nonsharedfs test with docker containers and executable staging
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+043-integrity-synthetic-with-errors:
+  key: T043SYN
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+044-singularity-nonsharedfs-shared:
+  key: T044D
+  description: Singularity test case
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+044-singularity-nonsharedfs:
+  key: T044C
+  description: Singularity nonsharedfs case
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+016-pegasus-transfer:
+  key: T016
+  description: TODO
+  other:
+    clean-working-dir: true
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-no-jobs ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+028-dynamic-hierarchy-b:
+  key: T028B
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+043-integrity-condorio-5.0API:
+  key: T043E
+  description: Integrity checking on for the whole workflow using 5.0 API
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+043-integrity-condorio-nogs:
+  key: T043D
+  description: Integrity checking with PegasusLite and Condorio but some jobs launched without kickstart
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+043-integrity-condorio-singularity:
+  key: T043G
+  description: Integrity checking on for the whole workflow including associated singularity containers
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+043-integrity-bypass-staging:
+  key: T043F
+  description: Integrity checking when using bypass staging
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-no-jobs ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+043-integrity-bypass-staging-b:
+  key: T043H
+  description: nonsharedfs with containers and per file bypass on for files, executables and containers
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+030-pegasuslite-sshftp:
+  key: SSHFTP030
+  description: TODO
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+  artifact-subscriptions:
+    - artifact: tests
+041-jdbcrc-performance:
+  key: JDBCPERF
+  description: JDBC RC performance
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-no-jobs ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+    - performance
+  artifact-subscriptions:
+    - artifact: tests
+014-planner-performance-ahope:
+  key: T014C
+  description: A LIGO ahope test case with Shell code generator
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-planner-only ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+    - performance
+  artifact-subscriptions:
+    - artifact: tests
+014-planner-performance-hcc:
+  key: T014HCC
+  description: Planner performance HCC
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-planner-only ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+    - performance
+  artifact-subscriptions:
+    - artifact: tests
+014-planner-performance-100k:
+  key: T014100K
+  description: Planner performance 100K
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-planner-only ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+    - performance
+  artifact-subscriptions:
+    - artifact: tests
+014-planner-performance:
+  key: T014
+  description: Planner performance
+  tasks:
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - rm -rf pegasus/ test/
+        description: Cleanup
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - tar xf tests.tar
+        description: Untar source
+    - script:
+        interpreter: BINSH_OR_CMDEXE
+        scripts:
+          - |
+            export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
+            test/scripts/launch-bamboo-test-planner-only ${bamboo_shortJobName}
+        description: Run Test
+  requirements:
+    - condor
+    - performance
+  artifact-subscriptions:
+    - artifact: tests
+repositories:
+  - Pegasus:
+      scope: global
+triggers:
+  # Trigger com.atlassian.bamboo.triggers.atlassian-bamboo-triggers:poll is disabled. This state is not supported by YAML.
+  - cron:
+      expression: 0 0 20 * * ?
+      description: Nightly Build
+branches:
+  create: manually
+  delete: never
+  link-to-jira: true
+notifications:
+  - events:
+      - job-hung
+    recipients:
+      - emails:
+          - pegasus-svn@isi.edu
+  - events:
+      - plan-failed
+    recipients:
+      - emails:
+          - pegasus-svn@isi.edu
+labels: []
+other:
+  concurrent-build-plugin: system-default
+# Some plugin configurations are not supported by YAML Specs
