@@ -1,4 +1,3 @@
----
 version: 2
 plan:
   project-key: PEGASUS
@@ -1652,22 +1651,3 @@ labels: []
 other:
   concurrent-build-plugin: system-default
 # Some plugin configurations are not supported by YAML Specs
----
-version: 2
-plan:
-  key: PEGASUS-BNT50
-plan-permissions:
-  - users:
-      - mayani
-    permissions:
-      - admin
-  - groups:
-      - ccg-users
-    permissions:
-      - view
-      - build
-  - roles:
-      - logged-in
-      - anonymous
-    permissions:
-      - view
