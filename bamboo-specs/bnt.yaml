@@ -4,6 +4,11 @@ plan:
   key: BNT51
   name: Build and Test (master)
 stages:
+  - Default Stage:
+      manual: false
+      final: false
+      jobs:
+        - Default Job
   - Source Checkout:
       manual: false
       final: false
@@ -88,13 +93,6 @@ stages:
       final: false
       jobs:
         - Tutorial Docker Image
-Default Job:
-  key: JOB1
-  tasks:
-    - checkout:
-        force-clean-build: "false"
-        description: Checkout Default Repository
-  artifact-subscriptions: []
 Source checkout and distribution:
   key: DIST
   description: Create the full distribution tarball

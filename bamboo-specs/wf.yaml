@@ -126,13 +126,6 @@ stages:
         - 014-planner-performance-hcc
         - 014-planner-performance-100k
         - 014-planner-performance
-Default Job:
-  key: JOB1
-  tasks:
-    - checkout:
-        force-clean-build: "false"
-        description: Checkout Default Repository
-  artifact-subscriptions: []
 Build Pegasus:
   key: BP
   description: Build Pegasus
