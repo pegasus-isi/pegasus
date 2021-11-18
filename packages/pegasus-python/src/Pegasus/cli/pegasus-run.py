@@ -179,11 +179,7 @@ def exec_script(script):
     help="Output in JSON format.",
 )
 @click.option(
-    "-v",
-    "--verbose",
-    default=0,
-    count=True,
-    help="Raises debug level by 1.",
+    "-v", "--verbose", default=0, count=True, help="Raises debug level by 1.",
 )
 @click.argument(
     "submit-dir",
@@ -262,9 +258,7 @@ def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
                 click.secho(
                     """Submitting job(s).
 1 job(s) submitted to cluster %(job_id)d."""
-                    % {
-                        "job_id": job_id,
-                    },
+                    % {"job_id": job_id,},
                     err=True,
                 )
                 click.secho(
