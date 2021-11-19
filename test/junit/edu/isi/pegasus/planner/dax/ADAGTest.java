@@ -1,7 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * Copyright 2007-2021 University Of Southern California
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.isi.pegasus.planner.dax;
 
@@ -18,6 +26,55 @@ import org.junit.Test;
 
 /** @author ryantanaka */
 public class ADAGTest {
+
+    @Test
+    public void testDAXJobArgumentsSerialization() {
+        ADAG wf = new ADAG("test");
+        DAX preD = new DAX("test", "subwf.yml");
+        preD.addArgument("--force");
+        preD.addArgument("-q");
+        preD.addArgument("--cleanup none");
+        wf.addDAX(preD);
+
+        String result = wf.toYAML();
+        System.out.println(result);
+        String expected =
+                "---\n"
+                        + "pegasus: \"5.0\"\n"
+                        + "x-pegasus:\n"
+                        + "  createdBy: \"vahi\"\n"
+                        + "  createdOn: \"2021-11-18T23:43:41Z\"\n"
+                        + "  apiLang: \"java\"\n"
+                        + "name: \"test\"\n"
+                        + "metadata:\n"
+                        + "  wf.api: \"java\"\n"
+                        + "jobs:\n"
+                        + " -\n"
+                        + "  type: \"pegasusWorkflow\"\n"
+                        + "  file: \"subwf.yml\"\n"
+                        + "  id: \"test\"\n"
+                        + "  arguments:\n"
+                        + "   - \"--force\"\n"
+                        + "   - \"-q\"\n"
+                        + "   - \"--cleanup none\"\n"
+                        + "  uses: []\n";
+
+        // use a fixed "createdOn" value for test
+        String createdOn = "\"today\"";
+        String pattern1 = "\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"";
+        result = result.replaceAll(pattern1, createdOn);
+        expected = expected.replaceAll(pattern1, createdOn);
+
+        // use a fixed "createdBy" value for test
+        String createdBy = "createdBy: \"bamboo\"";
+        String pattern2 = "createdBy: \\p{Print}+";
+        result = result.replaceAll(pattern2, createdBy);
+        expected = expected.replaceAll(pattern2, createdBy);
+
+        // System.out.println(result);
+
+        assertEquals(expected, result);
+    }
 
     @Test
     public void testADAGYamlSerialization() {
@@ -207,13 +264,9 @@ public class ADAGTest {
                         + "      cmd: \"cmd\"\n"
                         + "  arguments:\n"
                         + "   - \"-a preprocess -T 60 -i \"\n"
-                        + "   - \" \"\n"
                         + "   - \"f.a\"\n"
-                        + "   - \" \"\n"
                         + "   - \"-o \"\n"
-                        + "   - \" \"\n"
                         + "   - \"f.b1\"\n"
-                        + "   - \" \"\n"
                         + "   - \"f.b2\"\n"
                         + "  uses:\n"
                         + "   -\n"
@@ -268,7 +321,6 @@ public class ADAGTest {
                         + "      SOME_VAR: \"SOME_VALUE\"\n"
                         + "  arguments:\n"
                         + "   - \"--site \"\n"
-                        + "   - \" \"\n"
                         + "   - \"local\"\n"
                         + "  uses:\n"
                         + "   -\n"
@@ -289,16 +341,12 @@ public class ADAGTest {
                         + "  id: \"j4\"\n"
                         + "  arguments:\n"
                         + "   - \"-a analyze\"\n"
-                        + "   - \" \"\n"
                         + "   - \"-T\"\n"
-                        + "   - \" \"\n"
                         + "   - \"60\"\n"
-                        + "   - \" \"\n"
                         + "   - \"-i \"\n"
                         + "   - \"f.c1\"\n"
                         + "   - \",\"\n"
                         + "   - \"f.c2\"\n"
-                        + "   - \" \"\n"
                         + "   - \"-o \"\n"
                         + "   - \"f.d\"\n"
                         + "  uses:\n"
@@ -346,7 +394,7 @@ public class ADAGTest {
 
         System.out.println(result);
 
-        assertEquals(result, expected);
+        assertEquals(expected, result);
 
         // validate against schema
         wf.writeToFile("/tmp/diamond.yml", ADAG.FORMAT.yaml);
@@ -364,7 +412,7 @@ public class ADAGTest {
         assertEquals(isValid, true);
     }
 
-    @Test
+    // @Test
     public void testCompoundTransformationUnsupported() {
         ADAG wf = new ADAG("test");
 

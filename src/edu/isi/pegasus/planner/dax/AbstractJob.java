@@ -119,9 +119,6 @@ public class AbstractJob {
      */
     public AbstractJob addArgument(String argument) {
         if (argument != null) {
-            if (!mArguments.isEmpty()) {
-                mArguments.add(ARG_DELIMITER);
-            }
             mArguments.add(argument);
         }
         return this;
@@ -136,9 +133,6 @@ public class AbstractJob {
      */
     public AbstractJob addArgument(File file) {
         if (file != null) {
-            if (!mArguments.isEmpty()) {
-                mArguments.add(ARG_DELIMITER);
-            }
             mArguments.add(file);
         }
         return this;
@@ -153,7 +147,9 @@ public class AbstractJob {
      * @see File
      */
     public AbstractJob addArgument(File[] files) {
-        this.addArgument(files, FILE_DELIMITER);
+        for (File f : files) {
+            this.addArgument(f);
+        }
         return this;
     }
 
@@ -166,7 +162,9 @@ public class AbstractJob {
      * @see File
      */
     public AbstractJob addArgument(List<File> files) {
-        this.addArgument(files, FILE_DELIMITER);
+        for (File f : files) {
+            this.addArgument(f);
+        }
         return this;
     }
 
@@ -178,6 +176,8 @@ public class AbstractJob {
      * @param filedelimiter String delimiter for the files. Default is space
      * @return AbstractJob
      * @see File
+     * @deprecated As of 5.0.2 release this function will not work consistently as ARG_LIMITER is
+     *     always added between args
      */
     public AbstractJob addArgument(File[] files, String filedelimiter) {
         filedelimiter = (filedelimiter == null) ? FILE_DELIMITER : filedelimiter;
@@ -205,6 +205,8 @@ public class AbstractJob {
      * @param filedelimiter String delimiter for the files. Default is space
      * @return AbstractJob
      * @see File
+     * @deprecated As of 5.0.2 release this function will not work consistently as ARG_LIMITER is
+     *     always added between args
      */
     public AbstractJob addArgument(List<File> files, String filedelimiter) {
         if (files != null && !files.isEmpty()) {
@@ -1616,7 +1618,11 @@ public class AbstractJob {
 
         if (!mArguments.isEmpty()) {
             writer.startElement("argument", indent + 1);
+            boolean addArgLimiter = false;
             for (Object o : mArguments) {
+                if (addArgLimiter) {
+                    writer.writeData(ARG_DELIMITER);
+                }
                 if (o.getClass() == String.class) {
                     // if class is string add argument string in the data section
                     writer.writeData((String) o);
@@ -1625,6 +1631,7 @@ public class AbstractJob {
                     // add file tags in the argument elements data section
                     ((File) o).toXML(writer, 0, "argument");
                 }
+                addArgLimiter = true;
             }
             writer.endElement();
         }
