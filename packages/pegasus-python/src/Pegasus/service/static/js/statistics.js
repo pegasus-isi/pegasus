@@ -12,7 +12,8 @@ function render_workflow_summary_stats(dest, data) {
   }
 
   var content = "";
-  content = '<table id="workflow_summary_stats_table">';
+  content =
+    '<table id="workflow_summary_stats_table" class="table table-striped w-100">';
   content += "<tr>";
   content += "<th>Workflow Wall Time</th>";
   content += "<td>" + formatData(data["wall-time"]) + "</td>";
@@ -53,8 +54,7 @@ function render_workflow_stats(dest, all_data) {
     content += "No information available";
   }
 
-  content +=
-    '<header class="ui-widget-header" style="padding: .3em;">This Workflow</header>';
+  content += '<header style="padding: .3em;">This Workflow</header>';
   content += render_workflow_stats_table("individual", data) + "<br />";
 
   data = all_data.all;
@@ -63,14 +63,12 @@ function render_workflow_stats(dest, all_data) {
     content += "No information available";
   }
 
-  content +=
-    '<header class="ui-widget-header" style="padding: .3em;">Entire Workflow</header>';
+  content += '<header style="padding: .3em;">Entire Workflow</header>';
   content += render_workflow_stats_table("all", data);
 
   dest.html(content);
 
   $("#workflow_stats_individual_table").dataTable({
-    jQueryUI: true,
     dom: '<"top"iflp<"clear">>rt<"bottom"iflp<"clear">>',
     ordering: false,
     searching: false,
@@ -79,7 +77,6 @@ function render_workflow_stats(dest, all_data) {
   });
 
   $("#workflow_stats_all_table").dataTable({
-    jQueryUI: true,
     dom: '<"top"iflp<"clear">>rt<"bottom"iflp<"clear">>',
     ordering: false,
     searching: false,
@@ -90,7 +87,10 @@ function render_workflow_stats(dest, all_data) {
 
 function render_workflow_stats_table(type, data) {
   var content = "";
-  content = '<table id="workflow_stats_' + type + '_table">';
+  content =
+    '<table id="workflow_stats_' +
+    type +
+    '_table" class="table table-striped w-100">';
   content += "<thead><tr>";
   content += "<th>Type</th>";
   content += "<th>Succeeded</th>";
@@ -172,7 +172,8 @@ function render_job_breakdown(dest, data) {
   }
 
   var content = "";
-  content = '<table id="job_breakdown_stats_table">';
+  content =
+    '<table id="job_breakdown_stats_table" class="table table-striped w-100">';
   content += "<thead><tr>";
   content += "<td colspan=2></td>";
   content += "<td></td><td colspan=4 align=center>Runtime (sec)</td>";
@@ -217,11 +218,29 @@ function render_job_breakdown(dest, data) {
   dest.html(content);
 
   $("#job_breakdown_stats_table").dataTable({
-    jQueryUI: true,
     pagingType: "full_numbers",
     processing: true,
     serverSide: false,
     autoWidth: false,
+    scrollX: "100%",
+    scrollCollapse: true,
+    columnDefs: [
+      {
+        targets: 1,
+        createdCell: function (td, v) {
+          switch (v) {
+            case "successful":
+              $(td)
+                .addClass("bg-success text-white text-center")
+                .text("Successful");
+              break;
+            case "failed":
+              $(td).addClass("bg-danger text-white text-center").text("Failed");
+              break;
+          }
+        },
+      },
+    ],
   });
 
   $('[data-toggle="tooltip"]').tooltip();
@@ -253,7 +272,7 @@ function render_job_stats(dest, data) {
   }
 
   var content = "";
-  content += '<table id="job_stats_table">';
+  content += '<table id="job_stats_table" class="table table-striped w-100">';
   content += "<thead><tr>";
   content += '<th class="text-nowrap">Job</th>';
   content += '<th class="text-nowrap">Try</th>';
@@ -288,12 +307,11 @@ function render_job_stats(dest, data) {
   dest.html(content);
 
   $("#job_stats_table").dataTable({
-    scrollX: "100%",
-    scrollCollapse: true,
-    jQueryUI: true,
     pagingType: "full_numbers",
     processing: true,
     serverSide: false,
+    scrollX: "100%",
+    scrollCollapse: true,
   });
 }
 
@@ -319,7 +337,10 @@ function getIntegrityStats(url, container) {
 
 function render_integrity_stats_table(type, data) {
   var content = "";
-  content = '<table id="int_stats_' + type + '_table">';
+  content =
+    '<table id="int_stats_' +
+    type +
+    '_table" class="table table-striped w-100">';
   content += "<thead><tr>";
   content += "<th>Type</th>";
   content += "<th>File Type</th>";
@@ -353,8 +374,7 @@ function render_integrity_stats(dest, all_data) {
     content += "No information available";
   }
 
-  content +=
-    '<header class="ui-widget-header" style="padding: .3em;">This Workflow</header>';
+  content += '<header style="padding: .3em;">This Workflow</header>';
   content += render_integrity_stats_table("individual", data) + "<br />";
 
   data = all_data.all;
@@ -363,14 +383,12 @@ function render_integrity_stats(dest, all_data) {
     content += "No information available";
   }
 
-  content +=
-    '<header class="ui-widget-header" style="padding: .3em;">Entire Workflow</header>';
+  content += '<header style="padding: .3em;">Entire Workflow</header>';
   content += render_integrity_stats_table("all", data);
 
   dest.html(content);
 
   $("#int_stats_individual_table").dataTable({
-    jQueryUI: true,
     dom: '<"top"iflp<"clear">>rt<"bottom"iflp<"clear">>',
     ordering: false,
     searching: false,
@@ -379,7 +397,6 @@ function render_integrity_stats(dest, all_data) {
   });
 
   $("#int_stats_all_table").dataTable({
-    jQueryUI: true,
     dom: '<"top"iflp<"clear">>rt<"bottom"iflp<"clear">>',
     ordering: false,
     searching: false,
@@ -388,21 +405,23 @@ function render_integrity_stats(dest, all_data) {
   });
 }
 
-function activateEventHandler(event, ui) {
-  var tabIndex = ui.newHeader.attr("title");
+function activateEventHandler(e) {
+  var target = $(e.target);
+  var id = target.attr("id");
+  var container = $("#" + id.replaceAll("-", "_"));
 
-  if (tabIndex == "workflow_stats") {
+  if (id == "workflow-stats") {
     return;
-  } else if (tabIndex == "job_breakdown_stats") {
-    getJobBreakdownStats(ui.newHeader.attr("href"), ui.newPanel);
-  } else if (tabIndex == "job_stats") {
-    getJobStats(ui.newHeader.attr("href"), ui.newPanel);
-  } else if (tabIndex == "time_stats") {
-    getTimeStats(ui.newHeader.attr("href"), ui.newPanel);
-  } else if (tabIndex == "int_stats") {
-    getIntegrityStats(ui.newHeader.attr("href"), ui.newPanel);
+  } else if (id == "job-breakdown-stats") {
+    getJobBreakdownStats(target.attr("href"), container);
+  } else if (id == "job-stats") {
+    getJobStats(target.attr("href"), container);
+  } else if (id == "time_stats") {
+    getTimeStats(target.attr("href"), container);
+  } else if (id == "int-stats") {
+    getIntegrityStats(target.attr("href"), container);
   } else {
-    alert("Invalid accordian option " + tabIndex);
+    alert("Invalid accordian option " + id);
   }
 }
 

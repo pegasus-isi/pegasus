@@ -1,6 +1,6 @@
 "use strict";
 
-$(function() {
+$(function () {
   // Initialize Tooltips
   $('[data-toggle="tooltip"]').tooltip();
 });
@@ -12,7 +12,8 @@ function clipboardTooltipInitialization() {
     .data("trigger", "hover")
     .attr("title", "Copy to clipboard")
     .tooltip();
-  button.on("click", function(event) {
+
+  button.on("click", function (event) {
     var target = $(event.target);
     var text = target.data("clipboard-text");
     var copy = $("<input>");
@@ -22,12 +23,11 @@ function clipboardTooltipInitialization() {
     document.execCommand("copy");
     copy.remove();
 
-    target
-      .attr("title", "Copied!")
-      .tooltip("fixTitle")
-      .tooltip("show")
-      .attr("title", "Copy to clipboard")
-      .tooltip("fixTitle");
+    target.attr("data-bs-original-title", "Copied!").tooltip("show");
+  });
+
+  button.tooltip().on("hidden.bs.tooltip", function () {
+    button.attr("data-bs-original-title", "Copy to clipboard");
   });
 }
 
@@ -44,22 +44,17 @@ function highChartsInitialization(colors) {
       "#db843d",
       "#92a8cd",
       "#a47d7c",
-      "#b5ca92"
+      "#b5ca92",
     ];
 
   // Radialize the colors
-  Highcharts.getOptions().colors = $.map(colors, function(color) {
+  Highcharts.getOptions().colors = $.map(colors, function (color) {
     return {
       radialGradient: { cx: 0.5, cy: 0.5, r: 0.5 },
       stops: [
         [0, color],
-        [
-          1,
-          Highcharts.Color(color)
-            .brighten(-0.1)
-            .get("rgb")
-        ] // darken
-      ]
+        [1, Highcharts.Color(color).brighten(-0.1).get("rgb")], // darken
+      ],
     };
   });
 }
@@ -69,13 +64,13 @@ function verticalTableInit(selector) {
   table.addClass("dataTable");
   table.attr("cellspacing", 0);
   table.attr("cellpadding", 5);
-  $(selector + "> tbody > tr > th").each(function(index) {
-    $(this).addClass("ui-state-default nowrap");
+  table.find("> tbody > tr > th").each(function (index) {
+    $(this).addClass("nowrap");
   });
 
   var isOdd = true;
 
-  $(selector + "> tbody > tr").each(function(index) {
+  table.find("> tbody > tr").each(function (index) {
     if (isOdd) {
       $(this).addClass("odd");
     } else {
@@ -94,13 +89,13 @@ function verticalTableInitStatus(selector, status) {
   table.addClass("dataTable");
   table.attr("cellspacing", 0);
   table.attr("cellpadding", 5);
-  $(selector + "> tbody > tr > th").each(function(index) {
-    $(this).addClass("ui-state-default nowrap");
+  table.find("> tbody > tr > th").each(function (index) {
+    $(this).addClass("nowrap");
   });
 
   var isOdd = true;
 
-  $(selector + "> tbody > tr").each(function(index) {
+  table.find("> tbody > tr").each(function (index) {
     if (isOdd) {
       $(this).addClass("odd");
     } else {
