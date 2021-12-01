@@ -483,7 +483,7 @@ $(document).ready(function () {
 <li class="breadcrumb-item active" aria-current="page">Workflow</li>
 {% endblock %}
 {% block title_header %}Workflow Details
-<small class="text-muted">{{ workflow.wf_uuid }}<button class="copy-button" data-clipboard-text="{{ workflow.wf_uuid }}"></button></small>
+<small class="text-muted">{{ workflow.wf_uuid }}<button class="text-muted copy-button" data-clipboard-text="{{ workflow.wf_uuid }}"></button></small>
 {% endblock %}
 {% block content %}
 <section class="row">
@@ -530,7 +530,7 @@ $(document).ready(function () {
                             <td class="text-nowrap">
                                 <a target="_blank"
                                    href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}"
-                                   class="file-browser" data-bs-toggle="tooltip" data-bs-placement="top"
+                                   class="btn file-browser" data-bs-toggle="tooltip" data-bs-placement="top"
                                    title="Browse directory">
                                 </a>
                                 <button class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">

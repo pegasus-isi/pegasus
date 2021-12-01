@@ -23,11 +23,11 @@ function clipboardTooltipInitialization() {
     document.execCommand("copy");
     copy.remove();
 
-    target.attr("data-original-title", "Copied!").tooltip("show");
+    target.attr("data-bs-original-title", "Copied!").tooltip("show");
   });
 
   button.tooltip().on("hidden.bs.tooltip", function () {
-    button.attr("data-original-title", "Copy to clipboard");
+    button.attr("data-bs-original-title", "Copy to clipboard");
   });
 }
 
