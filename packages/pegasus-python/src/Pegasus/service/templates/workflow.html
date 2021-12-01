@@ -87,7 +87,7 @@
         <div class="card border-primary">
             <div class="card-body p-0">
                 <h5 class="card-title text-center text-white bg-primary py-3">Running</h5>
-                <h1 class="card-text text-center text-primary pb-3">{{ counts.others }}</h1>
+                <h1 class="card-text text-center text-primary pb-3">{{ counts.others or 0 }}</h1>
             </div>
         </div>
     </div>
@@ -95,7 +95,7 @@
         <div class="card border-success">
             <div class="card-body p-0">
                 <h5 class="card-title text-center text-white bg-success py-3">Successful</h5>
-                <h1 class="card-text text-center text-success pb-3">{{ counts.success }}</h1>
+                <h1 class="card-text text-center text-success pb-3">{{ counts.success or 0 }}</h1>
             </div>
         </div>
     </div>
@@ -103,7 +103,7 @@
         <div class="card border-danger">
             <div class="card-body p-0">
                 <h5 class="card-title text-center text-white bg-danger py-3">Failed</h5>
-                <h1 class="card-text text-center text-danger pb-3">{{ counts.fail }}</h1>
+                <h1 class="card-text text-center text-danger pb-3">{{ counts.fail or 0 }}</h1>
             </div>
         </div>
     </div>
