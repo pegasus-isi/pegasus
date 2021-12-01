@@ -43,21 +43,22 @@
             { data: "submit_dir" },
             {
               data: "state",
-              createdCell: function (td, v) {
-                console.log(v)
-                switch (v) {
-                  case "Running":
-                    $(td)
-                      .addClass("bg-primary text-white text-center")
-                  break;
-                  case "Successful":
-                    $(td)
-                      .addClass("bg-success text-white text-center")
-                  break;
-                  case "Failed":
-                    $(td)
-                      .addClass("bg-danger text-white text-center")
-                  break;
+              createdCell: function (td, v, data) {
+                console.log(v, data);
+                if (data.archived) {
+                  $(td).addClass("bg-secondary text-white text-center");
+                } else {
+                  switch (v) {
+                    case "Running":
+                      $(td).addClass("bg-primary text-white text-center");
+                      break;
+                    case "Successful":
+                      $(td).addClass("bg-success text-white text-center");
+                      break;
+                    case "Failed":
+                      $(td).addClass("bg-danger text-white text-center");
+                      break;
+                  }
                 }
 
                 $(td).text(v);
