@@ -113,6 +113,7 @@ public abstract class LogManager {
     public static final String LOG4J_LOGGER = "Log4j";
 
     private static HashMap<Level, Integer> mLog4jLevelsToIntValue;
+    private static HashMap<Integer, Level> mIntToLog4jLevels;
 
     /** the type of stream types to which log messages can be directed to */
     public static enum STREAM_TYPE {
@@ -120,7 +121,7 @@ public abstract class LogManager {
         stderr
     };
 
-    public static Map<Level, Integer> log4jLevelsToIntValue() {
+    public static Map<Level, Integer> log4jLevelToInt() {
         if (mLog4jLevelsToIntValue == null) {
             mLog4jLevelsToIntValue = new HashMap<Level, Integer>();
             mLog4jLevelsToIntValue.put(Level.FATAL, LogManager.FATAL_MESSAGE_LEVEL);
@@ -128,10 +129,27 @@ public abstract class LogManager {
             mLog4jLevelsToIntValue.put(Level.WARN, LogManager.WARNING_MESSAGE_LEVEL);
             mLog4jLevelsToIntValue.put(Level.INFO, LogManager.INFO_MESSAGE_LEVEL);
             mLog4jLevelsToIntValue.put(Level.DEBUG, LogManager.DEBUG_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.TRACE, LogManager.TRACE_MESSAGE_LEVEL);
             mLog4jLevelsToIntValue.put(Level.ALL, LogManager.TRACE_MESSAGE_LEVEL);
         }
         return mLog4jLevelsToIntValue;
     }
+
+    public static Map<Integer, Level> intTolog4jLevel() {
+        if (mIntToLog4jLevels == null) {
+            mIntToLog4jLevels = new HashMap<Integer, Level>();
+            mIntToLog4jLevels.put(LogManager.FATAL_MESSAGE_LEVEL, Level.FATAL);
+            mIntToLog4jLevels.put(LogManager.ERROR_MESSAGE_LEVEL, Level.ERROR);
+            mIntToLog4jLevels.put(LogManager.WARNING_MESSAGE_LEVEL, Level.WARN);
+            mIntToLog4jLevels.put(LogManager.INFO_MESSAGE_LEVEL, Level.INFO);
+            // config level also maps to info
+            mIntToLog4jLevels.put(LogManager.CONFIG_MESSAGE_LEVEL, Level.INFO);
+            mIntToLog4jLevels.put(LogManager.DEBUG_MESSAGE_LEVEL, Level.DEBUG);
+            mIntToLog4jLevels.put(LogManager.TRACE_MESSAGE_LEVEL, Level.TRACE);
+        }
+        return mIntToLog4jLevels;
+    }
+
     /**
      * The debug level. Higher the level the more the detail is logged. At present can be 0 or 1.
      * This is set according to the option given by the user, whether verbose or not.
@@ -263,18 +281,7 @@ public abstract class LogManager {
      */
     public void setLevel(Level level) {
         int value = LogManager.FATAL_MESSAGE_LEVEL;
-        if (level.equals(Level.ERROR)) {
-            value = LogManager.ERROR_MESSAGE_LEVEL;
-        } else if (level.equals(Level.WARN)) {
-            value = LogManager.WARNING_MESSAGE_LEVEL;
-        } else if (level.equals(Level.INFO)) {
-            value = LogManager.INFO_MESSAGE_LEVEL;
-        }
-        if (level.equals(Level.DEBUG)) {
-            value = LogManager.DEBUG_MESSAGE_LEVEL;
-        } else if (level.equals(Level.TRACE)) {
-            value = LogManager.TRACE_MESSAGE_LEVEL;
-        }
+        value = log4jLevelToInt().containsKey(level) ? log4jLevelToInt().get(level) : value;
         setLevel(value, false);
     }
 

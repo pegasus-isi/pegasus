@@ -167,39 +167,13 @@ public class Log4j extends LogManager {
      * @param info boolean denoting whether the INFO messages need to be logged or not.
      */
     protected void setLevel(int level, boolean info) {
-        Level l = Level.ALL;
-        switch (level) {
-            case LogManager.FATAL_MESSAGE_LEVEL:
-                l = Level.FATAL;
-                break;
+        Level l =
+                LogManager.intTolog4jLevel().containsKey(level)
+                        ? LogManager.intTolog4jLevel().get(level)
+                        : Level.ALL;
 
-            case LogManager.ERROR_MESSAGE_LEVEL:
-                l = Level.ERROR;
-                break;
-
-            case LogManager.WARNING_MESSAGE_LEVEL:
-                l = Level.WARN;
-                break;
-
-            case LogManager.CONFIG_MESSAGE_LEVEL:
-                l = Level.INFO;
-                break;
-
-            case LogManager.INFO_MESSAGE_LEVEL:
-                l = Level.INFO;
-                break;
-
-            case LogManager.DEBUG_MESSAGE_LEVEL:
-                l = Level.DEBUG;
-                break;
-
-            case LogManager.TRACE_MESSAGE_LEVEL:
-                l = Level.TRACE;
-                break;
-        }
         // lets set only the pegasus logger
-        Configurator.setLevel("pegasus", l);
-        // mLogger.setLevel(l);
+        Configurator.setLevel("pegasus", l); 
     }
 
     /**
@@ -217,7 +191,7 @@ public class Log4j extends LogManager {
 
         // lets set only the pegasus logger
         Configurator.setLevel("pegasus", level);
-        mDebugLevel = LogManager.log4jLevelsToIntValue().get(level);
+        mDebugLevel = LogManager.log4jLevelToInt().get(level);
     }
 
     /**
