@@ -15,16 +15,19 @@ package edu.isi.pegasus.common.logging.logger;
 
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.io.PrintStream;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.Properties;
-import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 /**
  * A Log4j implementation of the LogManager interface. Using this allows us us log messages using
@@ -36,7 +39,7 @@ import org.apache.log4j.PropertyConfigurator;
 public class Log4j extends LogManager {
 
     /** The property that specifies the path to the log4j properties file. */
-    private static final String LOG4J_CONF_PROPERTY = "log4j.conf";
+    private static final String LOG4J2_CONF_PROPERTY = "log4j2.properties";
 
     // level  constants that loosely match Log4J and are used
     // to generate the appropriate mask values.
@@ -49,6 +52,7 @@ public class Log4j extends LogManager {
 
     /** Initializes the root logger when this class is loaded. */
     static {
+        /*
         if ((mRoot = Logger.getRootLogger()) != null) {
 
             // get hold of all appenders and override the console appender
@@ -63,6 +67,21 @@ public class Log4j extends LogManager {
             mRoot.setLevel(Level.INFO);
             mRoot.debug("starting");
         }
+        */
+        if ((mRoot = org.apache.logging.log4j.LogManager.getRootLogger()) != null) {
+            // picked up from this example https://www.baeldung.com/log4j2-programmatic-config
+            ConfigurationBuilder<BuiltConfiguration> builder =
+                    ConfigurationBuilderFactory.newConfigurationBuilder();
+            AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+            builder.add(console);
+            LayoutComponentBuilder standard = builder.newLayout("PatternLayout");
+            standard.addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n");
+            console.add(standard);
+            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.INFO);
+            rootLogger.add(builder.newAppenderRef("stdout"));
+            builder.add(rootLogger);
+            Configurator.initialize(builder.build());
+        }
     }
 
     /** The properties passed at runtime */
@@ -71,7 +90,7 @@ public class Log4j extends LogManager {
     /** The constructor. */
     public Log4j() {
         // configure properties through log4j.properties file
-        mLogger = Logger.getLogger("pegasus");
+        mLogger = org.apache.logging.log4j.LogManager.getLogger("pegasus");
     }
 
     /**
@@ -88,9 +107,10 @@ public class Log4j extends LogManager {
         mLogFormatter.setProgramName("pegasus");
 
         // specify the path to the log4j properties file if specified.
-        String conf = properties.getProperty(Log4j.LOG4J_CONF_PROPERTY);
+        String conf = properties.getProperty(Log4j.LOG4J2_CONF_PROPERTY);
         if (conf != null) {
-            PropertyConfigurator.configure(conf);
+            // PropertyConfigurator.configure(conf);
+            Configurator.initialize(null, conf);
         }
     }
 
@@ -172,8 +192,14 @@ public class Log4j extends LogManager {
             case LogManager.DEBUG_MESSAGE_LEVEL:
                 l = Level.DEBUG;
                 break;
+
+            case LogManager.TRACE_MESSAGE_LEVEL:
+                l = Level.TRACE;
+                break;
         }
-        mLogger.setLevel(l);
+        // lets set only the pegasus logger
+        Configurator.setLevel("pegasus", l);
+        // mLogger.setLevel(l);
     }
 
     /**
@@ -184,8 +210,14 @@ public class Log4j extends LogManager {
      * @param info boolean denoting whether the INFO messages need to be logged or not.
      */
     protected void setLevel(Level level, boolean info) {
+        /*
         mDebugLevel = level.toInt();
         mLogger.setLevel(level);
+        */
+
+        // lets set only the pegasus logger
+        Configurator.setLevel("pegasus", level);
+        mDebugLevel = LogManager.log4jLevelsToIntValue().get(level);
     }
 
     /**
@@ -268,6 +300,10 @@ public class Log4j extends LogManager {
             case LogManager.DEBUG_MESSAGE_LEVEL:
                 mLogger.debug(message, e);
                 break;
+
+            case LogManager.TRACE_MESSAGE_LEVEL:
+                mLogger.trace(message, e);
+                break;
         }
     }
 
@@ -306,6 +342,10 @@ public class Log4j extends LogManager {
             case LogManager.DEBUG_MESSAGE_LEVEL:
                 mLogger.debug(message);
                 break;
+
+            case LogManager.TRACE_MESSAGE_LEVEL:
+                mLogger.trace(message);
+                break;
         }
     }
 
@@ -318,5 +358,15 @@ public class Log4j extends LogManager {
         String message = mLogFormatter.getEndEventMessage();
         logAlreadyFormattedMessage(message, level);
         mLogFormatter.popEvent();
+    }
+
+    public static void main(String args[]) {
+        LogManager manager = LogManagerFactory.loadInstance("Log4j", "Simple", new Properties());
+        manager.setLevel(Level.DEBUG);
+        manager.logEventStart("test.transfer.generator.stagein", "setup", "0");
+        manager.log("ERROR message level should print", ERROR_MESSAGE_LEVEL);
+        manager.log("DEBUG message level should print", DEBUG_MESSAGE_LEVEL);
+        manager.log("TRACE message level SHOULD NOT print", TRACE_MESSAGE_LEVEL);
+        manager.logEventCompletion();
     }
 }

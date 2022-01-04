@@ -18,9 +18,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 /**
  * The logging class that to log messages at different levels. Currently the following levels are
@@ -111,12 +112,26 @@ public abstract class LogManager {
     /** The Log4j logger. */
     public static final String LOG4J_LOGGER = "Log4j";
 
+    private static HashMap<Level, Integer> mLog4jLevelsToIntValue;
+
     /** the type of stream types to which log messages can be directed to */
     public static enum STREAM_TYPE {
         stdout,
         stderr
     };
 
+    public static Map<Level, Integer> log4jLevelsToIntValue() {
+        if (mLog4jLevelsToIntValue == null) {
+            mLog4jLevelsToIntValue = new HashMap<Level, Integer>();
+            mLog4jLevelsToIntValue.put(Level.FATAL, LogManager.FATAL_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.ERROR, LogManager.ERROR_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.WARN, LogManager.WARNING_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.INFO, LogManager.INFO_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.DEBUG, LogManager.DEBUG_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.ALL, LogManager.TRACE_MESSAGE_LEVEL);
+        }
+        return mLog4jLevelsToIntValue;
+    }
     /**
      * The debug level. Higher the level the more the detail is logged. At present can be 0 or 1.
      * This is set according to the option given by the user, whether verbose or not.
@@ -247,27 +262,18 @@ public abstract class LogManager {
      * @param level the level to which the debug level needs to be set to.
      */
     public void setLevel(Level level) {
-        int value = level.toInt();
-        switch (value) {
-            case Level.DEBUG_INT:
-                value = LogManager.DEBUG_MESSAGE_LEVEL;
-                break;
-
-            case Level.INFO_INT:
-                value = LogManager.INFO_MESSAGE_LEVEL;
-                break;
-
-            case Level.WARN_INT:
-                value = LogManager.WARNING_MESSAGE_LEVEL;
-                break;
-
-            case Level.ERROR_INT:
-                value = LogManager.ERROR_MESSAGE_LEVEL;
-                break;
-
-            default:
-                value = LogManager.FATAL_MESSAGE_LEVEL;
-                break;
+        int value = LogManager.FATAL_MESSAGE_LEVEL;
+        if (level.equals(Level.ERROR)) {
+            value = LogManager.ERROR_MESSAGE_LEVEL;
+        } else if (level.equals(Level.WARN)) {
+            value = LogManager.WARNING_MESSAGE_LEVEL;
+        } else if (level.equals(Level.INFO)) {
+            value = LogManager.INFO_MESSAGE_LEVEL;
+        }
+        if (level.equals(Level.DEBUG)) {
+            value = LogManager.DEBUG_MESSAGE_LEVEL;
+        } else if (level.equals(Level.TRACE)) {
+            value = LogManager.TRACE_MESSAGE_LEVEL;
         }
         setLevel(value, false);
     }
