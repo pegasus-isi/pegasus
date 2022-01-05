@@ -173,7 +173,7 @@ public class Log4j extends LogManager {
                         : Level.ALL;
 
         // lets set only the pegasus logger
-        Configurator.setLevel("pegasus", l); 
+        Configurator.setLevel("pegasus", l);
     }
 
     /**
@@ -341,6 +341,24 @@ public class Log4j extends LogManager {
         manager.log("ERROR message level should print", ERROR_MESSAGE_LEVEL);
         manager.log("DEBUG message level should print", DEBUG_MESSAGE_LEVEL);
         manager.log("TRACE message level SHOULD NOT print", TRACE_MESSAGE_LEVEL);
+        manager.log(
+                "FATAL level int value is " + Level.FATAL.intLevel(),
+                LogManager.INFO_MESSAGE_LEVEL);
+        manager.log(
+                "ERROR level int value is " + Level.ERROR.intLevel(),
+                LogManager.INFO_MESSAGE_LEVEL);
+        manager.log(
+                "WARN level int value is " + Level.WARN.intLevel(), LogManager.INFO_MESSAGE_LEVEL);
+        manager.log(
+                "INFO level int value is " + Level.INFO.intLevel(), LogManager.INFO_MESSAGE_LEVEL);
+        manager.log(
+                "DEBUG level int value is " + Level.DEBUG.intLevel(),
+                LogManager.INFO_MESSAGE_LEVEL);
+        manager.log(
+                "TRACE level int value is " + Level.TRACE.intLevel(),
+                LogManager.INFO_MESSAGE_LEVEL);
+        manager.log(
+                "ALL level int value is " + Level.ALL.intLevel(), LogManager.INFO_MESSAGE_LEVEL);
         manager.logEventCompletion();
     }
 }

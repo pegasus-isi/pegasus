@@ -142,8 +142,9 @@ public abstract class LogManager {
             mIntToLog4jLevels.put(LogManager.ERROR_MESSAGE_LEVEL, Level.ERROR);
             mIntToLog4jLevels.put(LogManager.WARNING_MESSAGE_LEVEL, Level.WARN);
             mIntToLog4jLevels.put(LogManager.INFO_MESSAGE_LEVEL, Level.INFO);
-            // config level also maps to info
+            // config level also maps to info and console message map to info level?
             mIntToLog4jLevels.put(LogManager.CONFIG_MESSAGE_LEVEL, Level.INFO);
+            mIntToLog4jLevels.put(LogManager.CONSOLE_MESSAGE_LEVEL, Level.INFO);
             mIntToLog4jLevels.put(LogManager.DEBUG_MESSAGE_LEVEL, Level.DEBUG);
             mIntToLog4jLevels.put(LogManager.TRACE_MESSAGE_LEVEL, Level.TRACE);
         }
