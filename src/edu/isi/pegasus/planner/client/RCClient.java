@@ -44,11 +44,15 @@ import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.Priority;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.griphyn.vdl.toolkit.Toolkit;
 
 /**
@@ -102,12 +106,19 @@ public class RCClient extends Toolkit {
 
     /** Initializes the root logger when this class is loaded. */
     static {
-        if ((m_root = Logger.getRootLogger()) != null) {
-            m_root.removeAllAppenders(); // clean house
-            m_root.addAppender(
-                    new ConsoleAppender(
-                            new PatternLayout("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n")));
-            m_root.setLevel(Level.INFO);
+        if ((m_root = org.apache.logging.log4j.LogManager.getRootLogger()) != null) {
+            // picked up from this example https://www.baeldung.com/log4j2-programmatic-config
+            ConfigurationBuilder<BuiltConfiguration> builder =
+                    ConfigurationBuilderFactory.newConfigurationBuilder();
+            AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+            builder.add(console);
+            LayoutComponentBuilder standard = builder.newLayout("PatternLayout");
+            standard.addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n");
+            console.add(standard);
+            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.INFO);
+            rootLogger.add(builder.newAppenderRef("stdout"));
+            builder.add(rootLogger);
+            Configurator.initialize(builder.build());
             m_root.debug("starting");
         }
     }
@@ -117,10 +128,10 @@ public class RCClient extends Toolkit {
     /**
      * Sets a logging level.
      *
-     * @param level is the new level to achieve.
+     * @param level is the new level to achieve and is the log4j int value
      */
     public void setLevel(int level) {
-        doSet(Level.toLevel(level));
+        doSet(LogManager.intTolog4jLevel().get(level));
     }
 
     /**
@@ -138,8 +149,9 @@ public class RCClient extends Toolkit {
     private Logger m_log;
 
     private void doSet(Level level) {
-        m_root.setLevel(level);
-        m_log.setLevel(level);
+        Configurator.setRootLevel(level);
+        // set for the rc-client logger
+        Configurator.setLevel(RCClient.class.getName(), level);
         m_pegasus_logger.setLevel(level);
     }
 
@@ -178,7 +190,7 @@ public class RCClient extends Toolkit {
         m_total_lines_worked = 0;
         m_total_lines_succ_worked = 0;
         // private logger
-        m_log = Logger.getLogger(RCClient.class);
+        m_log = org.apache.logging.log4j.LogManager.getLogger(RCClient.class);
         String propertyFile = lookupConfProperty(opts, confChar);
         m_pegasus_props = PegasusProperties.getInstance(propertyFile);
         m_conf_property_file = propertyFile;
@@ -1006,7 +1018,7 @@ public class RCClient extends Toolkit {
      */
     public static void main(String[] args) {
         int result = 0;
-        int level = Level.ERROR_INT;
+        int level = Level.ERROR.intLevel();
         RCClient me = null;
 
         try {
@@ -1143,7 +1155,9 @@ public class RCClient extends Toolkit {
 
             // print stack trace if debug or higher
             // or logmanger is not set at all
-            if (me == null || me.m_log == null || me.m_log.getLevel().toInt() <= Level.DEBUG_INT) {
+            if (me == null
+                    || me.m_log == null
+                    || me.m_log.getLevel().intLevel() <= Level.DEBUG.intLevel()) {
                 org.printStackTrace();
             }
 
