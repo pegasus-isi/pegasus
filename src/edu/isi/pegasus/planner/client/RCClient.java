@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.client;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.logger.Log4j;
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
@@ -126,12 +127,12 @@ public class RCClient extends Toolkit {
     private ReplicaStore mMetadataStore;
 
     /**
-     * Sets a logging level.
+     * Sets a logging log4jIntLevel.
      *
-     * @param level is the new level to achieve and is the log4j int value
+     * @param log4jIntLevel is the new log level to achieve and is the log4j int value
      */
-    public void setLevel(int level) {
-        doSet(LogManager.intTolog4jLevel().get(level));
+    public void setLevel(int log4jIntLevel) {
+        doSet(Log4j.log4jIntValueTolog4jLevel().get(log4jIntLevel));
     }
 
     /**
@@ -1053,7 +1054,7 @@ public class RCClient extends Toolkit {
                         System.out.println("Pegasus version " + Version.instance().toString());
                         return;
                     case 'v':
-                        level -= 10000;
+                        level += 100;
                         break;
                     case 'f':
                         arg = opts.getOptarg();
@@ -1157,7 +1158,7 @@ public class RCClient extends Toolkit {
             // or logmanger is not set at all
             if (me == null
                     || me.m_log == null
-                    || me.m_log.getLevel().intLevel() <= Level.DEBUG.intLevel()) {
+                    || me.m_log.getLevel().intLevel() >= Level.DEBUG.intLevel()) {
                 org.printStackTrace();
             }
 
