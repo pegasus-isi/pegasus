@@ -18,15 +18,16 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.io.PrintStream;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
-import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 /**
@@ -41,6 +42,8 @@ public class Log4j extends LogManager {
     /** The property that specifies the path to the log4j properties file. */
     private static final String LOG4J2_CONF_PROPERTY = "log4j2.properties";
 
+    private static Map<Integer, Level> mLog4jIntToLog4jLevels;
+
     // level  constants that loosely match Log4J and are used
     // to generate the appropriate mask values.
 
@@ -49,6 +52,26 @@ public class Log4j extends LogManager {
 
     /** Keeps track of log4j's root logger as singleton. */
     private static Logger mRoot;
+
+    /**
+     * A reverse lookup map, since log4j 2.x does not provide a way to create log4j level using int
+     * values
+     *
+     * @return
+     */
+    public static Map<Integer, Level> log4jIntValueTolog4jLevel() {
+        if (mLog4jIntToLog4jLevels == null) {
+            mLog4jIntToLog4jLevels = new HashMap<Integer, Level>();
+            mLog4jIntToLog4jLevels.put(Level.FATAL.intLevel(), Level.FATAL);
+            mLog4jIntToLog4jLevels.put(Level.ERROR.intLevel(), Level.ERROR);
+            mLog4jIntToLog4jLevels.put(Level.WARN.intLevel(), Level.WARN);
+            mLog4jIntToLog4jLevels.put(Level.INFO.intLevel(), Level.INFO);
+            mLog4jIntToLog4jLevels.put(Level.DEBUG.intLevel(), Level.DEBUG);
+            mLog4jIntToLog4jLevels.put(Level.TRACE.intLevel(), Level.TRACE);
+            mLog4jIntToLog4jLevels.put(Level.ALL.intLevel(), Level.ALL);
+        }
+        return mLog4jIntToLog4jLevels;
+    }
 
     /** Initializes the root logger when this class is loaded. */
     static {
@@ -68,20 +91,19 @@ public class Log4j extends LogManager {
             mRoot.debug("starting");
         }
         */
-        if ((mRoot = org.apache.logging.log4j.LogManager.getRootLogger()) != null) {
-            // picked up from this example https://www.baeldung.com/log4j2-programmatic-config
-            ConfigurationBuilder<BuiltConfiguration> builder =
-                    ConfigurationBuilderFactory.newConfigurationBuilder();
-            AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
-            builder.add(console);
-            LayoutComponentBuilder standard = builder.newLayout("PatternLayout");
-            standard.addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n");
-            console.add(standard);
-            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.INFO);
-            rootLogger.add(builder.newAppenderRef("stdout"));
-            builder.add(rootLogger);
-            Configurator.initialize(builder.build());
-        }
+        // PM-1836 log4j 2.x style configuration
+        // derived from https://logging.apache.org/log4j/2.x/manual/customconfig.html
+        ConfigurationBuilder<BuiltConfiguration> builder =
+                ConfigurationBuilderFactory.newConfigurationBuilder();
+        AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+        console.add(
+                builder.newLayout("PatternLayout")
+                        .addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"));
+        builder.add(console);
+        builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("stdout")));
+        LoggerContext ctx = Configurator.initialize(builder.build());
+        // IMPORTANT: root logger can only be retrieved once configurator is initalized
+        mRoot = org.apache.logging.log4j.LogManager.getRootLogger();
     }
 
     /** The properties passed at runtime */
@@ -360,5 +382,8 @@ public class Log4j extends LogManager {
         manager.log(
                 "ALL level int value is " + Level.ALL.intLevel(), LogManager.INFO_MESSAGE_LEVEL);
         manager.logEventCompletion();
+
+        Log4j log4j = new Log4j();
+        log4j.mRoot.log(Level.FATAL, "test on root logger");
     }
 }

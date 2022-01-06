@@ -21,12 +21,11 @@ import java.net.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
-import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 public class SimpleServerThread extends Thread {
@@ -48,17 +47,18 @@ public class SimpleServerThread extends Thread {
         this.m_socket = socket;
         if (c_logger == null) {
             // Singleton-like init
+            // PM-1836 log4j 2.x style configuration
+            // derived from https://logging.apache.org/log4j/2.x/manual/customconfig.html
             ConfigurationBuilder<BuiltConfiguration> builder =
                     ConfigurationBuilderFactory.newConfigurationBuilder();
             AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+            console.add(
+                    builder.newLayout("PatternLayout")
+                            .addAttribute(
+                                    "pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"));
             builder.add(console);
-            LayoutComponentBuilder standard = builder.newLayout("PatternLayout");
-            standard.addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n");
-            console.add(standard);
-            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.INFO);
-            rootLogger.add(builder.newAppenderRef("stdout"));
-            builder.add(rootLogger);
-            Configurator.initialize(builder.build());
+            builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("stdout")));
+            LoggerContext ctx = Configurator.initialize(builder.build());
 
             c_logger = LogManager.getLogger(SimpleServerThread.class);
 
