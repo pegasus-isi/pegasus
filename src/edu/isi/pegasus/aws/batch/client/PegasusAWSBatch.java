@@ -58,6 +58,25 @@ public class PegasusAWSBatch {
             // reset logger to class specific
             mLogger = Logger.getLogger(PegasusAWSBatch.class.getName());
         }
+        
+        /* log4j 2.x initialization 
+        // PM-1836 log4j 2.x style configuration
+        // derived from https://logging.apache.org/log4j/2.x/manual/customconfig.html
+        ConfigurationBuilder<BuiltConfiguration> builder =
+                ConfigurationBuilderFactory.newConfigurationBuilder();
+        AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+        console.add(
+                builder.newLayout("PatternLayout")
+                        .addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"));
+        builder.add(console);
+        builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("stdout")));
+        LoggerContext ctx = Configurator.initialize(builder.build());
+        mLogger = org.apache.logging.log4j.LogManager.getLogger(PegasusAWSBatch.class);
+        
+        // with log4j 2.x we dont need to remove any appenders, as we started
+        // with a new configuration. https://stackoverflow.com/questions/32945172/log4j1-x-to-log4j2
+        // mLogger.removeAllAppenders(); // clean house only once
+        */
     }
 
     public PegasusAWSBatch() {
