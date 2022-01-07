@@ -9,7 +9,7 @@ home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 install_requires = [
     # Utils
     # DAX/Workflow
-    "PyYAML>5.3,<5.5",
+    "PyYAML>5.3",
     # pegasus-init
     "GitPython>1.0,<3.2",
     "pamela>=1.0,<1.1",
