@@ -40,7 +40,7 @@ import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 public class Log4j extends LogManager {
 
     /** The property that specifies the path to the log4j properties file. */
-    private static final String LOG4J2_CONF_PROPERTY = "log4j2.properties";
+    private static final String LOG4J2_CONF_PROPERTY_KEY = "log4j.conf";
 
     private static Map<Integer, Level> mLog4jIntToLog4jLevels;
 
@@ -129,7 +129,7 @@ public class Log4j extends LogManager {
         mLogFormatter.setProgramName("pegasus");
 
         // specify the path to the log4j properties file if specified.
-        String conf = properties.getProperty(Log4j.LOG4J2_CONF_PROPERTY);
+        String conf = properties.getProperty(Log4j.LOG4J2_CONF_PROPERTY_KEY);
         if (conf != null) {
             // PropertyConfigurator.configure(conf);
             Configurator.initialize(null, conf);
