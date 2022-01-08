@@ -41,9 +41,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.batch.*;
 import software.amazon.awssdk.services.batch.model.*;
@@ -172,8 +172,8 @@ public class Synch {
             Properties properties, Level level, EnumMap<BATCH_ENTITY_TYPE, String> jsonFileMap)
             throws IOException {
         // "405596411149";
-        mLogger = Logger.getLogger(Synch.class.getName());
-        mLogger.setLevel(level);
+        mLogger = org.apache.logging.log4j.LogManager.getLogger(Synch.class.getName());
+        Configurator.setLevel(Synch.class.getName(), level);
         mAWSAccountID = getProperty(properties, Synch.AWS_PROPERTY_PREFIX, "account");
         mAWSRegion =
                 Region.of(
@@ -468,9 +468,9 @@ public class Synch {
                         mLogger.info("Submitted Job " + response.jobName() + " with id " + jobID);
                         it.remove();
                     } catch (InterruptedException ex) {
-                        mLogger.log(Priority.ERROR, null, ex);
+                        mLogger.log(Level.ERROR, (String) null, ex);
                     } catch (ExecutionException ex) {
-                        mLogger.log(Priority.ERROR, null, ex);
+                        mLogger.log(Level.ERROR, (String) null, ex);
                     }
                 }
             }
@@ -655,7 +655,7 @@ public class Synch {
         try {
             batchClient.close();
         } catch (Exception ex) {
-            mLogger.error(null, ex);
+            mLogger.error((String) null, ex);
             mExitCode = Synch.NON_TASK_FAILURE_EXITCODE;
         }
 
@@ -723,7 +723,7 @@ public class Synch {
         try {
             mBatchClient.close();
         } catch (Exception ex) {
-            mLogger.error(null, ex);
+            mLogger.error((String) null, ex);
         }
         mLogger.info("Shutting down threads ...");
         if (this.mExecutorService != null) {
@@ -813,7 +813,7 @@ public class Synch {
             try {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ex) {
-                mLogger.log(Priority.ERROR, null, ex);
+                mLogger.error((String) null, ex);
             }
             sleepTime += sleepTime;
         }
@@ -861,7 +861,7 @@ public class Synch {
             try {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ex) {
-                mLogger.log(Priority.ERROR, null, ex);
+                mLogger.error((String) null, ex);
             }
         }
         if (!valid) {
@@ -1014,7 +1014,7 @@ public class Synch {
             try {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ex) {
-                mLogger.log(Priority.ERROR, null, ex);
+                mLogger.error((String) null, ex);
             }
             retry++;
         }
@@ -1047,7 +1047,7 @@ public class Synch {
                     mLogger.debug("Sleeping for " + sleepTime);
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException ex) {
-                    mLogger.log(Priority.ERROR, null, ex);
+                    mLogger.error((String) null, ex);
                 }
                 retry++;
                 sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
@@ -1092,7 +1092,7 @@ public class Synch {
             try {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ex) {
-                mLogger.log(Priority.ERROR, null, ex);
+                mLogger.error((String) null, ex);
             }
             retry++;
         }
@@ -1128,7 +1128,7 @@ public class Synch {
                     mLogger.debug("Sleeping for " + sleepTime);
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException ex) {
-                    mLogger.log(Priority.ERROR, null, ex);
+                    mLogger.error((String) null, ex);
                 }
                 retry++;
                 sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
