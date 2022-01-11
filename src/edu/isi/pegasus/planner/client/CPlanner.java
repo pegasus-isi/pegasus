@@ -1185,7 +1185,7 @@ public class CPlanner extends Executable {
                 .append(
                         "\n -C |--cluster         comma separated list of clustering techniques to be applied to the workflow to ")
                 .append(
-                        "\n                       to cluster jobs in to larger jobs, to avoid scheduling overheads.")
+                        "\n                       to cluster jobs in to larger jobs, to avoid scheduling overheads. Can be horizontal|label|whole .")
                 .append(
                         "\n --conf                the path to the properties file to use for planning. Defaults to pegasus.properties file")
                 .append("\n                       in the current working directory ")
