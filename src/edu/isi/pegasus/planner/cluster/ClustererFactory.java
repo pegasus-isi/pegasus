@@ -77,8 +77,15 @@ public class ClustererFactory {
             throw new ClustererFactoryException("No Clustering Technique Specified ");
         }
 
-        // try to find the appropriate partitioner
-        Object partitionerClass = partitionerTable().get(clusterer);
+        // PM-1839 check if a user has specfied a particular partitioner to load
+        // If not, then load a default one
+        Object partitionerClass = properties.getClustererPartitioner(clusterer);
+        if (partitionerClass == null) {
+            // fall back to the default one
+            // try to find the appropriate partitioner
+            partitionerClass = partitionerTable().get(clusterer);
+        }
+
         if (partitionerClass == null) {
             throw new ClustererFactoryException(
                     "No matching partitioner found for clustering technique " + clusterer);

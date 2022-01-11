@@ -2331,6 +2331,20 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Returns the type of partitioner to load for a particular clustering type Useful for
+     * overriding the default partitioner that is loaded for a particular clustering type. Allows
+     * user to specify a "Whole" partitioner to use for label based clustering.
+     *
+     * <p>Referred to by the "pegasus.clusterer.[type].partitioner" property.
+     *
+     * @param type type of clustering being
+     * @return the value specified by the property else null
+     */
+    public String getClustererPartitioner(String type) {
+        return mProps.getProperty("pegasus.clusterer." + type + ".partitioner");
+    }
+
+    /**
      * Returns the estimator to be used
      *
      * <p>Referred to by the "pegasus.estimator" property
