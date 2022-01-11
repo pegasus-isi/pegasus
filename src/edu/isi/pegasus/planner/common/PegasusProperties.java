@@ -2290,29 +2290,6 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
-     * Returns the DAXCallback that is to be used while parsing the DAX.
-     *
-     * <p>Referred to by the "pegasus.partitioner.parser.dax.callback" property.
-     *
-     * @return the value specified in the properties file, else DEFAULT_DAX_CALLBACK
-     * @see #DEFAULT_DAX_CALLBACK
-     */
-    public String getPartitionerDAXCallback() {
-        return mProps.getProperty("pegasus.partitioner.parser.dax.callback", DEFAULT_DAX_CALLBACK);
-    }
-
-    /**
-     * Returns the key that is to be used as a label key, for labelled partitioning.
-     *
-     * <p>Referred to by the "pegasus.partitioner.label.key" property.
-     *
-     * @return the value specified in the properties file.
-     */
-    public String getPartitionerLabelKey() {
-        return mProps.getProperty("pegasus.partitioner.label.key");
-    }
-
-    /**
      * Returns the bundle value for a particular transformation.
      *
      * <p>Referred to by the "pegasus.partitioner.horziontal.bundle.[txname]" property, where
