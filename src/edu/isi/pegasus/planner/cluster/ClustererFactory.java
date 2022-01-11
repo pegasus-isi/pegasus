@@ -44,7 +44,7 @@ public class ClustererFactory {
 
     /** The type corresponding to label based clustering. */
     private static final String LABEL_CLUSTERING_TYPE = "label";
-    
+
     /** The type corresponding to whole workflow clustering. */
     private static final String WHOLE_CLUSTERING_TYPE = "whole";
 

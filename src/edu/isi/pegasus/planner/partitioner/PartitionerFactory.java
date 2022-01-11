@@ -38,7 +38,7 @@ public class PartitionerFactory {
 
     /** The name of the class that does horizontal based partitioning. */
     public static final String HORIZONTAL_PARTITIONING_CLASS = "Horizontal";
-    
+
     /** The name of the class that does whole workflow based partitioning. */
     public static final String WHOLE_WF_PARTITIONING_CLASS = "Whole";
 
