@@ -44,6 +44,9 @@ public class ClustererFactory {
 
     /** The type corresponding to label based clustering. */
     private static final String LABEL_CLUSTERING_TYPE = "label";
+    
+    /** The type corresponding to whole workflow clustering. */
+    private static final String WHOLE_CLUSTERING_TYPE = "whole";
 
     /** The table that maps clustering technique to a partitioner. */
     private static Map mPartitionerTable;
@@ -171,6 +174,7 @@ public class ClustererFactory {
                     HORIZONTAL_CLUSTERING_CLASS.toLowerCase(), HORIZONTAL_CLUSTERING_CLASS);
             mClustererTable.put(VERTICAL_CLUSTERING_CLASS.toLowerCase(), VERTICAL_CLUSTERING_CLASS);
             mClustererTable.put(LABEL_CLUSTERING_TYPE.toLowerCase(), VERTICAL_CLUSTERING_CLASS);
+            mClustererTable.put(WHOLE_CLUSTERING_TYPE.toLowerCase(), VERTICAL_CLUSTERING_CLASS);
         }
         return mClustererTable;
     }
@@ -192,6 +196,9 @@ public class ClustererFactory {
             mPartitionerTable.put(
                     LABEL_CLUSTERING_TYPE.toLowerCase(),
                     PartitionerFactory.LABEL_BASED_PARTITIONING_CLASS);
+            mPartitionerTable.put(
+                    WHOLE_CLUSTERING_TYPE.toLowerCase(),
+                    PartitionerFactory.WHOLE_WF_PARTITIONING_CLASS);
         }
         return mPartitionerTable;
     }
