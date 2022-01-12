@@ -137,10 +137,14 @@ public class PegasusConfiguration {
      * staging site is not determined from the options it is set to be the execution site for the
      * job
      *
+     * @param store the site store
+     * @param job the job for which staging site has to be determined
      * @param options options passed to the planner
      * @return the staging site
+     * @throws RuntimeException in case of unable to determine staging site, or staging site that is
+     *     determined does not exist in the site store
      */
-    public String determineStagingSite(Job job, PlannerOptions options) {
+    public String determineStagingSite(SiteStore store, Job job, PlannerOptions options) {
         // check to see if job has data.mode set
         if (!job.vdsNS.containsKey(Pegasus.DATA_CONFIGURATION_KEY)) {
             throw new RuntimeException(
@@ -192,6 +196,23 @@ public class PegasusConfiguration {
 
                 throw new RuntimeException(sb.toString());
             }
+        }
+
+        // PM-1837 check for existence in the site
+        if (store == null || !store.contains(stagingSite)) {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("Staging Site")
+                    .append(" ")
+                    .append(stagingSite)
+                    .append(" ")
+                    .append("for job")
+                    .append(" ")
+                    .append(job.getID())
+                    .append(" ")
+                    .append("not found in site catalog.");
+
+            throw new RuntimeException(sb.toString());
         }
 
         return stagingSite;
