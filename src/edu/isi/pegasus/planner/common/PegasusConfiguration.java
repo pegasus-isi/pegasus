@@ -132,12 +132,12 @@ public class PegasusConfiguration {
     }
 
     /**
-     * Returns the staging site to be used for a job. The determination is made on the basis of the
+     * Returns the staging site to be used for a job.The determination is made on the basis of the
      * following - data configuration value for job - from planner command line options - If a
      * staging site is not determined from the options it is set to be the execution site for the
      * job
      *
-     * @param job the job for which to determine the staging site
+     * @param options options passed to the planner
      * @return the staging site
      */
     public String determineStagingSite(Job job, PlannerOptions options) {
@@ -150,11 +150,12 @@ public class PegasusConfiguration {
 
         String conf = job.getDataConfiguration();
         // shortcut for condorio
+        String stagingSite = null;
         if (conf.equalsIgnoreCase(PegasusConfiguration.CONDOR_CONFIGURATION_VALUE)) {
             // sanity check against the command line option
             // we are leaving the data mode to be per site
             // by this check
-            String stagingSite = options.getStagingSite(job.getSiteHandle());
+            stagingSite = options.getStagingSite(job.getSiteHandle());
             if (stagingSite == null) {
                 stagingSite = "local";
             } else if (!(stagingSite.equalsIgnoreCase("local"))) {
@@ -171,28 +172,29 @@ public class PegasusConfiguration {
                 throw new RuntimeException(sb.toString());
             }
 
-            return stagingSite;
+        } else {
+            // check for nonsharedfs first
+            stagingSite = options.getStagingSite(job.getSiteHandle());
+            stagingSite = (stagingSite == null) ? job.getSiteHandle() : stagingSite;
+
+            // check for sharedfs
+            if (conf.equalsIgnoreCase(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE)
+                    && !stagingSite.equalsIgnoreCase(job.getSiteHandle())) {
+                StringBuilder sb = new StringBuilder();
+
+                sb.append("Mismatch in the between execution site ")
+                        .append(job.getSiteHandle())
+                        .append(" and staging site ")
+                        .append(stagingSite)
+                        .append(" for job ")
+                        .append(job.getID())
+                        .append(" . For sharedfs they should be the same");
+
+                throw new RuntimeException(sb.toString());
+            }
         }
 
-        String ss = options.getStagingSite(job.getSiteHandle());
-        ss = (ss == null) ? job.getSiteHandle() : ss;
-        // check for sharedfs
-        if (conf.equalsIgnoreCase(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE)
-                && !ss.equalsIgnoreCase(job.getSiteHandle())) {
-            StringBuffer sb = new StringBuffer();
-
-            sb.append("Mismatch in the between execution site ")
-                    .append(job.getSiteHandle())
-                    .append(" and staging site ")
-                    .append(ss)
-                    .append(" for job ")
-                    .append(job.getID())
-                    .append(" . For sharedfs they should be the same");
-
-            throw new RuntimeException(sb.toString());
-        }
-
-        return ss;
+        return stagingSite;
     }
 
     /**
