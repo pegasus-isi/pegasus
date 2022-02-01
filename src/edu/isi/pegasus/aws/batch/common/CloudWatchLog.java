@@ -26,10 +26,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Iterator;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.batch.BatchClient;
@@ -80,8 +79,8 @@ public class CloudWatchLog {
      */
     public void initialze(Region awsRegion, Level logLevel, String logGroup) {
         //"405596411149";
-        mLogger = Logger.getLogger(Synch.class.getName());
-        mLogger.setLevel(logLevel);
+        mLogger = org.apache.logging.log4j.LogManager.getLogger(Synch.class.getName());
+        Configurator.setLevel(Synch.class.getName(), logLevel);
         mLogGroup = logGroup;
         mBatchClient = BatchClient.builder().region(awsRegion).build();
         mCWL = CloudWatchLogsClient.builder().region(awsRegion).build();
@@ -190,7 +189,7 @@ public class CloudWatchLog {
             }
             pw.flush();
         } catch (IOException ex) {
-            mLogger.log(Priority.ERROR, ex);
+            mLogger.error(ex);
         } finally {
             if (stdoutPW != null) {
                 stdoutPW.close();

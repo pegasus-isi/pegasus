@@ -2928,8 +2928,8 @@ Logging Properties
     | | See Also :pegasus.log.manager.formatter     | | log4j or syslog.                                                          |
     |                                               |                                                                             |
     |                                               | | **Log4j**:                                                                |
-    |                                               | | This implementation, uses Log4j to log                                    |
-    |                                               | |  messages. The log4j properties can be specified in                       |
+    |                                               | | This implementation, uses Log4j 2.x (2.17 at time of implementation to    |
+    |                                               | |  log messages. The log4j properties can be specified in                   |
     |                                               | |  a properties file, the location of which is specified                    |
     |                                               | |  by the property pegasus.log.manager.log4j.conf .                         |
     +-----------------------------------------------+-----------------------------------------------------------------------------+

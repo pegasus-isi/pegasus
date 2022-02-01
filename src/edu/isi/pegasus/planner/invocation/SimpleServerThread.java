@@ -14,9 +14,19 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
+import static edu.isi.pegasus.planner.invocation.SimpleServer.c_logger;
+
 import java.io.*;
 import java.net.*;
-import org.apache.log4j.*;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 public class SimpleServerThread extends Thread {
     private String m_remote = null;
@@ -37,12 +47,22 @@ public class SimpleServerThread extends Thread {
         this.m_socket = socket;
         if (c_logger == null) {
             // Singleton-like init
-            c_logger = Logger.getLogger(SimpleServerThread.class);
-            c_logger.setLevel(Level.DEBUG);
-            c_logger.addAppender(
-                    new ConsoleAppender(
-                            new PatternLayout("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %m%n")));
-            c_logger.setAdditivity(false);
+            // PM-1836 log4j 2.x style configuration
+            // derived from https://logging.apache.org/log4j/2.x/manual/customconfig.html
+            ConfigurationBuilder<BuiltConfiguration> builder =
+                    ConfigurationBuilderFactory.newConfigurationBuilder();
+            AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+            console.add(
+                    builder.newLayout("PatternLayout")
+                            .addAttribute(
+                                    "pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"));
+            builder.add(console);
+            builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("stdout")));
+            LoggerContext ctx = Configurator.initialize(builder.build());
+
+            c_logger = LogManager.getLogger(SimpleServerThread.class);
+
+            // c_logger.setAdditivity(false);
         }
 
         InetSocketAddress remote = (InetSocketAddress) m_socket.getRemoteSocketAddress();

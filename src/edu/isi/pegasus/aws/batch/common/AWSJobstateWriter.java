@@ -12,7 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 /** @author Karan Vahi */
 public class AWSJobstateWriter {
@@ -28,7 +28,7 @@ public class AWSJobstateWriter {
 
     public void initialze(File directory, String prefix, Logger logger) {
         // "405596411149";
-        mLogger = Logger.getLogger(AWSJobstateWriter.class.getName());
+        mLogger = org.apache.logging.log4j.LogManager.getLogger(AWSJobstateWriter.class);
         try {
             mJobstateWriter =
                     new PrintWriter(

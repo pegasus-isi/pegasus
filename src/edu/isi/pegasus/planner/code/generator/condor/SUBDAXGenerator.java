@@ -696,7 +696,8 @@ public class SUBDAXGenerator {
 
         // set the staging site to be same as dag job??
         preScriptJob.setStagingSiteHandle(
-                mPegasusConfiguration.determineStagingSite(preScriptJob, mBag.getPlannerOptions()));
+                mPegasusConfiguration.determineStagingSite(
+                        mSiteStore, preScriptJob, mBag.getPlannerOptions()));
 
         GridStart pegasusLiteWrapper = mGridStartFactory.loadGridStart(preScriptJob, null);
 

@@ -636,6 +636,17 @@ For example if the user sets ``pegasus.clusterer.label.key`` to
 -  Each job with the same value for ``PEGASUS`` profile key
    ``user_label`` appears in the same cluster.
 
+Whole Clustering
+----------------
+
+In ``whole`` workflow clustering, all the jobs in the workflow get clustered into
+a single job. This clustering is a specialized case of ``label`` based clustering
+where all jobs in the workflow are assumed to have the same label. This is
+particularly useful when you want to run the whole workflow using **PMC**.
+
+To use whole workflow clustering the user needs to set the ``--cluster`` option
+of :ref:`pegasus-plan <cli-pegasus-plan>` to ``whole``.
+
 Recursive Clustering
 --------------------
 
