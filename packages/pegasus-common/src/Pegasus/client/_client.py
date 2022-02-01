@@ -736,13 +736,13 @@ class Workflow:
         self._submit_dir = submit_dir
         self.braindump = self._get_braindump(self._submit_dir)
 
-        self.client = client or from_env()
-
         self.run = None
         self.status = None
         self.remove = None
         self.analyze = None
         self.statistics = None
+
+        self.client = client or from_env()
 
     @property
     def client(self):
@@ -752,11 +752,12 @@ class Workflow:
     def client(self, client: Client):
         self._client = client
 
-        self.run = partial(self._client.run, self._submit_dir)
-        self.status = partial(self._client.status, self._submit_dir)
-        self.remove = partial(self._client.remove, self._submit_dir)
-        self.analyze = partial(self._client.analyzer, self._submit_dir)
-        self.statistics = partial(self._client.statistics, self._submit_dir)
+        if self._client:
+            self.run = partial(self._client.run, self._submit_dir)
+            self.status = partial(self._client.status, self._submit_dir)
+            self.remove = partial(self._client.remove, self._submit_dir)
+            self.analyze = partial(self._client.analyzer, self._submit_dir)
+            self.statistics = partial(self._client.statistics, self._submit_dir)
 
     @staticmethod
     def _get_braindump(submit_dir: str):
