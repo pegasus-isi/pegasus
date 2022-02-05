@@ -1,8 +1,10 @@
 import logging
 import os
 import unittest
+import uuid
 from configparser import ConfigParser
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import boto3
 import botocore
@@ -86,6 +88,100 @@ class TestPaths(unittest.TestCase):
         self.assertRaises(Exception, s3.get_key_for_path, "/foo", "/bar", "bar")
 
 
+# assumption is that .pegasus/credentials.conf exists with proper configuration
+def is_missing_credentials():
+    try:
+        CFG_PATH = (Path.home() / ".pegasus/credentials.conf").resolve()
+    except FileNotFoundError:
+        return True
+
+    cfg = ConfigParser()
+    if len(cfg.read(str(CFG_PATH))) != 1:
+        return True
+
+    if "osgconnect" not in cfg and "rynge@osgconnect" not in cfg:
+        return True
+
+    return False
+
+
+class TestConfig:
+    def test_get_config_set_with_cli(self):
+        with NamedTemporaryFile(mode="w+") as f:
+            config = ConfigParser()
+            config["DEFAULT"]["test"] = "some text"
+            config.write(f)
+            f.seek(0)
+
+            parser, options = s3.parse_args(("-C", f.name))
+            read_config = s3.get_config(options)
+            assert read_config["DEFAULT"]["test"] == "some text"
+
+    def test_get_config_set_with_env(self, monkeypatch):
+        with NamedTemporaryFile(mode="w+") as f:
+            config = ConfigParser()
+            config["DEFAULT"]["test2"] = "some text"
+            config.write(f)
+            f.seek(0)
+
+            monkeypatch.setenv("S3CFG", f.name)
+
+            parser, options = s3.parse_args(())
+            read_config = s3.get_config(options)
+            assert read_config["DEFAULT"]["test2"] == "some text"
+
+    @pytest.mark.skipif(
+        is_missing_credentials(), reason="missing credentials, can't do test"
+    )
+    def test_get_config_from_default_location(self):
+        credential_path = Path.home() / "credentials.conf"
+        assert credential_path.exists()
+
+        parser, options = s3.parse_args(())
+        read_config = s3.get_config(options)
+
+        assert "osgconnect" in read_config
+
+    def test_get_config_from_old_default_location(self, monkeypatch):
+        # set default credential path to a filename that should not exist in cwd
+        monkeypatch.setattr(s3, "DEFAULT_CREDENTIAL_PATH", str(uuid.uuid1()))
+
+        # create a temporary, secondary config
+        with NamedTemporaryFile(mode="w+") as f:
+            config = ConfigParser()
+            config["DEFAULT"]["test3"] = "some text"
+            config.write(f)
+            f.seek(0)
+
+            # overwrite the old default config location to be this temporary file
+            monkeypatch.setattr(s3, "OLD_DEFAULT_CREDENTIAL_PATH", f.name)
+
+            parser, options = s3.parse_args(())
+            read_config = s3.get_config(options)
+
+        assert "test3" in read_config["DEFAULT"]
+
+    def test_config_not_found(self):
+        parser, options = s3.parse_args(("-C", "bad_path_that_wont_exist087402170274x"))
+
+        with pytest.raises(Exception) as e:
+            s3.get_config(options)
+
+        assert "Config file not found" in str(e)
+
+    def test_config_has_invalid_permissions(self):
+        with NamedTemporaryFile(mode="w") as f:
+            # set the most liberal permissions for our fake config file
+            parser, options = s3.parse_args(("-C", f.name))
+            Path(f.name).chmod(0o777)
+            with pytest.raises(Exception) as e:
+                s3.get_config(options)
+
+            assert "Permissions of config file {} are too liberal".format(
+                f.name
+            ) in str(e)
+
+
 # --- testing pegasus-s3 commands ----------------------------------------------
 @pytest.fixture(scope="module")
 def s3_client():
@@ -128,23 +224,6 @@ def test_file():
     yield test_file
 
     test_file.unlink()
-
-
-# assumption is that .pegasus/credentials.conf exists with proper configuration
-def is_missing_credentials():
-    try:
-        CFG_PATH = (Path.home() / ".pegasus/credentials.conf").resolve()
-    except FileNotFoundError:
-        return True
-
-    cfg = ConfigParser()
-    if len(cfg.read(str(CFG_PATH))) != 1:
-        return True
-
-    if "osgconnect" not in cfg and "rynge@osgconnect" not in cfg:
-        return True
-
-    return False
 
 
 class TestLs:
@@ -412,7 +491,7 @@ class TestMkdir:
 
     @pytest.mark.skipif(is_missing_credentials(), reason="missing credentials")
     def test_mkdir_bucket_already_owned_by_user(self, s3_client, caplog):
-        BUCKET = "test-bucket"
+        BUCKET = "test-bucket2"
 
         # create test bucket before calling mkdir on same bucket
         s3_client.create_bucket(Bucket=BUCKET)
@@ -428,7 +507,7 @@ class TestMkdir:
             (
                 "root",
                 logging.WARNING,
-                "Bucket: test-bucket exists and is already owned by user: rynge@osgconnect",
+                "Bucket: test-bucket2 exists and is already owned by user: rynge@osgconnect",
             )
         ]
 
@@ -591,7 +670,7 @@ class TestPut:
 
     @pytest.mark.skipif(is_missing_credentials(), reason="missing credentials")
     def test_put(self, s3_client, test_file):
-        BUCKET = "test-bucket"
+        BUCKET = "test-bucket-for-put-command"
 
         # create test bucket
         s3_client.create_bucket(Bucket=BUCKET)
