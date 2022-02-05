@@ -143,6 +143,10 @@ def get_path_for_key(bucket, searchkey, key, output):
         return os.path.join(output, relpath)
 
 
+DEFAULT_CREDENTIAL_PATH = "~/.pegasus/credentials.conf"
+OLD_DEFAULT_CREDENTIAL_PATH = "~/.pegasus/s3cfg"
+
+
 def get_config(options):
     S3CFG = os.getenv("S3CFG", None)
     if options.config:
@@ -153,12 +157,12 @@ def get_config(options):
         cfg = S3CFG
     else:
         # New default
-        new_default = os.path.expanduser("~/.pegasus/s3cfg")
+        new_default = os.path.expanduser(DEFAULT_CREDENTIAL_PATH)
         if os.path.isfile(new_default):
             cfg = new_default
         else:
             # If the new default doesn't exist, try the old default
-            cfg = os.path.expanduser("~/.s3cfg")
+            cfg = os.path.expanduser(OLD_DEFAULT_CREDENTIAL_PATH)
 
     if not os.path.isfile(cfg):
         raise Exception("Config file not found")
