@@ -1,4 +1,4 @@
-FROM centos:8
+FROM rockylinux:8
 
 RUN groupadd --gid 808 scitech-group
 RUN useradd --gid 808 --uid 550 --create-home --password '$6$ouJkMasm5X8E4Aye$QTFH2cHk4b8/TmzAcCxbTz7Y84xyNFs.gqm/HWEykdngmOgELums1qOi3e6r8Z.j7GEA9bObS/2pTN1WArGNf0' scitech
@@ -11,6 +11,7 @@ RUN dnf -y update && \
 
 RUN dnf -y install --allowerasing --nobest \
      curl \
+     gcc \
      docker-ce \
      glibc-langpack-en \
      graphviz \
