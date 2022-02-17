@@ -268,6 +268,13 @@ class ReplicaCatalog(Writable):
 
             pfn = str(pfn)
 
+        if isinstance(pfn, File):
+            raise TypeError(
+                "Invalid pfn: {}, the given pfn must be a str or pathlib.Path".format(
+                    pfn
+                )
+            )
+
         metadata = metadata or dict()
         checksum = checksum or dict()
 

@@ -191,7 +191,17 @@ class TestReplicaCatalog:
         with pytest.raises(ValueError) as e:
             rc.add_replica("local", "f.a", Path("file"))
 
-        assert "Invalid pfn: file" in str(e)
+        assert "Invalid pfn: file, the given path must be an absolute path" in str(e)
+
+    def test_add_replica_pfn_as_file_object(self):
+        rc = ReplicaCatalog()
+        with pytest.raises(TypeError) as e:
+            rc.add_replica(site="local", lfn="test_lfn", pfn=File("badfile"))
+
+        assert (
+            "Invalid pfn: badfile, the given pfn must be a str or pathlib.Path"
+            in str(e)
+        )
 
     def test_add_replica_file_as_lfn(self):
         rc = ReplicaCatalog()
