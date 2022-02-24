@@ -96,7 +96,7 @@ setup(
     long_description_content_type="text/markdown",
     license="Apache2",
     url="http://pegasus.isi.edu",
-    project_url={
+    project_urls={
         "Documentation": "https://pegasus.isi.edu/documentation/",
         "Changes": "https://pegasus.isi.edu/blog/?category_name=Release",
         "Source Code": "https://github.com/pegasus-isi/pegasus",
