@@ -82,11 +82,18 @@ class Test_Use:
                 _Use(
                     File("a"), _LinkType.INPUT, stage_out=None, register_replica=False
                 ),
-                {"lfn": "a", "type": "input", "registerReplica": False,},
+                {
+                    "lfn": "a",
+                    "type": "input",
+                    "registerReplica": False,
+                },
             ),
             (
                 _Use(File("a"), _LinkType.INPUT, stage_out=None, register_replica=None),
-                {"lfn": "a", "type": "input",},
+                {
+                    "lfn": "a",
+                    "type": "input",
+                },
             ),
             (
                 _Use(
@@ -1400,7 +1407,7 @@ class TestWorkflow:
         with wf_path.open("w+") as f:
             wf.write(f)
             f.seek(0)
-            result = yaml.load(f)
+            result = yaml.safe_load(f)
 
         expected = {
             "pegasus": "5.0",
@@ -1512,7 +1519,10 @@ class TestWorkflow:
                             "file": "subwf_testID.yml",
                             "arguments": ["arg1"],
                             "uses": [
-                                {"lfn": "if.txt", "type": "input",},
+                                {
+                                    "lfn": "if.txt",
+                                    "type": "input",
+                                },
                                 {"lfn": "subwf_testID.yml", "type": "input"},
                             ],
                         }
@@ -1549,7 +1559,10 @@ class TestWorkflow:
                             "file": "subwf_testID.yml",
                             "arguments": ["arg1"],
                             "uses": [
-                                {"lfn": "if.txt", "type": "input",},
+                                {
+                                    "lfn": "if.txt",
+                                    "type": "input",
+                                },
                                 {"lfn": "subwf_testID.yml", "type": "input"},
                             ],
                         }
@@ -1567,7 +1580,7 @@ class TestWorkflow:
         with NamedTemporaryFile(mode="w+") as f:
             workflow.write(f)
             f.seek(0)
-            result = yaml.load(f)
+            result = yaml.safe_load(f)
 
         # validate written workflow yaml
         workflow_schema = load_schema("wf-5.0.json")
