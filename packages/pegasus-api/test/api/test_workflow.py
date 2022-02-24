@@ -82,18 +82,11 @@ class Test_Use:
                 _Use(
                     File("a"), _LinkType.INPUT, stage_out=None, register_replica=False
                 ),
-                {
-                    "lfn": "a",
-                    "type": "input",
-                    "registerReplica": False,
-                },
+                {"lfn": "a", "type": "input", "registerReplica": False,},
             ),
             (
                 _Use(File("a"), _LinkType.INPUT, stage_out=None, register_replica=None),
-                {
-                    "lfn": "a",
-                    "type": "input",
-                },
+                {"lfn": "a", "type": "input",},
             ),
             (
                 _Use(
@@ -1519,10 +1512,7 @@ class TestWorkflow:
                             "file": "subwf_testID.yml",
                             "arguments": ["arg1"],
                             "uses": [
-                                {
-                                    "lfn": "if.txt",
-                                    "type": "input",
-                                },
+                                {"lfn": "if.txt", "type": "input",},
                                 {"lfn": "subwf_testID.yml", "type": "input"},
                             ],
                         }
@@ -1559,10 +1549,7 @@ class TestWorkflow:
                             "file": "subwf_testID.yml",
                             "arguments": ["arg1"],
                             "uses": [
-                                {
-                                    "lfn": "if.txt",
-                                    "type": "input",
-                                },
+                                {"lfn": "if.txt", "type": "input",},
                                 {"lfn": "subwf_testID.yml", "type": "input"},
                             ],
                         }
