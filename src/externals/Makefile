@@ -67,7 +67,7 @@ $(LIBDIR)/%:
 	touch $@
 
 $(LIBDIR)/flask: Flask-1.1.1.tar.gz
-$(LIBDIR)/flask_caching: Flask-Caching-1.8.0.tar.gz
+$(LIBDIR)/flask_caching: Flask-Caching-1.10.1.tar.gz
 $(LIBDIR)/jinja2: Jinja2-2.11.1.tar.gz
 $(LIBDIR)/markupsafe: MarkupSafe-1.1.1.tar.gz
 $(LIBDIR)/pyjwt: PyJWT-1.7.1.tar.gz
