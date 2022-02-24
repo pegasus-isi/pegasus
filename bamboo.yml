@@ -59,10 +59,6 @@ project:
                 - name: pegasus-source
                   copyPattern: "pegasus-source.tar.gz"
                   isShared: true
-              requirements:
-                - capabilityKey: docbuild
-                  matchType: !equals
-                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
@@ -942,9 +938,9 @@ project:
                     scriptBody: |
                       TAG=${bamboo_TAG_CENTOS_8}
 
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+                      docker pull pegasus/pegasus:${TAG}
 
-                      /opt/docker/docker-bamboo-wrapper run \
+                      docker run \
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
@@ -974,9 +970,9 @@ project:
                     scriptBody: |
                       TAG=${bamboo_TAG_CENTOS_8}
 
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+                      docker pull pegasus/pegasus:${TAG}
 
-                      /opt/docker/docker-bamboo-wrapper run \
+                      docker run \
                       --rm \
                       --entrypoint ant \
                       --env "USER=bamboo" \
@@ -1009,9 +1005,9 @@ project:
                     scriptBody: |
                       TAG=${bamboo_TAG_CENTOS_7}
 
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
+                      docker pull pegasus/pegasus:${TAG}
 
-                      /opt/docker/docker-bamboo-wrapper run \
+                      docker run \
                       --rm \
                       --env "LANG=en_US.utf8" \
                       --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
@@ -1053,9 +1049,6 @@ project:
                   isShared: true
               artifactDependencies:
                 - name: pegasus-source
-              requirements:
-                - capabilityKey: docbuild
-                  matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BA3
