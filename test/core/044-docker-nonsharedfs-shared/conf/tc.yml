@@ -51,7 +51,7 @@ containers:
  -
   name: "centos-base"
   type: "docker"
-  image: "docker:///opensciencegrid/osgvo-el7:latest"
+  image: "docker:///hub.opensciencegrid.org/opensciencegrid/osgvo-el8:latest"
   image.site: "local"
   mounts:
    - "/lizard:/lizard"
