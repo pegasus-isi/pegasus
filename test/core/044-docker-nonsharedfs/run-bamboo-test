@@ -41,7 +41,7 @@ export PYTHONPATH=`pegasus-config --python`
 pegasus-plan \
     --conf ./pegasusrc \
     --sites condorpool \
-    --staging-site cartman-data \
+    --staging-site workflow-webdav \
     --output-sites local \
     --dir dags \
     --cluster horizontal \
