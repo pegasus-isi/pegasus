@@ -1247,24 +1247,46 @@ public class PegasusLite implements GridStart {
     }
 
     /**
-     * Determines the path to common shell functions file that Pegasus Lite wrapped jobs use.
+     * Determines the path to common shell functions file that Pegasus Lite wrapped jobs use. The
+     * path returned is the path on to the submit directory for the workflow. If the file does not
+     * exist for whatever reason, then we default back to the share directory location in the submit
+     * host Pegasus installation.
      *
      * @return the path on the submit host.
      */
     protected String getSubmitHostPathToPegasusLiteCommon() {
         StringBuffer path = new StringBuffer();
 
-        // first get the path to the share directory
-        File share = mProps.getSharedDir();
-        if (share == null) {
-            throw new RuntimeException("Property for Pegasus share directory is not set");
-        }
-
-        path.append(share.getAbsolutePath())
-                .append(File.separator)
-                .append("sh")
+        // PM-1851 opt for a path in the submit directory
+        path.append(this.mSubmitDir)
                 .append(File.separator)
                 .append(PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME);
+
+        if (!new File(path.toString()).exists()) {
+            // make sure the path exists, else revert to the location from
+            // the Pegasus install
+            mLogger.log(
+                    PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME
+                            + " "
+                            + "does not exist in the submit directory"
+                            + " "
+                            + mSubmitDir
+                            + ". Reverting to the pegasus install location",
+                    LogManager.ERROR_MESSAGE_LEVEL);
+            path = new StringBuffer();
+
+            // first get the path to the share directory
+            File share = mProps.getSharedDir();
+            if (share == null) {
+                throw new RuntimeException("Property for Pegasus share directory is not set");
+            }
+
+            path.append(share.getAbsolutePath())
+                    .append(File.separator)
+                    .append("sh")
+                    .append(File.separator)
+                    .append(PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME);
+        }
 
         return path.toString();
     }
