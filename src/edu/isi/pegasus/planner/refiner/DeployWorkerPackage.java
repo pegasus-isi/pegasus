@@ -351,6 +351,8 @@ public class DeployWorkerPackage extends Engine {
         CreateWorkerPackage cw = new CreateWorkerPackage(mBag);
         // PM-1046 copy the worker package instead of creating our own
         mSubmitHostWorkerPackage = cw.copy();
+        // PM-1851 we need to copy the pegasus-lite-common also to the submit directory
+        cw.copyPegasusLiteCommon();
 
         // load the transformation selector. different
         // selectors may end up being loaded for different jobs.

@@ -15,13 +15,16 @@ package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.channels.FileChannel;
 
 /**
@@ -108,6 +111,51 @@ public class CreateWorkerPackage {
                             + directory);
         }
         return destFile;
+    }
+
+    /**
+     * Copies the pegasus-lite-common.sh file into the submit directory for the workflow
+     *
+     * @return the sourcePath to pegasus lite common in the submit directory
+     */
+    public File copyPegasusLiteCommon() {
+
+        StringBuffer sourcePath = new StringBuffer();
+
+        // first get the sourcePath to the share directory
+        File share = mBag.getPegasusProperties().getSharedDir();
+        if (share == null) {
+            throw new RuntimeException("Property for Pegasus share directory is not set");
+        }
+
+        sourcePath
+                .append(share.getAbsolutePath())
+                .append(File.separator)
+                .append("sh")
+                .append(File.separator)
+                .append(PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME);
+
+        PlannerOptions options = mBag.getPlannerOptions();
+        if (options == null) {
+            throw new RuntimeException("No planner options specified " + options);
+        }
+
+        File result = null;
+        File destDir = new File(options.getSubmitDirectory());
+        try {
+            result = FileUtils.copy(new File(sourcePath.toString()), destDir);
+        } catch (IOException ioe) {
+            throw new RuntimeException(
+                    "Unable to copy"
+                            + " "
+                            + PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME
+                            + " "
+                            + "to the submit directory"
+                            + " "
+                            + destDir,
+                    ioe);
+        }
+        return result;
     }
 }
 
