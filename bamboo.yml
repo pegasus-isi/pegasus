@@ -936,23 +936,20 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_8}
-
-                      docker pull pegasus/pegasus:${TAG}
-
-                      docker run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --env "CI=true" \
-                      --env "bamboo_buildKey=${bamboo_buildKey}" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} code-format-java
+                      export USER=bamboo
+                      export CI=true
+                      export bamboo_buildKey=${bamboo_buildKey}
+                      cd pegasus-source
+                      ant code-format-java
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: centos
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 8
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: PCF
@@ -968,23 +965,20 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_8}
-
-                      docker pull pegasus/pegasus:${TAG}
-
-                      docker run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --env "CI=true" \
-                      --env "bamboo_buildKey=${bamboo_buildKey}" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} code-format-python
+                      export USER=bamboo
+                      export CI=true
+                      export bamboo_buildKey=${bamboo_buildKey}
+                      cd pegasus-source
+                      ant code-format-python
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: centos
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 8
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
         - name: Build
@@ -1003,17 +997,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_7}
-
-                      docker pull pegasus/pegasus:${TAG}
-
-                      docker run \
-                      --rm \
-                      --env "LANG=en_US.utf8" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      dist-doc
+                      cd pegasus-source
+                      ant dist-doc
               artifactDefinitions:
                 - name: pegasus-doc
                   copyPattern: "pegasus-doc-*.tar.gz"
@@ -1022,8 +1007,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: centos
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 8
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BR
