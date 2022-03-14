@@ -2408,7 +2408,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             logger.info("No transfer_access_token was supplied")
 
         try:
-            cred_details["transfer_at_exp"] = config.get("oauth", "transfer_at_exp")
+            cred_details["transfer_at_exp"] = config.getint("oauth", "transfer_at_exp")
         except (configparser.NoSectionError, configparser.NoOptionError):
             logger.info(
                 "No transfer_access_token_expiration was supplied, defaults to 0"
