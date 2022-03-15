@@ -36,8 +36,10 @@ Options
 **-h**; \ **--help**
    Prints a usage summary with all the available command-line options.
 
-**--permanent**
+**-p**; \ **--permanent**
    Requests a refresh token that can be used indefinetely. Access can be
-   revoked from globus web interface (manage consents)
+   revoked from globus web interface (manage consents).
 
-
+**-e**; \ **--endpoints**
+   A list of endpoints that require data_access consent to move data to
+   and from them. Access can be revoked from globus web interface.
