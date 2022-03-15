@@ -129,7 +129,7 @@ def wait_for_task(transfer_client, task_id, acceptable_faults=None):
             % (task_id, loop_counter * wait_timeout)
         )
         task_errors = transfer_client.task_event_list(
-            task_id=task_id, limit=20, query_params={"filter": "is_error:1"}
+            task_id=task_id, limit=20, filter_is_error=True
         )
         for error in task_errors:
             details = re.sub(r"\n|\r", " ", error["description"])
