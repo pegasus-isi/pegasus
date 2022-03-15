@@ -38,10 +38,10 @@ PACKAGES+=six
 PACKAGES+=urllib3
 
 
-ifeq ($(shell python --version 2>&1 | grep " 2.6"),)
+ifeq ($(shell python --version 2>&1 | grep " 2."),)
     PACKAGES+=globus_sdk
 else
-    $(warning WARNING: globus_sdk does not work with Python 2.6: skipping globus_sdk library)
+    $(warning WARNING: globus_sdk does not work with Python 2.x: skipping globus_sdk library)
 endif
 
 PYOPENSSL_ARGS=
