@@ -296,21 +296,19 @@ public class DeployWorkerPackage extends Engine {
 
         mTransferWorkerPackage = mProps.transferWorkerPackage();
 
-        // mWorkerNodeExecution   = mProps.executeOnWorkerNode();
-
-        // load the transfer setup implementation
-        // To DO . specify type for loading
-        /* PM-833
-        mSetupTransferImplementation = ImplementationFactory.loadInstance(
-                                                          bag,
-                                                          ImplementationFactory.TYPE_SETUP );
-        */
         mUserSpecifiedSourceLocation = mProps.getBaseSourceURLForSetupTransfers();
         mUseUserSpecifiedSourceLocation =
                 !(mUserSpecifiedSourceLocation == null
                         || mUserSpecifiedSourceLocation.trim().length() == 0);
 
         Version version = Version.instance();
+
+        CreateWorkerPackage cw = new CreateWorkerPackage(mBag);
+        // PM-1851 we need to copy the pegasus-lite-common also to the submit directory
+        // we want to do it all cases irrespective of whether deployment is required
+        // or not, since after 5.0 the sub workflows are planned via PegasusLite in
+        // the prescript
+        cw.copyPegasusLiteCommon();
     }
 
     /**
@@ -351,8 +349,6 @@ public class DeployWorkerPackage extends Engine {
         CreateWorkerPackage cw = new CreateWorkerPackage(mBag);
         // PM-1046 copy the worker package instead of creating our own
         mSubmitHostWorkerPackage = cw.copy();
-        // PM-1851 we need to copy the pegasus-lite-common also to the submit directory
-        cw.copyPegasusLiteCommon();
 
         // load the transformation selector. different
         // selectors may end up being loaded for different jobs.
