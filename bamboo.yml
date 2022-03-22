@@ -172,113 +172,6 @@ project:
                     matchValue: 3
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: D9CUT
-              name: Debian 9 Unit Tests
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Unit Tests
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      cd pegasus-source
-                      ant test-kickstart test-pmc test-transfer
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: distro
-                  matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 9
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: D9JUT
-              name: Debian 9 Java Unit Tests
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Java Unit Tests
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      cd pegasus-source
-                      ant test-java
-                - !junitParser
-                  description: Parse Test Report
-                  testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
-                  pickUpTestResultsCreatedOutsideOfBuild: false
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: distro
-                  matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 9
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: D9PUT
-              name: Debian 9 Python Unit Tests
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Python Unit Tests
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      cd pegasus-source
-                      ant test-python
-                - !junitParser
-                  description: Parse Test Report
-                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
-                  pickUpTestResultsCreatedOutsideOfBuild: false
-              artifactDefinitions:
-                - name: Coverage Report - Pegasus Common
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-common/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus API
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-api/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus DAX
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus Worker
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-worker/htmlcov/
-                  isShared: false
-                - name: Coverage Report - Pegasus WMS
-                  copyPattern: "*"
-                  location: pegasus-source/packages/pegasus-python/htmlcov/
-                  isShared: false
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: distro
-                  matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 9
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: D10CUT
               name: Debian 10 Unit Tests
               tasks:
@@ -1228,45 +1121,6 @@ project:
                     matchValue: 8
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXDS
-              name: Build Debian 9
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      cd pegasus-source
-                      ant clean dist-deb dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_deb_9
-                  copyPattern: "pegasus-binary-*-x86_64_deb_9.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-deb-x86_64_deb_9
-                  copyPattern: "*.deb"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_deb_9
-                  copyPattern: "pegasus-worker-*-x86_64_deb_9.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: distro
-                  matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 9
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
               name: Build Debian 10
               enabled: true
@@ -1507,8 +1361,6 @@ project:
                       mv pegasus-r-pegasus*.tar.gz $DOWNLOADS/
 
                       # debian
-                      mkdir -p $DOWNLOADS/debian/dists/stretch/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*deb9_amd64.deb $DOWNLOADS/debian/dists/stretch/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb10_amd64.deb $DOWNLOADS/debian/dists/buster/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/bullseye/main/binary-amd64
@@ -1555,7 +1407,6 @@ project:
                       scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
                 - name: pegasus-binary-x86_64_alpine_3
-                - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_deb_11
                 - name: pegasus-binary-x86_64_macos
@@ -1563,7 +1414,6 @@ project:
                 - name: pegasus-binary-x86_64_rhel_8
                 - name: pegasus-binary-x86_64_ubuntu_18
                 - name: pegasus-binary-x86_64_ubuntu_20
-                - name: pegasus-deb-x86_64_deb_9
                 - name: pegasus-deb-x86_64_deb_10
                 - name: pegasus-deb-x86_64_deb_11
                 - name: pegasus-deb-x86_64_ubuntu_18
@@ -1577,7 +1427,6 @@ project:
                 - name: pegasus-source-versioned
                 - name: pegasus-srcrpm
                 - name: pegasus-worker-x86_64_alpine_3
-                - name: pegasus-worker-x86_64_deb_9
                 - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_deb_11
                 - name: pegasus-worker-x86_64_macos
@@ -1674,8 +1523,6 @@ project:
           value: centos7
         - key: TAG_CENTOS_8
           value: centos8
-        - key: TAG_DEBIAN_9
-          value: stretch
         - key: TAG_DEBIAN_10
           value: buster
         - key: TAG_DEBIAN_11
