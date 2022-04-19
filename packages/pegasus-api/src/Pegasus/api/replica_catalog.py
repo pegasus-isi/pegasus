@@ -31,7 +31,7 @@ class _PFN:
         return "<_PFN site: {}, pfn: {}>".format(self.site, self.pfn)
 
     def __json__(self):
-        return {"site": self.site, "pfn": self.pfn}
+        return OrderedDict([("site", self.site), ("pfn", self.pfn)])
 
 
 class File(MetadataMixin):
@@ -58,7 +58,7 @@ class File(MetadataMixin):
                 "invalid lfn: {lfn}; lfn must be of type str".format(lfn=lfn)
             )
 
-        self.metadata = dict()
+        self.metadata = OrderedDict()
         self.lfn = lfn
         self.size = size
         if size:
@@ -80,11 +80,13 @@ class File(MetadataMixin):
 
     def __json__(self):
         return _filter_out_nones(
-            {
-                "lfn": self.lfn,
-                "metadata": self.metadata if len(self.metadata) > 0 else None,
-                "size": self.size,
-            }
+            OrderedDict(
+                [
+                    ("lfn", self.lfn),
+                    ("metadata", self.metadata if len(self.metadata) > 0 else None),
+                    ("size", self.size),
+                ]
+            )
         )
 
 
@@ -99,19 +101,21 @@ class _ReplicaCatalogEntry:
     ):
         self.lfn = lfn
         self.pfns = pfns
-        self.checksum = checksum or dict()
-        self.metadata = metadata or dict()
+        self.checksum = checksum or OrderedDict()
+        self.metadata = metadata or OrderedDict()
         self.regex = regex
 
     def __json__(self):
         return _filter_out_nones(
-            {
-                "lfn": self.lfn,
-                "pfns": [pfn for pfn in self.pfns],
-                "checksum": self.checksum if len(self.checksum) > 0 else None,
-                "metadata": self.metadata if len(self.metadata) > 0 else None,
-                "regex": self.regex if self.regex else None,
-            }
+            OrderedDict(
+                [
+                    ("lfn", self.lfn),
+                    ("pfns", [pfn for pfn in self.pfns]),
+                    ("checksum", self.checksum if len(self.checksum) > 0 else None),
+                    ("metadata", self.metadata if len(self.metadata) > 0 else None),
+                    ("regex", self.regex if self.regex else None),
+                ]
+            )
         )
 
 
@@ -187,7 +191,7 @@ class ReplicaCatalog(Writable):
         :raises DuplicateError: Duplicate patterns with different PFNs are currently not supported
         """
 
-        metadata = metadata or dict()
+        metadata = metadata or OrderedDict()
 
         # restricting pattern to single pfn (may be relaxed in future release)
         if (pattern, True) in self.entries:
@@ -275,8 +279,8 @@ class ReplicaCatalog(Writable):
                 )
             )
 
-        metadata = metadata or dict()
-        checksum = checksum or dict()
+        metadata = metadata or OrderedDict()
+        checksum = checksum or OrderedDict()
 
         # File might contain metadata that should be included
         if isinstance(lfn, File):
