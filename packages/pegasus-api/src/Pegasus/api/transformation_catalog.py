@@ -127,7 +127,7 @@ class Container(ProfileMixin):
             )
         self.metadata = metadata
 
-        self.profiles = defaultdict(dict)
+        self.profiles = defaultdict(OrderedDict)
 
         # add additional arguments if given (this is not part of the schema
         # and must be added to profiles)
@@ -140,17 +140,24 @@ class Container(ProfileMixin):
 
     def __json__(self):
         return _filter_out_nones(
-            {
-                "name": self.name,
-                "type": self.container_type,
-                "image": self.image,
-                "mounts": self.mounts,
-                "bypass": self.bypass,
-                "image.site": self.image_site,
-                "checksum": self.checksum,
-                "metadata": self.metadata,
-                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-            }
+            OrderedDict(
+                [
+                    ("name", self.name),
+                    ("type", self.container_type),
+                    ("image", self.image),
+                    ("mounts", self.mounts),
+                    ("bypass", self.bypass),
+                    ("image.site", self.image_site),
+                    ("checksum", self.checksum),
+                    ("metadata", self.metadata),
+                    (
+                        "profiles",
+                        OrderedDict(sorted(self.profiles.items(), key=lambda _: _[0]))
+                        if len(self.profiles) > 0
+                        else None,
+                    ),
+                ]
+            )
         )
 
 
@@ -262,25 +269,34 @@ class TransformationSite(ProfileMixin, MetadataMixin):
                 )
         self.container = container_name
 
-        self.profiles = defaultdict(dict)
-        self.metadata = dict()
+        self.profiles = defaultdict(OrderedDict)
+        self.metadata = OrderedDict()
 
     def __json__(self):
-
         return _filter_out_nones(
-            {
-                "name": self.name,
-                "pfn": self.pfn,
-                "type": self.transformation_type,
-                "bypass": self.bypass,
-                "arch": self.arch,
-                "os.type": self.os_type,
-                "os.release": self.os_release,
-                "os.version": self.os_version,
-                "container": self.container,
-                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-                "metadata": dict(self.metadata) if len(self.metadata) > 0 else None,
-            }
+            OrderedDict(
+                [
+                    ("name", self.name),
+                    ("pfn", self.pfn),
+                    ("type", self.transformation_type),
+                    ("bypass", self.bypass),
+                    ("arch", self.arch),
+                    ("os.type", self.os_type),
+                    ("os.release", self.os_release),
+                    ("os.version", self.os_version),
+                    ("container", self.container),
+                    (
+                        "profiles",
+                        OrderedDict(sorted(self.profiles.items(), key=lambda _: _[0]))
+                        if len(self.profiles) > 0
+                        else None,
+                    ),
+                    (
+                        "metadata",
+                        dict(self.metadata) if len(self.metadata) > 0 else None,
+                    ),
+                ]
+            )
         )
 
 
@@ -315,7 +331,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         applied to the site, else they are ignored. When a transformation resides
         multiple sites, the syntax in Example 2 can be used where multiple
         TransformationSite objects can be added. Note that when specifying a checksum
-        such as :code:`{"sha256": <value>}` , this only applies stageable executables. 
+        such as :code:`{"sha256": <value>}` , this only applies stageable executables.
 
         .. code-block:: python
 
@@ -398,12 +414,12 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.namespace = namespace
         self.version = version
 
-        self.sites = dict()
+        self.sites = OrderedDict()
         self.requires = set()
 
         self.hooks = defaultdict(list)
-        self.profiles = defaultdict(dict)
-        self.metadata = dict()
+        self.profiles = defaultdict(OrderedDict)
+        self.metadata = OrderedDict()
 
         # add site if site if given
         if site is not None and pfn is not None:
@@ -536,24 +552,39 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
     def __json__(self):
         return _filter_out_nones(
-            {
-                "namespace": self.namespace,
-                "name": self.name,
-                "version": self.version,
-                "requires": [req for req in self.requires]
-                if len(self.requires) > 0
-                else None,
-                "sites": [site for _, site in self.sites.items()],
-                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-                "hooks": {
-                    hook_name: [hook for hook in values]
-                    for hook_name, values in self.hooks.items()
-                }
-                if len(self.hooks) > 0
-                else None,
-                "metadata": self.metadata if len(self.metadata) > 0 else None,
-                "checksum": self.checksum,
-            }
+            OrderedDict(
+                [
+                    ("namespace", self.namespace),
+                    ("name", self.name),
+                    ("version", self.version),
+                    (
+                        "requires",
+                        [req for req in self.requires]
+                        if len(self.requires) > 0
+                        else None,
+                    ),
+                    ("sites", [site for _, site in self.sites.items()]),
+                    (
+                        "profiles",
+                        OrderedDict(sorted(self.profiles.items(), key=lambda _: _[0]))
+                        if len(self.profiles) > 0
+                        else None,
+                    ),
+                    (
+                        "hooks",
+                        OrderedDict(
+                            [
+                                (hook_name, [hook for hook in values])
+                                for hook_name, values in self.hooks.items()
+                            ]
+                        )
+                        if len(self.hooks) > 0
+                        else None,
+                    ),
+                    ("metadata", self.metadata if len(self.metadata) > 0 else None),
+                    ("checksum", self.checksum),
+                ]
+            )
         )
 
     def __str__(self):
@@ -573,7 +604,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
 
 class TransformationCatalog(Writable):
-    """Maintains a list a :py:class:`~Pegasus.api.transformation_catalog.Transformation` s and 
+    """Maintains a list a :py:class:`~Pegasus.api.transformation_catalog.Transformation` s and
     :py:class:~`Pegasus.api.transformation_catalog.Container` s
 
     .. code-block:: python
@@ -628,8 +659,8 @@ class TransformationCatalog(Writable):
     def __init__(self):
         Writable.__init__(self)
 
-        self.transformations = dict()
-        self.containers = dict()
+        self.transformations = OrderedDict()
+        self.containers = OrderedDict()
 
     @_chained
     def add_transformations(self, *transformations: Transformation):

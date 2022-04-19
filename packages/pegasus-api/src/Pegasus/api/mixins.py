@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 from enum import Enum
 from functools import partialmethod, wraps
 from pathlib import Path
@@ -123,7 +124,7 @@ class _ShellHook(_Hook):
         self.cmd = cmd
 
     def __json__(self):
-        return {"_on": self.on, "cmd": self.cmd}
+        return OrderedDict([("_on", self.on), ("cmd", self.cmd)])
 
 
 # --- profiles -----------------------------------------------------------------

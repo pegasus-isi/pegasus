@@ -123,15 +123,23 @@ class FileServer(ProfileMixin):
 
         self.operation_type = operation_type.value
 
-        self.profiles = defaultdict(dict)
+        self.profiles = defaultdict(OrderedDict)
 
     def __json__(self):
+        print(self.profiles)
         return _filter_out_nones(
-            {
-                "url": self.url,
-                "operation": self.operation_type,
-                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-            }
+            OrderedDict(
+                [
+                    ("url", self.url),
+                    ("operation", self.operation_type),
+                    (
+                        "profiles",
+                        OrderedDict(sorted(self.profiles.items(), key=lambda _: _[0]))
+                        if len(self.profiles) > 0
+                        else None,
+                    ),
+                ]
+            )
         )
 
 
@@ -222,14 +230,16 @@ class Directory:
 
     def __json__(self):
         return _filter_out_nones(
-            {
-                "type": self.directory_type,
-                "path": self.path,
-                "sharedFileSystem": self.shared_file_system,
-                "fileServers": [fs for fs in self.file_servers],
-                "freeSize": None,
-                "totalSize": None,
-            }
+            OrderedDict(
+                [
+                    ("type", self.directory_type),
+                    ("path", self.path),
+                    ("sharedFileSystem", self.shared_file_system),
+                    ("fileServers", [fs for fs in self.file_servers]),
+                    ("freeSize", None),
+                    ("totalSize", None),
+                ]
+            )
         )
 
 
@@ -310,12 +320,14 @@ class Grid:
 
     def __json__(self):
         return _filter_out_nones(
-            {
-                "type": self.grid_type,
-                "contact": self.contact,
-                "scheduler": self.scheduler_type,
-                "jobtype": self.job_type,
-            }
+            OrderedDict(
+                [
+                    ("type", self.grid_type),
+                    ("contact", self.contact),
+                    ("scheduler", self.scheduler_type),
+                    ("jobtype", self.job_type),
+                ]
+            )
         )
 
 
@@ -393,7 +405,7 @@ class Site(ProfileMixin):
         self.os_release = os_release
         self.os_version = os_version
 
-        self.profiles = defaultdict(dict)
+        self.profiles = defaultdict(OrderedDict)
 
     @_chained
     def add_directories(self, *directories: Directory):
@@ -435,16 +447,23 @@ class Site(ProfileMixin):
 
     def __json__(self):
         return _filter_out_nones(
-            {
-                "name": self.name,
-                "arch": self.arch,
-                "os.type": self.os_type,
-                "os.release": self.os_release,
-                "os.version": self.os_version,
-                "directories": [d for d in self.directories],
-                "grids": [g for g in self.grids] if len(self.grids) > 0 else None,
-                "profiles": dict(self.profiles) if len(self.profiles) > 0 else None,
-            }
+            OrderedDict(
+                [
+                    ("name", self.name),
+                    ("arch", self.arch),
+                    ("os.type", self.os_type),
+                    ("os.release", self.os_release),
+                    ("os.version", self.os_version),
+                    ("directories", [d for d in self.directories]),
+                    ("grids", [g for g in self.grids] if len(self.grids) > 0 else None),
+                    (
+                        "profiles",
+                        OrderedDict(sorted(self.profiles.items(), key=lambda _: _[0]))
+                        if len(self.profiles) > 0
+                        else None,
+                    ),
+                ]
+            )
         )
 
 
@@ -465,7 +484,7 @@ class SiteCatalog(Writable):
                         .add_directories(
                             Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
                                 .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
-                            
+
                             Directory(Directory.LOCAL_STORAGE, local_storage_dir)
                                 .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
                         )
@@ -486,7 +505,7 @@ class SiteCatalog(Writable):
     def __init__(self):
         Writable.__init__(self)
 
-        self.sites = dict()
+        self.sites = OrderedDict()
 
     @_chained
     def add_sites(self, *sites: Site):
