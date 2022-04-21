@@ -29,7 +29,9 @@ import java.util.Map;
  */
 public class PegasusCredentials extends Abstract implements CredentialHandler {
 
-    /** The name of the environment variable that specifies the path to the s3cfg file. */
+    /**
+     * The name of the environment variable that specifies the path to the credentials.conf file.
+     */
     public static final String CREDENTIALS_FILE = "PEGASUS_CREDENTIALS";
 
     private static final String CREDENTIALS_PEGASUS_PROFILE_KEY =
@@ -175,7 +177,7 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
      * @return the name of the environment variable.
      */
     public String getEnvironmentVariable(String site) {
-        return PegasusCredentials.CREDENTIALS_FILE;
+        return PegasusCredentials.CREDENTIALS_FILE + "_" + this.getSiteNameForEnvironmentKey(site);
     }
 
     /**

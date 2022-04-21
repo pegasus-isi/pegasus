@@ -148,10 +148,14 @@ OLD_DEFAULT_CREDENTIAL_PATH = "~/.pegasus/s3cfg"
 
 
 def get_config(options):
+    PEGASUS_CREDENTIALS = os.getenv("PEGASUS_CREDENTIALS", None)
     S3CFG = os.getenv("S3CFG", None)
     if options.config:
         # Command-line overrides everything
         cfg = options.config
+    elif PEGASUS_CREDENTIALS is not None:
+        # Environment variable overrides defaults
+        cfg = PEGASUS_CREDENTIALS
     elif S3CFG is not None:
         # Environment variable overrides defaults
         cfg = S3CFG

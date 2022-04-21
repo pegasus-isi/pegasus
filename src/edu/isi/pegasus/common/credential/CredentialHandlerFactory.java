@@ -61,7 +61,9 @@ public class CredentialHandlerFactory {
                     CredentialHandler.TYPE.credentials, CREDENTIALS_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.x509, X509_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.irods, IRODS_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put(CredentialHandler.TYPE.s3, S3_IMPLEMENTING_CLASS);
+            // PM-1831 we no longer load this, as for S3 transfers we now only rely on
+            // credentials.conf
+            // mImplementingClassNameTable.put(CredentialHandler.TYPE.s3, S3_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.boto, BOTO_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(
                     CredentialHandler.TYPE.googlep12, GOOGLEP12_IMPLEMENTING_CLASS);
