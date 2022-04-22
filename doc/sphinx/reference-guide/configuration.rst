@@ -445,6 +445,12 @@ RSL specification.
     | | Since : 2.0                      |                                                               |
     | | Type :Integer                    |                                                               |
     +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.totalmemory | the total amount of memory required for this job              |
+    | | Profile Key: totalmemory         |                                                               |
+    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Since : 2.0                      |                                                               |
+    | | Type :Integer                    |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
     | | Property Key: globus.project     | associates an account with a job at the remote end.           |
     | | Profile Key: project             |                                                               |
     | | Scope : TC, SC, DAX, Properties  |                                                               |
