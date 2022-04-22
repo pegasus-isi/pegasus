@@ -177,7 +177,7 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
      * @return the name of the environment variable.
      */
     public String getEnvironmentVariable(String site) {
-        return PegasusCredentials.CREDENTIALS_FILE + "_" + this.getSiteNameForEnvironmentKey(site);
+        return PegasusCredentials.CREDENTIALS_FILE;
     }
 
     /**
