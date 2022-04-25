@@ -434,6 +434,12 @@ public class PegasusAWSBatchGS implements GridStart {
                     }
                     break;
 
+                case 'P':
+                    if (key.startsWith("PEGASUS_CREDENTIALS")) {
+                        updatedCredentialEnvs.put(key, rewriteValue(value, bucket));
+                    }
+                    break;
+
                 case 'S':
                     if (key.startsWith("S3CFG")
                             || key.startsWith("S3CFG_")
@@ -443,6 +449,7 @@ public class PegasusAWSBatchGS implements GridStart {
                         updatedCredentialEnvs.put(key, rewriteValue(value, bucket));
                     }
                     break;
+
                 case 'X':
                     if (key.startsWith("X509_USER_PROXY") || key.startsWith("X509_USER_PROXY_")) {
                         updatedCredentialEnvs.put(key, rewriteValue(value, bucket));
