@@ -457,6 +457,8 @@ public class PegasusAWSBatchGS implements GridStart {
                     break;
             }
         }
+        mLogger.log("Updated credentials for job " + job.getID() + " " + updatedCredentialEnvs,
+                    LogManager.TRACE_MESSAGE_LEVEL);
         // update job to include update envs
         for (Map.Entry<String, String> entry : updatedCredentialEnvs.entrySet()) {
             job.envVariables.construct(entry.getKey(), entry.getValue());
@@ -480,12 +482,15 @@ public class PegasusAWSBatchGS implements GridStart {
      * @return
      */
     private String rewriteValue(String value, String bucket) {
-        // only rewrite values that start with .
-        if (value.startsWith(".")) {
+        // PM-1860 until 5.0.1 we only re-wrote value for credentials whose basename was 
+        // starting with a . . The only credential was .s3cfg
+        // 5.0.2 onwards we have moved to pegasus credentials file whose basename is
+        // credentials.conf . Does not start with a . 
+        // We have relaxed the check. As a result all values will be re-written
+        //if (value.startsWith(".")) {
             StringBuilder sb = new StringBuilder();
             sb.append(bucket).append(File.separator).append(value);
             return sb.toString();
-        }
-        return value;
+        //}
     }
 }
