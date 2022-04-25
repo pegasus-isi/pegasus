@@ -61,9 +61,6 @@ public class DefaultImplementation implements Implementation {
     /** The path to be set for create dir jobs. */
     public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";
 
-    /** The arguments for pegasus-exitcode when you only want the log files to be rotated. */
-    public static final String POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE = "-r $RETURN";
-
     /** The complete TC name for kickstart. */
     public static final String COMPLETE_TRANSFORMATION_NAME =
             Separator.combine(
@@ -190,23 +187,6 @@ public class DefaultImplementation implements Implementation {
         String targetURL = "";
         if (mUseMkdir) {
 
-            // no gridstart but arguments to exitcode to add -r $RETURN
-            /*
-            newJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
-            newJob.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
-            newJob.dagmanVariables.construct(
-                    Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    DefaultImplementation.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
-
-            StringBuilder sb = new StringBuilder();
-            sb.append(mProps.getBinDir())
-                    .append(File.separator)
-                    .append(DefaultImplementation.EXECUTABLE_BASENAME);
-            execPath = sb.toString();
-
-            targetURL = mSiteStore.getExternalWorkDirectoryURL(site, FileServer.OPERATION.put);
-            newJob.condorVariables.setExecutableForTransfer();
-            */
             // PM-1552 after 5.0 worker package organization, we cannot just
             // transfer pegasus-transfer using transfer_executable. Instead we
             // have to set it up using PegasusLite and also ensure only pegasus-kickstart

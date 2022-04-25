@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.client;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.logger.Log4j;
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
@@ -44,11 +45,14 @@ import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.Priority;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.griphyn.vdl.toolkit.Toolkit;
 
 /**
@@ -102,25 +106,30 @@ public class RCClient extends Toolkit {
 
     /** Initializes the root logger when this class is loaded. */
     static {
-        if ((m_root = Logger.getRootLogger()) != null) {
-            m_root.removeAllAppenders(); // clean house
-            m_root.addAppender(
-                    new ConsoleAppender(
-                            new PatternLayout("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n")));
-            m_root.setLevel(Level.INFO);
-            m_root.debug("starting");
-        }
+        // PM-1836 log4j 2.x style configuration
+        // derived from https://logging.apache.org/log4j/2.x/manual/customconfig.html
+        ConfigurationBuilder<BuiltConfiguration> builder =
+                ConfigurationBuilderFactory.newConfigurationBuilder();
+        AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+        console.add(
+                builder.newLayout("PatternLayout")
+                        .addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"));
+        builder.add(console);
+        builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("stdout")));
+        LoggerContext ctx = Configurator.initialize(builder.build());
+        m_root = org.apache.logging.log4j.LogManager.getRootLogger();
+        m_root.debug("starting");
     }
 
     private ReplicaStore mMetadataStore;
 
     /**
-     * Sets a logging level.
+     * Sets a logging log4jIntLevel.
      *
-     * @param level is the new level to achieve.
+     * @param log4jIntLevel is the new log level to achieve and is the log4j int value
      */
-    public void setLevel(int level) {
-        doSet(Level.toLevel(level));
+    public void setLevel(int log4jIntLevel) {
+        doSet(Log4j.log4jIntValueTolog4jLevel().get(log4jIntLevel));
     }
 
     /**
@@ -138,8 +147,9 @@ public class RCClient extends Toolkit {
     private Logger m_log;
 
     private void doSet(Level level) {
-        m_root.setLevel(level);
-        m_log.setLevel(level);
+        Configurator.setRootLevel(level);
+        // set for the rc-client logger
+        Configurator.setLevel(RCClient.class.getName(), level);
         m_pegasus_logger.setLevel(level);
     }
 
@@ -178,7 +188,7 @@ public class RCClient extends Toolkit {
         m_total_lines_worked = 0;
         m_total_lines_succ_worked = 0;
         // private logger
-        m_log = Logger.getLogger(RCClient.class);
+        m_log = org.apache.logging.log4j.LogManager.getLogger(RCClient.class);
         String propertyFile = lookupConfProperty(opts, confChar);
         m_pegasus_props = PegasusProperties.getInstance(propertyFile);
         m_conf_property_file = propertyFile;
@@ -1006,7 +1016,7 @@ public class RCClient extends Toolkit {
      */
     public static void main(String[] args) {
         int result = 0;
-        int level = Level.ERROR_INT;
+        int level = Level.ERROR.intLevel();
         RCClient me = null;
 
         try {
@@ -1041,7 +1051,7 @@ public class RCClient extends Toolkit {
                         System.out.println("Pegasus version " + Version.instance().toString());
                         return;
                     case 'v':
-                        level -= 10000;
+                        level += 100;
                         break;
                     case 'f':
                         arg = opts.getOptarg();
@@ -1143,7 +1153,9 @@ public class RCClient extends Toolkit {
 
             // print stack trace if debug or higher
             // or logmanger is not set at all
-            if (me == null || me.m_log == null || me.m_log.getLevel().toInt() <= Level.DEBUG_INT) {
+            if (me == null
+                    || me.m_log == null
+                    || me.m_log.getLevel().intLevel() >= Level.DEBUG.intLevel()) {
                 org.printStackTrace();
             }
 

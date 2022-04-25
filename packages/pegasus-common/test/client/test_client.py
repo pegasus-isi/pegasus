@@ -172,7 +172,6 @@ class TestClient:
             cluster=["horizontal", "label"],
             conf="pegasus.conf",
             dir="/dir",
-            env=123,
             force=True,
             force_replan=True,
             forward=["arg1", "opt1=value"],
@@ -191,11 +190,12 @@ class TestClient:
             staging_sites={"es1": "ss1", "es2": "ss2"},
             submit=True,
             verbose=3,
+            **{"pegasus.mode": "development"},
         )
         subprocess.Popen.assert_called_once_with(
             [
                 "/path/bin/pegasus-plan",
-                "-Denv=123",
+                "-Dpegasus.mode=development",
                 "--basename",
                 "test_basename",
                 "--job-prefix",

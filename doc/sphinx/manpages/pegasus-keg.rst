@@ -8,9 +8,10 @@ kanonical executable for grids
 
    ::
 
-      pegasus-keg [-a appname] [-t interval |-T interval] [-l logname]
-                  [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz [..]] [-m memory]
-                  [-C] [-e env [..]] [-p parm [..]] [-u data_unit]
+      pegasus-keg [-a appname] [ -t interval | -T interval] [-s interval] 
+                  [-l logname] [-P prefix] [-o fn [..]] [-i fn [..]] 
+                  [-G sz [..]] [-m memory] [-C] [-e env [..]] 
+                  [-p parm [..]] [-u data_unit]
 
 
 
@@ -132,7 +133,10 @@ usage and exit with success.
    executable is to sleep in seconds. This can be used to emulate light
    work without straining the pool resources. If used together with the
    **-T** spin option, the sleep interval comes before the spin
-   interval. The default is no sleep time.
+   interval. The default is no sleep time. Note that if the time 
+   taken by I/Os is larger than the sleep time, **pegasus-keg** will 
+   *exit immediately* (i.e, **pegasus-keg** will run 
+   for min(I/O time, interval)).
 
 **-T interval**
    The interval is an amount of busy spin time that the **pegasus-keg**
@@ -140,7 +144,18 @@ usage and exit with success.
    simulation is done by random julia set calculations. This option can
    be used to emulate an intense work to strain pool resources. If used
    together with the **-t** sleep option, the sleep interval comes
-   before the spin interval. The default is no spin time.
+   before the spin interval. The default is no spin time. Note that 
+   if the time  taken by I/Os is larger than the spin time, 
+   **pegasus-keg** will *exit immediately* (i.e, **pegasus-keg** 
+   will run for min(I/O time, interval)).
+
+**-s interval**
+   The interval is an amount of sleep time that the **pegasus-keg**
+   executable is to sleep in seconds after performing any I/Os.
+   With this option **pegasus-keg** will perform I/Os and then sleep
+   for the amount of seconds specified (i.e, **pegasus-keg** 
+   will run for I/O time + interval).
+
 
 **-m memory**
    The amount of memory ([MB]) the Keg process should use. This option

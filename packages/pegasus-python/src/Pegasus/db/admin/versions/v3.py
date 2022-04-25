@@ -1,3 +1,19 @@
+#!/usr/bin/env python
+#
+#  Copyright 2017-2021 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 __author__ = "Gideon Juve"
 __author__ = "Rafael Ferreira da Silva"
 
@@ -20,7 +36,6 @@ class Version(BaseVersion):
     def update(self, force=False):
         "Add plan_command field to ensemble_workflow table"
         log.info("Updating to version %s" % DB_VERSION)
-        # TODO We might need to check to see if the field already exists first
         try:
             self.db.execute(
                 "ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'"

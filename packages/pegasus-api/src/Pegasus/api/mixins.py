@@ -1,3 +1,5 @@
+import re
+from collections import OrderedDict
 from enum import Enum
 from functools import partialmethod, wraps
 from pathlib import Path
@@ -122,7 +124,7 @@ class _ShellHook(_Hook):
         self.cmd = cmd
 
     def __json__(self):
-        return {"_on": self.on, "cmd": self.cmd}
+        return OrderedDict([("_on", self.on), ("cmd", self.cmd)])
 
 
 # --- profiles -----------------------------------------------------------------
@@ -191,33 +193,40 @@ def _profiles(ns, **map_p):
 def to_mb(value: str) -> int:
     """Convert the given value to MB
 
-    :param value: str formatted as str formatted as :code:`'<int> [MB | GB | TB | PB | EB]'`
+    :param value: str formatted as str formatted as :code:`'<int> [MB | GB | TB | PB | EB | ZB | YB]'`
     :type value: str
     :raises ValueError: invalid format
     :return: value in MB
     :rtype: int
     """
     try:
-        tokens = str(value).strip().split()
+        value = str(value).strip()
+        m = re.match(r"^\s*(\d+([Ee][+-]?\d+)?)\s*([MmGgPpEeZzYy][Bb])?\s*$", value)
 
-        if len(tokens) == 1:
-            return int(tokens[0])
-        elif len(tokens) == 2:
-            amt = int(tokens[0])
-            unit = tokens[1].lower()
+        if not m:
+            raise ValueError
 
+        # float(..) is required as int("1E1") raises a ValueError
+        amt = int(float(m.group(1)))
+        unit = m.group(3).lower() if m.group(3) else None
+
+        if unit is None:
+            return amt
+        else:
             _bytes = {
                 "mb": 1 << 20,
                 "gb": 1 << 30,
                 "tb": 1 << 40,
                 "pb": 1 << 50,
                 "eb": 1 << 60,
+                "zb": 1 << 70,
+                "yb": 1 << 80,
             }
 
-            return (amt * _bytes[unit]) / _bytes["mb"]
+            return int((amt * _bytes[unit]) / _bytes["mb"])
     except Exception:
         raise ValueError(
-            "value: {} should be a str formatted as '<int> [MB | GB | TB | PB | EB]'".format(
+            "value: {} should be a str formatted as '<int> [MB | GB | TB | PB | EB | ZB | YB]'".format(
                 value
             )
         )
@@ -251,9 +260,9 @@ class ProfileMixin:
 
         For :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_globus_profiles`, :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_condor_profiles`,
         :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_dagman_profiles`, :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_selector_profiles`,
-        and :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_pegasus_profiles`, if a profile key 
+        and :py:meth:`~Pegasus.api.mixins.ProfileMixin.add_pegasus_profiles`, if a profile key
         you are trying to use is not listed as a key word argument, use this
-        function to add the profile. 
+        function to add the profile.
 
         :raises TypeError: namespace must be one of Namespace
         :return: self
@@ -427,6 +436,7 @@ class ProfileMixin:
         clusters_num="clusters.num",
         clusters_size="clusters.size",
         job_aggregator="job.aggregator",
+        job_aggregator_arguments="job.aggregator.arguments",
         grid_start="gridstart",
         grid_start_path="gridstart.path",
         grid_start_arguments="gridstart.arguments",
@@ -478,6 +488,7 @@ class ProfileMixin:
         clusters_num: int = None,
         clusters_size: int = None,
         job_aggregator: int = None,
+        job_aggregator_arguments: str = None,
         grid_start: int = None,
         grid_start_path: str = None,
         grid_start_arguments: str = None,
@@ -531,6 +542,8 @@ class ProfileMixin:
         :type clusters_size: int, optional
         :param job_aggregator: Indicates the clustering executable that is used to run the clustered job on the remote site, defaults to None
         :type job_aggregator: int, optional
+        :param job_aggregator_arguments: Additional arguments with which a clustering executable should be invoked, defaults to None
+        :type job_aggregator_arguments: str, optional
         :param grid_start: Determines the executable for launching a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`_ for more information), defaults to None
         :type grid_start: int, optional
         :param grid_start_path: Sets the path to the gridstart . This profile is best set in the Site Catalog, defaults to None

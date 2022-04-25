@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -71,6 +72,11 @@ public class Docker extends Abstract {
         StringBuilder sb = new StringBuilder();
 
         sb.append("set -e").append("\n");
+
+        // PM-1818 for the debug mode set -x
+        if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
+            sb.append("set -x").append('\n');
+        }
 
         // within the pegasus lite script create a wrapper
         // to launch job in the container. wrapper is required to
@@ -161,7 +167,7 @@ public class Docker extends Abstract {
         sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
 
         // remove the docker container
-        sb.append("docker rm $cont_name ").append(" 1>&2").append("\n");
+        sb.append("docker rm --force $cont_name ").append(" 1>&2").append("\n");
         sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
 
         return sb.toString();

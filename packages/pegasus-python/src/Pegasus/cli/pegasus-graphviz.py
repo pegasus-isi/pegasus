@@ -2,12 +2,16 @@
 
 import colorsys
 import os
+import shutil
+import subprocess
 import sys
 import xml.sax
 import xml.sax.handler
 from collections import OrderedDict
 from functools import cmp_to_key
 from optparse import OptionParser
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from Pegasus import yaml
 
@@ -59,8 +63,8 @@ class DAG:
 
 
 class Node:
-    def __init__(self):
-        self.id = None
+    def __init__(self, _id=None):
+        self.id = _id
         self.label = None
         self.level = 0
         self.parents = []
@@ -76,6 +80,12 @@ class Node:
 
     def __repr__(self):
         return "({}, {})".format(self.id, self.label)
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 class Job(Node):
@@ -482,8 +492,10 @@ def transitivereduction(dag):
 
             w.mark += 1
 
-            if w in v.closure:
-                # If it is already in the closure, then it is not needed
+            if isinstance(w, Job) and isinstance(v, Job) and w in v.closure:
+                # If w is a Job, v is a Job, and w is in the closure, then it is not needed.
+                # The above condition prevents us from removing edges from file -> job as those
+                # edges should always be visible.
                 sys.stderr.write("Removing {} -> {}\n".format(v.label, w.label))
             else:
                 v.closure = v.closure.union(w.closure)
@@ -566,6 +578,29 @@ class emit_dot:
         )
 
 
+def invoke_dot(dot_file, fmt, output):
+    dot = shutil.which("dot")
+    if dot:
+        cmd = [dot]
+        # output format
+        cmd.append("-T{}".format(fmt))
+
+        # output file
+        cmd.extend(["-o", output])
+
+        # path to dot file
+        cmd.append(dot_file)
+
+        subprocess.run(cmd)
+    else:
+        raise RuntimeError(
+            "Unable to find 'dot'. Please install graphviz and ensure that 'dot' is added to your PATH"
+        )
+
+
+SUPPORTED_DRAW_FORMATS = {"jpg", "jpeg", "png", "pdf", "gif", "svg"}
+
+
 def main():
     labeloptions = ["label", "xform", "id", "xform-id", "label-xform", "label-id"]
     labeloptionsstring = ", ".join("'%s'" % l for l in labeloptions)
@@ -599,7 +634,11 @@ DAGMan file, Pegasus YAML file, or Pegasus DAX file."""
         dest="outfile",
         metavar="FILE",
         default="/dev/stdout",
-        help="Write output to FILE [default: stdout]",
+        help="""Write output to FILE [default: stdout]. If FILE is given with any
+of the following extensions: 'png', 'jpg', 'jpeg', 'pdf', 'gif', and 'svg', pegasus-graphviz
+will internally invoke 'dot -T<extension> -o FILE'. Note that graphviz must be
+installed to output these file types. If any other extension is given, the raw
+dot representation is output.""",
     )
     parser.add_option(
         "-r",
@@ -670,7 +709,17 @@ DAGMan file, Pegasus YAML file, or Pegasus DAX file."""
     if options.simplify:
         dag = transitivereduction(dag)
 
-    emit_dot(dag, options.label, options.outfile, options.width, options.height)
+    output_extension = Path(options.outfile).suffix.lower()[1:]
+    if output_extension in SUPPORTED_DRAW_FORMATS:
+        with NamedTemporaryFile("w") as f:
+            emit_dot(dag, options.label, f.name, options.width, options.height)
+            try:
+                invoke_dot(f.name, output_extension, options.outfile)
+            except RuntimeError as e:
+                print("ERROR: {}".format(e))
+                sys.exit(1)
+    else:
+        emit_dot(dag, options.label, options.outfile, options.width, options.height)
 
 
 if __name__ == "__main__":

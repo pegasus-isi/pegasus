@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.namespace;
 import edu.isi.pegasus.common.credential.impl.BotoConfig;
 import edu.isi.pegasus.common.credential.impl.GoogleP12;
 import edu.isi.pegasus.common.credential.impl.Irods;
+import edu.isi.pegasus.common.credential.impl.PegasusCredentials;
 import edu.isi.pegasus.common.credential.impl.Proxy;
 import edu.isi.pegasus.common.credential.impl.S3CFG;
 import edu.isi.pegasus.common.credential.impl.Ssh;
@@ -78,10 +79,16 @@ public class Pegasus extends Namespace {
     public static final String MAX_RUN_TIME = "clusters.maxruntime";
 
     /**
-     * The name of the key that determines the clusterig executable to be used to run the
+     * The name of the key that determines the clustering executable to be used to run the
      * merged/collapsed job.
      */
     public static final String JOB_AGGREGATOR_KEY = "job.aggregator";
+
+    /**
+     * The name of the key that determines the clustering executable to be used to run the
+     * merged/collapsed job.
+     */
+    public static final String JOB_AGGREGATOR_ARGUMENTS_KEY = "job.aggregator.arguments";
 
     /**
      * The name of the key that determines the collapser executable to be used to run the
@@ -403,6 +410,8 @@ public class Pegasus extends Namespace {
 
     // credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
+    private static final String PEGASUS_CREDENTIAL_FILE =
+            PegasusCredentials.CREDENTIALS_FILE.toLowerCase();
     private static final String SSH_PRIVATE_KEY_VARIABLE =
             Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase();
     private static final String IRODSENVFILE = Irods.IRODSENVFILE.toLowerCase();
@@ -545,7 +554,6 @@ public class Pegasus extends Namespace {
                         || (key.compareTo(CHAIN_STAGE_IN_KEY) == 0)
                         || (key.compareTo(MAX_RUN_TIME) == 0)
                         || (key.compareTo(CREATE_AND_CHANGE_DIR_KEY) == 0)
-                        || (key.compareTo(CLUSTER_ARGUMENTS) == 0)
                         || (key.compareTo(CORES_KEY) == 0)
                         || (key.compareTo(Pegasus.CHECKPOINT_TIME_KEY) == 0)
                         || (key.compareTo(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0)
@@ -607,7 +615,8 @@ public class Pegasus extends Namespace {
             case 'j':
                 if (key.compareTo(DEPRECATED_RUNTIME_KEY) == 0) {
                     res = DEPRECATED_KEY;
-                } else if (key.compareTo(JOB_AGGREGATOR_KEY) == 0) {
+                } else if (key.compareTo(JOB_AGGREGATOR_KEY) == 0
+                        || key.compareTo(JOB_AGGREGATOR_ARGUMENTS_KEY) == 0) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;
@@ -645,7 +654,8 @@ public class Pegasus extends Namespace {
                         || key.compareTo(PMC_TASK_ARGUMENTS) == 0
                         || key.compareTo(PPN_KEY) == 0
                         || key.compareTo(PROJECT_KEY) == 0
-                        || key.compareTo(PEGASUS_LITE_ENV_SOURCE_KEY) == 0) {
+                        || key.compareTo(PEGASUS_LITE_ENV_SOURCE_KEY) == 0
+                        || key.compareTo(PEGASUS_CREDENTIAL_FILE) == 0) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;

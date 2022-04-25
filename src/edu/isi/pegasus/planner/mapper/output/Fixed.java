@@ -78,7 +78,7 @@ public class Fixed implements OutputMapper {
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
         mOutputSites = (Set<String>) options.getOutputSites();
-        boolean stageOut = ((this.mOutputSites != null) && (!this.mOutputSites.isEmpty()));
+        boolean stageOut = bag.getPlannerOptions().doStageOut();
 
         if (!stageOut) {
             // no initialization and return

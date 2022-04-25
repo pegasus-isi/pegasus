@@ -78,9 +78,6 @@ public class DeployWorkerPackage extends Engine {
     /** Constant suffix for the names of the deployment nodes. */
     public static final String CLEANUP_PREFIX = "cleanup_";
 
-    /** The arguments for pegasus-exitcode when you only want the log files to be rotated. */
-    public static final String POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE = "-r $RETURN";
-
     /**
      * Array storing the names of the executables in the $PEGASUS_HOME/bin directory Associates the
      * transformation name with the executable basenames
@@ -103,7 +100,7 @@ public class DeployWorkerPackage extends Engine {
     private static final String mRegexExpression =
             //
             // "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z]*)-x86.*";
-            "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
+            "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc|ppc64le)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
 
     /** The path to be set for create dir jobs. */
     public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";
@@ -299,21 +296,19 @@ public class DeployWorkerPackage extends Engine {
 
         mTransferWorkerPackage = mProps.transferWorkerPackage();
 
-        // mWorkerNodeExecution   = mProps.executeOnWorkerNode();
-
-        // load the transfer setup implementation
-        // To DO . specify type for loading
-        /* PM-833
-        mSetupTransferImplementation = ImplementationFactory.loadInstance(
-                                                          bag,
-                                                          ImplementationFactory.TYPE_SETUP );
-        */
         mUserSpecifiedSourceLocation = mProps.getBaseSourceURLForSetupTransfers();
         mUseUserSpecifiedSourceLocation =
                 !(mUserSpecifiedSourceLocation == null
                         || mUserSpecifiedSourceLocation.trim().length() == 0);
 
         Version version = Version.instance();
+
+        CreateWorkerPackage cw = new CreateWorkerPackage(mBag);
+        // PM-1851 we need to copy the pegasus-lite-common also to the submit directory
+        // we want to do it all cases irrespective of whether deployment is required
+        // or not, since after 5.0 the sub workflows are planned via PegasusLite in
+        // the prescript
+        cw.copyPegasusLiteCommon();
     }
 
     /**
@@ -786,17 +781,6 @@ public class DeployWorkerPackage extends Engine {
             // the setupTXJob non third party site, has to be the staging site
             setupTXJob.setNonThirdPartySite(stagingSite);
 
-            /*
-            // the setup and untar jobs need to be launched without kickstart.
-            setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
-            // no empty postscript but arguments to exitcode to add -r $RETURN
-            setupTXJob.dagmanVariables.construct(
-                    Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
-            setupTXJob.dagmanVariables.construct(
-                    Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
-            */
-
             // PM-1552 after 5.0 worker package organization, we cannot just
             // transfer pegasus-transfer using transfer_executable. Instead we
             // have to set it up using PegasusLite and also ensure only pegasus-kickstart
@@ -818,9 +802,17 @@ public class DeployWorkerPackage extends Engine {
                                     ((NameValue<String, String>) ft.getSourceURL()).getValue()));
             untarJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
             untarJob.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
+            StringBuilder exitcodeArgs = new StringBuilder();
+            exitcodeArgs.append(
+                    PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+            // PM-1821 explicity indicate no kickstart records to parse
+            exitcodeArgs
+                    .append(" ")
+                    .append(
+                            PegasusExitCode
+                                    .POSTSCRIPT_ARGUMENTS_FOR_DISABLING_CHECKS_FOR_INVOCATIONS);
             untarJob.dagmanVariables.construct(
-                    Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+                    Dagman.POST_SCRIPT_ARGUMENTS_KEY, exitcodeArgs.toString());
 
             GraphNode untarNode = new GraphNode(untarJob.getName(), untarJob);
 
@@ -953,13 +945,6 @@ public class DeployWorkerPackage extends Engine {
         // data to the submit host directory
         setupTXJob.setNonThirdPartySite(null);
 
-        /*
-        // the setup and untar jobs need to be launched without kickstart.
-        setupTXJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
-        // no empty postscript but arguments to exitcode to add -r $RETURN
-        setupTXJob.dagmanVariables.construct(
-                Dagman.POST_SCRIPT_ARGUMENTS_KEY, POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
-        */
         // PM-1552 after 5.0 worker package organization, we cannot just
         // transfer pegasus-transfer using transfer_executable. Instead we
         // have to set it up using PegasusLite and also ensure only pegasus-kickstart

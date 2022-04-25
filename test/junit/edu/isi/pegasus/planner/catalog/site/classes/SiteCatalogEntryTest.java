@@ -98,6 +98,7 @@ public class SiteCatalogEntryTest {
                         + "  path: \"/mount/workflows/scratch\"\n"
                         + "  freeSize: \"1GB\"\n"
                         + "  totalSize: \"122GB\"\n"
+                        + "  sharedFileSystem: false\n"
                         + "  fileServers:\n"
                         + "   -\n"
                         + "    operation: \"get\"\n"

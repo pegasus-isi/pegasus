@@ -64,6 +64,8 @@ $defs:
         $ref: "#/$defs/genericProfilePropertyType"
       hints:
         $ref: "#/$defs/genericProfilePropertyType"
+      selector:
+        $ref: "#/$defs/genericProfilePropertyType"
     additionalProperties: false
     patternProperties:
       ^x-:

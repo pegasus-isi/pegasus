@@ -160,6 +160,9 @@ public class SeqExec extends Abstract {
             arguments.append(" -R ").append(logFile(job));
         }
 
+        // PM-1826 add any extra arguments associated as a profile
+        arguments.append(" ").append(this.getAddOnClusteredJobArguments(job));
+
         return arguments.toString();
     }
 

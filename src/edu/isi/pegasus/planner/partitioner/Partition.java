@@ -103,7 +103,9 @@ public class Partition extends Data {
         mHasAssociatedLabel = false;
         mLastAddedNode = null;
         for (Iterator it = mNodeList.iterator(); it.hasNext(); ) {
-            mNodeSet.add(((GraphNode) it.next()).getID());
+            GraphNode node = (GraphNode) it.next();
+            mNodeSet.add(node.getID());
+            mLastAddedNode = node;
         }
     }
 

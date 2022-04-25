@@ -236,6 +236,7 @@ clients
    =============== ====================================================================================
    gfal-copy       staging file to and from GridFTP servers
    globus-url-copy staging files to and from GridFTP servers, only if gfal is not detected in the path.
+   globus          staging files between globus endpoints using the globus transfer service
    gfal-copy       staging files to and from SRM or XRootD servers
    wget            staging files from a HTTP server
    cp              copying files from a POSIX filesystem
@@ -322,7 +323,12 @@ required steps are:
    and retrieve your transfer access tokens. By default Pegasus acquires
    temporary tokens that expire within a few days. Using --permanent
    option you can request refreshable tokens that last indefinetely (or
-   until access is revoked).
+   until access is revoked). With endpoints running Globus Connect Server(GCS)
+   versions 5.4+ data collections may require *data_access* consent to allow
+   to operate on them (e.g., transfers). Endpoints that support this usually
+   have their *host_id* set to None. To acquire *data_access* consent for
+   these endpoints under pegasus, you can use the --endpoints option and list
+   the *UUIDs* of the endpoints you would like to give pegasus consent for.
 
 2. In the Globus Online web interface, under Endpoints, find the
    endpoints you need for the workflow, and activate them. Note that you
@@ -335,6 +341,11 @@ URLs for Globus Online endpoint data follows the following scheme:
 private endpoint *bob#researchdata* and a file
 */home/bsmith/experiment/1.dat*, the URL would be:
 *go://bob#researchdata/home/bsmith/experiment/1.dat*
+
+Additionally you can use the UUIDs of the endpoints directly and not their
+Legacy Names. For example:
+*go://56569ec1-adn1-4785-a6c1-8524231c7a6d/home/bsmith/experiment/1.dat*
+
 
 .. _transfer-gridftp:
 
@@ -951,29 +962,31 @@ strategy implemented
 Behaviour of the cleanup strategies implemented in the Pegasus Mapper
 can be controlled by properties described `here <#cleanup_props>`__.
 
-Data Cleanup in Hierarchal Workflows
-------------------------------------
+Data Cleanup in Hierarchical Workflows
+--------------------------------------
 
-By default, for hierarchal workflows the inplace cleanup is always
-turned off. This is because the cleanup algorithm ( InPlace ) does not
-work across the sub workflows. For example, if you have two
-pegasusWorkflow jobs in your top level workflow and the child
-pegasusWorkflow job refers to a file generated during the execution of
-the parent pegasusWorkflow job, the InPlace cleanup algorithm when applied
-to the parent pegasusWorkflow job will result in the file being deleted,
-when the sub workflow corresponding to parent pegasusWorkflow job is
-executed. This would result in failure of sub workflow corresponding to
-the child pegasusWorkflow job, as the file deleted is required to present during
-it's execution.
+By default, for hierarchical workflows the inplace cleanup is always
+turned off. However, you can enable cleanup for your workflows if either of
+the following two conditions hold true
 
-In case there are no data dependencies across the pegasusWorkflow jobs, then
-yes you can enable the InPlace algorithm for the sub workflows . To do this
-you can set the property
+* you have no data dependencies across the *pegasusWorkflow* jobs, OR
 
--  pegasus.file.cleanup.scope deferred
+* if you have data dependencies between two *pegasusWorkflow* jobs, they are
+  explicitly tracked by enumerating them as inputs and outputs when defining
+  the pegasusWorkflow jobs
+
+**AND**
+
+* you can set the property
+
+    -  pegasus.file.cleanup.scope deferred
 
 This will result in cleanup option to be picked up from the arguments
 for the pegasusWorkflow job in the top level Abstract Workflow .
+
+Before the 5.0.1 release, you could only enable inplace cleanup for your
+hierarchical workflows if there were no data dependencies between *pegasusWorkflow*
+jobs.
 
 Metadata
 ========

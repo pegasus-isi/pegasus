@@ -1,7 +1,15 @@
-![Pegasus](doc/sphinx/images/pegasusfront-black-reduced.png)
+<p align="center">
+      <img src="doc/sphinx/images/pegasusfront-black-reduced.png" width="200" alt="Pegasus WMS" />
+</p>
 
 Pegasus Workflow Management System
 ----------------------------------
+<p align="left">
+    <img src="https://img.shields.io/github/license/pegasus-isi/pegasus?color=blue&label=Licence"/>
+    <img src="https://img.shields.io/github/v/tag/pegasus-isi/pegasus?label=Latest"/>
+    <img src="https://img.shields.io/pypi/dm/pegasus-wms?color=green&label=PyPI%20Downloads"/>
+    <img src="https://img.shields.io/github/contributors-anon/pegasus-isi/pegasus?color=green&label=Contributors"/>
+</p>
 
 Pegasus WMS is a configurable system for mapping and executing scientific
 workflows over a wide range of computational infrastructures including laptops,

@@ -88,7 +88,9 @@ def acquire_clients(request):
             expires_at=int(request["transfer_at_exp"]),
         )
 
-    transfer_client = globus_sdk.TransferClient(authorizer=authorizer)
+    transfer_client = globus_sdk.TransferClient(
+        authorizer=authorizer, transport_params={"max_retries": 0}
+    )
     return client, transfer_client
 
 
@@ -107,7 +109,7 @@ def activate_endpoint(transfer_client, endpoint):
             sys.exit(1)
     except globus_sdk.TransferAPIError as e:
         logger.critical('Endpoint "%s" auto-activation ERROR' % endpoint)
-        logger.critical(e.message)
+        logger.critical(str(e))
         sys.exit(1)
 
 
@@ -127,7 +129,7 @@ def wait_for_task(transfer_client, task_id, acceptable_faults=None):
             % (task_id, loop_counter * wait_timeout)
         )
         task_errors = transfer_client.task_event_list(
-            task_id=task_id, num_results=20, filter="is_error:1"
+            task_id=task_id, limit=20, filter_is_error=True
         )
         for error in task_errors:
             details = re.sub(r"\n|\r", " ", error["description"])
@@ -187,7 +189,7 @@ def mkdir(request):
                 )
             except globus_sdk.TransferAPIError as e:
                 logger.warn("Finding existing parent dir for mkdir " + f)
-                logger.warn(e.message)
+                logger.warn(str(e))
                 found = False
 
         child_dirs.reverse()
@@ -204,7 +206,7 @@ def mkdir(request):
                 if e.code == "ExternalError.MkdirFailed.Exists":
                     logger.warn("Directory already exists: " + path)
                 else:
-                    raise RuntimeError(e.message)
+                    raise RuntimeError(str(e))
     logger.info("Mkdir complete")
 
 
@@ -265,12 +267,12 @@ def transfer(request):
     task_id = transfer_result["task_id"]
 
     # how many faults will we accept before giving up?
-    acceptable_faults = min(100, len(request["files"]) * 3)
+    # acceptable_faults = min(100, len(request["files"]) * 3)
 
     # wait for the task to complete, and see the tasks and
     # endpoint ls change
     try:
-        wait_for_task(transfer_client, task_id, acceptable_faults)
+        wait_for_task(transfer_client, task_id)
     except Exception as err:
         logger.error(err)
         cancel_task(transfer_client, task_id)
@@ -319,12 +321,12 @@ def remove(request):
     task_id = delete_result["task_id"]
 
     # how many faults will we accept before giving up?
-    acceptable_faults = min(100, len(request["files"]) * 3)
+    # acceptable_faults = min(100, len(request["files"]) * 3)
 
     # wait for the task to complete, and see the tasks and
     # endpoint ls change
     try:
-        wait_for_task(transfer_client, task_id, acceptable_faults)
+        wait_for_task(transfer_client, task_id)
     except Exception as err:
         logger.error(err)
         cancel_task(transfer_client, task_id)

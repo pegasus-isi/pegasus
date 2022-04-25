@@ -97,6 +97,8 @@ public abstract class Abstract implements ContainerShellWrapper {
 
     private Integrity mIntegrityHandler;
 
+    protected PegasusProperties.PEGASUS_MODE mPegasusMode;
+
     /**
      * Appends a fragment to the pegasus lite script that logs a message to stderr
      *
@@ -148,6 +150,7 @@ public abstract class Abstract implements ContainerShellWrapper {
         mDoIntegrityChecking = mProps.doIntegrityChecking();
         mIntegrityHandler = new Integrity();
         mIntegrityHandler.initialize(bag, dag);
+        mPegasusMode = mProps.getPegasusMode();
     }
 
     /**

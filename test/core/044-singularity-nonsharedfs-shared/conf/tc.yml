@@ -41,7 +41,7 @@ transformations:
             foo: bar
 
 containers:
-  - image: gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/centos7.img
+  - image: gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img
     image.site: local
     profiles:
       env:

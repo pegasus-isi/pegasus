@@ -16,7 +16,7 @@ package edu.isi.pegasus.common.util;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.io.IOException;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 /**
  * A utility class that has convenience methods to execute a command and retrive the stdout and

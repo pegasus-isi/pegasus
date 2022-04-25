@@ -9,19 +9,19 @@ home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 install_requires = [
     # Utils
     # DAX/Workflow
-    "PyYAML>5.3,<5.5",
+    "PyYAML>5.3",
     # pegasus-init
-    "GitPython>1.0,<3.2",
-    "pamela>=1.0,<1.1",
-    "pika==1.1.0",
-    "Flask>1.1,<1.2",
-    "Flask-Caching>1.8,<1.11",
-    "requests>2.23,<2.26",
+    "GitPython>1.0",
+    "pamela>=1.0",
+    "pika>=1.1.0",
+    "Flask>1.1",
+    "Flask-Caching>1.8",
+    "requests>2.23",
     "sqlalchemy>1.3,<1.4",
-    "pegasus-wms.api<5.2",
-    "pegasus-wms.dax<5.2",
-    "pegasus-wms.common<5.2",
-    "pegasus-wms.worker<5.2",
+    "pegasus-wms.api",
+    "pegasus-wms.dax",
+    "pegasus-wms.common",
+    "pegasus-wms.worker",
 ]
 
 #
@@ -96,6 +96,12 @@ setup(
     long_description_content_type="text/markdown",
     license="Apache2",
     url="http://pegasus.isi.edu",
+    project_urls={
+        "Documentation": "https://pegasus.isi.edu/documentation/",
+        "Changes": "https://pegasus.isi.edu/blog/?category_name=Release",
+        "Source Code": "https://github.com/pegasus-isi/pegasus",
+        "Issue Tracker": "https://jira.isi.edu/projects/PM/issues",
+    },
     python_requires=">=3.5",
     keywords=["scientific workflows"],
     classifiers=[
@@ -111,6 +117,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Scientific/Engineering",
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",
@@ -121,11 +128,10 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
-    use_2to3=False,
     convert_2to3_doctests=[],
     extras_require={
         "postgresql": ["psycopg2"],
         "mysql": ["mysqlclient"],
-        "cwl": ["cwl-utils==0.3", "jsonschema==3.2.0"],
+        "cwl": ["cwl-utils==0.11", "jsonschema==3.2.0"],
     },
 )

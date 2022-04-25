@@ -57,6 +57,9 @@ $defs:
           - localStorage
       path:
         type: string
+      sharedFileSystem:
+        type: boolean
+        default: false
       freeSize:
         type: string
       totalSize:

@@ -199,7 +199,7 @@ time_stats_col_name_text = ["Date", "Count", "Runtime (sec)"]
 time_stats_col_size = [30, 20, 20]
 time_host_stats_col_name_csv = ["stat_type", "date", "host", "count", "runtime (sec)"]
 time_host_stats_col_name_text = ["Date", "Host", "Count", "Runtime (sec)"]
-time_host_stats_col_size = [23, 25, 10, 20]
+time_host_stats_col_size = [23, 30, 10, 20]
 
 
 class JobStatistics:
@@ -2001,6 +2001,9 @@ def main():
 
     if "tf_stats" in sl:
         calc_tf_stats = True
+
+    if "ti_stats" in sl:
+        calc_ti_stats = True
 
     if "int_stats" in sl:
         calc_int_stats = True

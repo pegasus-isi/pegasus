@@ -34,6 +34,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
+from enum import Enum
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
@@ -55,6 +56,13 @@ re_collapse_condor_subs = re.compile(r"\$\([^\)]*\)")
 re_ks_invocation = re.compile(r"^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b.*")
 
 # --- classes -------------------------------------------------------------------------
+class WORKFLOW_STATUS(Enum):
+    """Workflow Status"""
+
+    UNKNOWN = "unknown"
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILURE = "failure"
 
 
 class Job:
@@ -102,7 +110,7 @@ debug_level = logging.WARNING  # For now
 
 # --- global variables ----------------------------------------------------------------
 
-prog_base = os.path.split(sys.argv[0])[1]  # Name of this program
+prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this program
 input_dir = None  # Directory given in -i command line option
 dag_path = None  # Path of the dag file
 tsdl_path = None  # Path to monitord's log file
@@ -350,6 +358,34 @@ def generate_pegasus_lite_debug_wrapper(pegasus_lite_wrapper):
     os.chmod(debug_wrapper, 0o755)
 
     return debug_wrapper
+
+
+def get_workflow_status(last_wf_state_record):
+    """
+    Determines the workflow status from the last workflow state record for the workflow from the workflow database
+    :param last_wf_state_record: of form  (wf_id, state, timestamp, restart_count, status)
+    :return: the workflow status as value of type enum WORKFLOW_STATUS
+    """
+
+    workflow_status = WORKFLOW_STATUS.UNKNOWN
+    if last_wf_state_record is None:
+        return workflow_status
+
+    # (wf_id, state, timestamp, restart_count, status)
+    # (1, 'WORKFLOW_TERMINATED', Decimal('1619144694.000000'), 2, 1)
+    last_wf_state = last_wf_state_record[1]
+    last_wf_status = last_wf_state_record[4]
+
+    if last_wf_state == "WORKFLOW_STARTED":
+        workflow_status = WORKFLOW_STATUS.RUNNING
+    elif last_wf_state == "WORKFLOW_TERMINATED":
+        workflow_status = (
+            WORKFLOW_STATUS.SUCCESS if last_wf_status == 0 else WORKFLOW_STATUS.FAILURE
+        )
+    else:
+        raise ValueError("Invalid worklfow state %s" % last_wf_state)
+
+    return workflow_status
 
 
 def parse_submit_file(my_job):
@@ -980,7 +1016,7 @@ def backticks(cmd_line):
         o = o.decode()
 
 
-def print_top_summary():
+def print_top_summary(workflow_status=None):
     """
     This function prints the summary for the analyzer report,
     which is the same for the long and short output versions
@@ -990,6 +1026,9 @@ def print_top_summary():
     print_console(summary)
     print_console()
     print_console(" Submit Directory   : %s" % (input_dir or top_dir))
+    if workflow_status:
+        print_console(" Workflow Status    : %s" % (workflow_status.value))
+
     print_console(
         " Total jobs         : % 6d (%3.2f%%)"
         % (total, 100 * (1.0 * total / (total or 1)))
@@ -1135,7 +1174,8 @@ def analyze_files():
 
     # Print summary of our analysis
     if summary_mode:
-        print_top_summary()
+        # PM-1762 in the files mode we don't determine workflow status
+        print_top_summary(workflow_status=None)
     else:
         # This is non summary mode despite of the name (go figure)
         print_summary()
@@ -1194,6 +1234,20 @@ def analyze_db(config_properties):
     held_jobs = workflow_stats.get_total_held_jobs()
     held = len(held_jobs)
 
+    # PM-1762 need to retrieve workflow states also, as you can
+    # have workflow with zero failed jobs, but still the workflow failed
+    # for example trying to run a workflow again from the same directory
+    # where an already existing workflow is running
+    workflow_states = workflow_stats.get_workflow_states()
+    workflow_status = WORKFLOW_STATUS.UNKNOWN
+    if workflow_states:
+        # workflow states are returned in ascending order. we need the last state
+        workflow_status = get_workflow_status(workflow_states[-1])
+
+    logger.debug(
+        "Workflow state determined from workflow database is %s" % workflow_status.value
+    )
+
     # PM-1039
     if success is None:
         success = 0
@@ -1202,14 +1256,20 @@ def analyze_db(config_properties):
 
     unsubmitted = total - success - failed
 
-    # Let's print the results
-    print_top_summary()
+    # PM-1762 add a helpful message in case failed jobs are zero and workflow failed
+    if workflow_status is WORKFLOW_STATUS.FAILURE and failed == 0:
+        print_console(
+            "It seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in %s"
+            % (input_dir or top_dir)
+        )
 
+    # Let's print the results
+    print_top_summary(workflow_status)
     check_for_wf_start()
 
     # Exit if summary mode is on
     if summary_mode:
-        if failed > 0:
+        if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
             # Workflow has failures, exit with exitcode 2
             sys.exit(2)
         # Workflow has no failures, exit with exitcode 0
@@ -1463,7 +1523,7 @@ def analyze_db(config_properties):
     # Done with the database
     workflow_stats.close()
 
-    if failed > 0:
+    if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
         # Workflow has failures, exit with exitcode 2
         sys.exit(2)
 

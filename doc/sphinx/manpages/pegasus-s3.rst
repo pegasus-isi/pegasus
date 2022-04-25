@@ -236,10 +236,14 @@ example of an identity entry:
    access_key = 90c4143642cb097c88fe2ec66ce4ad4e
    secret_key = a0e3840e5baee6abb08be68e81674dca
 
+.. warning::
+  Access and secret keys should not be quoted. 
+
 It is important to note that user names and site names used are only
 logical—they do not correspond to actual hostnames or usernames, but are
 simply used as a convenient way to refer to the services and identities
 used by the client.
+
 
 The configuration file should be saved with limited permissions. Only
 the owner of the file should be able to read from it and write to it

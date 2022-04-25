@@ -62,7 +62,7 @@ YAML
 Starting 5.0 release, this is the default Replica Catalog backend in
 Pegasus, replacing the old File format. In this format, you describe
 the locations of your files in a YAML format that is described
-using JSON schemas in `rc-5.0.yml <schemas/5.0/rc-5.0.yml>`__ .
+using JSON schemas in :download:`rc-5.0.yml <../../schemas/5.0/rc-5.0.yml>`.
 
 The YAML mode is the Default mode, and by default Pegasus picks up a
 file named **replicas.yml** in the current working directory ( from
@@ -489,16 +489,21 @@ Described below are some of the entries in the site catalog.
    get. For each mehod, specify a URL including the protocol. For
    example, if you want share data via http using the /var/www/staging
    directory, you can use scp://hostname/var/www for the put element and
-   http://hostname/staging for the get element.
+   http://hostname/staging for the get element. Also for each shared-*
+   directory you can specify a boolean attribute *sharedFileSystem* to indicate
+   that the worker nodes actually share a filesystem. This is used to
+   trigger data optimizations whereby Pegasus may access a file for a job
+   on that site via the file system instead of retrieving them from the
+   file server endpoints of the directory.
 
-#. **arch,os,osrelease,osversion,** - The
+#. **arch,os.type,os.release,os.version,** - The
    arch/os/osrelease/osversion/ of the site.
 
    ARCH can have one of the following values with the default value of
    **x86_64**.
 
     * x86
-    * x86_64
+    * x86_64 (default value)
     * ppc
     * ppc_64
     * ppc64le
@@ -509,7 +514,7 @@ Described below are some of the entries in the site catalog.
 
    OS can have one of the following values
 
-    * linux
+    * linux (default value)
     * sunos
     * macosx
     * aix
@@ -545,10 +550,10 @@ The rest of this section shows how to configure the site catalog.
 Pegasus supports the following implementations of the Site Catalog.
 
 1. **YAML** (Default) Corresponds to the schema described
-   `here <schemas/5.0/sc-5.0.yml>`__.
+   :download:`here <../../schemas/5.0/sc-5.0.yml>`.
 
 2. **XML** Corresponds to the schema described
-   `here <schemas/sc-4.0/sc-4.0.html>`__.
+   :download:`here <../../schemas/sc-4.0/sc-4.0.html>`.
 
 The above two formats are functionally equivalent
 
@@ -600,7 +605,7 @@ can be used to generate a new Site Catalog programatically.
         )
 
         # create and add a shared scratch directory to the site "condorpool"
-        condorpool_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/lustre")\
+        condorpool_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/lustre",shared_file_system=True)\
                                             .add_file_servers(FileServer("gsiftp://smarty.isi.edu/lustre", Operation.ALL))
         condorpool.add_directories(condorpool_shared_scratch_dir)
 
@@ -648,6 +653,7 @@ can be used to generate a new Site Catalog programatically.
           directories:
           - type: sharedScratch
             path: /lustre
+            sharedFileSystem: True
             fileServers:
             - {url: 'gsiftp://smarty.isi.edu/lustre', operation: all}
           grids:
@@ -836,14 +842,14 @@ The entries in this catalog have the following meaning
     * **container** - reference to a container in which this transformation
       is supposed to execute in. See :ref:`tc-container`
 
-    * **arch, os, osrelease, osversion** - The arch/os/osrelease/osversion
-      of the transformation. osrelease and osversion are optional.
+    * **arch, os.type, os.release, os.version** - The arch/os/osrelease/osversion
+      of the transformation. os.release and os.version are optional.
 
-      ARCH can have one of the following values with the default value of
+      arch can have one of the following values with the default value of
       **x86_64**.
 
         * x86
-        * x86_64
+        * x86_64 (default value)
         * ppc
         * ppc_64
         * ppc64le
@@ -852,9 +858,9 @@ The entries in this catalog have the following meaning
         * sparcv9
         * amd64
 
-      OS can have one of the following values
+      os.type can have one of the following values
 
-        * linux
+        * linux (default value)
         * sunos
         * macosx
         * aix

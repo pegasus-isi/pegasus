@@ -38,10 +38,10 @@ PACKAGES+=six
 PACKAGES+=urllib3
 
 
-ifeq ($(shell python --version 2>&1 | grep " 2.6"),)
+ifeq ($(shell python --version 2>&1 | grep " 2."),)
     PACKAGES+=globus_sdk
 else
-    $(warning WARNING: globus_sdk does not work with Python 2.6: skipping globus_sdk library)
+    $(warning WARNING: globus_sdk does not work with Python 2.x: skipping globus_sdk library)
 endif
 
 PYOPENSSL_ARGS=
@@ -67,7 +67,7 @@ $(LIBDIR)/%:
 	touch $@
 
 $(LIBDIR)/flask: Flask-1.1.1.tar.gz
-$(LIBDIR)/flask_caching: Flask-Caching-1.8.0.tar.gz
+$(LIBDIR)/flask_caching: Flask-Caching-1.10.1.tar.gz
 $(LIBDIR)/jinja2: Jinja2-2.11.1.tar.gz
 $(LIBDIR)/markupsafe: MarkupSafe-1.1.1.tar.gz
 $(LIBDIR)/pyjwt: PyJWT-1.7.1.tar.gz
@@ -81,7 +81,7 @@ $(LIBDIR)/certifi: certifi-2019.11.28.tar.gz
 $(LIBDIR)/chardet: chardet-3.0.4.tar.gz
 $(LIBDIR)/click: click-7.1.1.tar.gz
 $(LIBDIR)/docutils: docutils-0.15.2.tar.gz
-$(LIBDIR)/globus_sdk: globus-sdk-1.4.1.tar.gz
+$(LIBDIR)/globus_sdk: globus-sdk-3.5.0.tar.gz
 $(LIBDIR)/idna: idna-2.9.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-1.1.0.tar.gz
 $(LIBDIR)/jmespath: jmespath-0.9.5.tar.gz

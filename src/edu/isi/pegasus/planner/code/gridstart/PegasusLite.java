@@ -251,6 +251,8 @@ public class PegasusLite implements GridStart {
     /** path to a setup script on the submit host that needs to be sourced in PegasusLite. */
     protected String mSetupScriptOnTheSubmitHost;
 
+    protected PegasusProperties.PEGASUS_MODE mPegasusMode;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -314,6 +316,7 @@ public class PegasusLite implements GridStart {
                 mSiteStore.lookup("local").getProfiles().get(Profiles.NAMESPACES.pegasus);
         mSetupScriptOnTheSubmitHost =
                 (String) localSitePegasusProfiles.get(Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY);
+        mPegasusMode = mProps.getPegasusMode();
     }
 
     /**
@@ -550,9 +553,15 @@ public class PegasusLite implements GridStart {
             // PM-1360
             // no empty postscript but arguments to exitcode to add -r $RETURN
             job.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
-            job.dagmanVariables.construct(
-                    Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+
+            StringBuilder args = new StringBuilder();
+            args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+            // PM-1821 explicity indicate no kickstart records to parse
+            args.append(" ")
+                    .append(
+                            PegasusExitCode
+                                    .POSTSCRIPT_ARGUMENTS_FOR_DISABLING_CHECKS_FOR_INVOCATIONS);
+            job.dagmanVariables.construct(Dagman.POST_SCRIPT_ARGUMENTS_KEY, args.toString());
         }
         return this.defaultPOSTScript();
     }
@@ -738,6 +747,9 @@ public class PegasusLite implements GridStart {
             StringBuffer sb = new StringBuffer();
             sb.append("#!/bin/bash").append('\n');
             sb.append("set -e").append('\n');
+            if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
+                sb.append("set -x").append('\n');
+            }
             sb.append("pegasus_lite_version_major=\"")
                     .append(this.mMajorVersionLevel)
                     .append("\"")
@@ -1235,24 +1247,46 @@ public class PegasusLite implements GridStart {
     }
 
     /**
-     * Determines the path to common shell functions file that Pegasus Lite wrapped jobs use.
+     * Determines the path to common shell functions file that Pegasus Lite wrapped jobs use. The
+     * path returned is the path on to the submit directory for the workflow. If the file does not
+     * exist for whatever reason, then we default back to the share directory location in the submit
+     * host Pegasus installation.
      *
      * @return the path on the submit host.
      */
     protected String getSubmitHostPathToPegasusLiteCommon() {
         StringBuffer path = new StringBuffer();
 
-        // first get the path to the share directory
-        File share = mProps.getSharedDir();
-        if (share == null) {
-            throw new RuntimeException("Property for Pegasus share directory is not set");
-        }
-
-        path.append(share.getAbsolutePath())
-                .append(File.separator)
-                .append("sh")
+        // PM-1851 opt for a path in the submit directory
+        path.append(this.mSubmitDir)
                 .append(File.separator)
                 .append(PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME);
+
+        if (!new File(path.toString()).exists()) {
+            // make sure the path exists, else revert to the location from
+            // the Pegasus install
+            mLogger.log(
+                    PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME
+                            + " "
+                            + "does not exist in the submit directory"
+                            + " "
+                            + mSubmitDir
+                            + ". Reverting to the pegasus install location",
+                    LogManager.ERROR_MESSAGE_LEVEL);
+            path = new StringBuffer();
+
+            // first get the path to the share directory
+            File share = mProps.getSharedDir();
+            if (share == null) {
+                throw new RuntimeException("Property for Pegasus share directory is not set");
+            }
+
+            path.append(share.getAbsolutePath())
+                    .append(File.separator)
+                    .append("sh")
+                    .append(File.separator)
+                    .append(PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME);
+        }
 
         return path.toString();
     }

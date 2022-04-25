@@ -122,14 +122,38 @@ class ExitcodeTestCase(unittest.TestCase):
             success_messages=["Job succeeded", "Successfully finished"],
         )
 
-        # PM-927 Exitcode should fail in this case, even if status=0
+        # PM-927 Exitcode should fail in this case, even if dagman_job_status=0
         self.assertRaises(
             JobFailed,
             ec,
             "insufficient.out",
             success_messages=["End of program"],
-            status=0,
+            dagman_job_status=0,
         )
+
+        # PM-1821  cases
+        # kick-ec | -r | Reason
+        # 0       | 0  | No error
+        # 1       | 0  | Task failed
+        # 0       | 1  | HTCondor failed it
+        # 1       | 1  | Task failed
+        # dagman_job_status is zero but kickstart record says failure
+        self.assertRaises(
+            JobFailed, ec, "yaml-failed.out", dagman_job_status=0,
+        )
+        self.assertRaises(
+            JobFailed, ec, "yaml-failed.out", dagman_job_status=1,
+        )
+        # PM-1821 dagman job status has highest priority. trigger failure even though
+        # kickstart record says zero exitcode
+        self.assertRaises(
+            JobFailed, ec, "yaml-ok.out", dagman_job_status=1,
+        )
+        # empty stdout only success in case of --no-invocations
+        self.assertRaises(JobFailed, ec, "empty.out")
+        self.assertRaises(JobFailed, ec, "empty.out", dagman_job_status=0)
+        self.assertRaises(JobFailed, ec, "empty.out", dagman_job_status=1)
+        ec("empty.out", dagman_job_status=0, check_invocations=False)
 
     def test_rename_noerrfile(self):
         inf = os.path.join(dirname, "exitcode", "ok.out")

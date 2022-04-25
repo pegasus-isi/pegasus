@@ -39,9 +39,13 @@ def load(fp: TextIO, *args, **kwargs) -> Properties:
     """
 
     conf = ConfigParser()
+    # preserve case for keys
+    conf.optionxform = str
     conf.read_string("[{}]\n".format(DEFAULTSECT) + fp.read())
+
     props = Properties()
-    props._conf = conf
+    for k, v in conf[DEFAULTSECT].items():
+        props[k] = v
 
     return props
 
@@ -56,9 +60,13 @@ def loads(s: str, *args, **kwargs) -> Properties:
     :rtype: Properties
     """
     conf = ConfigParser()
+    # preserve case for keys
+    conf.optionxform = str
     conf.read_string("[{}]\n".format(DEFAULTSECT) + s)
+
     props = Properties()
-    props._conf = conf
+    for k, v in conf[DEFAULTSECT].items():
+        props[k] = v
 
     return props
 

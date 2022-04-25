@@ -31,8 +31,19 @@ import java.io.File;
  */
 public class PegasusExitCode implements POSTScript {
 
-    /** The arguments for pegasus-exitcode when you only want the log files to be rotated. */
-    public static final String POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE = "-r $RETURN";
+    /**
+     * The arguments for pegasus-exitcode when you only want the log files to be rotated. A
+     * misnomer, as -r $RETURN means to use the dagman determined exitcode for the job which is
+     * populated in the $RETURN environment variable
+     */
+    public static final String POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE = "-r $RETURN";
+
+    /**
+     * The arguments that indicate that invocation records should not be parsed as job is not
+     * launched via kickstart
+     */
+    public static final String POSTSCRIPT_ARGUMENTS_FOR_DISABLING_CHECKS_FOR_INVOCATIONS =
+            "--no-invocations";
 
     /** The SHORTNAME for this implementation. */
     public static final String SHORT_NAME = "pegasus-exitcode";
@@ -68,6 +79,9 @@ public class PegasusExitCode implements POSTScript {
     /** Whether to disable .meta file creation or not */
     protected boolean mDisablePerJobMetaFileCreation;
 
+    /** A boolean to track whether we are using the condor code generator or not */
+    protected boolean mUsingCondorCodeGenerator;
+
     /** The submit directory where the submit files are being generated for the workflow. */
     protected String mSubmitDir;
 
@@ -102,6 +116,8 @@ public class PegasusExitCode implements POSTScript {
         mWFCacheMetadataLog = basename + ".cache.meta";
         mDisablePerJobMetaFileCreation =
                 properties.getIntegrityDial() == PegasusProperties.INTEGRITY_DIAL.none;
+        mUsingCondorCodeGenerator =
+                properties.getCodeGenerator().equals(PegasusProperties.DEFAULT_CODE_GENERATOR);
     }
 
     /**
@@ -131,6 +147,15 @@ public class PegasusExitCode implements POSTScript {
 
         // put in the postscript properties if any
         defaultOptions.append(this.mPostScriptProperties);
+
+        // PM-1746 add default option to take in the dagman provided exitcode
+        // for the job
+        // PM-1817 we dont want this option in case of non condor code generator
+        if (mUsingCondorCodeGenerator) {
+            defaultOptions
+                    .append(" ")
+                    .append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+        }
 
         // check for existence of Pegasus profile key for exitcode.failuremsg and
         // exitcode.successmsg

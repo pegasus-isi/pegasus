@@ -73,10 +73,10 @@ sites:
     fileServers:
      -
       operation: "get"
-      url: "http://obelix.isi.edu/shared-scratch/ptesting"
+      url: "http://workflow.isi.edu/shared-scratch/ptesting"
      -
       operation: "put"
-      url: "gsiftp://obelix.isi.edu/lizard/scratch-90-days/http-scratch/ptesting"
+      url: "gsiftp://workflow.isi.edu/lizard/scratch-90-days/http-scratch/ptesting"
  -
   name: "local"
   arch: "x86_64"

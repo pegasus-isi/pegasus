@@ -161,9 +161,9 @@ public class JDBCRC implements ReplicaCatalog {
         // 17:
         "UPDATE rc_meta SET value=? WHERE lfn_id=? and `key`=?",
         // 18:
-        "DELETE l FROM rc_lfn l LEFT JOIN rc_pfn p ON p.lfn_id=l.lfn_id WHERE p.lfn_id IS NULL",
+        "DELETE l FROM rc_lfn l LEFT JOIN rc_pfn p ON p.lfn_id=l.lfn_id WHERE l.lfn=? AND p.lfn_id IS NULL",
         // 19:
-        "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT rc_lfn.lfn_id FROM rc_lfn LEFT JOIN rc_pfn ON rc_lfn.lfn_id=rc_pfn.lfn_id WHERE rc_pfn.lfn_id IS NULL)"
+        "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT rc_lfn.lfn_id FROM rc_lfn LEFT JOIN rc_pfn ON rc_lfn.lfn_id=rc_pfn.lfn_id WHERE rc_lfn.lfn=? AND rc_pfn.lfn_id IS NULL)"
     };
 
     /** Remembers if obtaining generated keys will work or not. */
@@ -1189,17 +1189,22 @@ public class JDBCRC implements ReplicaCatalog {
                 // insert new lfns
                 List<String> lfnsInDB = new ArrayList<String>((Set<String>) lfnToID.keySet());
                 List<String> lfnsToInsert = new ArrayList<String>();
+                PreparedStatement ps =
+                        mConnection.prepareStatement(
+                                "INSERT INTO rc_lfn(lfn) VALUES(?)",
+                                Statement.RETURN_GENERATED_KEYS);
                 int countInserts = 0;
                 for (String lfn : lfns) {
                     if (!lfnsInDB.contains(lfn)) {
-                        st.addBatch("INSERT INTO rc_lfn(lfn) VALUES('" + lfn + "')");
+                        ps.setString(1, lfn);
+                        ps.addBatch();
                         lfnsToInsert.add(lfn);
                         countInserts++;
                     }
                 }
-                st.executeBatch();
+                ps.executeBatch();
                 int index = 0;
-                rs = st.getGeneratedKeys();
+                rs = ps.getGeneratedKeys();
                 while (rs.next()) {
                     if (mUsingSQLiteBackend) {
                         for (String lfn : lfnsToInsert) {
@@ -1420,6 +1425,7 @@ public class JDBCRC implements ReplicaCatalog {
             which = mUsingSQLiteBackend ? 19 : 18;
             query = mCStatements[which];
             ps = getStatement(which);
+            ps.setString(1, quote(lfn));
             result = ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -1513,6 +1519,7 @@ public class JDBCRC implements ReplicaCatalog {
                 int which = mUsingSQLiteBackend ? 19 : 18;
                 query = new StringBuilder(mCStatements[which]);
                 PreparedStatement ps = getStatement(which);
+                ps.setString(1, quote(lfn));
                 result = ps.executeUpdate();
 
             } else {

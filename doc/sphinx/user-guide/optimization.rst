@@ -636,6 +636,17 @@ For example if the user sets ``pegasus.clusterer.label.key`` to
 -  Each job with the same value for ``PEGASUS`` profile key
    ``user_label`` appears in the same cluster.
 
+Whole Clustering
+----------------
+
+In ``whole`` workflow clustering, all the jobs in the workflow get clustered into
+a single job. This clustering is a specialized case of ``label`` based clustering
+where all jobs in the workflow are assumed to have the same label. This is
+particularly useful when you want to run the whole workflow using **PMC**.
+
+To use whole workflow clustering the user needs to set the ``--cluster`` option
+of :ref:`pegasus-plan <cli-pegasus-plan>` to ``whole``.
+
 Recursive Clustering
 --------------------
 
@@ -826,6 +837,149 @@ execution of the smaller constituent jobs either
 
       Users are encouraged to use label based clustering in conjunction
       with PMC
+
+-  **On multiple nodes of the remote site using MPI based in-situ task
+   management tool called Decaf**
+
+   Decaf  is a middleware for building and executing in-situ workflows. Decaf allows
+   parallel communication of coupled tasks by creating communication channels over HPC
+   interconnects through MPI. Decaf has a Python API, where users can describe the
+   workflow graph by defining the tasks and the communication channels among them.
+   Decaf does not impose any constraints on this graph topology and can manage
+   graphs with cycles. Once the workflow graph is defined, it is
+   executed as a multiple-program-multiple-data (MPMD) MPI application.
+
+   To use in-situ frameworks such as Decaf the underlying application code needs to
+   be changed to use the Decaf libraries and constructs for their file I/O. This cannot
+   be avoided. However, Pegasus ensures that users don’t have to change their
+   workflow generators to use Decaf. Decaf is integrated into Pegasus as a
+   technique to manage execution of clustered jobs. When users enable job
+   clustering in their workflows at planning time, Pegasus can set up a sub
+   graph of the workflow (identified using :ref:`label based clustering <label-clustering>`)
+   to be clustered and executed using Decaf. As part of this process, Pegasus creates
+   the necessary bindings for the clustered job to execute using Decaf.
+
+   To execute a clustered job using Decaf, Pegasus generates
+
+   1. the JSON file for the workflow graph, and
+   2. the run script for the users to run the Decaf via mpmd.
+
+
+   To automatically generate the Decaf description Pegasus employs the following rules
+
+   1. the roots of the sub graph will have no inports and the leaves of the sub
+      graph have no outports
+   2. the func name is generated based on the transformation name the node maps
+      to for link jobs
+   3. the name attribute is derived from the func attribute of
+      the nodes making up the edges
+   4. the source and target are the decaf integer id’s of the
+      nodes.
+   5. also internally order for the jobs is preserved as specified in the input
+      workflow description.
+
+   In addition, Pegasus generates a shell script for the clustered job that allows
+   the clustered DECAF job to be run via SLURM. Below is an actual script from one
+   of the runs of 1000Genome workflow that was executed on CORI.
+
+   .. code-block:: bash
+
+        #!/bin/bash
+        set -e
+
+        LAUNCH_DIR=`pwd`
+        echo "Job Launched in directory $LAUNCH_DIR"
+        source $DECAF_ENV_SOURCE
+
+
+        # copy the json file for the job into the directory
+        # where we are going to launch decaf
+        cp 1Kgenome.json $PEGASUS_SCRATCH_DIR/
+
+        cd $PEGASUS_SCRATCH_DIR
+        echo "Invoking decaf executable from directory `pwd`"
+        cat <<EOF > merge_cluster1.conf
+        0 ./individuals ALL.chr1.250000.vcf 1 1 15626 250000
+        1 ./individuals ALL.chr1.250000.vcf 1 171876 187501 250000
+        2 ./individuals ALL.chr1.250000.vcf 1 15626 31251 250000
+        3 ./individuals ALL.chr1.250000.vcf 1 187501 203126 250000
+        4 ./individuals ALL.chr1.250000.vcf 1 140626 156251 250000
+        5 ./individuals ALL.chr1.250000.vcf 1 156251 171876 250000
+        6 ./individuals ALL.chr1.250000.vcf 1 62501 78126 250000
+        7 ./individuals ALL.chr1.250000.vcf 1 234376 250001 250000
+        8 ./individuals ALL.chr1.250000.vcf 1 78126 93751 250000
+        9 ./individuals ALL.chr1.250000.vcf 1 31251 46876 250000
+        10 ./individuals ALL.chr1.250000.vcf 1 203126 218751 250000
+        11 ./individuals ALL.chr1.250000.vcf 1 46876 62501 250000
+        12 ./individuals ALL.chr1.250000.vcf 1 218751 234376 250000
+        13 ./individuals ALL.chr1.250000.vcf 1 125001 140626 250000
+        14 ./individuals ALL.chr1.250000.vcf 1 93751 109376 250000
+        15 ./individuals ALL.chr1.250000.vcf 1 109376 125001 250000
+        16 ./individuals_merge 1 chr1n-1-15626.tar.gz chr1n-15626-31251.tar.gz chr1n-31251-46876.tar.gz chr1n-46876-62501.tar.gz chr1n-62501-78126.tar.gz chr1n-78126-93751.tar.gz chr1n-93751-109376.tar.gz chr1n-109376-125001.tar.gz chr1n-125001-140626.tar.gz chr1n-140626-156251.tar.gz chr1n-156251-171876.tar.gz chr1n-171876-187501.tar.gz chr1n-187501-203126.tar.gz chr1n-203126-218751.tar.gz chr1n-218751-234376.tar.gz chr1n-234376-250001.tar.gz
+        EOF
+        srun --multi-prog ./merge_cluster1.conf
+
+
+   You need to have a ``dataflow::decaf`` entry in the transformation catalog to
+   specify basename of the json file that you want created for execution on
+   the remote site
+
+    .. tabs::
+
+        .. code-tab:: python generate_tc.py
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # create the TransformationCatalog object
+            tc = TransformationCatalog()
+            n_nodes = 17
+
+            decaf = Transformation("decaf", namespace="dataflow", site="cori", pfn=json_fn, is_stageable=False)
+                    .add_pegasus_profile(
+                        runtime="18000",
+                        glite_arguments="--qos=regular --constraint=haswell --licenses=SCRATCH --nodes=" + str(n_nodes) + " --ntasks-per-node=1 --ntasks=" + str(n_nodes),
+                        # glite_arguments="--qos=debug --constraint=haswell --licenses=SCRATCH",
+                        # exitcode.successmsg="Execution time in seconds:",
+                    )
+                    .add_profiles(Namespace.PEGASUS, key="exitcode.successmsg", value="Execution time in seconds:")
+                    .add_profiles(Namespace.PEGASUS, key="dagman.post", value="pegasus-exitcode")
+                    .add_env(key="DECAF_ENV_SOURCE", value=env_script)
+
+            tc.add_transformations(decaf)
+
+
+            # write the transformation catalog to the default file path "./transformations.yml"
+            tc.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus:
+            apiLang: python
+            createdBy: pegasus
+            createdOn: 10-17-21T15:23:28Z
+            pegasus: '5.0'
+            transformations:
+                - namespace: dataflow
+                  name: decaf
+                  sites:
+                  - name: cori
+                    pfn: 1Kgenome.json
+                    type: installed
+                  profiles:
+                    pegasus:
+                      runtime: '12000'
+                      glite.arguments: --qos=regular --constraint=haswell --licenses=SCRATCH --nodes=17
+                        --ntasks-per-node=1 --ntasks=17
+                      exitcode.successmsg: 'Execution time in seconds:'
+                      dagman.post: pegasus-exitcode
+                    env:
+                      DECAF_ENV_SOURCE: /global/cfs/cdirs/m2187/pegasus-decaf/1000genome-workflow/env.sh
+
+.. note::
+
+      If you want to use Decaf for your workflows, please contact the Decaf team at Argonne for help on
+      how to port your application to Decaf.
 
 Specification of Method of Execution for Clustered Jobs
 -------------------------------------------------------
@@ -1102,6 +1256,21 @@ executable workflow. In the example :ref:`above <pegasusWorkflow-job-example>`
 ``maxjobs`` is set to 10 for the sub workflow.
 
 
+Catalogs in Hierarchical Workflows
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When using hierarchical workflows, and you want to use the same catalog files
+for all the workflows making up your hierarchical workflow it is advisable
+to have the catalog files as standalone catalog files, and locations of those
+catalogued in your properties.
+
+Catalogs defined inline in the abstract workflow are not inherited by a
+sub-workflow. The only exception to this is the replica catalog that is
+inherited one level ( if in a worklfow W you have a replica catalog
+inlined, the worklfows corresponding to the pegasusWorkflow jobs defined
+in W will have access to replica catalog defined in W).
+
+
 Execution of the PRE script and HTCondor DAGMan instance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1226,6 +1395,16 @@ namely
 
 #. data dependency between a *pegasusWorkflow* job and a compute job
 
+.. note::
+
+    Starting with Pegasus 5.x releases, it is recommended that you list the file
+    dependencies for a *pegasusWorkflow* job as you would do with a normal compute
+    job. Additionally, the sub workflows no longer get passed the cache file
+    generated when the planning the enclosing workflow ( the workflow in which you
+    define the pegasusWorkflow jobs). Hence it is advisable to list any
+    file dependencies that a pegasusWorkflow job may have to a *compute* job
+    or other *pegasusWorkflow* jobs.
+
 File Dependencies Across pegasusWorkflow Jobs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1254,6 +1433,84 @@ files to a storage site, and you want the child sub workflow to stage
 these files from the storage output site instead of the workflow
 execution directory where the files were originally created.
 
+.. tabs::
+
+        .. code-tab:: python Code Snippet
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # define various transformations.
+            ...
+
+            # --- SubWorkflow1 ---------------------------------------------------------------
+            input_file = File("input.txt")
+            k1_out = File("k1.txt")
+            wf1 = Workflow("subworkflow-1")
+            k1 = Job(keg)\
+                    .add_args("-i", input_file, "-o", k1_out, "-T", 5)\
+                    .add_inputs(input_file)\
+                    .add_outputs(k1_out)
+
+            ls1 = Job(ls)\
+                    .add_args("-alh")
+
+            wf1.add_jobs(k1, ls1)
+            wf1.write("subwf1.yml")
+
+            # --- SubWorkflow2 ---------------------------------------------------------------
+            k2_out = File("k2.txt")
+            wf2 = Workflow("subworkflow-2")
+            k2 = Job(keg)\
+                    .add_args("-i", k1_out, "-o", k2_out, "-T", 5)\
+                    .add_inputs(k1_out)\
+                    .add_outputs(k2_out)
+
+            wf2.add_jobs(k2)
+            wf2.write("subwf2.yml")
+
+            # Root
+            root_wf = Workflow("root")
+
+
+            j1 = SubWorkflow("subwf1.yml", _id="subwf1")\
+                    .add_planner_args(verbose=3)\
+                    .add_outputs(k1_out)
+
+            j2 = SubWorkflow("subwf2.yml", _id="subwf2")\
+                    .add_planner_args(verbose=3)\
+                    .add_inputs(k1_out)\
+                    .add_outputs(k2_out)
+
+            root_wf.add_jobs(j1, j2)
+
+
+        .. code-tab:: yaml Abstract Workflow
+
+           x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '10-05-21T09:27:22Z'}
+            pegasus: '5.0'
+            name: root
+            jobs:
+            - type: pegasusWorkflow
+              file: subwf1.yml
+              id: subwf1
+              arguments: [-vvv]
+              uses:
+              - {lfn: subwf1.yml, type: input}
+              - {lfn: k1.txt, type: output, stageOut: true, registerReplica: true}
+            - type: pegasusWorkflow
+              file: subwf2.yml
+              id: subwf2
+              arguments: [-vvv]
+              uses:
+              - {lfn: k2.txt, type: output, stageOut: true, registerReplica: true}
+              - {lfn: subwf2.yml, type: input}
+              - {lfn: k1.txt, type: input}
+            jobDependencies:
+            - id: subwf1
+              children: [subwf2]
+
+
 File Dependencies between pegasusWorkflow and Compute Jobs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1269,6 +1526,91 @@ This is achieved by passing an *output.map* file to the *pegasusWorkflow*
 job that lists the location on the staging site (where job D will pickup
 from when it executes). The *output.map* file tells the *pegasusWorkflow*
 job as to where to place certain outputs.
+
+.. tabs::
+
+        .. code-tab:: python Code Snippet
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            fa = File("f.a")
+            fb1 = File("f.b1")
+            fb2 = File("f.b2")
+            fc1 = File("f.c1")
+            fc2 = File("f.c2")
+            fd = File("f.d")
+            fe = File("f.e")
+
+            # define various transformations.
+            ...
+
+            # --- Blackdiamond Sub Workflow -------------------------------------------------------
+            wf = (
+                Workflow("blackdiamond")
+                .add_jobs(
+                    Job("preprocess", namespace="diamond", version="4.0")
+                    .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+                    .add_inputs(fa)
+                    .add_outputs(fb1, fb2, register_replica=True),
+                    Job("findrange", namespace="diamond", version="4.0")
+                    .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
+                    .add_inputs(fb1)
+                    .add_outputs(fc1, register_replica=True),
+                    Job("findrange", namespace="diamond", version="4.0")
+                    .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
+                    .add_inputs(fb2)
+                    .add_outputs(fc2, register_replica=True),
+                    Job("analyze", namespace="diamond", version="4.0")
+                    .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
+                    .add_inputs(fc1, fc2)
+                    .add_outputs(fd, register_replica=False, stage_out=False),
+                )
+                .write(str(TOP_DIR / "input/blackdiamond.yml"))
+            )
+
+            # --- Top Root Level Workflow -------------------------------------------------------
+            wf = Workflow("local-hierarchy")
+
+            blackdiamond_wf = SubWorkflow("blackdiamond.yml", False).add_args(
+                "--input-dir", "input", "--output-sites", "local", "-vvv", "--force"
+            ).add_outputs(fd)
+
+            # --- Compute Job that is dependent on output f.d created by the  Sub Workflow-------
+            post_analyze_job = Job("post-analyze", namespace="diamond", version="4.0")\
+                               .add_args("-a", "post-analyze", "-T", "60", "-i", fd, "-o", fe)\
+                               .add_inputs(fd)\
+                               .add_outputs(fe, register_replica=True, stage_out=True)
+
+            wf.add_jobs(blackdiamond_wf, post_analyze_job)
+            wf.add_dependency(blackdiamond_wf, children=[post_analyze_job])
+
+
+        .. code-tab:: yaml Abstract Workflow
+
+            x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '10-05-21T09:27:21Z'}
+            pegasus: '5.0'
+            name: local-hierarchy
+            jobs:
+            - type: pegasusWorkflow
+              file: blackdiamond.yml
+              id: ID0000001
+              arguments: [--input-dir, input, --output-sites, local, -vvv, --force]
+              uses:
+              - {lfn: f.d, type: output, stageOut: true, registerReplica: true}
+              - {lfn: blackdiamond.yml, type: input}
+            - type: job
+              namespace: diamond
+              version: '4.0'
+              name: post-analyze
+              id: ID0000002
+              arguments: [-a, post-analyze, -T, '60', -i, f.d, -o, f.e]
+              uses:
+              - {lfn: f.d, type: input}
+              - {lfn: f.e, type: output, stageOut: true, registerReplica: true}
+            jobDependencies:
+            - id: ID0000001
+              children: [ID0000002]
 
 Recursion in Hierarchical Workflows
 -----------------------------------

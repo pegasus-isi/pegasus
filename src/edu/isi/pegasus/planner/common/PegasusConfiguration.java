@@ -103,7 +103,25 @@ public class PegasusConfiguration {
             PegasusProperties properties, PlannerOptions options) {
 
         this.loadConfigurationProperties(properties);
-        this.loadModeProperties(properties);
+
+        PEGASUS_MODE mode = properties.getPegasusMode();
+        this.loadModeProperties(properties, mode);
+
+        // set other mode knobs that are not handled via properties
+        switch (mode) {
+            case debug:
+                // PM-1818 set the planner log level to trace
+                mLogger.setLevel(LogManager.TRACE_MESSAGE_LEVEL);
+                break;
+
+            case development:
+                // PM-1804 set the planner log level to debug
+                mLogger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+                break;
+
+            default:
+                break;
+        }
 
         // PM-1190 if integrity checking is turned on, turn on the stat of
         // files also
@@ -114,15 +132,19 @@ public class PegasusConfiguration {
     }
 
     /**
-     * Returns the staging site to be used for a job. The determination is made on the basis of the
+     * Returns the staging site to be used for a job.The determination is made on the basis of the
      * following - data configuration value for job - from planner command line options - If a
      * staging site is not determined from the options it is set to be the execution site for the
      * job
      *
-     * @param job the job for which to determine the staging site
+     * @param store the site store
+     * @param job the job for which staging site has to be determined
+     * @param options options passed to the planner
      * @return the staging site
+     * @throws RuntimeException in case of unable to determine staging site, or staging site that is
+     *     determined does not exist in the site store
      */
-    public String determineStagingSite(Job job, PlannerOptions options) {
+    public String determineStagingSite(SiteStore store, Job job, PlannerOptions options) {
         // check to see if job has data.mode set
         if (!job.vdsNS.containsKey(Pegasus.DATA_CONFIGURATION_KEY)) {
             throw new RuntimeException(
@@ -132,11 +154,12 @@ public class PegasusConfiguration {
 
         String conf = job.getDataConfiguration();
         // shortcut for condorio
+        String stagingSite = null;
         if (conf.equalsIgnoreCase(PegasusConfiguration.CONDOR_CONFIGURATION_VALUE)) {
             // sanity check against the command line option
             // we are leaving the data mode to be per site
             // by this check
-            String stagingSite = options.getStagingSite(job.getSiteHandle());
+            stagingSite = options.getStagingSite(job.getSiteHandle());
             if (stagingSite == null) {
                 stagingSite = "local";
             } else if (!(stagingSite.equalsIgnoreCase("local"))) {
@@ -153,28 +176,46 @@ public class PegasusConfiguration {
                 throw new RuntimeException(sb.toString());
             }
 
-            return stagingSite;
+        } else {
+            // check for nonsharedfs first
+            stagingSite = options.getStagingSite(job.getSiteHandle());
+            stagingSite = (stagingSite == null) ? job.getSiteHandle() : stagingSite;
+
+            // check for sharedfs
+            if (conf.equalsIgnoreCase(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE)
+                    && !stagingSite.equalsIgnoreCase(job.getSiteHandle())) {
+                StringBuilder sb = new StringBuilder();
+
+                sb.append("Mismatch in the between execution site ")
+                        .append(job.getSiteHandle())
+                        .append(" and staging site ")
+                        .append(stagingSite)
+                        .append(" for job ")
+                        .append(job.getID())
+                        .append(" . For sharedfs they should be the same");
+
+                throw new RuntimeException(sb.toString());
+            }
         }
 
-        String ss = options.getStagingSite(job.getSiteHandle());
-        ss = (ss == null) ? job.getSiteHandle() : ss;
-        // check for sharedfs
-        if (conf.equalsIgnoreCase(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE)
-                && !ss.equalsIgnoreCase(job.getSiteHandle())) {
-            StringBuffer sb = new StringBuffer();
+        // PM-1837 check for existence in the site
+        if (store == null || !store.contains(stagingSite)) {
+            StringBuilder sb = new StringBuilder();
 
-            sb.append("Mismatch in the between execution site ")
-                    .append(job.getSiteHandle())
-                    .append(" and staging site ")
-                    .append(ss)
-                    .append(" for job ")
+            sb.append("Staging Site")
+                    .append(" ")
+                    .append(stagingSite)
+                    .append(" ")
+                    .append("for job")
+                    .append(" ")
                     .append(job.getID())
-                    .append(" . For sharedfs they should be the same");
+                    .append(" ")
+                    .append("not found in site catalog.");
 
             throw new RuntimeException(sb.toString());
         }
 
-        return ss;
+        return stagingSite;
     }
 
     /**
@@ -452,15 +493,14 @@ public class PegasusConfiguration {
     }
 
     /**
-     * Loads mode specific properties into PegasusProperties. There are the properties corresponding
+     * Loads mode specific properties into PegasusProperties.There are the properties corresponding
      * to the mode under which Pegasus is running under.
      *
      * @param properties the Pegasus Properties.
+     * @param mode the pegasus mode passed.
      * @see #PEGASUS_MODE
      */
-    protected void loadModeProperties(PegasusProperties properties) {
-        String mode = properties.getProperty(PegasusProperties.PEGASUS_MODE_PROPERTY_KEY);
-
+    protected void loadModeProperties(PegasusProperties properties, PEGASUS_MODE mode) {
         Properties props = this.getModeProperties(mode);
         for (Iterator it = props.keySet().iterator(); it.hasNext(); ) {
             String key = (String) it.next();
@@ -475,13 +515,28 @@ public class PegasusConfiguration {
      * @param mode the mode value.
      * @return Properties
      */
-    protected Properties getModeProperties(String mode) {
+    protected Properties getModeProperties(PEGASUS_MODE mode) {
+        if (mode == null) {
+            throw new NullPointerException("NULL value detected for pegasus mode");
+        }
+
         Properties p = new Properties();
-        PEGASUS_MODE m = (mode == null) ? PEGASUS_MODE.production : PEGASUS_MODE.valueOf(mode);
-        switch (m) {
+        switch (mode) {
+            case debug:
+                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_ARGUMENTS_KEY, "--debug -m 1");
+                p.setProperty(
+                        PegasusProperties.PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY, "--debug -m 1");
+                p.setProperty(PegasusProperties.PEGASUS_MONITORD_ARGUMENTS_PROPERTY_KEY, "-vvv");
+                p.setProperty(Dagman.NAMESPACE_NAME + "." + Dagman.RETRY_KEY, "0");
+                p.setProperty(
+                        PegasusProperties.PEGASUS_INTEGRITY_CHECKING_KEY,
+                        PegasusProperties.INTEGRITY_DIAL.none.toString());
+                p.setProperty(
+                        Condor.NAMESPACE_NAME + "." + Condor.PERIODIC_REMOVE_KEY,
+                        "(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 30)");
+                break;
+
             case development:
-                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_ARGUMENTS_KEY, "-m 1");
-                p.setProperty(PegasusProperties.PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY, "-m 1");
                 p.setProperty(Dagman.NAMESPACE_NAME + "." + Dagman.RETRY_KEY, "0");
                 p.setProperty(
                         PegasusProperties.PEGASUS_INTEGRITY_CHECKING_KEY,
@@ -505,7 +560,7 @@ public class PegasusConfiguration {
                 break;
 
             default:
-                throw new RuntimeException("Unknown Pegasus mode specified " + m);
+                throw new RuntimeException("Unknown Pegasus mode specified " + mode);
         }
 
         return p;

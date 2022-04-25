@@ -317,6 +317,16 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
+     * Removes a directory of said type from the site catalog entry.
+     *
+     * @param type
+     * @return the directory if associated, else null
+     */
+    public Directory remove(Directory.TYPE type) {
+        return this.mDirectories.remove(type);
+    }
+
+    /**
      * Sets a siteEntry corresponding to a particular type
      *
      * @param directory the siteEntry to be set
@@ -807,6 +817,22 @@ public class SiteCatalogEntry extends AbstractSiteData {
     public boolean isVisibleToLocalSite() {
         Pegasus pegasusProfiles = (Pegasus) this.getProfiles().get(NAMESPACES.pegasus);
         return pegasusProfiles.getBooleanValue(Pegasus.LOCAL_VISIBLE_KEY);
+    }
+
+    /**
+     * Returns a boolean indicating whether the shared scratch space is accessible to the worker
+     * nodes via a shared filesystem.
+     *
+     * @return
+     * @throws RuntimeException in case directory of type shared scratch is not associated
+     */
+    public boolean hasSharedFileSystem() {
+        Directory dir = this.getDirectory(Directory.TYPE.shared_scratch);
+        if (dir == null) {
+            throw new RuntimeException(
+                    "Directory of type shared_scratch is not associated with the site " + this.mID);
+        }
+        return dir.hasSharedFileSystemAccess();
     }
 
     public static void main(String[] args) {

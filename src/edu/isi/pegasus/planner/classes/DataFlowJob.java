@@ -19,12 +19,20 @@ public class DataFlowJob extends AggregatedJob {
 
     private List<Link> mEdges;
 
+    /**
+     * A boolean to track whether Data Flow Job is partially created or not. In case of job
+     * clustering using DECAF, we need to distinguish the state of the job. By default, a
+     * DataFlowJob if specified in the Abstract Workflow is always fully created.
+     */
+    private boolean mPartiallyCreated;
+
     /** The default constructor. */
     public DataFlowJob() {
         super();
         mEdges = new LinkedList();
         // data flow job cannot be executed via kickstart
         this.vdsNS.construct(Pegasus.GRIDSTART_KEY, "none");
+        mPartiallyCreated = false;
     }
 
     /**
@@ -47,6 +55,7 @@ public class DataFlowJob extends AggregatedJob {
         mEdges = new LinkedList();
         // data flow job cannot be executed via kickstart
         this.vdsNS.construct(Pegasus.GRIDSTART_KEY, "none");
+        mPartiallyCreated = false;
     }
 
     /**
@@ -56,6 +65,29 @@ public class DataFlowJob extends AggregatedJob {
      */
     public void addEdge(Link e) {
         mEdges.add(e);
+    }
+
+    /**
+     * Returns a boolean indicating if the job is partially created or not
+     *
+     * @return boolean
+     */
+    public boolean isPartiallyCreated() {
+        return this.mPartiallyCreated;
+    }
+
+    /** Sets the internal boolean flag that indicates job is only partially created. */
+    public void setPartiallyCreated() {
+        this.setPartiallyCreated(true);
+    }
+
+    /**
+     * Set the partially created flag to value passed
+     *
+     * @param value boolean
+     */
+    public void setPartiallyCreated(boolean value) {
+        this.mPartiallyCreated = value;
     }
 
     /**

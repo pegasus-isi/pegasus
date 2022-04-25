@@ -93,7 +93,15 @@ public class PegasusProperties implements Cloneable {
     /** The property key for pegasus mode. */
     public static final String PEGASUS_MODE_PROPERTY_KEY = "pegasus.mode";
 
+    public static final String PEGASUS_MONITORD_ARGUMENTS_PROPERTY_KEY =
+            "pegasus.monitord.arguments";
+
     public static final String PEGASUS_INTEGRITY_CHECKING_KEY = "pegasus.integrity.checking";
+
+    public static final String PEGASUS_TRANSFER_BYPASS_INPUT_STAGING_PROPERTY_KEY =
+            "pegasus.transfer.bypass.input.staging";
+
+    public static final String PEGASUS_TRANSFER_LINKS_PROPERTY_KEY = "pegasus.transfer.links";
 
     // Replica Catalog Constants
     public static final String DEFAULT_RC_COLLECTION = "GriphynData";
@@ -152,6 +160,9 @@ public class PegasusProperties implements Cloneable {
     // collapsing constants
     public static final String DEFAULT_JOB_AGGREGATOR = "SeqExec";
 
+    // code generator constants
+    public static final String DEFAULT_CODE_GENERATOR = "condor";
+
     // some tranformation catalog constants
     public static final String DEFAULT_TC_MAPPER_MODE = "All";
 
@@ -173,7 +184,8 @@ public class PegasusProperties implements Cloneable {
     public static enum PEGASUS_MODE {
         production,
         development,
-        tutorial
+        tutorial,
+        debug
     };
 
     /** An enum defining The dial for cleanup algorithm */
@@ -464,6 +476,39 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Accessor: Overwrite any system properties from within the program.
+     *
+     * @param key is the key to look up
+     * @param value is the new property value to place in the system.
+     * @return the old value, or null if it didn't exist before.
+     */
+    public Object setSystemProperty(String key, String value) {
+        return System.getProperties().setProperty(key, value);
+    }
+
+    /**
+     * Extracts a specific property key subset from the System properties.
+     *
+     * @param prefix is the key prefix to filter the properties by.
+     * @return a property dictionary matching the filter key. May be an empty dictionary, if no
+     *     prefix matches were found.
+     */
+    public Properties matchingSubsetFromSystemProperties(String prefix) {
+        Properties result = new Properties();
+        Properties system = System.getProperties();
+
+        java.util.Enumeration e = system.propertyNames();
+        while (e.hasMoreElements()) {
+            String key = (String) e.nextElement();
+            if (key.startsWith(prefix)) {
+                result.setProperty(key, system.getProperty(key));
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Extracts a specific property key subset from the known properties. The prefix may be removed
      * from the keys in the resulting dictionary, or it may be kept. In the latter case, exact
      * matches on the prefix will also be copied into the resulting dictionary.
@@ -553,6 +598,16 @@ public class PegasusProperties implements Cloneable {
      */
     public String removeProperty(String key) {
         return mProps.removeProperty(key);
+    }
+
+    /**
+     * Removes a System property from the soft state.
+     *
+     * @param key the key
+     * @return the corresponding value if key exits, else null
+     */
+    public String removeSystemProperty(String key) {
+        return (String) System.getProperties().remove(key);
     }
 
     // PROPERTIES RELATED TO SCHEMAS
@@ -1017,7 +1072,8 @@ public class PegasusProperties implements Cloneable {
      * @return boolean value specified , else false
      */
     public boolean bypassFirstLevelStagingForInputs() {
-        return Boolean.parse(mProps.getProperty("pegasus.transfer.bypass.input.staging"), false);
+        return Boolean.parse(
+                mProps.getProperty(PEGASUS_TRANSFER_BYPASS_INPUT_STAGING_PROPERTY_KEY), false);
     }
 
     /**
@@ -1150,7 +1206,7 @@ public class PegasusProperties implements Cloneable {
      *     value being specified or property not being set.
      */
     public boolean getUseOfSymbolicLinks() {
-        String value = mProps.getProperty("pegasus.transfer.links");
+        String value = mProps.getProperty(PEGASUS_TRANSFER_LINKS_PROPERTY_KEY);
         return Boolean.parse(value, false);
     }
 
@@ -2043,9 +2099,10 @@ public class PegasusProperties implements Cloneable {
      * <p>Referred to by the "pegasus.code.generator" property.
      *
      * @return the submit mode specified in the property file, else the default i.e condor.
+     * @see #DEFAULT_CODE_GENERATOR
      */
-    public String getSubmitMode() {
-        return mProps.getProperty("pegasus.code.generator", "condor");
+    public String getCodeGenerator() {
+        return mProps.getProperty("pegasus.code.generator", DEFAULT_CODE_GENERATOR);
     }
 
     /**
@@ -2068,6 +2125,17 @@ public class PegasusProperties implements Cloneable {
      */
     public String getDataReuseScope() {
         return mProps.getProperty("pegasus.data.reuse.scope");
+    }
+
+    /**
+     * Returns the pegasus mode as an enum value. Defaults to production value.
+     *
+     * @return the pegasus mode
+     * @see #PEGASUS_MODE_PROPERTY_KEY
+     */
+    public PEGASUS_MODE getPegasusMode() {
+        String mode = this.getProperty(PegasusProperties.PEGASUS_MODE_PROPERTY_KEY);
+        return (mode == null) ? PEGASUS_MODE.production : PEGASUS_MODE.valueOf(mode);
     }
 
     // JOB COLLAPSING PROPERTIES
@@ -2101,13 +2169,25 @@ public class PegasusProperties implements Cloneable {
      * Returns what job aggregator is to be used to aggregate multiple compute jobs into a single
      * condor job.
      *
-     * <p>Referred to by the "pegasus.cluster.job.aggregator" property.
+     * <p>Referred to by the "pegasus.clusterer.job.aggregator" property.
      *
      * @return the value specified in the properties file, else DEFAULT_JOB_AGGREGATOR
      * @see #DEFAULT_JOB_AGGREGATOR
      */
     public String getJobAggregator() {
         return mProps.getProperty("pegasus.clusterer.job.aggregator", DEFAULT_JOB_AGGREGATOR);
+    }
+
+    /**
+     * Returns the arguments with which the clustering executable needs to be invoked.
+     *
+     * <p>Referred to by "pegasus.clusterer.job.aggregator.arguments" property.
+     *
+     * @return the arguments specified in the properties file, else null if property is not
+     *     specified.
+     */
+    public String getJobAggregatorArguments() {
+        return mProps.getProperty("pegasus.clusterer.job.aggregator.arguments");
     }
 
     /**
@@ -2210,29 +2290,6 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
-     * Returns the DAXCallback that is to be used while parsing the DAX.
-     *
-     * <p>Referred to by the "pegasus.partitioner.parser.dax.callback" property.
-     *
-     * @return the value specified in the properties file, else DEFAULT_DAX_CALLBACK
-     * @see #DEFAULT_DAX_CALLBACK
-     */
-    public String getPartitionerDAXCallback() {
-        return mProps.getProperty("pegasus.partitioner.parser.dax.callback", DEFAULT_DAX_CALLBACK);
-    }
-
-    /**
-     * Returns the key that is to be used as a label key, for labelled partitioning.
-     *
-     * <p>Referred to by the "pegasus.partitioner.label.key" property.
-     *
-     * @return the value specified in the properties file.
-     */
-    public String getPartitionerLabelKey() {
-        return mProps.getProperty("pegasus.partitioner.label.key");
-    }
-
-    /**
      * Returns the bundle value for a particular transformation.
      *
      * <p>Referred to by the "pegasus.partitioner.horziontal.bundle.[txname]" property, where
@@ -2271,6 +2328,20 @@ public class PegasusProperties implements Cloneable {
      */
     public String getClustererLabelKey() {
         return mProps.getProperty("pegasus.clusterer.label.key");
+    }
+
+    /**
+     * Returns the type of partitioner to load for a particular clustering type Useful for
+     * overriding the default partitioner that is loaded for a particular clustering type. Allows
+     * user to specify a "Whole" partitioner to use for label based clustering.
+     *
+     * <p>Referred to by the "pegasus.clusterer.[type].partitioner" property.
+     *
+     * @param type type of clustering being
+     * @return the value specified by the property else null
+     */
+    public String getClustererPartitioner(String type) {
+        return mProps.getProperty("pegasus.clusterer." + type + ".partitioner");
     }
 
     /**

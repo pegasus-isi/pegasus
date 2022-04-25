@@ -7,7 +7,7 @@ src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 
 install_requires = [
-    "PyYAML>5.3,<5.5",
+    "PyYAML>5.3",
 ]
 
 
@@ -56,6 +56,12 @@ setup(
     long_description_content_type="text/markdown",
     license="Apache2",
     url="http://pegasus.isi.edu",
+    project_urls={
+        "Documentation": "https://pegasus.isi.edu/documentation/",
+        "Changes": "https://pegasus.isi.edu/blog/?category_name=Release",
+        "Source Code": "https://github.com/pegasus-isi/pegasus",
+        "Issue Tracker": "https://jira.isi.edu/projects/PM/issues",
+    },
     python_requires=">=3.5",
     keywords=["scientific workflows"],
     classifiers=[
@@ -71,6 +77,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Scientific/Engineering",
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",

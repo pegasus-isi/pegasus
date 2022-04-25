@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.partitioner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -81,6 +82,14 @@ public class Whole extends Partitioner {
         p.constructPartition();
 
         mLogger.log("Partition is " + p.getNodeIDs(), LogManager.DEBUG_MESSAGE_LEVEL);
+
+        // PM-1839 to use whole partitioner with label based clustering, we need to
+        // add a LabelBag to the last added node. that is how the Vertical/label clusterer
+        // determines label for a partition
+        GraphNode n = p.lastAddedNode();
+        LabelBag bag = new LabelBag();
+        bag.add(LabelBag.LABEL_KEY, "whole-wf");
+        n.setBag(bag);
 
         c.cbPartition(p);
 

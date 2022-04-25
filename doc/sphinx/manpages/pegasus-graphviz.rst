@@ -38,7 +38,11 @@ Options
    node-label. [default: label]
 
 **-o** *FILE*; \ **--output** *FILE*
-   Write output to FILE [default: stdout]
+    Write output to ``FILE``. If ``FILE`` is given with any of the 
+    following extensions: ``'png'``, ``'jpg'``, ``'jpeg'``, ``'pdf'``, ``'gif'``, and ``'svg'``, 
+    pegasus-graphviz will internally invoke ``dot -T<extension> -o FILE``. Note 
+    that graphviz must be installed to output these file types. If any other 
+    extension is given, the raw dot representation is output to ``FILE``. [default: stdout]
 
 **-r** *XFORM*; \ **--remove** *XFORM*
    Remove jobs from the workflow by transformation name

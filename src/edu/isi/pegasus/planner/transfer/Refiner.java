@@ -32,6 +32,9 @@ public interface Refiner
         extends edu.isi.pegasus.planner.refiner
                 .Refiner { // need to extend it for the PASOA integration
 
+    /** The version number associated with this API */
+    public static final String VERSION = "1.4";
+
     /** The prefix for all local transfer jobs. */
     public static final String LOCAL_PREFIX = "local_";
 
@@ -96,18 +99,25 @@ public interface Refiner
     public void addInterSiteTXNodes(Job job, Collection files, boolean localTransfer);
 
     /**
-     * Adds the stageout transfer nodes, that stage data to an output site specified by the user.
+     * Adds the stage-out transfer nodes, that stage data to an output site specified by the user.
+     * Stage-out jobs can be added to run locally to manage the localFileTransfers or remotely on
+     * the staging site for remoteFileTransfers.
      *
      * @param job <code>Job</code> object corresponding to the node to which the files are to be
      *     transferred to.
-     * @param files Collection of <code>FileTransfer</code> objects containing the information about
-     *     source and destURL's.
+     * @param localFileTransfers Collection of <code>FileTransfer</code> objects containing the
+     *     information about source and destURL's that need to be managed from the submit host.
+     *     These are the transfers managed in third party mode on the submit note
+     * @param remoteFileTransfers Collection of <code>FileTransfer</code> objects containing source
+     *     and destination file url's that need to be handled remotely.
      * @param rcb bridge to the Replica Catalog. Used for creating registration nodes in the
      *     workflow.
-     * @param localTransfer boolean indicating that associated transfer job will run on local site.
      */
     public void addStageOutXFERNodes(
-            Job job, Collection files, ReplicaCatalogBridge rcb, boolean localTransfer);
+            Job job,
+            Collection<FileTransfer> localFileTransfers,
+            Collection<FileTransfer> remoteFileTransfers,
+            ReplicaCatalogBridge rcb);
 
     /**
      * Adds the stageout transfer nodes, that stage data to an output site specified by the user. It
@@ -125,24 +135,28 @@ public interface Refiner
      */
     public abstract void addStageOutXFERNodes(
             Job job,
-            Collection files,
+            Collection<FileTransfer> files,
             ReplicaCatalogBridge rcb,
             boolean localTransfer,
             boolean deletedLeaf);
 
     /**
-     * Adds the stage in transfer nodes which transfer the input files for a job, from the location
-     * returned from the replica catalog to the job's execution pool.
+     * Adds the stage in transfer nodes which transfer the input localFileTransfers for a job, from
+     * the location returned from the replica catalog to the job's execution pool. Stage-in jobs can
+     * be added to run locally to manage the localFileTransfers or remotely on the staging site.
      *
-     * @param job <code>Job</code> object corresponding to the node to which the files are to be
-     *     transferred to.
-     * @param files Collection of <code>FileTransfer</code> objects containing the information about
-     *     source and destURL's.
-     * @param symLinkFiles Collection of <code>FileTransfer</code> objects containing source and
-     *     destination file url's for symbolic linking on compute site.
+     * @param job <code>Job</code> object corresponding to the node to which the localFileTransfers
+     *     are to be transferred to.
+     * @param localFileTransfers Collection of <code>FileTransfer</code> objects containing the
+     *     information about source and destURL's. These are the transfers managed in third party
+     *     mode on the submit note
+     * @param remoteFileTransfers Collection of <code>FileTransfer</code> objects containing source
+     *     and destination file url's including those used for symbolic linking on compute site.
      */
     public void addStageInXFERNodes(
-            Job job, Collection<FileTransfer> files, Collection<FileTransfer> symLinkFiles);
+            Job job,
+            Collection<FileTransfer> localFileTransfers,
+            Collection<FileTransfer> remoteFileTransfers);
 
     /**
      * Signals that the traversal of the workflow is done. This would allow the transfer mechanisms

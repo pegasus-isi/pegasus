@@ -19,14 +19,16 @@ function loadMetadata() {
             }
 
             var metadata = data.records;
-            var table = $('<table id="metadata_table" class="table-fixed"></table>');
-            table.append($('<col width="25%">'));
+            var table = $('<table id="metadata_table" class="table table-striped w-100"></table>');
+            table.append($("<colgroup></colgroup>").append($('<col width="25%">')));
+            tbody = $("<tbody></tbody>");
+            table.append(tbody);
 
             for( var i = 0; i < metadata.length; ++i) {
                 var tr = $('<tr></tr>');
                 var th = $('<th>' + metadata[i].key + '</th>');
                 var td = $('<td>' + metadata[i].value + '</td>');
-                table.append(tr.append(th).append(td));
+                tbody.append(tr.append(th).append(td));
             }
 
             $('#metadata').html(table);
@@ -51,14 +53,14 @@ $(document).ready (function ()
 {% block title %}Task Details{% endblock %}
 {% block title_header %}Task Details{% endblock %}
 {% block navigation_bar %}
-<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
-<li><a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id) }}">Job</a></li>
-<li class="active">Task Details</li>
+<li class="breadcrumb-item"><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id) }}">Job</a></li>
+<li class="breadcrumb-item active" aria-current="page">Task Details</li>
 {% endblock %}
 {% block content %}
 <section class="row">
-    <div class="col-xs-12">
-        <table id="invocation_text_info" class="table-fixed">
+    <div class="col">
+        <table id="invocation_text_info" class="table table-striped w-100">
             <col width="25%">
             <tr>
                 <th>Task Label</th>
@@ -118,7 +120,7 @@ $(document).ready (function ()
     <hr>
 </section>
 <section class="row">
-    <div class="col-xs-12" id="metadata">
+    <div class="col" id="metadata">
         {% if not invocation.task_id %}No metadata associated with this task{% endif %}
     </div>
 </section>

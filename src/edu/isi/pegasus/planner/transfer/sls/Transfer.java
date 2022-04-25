@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
@@ -308,6 +309,9 @@ public class Transfer implements SLS {
             }
         }
 
+        String computeSite = job.getSiteHandle();
+        SiteCatalogEntry computeSiteEntry = this.mSiteStore.lookup(computeSite);
+
         // To do. distinguish the sls file from the other input files
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
@@ -332,7 +336,6 @@ public class Transfer implements SLS {
             Collection<ReplicaCatalogEntry> cacheLocations = null;
             Collection<ReplicaCatalogEntry> sources = new LinkedList();
             boolean symlink = false;
-            String computeSite = job.getSiteHandle();
             if (pf.doBypassStaging()) {
                 // PM-698
                 // we retrieve the URL from the Planner Cache as a get URL
@@ -353,17 +356,27 @@ public class Transfer implements SLS {
             }
             if (cacheLocations == null || cacheLocations.isEmpty()) {
                 String stagingSite = job.getStagingSiteHandle();
-                // construct the location with respect to the staging site
-                if (mUseSymLinks
-                        && // specified in configuration
-                        stagingSite.equals(
-                                computeSite)) { // source URL logically on the same site where job
-                    // is to be run
-                    // we can symlink . construct the source URL as a file url
-                    symlink = true;
+                // PM-1787 PM-1789 the source URL can be a file URL if source URL logically on the
+                // same site
+                // where job and also the compute site has a shared filesystem access OR
+                // staging site is local and the compute site is visible to the local site
+                boolean useFileURLAsSource =
+                        (stagingSite.equals(computeSite) && computeSiteEntry.hasSharedFileSystem())
+                                || (stagingSite.equals("local")
+                                        && computeSiteEntry.isVisibleToLocalSite());
+                if (useFileURLAsSource) {
+                    // construct the source URL as a file url
                     url.append(PegasusURL.FILE_URL_SCHEME)
                             .append("//")
                             .append(stagingSiteDirectory);
+                } else {
+                    url.append(
+                            mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite));
+                }
+
+                // construct the location with respect to the staging site
+                if (mUseSymLinks && useFileURLAsSource) {
+                    symlink = true;
                     if (pf.isExecutable()) {
                         // PM-734 for executable files we can have the source url as file url
                         // but we cannot have the destination URL as symlink://
@@ -374,9 +387,6 @@ public class Transfer implements SLS {
                         // we never symlink checkpoint files
                         symlink = false;
                     }
-                } else {
-                    url.append(
-                            mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite));
                 }
                 // PM-833 append the relative staging site add on directory
                 url.append(File.separator)
@@ -509,6 +519,7 @@ public class Transfer implements SLS {
         PegasusFile pf;
         String stagingSite = job.getStagingSiteHandle();
         String computeSite = job.getSiteHandle();
+        SiteCatalogEntry computeSiteEntry = this.mSiteStore.lookup(computeSite);
 
         // To do. distinguish the sls file from the other input files
         for (Iterator it = files.iterator(); it.hasNext(); ) {
@@ -516,6 +527,7 @@ public class Transfer implements SLS {
             String lfn = pf.getLFN();
 
             FileTransfer ft = new FileTransfer();
+            ft.setLFN(lfn);
             // ensure that right type gets associated, especially
             // whether a file is a checkpoint file or not
             ft.setType(pf.getType());
@@ -528,7 +540,19 @@ public class Transfer implements SLS {
             // destination
             url = new StringBuffer();
 
-            if (mUseSymLinks && computeSite.equals(stagingSite)) {
+            // PM-1787 PM-1789 the destination URL can be a file URL if the compute site and staging
+            // site
+            // are same, and also compute site has a shared filesystem
+            // OR
+            // staging site is local and the compute site is visible to the local site
+            boolean useFileURLAsDest =
+                    (stagingSite.equals(computeSite) && computeSiteEntry.hasSharedFileSystem())
+                            || (stagingSite.equals("local")
+                                    && computeSiteEntry.isVisibleToLocalSite());
+
+            if (useFileURLAsDest) {
+                // PM-1787 auxillary.local is what determines whether we use file URL as destination
+                // or not
                 // PM-1108 symlinking is turned on and the compute site for
                 // the job is the same the staging site. This means that
                 // the shared-scratch directory used on the staging site is locally

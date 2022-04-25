@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.aggregator.AWSBatch;
+import edu.isi.pegasus.planner.cluster.aggregator.MPIExec;
 import edu.isi.pegasus.planner.code.gridstart.*;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -202,18 +203,28 @@ public class GridStartFactory {
         }
         GridStart gs = null;
 
-        if (job.isMPIJob() && !(job instanceof AggregatedJob)) {
+        if (job.isMPIJob()) {
+            // PM-1824 make sure aggregated job is pmc when triggering check below, as
+            // decaf jobs are also mpi and clustered and we want them to have pegasus-exitcode
+            // associated
+            if (!(job instanceof AggregatedJob
+                    && ((AggregatedJob) job).getJobAggregator() instanceof MPIExec)) {
+                // for only MPI jobs that are not PMC, we associate exitcode postscript
+                // with the rotation of logs option  and explicity associate
+                // NoGridStart with them
+                job.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
 
-            // for only MPI jobs that are not PMC, we associate exitcode postscript
-            // with the rotation of logs option  and explicity associate
-            // NoGridStart with them
-            job.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
-
-            // no empty postscript but arguments to exitcode to add -r $RETURN
-            job.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
-            job.dagmanVariables.construct(
-                    Dagman.POST_SCRIPT_ARGUMENTS_KEY,
-                    PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE);
+                // no empty postscript but arguments to exitcode to add -r $RETURN
+                job.dagmanVariables.construct(Dagman.POST_SCRIPT_KEY, PegasusExitCode.SHORT_NAME);
+                StringBuilder args = new StringBuilder();
+                args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+                // PM-1821 explicity indicate no kickstart records to parse
+                args.append(" ")
+                        .append(
+                                PegasusExitCode
+                                        .POSTSCRIPT_ARGUMENTS_FOR_DISABLING_CHECKS_FOR_INVOCATIONS);
+                job.dagmanVariables.construct(Dagman.POST_SCRIPT_ARGUMENTS_KEY, args.toString());
+            }
         }
 
         // determine the short name of GridStart implementation
