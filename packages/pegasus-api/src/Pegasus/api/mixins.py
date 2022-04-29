@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 from enum import Enum
 from functools import partialmethod, wraps
 from pathlib import Path
@@ -123,7 +124,7 @@ class _ShellHook(_Hook):
         self.cmd = cmd
 
     def __json__(self):
-        return {"_on": self.on, "cmd": self.cmd}
+        return OrderedDict([("_on", self.on), ("cmd", self.cmd)])
 
 
 # --- profiles -----------------------------------------------------------------
@@ -435,6 +436,7 @@ class ProfileMixin:
         clusters_num="clusters.num",
         clusters_size="clusters.size",
         job_aggregator="job.aggregator",
+        job_aggregator_arguments="job.aggregator.arguments",
         grid_start="gridstart",
         grid_start_path="gridstart.path",
         grid_start_arguments="gridstart.arguments",
@@ -486,6 +488,7 @@ class ProfileMixin:
         clusters_num: int = None,
         clusters_size: int = None,
         job_aggregator: int = None,
+        job_aggregator_arguments: str = None,
         grid_start: int = None,
         grid_start_path: str = None,
         grid_start_arguments: str = None,
@@ -539,6 +542,8 @@ class ProfileMixin:
         :type clusters_size: int, optional
         :param job_aggregator: Indicates the clustering executable that is used to run the clustered job on the remote site, defaults to None
         :type job_aggregator: int, optional
+        :param job_aggregator_arguments: Additional arguments with which a clustering executable should be invoked, defaults to None
+        :type job_aggregator_arguments: str, optional
         :param grid_start: Determines the executable for launching a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`_ for more information), defaults to None
         :type grid_start: int, optional
         :param grid_start_path: Sets the path to the gridstart . This profile is best set in the Site Catalog, defaults to None

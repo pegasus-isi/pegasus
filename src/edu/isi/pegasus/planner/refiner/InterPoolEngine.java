@@ -298,7 +298,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      * @return the staging site
      */
     private String determineStagingSite(Job job) {
-        return mPegasusConfiguration.determineStagingSite(job, mPOptions);
+        return mPegasusConfiguration.determineStagingSite(mSiteStore, job, mPOptions);
     }
 
     /**

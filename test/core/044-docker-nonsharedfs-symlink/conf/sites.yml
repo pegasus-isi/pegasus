@@ -17,6 +17,7 @@ sites:
     profiles:
       env:
         PEGASUS_HOME: "${PEGASUS_BIN_DIR}/.."
+        SSH_PRIVATE_KEY: "/localhome/bamboo/.ssh/workflow_id_rsa"
         x-ext: true
       pegasus:
         clusters.num: 1
@@ -26,10 +27,10 @@ sites:
     os.type: linux
     directories:
       - type: sharedScratch
-        path: ${TOPDIR}/staging-site/scratch/${TEST_NAME}
+        path: /webdav/scratch-90-days/${TEST_NAME}
         fileServers:
           - operation: all
-            url: gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}
+            url: webdav://workflow.isi.edu/webdav/scratch-90-days/${TEST_NAME}
       - type: sharedStorage
         path: ${TOPDIR}/LOCAL/shared-storage
         fileServers:
@@ -50,7 +51,7 @@ sites:
         path: /lizard/scratch-90-days/${TEST_NAME}
         fileServers:
           - operation: all
-            url: gsiftp://bamboo.isi.edu/lizard/scratch-90-days/${TEST_NAME}
+            url: scp://bamboo@bamboo.isi.edu/lizard/scratch-90-days/${TEST_NAME}
     profiles:
       condor:
         universe: vanilla

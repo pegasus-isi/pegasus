@@ -1,7 +1,7 @@
 /*
  * Dashboard Style
  */
-.logo {
+ .logo {
     font-family: 'Stardos Stencil', cursive;
     font-size: 1.5em;
 }
@@ -31,10 +31,10 @@
 }
 
 .copy-button:before {
-    font-family: 'Pe-icon-7-stroke';
+    font-family: 'Font Awesome 5 Free';
     font-size: 1.33333333em;
     vertical-align: -15%;
-    content: '\e665';
+    content: '\f0c5';
 }
 
 .file-browser {
@@ -55,10 +55,10 @@
 }
 
 .file-browser:before {
-    font-family: 'Pe-icon-7-stroke';
+    font-family: 'Font Awesome 5 Free';
     font-size: 1.33333333em;
     vertical-align: -15%;
-    content: '\e653';
+    content: '\f07b';
 }
 
 .file-list {
@@ -79,27 +79,27 @@
 }
 
 .file-list .directory .collapsed:before {
-    font-family: 'FontAwesome';
+    font-family: 'Font Awesome 5 Free';
     font-size: 1.1em;
     vertical-align: -15%;
     padding-right: .2em;
-    content: '\f114';
+    content: '\f07b';
 }
 
 .file-list .directory:before {
-    font-family: 'FontAwesome';
+    font-family: 'Font Awesome 5 Free';
     font-size: 1.1em;
     vertical-align: -15%;
     padding-right: .2em;
-    content: '\f115';
+    content: '\f07c';
 }
 
 .file-list ul li:before {
-    font-family: 'Pe-icon-7-stroke';
+    font-family: 'Font Awesome 5 Free';
     font-size: 1.2em;
     vertical-align: -15%;
     padding-right: .2em;
-    content: '\e656';
+    content: '\f15b';
 }
 
 /*
@@ -147,165 +147,18 @@ body {
     vertical-align: middle;
 }
 
-/*
- * jQuery UI CSS overrides
- */
-.ui-widget {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-    font-size: 1em;
+table.dataTable tr.successful > td:first-child, table.dataTable tr.successful > th:first-child {
+    border-left: 2px solid #28a745;
 }
-
-.ui-widget-content a {
-    color: #337ab7 !important;
+table.dataTable tr.running > td:first-child, table.dataTable tr.running > th:first-child {
+    border-left: 2px solid #007bff;
 }
-
-.ui-corner-all, .ui-corner-top, .ui-corner-left, .ui-corner-tl {
-    -moz-border-radius-topleft: 0px;
-    -webkit-border-top-left-radius: 0px;
-    -khtml-border-top-left-radius: 0px;
-    border-top-left-radius: 0px;
+table.dataTable tr.failed > td:first-child, table.dataTable tr.failed > th:first-child {
+    border-left: 2px solid #dc3545;
 }
-
-.ui-corner-all, .ui-corner-top, .ui-corner-right, .ui-corner-tr {
-    -moz-border-radius-topright: 0px;
-    -webkit-border-top-right-radius: 0px;
-    -khtml-border-top-right-radius: 0px;
-    border-top-right-radius: 0px;
+table.dataTable tr.failing > td:first-child, table.dataTable tr.failing > th:first-child {
+    border-left: 2px solid #ffc107;
 }
-
-.ui-corner-all, .ui-corner-bottom, .ui-corner-left, .ui-corner-bl {
-    -moz-border-radius-bottomleft: 0px;
-    -webkit-border-bottom-left-radius: 0px;
-    -khtml-border-bottom-left-radius: 0px;
-    border-bottom-left-radius: 0px;
-}
-
-.ui-corner-all, .ui-corner-bottom, .ui-corner-right, .ui-corner-br {
-    -moz-border-radius-bottomright: 0px;
-    -webkit-border-bottom-right-radius: 0px;
-    -khtml-border-bottom-right-radius: 0px;
-    border-bottom-right-radius: 0px;
-}
-
-/*
- * Data tables CSS overrides
- */
-.dataTables_wrapper .fg-toolbar {
-    padding: .2em;
-}
-
-.dataTables_wrapper .dataTables_info {
-    padding: .25em !important;
-}
-
-.dataTables_paginate .fg-button {
-    padding: .25em !important;
-}
-
-table.dataTable th {
-    text-align: center;
-    vertical-align: middle;
-}
-
-table.dataTable tr.odd {
-    background-color: #dfd;
-}
-
-table.dataTable tr.even {
-    background-color: #efe;
-}
-
-/*
- * Successful
- */
-table.dataTable tr.odd.successful {
-    background-color: #ddffdd;
-}
-
-table.dataTable tr.even.successful {
-    background-color: #eeffee;
-}
-
-tr.odd.successful td.sorting_1 {
-    background-color: #c4ffc4 !important;
-}
-
-tr.even.successful td.sorting_1 {
-    background-color: #d5ffd5 !important;
-}
-
-/*
- * Running
- */
-table.dataTable tr.odd.running {
-    background-color: #ddddff;
-}
-
-table.dataTable tr.even.running {
-    background-color: #eeeeff;
-}
-
-tr.odd.running td.sorting_1 {
-    background-color: #c4c4ff !important;
-}
-
-tr.even.running td.sorting_1 {
-    background-color: #d5d5ff !important;
-}
-
-/*
- * Failed
- */
-table.dataTable tr.odd.failed {
-    background-color: #ffdddd;
-}
-
-table.dataTable tr.even.failed {
-    background-color: #ffeeee;
-}
-
-tr.odd.failed td.sorting_1 {
-    background-color: #ffc4c4 !important;
-}
-
-tr.even.failed td.sorting_1 {
-    background-color: #ffd5d5 !important;
-}
-
-/*
- * Failing
- */
-table.dataTable tr.odd.failing {
-    background-color: #fff2e3;
-}
-
-table.dataTable tr.even.failing {
-    background-color: #fff9f3;
-}
-
-tr.odd.failing td.sorting_1 {
-    background-color: #ffe0c2 !important;
-}
-
-tr.even.failing td.sorting_1 {
-    background-color: #fff0e0 !important;
-}
-
-/*
- * Archived
- */
-table.dataTable tr.odd.archived {
-    background-color: #e0e0e0;
-}
-
-table.dataTable tr.even.archived {
-    background-color: #f0f0f0;
-}
-
-tr.odd.archived td.sorting_1 {
-    background-color: #c0c0c0 !important;
-}
-
-tr.even.archived td.sorting_1 {
-    background-color: #d0d0d0 !important;
+table.dataTable tr.archived > td:first-child, table.dataTable tr.archived > th:first-child {
+    border-left: 2px solid #6c757d;
 }

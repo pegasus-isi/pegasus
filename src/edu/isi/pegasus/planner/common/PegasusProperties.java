@@ -2169,13 +2169,25 @@ public class PegasusProperties implements Cloneable {
      * Returns what job aggregator is to be used to aggregate multiple compute jobs into a single
      * condor job.
      *
-     * <p>Referred to by the "pegasus.cluster.job.aggregator" property.
+     * <p>Referred to by the "pegasus.clusterer.job.aggregator" property.
      *
      * @return the value specified in the properties file, else DEFAULT_JOB_AGGREGATOR
      * @see #DEFAULT_JOB_AGGREGATOR
      */
     public String getJobAggregator() {
         return mProps.getProperty("pegasus.clusterer.job.aggregator", DEFAULT_JOB_AGGREGATOR);
+    }
+
+    /**
+     * Returns the arguments with which the clustering executable needs to be invoked.
+     *
+     * <p>Referred to by "pegasus.clusterer.job.aggregator.arguments" property.
+     *
+     * @return the arguments specified in the properties file, else null if property is not
+     *     specified.
+     */
+    public String getJobAggregatorArguments() {
+        return mProps.getProperty("pegasus.clusterer.job.aggregator.arguments");
     }
 
     /**
@@ -2278,29 +2290,6 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
-     * Returns the DAXCallback that is to be used while parsing the DAX.
-     *
-     * <p>Referred to by the "pegasus.partitioner.parser.dax.callback" property.
-     *
-     * @return the value specified in the properties file, else DEFAULT_DAX_CALLBACK
-     * @see #DEFAULT_DAX_CALLBACK
-     */
-    public String getPartitionerDAXCallback() {
-        return mProps.getProperty("pegasus.partitioner.parser.dax.callback", DEFAULT_DAX_CALLBACK);
-    }
-
-    /**
-     * Returns the key that is to be used as a label key, for labelled partitioning.
-     *
-     * <p>Referred to by the "pegasus.partitioner.label.key" property.
-     *
-     * @return the value specified in the properties file.
-     */
-    public String getPartitionerLabelKey() {
-        return mProps.getProperty("pegasus.partitioner.label.key");
-    }
-
-    /**
      * Returns the bundle value for a particular transformation.
      *
      * <p>Referred to by the "pegasus.partitioner.horziontal.bundle.[txname]" property, where
@@ -2339,6 +2328,20 @@ public class PegasusProperties implements Cloneable {
      */
     public String getClustererLabelKey() {
         return mProps.getProperty("pegasus.clusterer.label.key");
+    }
+
+    /**
+     * Returns the type of partitioner to load for a particular clustering type Useful for
+     * overriding the default partitioner that is loaded for a particular clustering type. Allows
+     * user to specify a "Whole" partitioner to use for label based clustering.
+     *
+     * <p>Referred to by the "pegasus.clusterer.[type].partitioner" property.
+     *
+     * @param type type of clustering being
+     * @return the value specified by the property else null
+     */
+    public String getClustererPartitioner(String type) {
+        return mProps.getProperty("pegasus.clusterer." + type + ".partitioner");
     }
 
     /**

@@ -21,7 +21,7 @@ a job to preserve them in case the job is retried.
 
 Pegasus uses **pegasus-exitcode** as the DAGMan postscript for jobs
 submitted via Globus GRAM. This tool exists as a workaround to a known
-problem with Globus and Condor-G where the exitcodes of GRAM jobs are
+problem with Globus and HTHTCondor-G where the exitcodes of GRAM jobs are
 not returned. This is a problem because Pegasus uses the exitcode of a
 job to determine if the job failed or not.
 
@@ -46,7 +46,7 @@ determine if any of the tasks in the clustered job failed.
 **pegasus-exitcode** performs several checks (some optional) to
 determine whether a job failed or not. These checks include:
 
-1. Is the Condor exitcode non-zero? If so, then the job failed.
+1. Is the HTCondor exitcode non-zero? If so, then the job failed.
 
 2. Is STDOUT empty? If it is empty, then the job failed.
 
@@ -68,12 +68,24 @@ determine whether a job failed or not. These checks include:
    be at least one successful invocation or the job has failed.
 
 In addition, **pegasus-exitcode** allows the caller to specify the
-exitcode returned by Condor using the **--return** argument. This can be
+exitcode returned by HTCondor using the **--return** argument. This can be
 passed to **pegasus-exitcode** in a DAGMan post script by using the
 ``$RETURN`` variable. If this value is non-zero, then
 **pegasus-exitcode** returns a non-zero result before performing any
 other checks. For GRAM jobs, the value of ``$RETURN`` will always be 0
 regardless of whether the job failed or not.
+
+Below is a matrix of how the HTCondor exitcode are reconciled with an
+exitcode found in the kickstart records
+
+kick-ec | -r | Reason
+0       | 0  | No error
+1       | 0  | Task failed
+0       | 1  | HTCondor failed it
+1       | 1  | Task failed
+
+For jobs launched without kickstart (--no-invocations flag) pegasus-exitcode
+does not fail a job, if there is empty stdout
 
 In addition to checking the success/failure of a job,
 **pegasus-exitcode** also renames the STDOUT and STDERR files of the job
@@ -106,6 +118,13 @@ Options
 **-n**; \ **--no-rename**
    Don’t rename *job.out* and *job.err* to *.out.XXX* and *.err.XXX*.
    This option is used primarily for testing.
+
+**-N**; \ **--no-metadata**
+   Disable generation of metadata file after parsing of kickstart records.
+
+**-I**; \ **--no-invocations**
+   Do not check for invocation records(present in kickstart output)
+   output in the job.out file
 
 **-f** *msg*; \ **--failure-message** *msg*
    Failure message to find in job stdout/stderr. If this message exists

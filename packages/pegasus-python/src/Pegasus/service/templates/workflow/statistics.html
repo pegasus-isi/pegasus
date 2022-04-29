@@ -9,7 +9,7 @@
         {
             var workflowStats = '{{ workflow_stats|tojson|safe }}';
             workflowStats = JSON.parse (workflowStats);
-            render_workflow_stats (ui.panel, workflowStats);
+            render_workflow_stats ($("#workflow_stats"), workflowStats);
         }
 
         function loadSummaryStats ()
@@ -22,12 +22,10 @@
         function init ()
         {
             loadSummaryStats ();
-
-            var statistics = $ ("#statistics_container");
-            statistics.accordion ({ heightStyle: "content", autoHeight: false, activate: activateEventHandler, create : accordianCreate });
-
-            //var newHeader = { newHeader: $ ('h3[title="workflow_stats"]') };
-            //activateEventHandler (null, newHeader);
+            accordianCreate();
+            $("#stats-accordion").on("show.bs.collapse", function (e) {
+                activateEventHandler(e);
+            })
         }
 
         $ (document).ready (function ()
@@ -37,39 +35,84 @@
     </script>
 {% endblock %}
 {% block navigation_bar %}
-    <li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
-    <li class="active">Statistics</li>
+    <li class="breadcrumb-item"><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Statistics</li>
 {% endblock %}
 {% block title_header %}Statistics{% endblock %}
 {% block content %}
-    <section class="row">
+<section class="row">
+    <div class="col">
         <div id="workflow_summary_stats" class="col-xs-12"
-             href="{{ url_for ('.workflow_summary_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+            href="{{ url_for ('.workflow_summary_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
         </div>
-    </section>
-    <section class="row">
-        <div class="col-xs-12">
-            <div id="statistics_container">
-                <h3 href="{{ url_for ('.workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="workflow_stats">
-                    Workflow Statistics
-                </h3>
-                <div id="workflow_stats"></div>
+    </div>
+</section>
 
-                <h3 href="{{ url_for ('.job_breakdown_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}"
-                    title="job_breakdown_stats">Job Breakdown Statistics
-                </h3>
-                <div id="job_breakdown_stats"></div>
+<section class="row">
+    <div class="col">
+        <div class="accordion" id="stats-accordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#workflow-stats" aria-expanded="true" aria-controls="workflow-stats">
+                        Workflow Statistics
+                    </button>
+                </h2>
 
-                <h3 href="{{ url_for ('.job_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="job_stats">Job
-                    Statistics
-                </h3>
-                <div id="job_stats"></div>
+                <div id="workflow-stats" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#stats-accordion" href="{{ url_for ('.workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
+                        <div id="workflow_stats"></div>
+                    </div>
+                </div>
+            </div>
 
-                <h3 href="{{ url_for ('.integrity_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="int_stats">
-                    Integrity Statistics
-                </h3>
-                <div id="int_stats"></div>
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingTwo">
+                    <h2 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#job-breakdown-stats" aria-expanded="true" aria-controls="job-breakdown-stats">
+                            Job Breakdown Statistics
+                        </button>
+                    </h2>
+                </div>
+
+                <div id="job-breakdown-stats" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#stats-accordion" href="{{ url_for ('.job_breakdown_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
+                        <div id="job_breakdown_stats"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingThree">
+                    <h2 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#job-stats" aria-expanded="true" aria-controls="job-stats">
+                            Job Statistics
+                        </button>
+                    </h2>
+                </div>
+
+                <div id="job-stats" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#stats-accordion" href="{{ url_for ('.job_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
+                        <div id="job_stats"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingFour">
+                    <h2 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#int-stats" aria-expanded="true" aria-controls="int-stats">
+                            Integrity Statistics
+                        </button>
+                    </h2>
+                </div>
+
+                <div id="int-stats" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#stats-accordion" href="{{ url_for ('.integrity_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
+                        <div id="int_stats"></div>
+                    </div>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 {% endblock %}

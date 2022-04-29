@@ -18,10 +18,15 @@ import edu.isi.pegasus.planner.parser.InvocationParser;
 import java.io.*;
 import java.net.*;
 import java.util.Iterator;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.toolkit.*;
@@ -306,12 +311,20 @@ public class SimpleServer extends Toolkit {
     public static void main(String args[]) throws IOException {
         // setup logging
         System.setProperty("log4j.defaultInitOverride", "true");
-        Logger root = Logger.getRootLogger();
-        root.addAppender(
-                new ConsoleAppender(
-                        new PatternLayout("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n")));
-        root.setLevel(Level.INFO);
-        c_logger = Logger.getLogger(SimpleServer.class);
+
+        // PM-1836 log4j 2.x style configuration
+        // derived from https://logging.apache.org/log4j/2.x/manual/customconfig.html
+        ConfigurationBuilder<BuiltConfiguration> builder =
+                ConfigurationBuilderFactory.newConfigurationBuilder();
+        AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+        console.add(
+                builder.newLayout("PatternLayout")
+                        .addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"));
+        builder.add(console);
+        builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("stdout")));
+        LoggerContext ctx = Configurator.initialize(builder.build());
+
+        c_logger = LogManager.getLogger(SimpleServer.class);
         c_logger.info("starting");
 
         SimpleServer me = null;

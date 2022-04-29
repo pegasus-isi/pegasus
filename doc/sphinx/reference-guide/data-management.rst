@@ -236,6 +236,7 @@ clients
    =============== ====================================================================================
    gfal-copy       staging file to and from GridFTP servers
    globus-url-copy staging files to and from GridFTP servers, only if gfal is not detected in the path.
+   globus          staging files between globus endpoints using the globus transfer service
    gfal-copy       staging files to and from SRM or XRootD servers
    wget            staging files from a HTTP server
    cp              copying files from a POSIX filesystem
@@ -322,7 +323,12 @@ required steps are:
    and retrieve your transfer access tokens. By default Pegasus acquires
    temporary tokens that expire within a few days. Using --permanent
    option you can request refreshable tokens that last indefinetely (or
-   until access is revoked).
+   until access is revoked). With endpoints running Globus Connect Server(GCS)
+   versions 5.4+ data collections may require *data_access* consent to allow
+   to operate on them (e.g., transfers). Endpoints that support this usually
+   have their *host_id* set to None. To acquire *data_access* consent for
+   these endpoints under pegasus, you can use the --endpoints option and list
+   the *UUIDs* of the endpoints you would like to give pegasus consent for.
 
 2. In the Globus Online web interface, under Endpoints, find the
    endpoints you need for the workflow, and activate them. Note that you
@@ -335,6 +341,11 @@ URLs for Globus Online endpoint data follows the following scheme:
 private endpoint *bob#researchdata* and a file
 */home/bsmith/experiment/1.dat*, the URL would be:
 *go://bob#researchdata/home/bsmith/experiment/1.dat*
+
+Additionally you can use the UUIDs of the endpoints directly and not their
+Legacy Names. For example:
+*go://56569ec1-adn1-4785-a6c1-8524231c7a6d/home/bsmith/experiment/1.dat*
+
 
 .. _transfer-gridftp:
 

@@ -1,8 +1,11 @@
+import logging
 from configparser import DEFAULTSECT, ConfigParser
 from io import StringIO
 from typing import Optional, TextIO, Union
 
 __all__ = ["Properties"]
+
+log = logging.getLogger(__name__)
 
 
 class Properties:
@@ -19,6 +22,26 @@ class Properties:
         props.write()
 
     """
+
+    _pattern_props = (
+        # variable property keys
+        "pegasus.file.cleanup.constraint.*.maxspace",
+        "pegasus.log.*",
+        "pegasus.metrics.app.*",
+        "pegasus.transfer.*.remote.sites",
+        "pegasus.transfer.*.impl",
+        "pegasus.selector.site.env.*",
+        "pegasus.selector.regex.rank.*",
+        "pegasus.selector.replica.*.prefer.stagein.sites",
+        "pegasus.selector.replica.*.ignore.stagein.sites",
+        "pegasus.catalog.replica.output.*",
+        "pegasus.catalog.*.timeout",
+        "pegasus.catalog.replica.db.*",
+        "env.*",
+        "dagman.*",
+        "condor.*",
+        "globus.*",
+    )
 
     _props = (
         "pegasus.mode",
@@ -77,6 +100,7 @@ class Properties:
         "pegasus.monitord.encoding",
         "pegasus.monitord.arguments",
         "pegasus.clusterer.job.aggregator",
+        "pegasus.clusterer.job.aggregator.arguments",
         "pegasus.clusterer.job.aggregator.seqexec.log",
         "pegasus.clusterer.job.aggregator.seqexec.firstjobfail",
         "pegasus.clusterer.allow.single",
@@ -185,25 +209,12 @@ class Properties:
         "selector.execution.site",
         "selector.pfn",
         "selector.grid.jobtype",
-        # variable property keys
-        "pegasus.file.cleanup.constraint.*.maxspace",
-        "pegasus.log.*",
-        "pegasus.transfer.*.remote.sites",
-        "pegasus.transfer.*.impl",
-        "pegasus.selector.site.env.*",
-        "pegasus.selector.regex.rank.*",
-        "pegasus.selector.replica.*.prefer.stagein.sites",
-        "pegasus.selector.replica.*.ignore.stagein.sites",
-        "pegasus.catalog.replica.output.*",
-        "pegasus.catalog.*.timeout",
-        "pegasus.catalog.*.db.*",
-        "pegasus.catalog.*.db.password",
-        "pegasus.catalog.*.db.user",
-        "pegasus.catalog.*.db.url",
-        "pegasus.catalog.*.db.driver",
-        "dagman.*.maxjobs" "env.*" "dagman.*",
-        "condor.*",
-        "globus.*",
+        # Database
+        "pegasus.catalog.replica.db.password",
+        "pegasus.catalog.replica.db.user",
+        "pegasus.catalog.replica.db.url",
+        "pegasus.catalog.replica.db.driver",
+        *_pattern_props,
     )
 
     _cfg_header_len = len("[{}]\n".format(DEFAULTSECT))
@@ -212,25 +223,27 @@ class Properties:
     def ls(prop: Optional[str] = None):
         """List property keys. Refer to
         `Configuration docs <https://pegasus.isi.edu/documentation/configuration.php>`_
-        for additional information. If :code:`prop` is given, all properties beginning with
-        prop will be printed, else all properties will be printed.
+        for additional information. If :code:`prop` is given, all properties
+        containing prop will be printed, else all properties will be printed.
 
         .. code-block:: python
 
             # Example
-            >>> Properties.ls("pegasus.pmc")
-            pegasus.pmc_priority
+            >>> P.ls("request")
+            condor.request_cpus
+            condor.request_disk
+            condor.request_gpus
+            condor.request_memory
             pegasus.pmc_request_cpus
             pegasus.pmc_request_memory
-            pegasus.pmc_task_arguments
 
-        :param prop: properties beginning with "prop" will be listed in alphabetical order, defaults to None
+        :param prop: properties containing "prop" will be listed in alphabetical order, defaults to None
         :type prop: Optional[str]
         """
         if prop:
             to_print = list()
             for p in Properties._props:
-                if p.startswith(prop):
+                if prop in p:
                     to_print.append(p)
 
             to_print.sort()
@@ -245,13 +258,43 @@ class Properties:
         self._conf[DEFAULTSECT] = {}
 
     def __setitem__(self, k, v):
-        self._conf[DEFAULTSECT][k] = v
+        self._conf[DEFAULTSECT][k] = self._escape(v)
+
+        if not self._check_key(k):
+            log.warning(
+                "Unrecognized property key: '{}' has been set to '{}'".format(
+                    k, self._escape(v)
+                )
+            )
 
     def __getitem__(self, k):
         return self._conf[DEFAULTSECT][k]
 
     def __delitem__(self, k):
         self._conf.remove_option(DEFAULTSECT, k)
+
+    @classmethod
+    def _check_key(cls, k) -> bool:
+        """Check if the key :code:`k` is a valid Pegasus property."""
+        rv = False
+        if k in cls._props:
+            rv = True
+        else:
+            for p in cls._pattern_props:
+                _ = p.split("*")
+                if k.startswith(_[0]) and k.endswith(_[1]) and len(k) >= len(p):
+                    rv = True
+                    break
+
+        return rv
+
+    @staticmethod
+    def _escape(v):
+        """Escape value :code:`v`."""
+        if isinstance(v, str):
+            return v
+        else:
+            return str(v)
 
     def write(self, file: Optional[Union[str, TextIO]] = None):
         """Write these properties to a file. If :code:`file` is not given, these

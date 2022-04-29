@@ -154,7 +154,7 @@ Any option will be displayed with its long options synonym(s).
    the clustered job sequentially on the same node at the remote site.
 
    In addition, an MPI based clustering tool called
-   pegasus-mpi-cluster', is also distributed and can be found in the bin
+   *pegasus-mpi-cluster*, is also distributed and can be found in the bin
    directory. pegasus-mpi-cluster can also be used in the sharedfs setup
    and needs to be compiled against the remote site MPI install.
    directory. The wrapper is run on every MPI node, with the first one
@@ -201,7 +201,7 @@ Any option will be displayed with its long options synonym(s).
          ``runtime`` should be set for each job individually.
 
    -  **label** is the style of clustering in which you can label the
-      jobs in your workflow. The jobs with the same level are put in the
+      jobs in your workflow. The jobs with the same label are put in the
       same clustered job. This allows you to aggregate jobs across
       levels, or in a manner that is best suited to your application.
 
@@ -211,6 +211,14 @@ Any option will be displayed with its long options synonym(s).
       It defaults to label, meaning if you have a PEGASUS profile key
       label with jobs, the jobs with the same value for the pegasus
       profile key label will go into the same clustered job.
+
+   -  **whole** is the style of clustering in which you can cluster all
+      the jobs in your workflow into a single clustered job. This is a
+      specialized case of the label based clustering, where all jobs in
+      the workflow are assumed to have the same label.
+
+      This is particularly useful when you want to run your whole
+      workflow using PMC (``pegasus-mpi-cluster``).
 
 **--cleanup** *cleanup strategy*
    The cleanup strategy to be used for workflows. Pegasus can add

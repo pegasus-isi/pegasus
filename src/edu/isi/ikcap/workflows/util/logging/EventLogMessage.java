@@ -9,7 +9,6 @@ package edu.isi.ikcap.workflows.util.logging;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
@@ -323,12 +322,15 @@ public class EventLogMessage {
     // ===============================================================
     // Log4J compatibility (contributed by Wolfgang Hoschek)
     // ===============================================================
+    // PM-1836: KV commenting out these static initializers as we have no need for it in Pegasus
+    //          and log4j 2.x Filters have too many methods to extend.
 
     /**
      * Static class initializer.
      *
      * <p>Make it so that log4j.jar is a compile time requirement, but not a runtime requirement
      */
+    /*
     static {
         try {
             // check if log4j is present
@@ -351,8 +353,10 @@ public class EventLogMessage {
         micro0 = micro1 = ms * 1000L;
         timeString = format.format(new Date(ms));
     }
+    */
 
     /** In log4j, ignore all messages not specifically directed at this appender. */
+    /*
     private static final class Log4jFilter extends org.apache.log4j.spi.Filter {
 
         public static void init() {
@@ -376,4 +380,5 @@ public class EventLogMessage {
             }
         }
     }
+    */
 }

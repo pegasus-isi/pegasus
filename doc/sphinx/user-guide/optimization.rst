@@ -636,6 +636,17 @@ For example if the user sets ``pegasus.clusterer.label.key`` to
 -  Each job with the same value for ``PEGASUS`` profile key
    ``user_label`` appears in the same cluster.
 
+Whole Clustering
+----------------
+
+In ``whole`` workflow clustering, all the jobs in the workflow get clustered into
+a single job. This clustering is a specialized case of ``label`` based clustering
+where all jobs in the workflow are assumed to have the same label. This is
+particularly useful when you want to run the whole workflow using **PMC**.
+
+To use whole workflow clustering the user needs to set the ``--cluster`` option
+of :ref:`pegasus-plan <cli-pegasus-plan>` to ``whole``.
+
 Recursive Clustering
 --------------------
 
@@ -826,6 +837,149 @@ execution of the smaller constituent jobs either
 
       Users are encouraged to use label based clustering in conjunction
       with PMC
+
+-  **On multiple nodes of the remote site using MPI based in-situ task
+   management tool called Decaf**
+
+   Decaf  is a middleware for building and executing in-situ workflows. Decaf allows
+   parallel communication of coupled tasks by creating communication channels over HPC
+   interconnects through MPI. Decaf has a Python API, where users can describe the
+   workflow graph by defining the tasks and the communication channels among them.
+   Decaf does not impose any constraints on this graph topology and can manage
+   graphs with cycles. Once the workflow graph is defined, it is
+   executed as a multiple-program-multiple-data (MPMD) MPI application.
+
+   To use in-situ frameworks such as Decaf the underlying application code needs to
+   be changed to use the Decaf libraries and constructs for their file I/O. This cannot
+   be avoided. However, Pegasus ensures that users don’t have to change their
+   workflow generators to use Decaf. Decaf is integrated into Pegasus as a
+   technique to manage execution of clustered jobs. When users enable job
+   clustering in their workflows at planning time, Pegasus can set up a sub
+   graph of the workflow (identified using :ref:`label based clustering <label-clustering>`)
+   to be clustered and executed using Decaf. As part of this process, Pegasus creates
+   the necessary bindings for the clustered job to execute using Decaf.
+
+   To execute a clustered job using Decaf, Pegasus generates
+
+   1. the JSON file for the workflow graph, and
+   2. the run script for the users to run the Decaf via mpmd.
+
+
+   To automatically generate the Decaf description Pegasus employs the following rules
+
+   1. the roots of the sub graph will have no inports and the leaves of the sub
+      graph have no outports
+   2. the func name is generated based on the transformation name the node maps
+      to for link jobs
+   3. the name attribute is derived from the func attribute of
+      the nodes making up the edges
+   4. the source and target are the decaf integer id’s of the
+      nodes.
+   5. also internally order for the jobs is preserved as specified in the input
+      workflow description.
+
+   In addition, Pegasus generates a shell script for the clustered job that allows
+   the clustered DECAF job to be run via SLURM. Below is an actual script from one
+   of the runs of 1000Genome workflow that was executed on CORI.
+
+   .. code-block:: bash
+
+        #!/bin/bash
+        set -e
+
+        LAUNCH_DIR=`pwd`
+        echo "Job Launched in directory $LAUNCH_DIR"
+        source $DECAF_ENV_SOURCE
+
+
+        # copy the json file for the job into the directory
+        # where we are going to launch decaf
+        cp 1Kgenome.json $PEGASUS_SCRATCH_DIR/
+
+        cd $PEGASUS_SCRATCH_DIR
+        echo "Invoking decaf executable from directory `pwd`"
+        cat <<EOF > merge_cluster1.conf
+        0 ./individuals ALL.chr1.250000.vcf 1 1 15626 250000
+        1 ./individuals ALL.chr1.250000.vcf 1 171876 187501 250000
+        2 ./individuals ALL.chr1.250000.vcf 1 15626 31251 250000
+        3 ./individuals ALL.chr1.250000.vcf 1 187501 203126 250000
+        4 ./individuals ALL.chr1.250000.vcf 1 140626 156251 250000
+        5 ./individuals ALL.chr1.250000.vcf 1 156251 171876 250000
+        6 ./individuals ALL.chr1.250000.vcf 1 62501 78126 250000
+        7 ./individuals ALL.chr1.250000.vcf 1 234376 250001 250000
+        8 ./individuals ALL.chr1.250000.vcf 1 78126 93751 250000
+        9 ./individuals ALL.chr1.250000.vcf 1 31251 46876 250000
+        10 ./individuals ALL.chr1.250000.vcf 1 203126 218751 250000
+        11 ./individuals ALL.chr1.250000.vcf 1 46876 62501 250000
+        12 ./individuals ALL.chr1.250000.vcf 1 218751 234376 250000
+        13 ./individuals ALL.chr1.250000.vcf 1 125001 140626 250000
+        14 ./individuals ALL.chr1.250000.vcf 1 93751 109376 250000
+        15 ./individuals ALL.chr1.250000.vcf 1 109376 125001 250000
+        16 ./individuals_merge 1 chr1n-1-15626.tar.gz chr1n-15626-31251.tar.gz chr1n-31251-46876.tar.gz chr1n-46876-62501.tar.gz chr1n-62501-78126.tar.gz chr1n-78126-93751.tar.gz chr1n-93751-109376.tar.gz chr1n-109376-125001.tar.gz chr1n-125001-140626.tar.gz chr1n-140626-156251.tar.gz chr1n-156251-171876.tar.gz chr1n-171876-187501.tar.gz chr1n-187501-203126.tar.gz chr1n-203126-218751.tar.gz chr1n-218751-234376.tar.gz chr1n-234376-250001.tar.gz
+        EOF
+        srun --multi-prog ./merge_cluster1.conf
+
+
+   You need to have a ``dataflow::decaf`` entry in the transformation catalog to
+   specify basename of the json file that you want created for execution on
+   the remote site
+
+    .. tabs::
+
+        .. code-tab:: python generate_tc.py
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+            # create the TransformationCatalog object
+            tc = TransformationCatalog()
+            n_nodes = 17
+
+            decaf = Transformation("decaf", namespace="dataflow", site="cori", pfn=json_fn, is_stageable=False)
+                    .add_pegasus_profile(
+                        runtime="18000",
+                        glite_arguments="--qos=regular --constraint=haswell --licenses=SCRATCH --nodes=" + str(n_nodes) + " --ntasks-per-node=1 --ntasks=" + str(n_nodes),
+                        # glite_arguments="--qos=debug --constraint=haswell --licenses=SCRATCH",
+                        # exitcode.successmsg="Execution time in seconds:",
+                    )
+                    .add_profiles(Namespace.PEGASUS, key="exitcode.successmsg", value="Execution time in seconds:")
+                    .add_profiles(Namespace.PEGASUS, key="dagman.post", value="pegasus-exitcode")
+                    .add_env(key="DECAF_ENV_SOURCE", value=env_script)
+
+            tc.add_transformations(decaf)
+
+
+            # write the transformation catalog to the default file path "./transformations.yml"
+            tc.write()
+
+        .. code-tab:: yaml YAML
+
+            x-pegasus:
+            apiLang: python
+            createdBy: pegasus
+            createdOn: 10-17-21T15:23:28Z
+            pegasus: '5.0'
+            transformations:
+                - namespace: dataflow
+                  name: decaf
+                  sites:
+                  - name: cori
+                    pfn: 1Kgenome.json
+                    type: installed
+                  profiles:
+                    pegasus:
+                      runtime: '12000'
+                      glite.arguments: --qos=regular --constraint=haswell --licenses=SCRATCH --nodes=17
+                        --ntasks-per-node=1 --ntasks=17
+                      exitcode.successmsg: 'Execution time in seconds:'
+                      dagman.post: pegasus-exitcode
+                    env:
+                      DECAF_ENV_SOURCE: /global/cfs/cdirs/m2187/pegasus-decaf/1000genome-workflow/env.sh
+
+.. note::
+
+      If you want to use Decaf for your workflows, please contact the Decaf team at Argonne for help on
+      how to port your application to Decaf.
 
 Specification of Method of Execution for Clustered Jobs
 -------------------------------------------------------

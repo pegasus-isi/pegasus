@@ -51,9 +51,7 @@ function timed_transfer
 }
 
 # credentials
-export S3CFG=$HOME/.s3cfg
-export irodsEnvFile=$HOME/.irods/irods_environment.json.IPlant
-
+export PEGASUS_CREDENTIALS=$HOME/.pegasus/credentials.conf
 
 for SUBTEST in \
     http \

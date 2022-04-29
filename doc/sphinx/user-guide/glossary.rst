@@ -102,6 +102,27 @@ Glossary
       The logical handle to the storage resource described in the Site Catalog,
       where input data required by a workflow resides.
 
+   Invocation Record
+      As far as possible, jobs in Pegasus are launched using Kickstart that
+      captures runtime provenance about the Tasks in a job (such as exitcode,
+      duration, hostname and directory where the job ran etc) in a YAML
+      formatted record that is called the Invocation Record. In case of
+      clustered jobs, there will be multiple Invocation Records associated
+      with the job in the Stampede Database.
+
+      See Task.
+
+   Job
+      A node in your workflow is referred to as a Job in the workflow.
+      For recording purposes in the Stampede monitoring database there is
+      differentiation between jobs in the input Abstract Workflows and the
+      jobs in the Executable Workflows (HTCondor DAGs).
+      Pegasus takes in an Abstract Workflow which is composed of Tasks.
+      Pegasus plans it into a HTCondor DAG / Executable workflow that
+      consists of Jobs. In case of Clustering, multiple tasks in the
+      Abstract Workflow can be captured into a single job in the
+      Executable workflow.
+
    Kickstart
       A lightweight C executable that Pegasus uses to launch user executables to
       gather metrics about the execution of each job.
@@ -183,11 +204,19 @@ Glossary
       from this database. By default, this is a sqlite database in the submit
       directory of the workflow.
 
-   Sub Workflow
-     The workflow referred to by a pegasusWorkflow job in a hierarchical
-     workflow.
+   Task
+      The monitoring layer in Pegasus differentiates between jobs in the input
+      Abstract Workflows and the jobs in the executable workflows (HTCondor DAGs).
+      Pegasus takes in an Abstract Workflow which is composed of Tasks.
+      Pegasus plans it into a HTCondor DAG / Executable workflow that consists of Jobs.
+      In case of Clustering, multiple tasks in the Abstract Workflow can be
+      captured into a single job in the Executable workflow.
 
-     See Hierarchical Workflow.
+   Sub Workflow
+      The workflow referred to by a pegasusWorkflow job in a hierarchical
+      workflow.
+
+      See Hierarchical Workflow.
 
    Transformation
       Any executable or code that is run as a task in the workflow.
@@ -197,8 +226,8 @@ Glossary
       of the transformation at a given compute site.
 
    XSEDE
-     The Extreme Science and Engineering Discovery Environment (XSEDE) is a
-     collection of supercomputing clusters and academic clouds largely available
-     in the United States for use by researchers in various fields. More information
-     can be found at `XSEDE Website <https://www.xsede.org/>`_
+      The Extreme Science and Engineering Discovery Environment (XSEDE) is a
+      collection of supercomputing clusters and academic clouds largely available
+      in the United States for use by researchers in various fields. More information
+      can be found at `XSEDE Website <https://www.xsede.org/>`_
 

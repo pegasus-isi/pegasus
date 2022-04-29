@@ -445,6 +445,12 @@ RSL specification.
     | | Since : 2.0                      |                                                               |
     | | Type :Integer                    |                                                               |
     +------------------------------------+---------------------------------------------------------------+
+    | | Property Key: globus.totalmemory | the total amount of memory required for this job              |
+    | | Profile Key: totalmemory         |                                                               |
+    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Since : 2.0                      |                                                               |
+    | | Type :Integer                    |                                                               |
+    +------------------------------------+---------------------------------------------------------------+
     | | Property Key: globus.project     | associates an account with a job at the remote end.           |
     | | Profile Key: project             |                                                               |
     | | Scope : TC, SC, DAX, Properties  |                                                               |
@@ -818,11 +824,22 @@ understands.
     | | Since : 3.0                              | | jobs in each cluster. The number of clusters depends on the total |
     | | Type : Integer                           | | number of jobs on the level.                                      |
     +--------------------------------------------+---------------------------------------------------------------------+
-    | | Property Key: pegasus.job.aggregator     | | Indicates the clustering executable that is used to run the       |
-    | | Profile Key:job.aggregator               | | clustered job on the remote site.                                 |
+    | | Property Key:                            | | Indicates the clustering executable that is used to run the       |
+    | |  pegasus.clusterer.job.aggregator        | | clustered job on the remote site.                                 |
+    | | Profile Key:job.aggregator               | |                                                                   |
     | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
     | | Since : 2.0                              |                                                                     |
     | | Type :Integer                            |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Property Key:                            | | The additional arguments with which a clustering                  |
+    | | pegasus.clusterer.job.aggregator.\       | | executable should be invoked.                                     |
+    | |                              arguments   | |                                                                   |
+    | | Profile Key: job.aggregator.arguments    | |                                                                   |
+    | | Scope : TC, SC, Abstract WF, Properties  |                                                                     |
+    | | Since : 5.0.2                            |                                                                     |
+    | | Default : None                           |                                                                     |
+    | | See Also :                               |                                                                     |
+    | |    pegasus.clusterer.job.aggregator      |                                                                     |
     +--------------------------------------------+---------------------------------------------------------------------+
     | | Property Key: pegasus.gridstart          | | Determines the executable for launching a job. This               |
     | | Profile Key: gridstart                   | | covers both tasks ( jobs specified by the user in the             |
@@ -1628,7 +1645,8 @@ Database Drivers For All Relational Catalogs
     |                                                       | |   pegasus.catalog.*.db.capitalizeTypeNames                        |
     |                                                       | |   pegasus.catalog.*.db.ultraDevHack                               |
     |                                                       | |   pegasus.catalog.*.db.strictFloatingPoint                        |
-    |                                                       | |   pegasus.catalog.*.db.useSSL pegasus.catalog.*.db.useCompression |
+    |                                                       | |   pegasus.catalog.*.db.useSSL                                     |
+    |                                                       | |   pegasus.catalog.*.db.useCompression                             |
     |                                                       | |   pegasus.catalog.*.db.socketTimeout                              |
     |                                                       | |   pegasus.catalog.*.db.maxReconnects                              |
     |                                                       | |   pegasus.catalog.*.db.initialTimeout                             |
@@ -2830,6 +2848,14 @@ Job Clustering Properties
     |                                                              | | in local universe on the submit and runs the jobs    |
     |                                                              | | making up the cluster on AWS Batch.                  |
     +--------------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.clusterer.job.aggregator.arguments   | | The additional arguments with which a clustering     |
+    | | Profile Key: job.aggregator.arguments                      | | executable should be invoked.                        |
+    | | Default : None                                             |                                                        |
+    | | Scope : TC, SC, Abstract WF, Properties                    |                                                        |
+    | | Since : 5.0.2                                              |                                                        |
+    | | See Also :                                                 |                                                        |
+    | |    pegasus.clusterer.job.aggregator                        |                                                        |
+    +--------------------------------------------------------------+--------------------------------------------------------+
     | | Property Key: pegasus.clusterer.job.aggregator.seqexec.log | | The tool pegasus-cluster logs the progress of the    |
     | | Profile Key: N/A                                           | | jobs that are being run by it in a progress file     |
     | | Scope : Properties                                         | | on the remote cluster where it is executed.          |
@@ -2908,8 +2934,8 @@ Logging Properties
     | | See Also :pegasus.log.manager.formatter     | | log4j or syslog.                                                          |
     |                                               |                                                                             |
     |                                               | | **Log4j**:                                                                |
-    |                                               | | This implementation, uses Log4j to log                                    |
-    |                                               | |  messages. The log4j properties can be specified in                       |
+    |                                               | | This implementation, uses Log4j 2.x (2.17 at time of implementation to    |
+    |                                               | |  log messages. The log4j properties can be specified in                   |
     |                                               | |  a properties file, the location of which is specified                    |
     |                                               | |  by the property pegasus.log.manager.log4j.conf .                         |
     +-----------------------------------------------+-----------------------------------------------------------------------------+

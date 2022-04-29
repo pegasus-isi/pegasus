@@ -49,7 +49,7 @@ cat >sites.xml <<EOF
         <directory type="local-storage" path="/bamboo-030-pegasuslite-s3/outputs">
             <file-server operation="all" url="s3://test@amazon/bamboo-030-pegasuslite-s3/outputs"/>
         </directory>
-        <profile namespace="pegasus" key="S3CFG" >/localhome/bamboo/.s3cfg</profile>
+        <profile namespace="pegasus" key="PEGASUS_CREDENTIALS" >/localhome/bamboo/.pegasus/credentials-s3.conf</profile>
     </site>
 </sitecatalog>
 EOF

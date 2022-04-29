@@ -2156,19 +2156,19 @@ class S3Handler(TransferHandlerBase):
 
     def _s3_cred_env(self, site_label):
         env = {}
-        if "S3CFG" in os.environ:
-            env["S3CFG"] = os.environ["S3CFG"]
-        key = "S3CFG_" + site_label
+        if "PEGASUS_CREDENTIALS" in os.environ:
+            env["PEGASUS_CREDENTIALS"] = os.environ["PEGASUS_CREDENTIALS"]
+        key = "PEGASUS_CREDENTIALS_" + site_label
         if key in os.environ:
-            env["S3CFG"] = os.environ[key]
-        if "S3CFG" not in env:
+            env["PEGASUS_CREDENTIALS"] = os.environ[key]
+        if "PEGASUS_CREDENTIALS" not in env:
             raise RuntimeError(
-                "At least one of the S3CFG_"
+                "At least one of the PEGASUS_CREDENTIALS_"
                 + site_label
-                + " or S3CFG"
+                + " or PEGASUS_CREDENTIALS"
                 + " environment variables has to be set"
             )
-        check_cred_fs_permissions(env["S3CFG"])
+        check_cred_fs_permissions(env["PEGASUS_CREDENTIALS"])
         return env
 
 
@@ -2384,7 +2384,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             logger.info("No transfer_access_token was supplied")
 
         try:
-            cred_details["transfer_at_exp"] = config.get("oauth", "transfer_at_exp")
+            cred_details["transfer_at_exp"] = config.getint("oauth", "transfer_at_exp")
         except (configparser.NoSectionError, configparser.NoOptionError):
             logger.info(
                 "No transfer_access_token_expiration was supplied, defaults to 0"

@@ -1400,7 +1400,7 @@ class TestWorkflow:
         with wf_path.open("w+") as f:
             wf.write(f)
             f.seek(0)
-            result = yaml.load(f)
+            result = yaml.safe_load(f)
 
         expected = {
             "pegasus": "5.0",
@@ -1567,7 +1567,7 @@ class TestWorkflow:
         with NamedTemporaryFile(mode="w+") as f:
             workflow.write(f)
             f.seek(0)
-            result = yaml.load(f)
+            result = yaml.safe_load(f)
 
         # validate written workflow yaml
         workflow_schema = load_schema("wf-5.0.json")

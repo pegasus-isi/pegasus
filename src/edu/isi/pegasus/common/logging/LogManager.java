@@ -18,9 +18,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 /**
  * The logging class that to log messages at different levels. Currently the following levels are
@@ -111,11 +112,44 @@ public abstract class LogManager {
     /** The Log4j logger. */
     public static final String LOG4J_LOGGER = "Log4j";
 
+    private static HashMap<Level, Integer> mLog4jLevelsToIntValue;
+    private static HashMap<Integer, Level> mIntToLog4jLevels;
+
     /** the type of stream types to which log messages can be directed to */
     public static enum STREAM_TYPE {
         stdout,
         stderr
     };
+
+    public static Map<Level, Integer> log4jLevelToInt() {
+        if (mLog4jLevelsToIntValue == null) {
+            mLog4jLevelsToIntValue = new HashMap<Level, Integer>();
+            mLog4jLevelsToIntValue.put(Level.FATAL, LogManager.FATAL_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.ERROR, LogManager.ERROR_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.WARN, LogManager.WARNING_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.INFO, LogManager.INFO_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.DEBUG, LogManager.DEBUG_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.TRACE, LogManager.TRACE_MESSAGE_LEVEL);
+            mLog4jLevelsToIntValue.put(Level.ALL, LogManager.TRACE_MESSAGE_LEVEL);
+        }
+        return mLog4jLevelsToIntValue;
+    }
+
+    public static Map<Integer, Level> intTolog4jLevel() {
+        if (mIntToLog4jLevels == null) {
+            mIntToLog4jLevels = new HashMap<Integer, Level>();
+            mIntToLog4jLevels.put(LogManager.FATAL_MESSAGE_LEVEL, Level.FATAL);
+            mIntToLog4jLevels.put(LogManager.ERROR_MESSAGE_LEVEL, Level.ERROR);
+            mIntToLog4jLevels.put(LogManager.WARNING_MESSAGE_LEVEL, Level.WARN);
+            mIntToLog4jLevels.put(LogManager.INFO_MESSAGE_LEVEL, Level.INFO);
+            // config level also maps to info and console message map to info level?
+            mIntToLog4jLevels.put(LogManager.CONFIG_MESSAGE_LEVEL, Level.INFO);
+            mIntToLog4jLevels.put(LogManager.CONSOLE_MESSAGE_LEVEL, Level.INFO);
+            mIntToLog4jLevels.put(LogManager.DEBUG_MESSAGE_LEVEL, Level.DEBUG);
+            mIntToLog4jLevels.put(LogManager.TRACE_MESSAGE_LEVEL, Level.TRACE);
+        }
+        return mIntToLog4jLevels;
+    }
 
     /**
      * The debug level. Higher the level the more the detail is logged. At present can be 0 or 1.
@@ -247,28 +281,8 @@ public abstract class LogManager {
      * @param level the level to which the debug level needs to be set to.
      */
     public void setLevel(Level level) {
-        int value = level.toInt();
-        switch (value) {
-            case Level.DEBUG_INT:
-                value = LogManager.DEBUG_MESSAGE_LEVEL;
-                break;
-
-            case Level.INFO_INT:
-                value = LogManager.INFO_MESSAGE_LEVEL;
-                break;
-
-            case Level.WARN_INT:
-                value = LogManager.WARNING_MESSAGE_LEVEL;
-                break;
-
-            case Level.ERROR_INT:
-                value = LogManager.ERROR_MESSAGE_LEVEL;
-                break;
-
-            default:
-                value = LogManager.FATAL_MESSAGE_LEVEL;
-                break;
-        }
+        int value = LogManager.FATAL_MESSAGE_LEVEL;
+        value = log4jLevelToInt().containsKey(level) ? log4jLevelToInt().get(level) : value;
         setLevel(value, false);
     }
 

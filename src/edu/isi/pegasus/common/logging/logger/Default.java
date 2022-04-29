@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Properties;
-import org.apache.log4j.Level;
 
 /**
  * The logging class that to log messages at different levels. Currently the following levels are
@@ -142,38 +141,6 @@ public class Default extends LogManager {
      */
     public void configure(boolean prefixTimestamp) {
         mPrefixTimestamp = prefixTimestamp;
-    }
-
-    /**
-     * Sets the debug level. All those messages are logged which have a level less than equal to the
-     * debug level.
-     *
-     * @param level the level to which the debug level needs to be set to.
-     */
-    public void setLevel(Level level) {
-        int value = level.toInt();
-        switch (value) {
-            case Level.DEBUG_INT:
-                value = Default.DEBUG_MESSAGE_LEVEL;
-                break;
-
-            case Level.INFO_INT:
-                value = Default.INFO_MESSAGE_LEVEL;
-                break;
-
-            case Level.WARN_INT:
-                value = Default.WARNING_MESSAGE_LEVEL;
-                break;
-
-            case Level.ERROR_INT:
-                value = Default.ERROR_MESSAGE_LEVEL;
-                break;
-
-            default:
-                value = Default.FATAL_MESSAGE_LEVEL;
-                break;
-        }
-        setLevel(value, false);
     }
 
     /**

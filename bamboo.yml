@@ -59,10 +59,6 @@ project:
                 - name: pegasus-source
                   copyPattern: "pegasus-source.tar.gz"
                   isShared: true
-              requirements:
-                - capabilityKey: docbuild
-                  matchType: !equals
-                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
@@ -837,23 +833,20 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_8}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --env "CI=true" \
-                      --env "bamboo_buildKey=${bamboo_buildKey}" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} code-format-java
+                      export USER=bamboo
+                      export CI=true
+                      export bamboo_buildKey=${bamboo_buildKey}
+                      cd pegasus-source
+                      ant code-format-java
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: centos
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 8
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: PCF
@@ -869,23 +862,20 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_8}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --entrypoint ant \
-                      --env "USER=bamboo" \
-                      --env "CI=true" \
-                      --env "bamboo_buildKey=${bamboo_buildKey}" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      pegasus/pegasus:${TAG} code-format-python
+                      export USER=bamboo
+                      export CI=true
+                      export bamboo_buildKey=${bamboo_buildKey}
+                      cd pegasus-source
+                      ant code-format-python
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: centos
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 8
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
         - name: Build
@@ -904,17 +894,8 @@ project:
                   inlineScript:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
-                      TAG=${bamboo_TAG_CENTOS_7}
-
-                      /opt/docker/docker-bamboo-wrapper pull pegasus/pegasus:${TAG}
-
-                      /opt/docker/docker-bamboo-wrapper run \
-                      --rm \
-                      --env "LANG=en_US.utf8" \
-                      --volume ${bamboo_build_working_directory}/pegasus-source:/home/bamboo/pegasus-source \
-                      --entrypoint ant \
-                      pegasus/pegasus:${TAG} \
-                      dist-doc
+                      cd pegasus-source
+                      ant dist-doc
               artifactDefinitions:
                 - name: pegasus-doc
                   copyPattern: "pegasus-doc-*.tar.gz"
@@ -923,8 +904,12 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: system.docker.executable
-                  matchType: !exists exists
+                - capabilityKey: distro
+                  matchType: !equals
+                    matchValue: centos
+                - capabilityKey: release
+                  matchType: !equals
+                    matchValue: 8
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BR
@@ -950,9 +935,6 @@ project:
                   isShared: true
               artifactDependencies:
                 - name: pegasus-source
-              requirements:
-                - capabilityKey: docbuild
-                  matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR8
@@ -1078,45 +1060,6 @@ project:
                 - capabilityKey: release
                   matchType: !equals
                     matchValue: 8
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXDS
-              name: Build Debian 9
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      cd pegasus-source
-                      ant clean dist-deb dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_deb_9
-                  copyPattern: "pegasus-binary-*-x86_64_deb_9.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-deb-x86_64_deb_9
-                  copyPattern: "*.deb"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_deb_9
-                  copyPattern: "pegasus-worker-*-x86_64_deb_9.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: distro
-                  matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 9
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
@@ -1359,8 +1302,6 @@ project:
                       mv pegasus-r-pegasus*.tar.gz $DOWNLOADS/
 
                       # debian
-                      mkdir -p $DOWNLOADS/debian/dists/stretch/main/binary-amd64
-                      cp $DOWNLOADS/pegasus_*deb9_amd64.deb $DOWNLOADS/debian/dists/stretch/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb10_amd64.deb $DOWNLOADS/debian/dists/buster/main/binary-amd64/
                       mkdir -p $DOWNLOADS/debian/dists/bullseye/main/binary-amd64
@@ -1396,6 +1337,7 @@ project:
                       ssh -i ~/.ssh/deployment pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
                       scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
+                - name: pegasus-binary-x86_64_alpine_3
                 - name: pegasus-binary-x86_64_deb_9
                 - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_deb_11
@@ -1404,7 +1346,6 @@ project:
                 - name: pegasus-binary-x86_64_rhel_8
                 - name: pegasus-binary-x86_64_ubuntu_18
                 - name: pegasus-binary-x86_64_ubuntu_20
-                - name: pegasus-deb-x86_64_deb_9
                 - name: pegasus-deb-x86_64_deb_10
                 - name: pegasus-deb-x86_64_deb_11
                 - name: pegasus-deb-x86_64_ubuntu_18
@@ -1417,6 +1358,7 @@ project:
                 - name: pegasus-source
                 - name: pegasus-source-versioned
                 - name: pegasus-srcrpm
+                - name: pegasus-worker-x86_64_alpine_3
                 - name: pegasus-worker-x86_64_deb_9
                 - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_deb_11
@@ -1716,35 +1658,6 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T4N6
               name: 004-montage-condor-io
-              description: TODO
-              tasks:
-                - !script
-                  description: Cleanup
-                  enabled: true
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "rm -rf pegasus/ test/"
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xf tests.tar"
-                - !script
-                  description: Run Test
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      export PATH=${bamboo_build_working_directory}/pegasus/bin:$PATH
-                      test/scripts/launch-bamboo-test ${bamboo_shortJobName}
-              requirements:
-                - capabilityKey: condor
-                  matchType: !exists exists
-              artifactDependencies:
-                - name: tests
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false
-            - key: T4
-              name: 004-montage-grid
               description: TODO
               tasks:
                 - !script
@@ -4213,7 +4126,7 @@ project:
               artifactDependencies:
                 - name: tests
               miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: false		
+                cleanWorkingDirectoryAfterEachBuild: false
             - key: T046A
               name: 046-aws-batch-black
               description: Blackdiamond workflow with horizontal clustering and clusters run on AWS Batch

@@ -726,6 +726,12 @@ public class Decaf extends Abstract {
             d.add(constitutentJob);
         }
 
+        // also put in jobType as mpi only if a user has not specified
+        // any other jobtype before hand
+        if (!d.globusRSL.containsKey("jobtype")) {
+            d.globusRSL.checkKeyInNS("jobtype", "mpi");
+        }
+
         d.setPartiallyCreated();
 
         return d;

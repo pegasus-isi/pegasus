@@ -753,7 +753,7 @@ public class Job extends Data implements GraphNodeContent {
             return;
         }
 
-        if (url.startsWith("webdav")) {
+        if (url.startsWith("webdav") || url.startsWith("s3")) {
             this.addCredentialType(site, CredentialHandler.TYPE.credentials);
         } else if (url.startsWith("gsiftp")
                 || url.startsWith("xroot")
@@ -781,8 +781,6 @@ public class Job extends Data implements GraphNodeContent {
                                 + " sshftp://username@somehost.org/path/file");
             }
             this.addCredentialType(site, CredentialHandler.TYPE.ssh);
-        } else if (url.startsWith("s3")) {
-            this.addCredentialType(site, CredentialHandler.TYPE.s3);
         } else if (url.startsWith("gs")) {
             this.addCredentialType(site, CredentialHandler.TYPE.boto);
             this.addCredentialType(site, CredentialHandler.TYPE.googlep12);

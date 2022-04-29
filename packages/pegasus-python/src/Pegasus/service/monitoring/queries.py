@@ -17,7 +17,7 @@ __author__ = "Rajiv Mayani"
 import hashlib
 import logging
 
-from sqlalchemy.orm import aliased, defer, joinedload
+from sqlalchemy.orm import aliased, defer
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_, desc, distinct, func
 
@@ -541,10 +541,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         q = (
             self.session.query(WorkflowFiles)
-            .options(
-                joinedload(WorkflowFiles.lfn).joinedload(RCLFN.pfns),
-                joinedload(WorkflowFiles.lfn).joinedload(RCLFN.meta),
-            )
+            .outerjoin(RCLFN)
+            .outerjoin(RCLFN.pfns)
+            .outerjoin(RCLFN.meta)
             .filter(WorkflowFiles.wf_id == wf_id)
         )
 

@@ -1,4 +1,92 @@
 ===============================
+Release Notes for Pegasus 5.0.2
+===============================
+We are happy to announce the release of Pegasus 5.0.2, which is a minor bug
+fix release for Pegasus 5.0 branch.  This release has some important updates
+namely
+
+- Updated Pegasus Log4J support to 2.17.
+- Globus Online Transfers now have support for consent options on endpoints
+
+The release also has important bug fixes related to correctly detecting job
+failures for grid universe jobs.
+
+We invite our users to give it a try.
+
+The release can be downloaded from:
+https://pegasus.isi.edu/downloads
+
+JIRA items
+----------------------------
+Exhaustive list of features, improvements and bug fixes can be found below.
+
+New Features and Improvements
+-----------------------------
+
+1)  [PM-1828] – Doc. mismatch
+
+2)  [PM-1817] – pegasus-run with shell code generator
+
+3)  [PM-1824] – decaf jobs should be associated with pegasus-exitcode postscript
+
+4)  [PM-1825] – update glossary
+
+5)  [PM-1826] – way to pass on additional arguments to clustered jobs
+
+6)  [PM-1830] – Globus Online transfers required GO consent
+
+7)  [PM-1835] – Upcoming changes to DAGMan output logging
+
+8)  [PM-1836] – Update Pegasus Log4J support to 2.16
+
+9)  [PM-1839] – allow easy clustering of the whole workflow without associating
+                labels for the jobs
+		
+10) [PM-1673] – passing properties as str to Properties() can be error prone,
+    	      	add some preliminary checks before writing
+		
+11) [PM-1759] – user facing class/function args shouldn’t be prefixed
+    	        with _ such as _id
+		
+12) [PM-1816] – make it easier to add entries to the replica catalog by inferring
+    	        site, lfn, pfn from file Path or URL
+		
+13) [PM-1822] – improve parsing of value in Mixins._to_mb(value)
+
+14) [PM-1827] – type check pfn in ReplicaCatalog.add_replica()
+
+15) [PM-1831] – planner by default should pick up credentials.conf when pegasus-s3 is used
+
+16) [PM-1834] – ensure that yaml is serialized in a deterministic manner
+
+17) [PM-1858] – pegasus-s3 should pick up PEGASUS_CREDENTIAL environment variable
+
+18) [PM-1859] – Document decaf as a clustering tool in the clustering guide
+
+Bugs Fixed
+----------
+
+1)  [PM-1763] – validate all strings that will then be used as filenames or
+               used in sub files
+	       
+2)  [PM-1821] – job failures not detected for grid universe jobs
+
+3)  [PM-1823] – Serialization of pegasus.memory results in a floating point no.
+
+4)  [PM-1832] – extraneous whitespace in arguments for sub workflow job with java generator
+
+5)  [PM-1837] – planner throws null pointer exception when invalid staging site is given
+
+6)  [PM-1838] – Intermediate outputs in a clustered job get sent back to staging
+    	      	site when they are not used by subsequent jobs outside of the cluster
+		and when stage_out has been set to false for those files
+		
+7)  [PM-1840] – Workflow class methods will always be None
+
+8)  [PM-1851] – PegasusLite submissions to local cluster (Slurm/PBS/etc) unable
+    	        to source pegasus-lite-common.sh
+
+===============================
 Release Notes for Pegasus 5.0.1
 ===============================
 We are happy to announce the release of Pegasus 5.0.1. Pegasus 5.0.1 is a
