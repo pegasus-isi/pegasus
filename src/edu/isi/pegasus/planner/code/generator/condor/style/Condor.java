@@ -302,10 +302,11 @@ public class Condor extends Abstract {
         }
         if (universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE)
                 || universe.equalsIgnoreCase(Condor.LOCAL_UNIVERSE)) {
-            // remove request_ keys as they are not handled in local universe
+            // PM-1206, PM-1864 remove request_ keys as they are not handled in local universe
             for (Iterator it = job.condorVariables.getProfileKeyIterator(); it.hasNext(); ) {
                 String key = (String) it.next();
-                if (key.startsWith("request_")) {
+                // PM-1864 tighten the check, to only remove request_cpus key
+                if (key.startsWith("request_cpus")) {
                     mLogger.log(
                             "Removing unsupported key "
                                     + key
