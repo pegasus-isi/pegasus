@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ##
 #  Copyright 2016 University Of Southern California
@@ -43,7 +43,7 @@ parse_error = False
 for line in open(exitcode_file):
     try:
         d = json.loads(line.strip())
-    except Exception, e:
+    except Exception as e:
         logger.error(e)
         parse_error = True
 
