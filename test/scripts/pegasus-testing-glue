@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ##
 #  Copyright 2007-2011 University Of Southern California
@@ -117,7 +117,7 @@ def clean_condor_q():
     cmd = "(condor_rm $USER; sleep 10s; condor_rm -forcex $USER; sleep 10s) >/dev/null 2>&1"
     try:
         myexec(cmd, 60, True)
-    except Exception, e:
+    except Exception as e:
         logger.error(e)
 
 
@@ -128,7 +128,7 @@ def summarize_stdout_stderr(test_dir):
     cmd = "cd %s && tail -n 100 test.stdout test.stderr" % test_dir
     try:
         myexec(cmd, 60, False)
-    except Exception, e:
+    except Exception as e:
         logger.error(e)
 
 
@@ -187,20 +187,20 @@ for entry in dir_list:
     try:
         myexec(cmd, 3600, True)
         logger.info("Test successful")
-    except Exception, e:
+    except Exception as e:
         logger.error(e)
         failed_tests.append(entry)
         rc += 1
         logger.info("Last 100 lines of stdout/stderr:")
         summarize_stdout_stderr("%s/%s" % (options.tests_dir, entry))
 
-print
+print()
 if len(failed_tests) == 0:
-    print "All tests successful!"
+    print("All tests successful!")
 else:
-    print "The following tests failed:"
+    print("The following tests failed:")
     for test in failed_tests:
-        print "  %s" %(test)
+        print("  %s" %(test))
 
 myexit(rc)
 
