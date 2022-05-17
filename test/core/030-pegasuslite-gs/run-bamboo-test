@@ -49,8 +49,8 @@ cat >sites.xml <<EOF
         <directory type="local-storage" path="/pegasus-wms/outputs">
             <file-server operation="all" url="gs://pegasus-wms/outputs"/>
         </directory>
-        <profile namespace="pegasus" key="BOTO_CONFIG" >/localhome/bamboo/.boto.service</profile>
-        <profile namespace="pegasus" key="GOOGLE_PKCS12" >/localhome/bamboo/.google-service-account.p12</profile>
+        <profile namespace="pegasus" key="BOTO_CONFIG" >$HOME/.boto.service</profile>
+        <profile namespace="pegasus" key="GOOGLE_PKCS12" >$HOME/.google-service-account.p12</profile>
     </site>
 </sitecatalog>
 EOF

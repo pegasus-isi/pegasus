@@ -16,7 +16,7 @@ sites:
             url: file:///${TOPDIR}/LOCAL/shared-storage
     profiles:
       pegasus:
-        s3cfg: "/localhome/bamboo/.s3cfg"
+        s3cfg: "/scitech/shared/home/bamboo/.s3cfg"
 
   - name: condorpool
     arch: x86_64

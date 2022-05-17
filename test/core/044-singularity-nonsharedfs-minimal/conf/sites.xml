@@ -11,7 +11,7 @@
             <file-server  operation="all" url="file:///${TOPDIR}/LOCAL/shared-storage">
             </file-server>
         </directory>
-        <profile namespace="pegasus" key="S3CFG" >/localhome/bamboo/.s3cfg</profile>
+        <profile namespace="pegasus" key="S3CFG" >/scitech/shared/home/bamboo/.s3cfg</profile>
     </site>
 
     <site  handle="staging_site" arch="x86_64" os="LINUX">
