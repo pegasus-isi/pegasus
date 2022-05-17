@@ -75,7 +75,7 @@ sites:
       # set the remote directory
       change.dir: 'true'
       # the key to use for scp transfers
-      SSH_PRIVATE_KEY: /scitech/home/bamboo/.ssh/workflow_id_rsa
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
  -
   name: "local"
   arch: "x86_64"
