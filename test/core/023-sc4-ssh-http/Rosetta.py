@@ -101,7 +101,7 @@ sites:
     env:
       PEGASUS_BIN_DIR: "{pegasus_bin_dir}"
     pegasus:
-      ssh_private_key: "/localhome/bamboo/.ssh/workflow_id_rsa"
+      ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
 """.format(
     work_dir=str(WORK_DIR), pegasus_bin_dir=PEGASUS_BIN_DIR
 )

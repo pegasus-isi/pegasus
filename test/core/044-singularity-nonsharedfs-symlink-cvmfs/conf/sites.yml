@@ -19,7 +19,7 @@ sites:
         PEGASUS_HOME: "${PEGASUS_BIN_DIR}/.."
       pegasus:
         clusters.num: 1
-        SSH_PRIVATE_KEY: "/localhome/bamboo/.ssh/workflow_id_rsa"
+        SSH_PRIVATE_KEY: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
 
   - name: obelix
     arch: x86_64

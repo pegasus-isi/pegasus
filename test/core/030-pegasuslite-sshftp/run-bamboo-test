@@ -61,7 +61,7 @@ cat >sites.xml <<EOF
         <directory type="shared-scratch" path="/data/scratch/http">
             <file-server operation="all" url="sshftp://ptesting@obelix.isi.edu/data/scratch/http"/>
         </directory>
-        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/localhome/bamboo/.ssh/workflow_id_rsa</profile>
+        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/scitech/shared/bamboo/.ssh/workflow_id_rsa</profile>
     </site>
 </sitecatalog>
 EOF
