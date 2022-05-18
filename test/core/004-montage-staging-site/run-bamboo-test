@@ -4,7 +4,7 @@ set -e
 
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/current/bin:$PATH
+export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 export PYTHONPATH=`pegasus-config --python`
 
 rm -rf montage-workflow-v3
@@ -32,7 +32,7 @@ sites:
   os.type: "linux"
   profiles:
     env:
-      MONTAGE_HOME: "/ccg/software/montage/current"
+      MONTAGE_HOME: "/scitech/shared/software/el8/montage/current"
       GLOBUS_LOCATION: "/ccg/software/globus/default"
       http_proxy: "workflow.isi.edu:3128"
     condor:

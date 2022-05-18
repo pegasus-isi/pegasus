@@ -4,7 +4,7 @@ set -e
 
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/current/bin:$PATH
+export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
@@ -31,7 +31,7 @@ sites:
   os.type: "linux"
   profiles:
     env:
-      MONTAGE_HOME: "/ccg/software/montage/current"
+      MONTAGE_HOME: "/scitech/shared/software/el8/montage/current"
       http_proxy: "workflow.isi.edu:3128"
     pegasus:
       style: "condor"

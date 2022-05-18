@@ -4,7 +4,7 @@ set -e
 
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/current/bin:$PATH
+export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 export PYTHONPATH=`pegasus-config --python`
 
 rm -rf montage-workflow-v3
@@ -49,7 +49,7 @@ sites:
       url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/outputs"
   profiles:
     env:
-      MONTAGE_HOME: "/ccg/software/montage/current"
+      MONTAGE_HOME: "/scitech/shared/software/el8/montage/current"
       PEGASUS_HOME: "/lizard/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION"
       http_proxy: "workflow.isi.edu:3128"
     condor:
