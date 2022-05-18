@@ -5,7 +5,7 @@ set -e
 TOP_DIR=`pwd`
 WORK_DIR=$TOP_DIR/work
 
-export PATH=/ccg/software/montage/current/bin:$PATH
+export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
 export GLOBUS_LOCATION=/ccg/software/globus/default
 
