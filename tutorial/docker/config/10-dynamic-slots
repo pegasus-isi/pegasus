@@ -1,0 +1,13 @@
+SLOT_TYPE_1 = cpus=100%,disk=100%,swap=100%
+SLOT_TYPE_1_PARTITIONABLE = TRUE
+SLOT_TYPE_1_CONSUMPTION_POLICY = True
+SLOT_TYPE_1_CONSUMPTION_DISK = 1.1 * TARGET.RequestDisk
+NUM_SLOTS = 1
+NUM_SLOTS_TYPE_1 = 1
+
+PROPORTIONAL_SWAP_ASSSIGNMENT = true
+
+# default consumptions (smallest slot available)
+CONSUMPTION_CPUS = quantize(target.RequestCpus,{1})
+CONSUMPTION_MEMORY = quantize(target.RequestMemory,{512})
+CONSUMPTION_DISK = quantize(target.RequestDisk,{1024})
