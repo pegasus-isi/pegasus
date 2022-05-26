@@ -84,7 +84,7 @@ fi
 
 # Build a full path to our real Python tool (we used to depend on pegasus-config
 # here, but as that has a dependency on perl, we are shortcutting it)
-TOOL_PATH="$PEGASUS_HOME/lib/pegasus/python/Pegasus/cli/$BASE_NAME.py"
+TOOL_PATH="$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/$BASE_NAME.py"
 
 # now execute
 exec "$PEGASUS_PYTHON" "$TOOL_PATH" "$@"
