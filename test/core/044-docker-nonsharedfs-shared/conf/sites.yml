@@ -48,10 +48,10 @@ sites:
     os.type: linux
     directories:
       - type: sharedScratch
-        path: /lizard/scratch-90-days/${TEST_NAME}
+        path: /scitech/shared/scratch-90-days/${TEST_NAME}
         fileServers:
           - operation: all
-            url: scp://bamboo@bamboo.isi.edu/lizard/scratch-90-days/${TEST_NAME}
+            url: scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}
     profiles:
       condor:
         universe: vanilla

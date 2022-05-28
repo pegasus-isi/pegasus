@@ -69,14 +69,14 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days/http-scratch/bamboo"
+    path: "/scitech/shared/scratch-90-days/http-scratch/bamboo"
     fileServers:
      -
       operation: "get"
       url: "http://workflow.isi.edu/shared-scratch/bamboo"
      -
       operation: "put"
-      url: "file:///lizard/scratch-90-days/http-scratch/bamboo"
+      url: "file:///scitech/shared/scratch-90-days/http-scratch/bamboo"
    -
     type: "localStorage"
     path: "{work_dir}/outputs"

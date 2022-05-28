@@ -35,22 +35,22 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days/bamboo/work"
+    path: "/scitech/shared/scratch-90-days/bamboo/work"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/work"
+      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/work"
    -
     type: "sharedStorage"
-    path: "/lizard/scratch-90-days/bamboo/outputs"
+    path: "/scitech/shared/scratch-90-days/bamboo/outputs"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/outputs"
+      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
   profiles:
     env:
       MONTAGE_HOME: "/scitech/shared/software/el8/montage/current"
-      PEGASUS_HOME: "/lizard/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION"
+      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION"
       http_proxy: "workflow.isi.edu:3128"
     condor:
       requirements: "(TARGET.FileSystemDomain =!= \"\")"

@@ -54,7 +54,7 @@ containers:
   image: "docker:///opensciencegrid/osgvo-el7"
   image.site: "local"
   mounts:
-   - "/lizard/scratch-90-days/${TEST_NAME}:/existing/data"
+   - "/scitech/shared/scratch-90-days/${TEST_NAME}:/existing/data"
   profiles:
     env:
       JAVA_HOME: "/bin/java.1.6"

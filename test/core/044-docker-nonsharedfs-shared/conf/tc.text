@@ -92,5 +92,5 @@ cont centos-base{
 
      # we are using the shared filesystem as the
      # staging site.
-     mount "/lizard:/lizard"
+     mount "/scitech/shared/scratch-90-days:/scitech/shared/scratch-90-days"
 }

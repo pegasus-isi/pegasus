@@ -35,18 +35,18 @@ sites:
   directories:
    -
     type: "sharedStorage"
-    path: "/lizard/scratch-90-days/bamboo/outputs"
+    path: "/scitech/shared/scratch-90-days/bamboo/outputs"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/outputs"
+      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days/bamboo/scratch"
+    path: "/scitech/shared/scratch-90-days/bamboo/scratch"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/scratch"
+      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch"
   profiles:
     env:
       PEGASUS_HOME: "/usr"

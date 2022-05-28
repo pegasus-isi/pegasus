@@ -33,18 +33,18 @@ sites:
   directories:
    -
     type: "sharedStorage"
-    path: "/lizard/scratch-90-days/bamboo/outputs"
+    path: "/scitech/shared/scratch-90-days/bamboo/outputs"
     fileServers:
      -
       operation: "all"
-      url: "file:///lizard/scratch-90-days/bamboo/outputs"
+      url: "file:///scitech/shared/scratch-90-days/bamboo/outputs"
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days"
+    path: "/scitech/shared/scratch-90-days"
     fileServers:
      -
       operation: "all"
-      url: "file:///lizard/scratch-90-days"
+      url: "file:///scitech/shared/scratch-90-days"
   profiles:
     condor:
       getenv: "True"
@@ -60,18 +60,18 @@ sites:
   directories:
    -
     type: "sharedStorage"
-    path: "/lizard/scratch-90-days/bamboo/outputs"
+    path: "/scitech/shared/scratch-90-days/bamboo/outputs"
     fileServers:
      -
       operation: "all"
-      url: "file:///lizard/scratch-90-days/bamboo/outputs"
+      url: "file:///scitech/shared/scratch-90-days/bamboo/outputs"
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days"
+    path: "/scitech/shared/scratch-90-days"
     fileServers:
      -
       operation: "all"
-      url: "file:///lizard/scratch-90-days"
+      url: "file:///scitech/shared/scratch-90-days"
   grids:
    -
     type: "condor"

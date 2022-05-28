@@ -51,4 +51,4 @@ containers:
     name: centos-base
     type: singularity
     mounts:
-      - /lizard:/lizard
+      - /scitech/shared/scratch-90-days:/scitech/shared/scratch-90-days

@@ -69,14 +69,14 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days/http-scratch/ptesting"
+    path: "/scitech/shared/scratch-90-days/http-scratch/ptesting"
     fileServers:
      -
       operation: "get"
       url: "http://workflow.isi.edu/shared-scratch/ptesting"
      -
       operation: "put"
-      url: "gsiftp://workflow.isi.edu/lizard/scratch-90-days/http-scratch/ptesting"
+      url: "gsiftp://workflow.isi.edu/scitech/shared/scratch-90-days/http-scratch/ptesting"
  -
   name: "local"
   arch: "x86_64"
