@@ -65,8 +65,8 @@ rc.write()
 
 # --- Transformations ----------------------------------------------------------
 # Using the binary is 32 bit version of pegasus-keg
-# that is stored at "/lizard/scratch-90-days/bamboo/inputs/pegasus-keg-x86"
-keg_path = "/lizard/scratch-90-days/bamboo/inputs/pegasus-keg-x86"
+# that is stored at "/scitech/shared/scratch-90-days/bamboo/inputs/pegasus-keg-x86"
+keg_path = "/scitech/shared/scratch-90-days/bamboo/inputs/pegasus-keg-x86"
 preprocess = Transformation(
                 name="preprocess", 
                 namespace="diamond", 

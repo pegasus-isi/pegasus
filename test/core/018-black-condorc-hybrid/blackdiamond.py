@@ -26,10 +26,10 @@ sc = SiteCatalog()
 # CCG site
 ccg_site = Site(name="CCG", arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
 ccg_site.add_directories(
-    Directory(directory_type=Directory.SHARED_STORAGE, path="/lizard/scratch-90-days/bamboo/outputs")
-        .add_file_servers(FileServer(url="file:///lizard/scratch-90-days/bamboo/outputs", operation_type=Operation.ALL)),
-    Directory(directory_type=Directory.SHARED_SCRATCH, path="/lizard/scratch-90-days")
-        .add_file_servers(FileServer(url="file:///lizard/scratch-90-days", operation_type=Operation.ALL))
+    Directory(directory_type=Directory.SHARED_STORAGE, path="/scitech/shared/scratch-90-days/bamboo/outputs")
+        .add_file_servers(FileServer(url="file:///scitech/shared/scratch-90-days/bamboo/outputs", operation_type=Operation.ALL)),
+    Directory(directory_type=Directory.SHARED_SCRATCH, path="/scitech/shared/scratch-90-days")
+        .add_file_servers(FileServer(url="file:///scitech/shared/scratch-90-days", operation_type=Operation.ALL))
 )
 ccg_site.add_profiles(Namespace.CONDOR, getenv="True", requirements='"(TARGET.FileSystemDomain =!= \"\")"')
 ccg_site.add_profiles(Namespace.PEGASUS, style="condor")
@@ -37,10 +37,10 @@ ccg_site.add_profiles(Namespace.PEGASUS, style="condor")
 # local site
 local_site = Site(name="local", arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
 local_site.add_directories(
-    Directory(directory_type=Directory.SHARED_STORAGE, path="/lizard/scratch-90-days/bamboo/outputs")
-        .add_file_servers(FileServer(url="file:///lizard/scratch-90-days/bamboo/outputs", operation_type=Operation.ALL)),
-    Directory(directory_type=Directory.SHARED_SCRATCH, path="/lizard/scratch-90-days")
-        .add_file_servers(FileServer(url="file:///lizard/scratch-90-days", operation_type=Operation.ALL))
+    Directory(directory_type=Directory.SHARED_STORAGE, path="/scitech/shared/scratch-90-days/bamboo/outputs")
+        .add_file_servers(FileServer(url="file:///scitech/shared/scratch-90-days/bamboo/outputs", operation_type=Operation.ALL)),
+    Directory(directory_type=Directory.SHARED_SCRATCH, path="/scitech/shared/scratch-90-days")
+        .add_file_servers(FileServer(url="file:///scitech/shared/scratch-90-days", operation_type=Operation.ALL))
 )
 local_site.add_grids(
     Grid(grid_type=Grid.CONDOR, contact="ccg-testing1.isi.edu", scheduler_type=Scheduler.CONDOR, job_type=SupportedJobs.COMPUTE),
