@@ -16,7 +16,7 @@ RUN_ID = "black-diamond-integrity-checking-condorio-5.0api-" + datetime.now().st
     "%s"
 )
 TOP_DIR = Path(Path.cwd())
-WORK_DIR = "/lizard/scratch-90-days/bamboo/${TEST_NAME}/work"
+WORK_DIR = "/scitech/shared/scratch-90-days/bamboo/${TEST_NAME}/work"
 
 
 # --- Configuration ------------------------------------------------------------

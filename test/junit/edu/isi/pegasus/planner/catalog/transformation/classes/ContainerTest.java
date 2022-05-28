@@ -140,8 +140,8 @@ public class ContainerTest {
     @Test
     public void testSimpleMountPoint() {
         this.testMountPoint(
-                "/lizard/scratch-90-days/:/existing/data",
-                "/lizard/scratch-90-days/",
+                "/scitech/shared/scratch-90-days/:/existing/data",
+                "/scitech/shared/scratch-90-days/",
                 "/existing/data",
                 null);
     }
@@ -149,8 +149,8 @@ public class ContainerTest {
     @Test
     public void testSimpleMountPointWithOptions() {
         this.testMountPoint(
-                "/lizard/scratch-90-days/:/existing/data:ro",
-                "/lizard/scratch-90-days/",
+                "/scitech/shared/scratch-90-days/:/existing/data:ro",
+                "/scitech/shared/scratch-90-days/",
                 "/existing/data",
                 "ro");
     }
@@ -158,8 +158,8 @@ public class ContainerTest {
     @Test
     public void testSimpleMountPointWithShellVariable() {
         this.testMountPoint(
-                "/lizard/scratch-90-days/${TEST_NAME}:/existing/data:ro",
-                "/lizard/scratch-90-days/${TEST_NAME}",
+                "/scitech/shared/scratch-90-days/${TEST_NAME}:/existing/data:ro",
+                "/scitech/shared/scratch-90-days/${TEST_NAME}",
                 "/existing/data",
                 "ro");
     }

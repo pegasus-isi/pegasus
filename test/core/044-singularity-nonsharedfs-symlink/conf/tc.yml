@@ -51,4 +51,4 @@ containers:
     name: osgvo-el7
     type: singularity
     mounts:
-      - /lizard/scratch-90-days/${TEST_NAME}:/existing/data
+      - /scitech/shared/scratch-90-days/${TEST_NAME}:/existing/data

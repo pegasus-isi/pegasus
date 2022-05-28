@@ -40,7 +40,7 @@ def write_sc(top_dir: Path, run_id: str):
             "unable to call pegasus-version: {}".format(cp.stderr.decode().strip())
         )
 
-    REMOTE_PEGASUS_HOME = "/lizard/scratch-90-days/bamboo/installs/pegasus-{}".format(
+    REMOTE_PEGASUS_HOME = "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-{}".format(
         cp.stdout.decode().strip()
     )
 
@@ -72,7 +72,7 @@ def write_sc(top_dir: Path, run_id: str):
     sharedfs = Site(name="sharedfs", arch=Arch.X86_64, os_type=OS.LINUX)
     sharedfs_dir1 = Directory(
         Directory.SHARED_STORAGE,
-        Path("/lizard/scratch-90-days")
+        Path("/scitech/shared/scratch-90-days")
         / os.getenv("USER")
         / "storage/black-diamond-output"
         / run_id,
@@ -81,7 +81,7 @@ def write_sc(top_dir: Path, run_id: str):
         FileServer(
             "file://"
             + str(
-                Path("/lizard/scratch-90-days")
+                Path("/scitech/shared/scratch-90-days")
                 / os.getenv("USER")
                 / "storage/black-diamond-output"
                 / run_id
@@ -93,13 +93,13 @@ def write_sc(top_dir: Path, run_id: str):
 
     sharedfs_dir2 = Directory(
         Directory.SHARED_SCRATCH,
-        Path("/lizard/scratch-90-days") / os.getenv("USER") / "scratch" / run_id,
+        Path("/scitech/shared/scratch-90-days") / os.getenv("USER") / "scratch" / run_id,
     )
     sharedfs_dir2.add_file_servers(
         FileServer(
             "file://"
             + str(
-                Path("/lizard/scratch-90-days") / os.getenv("USER") / "scratch" / run_id
+                Path("/scitech/shared/scratch-90-days") / os.getenv("USER") / "scratch" / run_id
             ),
             Operation.ALL,
         )
@@ -141,7 +141,7 @@ def write_rc(config: configparser.ConfigParser):
     if input_file == "":
         input_file = Path("f.a")
     else:
-        # is a directory such as '/lizard/scratch-90-days'
+        # is a directory such as '/scitech/shared/scratch-90-days'
         input_dir = Path(input_file) / os.getenv("USER") / "inputs"
         input_dir.mkdir(parents=True, exist_ok=True)
         input_file = input_dir / "f.a"
