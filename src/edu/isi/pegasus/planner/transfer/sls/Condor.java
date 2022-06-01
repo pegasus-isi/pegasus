@@ -264,9 +264,6 @@ public class Condor implements SLS {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
 
-            // sanity check case
-            sanityCheckForDeepLFN(job.getID(), lfn, "input");
-
             ReplicaCatalogEntry cacheLocation = null;
 
             String pfn = null;
@@ -304,9 +301,6 @@ public class Condor implements SLS {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
 
-            // sanity check case
-            sanityCheckForDeepLFN(job.getID(), lfn, "output");
-
             // ignore any input files of FileTransfer as they are first level
             // staging put in by Condor Transfer refiner
             if (pf instanceof FileTransfer) {
@@ -319,31 +313,6 @@ public class Condor implements SLS {
         job.condorVariables.addOPFileForTransfer(files);
 
         return true;
-    }
-
-    /**
-     * Complains for a deep lfn if separator character is found in the lfn
-     *
-     * @param id the id of the associated job
-     * @param lfn lfn of file
-     * @param type type of file as string
-     */
-    private void sanityCheckForDeepLFN(String id, String lfn, String type) throws RuntimeException {
-        if (lfn.contains(File.separator)) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Condor File Transfers don't support deep LFN's. ")
-                    .append(" The ")
-                    .append(type)
-                    .append(" file ")
-                    .append(lfn)
-                    .append(" for job ")
-                    .append(id)
-                    .append(
-                            " has a file separator. Set the property pegasus.data.configuration to ")
-                    .append(PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE)
-                    .append(" .");
-            throw new RuntimeException(sb.toString());
-        }
     }
 
     /**
