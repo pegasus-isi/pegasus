@@ -36,18 +36,24 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
     export PATH
 
     # first look in the PATH
-    PEXE_LIST="$(which python3 2>/dev/null)"
+    I=0
+    PEXE_LIST[$I]="$(which python3 2>/dev/null)"
+    I=$((I+1))
     if [ $ALLOW_PY2 = 1 ]; then
-        PEXE_LIST="$PEXE_LIST $(which python 2>/dev/null)"
+        PEXE_LIST[$I]="$(which python 2>/dev/null)"
+        I=$((I+1))
     fi
     # has to be last to find user defined environments
-    PEXE_LIST="$PEXE_LIST /usr/bin/python3"
+    PEXE_LIST[$I]="/usr/bin/python3"
+    I=$((I+1))
     if [ $ALLOW_PY2 = 1 ]; then
-        PEXE_LIST="$PEXE_LIST /usr/bin/python"
+        PEXE_LIST[$I]="/usr/bin/python"
+        I=$((I+1))
     fi
 
     # Look for a python in the give list
-    for PEXE in $PEXE_LIST; do
+    for i in `seq $I`; do
+        PEXE=${PEXE_LIST[$i-1]}
         if [ -e "$PEXE" ]; then
             break
         fi
