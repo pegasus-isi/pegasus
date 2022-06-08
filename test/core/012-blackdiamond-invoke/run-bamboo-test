@@ -39,14 +39,14 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
+      url: "sftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
    -
     type: "sharedScratch"
     path: "/scitech/shared/scratch-90-days/bamboo/scratch"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch"
+      url: "sftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch"
   profiles:
     env:
       PEGASUS_HOME: "/usr"
@@ -76,6 +76,8 @@ sites:
   profiles:
     pegasus:
       clusters.num: "1"
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
+      
 EOF
 
 # plan and submit the  workflow
