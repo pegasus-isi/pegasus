@@ -55,7 +55,6 @@ export PEGASUS_CREDENTIALS=$HOME/.pegasus/credentials.conf
 
 for SUBTEST in \
     http \
-    gridftp \
 ; do
     echo
     echo

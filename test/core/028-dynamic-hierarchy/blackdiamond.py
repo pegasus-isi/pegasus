@@ -4,7 +4,7 @@ import sys
 import subprocess
 
 if len(sys.argv) != 3:
-        print "Usage: %s PEGASUS_HOME DAXFILE" % (sys.argv[0])
+        print("Usage: %s PEGASUS_HOME DAXFILE" % (sys.argv[0]))
         sys.exit(1)
 
 pegasus_home=sys.argv[1]
