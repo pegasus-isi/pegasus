@@ -15,7 +15,7 @@ fi
 
 # Generate dax
 export PYTHONPATH=`pegasus-config --python`
-python daxgen.py dax.xml
+python3 daxgen.py dax.xml
 
 MPIEXEC=`which mpiexec`
 

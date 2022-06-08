@@ -54,7 +54,7 @@ def write_sc(top_dir: Path, run_id: str):
             top_dir / "staging-site/scratch",
         ).add_file_servers(
             FileServer(
-                "gsiftp://bamboo.isi.edu" + str(top_dir / "staging-site/scratch"),
+                "webdavs://workflow.isi.edu/webdav/scratch-90-days/" + str(top_dir / "staging-site/scratch"),
                 Operation.ALL,
             )
         )
@@ -129,6 +129,8 @@ def write_sc(top_dir: Path, run_id: str):
         FileServer(local_site_url + str(top_dir / "work"), Operation.ALL)
     )
     local.add_directories(local_dir2)
+    
+    local.add_env(SSH_PRIVATE_KEY="/scitech/shared/home/bamboo/.ssh/workflow_id_rsa")
 
     sc.add_sites(local)
 

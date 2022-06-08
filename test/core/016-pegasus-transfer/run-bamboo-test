@@ -93,25 +93,25 @@ timed_transfer 0 30 "pegasus-transfer -f s3-step2.in"
 
 timed_transfer 0 30 "pegasus-transfer -f s3-cleanup.in"
 
-echo
-echo
-echo "================================================================="
-echo 
-echo
-echo "3rd party gridftp test..."
-echo
-echo
-
-
-timed_transfer 0 20 "pegasus-transfer -f 3rdparty.in"
-
-timed_transfer 0 20 "pegasus-transfer -f 3rdparty-step2.in"
-
-timed_transfer 0 10  "pegasus-transfer -f 3rdparty-cleanup.in"
-
-timed_transfer 0 40 "pegasus-transfer -n 32 -f many-small-files-3rdparty.in"
-
-timed_transfer 0 10 "pegasus-transfer -n 16 -f medium-files-push-3rdparty.in"
+# echo
+# echo
+# echo "================================================================="
+# echo 
+# echo
+# echo "3rd party gridftp test..."
+# echo
+# echo
+# 
+# 
+# timed_transfer 0 20 "pegasus-transfer -f 3rdparty.in"
+# 
+# timed_transfer 0 20 "pegasus-transfer -f 3rdparty-step2.in"
+# 
+# timed_transfer 0 10  "pegasus-transfer -f 3rdparty-cleanup.in"
+# 
+# timed_transfer 0 40 "pegasus-transfer -n 32 -f many-small-files-3rdparty.in"
+# 
+# timed_transfer 0 10 "pegasus-transfer -n 16 -f medium-files-push-3rdparty.in"
 
 
 echo
@@ -123,26 +123,25 @@ echo "Starting NAT/Firewall simulation..."
 echo
 echo
 
-# NAT/Firewall simulation - set the tcp port range to something that is firewalled 
-export GLOBUS_TCP_PORT_RANGE=5000,6000
-
-timed_transfer 0 20 "pegasus-transfer -f nat.in"
-
-timed_transfer 0 30 "pegasus-transfer -n 16 -f medium-files-pull.in"
+# # NAT/Firewall simulation - set the tcp port range to something that is firewalled 
+# export GLOBUS_TCP_PORT_RANGE=5000,6000
+# 
+# timed_transfer 0 20 "pegasus-transfer -f nat.in"
 
 timed_transfer 0 30 "pegasus-transfer -n 16 -f medium-files-push.in"
 
+timed_transfer 0 30 "pegasus-transfer -n 16 -f medium-files-pull.in"
 
-echo
-echo
-echo "================================================================="
-echo 
-echo
-echo "v1 tests - for backwards compatability"
-echo
-echo
-
-timed_transfer 0 30 "pegasus-transfer -d -f v1-format-mixed-protocols.in"
+# echo
+# echo
+# echo "================================================================="
+# echo 
+# echo
+# echo "v1 tests - for backwards compatability"
+# echo
+# echo
+# 
+# timed_transfer 0 30 "pegasus-transfer -d -f v1-format-mixed-protocols.in"
 
 exit 0
 

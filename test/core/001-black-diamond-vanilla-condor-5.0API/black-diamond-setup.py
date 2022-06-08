@@ -23,7 +23,7 @@ except FileExistsError:
 # --- Output Dir Setup for condorpool Site -------------------------------------
 condorpool_local_storage_dir = Path("/scitech/shared/scratch-90-days/bamboo/outputs") / RUN_ID
 try:
-    Path.mkdir(condorpool_local_storage_dir)
+    Path.mkdir(condorpool_local_storage_dir, parents=True)
 except FileExistsError:
     pass
 
