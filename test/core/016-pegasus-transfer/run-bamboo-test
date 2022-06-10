@@ -3,6 +3,8 @@
 
 TOPDIR=`pwd`
 
+export SSH_PRIVATE_KEY=/scitech/shared/home/bamboo/.ssh/workflow_id_rsa
+
 function timed_transfer
 {
     min=$1
