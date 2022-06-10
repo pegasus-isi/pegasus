@@ -17,6 +17,7 @@ fi
 export PYTHONPATH=`pegasus-config --python`
 python3 daxgen.py dax.xml
 
+export PATH=/usr/lib64/mpich/bin:$PATH
 MPIEXEC=`which mpiexec`
 
 cat > sites.yml <<END

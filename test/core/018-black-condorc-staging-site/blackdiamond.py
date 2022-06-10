@@ -37,7 +37,7 @@ isi_condor_c_site.add_pegasus_profile(clusters_num=1, style="condorc")
 cartman_data_site = Site(name="cartman-data", arch=Arch.X86, os_type=OS.LINUX, os_release="rhel", os_version="7")
 cartman_data_site.add_directories(
     Directory(directory_type=Directory.SHARED_SCRATCH, path= TOP_DIR / "staging-site/scratch")
-        .add_file_servers(FileServer(url="gsiftp://bamboo.isi.edu" + str(TOP_DIR / "staging-site/scratch"), operation_type=Operation.ALL))
+        .add_file_servers(FileServer(url="scp://bamboo@bamboo.isi.edu" + str(TOP_DIR / "staging-site/scratch"), operation_type=Operation.ALL))
 )
 
 # local
@@ -48,6 +48,7 @@ local_site.add_directories(
     Directory(directory_type=Directory.SHARED_SCRATCH, path=TOP_DIR / "work")
         .add_file_servers(FileServer(url="file://" + str(TOP_DIR / "work"), operation_type=Operation.ALL))
 )
+local_site.add_profiles(Namespace.PEGASUS, style="ssh", change_dir="true", SSH_PRIVATE_KEY="/scitech/home/bamboo/.ssh/workflow_id_rsa")
 
 
 sc.add_sites(isi_condor_c_site, cartman_data_site, local_site)

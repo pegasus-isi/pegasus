@@ -39,14 +39,14 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/work"
+      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/work"
    -
     type: "sharedStorage"
     path: "/scitech/shared/scratch-90-days/bamboo/outputs"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
+      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
   profiles:
     env:
       MONTAGE_HOME: "/scitech/shared/software/el8/montage/current"
@@ -83,9 +83,9 @@ sites:
     jobtype: "auxillary"
   profiles:
     env:
-      GLOBUS_LOCATION: "/ccg/software/globus/default"
-      GLOBUS_TCP_PORT_RANGE: "40000,50000"
       http_proxy: "workflow.isi.edu:3128"
+    pegasus:
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
 EOF
 
 cp ../pegasus.properties .
