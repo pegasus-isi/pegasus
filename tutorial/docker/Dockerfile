@@ -26,7 +26,6 @@ RUN dnf -y install --allowerasing --nobest \
      python3-pip \
      python3-pyOpenSSL \
      python3-PyYAML \
-     python3-setuptools \
      sudo \
      supervisor \
      tar \
@@ -40,6 +39,7 @@ RUN chmod +x /usr/local/bin/wrapdocker /usr/local/bin/htcondor-wrapper
 RUN usermod -aG docker scitech
 
 # Python packages
+RUN python3 -m pip install -U pip setuptools
 RUN python3 -m pip install jupyter
 
 # Locale and timezone
