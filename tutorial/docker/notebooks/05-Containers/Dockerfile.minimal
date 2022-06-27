@@ -1,0 +1,26 @@
+FROM ubuntu:bionic
+
+RUN groupadd --gid 808 scitech-group
+RUN useradd --gid 808 --uid 550 --create-home --password '$6$ouJkMasm5X8E4Aye$QTFH2cHk4b8/TmzAcCxbTz7Y84xyNFs.gqm/HWEykdngmOgELums1qOi3e6r8Z.j7GEA9bObS/2pTN1WArGNf0' scitech
+
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    wget \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# CA certs
+RUN mkdir -p /etc/grid-security && \
+    cd /etc/grid-security && \
+    wget -nv --no-check-certificate https://download.pegasus.isi.edu/containers/certificates.tar.gz && \
+    tar xzf certificates.tar.gz && \
+    rm -f certificates.tar.gz
+
+# User setup
+RUN echo -e "scitech ALL=(ALL)       NOPASSWD:ALL\n" >> /etc/sudoers
+USER scitech
+
+WORKDIR /home/scitech
+
