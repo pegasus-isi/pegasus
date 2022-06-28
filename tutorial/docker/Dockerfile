@@ -39,7 +39,8 @@ RUN chmod +x /usr/local/bin/wrapdocker /usr/local/bin/htcondor-wrapper
 RUN usermod -aG docker scitech
 
 # Python packages
-RUN python3 -m pip install -U pip setuptools
+# argon2-cffi-bindings which jupyter requires has a requirements for setuptools_scm>=6.2
+RUN python3 -m pip install 'setuptools_scm>=6'
 RUN python3 -m pip install jupyter
 
 # Locale and timezone
