@@ -797,7 +797,6 @@ catalog with:
         pegasus_worker = Transformation(
                 "worker",
                 namespace="pegasus",
-                version="1.0",
                 site="isi",
                 pfn="https://download.pegasus.isi.edu/pegasus/4.8.0dev/pegasus-worker-4.8.0dev-x86_64_macos_10.tar.gz",
                 is_stageable=True,
