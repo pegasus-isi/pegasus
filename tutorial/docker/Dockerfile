@@ -32,6 +32,7 @@ RUN dnf -y install --allowerasing --nobest \
      vim \
      wget
 
+ADD ./config/start.sh /start.sh
 ADD ./config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD ./config/wrapdocker /usr/local/bin/wrapdocker
 ADD ./config/htcondor-wrapper /usr/local/bin/htcondor-wrapper
@@ -66,7 +67,7 @@ RUN dnf -y install https://download.pegasus.isi.edu/pegasus/$PEGASUS_VERSION/peg
 ADD ./notebooks /home/scitech/notebooks
 RUN chown -R scitech /home/scitech/
 
-RUN echo -e "condor_master > /dev/null 2>&1" >> /home/scitech/.bashrc
+#RUN echo -e "condor_master > /dev/null 2>&1" >> /home/scitech/.bashrc
 
 # User setup
 RUN echo -e "scitech ALL=(ALL)       NOPASSWD:ALL\n" >> /etc/sudoers
@@ -90,11 +91,7 @@ RUN echo -e "export PATH=/home/scitech/.pyenv/bin:\$PATH:/usr/lib64/mpich/bin" >
 RUN mkdir /home/scitech/.jupyter \
     && echo "{ \"NotebookApp\": { \"password\": \"sha1:30a323540baa:6eec8eaf3b4e0f44f2f2aa7b504f80d5bf0ad745\" } }" >> /home/scitech/.jupyter/jupyter_notebook_config.json
 
-# wrapdocker required for nested docker containers
-#ENTRYPOINT ["sudo", "/usr/local/bin/wrapdocker"]
-#CMD ["su", "-", "scitech", "-c", "/usr/local/bin/start-services"]
-
 USER root
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/start.sh"]
 
 
