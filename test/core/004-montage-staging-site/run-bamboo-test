@@ -78,11 +78,11 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "/data/scratch/ptesting"
+    path: "/webdav/scratch-90-days"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://workflow.isi.edu/local-scratch/ptesting"
+      url: "webdavs://workflow.isi.edu/webdav/scratch-90-days"
 EOF
 
 cp ../pegasus.properties .
