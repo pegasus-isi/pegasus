@@ -383,8 +383,9 @@ public class Condor implements SLS {
             // check for deep lfn
             if (lfn.contains(File.separator)) {
                 // PM-1875 if the output file is a deep LFN then add
-                // transfer_output_remaps key?
-                job.condorVariables.addOPFileForTransferRemap(lfn, lfn);
+                // transfer_output_remaps key, with name as basename 
+                // and new name as the deep LFN
+                job.condorVariables.addOPFileForTransferRemap(new File(lfn).getName(), lfn);
             }
         }
         job.condorVariables.addOPFileForTransfer(files);
