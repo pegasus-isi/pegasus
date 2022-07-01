@@ -68,6 +68,12 @@ public class Condor implements SLS {
      */
     private PlannerCache mPlannerCache;
 
+    /**
+     * Handle to the Transfer SLS implementation that we use for supporting deep LFN renaming on
+     * stage-in of input files in the PegasusLite Script of the job
+     */
+    private Transfer mTransferSLSHandle;
+
     /** The default constructor. */
     public Condor() {}
 
@@ -82,6 +88,8 @@ public class Condor implements SLS {
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
         mPlannerCache = bag.getHandleToPlannerCache();
+        mTransferSLSHandle = new Transfer();
+        mTransferSLSHandle.initialize(bag);
     }
 
     /**
@@ -106,7 +114,7 @@ public class Condor implements SLS {
      * @return invocation string
      */
     public String invocationString(Job job, File slsFile) {
-        return null;
+        return this.mTransferSLSHandle.invocationString(job, slsFile);
     }
 
     /**
@@ -383,7 +391,7 @@ public class Condor implements SLS {
             // check for deep lfn
             if (lfn.contains(File.separator)) {
                 // PM-1875 if the output file is a deep LFN then add
-                // transfer_output_remaps key, with name as basename 
+                // transfer_output_remaps key, with name as basename
                 // and new name as the deep LFN
                 job.condorVariables.addOPFileForTransferRemap(new File(lfn).getName(), lfn);
             }
