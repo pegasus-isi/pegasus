@@ -25,7 +25,6 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -371,31 +370,6 @@ public class Condor implements SLS {
         job.condorVariables.addOPFileForTransfer(files);
 
         return true;
-    }
-
-    /**
-     * Complains for a deep lfn if separator character is found in the lfn
-     *
-     * @param id the id of the associated job
-     * @param lfn lfn of file
-     * @param type type of file as string
-     */
-    private void sanityCheckForDeepLFN(String id, String lfn, String type) throws RuntimeException {
-        if (lfn.contains(File.separator)) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Condor File Transfers don't support deep LFN's. ")
-                    .append(" The ")
-                    .append(type)
-                    .append(" file ")
-                    .append(lfn)
-                    .append(" for job ")
-                    .append(id)
-                    .append(
-                            " has a file separator. Set the property pegasus.data.configuration to ")
-                    .append(PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE)
-                    .append(" .");
-            throw new RuntimeException(sb.toString());
-        }
     }
 
     /**
