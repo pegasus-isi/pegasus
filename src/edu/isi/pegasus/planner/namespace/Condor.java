@@ -232,11 +232,22 @@ public class Condor extends Namespace {
      * Returns a comma separated list of files that are designated for transfer via condor file
      * transfer mechanism for the job.
      *
-     * @return a csv file else null
+     * @return a string else null
      */
     public String getOutputFilesForTransfer() {
         return (this.containsKey(Condor.TRANSFER_OP_FILES_KEY))
                 ? (String) this.get(Condor.TRANSFER_OP_FILES_KEY)
+                : null;
+    }
+
+    /**
+     * Returns a ; separated list of output file remaps
+     *
+     * @return a string else null
+     */
+    public String getOutputRemapsForTransfer() {
+        return (this.containsKey(Condor.TRANSFER_OP_REMAPS_KEY))
+                ? (String) this.get(Condor.TRANSFER_OP_REMAPS_KEY)
                 : null;
     }
 
@@ -274,6 +285,14 @@ public class Condor extends Namespace {
         }
     }
 
+    /**
+     * Remove the output files remaps that were designated for transfer using Condor File Transfer
+     * Mechanism.
+     */
+    public void removeOutputRemapsForTransfer() {
+        this.removeKey(Condor.TRANSFER_OP_REMAPS_KEY);
+    }
+
     /** Adds the executable for transfer via the condor file transfer mechanism. */
     public void setExecutableForTransfer() {
         this.construct(Condor.TRANSFER_EXECUTABLE_KEY, "true");
@@ -289,7 +308,6 @@ public class Condor extends Namespace {
      * @param file the path to the file on the submit host.
      */
     public void addIPFileForTransfer(Collection<String> files) {
-
         this.addFilesForTransfer(files, Condor.TRANSFER_IP_FILES_KEY);
     }
 
