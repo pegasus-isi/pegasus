@@ -209,8 +209,9 @@ public class Condor implements SLS {
             if (!deepLFN) {
                 continue;
             }
-
-            result.add(fileTransferForCopyOfInputs(pf, job.getSiteHandle(), destDir));
+            // In CondorIO case, condor file io has already  gotten the job the compute site
+            // before PegasusLitejob starts
+            result.add(fileTransferForSymlinkOfInputs(pf, job.getSiteHandle(), destDir));
         }
         return result;
     }
@@ -407,13 +408,13 @@ public class Condor implements SLS {
     }
 
     /**
-     * Creates a file transfer object that results in a file copy to in the job working directory to
+     * Creates a file transfer object that results in a file copy in the job working directory to
      * the deep LFN. This results in two copies of the file in the HTCondor assigned job directory
      *
      * @param pf the PegasusFile that needs to be copied
      * @param siteHandle the compute site where job runs
      * @param destDir the destination directory on the worker node
-     * @return
+     * @return generated FileTransfer
      */
     protected FileTransfer fileTransferForCopyOfInputs(
             PegasusFile pf, String siteHandle, String destDir) {
@@ -442,6 +443,64 @@ public class Condor implements SLS {
         // directory
         StringBuffer destURL = new StringBuffer();
         destURL.append(PegasusURL.FILE_URL_SCHEME)
+                .append("//")
+                .append(destDir)
+                .append(File.separator)
+                .append(lfn);
+        ft.addDestination(siteHandle, destURL.toString());
+        return ft;
+    }
+
+    /**
+     * Creates a file transfer object that results in a symlink in the job working directory to the
+     * source file copied over by the HTCondor file transfer.
+     *
+     * @param pf the PegasusFile that needs to be copied
+     * @param siteHandle the compute site where job runs
+     * @param destDir the destination directory on the worker node
+     * @return generated FileTransfer
+     */
+    protected FileTransfer fileTransferForSymlinkOfInputs(
+            PegasusFile pf, String siteHandle, String destDir) {
+        FileTransfer ft = new FileTransfer();
+
+        String lfn = pf.getLFN();
+        ft.setLFN(pf.getLFN());
+        // ensure that right type gets associated, especially
+        // whether a file is a checkpoint file or not
+        ft.setType(pf.getType());
+
+        // for symlinking with deep LFN's we do relative paths in the
+        // HTCondor assigned job workdir
+        destDir = ".";
+
+        // the source URL is the basename of the file in the directory
+        // on the worker node . However, symlinking happens w.r.t to the destination dir
+        // so if we need to link f.a -> deep/f.a, the command triggered should
+        // be ln -s ../f.a deep/f.a
+        StringBuilder sourceURL = new StringBuilder();
+        StringBuilder sourceDir = new StringBuilder();
+        int index = 0;
+        while ((index = lfn.indexOf(File.separatorChar, index)) != -1) {
+            sourceDir.append("..").append(File.separator);
+            index += 1;
+        }
+        if (sourceDir.length() == 0) {
+            // empty source dir computed. means just a flat lfn
+            sourceDir.append(".").append(File.separator);
+        }
+
+        sourceURL
+                .append(PegasusURL.FILE_URL_SCHEME)
+                .append("//")
+                .append(sourceDir)
+                .append(new File(lfn).getName());
+
+        ft.addSource(siteHandle, sourceURL.toString());
+
+        // the destination is the deep LFN
+        StringBuffer destURL = new StringBuffer();
+        destURL.append(PegasusURL.SYMLINK_URL_SCHEME)
                 .append("//")
                 .append(destDir)
                 .append(File.separator)
