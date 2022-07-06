@@ -210,7 +210,7 @@ public class Condor implements SLS {
             }
             // In CondorIO case, condor file io has already  gotten the job the compute site
             // before PegasusLitejob starts
-            result.add(fileTransferForSymlinkOfInputs(pf, job.getSiteHandle(), destDir));
+            result.add(fileTransferForCopyOfInputs(pf, job.getSiteHandle(), destDir));
         }
         return result;
     }
