@@ -25,7 +25,6 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -209,37 +208,9 @@ public class Condor implements SLS {
             if (!deepLFN) {
                 continue;
             }
-
-            FileTransfer ft = new FileTransfer();
-            ft.setLFN(pf.getLFN());
-            // ensure that right type gets associated, especially
-            // whether a file is a checkpoint file or not
-            ft.setType(pf.getType());
-
-            // the source URL is the basename of the file in the directory
-            // on the worker node .
-            StringBuffer sourceURL = new StringBuffer();
-            sourceURL
-                    .append(PegasusURL.FILE_URL_SCHEME)
-                    .append("//")
-                    .append("$pegasus_lite_work_dir")
-                    .append(File.separator)
-                    .append(new File(lfn).getName());
             // In CondorIO case, condor file io has already  gotten the job the compute site
             // before PegasusLitejob starts
-            ft.addSource(job.getSiteHandle(), sourceURL.toString());
-
-            // the destination is the complete LFN in $pegasus_lite_work_dir ($PWD)
-            // directory
-            StringBuffer destURL = new StringBuffer();
-            destURL.append(PegasusURL.FILE_URL_SCHEME)
-                    .append("//")
-                    .append(destDir)
-                    .append(File.separator)
-                    .append(lfn);
-            ft.addDestination(job.getSiteHandle(), destURL.toString());
-
-            result.add(ft);
+            result.add(fileTransferForCopyOfInputs(pf, job.getSiteHandle(), destDir));
         }
         return result;
     }
@@ -402,36 +373,113 @@ public class Condor implements SLS {
     }
 
     /**
-     * Complains for a deep lfn if separator character is found in the lfn
-     *
-     * @param id the id of the associated job
-     * @param lfn lfn of file
-     * @param type type of file as string
-     */
-    private void sanityCheckForDeepLFN(String id, String lfn, String type) throws RuntimeException {
-        if (lfn.contains(File.separator)) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Condor File Transfers don't support deep LFN's. ")
-                    .append(" The ")
-                    .append(type)
-                    .append(" file ")
-                    .append(lfn)
-                    .append(" for job ")
-                    .append(id)
-                    .append(
-                            " has a file separator. Set the property pegasus.data.configuration to ")
-                    .append(PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE)
-                    .append(" .");
-            throw new RuntimeException(sb.toString());
-        }
-    }
-
-    /**
      * Returns a textual description of the transfer mode.
      *
      * @return a short textual description
      */
     public String getDescription() {
         return "SLS backend using Condor File Transfers to the worker node";
+    }
+
+    /**
+     * Creates a file transfer object that results in a file copy in the job working directory to
+     * the deep LFN. This results in two copies of the file in the HTCondor assigned job directory
+     *
+     * @param pf the PegasusFile that needs to be copied
+     * @param siteHandle the compute site where job runs
+     * @param destDir the destination directory on the worker node
+     * @return generated FileTransfer
+     */
+    protected FileTransfer fileTransferForCopyOfInputs(
+            PegasusFile pf, String siteHandle, String destDir) {
+        FileTransfer ft = new FileTransfer();
+
+        String lfn = pf.getLFN();
+        ft.setLFN(pf.getLFN());
+        // ensure that right type gets associated, especially
+        // whether a file is a checkpoint file or not
+        ft.setType(pf.getType());
+
+        // the source URL is the basename of the file in the directory
+        // on the worker node .
+        StringBuffer sourceURL = new StringBuffer();
+        sourceURL
+                .append(PegasusURL.FILE_URL_SCHEME)
+                .append("//")
+                .append("$pegasus_lite_work_dir")
+                .append(File.separator)
+                .append(new File(lfn).getName());
+        // In CondorIO case, condor file io has already  gotten the job the compute site
+        // before PegasusLitejob starts
+        ft.addSource(siteHandle, sourceURL.toString());
+
+        // the destination is the complete LFN in $pegasus_lite_work_dir ($PWD)
+        // directory
+        StringBuffer destURL = new StringBuffer();
+        destURL.append(PegasusURL.FILE_URL_SCHEME)
+                .append("//")
+                .append(destDir)
+                .append(File.separator)
+                .append(lfn);
+        ft.addDestination(siteHandle, destURL.toString());
+        return ft;
+    }
+
+    /**
+     * Creates a file transfer object that results in a symlink in the job working directory to the
+     * source file copied over by the HTCondor file transfer.
+     *
+     * @param pf the PegasusFile that needs to be copied
+     * @param siteHandle the compute site where job runs
+     * @param destDir the destination directory on the worker node
+     * @return generated FileTransfer
+     */
+    protected FileTransfer fileTransferForSymlinkOfInputs(
+            PegasusFile pf, String siteHandle, String destDir) {
+        FileTransfer ft = new FileTransfer();
+
+        String lfn = pf.getLFN();
+        ft.setLFN(pf.getLFN());
+        // ensure that right type gets associated, especially
+        // whether a file is a checkpoint file or not
+        ft.setType(pf.getType());
+
+        // for symlinking with deep LFN's we do relative paths in the
+        // HTCondor assigned job workdir
+        destDir = ".";
+
+        // the source URL is the basename of the file in the directory
+        // on the worker node . However, symlinking happens w.r.t to the destination dir
+        // so if we need to link f.a -> deep/f.a, the command triggered should
+        // be ln -s ../f.a deep/f.a
+        StringBuilder sourceURL = new StringBuilder();
+        StringBuilder sourceDir = new StringBuilder();
+        int index = 0;
+        while ((index = lfn.indexOf(File.separatorChar, index)) != -1) {
+            sourceDir.append("..").append(File.separator);
+            index += 1;
+        }
+        if (sourceDir.length() == 0) {
+            // empty source dir computed. means just a flat lfn
+            sourceDir.append(".").append(File.separator);
+        }
+
+        sourceURL
+                .append(PegasusURL.FILE_URL_SCHEME)
+                .append("//")
+                .append(sourceDir)
+                .append(new File(lfn).getName());
+
+        ft.addSource(siteHandle, sourceURL.toString());
+
+        // the destination is the deep LFN
+        StringBuffer destURL = new StringBuffer();
+        destURL.append(PegasusURL.SYMLINK_URL_SCHEME)
+                .append("//")
+                .append(destDir)
+                .append(File.separator)
+                .append(lfn);
+        ft.addDestination(siteHandle, destURL.toString());
+        return ft;
     }
 }

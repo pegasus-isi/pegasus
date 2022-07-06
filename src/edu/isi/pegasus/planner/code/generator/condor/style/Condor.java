@@ -81,6 +81,10 @@ public class Condor extends Abstract {
     /** The name of the environment variable for transferring output files */
     public static final String PEGASUS_TRANSFER_OUTPUT_FILES_KEY = "_PEGASUS_TRANSFER_OUTPUT_FILES";
 
+    /** The name of the environment variable for remapping output files */
+    public static final String PEGASUS_TRANSFER_OUTPUT_REMAPS_KEY =
+            "_PEGASUS_TRANSFER_OUTPUT_REMAPS";
+
     /** The name of the environment variable for the initial dir for pegasus lite local */
     public static final String PEGASUS_INITIAL_DIR_KEY = "_PEGASUS_INITIAL_DIR";
 
@@ -334,6 +338,7 @@ public class Condor extends Abstract {
 
         String ipFiles = job.condorVariables.getIPFilesForTransfer();
         String opFiles = job.condorVariables.getOutputFilesForTransfer();
+        String opRemaps = job.condorVariables.getOutputRemapsForTransfer();
 
         if (ipFiles == null && opFiles == null) {
             if (job.getRemoteExecutable().startsWith(File.separator)) {
@@ -406,6 +411,16 @@ public class Condor extends Abstract {
             }
             job.envVariables.construct(Condor.PEGASUS_TRANSFER_OUTPUT_FILES_KEY, value.toString());
             job.condorVariables.removeOutputFilesForTransfer();
+        }
+
+        // PM-1875, PM-1877 check for any transfer_output_remaps option
+        if (opRemaps != null) {
+            // sanity check as wrapper requires initialdir to be set
+            if (workdir == null) {
+                throw new CondorStyleException("Condor initialdir not set for job " + job.getID());
+            }
+            job.envVariables.construct(Condor.PEGASUS_TRANSFER_OUTPUT_REMAPS_KEY, opRemaps);
+            job.condorVariables.removeOutputRemapsForTransfer();
         }
 
         // PM-1029 set PEGASUS_BIN_DIR environment variable

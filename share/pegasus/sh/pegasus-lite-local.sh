@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 ##
 #  Copyright 2007-2011 University Of Southern California
@@ -122,4 +122,18 @@ if [ "X${_PEGASUS_TRANSFER_OUTPUT_FILES}" != "X" ]; then
 	cp $file $outputdir
     done
     
+fi
+
+# PM-1875, PM-1877 handle output remaps for deep LFN's
+if [ "X${_PEGASUS_TRANSFER_OUTPUT_REMAPS}" != "X" ]; then
+    dir=$_PEGASUS_INITIAL_DIR
+
+    #split files on ;
+    echo $_PEGASUS_TRANSFER_OUTPUT_REMAPS
+    IFS=';' read -a FILE_PAIRS <<< "$_PEGASUS_TRANSFER_OUTPUT_REMAPS"
+    for filepair in "${FILE_PAIRS[@]}";do
+        files=($(echo $filepair | tr "=" "\n"))
+	# copy the lfn basename to the deep lfn
+        mv  $dir/${files[0]}  $dir/${files[1]}
+    done
 fi
