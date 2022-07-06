@@ -210,36 +210,7 @@ public class Condor implements SLS {
                 continue;
             }
 
-            FileTransfer ft = new FileTransfer();
-            ft.setLFN(pf.getLFN());
-            // ensure that right type gets associated, especially
-            // whether a file is a checkpoint file or not
-            ft.setType(pf.getType());
-
-            // the source URL is the basename of the file in the directory
-            // on the worker node .
-            StringBuffer sourceURL = new StringBuffer();
-            sourceURL
-                    .append(PegasusURL.FILE_URL_SCHEME)
-                    .append("//")
-                    .append("$pegasus_lite_work_dir")
-                    .append(File.separator)
-                    .append(new File(lfn).getName());
-            // In CondorIO case, condor file io has already  gotten the job the compute site
-            // before PegasusLitejob starts
-            ft.addSource(job.getSiteHandle(), sourceURL.toString());
-
-            // the destination is the complete LFN in $pegasus_lite_work_dir ($PWD)
-            // directory
-            StringBuffer destURL = new StringBuffer();
-            destURL.append(PegasusURL.FILE_URL_SCHEME)
-                    .append("//")
-                    .append(destDir)
-                    .append(File.separator)
-                    .append(lfn);
-            ft.addDestination(job.getSiteHandle(), destURL.toString());
-
-            result.add(ft);
+            result.add(fileTransferForCopyOfInputs(pf, job.getSiteHandle(), destDir));
         }
         return result;
     }
@@ -433,5 +404,49 @@ public class Condor implements SLS {
      */
     public String getDescription() {
         return "SLS backend using Condor File Transfers to the worker node";
+    }
+
+    /**
+     * Creates a file transfer object that results in a file copy to in the job working directory to
+     * the deep LFN. This results in two copies of the file in the HTCondor assigned job directory
+     *
+     * @param pf the PegasusFile that needs to be copied
+     * @param siteHandle the compute site where job runs
+     * @param destDir the destination directory on the worker node
+     * @return
+     */
+    protected FileTransfer fileTransferForCopyOfInputs(
+            PegasusFile pf, String siteHandle, String destDir) {
+        FileTransfer ft = new FileTransfer();
+
+        String lfn = pf.getLFN();
+        ft.setLFN(pf.getLFN());
+        // ensure that right type gets associated, especially
+        // whether a file is a checkpoint file or not
+        ft.setType(pf.getType());
+
+        // the source URL is the basename of the file in the directory
+        // on the worker node .
+        StringBuffer sourceURL = new StringBuffer();
+        sourceURL
+                .append(PegasusURL.FILE_URL_SCHEME)
+                .append("//")
+                .append("$pegasus_lite_work_dir")
+                .append(File.separator)
+                .append(new File(lfn).getName());
+        // In CondorIO case, condor file io has already  gotten the job the compute site
+        // before PegasusLitejob starts
+        ft.addSource(siteHandle, sourceURL.toString());
+
+        // the destination is the complete LFN in $pegasus_lite_work_dir ($PWD)
+        // directory
+        StringBuffer destURL = new StringBuffer();
+        destURL.append(PegasusURL.FILE_URL_SCHEME)
+                .append("//")
+                .append(destDir)
+                .append(File.separator)
+                .append(lfn);
+        ft.addDestination(siteHandle, destURL.toString());
+        return ft;
     }
 }
