@@ -39,20 +39,21 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
+      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
    -
     type: "sharedScratch"
     path: "/scitech/shared/scratch-90-days/bamboo/scratch"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch"
+      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch"
   profiles:
     env:
       PEGASUS_HOME: "/usr"
     condor:
       universe: "vanilla"
     pegasus:
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
       style: "condor"
  -
   name: "local"
@@ -100,6 +101,3 @@ if [ "$lines" -gt "28" ]; then
     echo "ERROR: planner output is too verbose $lines. Check plan.out file for extra log messages"
     exit 1
 fi
-
-
-

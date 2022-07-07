@@ -43,14 +43,14 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID/outputs"
+      url: "webdavs://workflow.isi.edu/webdav/scitech/shared/scratch-90-days/bamboo/$UUID/outputs"
    -
     type: "sharedScratch"
     path: "/scitech/shared/scratch-90-days/bamboo/$UUID/scratch"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID/scratch"
+      url: "webdavs://workflow.isi.edu/webdav/scitech/shared/scratch-90-days/bamboo/$UUID/scratch"
   profiles:
     env:
       PEGASUS_HOME: "/usr"
