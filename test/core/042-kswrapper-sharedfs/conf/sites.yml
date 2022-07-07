@@ -28,7 +28,7 @@ sites:
         path: /scitech/shared/scratch-90-days/${TEST_NAME}
         fileServers:
           - operation: all
-            url: gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}
+            url: scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}
     profiles:
       env:
         PEGASUS_HOME: "/usr"
@@ -37,3 +37,4 @@ sites:
       pegasus:
         style: condor
         gridstart.path: "${KS_WRAPPER}"
+        SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa

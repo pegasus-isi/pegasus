@@ -46,9 +46,9 @@ condorpool_site.add_pegasus_profile(style="condor")
 cartman_data_site = Site(name="cartman-data", arch=Arch.X86_64, os_type=OS.LINUX)
 cartman_data_site.add_directories(
     Directory(directory_type=Directory.SHARED_SCRATCH, path=TOP_DIR / "staging-site/scratch")
-        .add_file_servers(FileServer(url="webdavs://workflow.isi.edu/webdav/scratch-90-days/{}".format(TOP_DIR / "staging-site/scratch"), operation_type=Operation.ALL))
+        .add_file_servers(FileServer(url="scp://bamboo@bamboo.isi.edu/{}".format(TOP_DIR / "staging-site/scratch"), operation_type=Operation.ALL))
 )
-
+cartman_data_site.add_pegasus_profile(SSH_PRIVATE_KEY="/scitech/shared/home/bamboo/.ssh/workflow_id_rsa")
 sc.add_sites(local_site, condorpool_site, cartman_data_site)
 sc.write()
 

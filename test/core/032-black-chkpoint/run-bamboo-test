@@ -38,11 +38,11 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "${TOPDIR}/staging-site/scratch"
+    path: "/webdav/scratch-90-days/${TOPDIR}/staging-site/scratch"
     fileServers:
      -
       operation: "all"
-      url: "webdav://workflow.isi.edu/${TOPDIR}/staging-site/scratch"
+      url: "webdavs://workflow.isi.edu/webdav/scratch-90-days/${TOPDIR}/staging-site/scratch"
  -
   name: "condorpool"
   arch: "x86_64"
@@ -96,5 +96,3 @@ echo
 echo
 echo "Starting the workflow..."
 pegasus-run $WORK_DIR
-
-

@@ -38,14 +38,14 @@ local_site.add_directories(
 # CCG site
 ccg_site = Site(name="CCG", arch=Arch.X86_64, os_type=OS.LINUX)
 ccg_site.add_grids(
-    Grid(grid_type=Grid.GT5, contact="obelix.isi.edu/jobmanager-fork", scheduler_type=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
-    Grid(grid_type=Grid.GT5, contact="obelix.isi.edu/jobmanager-condor", scheduler_type=Scheduler.CONDOR, job_type=SupportedJobs.COMPUTE),
+    Grid(grid_type=Grid.GT5, contact="workflow.isi.edu/jobmanager-fork", scheduler_type=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
+    Grid(grid_type=Grid.GT5, contact="workflow.isi.edu/jobmanager-condor", scheduler_type=Scheduler.CONDOR, job_type=SupportedJobs.COMPUTE),
 )
 ccg_site.add_directories(
     Directory(Directory.SHARED_SCRATCH, "/scitech/shared/scratch-90-days/CCG/scratch")
-        .add_file_servers(FileServer("webdavs://obelix.isi.edu/webdav/scitech/shared/scratch-90-days/CCG/scratch", Operation.ALL)),
+        .add_file_servers(FileServer("webdavs://workflow.isi.edu/webdav/scitech/shared/scratch-90-days/CCG/scratch", Operation.ALL)),
     Directory(Directory.LOCAL_STORAGE, "/scitech/shared/scratch-90-days/CCG/outputs")
-        .add_file_servers(FileServer("webdavs://obelix.isi.edu/webdav/scitech/shared/scratch-90-days/CCG/outputs", Operation.ALL))
+        .add_file_servers(FileServer("webdavs://workflow.isi.edu/webdav/scitech/shared/scratch-90-days/CCG/outputs", Operation.ALL))
 )
 ccg_site.add_env(PEGASUS_HOME="/usr/bin")
 

@@ -3,6 +3,8 @@
 set -e
 set -o pipefail
 
+export SSH_PRIVATE_KEY=/scitech/shared/home/bamboo/.ssh/workflow_id_rsa
+
 # this variable is expanded by the planner when
 # parsing in the sites.xml file in the conf directory
 TOPDIR=`pwd`
@@ -65,8 +67,7 @@ done
 if [ X${SUBMIT_FILE_FOUND} = X ]; then
     echo "No jobs scheduled for site condorpool in submit directory ${WORK_DIR}"
     exit 1
-fi 
+fi
 
 # now submit the workflow for execution
 pegasus-run $WORK_DIR
-
