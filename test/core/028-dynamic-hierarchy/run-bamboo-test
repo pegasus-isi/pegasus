@@ -62,7 +62,7 @@ EOF
 
 #create the transformation catalog for the outer level workflow
 cat >tc.text <<EOF
-tr level1::sleep { 
+tr level1::sleep {
   site local {
     pfn "/bin/sleep"
     os "linux"
@@ -73,7 +73,7 @@ tr level1::sleep {
   }
 }
 
-tr level2::sleep {   
+tr level2::sleep {
   site local {
     pfn "/bin/sleep"
     os "linux"
@@ -89,7 +89,7 @@ tr level2::sleep {
 # on the nodes
 tr blackdiamond::generate{
    site local {
-    pfn "$TOP_DIR/blackdiamond.py"     
+    pfn "$TOP_DIR/blackdiamond.py"
     os "linux"
     osrelease "rhel"
     osversion "7"
@@ -105,7 +105,7 @@ EOF
 # and the nodes in the CCG.
 cat > $INNER_DAX_TC <<EOF
 
-tr level2::sleep {   
+tr level2::sleep {
   site local {
     pfn "/bin/sleep"
     os "linux"
@@ -163,14 +163,14 @@ cat >sites.xml <<EOF
     </site>
 
     <site  handle="CCG" arch="x86_64" os="LINUX">
-        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
+        <grid  type="gt5" contact="workflow.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt5" contact="workflow.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
 
-        <directory type="shared-scratch" path="/scitech/shared/scratch-90-days/CCG/scratch">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/scitech/shared/scratch-90-days/CCG/scratch"/>
+        <directory type="shared-scratch" path="/webdav/scitech/shared/scratch-90-days/CCG/scratch">
+            <file-server operation="all" url="webdavs://workflow.isi.edu/webdav/scitech/shared/scratch-90-days/CCG/scratch"/>
         </directory>
-        <directory type="local-storage" path="/scitech/shared/scratch-90-days/CCG/outputs">
-            <file-server operation="all" url="gsiftp://obelix.isi.edu/scitech/shared/scratch-90-days/CCG/outputs"/>
+        <directory type="local-storage" path="/webdav/scitech/shared/scratch-90-days/CCG/outputs">
+            <file-server operation="all" url="webdavs://workflow.isi.edu/webdav/scitech/shared/scratch-90-days/CCG/outputs"/>
         </directory>
 
         <profile namespace="env" key="PEGASUS_HOME">$CONDOR_POOL_PEGASUS_HOME</profile>
@@ -192,4 +192,3 @@ pegasus-plan \
     --submit \
     outer.dax \
     | tee $TOP_DIR/plan.out
-

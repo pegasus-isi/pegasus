@@ -30,7 +30,7 @@ sites:
         path: /webdav/scratch-90-days/${TEST_NAME}
         fileServers:
           - operation: all
-            url: webdav://workflow.isi.edu/webdav/scratch-90-days/${TEST_NAME}
+            url: webdavs://workflow.isi.edu/webdav/scratch-90-days/${TEST_NAME}
       - type: sharedStorage
         path: ${TOPDIR}/LOCAL/shared-storage
         fileServers:
