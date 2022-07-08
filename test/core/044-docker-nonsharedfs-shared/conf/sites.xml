@@ -23,7 +23,7 @@
 
   <site handle="condorpool" arch="x86_64" os="LINUX">
         <directory type="shared-scratch"  path="/scitech/shared/scratch-90-days/${TEST_NAME}">
-	  <file-server operation="all"   url="scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}"/>
+	  <file-server operation="all"   url="scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo${TEST_NAME}"/>
         </directory>
 
        <profile namespace="pegasus" key="style">condor</profile>
