@@ -51,7 +51,7 @@ sites:
         path: /scitech/shared/scratch-90-days/${TEST_NAME}
         fileServers:
           - operation: all
-            url: scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}
+            url: scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/${TEST_NAME}
     profiles:
       condor:
         universe: vanilla
