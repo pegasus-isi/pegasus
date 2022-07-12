@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os 
+import os
 import sys
 import subprocess
 
@@ -10,11 +10,11 @@ if len(sys.argv) != 3:
 pegasus_home=sys.argv[1]
 daxfile=sys.argv[2]
 
-pegasus_config = os.path.join( pegasus_home + "/bin" ,"pegasus-config") + " --noeoln --python"
+pegasus_config = (os.path.join( pegasus_home + "/bin" ,"pegasus-config") + " --noeoln --python")
 lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 
 # Insert this directory in our search path
-os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, str(lib_dir))
 
 from Pegasus.DAX3 import *
 
@@ -68,9 +68,6 @@ diamond.addDependency(Dependency(parent=frr, child=analyze))
 
 # Write the DAX to daxfile
 f = open( daxfile,"w" )
-print "Writing DAX to %s" %(os.path.abspath( daxfile ) )
+print("Writing DAX to %s" %(os.path.abspath( daxfile ) ))
 diamond.writeXML( f )
 f.close()
-
-
-
