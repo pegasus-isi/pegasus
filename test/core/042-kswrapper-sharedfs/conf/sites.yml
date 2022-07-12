@@ -26,7 +26,7 @@ sites:
     os.type: linux
     directories:
       - type: sharedScratch
-        path: /scitech/shared/scratch-90-days/${TEST_NAME}
+        path: /scitech/shared/scratch-90-days/bamboo/${TEST_NAME}
         fileServers:
           - operation: all
             url: scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/${TEST_NAME}

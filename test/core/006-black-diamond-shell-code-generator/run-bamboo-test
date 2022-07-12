@@ -50,6 +50,7 @@ sites:
       url: "file://$TOPDIR/work"
   profiles:
     env:
+      SSH_PRIVATE_KEY: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
       PEGASUS_HOME: "/usr"
       GLOBUS_LOCATION: "/ccg/software/globus/default"
 EOF
