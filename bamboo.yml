@@ -1236,9 +1236,6 @@ project:
                 - capabilityKey: platform
                   matchType: !equals
                     matchValue: macos
-                - capabilityKey: release
-                  matchType: !matches
-                    regex: 10.*
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUB
