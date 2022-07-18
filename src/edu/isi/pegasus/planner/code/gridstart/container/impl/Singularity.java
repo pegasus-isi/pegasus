@@ -305,7 +305,10 @@ public class Singularity extends Abstract {
                         "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download")
                 .append("\n");
         sb.append("pegasus_lite_inside_container=true").append("\n");
-        sb.append("pegasus_lite_work_dir=")
+
+        // PM-1875 we need to export the pegasus_lite_work_dir variable to
+        // ensure pegasus-transfer picks from the environment
+        sb.append("export pegasus_lite_work_dir=")
                 .append(Singularity.CONTAINER_WORKING_DIRECTORY)
                 .append("\n")
                 .append("\n");

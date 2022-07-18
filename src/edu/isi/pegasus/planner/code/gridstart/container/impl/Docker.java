@@ -342,7 +342,12 @@ public class Docker extends Abstract {
         sb.append(
                         "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download")
                 .append("\n");
-        sb.append("pegasus_lite_work_dir=").append(Docker.CONTAINER_WORKING_DIRECTORY).append("\n");
+
+        // PM-1875 we need to export the pegasus_lite_work_dir variable to
+        // ensure pegasus-transfer picks from the environment
+        sb.append("export pegasus_lite_work_dir=")
+                .append(Docker.CONTAINER_WORKING_DIRECTORY)
+                .append("\n");
 
         sb.append("\n");
         sb.append(". ./pegasus-lite-common.sh").append("\n");
