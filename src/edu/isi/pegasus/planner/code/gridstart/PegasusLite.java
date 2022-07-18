@@ -995,7 +995,6 @@ public class PegasusLite implements GridStart {
             // arguments passed
             job.setArguments("");
 
-            
             sb.append("\n");
             sb.append("# clear the trap, and exit cleanly").append('\n');
             sb.append("trap - EXIT").append('\n');
