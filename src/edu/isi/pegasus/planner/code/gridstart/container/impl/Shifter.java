@@ -287,7 +287,10 @@ public class Shifter extends Abstract {
         sb.append(
                         "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download")
                 .append("\n");
-        sb.append("pegasus_lite_work_dir=")
+
+        // PM-1875 we need to export the pegasus_lite_work_dir variable to
+        // ensure pegasus-transfer picks from the environment
+        sb.append("export pegasus_lite_work_dir=")
                 .append(Shifter.CONTAINER_WORKING_DIRECTORY)
                 .append("\n");
         sb.append("echo \\$PWD").append("  1>&2").append("\n");

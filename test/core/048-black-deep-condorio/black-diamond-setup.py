@@ -92,6 +92,13 @@ print(
     "Generating transformation catalog at: {}".format(TOP_DIR / "transformations.yml")
 )
 
+base_container = Container(
+                  "base-container",
+                  Container.DOCKER,
+                  image="http://download.pegasus.isi.edu/pegasus/tutorial/pegasus-tutorial-minimal.tar.gz",
+                  bypass_staging=False
+               );
+
 preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
         CONDOR_POOL,
@@ -119,10 +126,11 @@ analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_site
         is_stageable=True,
         arch=Arch.X86_64,
         os_type=OS.LINUX,
+        container=base_container
     )
 )
 
-TransformationCatalog().add_transformations(preprocess, findrage, analyze)\
+TransformationCatalog().add_containers(base_container).add_transformations(preprocess, findrage, analyze)\
         .write("transformations.yml")
 
 # --- Workflow -----------------------------------------------------------------

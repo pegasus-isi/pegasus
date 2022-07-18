@@ -210,7 +210,13 @@ public class Condor implements SLS {
             }
             // In CondorIO case, condor file io has already  gotten the job the compute site
             // before PegasusLitejob starts
-            result.add(fileTransferForCopyOfInputs(pf, job.getSiteHandle(), destDir));
+            result.add(
+                    fileTransferForCopyOfInputs(
+                            pf,
+                            job.getSiteHandle(),
+                            destDir,
+                            // PM-1875 we expand escape varialbe if job run in container
+                            job.getContainer() != null));
         }
         return result;
     }
@@ -383,15 +389,17 @@ public class Condor implements SLS {
 
     /**
      * Creates a file transfer object that results in a file copy in the job working directory to
-     * the deep LFN. This results in two copies of the file in the HTCondor assigned job directory
+     * the deep LFN.This results in two copies of the file in the HTCondor assigned job directory
      *
      * @param pf the PegasusFile that needs to be copied
      * @param siteHandle the compute site where job runs
      * @param destDir the destination directory on the worker node
+     * @param escapeEnvVariable whether to escape environment variable in the generated source and
+     *     destination
      * @return generated FileTransfer
      */
     protected FileTransfer fileTransferForCopyOfInputs(
-            PegasusFile pf, String siteHandle, String destDir) {
+            PegasusFile pf, String siteHandle, String destDir, boolean escapeEnvVariable) {
         FileTransfer ft = new FileTransfer();
 
         String lfn = pf.getLFN();
@@ -403,9 +411,15 @@ public class Condor implements SLS {
         // the source URL is the basename of the file in the directory
         // on the worker node .
         StringBuffer sourceURL = new StringBuffer();
+        sourceURL.append(PegasusURL.FILE_URL_SCHEME).append("//");
+        if (escapeEnvVariable) {
+            // PM-1875 when a job is run through a container, then data stage-in
+            // happens inside the container. so we need to ensure
+            // the variable does not expanded on the host OS where pegasuslite
+            // script runs
+            sourceURL.append("\\");
+        }
         sourceURL
-                .append(PegasusURL.FILE_URL_SCHEME)
-                .append("//")
                 .append("$pegasus_lite_work_dir")
                 .append(File.separator)
                 .append(new File(lfn).getName());
