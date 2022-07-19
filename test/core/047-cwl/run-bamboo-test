@@ -4,12 +4,12 @@ set -e
 
 echo
 echo "Setting up virtualenv with cwl-utils and yaml packages for pegasus-cwl-converter"
-command -v virtualenv >/dev/null 2>&1 || {
-    echo >&2 "virtualenv is required for this test but it is not installed. Aborting."
+command -v python3 >/dev/null 2>&1 || {
+    echo >&2 "Python3 is required to create virtual environment, but it is not installed. Aborting."
     exit 1;
 }
 VIRTUAL_ENV_DIR=cwl_venv
-python -m virtualenv -p python3.6 $VIRTUAL_ENV_DIR
+python -m venv $VIRTUAL_ENV_DIR
 
 source cwl_venv/bin/activate
 
@@ -93,4 +93,4 @@ pegasus-plan \
     --sites condorpool \
     --output-sites local \
     --cluster horizontal \
-    --submit workflow.yml 
+    --submit workflow.yml

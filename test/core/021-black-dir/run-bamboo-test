@@ -49,6 +49,7 @@ cat >sites.xml <<EOF
 	<profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
 	<profile namespace="condor" key="universe" >vanilla</profile>
 	<profile namespace="pegasus" key="style" >condor</profile>
+  <profile namespace="pegasus" key="ssh_private_key" >/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
 </site>
 <site  handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7" glibc="">
 	<directory  path="$TOPDIR/work" type="shared-scratch" free-size="" total-size="">
@@ -68,7 +69,3 @@ pegasus-plan \
     --input-dir $input_dir \
     --output-dir $output_dir \
     --submit blackdiamond.dax | tee plan.out
-
-
-
-
