@@ -66,7 +66,7 @@ public class CondorVersion {
             "\\$CondorVersion:\\s*([0-9][\\.][0-9][\\.][0-9])[\\p{ASCII}\\s]*\\$";
 
     /** Stores compiled patterns at first use, quasi-Singleton. */
-    private static Pattern mPattern = null;
+    static Pattern mPattern = null;
 
     /**
      * Converts a string into the corresponding integer value.
