@@ -94,12 +94,19 @@ public class CondorVersionTest {
         this.testVersionString("7.4.1", "$CondorVersion: 7.4.1 Dec 17 2009 BuildID: 204351 $");
     }
 
+    @Test
+    public void testCondorVersionForPM1878() {
+        this.testVersionString(
+                "9.10.0",
+                "$CondorVersion: 9.10.0 2022-07-14 BuildID: 596547 PackageID: 9.10.0-1 $");
+    }
+
     public void testVersionString(String expected, String input) {
         Matcher matcher = mVersion.mPattern.matcher(input);
         if (matcher.matches()) {
             assertEquals(
                     "Version computed from " + input + " does not match",
-                    "7.4.1",
+                    expected,
                     matcher.group(1));
             return;
         }
