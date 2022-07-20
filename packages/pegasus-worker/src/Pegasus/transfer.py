@@ -145,6 +145,14 @@ class PegasusURL:
             self.path = expand_env_vars(self.path)
             return
 
+        # moveto url is a special cases as it can contain relative paths and
+        # env vars
+        if self.url.find("moveto:") == 0:
+            self.proto = "moveto"
+            self.path = re.sub("^moveto:(//)?", "", self.url)
+            self.path = expand_env_vars(self.path)
+            return
+
         # other than file/symlink urls
         r = re_parse_url.search(self.url)
         if not r:
@@ -3534,6 +3542,51 @@ class SymlinkHandler(TransferHandlerBase):
         return [successful_l, failed_l]
 
 
+class MovetoHandler(TransferHandlerBase):
+    """
+    Enables moving of files - this should only be used internally
+    by the planner
+    """
+
+    _name = "MovetoHandler"
+    _mkdir_cleanup_protocols = []
+    _protocol_map = ["file->moveto"]
+
+    def do_transfers(self, transfer_l):
+        successful_l = []
+        failed_l = []
+        for t in transfer_l:
+            self._pre_transfer_attempt(t)
+            t_start = time.time()
+
+            print(t.get_dst_path())
+            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+
+            # we do not allow dangling symlinks
+            if not os.path.exists(t.get_src_path()):
+                logger.warning(
+                    "Moveto source (%s) does not exist" % (t.get_src_path())
+                )
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+                continue
+
+            cmd = "mv '%s' '%s'" % (t.get_src_path(), t.get_dst_path())
+            try:
+                tc = utils.TimedCommand(cmd, timeout_secs=600)
+                tc.run()
+            except RuntimeError as err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+                continue
+
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+
+        return [successful_l, failed_l]
+
+
 class DockerHandler(TransferHandlerBase):
     """
     Use "docker save" to import images from DockerHub
@@ -4251,6 +4304,7 @@ class SimilarWorkSet:
         self._available_handlers.append(GSIScpHandler())
         self._available_handlers.append(StashHandler())
         self._available_handlers.append(SymlinkHandler())
+        self._available_handlers.append(MovetoHandler())
         self._available_handlers.append(DockerHandler())
         self._available_handlers.append(SingularityHandler())
         self._available_handlers.append(HPSSHandler())

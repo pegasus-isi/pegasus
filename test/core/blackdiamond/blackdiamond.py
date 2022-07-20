@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 import sys
-import ConfigParser
+import configparser
 
 from Pegasus.DAX3 import *
 import os
 
 if len(sys.argv) != 3:
-	print "Usage: %s PEGASUS_HOME test-directory" % (sys.argv[0])
+	print("Usage: %s PEGASUS_HOME test-directory" % (sys.argv[0]))
 	sys.exit(1)
 
-config = ConfigParser.ConfigParser({'input_file': '', 'workflow_name': 'diamond', 'executable_installed':"False"})
+config = configparser.ConfigParser({'input_file': '', 'workflow_name': 'diamond', 'executable_installed':"False"})
 config.read(sys.argv [2] + '/test.config')
 
 # Create a abstract dag
@@ -92,4 +92,3 @@ diamond.addDependency(Dependency(parent=frr, child=analyze))
 
 # Write the DAX to stdout
 diamond.writeXML(sys.stdout)
-

@@ -53,6 +53,7 @@ sites:
     condor:
       universe: "vanilla"
     pegasus:
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
       style: "condor"
  -
   name: "local"
@@ -86,7 +87,3 @@ pegasus-plan \
     --output-sites local \
     --cluster label \
     --submit blackdiamond.dax | tee plan.out
-
-
-
-
