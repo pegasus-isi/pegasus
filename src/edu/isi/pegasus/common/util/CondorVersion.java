@@ -63,10 +63,10 @@ public class CondorVersion {
             //
             // "\\$CondorVersion:\\s*([0-9][\\.][0-9][\\.][0-9])[a-zA-Z:0-9\\s]*\\$";
             // "\\$CondorVersion:\\s*([0-9][\\.][0-9][\\.][0-9])[\\w\\W\\s]*\\$";
-            "\\$CondorVersion:\\s*([0-9][\\.][0-9][\\.][0-9])[\\p{ASCII}\\s]*\\$";
+            "\\$CondorVersion:\\s*([0-9]+[\\.][0-9]+[\\.][0-9]+)[\\p{ASCII}\\s]*\\$";
 
     /** Stores compiled patterns at first use, quasi-Singleton. */
-    private static Pattern mPattern = null;
+    static Pattern mPattern = null;
 
     /**
      * Converts a string into the corresponding integer value.
@@ -322,6 +322,7 @@ public class CondorVersion {
     public static void main(String[] args) {
         LogManager logger = LogManagerFactory.loadSingletonInstance();
         CondorVersion cv = CondorVersion.getInstance();
+        System.out.println("Regex used is " + CondorVersion.mRegexExpression);
 
         logger.logEventStart("CondorVersion", "CondorVersion", "Version");
         System.out.println("Condor Version is " + cv.version());
