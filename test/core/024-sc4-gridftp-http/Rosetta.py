@@ -76,7 +76,7 @@ sites:
       url: "http://workflow.isi.edu/shared-scratch/ptesting"
      -
       operation: "put"
-      url: "scp://workflow.isi.edu/scitech/shared/scratch-90-days/http-scratch/ptesting"
+      url: "scp://ptesting@workflow.isi.edu/scitech/shared/scratch-90-days/http-scratch/ptesting"
  -
   name: "local"
   arch: "x86_64"
