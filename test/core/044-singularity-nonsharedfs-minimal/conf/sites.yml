@@ -15,18 +15,21 @@ sites:
           - operation: all
             url: file:///${TOPDIR}/LOCAL/shared-storage
     profiles:
+      env:
+        SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
       pegasus:
         s3cfg: "/scitech/shared/home/bamboo/.s3cfg"
+
 
   - name: condorpool
     arch: x86_64
     os.type: linux
     directories:
       - type: sharedScratch
-        path: /scitech/shared/scratch-90-days/${TEST_NAME}
+        path: /webdav/scitech/shared/scratch-90-days/${TEST_NAME}
         fileServers:
           - operation: all
-            url: gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}
+            url: webdavs://workflow.isi.edu/webdav/scitech/shared/scratch-90-days/${TEST_NAME}
     profiles:
       condor:
         universe: vanilla
