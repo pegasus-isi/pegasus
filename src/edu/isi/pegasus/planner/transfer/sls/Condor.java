@@ -211,7 +211,7 @@ public class Condor implements SLS {
             // In CondorIO case, condor file io has already  gotten the job the compute site
             // before PegasusLitejob starts
             result.add(
-                    fileTransferForCopyOfInputs(
+                    fileTransferForMoveOfInputs(
                             pf,
                             job.getSiteHandle(),
                             destDir,
@@ -388,8 +388,8 @@ public class Condor implements SLS {
     }
 
     /**
-     * Creates a file transfer object that results in a file copy in the job working directory to
-     * the deep LFN.This results in two copies of the file in the HTCondor assigned job directory
+     * Creates a file transfer object that results in the move of the file in the job working
+     * directory to the deep LFN.
      *
      * @param pf the PegasusFile that needs to be copied
      * @param siteHandle the compute site where job runs
@@ -398,7 +398,7 @@ public class Condor implements SLS {
      *     destination
      * @return generated FileTransfer
      */
-    protected FileTransfer fileTransferForCopyOfInputs(
+    protected FileTransfer fileTransferForMoveOfInputs(
             PegasusFile pf, String siteHandle, String destDir, boolean escapeEnvVariable) {
         FileTransfer ft = new FileTransfer();
 
@@ -430,7 +430,7 @@ public class Condor implements SLS {
         // the destination is the complete LFN in $pegasus_lite_work_dir ($PWD)
         // directory
         StringBuffer destURL = new StringBuffer();
-        destURL.append(PegasusURL.FILE_URL_SCHEME)
+        destURL.append(PegasusURL.MOVETO_PROTOCOL_SCHEME)
                 .append("//")
                 .append(destDir)
                 .append(File.separator)
