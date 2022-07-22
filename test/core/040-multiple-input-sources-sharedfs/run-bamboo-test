@@ -41,11 +41,12 @@ cat >sites.xml <<EOF
 
     <site  handle="condorpool" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="/scitech/shared/scratch-90-days/bamboo/$UUID">
-            <file-server operation="all" url="gsiftp://bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID"/>
+            <file-server operation="all" url="scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID"/>
         </directory>
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="pegasus" key="data.configuration">sharedfs</profile>
+        <profile namespace="pegasus" key="ssh_private_key" >/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
     </site>
 
 </sitecatalog>
@@ -66,5 +67,3 @@ echo
 echo
 echo "Starting the workflow..."
 pegasus-run $WORK_DIR
-
-

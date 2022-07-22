@@ -63,7 +63,11 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu${TOPDIR}/staging-site/scratch"
+      url: "scp://bamboo@bamboo.isi.edu${TOPDIR}/staging-site/scratch"
+	profiles:
+		pegasus:
+			SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
+
  -
   name: "condorpool"
   arch: "x86_64"
@@ -154,7 +158,6 @@ pegasus-plan \
     --dir work/submit \
     --cleanup $clean_up \
     --submit ${planner_args} \
-    ${DAX} 
+    ${DAX}
 
 set +x
-

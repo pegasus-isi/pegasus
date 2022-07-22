@@ -16,7 +16,7 @@ sites:
             url: file:///${TOPDIR}/LOCAL/shared-storage
     profiles:
       env:
-        SH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
+        SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
         PEGASUS_HOME: "${PEGASUS_BIN_DIR}/.."
         x-ext: true
       pegasus:
