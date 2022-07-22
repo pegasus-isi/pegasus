@@ -31,7 +31,7 @@ cat >sites.xml <<EOF
         <directory type="shared-scratch" path="${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors">
             <file-server operation="all" url="scp://bamboo@bamboo.isi.edu${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors"/>
         </directory>
-        <profile namespace="env" key="ssh_private_key">/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
+        <profile namespace="pegasus" key="ssh_private_key">/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
     </site>
 </sitecatalog>
 EOF
