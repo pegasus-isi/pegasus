@@ -61,7 +61,7 @@ sc = SiteCatalog().add_sites(
 print("Generating replica catalog")
 
 # create initial input file and compute its hash for integrity checking
-with open("/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/f.a", "wb+") as f:
+with open("/scitech/shared/scratch-90-days/bamboo/f.a", "wb+") as f:
     f.write(b"This is sample input to KEG\n")
     f.seek(0)
     readable_hash = hashlib.sha256(f.read()).hexdigest()
@@ -70,7 +70,7 @@ fa = File("f.a")
 rc = ReplicaCatalog().add_replica(
     LOCAL,
     fa,
-    "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/" + fa.lfn,
+    "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/" + fa.lfn,
     checksum={"sha256": readable_hash}
 )
 
