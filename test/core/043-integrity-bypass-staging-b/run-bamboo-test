@@ -13,7 +13,7 @@ TEST_NAME=`basename $TESTDIR`
 export TEST_NAME
 
 #input file directory
-input_dir = /scitech/shared/scratch-90-days/bamboo/${TEST_NAME}
+input_dir=/scitech/shared/scratch-90-days/bamboo/${TEST_NAME}
 mkdir -p ${input_dir}
 
 echo "Running blackdiamond.py"
