@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 ##
 #  Copyright 2007-2011 University Of Southern California
