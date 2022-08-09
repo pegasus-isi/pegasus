@@ -20,6 +20,7 @@ import edu.isi.pegasus.common.credential.impl.PegasusCredentials;
 import edu.isi.pegasus.common.credential.impl.Proxy;
 import edu.isi.pegasus.common.credential.impl.S3CFG;
 import edu.isi.pegasus.common.credential.impl.Ssh;
+import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -260,6 +261,12 @@ public class Pegasus extends Namespace {
      * threads that pegasus-transfer uses to do the transfer
      */
     public static final String TRANSFER_SLS_THREADS_KEY = "transfer.lite.threads";
+
+    /**
+     * The name of the profile key, that when associated jobs indicates wheter there should be
+     * nosymlinking or not.
+     */
+    public static final String NO_SYMLINK_KEY = "nosymlink";
 
     /** The directory in which job needs to execute on worker node tmp. */
     public static final String WORKER_NODE_DIRECTORY_KEY = "wntmp";
@@ -640,7 +647,7 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'n':
-                if (key.compareTo(NODES_KEY) == 0) {
+                if (key.compareTo(NODES_KEY) == 0 || key.compareTo(NO_SYMLINK_KEY) == 0) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;
@@ -898,15 +905,29 @@ public class Pegasus extends Namespace {
 
     /**
      * Returns a int value, that a particular key is mapped to in this namespace. If the key is
-     * mapped to a non integer, then the default value is returned
+     * mapped to a non boolean or key does not exist, then the default value of false is returned.
      *
      * @param key The key whose boolean value you desire.
      * @return boolean
      */
     public boolean getBooleanValue(Object key) {
-        boolean value = false;
+        return this.getBooleanValue(key, false);
+    }
+
+    /**
+     * Returns a int value, that a particular key is mapped to in this namespace. If the key is
+     * mapped to a non boolean or key does not exist, then the default value passed is returned.
+     *
+     * @param key the key whose boolean value you desire.
+     * @param defaultValue the default value to assign if profile is not present, or user specified
+     *     incorrect value
+     * 
+     * @return boolean
+     */
+    public boolean getBooleanValue(Object key, boolean defaultValue) {
+        boolean value = defaultValue;
         if (mProfileMap != null && mProfileMap.containsKey(key)) {
-            value = Boolean.valueOf((String) mProfileMap.get(key)).booleanValue();
+            value = Boolean.parse((String) mProfileMap.get(key), defaultValue);
         }
         return value;
     }
