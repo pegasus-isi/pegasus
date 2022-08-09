@@ -38,6 +38,8 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -209,6 +211,32 @@ public class TransferTest {
         this.testStageIn("compute", expectedOutput);
     }
 
+    /** PM-1879 turn off symlink via a job profile */
+    @Test
+    public void testSymlinkTurnOffInProfileForStageIn() {
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.in");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+
+        this.mProps.setProperty(PegasusProperties.PEGASUS_TRANSFER_LINKS_PROPERTY_KEY, "true");
+
+        SiteCatalogEntry computeSiteEntry = this.mBag.getHandleToSiteStore().lookup("compute");
+        Directory sharedScratch = computeSiteEntry.getDirectory(Directory.TYPE.shared_scratch);
+        sharedScratch.setSharedFileSystemAccess(true);
+
+        // since compute and staging site are the same, source is a file url not a gsiftp
+        expectedOutput.addSource(
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.in");
+        expectedOutput.addDestination("compute", "file://$PWD/f.in");
+
+        // add a profile to turn off symlink
+        Map<String, String> profiles = new HashMap();
+        profiles.put(Pegasus.NO_SYMLINK_KEY, "true");
+
+        this.testStageIn("compute", expectedOutput, profiles);
+    }
+
     /** PM-1787 */
     @Test
     public void testSymlinkForStageInFromLocalToCompute() {
@@ -378,6 +406,11 @@ public class TransferTest {
     }
 
     private void testStageIn(String stagingSite, FileTransfer expected) {
+        this.testStageIn(stagingSite, expected, new HashMap<String, String>());
+    }
+
+    private void testStageIn(
+            String stagingSite, FileTransfer expected, Map<String, String> pegasusProfiles) {
 
         mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
         Transfer t = new Transfer();
@@ -385,6 +418,11 @@ public class TransferTest {
 
         Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
         job.setStagingSiteHandle(stagingSite);
+
+        for (String key : pegasusProfiles.keySet()) {
+            job.vdsNS.construct(key, pegasusProfiles.get(key));
+        }
+
         PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
         FileServer stagingSiteServer = null;
         String stagingSiteDirectory = null;

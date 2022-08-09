@@ -287,6 +287,7 @@ public class Transfer implements SLS {
             return null;
         }
 
+        boolean symlinkingEnabledForJob = symlinkingEnabled(job, this.mUseSymLinks);
         Set files = job.getInputFiles();
 
         //      To handle for null conditions?
@@ -299,7 +300,7 @@ public class Transfer implements SLS {
         String containerLFN = null;
         if (c != null) {
             containerLFN = c.getLFN();
-            if (this.mUseSymLinks && c.getMountPoints().isEmpty()) {
+            if (symlinkingEnabledForJob && c.getMountPoints().isEmpty()) {
                 mLogger.log(
                         "Symlink of data files will be disabled because job "
                                 + job.getID()
@@ -375,7 +376,7 @@ public class Transfer implements SLS {
                 }
 
                 // construct the location with respect to the staging site
-                if (mUseSymLinks && useFileURLAsSource) {
+                if (symlinkingEnabledForJob && useFileURLAsSource) {
                     symlink = true;
                     if (pf.isExecutable()) {
                         // PM-734 for executable files we can have the source url as file url
@@ -407,7 +408,7 @@ public class Transfer implements SLS {
                     sources.add((ReplicaCatalogEntry) cacheLocation.clone());
 
                     symlink =
-                            (mUseSymLinks
+                            (symlinkingEnabledForJob
                                     && // specified in configuration
                                     !pf.isCheckpointFile()
                                     && // can only do symlinks for data files . not checkpoint files
@@ -808,5 +809,22 @@ public class Transfer implements SLS {
      */
     public String getDescription() {
         return "SLS backend using pegasus-transfer to worker node";
+    }
+
+    /**
+     * A convenience method that indicates whether to enable symlinking for a job or not
+     *
+     * @param job the job for which symlinking needs to be enabled
+     * @param workflowSymlinking whether the user has turned on symlinking for workflow or not
+     * @return
+     */
+    protected boolean symlinkingEnabled(Job job, boolean workflowSymlinking) {
+        if (!workflowSymlinking) {
+            // user does not have symlinking enabled for the workflow
+            return false;
+        }
+
+        // the profile value can turn symlinking off
+        return !job.vdsNS.getBooleanValue(Pegasus.NO_SYMLINK_KEY);
     }
 }
