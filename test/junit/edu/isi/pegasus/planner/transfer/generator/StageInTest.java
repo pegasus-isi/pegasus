@@ -288,7 +288,6 @@ public class StageInTest {
         mLogger.logEventStart(
                 "test.transfer.generator.stagein", "set", Integer.toString(mTestNumber++));
         StageIn si = new StageIn();
-        SiteStore s = mBag.getHandleToSiteStore();
         Job j = new Job();
         if (noSymlinkProfileValue != null) {
             j.vdsNS.construct(Pegasus.NO_SYMLINK_KEY, noSymlinkProfileValue.toString());
