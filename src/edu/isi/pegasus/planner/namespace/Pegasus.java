@@ -921,7 +921,6 @@ public class Pegasus extends Namespace {
      * @param key the key whose boolean value you desire.
      * @param defaultValue the default value to assign if profile is not present, or user specified
      *     incorrect value
-     * 
      * @return boolean
      */
     public boolean getBooleanValue(Object key, boolean defaultValue) {
