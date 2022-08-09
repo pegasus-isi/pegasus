@@ -41,7 +41,7 @@ transformations:
             foo: bar
 
 containers:
-  - image: gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/python3-minimal.img
+  - image: scp://bamboo@bamboo.isi.edu/scitech/shared/kubernetes/dynamic-storage/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif
     image.site: local
     profiles:
       env:

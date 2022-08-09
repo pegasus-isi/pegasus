@@ -29,8 +29,9 @@ cat >sites.xml <<EOF
 
     <site  handle="staging_site">
         <directory type="shared-scratch" path="${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors">
-            <file-server operation="all" url="gsiftp://bamboo.isi.edu${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors"/>
+            <file-server operation="all" url="scp://bamboo@bamboo.isi.edu${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors"/>
         </directory>
+        <profile namespace="pegasus" key="ssh_private_key">/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
     </site>
 </sitecatalog>
 EOF
@@ -45,6 +46,4 @@ pegasus-plan \
     --staging-site staging_site \
     --output-sites local \
     --submit \
-    dax.xml 
-
-
+    dax.xml

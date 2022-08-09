@@ -26,10 +26,10 @@ sites:
     os.type: linux
     directories:
       - type: sharedScratch
-        path: /data/scratch/http/${TEST_NAME}
+        path: /tmp/${TEST_NAME}
         fileServers:
           - operation: all
-            url: scp://ptesting@obelix.isi.edu/data/scratch/http/${TEST_NAME}
+            url: scp://bamboo@bamboo.isi.edu/tmp/${TEST_NAME}
 
   - name: condorpool
     arch: x86_64

@@ -328,6 +328,8 @@ public class StageIn extends Abstract {
         // dDirPutURL would be the url to the destination directoy
         // and is always a networked url.
 
+        boolean symlinkingEnabledForJob = symlinkingEnabled(job, this.mUseSymLinks);
+
         for (Iterator it = searchFiles.iterator(); it.hasNext(); ) {
             String sourceURL = null, destPutURL = null, destGetURL = null;
             PegasusFile pf = (PegasusFile) it.next();
@@ -486,7 +488,7 @@ public class StageIn extends Abstract {
                 candidateNum++;
                 boolean bypassFirstLevelStagingForCandidateLocation = false;
                 if (symLinkSelectedLocation =
-                        (mUseSymLinks
+                        (symlinkingEnabledForJob
                                 && selLoc.getResourceHandle().equals(job.getStagingSiteHandle())
                                 && !pf.isExecutable() // PM-1086 symlink only data files as chmod
                         // fails on symlinked file
@@ -1121,5 +1123,22 @@ public class StageIn extends Abstract {
             String lfn, String pfn, String site, FileServerType.OPERATION type) {
 
         mPlannerCache.insert(lfn, pfn, site, type);
+    }
+
+    /**
+     * A convenience method that indicates whether to enable symlinking for a job or not
+     *
+     * @param job the job for which symlinking needs to be enabled
+     * @param workflowSymlinking whether the user has turned on symlinking for workflow or not
+     * @return
+     */
+    protected boolean symlinkingEnabled(Job job, boolean workflowSymlinking) {
+        if (!workflowSymlinking) {
+            // user does not have symlinking enabled for the workflow
+            return false;
+        }
+
+        // the profile value can turn symlinking off
+        return !job.vdsNS.getBooleanValue(Pegasus.NO_SYMLINK_KEY);
     }
 }

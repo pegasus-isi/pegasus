@@ -43,12 +43,13 @@ sc = SiteCatalog().add_sites(
     Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_directories(
         Directory(Directory.SHARED_SCRATCH, shared_scratch_dir).add_file_servers(
-            FileServer("gsiftp://bamboo.isi.edu/" + shared_scratch_dir, Operation.ALL)
+            FileServer("scp://bamboo@bamboo.isi.edu/" + shared_scratch_dir, Operation.ALL)
         ),
         Directory(Directory.SHARED_STORAGE, shared_storage_dir).add_file_servers(
-            FileServer("gsiftp://bamboo.isi.edu/" + shared_storage_dir, Operation.ALL)
+            FileServer("scp://bamboo@bamboo.isi.edu/" + shared_storage_dir, Operation.ALL)
         ),
     )
+    .add_pegasus_profile(SSH_PRIVATE_KEY='/scitech/shared/home/bamboo/.ssh/workflow_id_rsa')
     .add_pegasus_profile(clusters_num=1),
     Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_pegasus_profile(style="condor")
@@ -60,7 +61,7 @@ sc = SiteCatalog().add_sites(
 print("Generating replica catalog")
 
 # create initial input file and compute its hash for integrity checking
-with open("/lfs1/bamboo-tests/data/043-integrity-bypass-staging-b/f.a", "wb+") as f:
+with open("/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/f.a", "wb+") as f:
     f.write(b"This is sample input to KEG\n")
     f.seek(0)
     readable_hash = hashlib.sha256(f.read()).hexdigest()
@@ -69,22 +70,22 @@ fa = File("f.a")
 rc = ReplicaCatalog().add_replica(
     LOCAL,
     fa,
-    "gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/043-integrity-bypass-staging-b/" + fa.lfn,
+    "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/" + fa.lfn,
     checksum={"sha256": readable_hash}
 )
 
 # --- Transformations ----------------------------------------------------------
 # compute the initial hash for the container
-with open("/lfs1/bamboo-tests/data/osgvo-el7.img", "rb") as f:
+with open("/scitech/shared/kubernetes/dynamic-storage/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif", "rb") as f:
     readable_hash = hashlib.sha256(f.read()).hexdigest()
-    
+
 print("Generating transformation catalog")
 tc = TransformationCatalog()
 # A container that will be used to execute the following transformations.
 tools_container = Container(
-    "osgvo-el7", 
-    Container.SINGULARITY, 
-    image="gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img",
+    "osgvo-el7",
+    Container.SINGULARITY,
+    image="scp://bamboo@bamboo.isi.edu/scitech/shared/kubernetes/dynamic-storage/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
     checksum={"sha256": readable_hash},
     bypass_staging=True
 )

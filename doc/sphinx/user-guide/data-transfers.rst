@@ -527,6 +527,9 @@ following must be true
 2. The input file location in the Replica Catalog has the *"site"*
    attribute matching the compute site.
 
+3. Symlinking is NOT turned OFF at a job level by associating a Pegasus
+   profile **nosymlink** with the job.
+
 ..
 
 .. tip::

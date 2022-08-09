@@ -246,6 +246,58 @@ public class StageInTest {
     }
 
     /**
+     * Test to test when nothing is set in properties for workflow symlinking or profiles for job
+     */
+    @Test
+    public void testSymlinkingEnabledWithNothingSet() {
+        this.testSymlinkingEnabled(false, false, null);
+    }
+
+    /** Test to test for default symlinking, when symlinking turned on for workflow */
+    @Test
+    public void testDefaultSymlinkingEnabled() {
+        this.testSymlinkingEnabled(true, true, null);
+    }
+
+    /** Test to test for symlinking when symlinking turned on for workflow but off for job */
+    @Test
+    public void testSymlinkingEnabledWhenProfileSetTrue() {
+        this.testSymlinkingEnabled(false, true, true);
+    }
+
+    /** Test to test for symlinking when symlinking turned on for workflow but also for job */
+    @Test
+    public void testSymlinkingEnabledWhenProfileSetFalse() {
+        this.testSymlinkingEnabled(true, true, false);
+    }
+
+    /** Test to test for symlinking when symlinking turned off for workflow and also for job */
+    @Test
+    public void testSymlinkingEnabledWhenWorkflowOffAndProfileSetFalse() {
+        this.testSymlinkingEnabled(false, false, false);
+    }
+
+    /** Test to test for symlinking when symlinking turned off for workflow and also for job */
+    @Test
+    public void testSymlinkingEnabledWhenWorkflowOffAndProfileSetTrue() {
+        this.testSymlinkingEnabled(false, false, true);
+    }
+
+    private void testSymlinkingEnabled(
+            boolean expected, boolean workflowSymlinking, Boolean noSymlinkProfileValue) {
+        mLogger.logEventStart(
+                "test.transfer.generator.stagein", "set", Integer.toString(mTestNumber++));
+        StageIn si = new StageIn();
+        Job j = new Job();
+        if (noSymlinkProfileValue != null) {
+            j.vdsNS.construct(Pegasus.NO_SYMLINK_KEY, noSymlinkProfileValue.toString());
+        }
+        assertEquals(
+                "Symlinking for job was ", expected, si.symlinkingEnabled(j, workflowSymlinking));
+        mLogger.logEventCompletion();
+    }
+
+    /**
      * Convenience method
      *
      * @param rce
