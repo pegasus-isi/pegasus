@@ -346,12 +346,12 @@ public abstract class Abstract implements ContainerShellWrapper {
             for (Iterator it = job.getInputFiles().iterator(); it.hasNext(); ) {
                 PegasusFile pf = (PegasusFile) it.next();
                 if (pf.getType() == PegasusFile.EXECUTABLE_FILE) {
-                    sb.append("if [ ! -x " + pf.getLFN() + " ]; then\n");
-                    sb.append("    ");
+                    // in some docker containers running on mac the -x bash operator
+                    // does not evaluate correctly. so we always do a chmod on the
+                    // executable without checking whether x bit is already set or not
                     sb.append(getPathToChmodExecutable(job.getSiteHandle()));
                     sb.append(" +x ");
                     sb.append(pf.getLFN()).append("\n");
-                    sb.append("fi\n");
                 }
             }
             sb.append('\n');
