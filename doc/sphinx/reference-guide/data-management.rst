@@ -296,9 +296,9 @@ Next, you need create a Pegasus credentials files. See
 `the section on credential staging <#cred-staging>`__. This file is
 picked up automatically when your workflow contains OSN transfers.
 Please add a section in it describing your endpoint. For example
-to use OSN deployment at XSEDE
+to use OSN deployment at XSEDE.
 
-..
+::
 
   [osn]
   endpoint = https://sdsc.osn.xsede.org
