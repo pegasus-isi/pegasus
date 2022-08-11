@@ -241,7 +241,7 @@ clients
    wget            staging files from a HTTP server
    cp              copying files from a POSIX filesystem
    ln              symlinking against input files
-   pegasus-s3      staging files to and from S3 buckets in Amazon Web Services
+   pegasus-s3      staging files to and from S3 buckets in Amazon Web Services, Open Storage Network (OSN)
    gsutil          staging files to and from Google Storage buckets
    scp             staging files using scp
    gsiscp          staging files using gsiscp and X509
@@ -277,6 +277,81 @@ You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
 Next, you need create a Pegasus credentials files. See 
 `the section on credential staging <#cred-staging>`__. This file is
 picked up automatically when your workflow contains s3 transfers.
+
+
+.. _transfer-osn:
+
+Open Storage Network OSN (osn://)
+---------------------------------
+
+Pegasus can be configured to use buckets in Open Storage Network (OSGN)
+as a staging site. OSN provides a S3 compatible interface to retrieve
+and put files in a bucket.
+
+In order to use S3, it is necessary to create a config file for the S3
+transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`.
+You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
+
+Next, you need create a Pegasus credentials files. See
+`the section on credential staging <#cred-staging>`__. This file is
+picked up automatically when your workflow contains OSN transfers.
+Please add a section in it describing your endpoint. For example
+to use OSN deployment at XSEDE
+
+..
+  [osn]
+  endpoint = https://sdsc.osn.xsede.org
+
+  [joe@osn]
+  access_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  secret_key = abababababababababababababababab
+
+To associate OSN as a staging area for your condorpool site, you can
+associate shared scratch directory to be a bucket in OSN
+
+.. tabs::
+
+    .. code-tab:: python generate_sc.py
+
+        from Pegasus.api import *
+
+        sc = SiteCatalog()
+        condorpool = Site("condorpool", arch=Arch.X86_64, os_type=OS.LINUX)
+
+        # create and add a bucket in OSN to use for your workflows
+        condorpool_shared_scratch_dir = Directory(Directory.SHARED_SCRATCH, path="/asc190064-bucket01/pegasus-workflows") \
+            .add_file_servers(
+            FileServer("s3://joe@osn/asc190064-bucket01/pegasus-workflows/", Operation.ALL),
+        )
+        condorpool.add_directories(condorpool_shared_scratch_dir)
+        condorpool.add_pegasus_profiles(style="condor")
+        sc.add_sites(condorpool)
+
+    .. code-tab:: yaml YAML SC
+
+        pegasus: '5.0'
+        siteCatalog:
+          sites:
+          - name: condorpool
+            arch: x86_64
+            os.type: linux
+            directories:
+            - type: sharedScratch
+              path: /asc190064-bucket01/pegasus-workflows/
+              sharedFileSystem: false
+              fileServers:
+              - url: s3://joe@osn/asc190064-bucket01/pegasus-workflows
+                operation: all
+            profiles:
+              pegasus:
+                style: condor
+
+
+.. note::
+
+   The OSN endpoint is defined in the credentials.conf and in the
+   URL's in the site catalog, you refer it with the alias. In this
+   example that is *osn*
 
 .. _transfer-docker:
 
