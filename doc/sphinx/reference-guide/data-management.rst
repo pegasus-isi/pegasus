@@ -299,6 +299,7 @@ Please add a section in it describing your endpoint. For example
 to use OSN deployment at XSEDE
 
 ..
+
   [osn]
   endpoint = https://sdsc.osn.xsede.org
 
