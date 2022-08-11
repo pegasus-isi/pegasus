@@ -109,18 +109,11 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
             flask.Flask("dummy_app"), {app.config["APPLICATION_ROOT"]: app}
         )
         run_simple(
-            host,
-            port,
-            application,
-            ssl_context=ssl_context,
-            **options,
+            host, port, application, ssl_context=ssl_context, **options,
         )
     else:
         app.run(
-            host=host,
-            port=port,
-            ssl_context=ssl_context,
-            **options,
+            host=host, port=port, ssl_context=ssl_context, **options,
         )
 
     log.info("Exiting")
