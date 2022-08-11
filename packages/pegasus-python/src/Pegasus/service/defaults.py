@@ -9,8 +9,11 @@ SERVER_PORT = 5000
 CERTIFICATE = None
 PRIVATE_KEY = None
 
+# Base URL prefix for Pegasus service
+# PEGASUS_SERVICE_URL_PREFIX = "/app"
+
 # Max number of processes to fork when handling requests
-MAX_PROCESSES = 10
+# MAX_PROCESSES = 10
 
 # Enable debugging
 DEBUG = False
