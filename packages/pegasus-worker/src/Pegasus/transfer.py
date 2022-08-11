@@ -3564,9 +3564,7 @@ class MovetoHandler(TransferHandlerBase):
 
             # we do not allow dangling symlinks
             if not os.path.exists(t.get_src_path()):
-                logger.warning(
-                    "Moveto source (%s) does not exist" % (t.get_src_path())
-                )
+                logger.warning("Moveto source (%s) does not exist" % (t.get_src_path()))
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
                 continue
