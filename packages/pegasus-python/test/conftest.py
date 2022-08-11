@@ -193,10 +193,7 @@ def db(request):
     _docker = docker.from_env()
     env = "MYSQL_ROOT_PASSWORD" if is_mysql else "POSTGRES_PASSWORD"
     _db = _docker.containers.run(
-        image,
-        environment={env: password},
-        detach=True,
-        ports={port: None},
+        image, environment={env: password}, detach=True, ports={port: None},
     )
 
     count = 15
@@ -239,19 +236,11 @@ def db(request):
     port_map = _docker.api.port(_db.name, port)[0]
     if is_mysql:
         url = "jdbc:mysql://{}:{}@{}:{}/{}".format(
-            username,
-            password,
-            host,
-            port_map["HostPort"],
-            database,
+            username, password, host, port_map["HostPort"], database,
         )
     else:
         url = "jdbc:postgresql://{}:{}@{}:{}/{}".format(
-            username,
-            password,
-            host,
-            port_map["HostPort"],
-            database,
+            username, password, host, port_map["HostPort"], database,
         )
 
     log.info(url)
