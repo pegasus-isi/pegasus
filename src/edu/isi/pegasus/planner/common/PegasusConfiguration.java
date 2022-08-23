@@ -108,20 +108,9 @@ public class PegasusConfiguration {
         this.loadModeProperties(properties, mode);
 
         // set other mode knobs that are not handled via properties
-        switch (mode) {
-            case debug:
-                // PM-1818 set the planner log level to trace
-                mLogger.setLevel(LogManager.TRACE_MESSAGE_LEVEL);
-                break;
-
-            case development:
-                // PM-1804 set the planner log level to debug
-                mLogger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
-                break;
-
-            default:
-                break;
-        }
+        int logLevel = computeLogLevel(mode, options);
+        options.setLoggingLevel(new Integer(logLevel).toString());
+        mLogger.setLevel(logLevel);
 
         // PM-1190 if integrity checking is turned on, turn on the stat of
         // files also
@@ -768,5 +757,41 @@ public class PegasusConfiguration {
             return requirements.toString();
         }
         return null;
+    }
+
+    /**
+     * Computes log level based on the mode set in properties and what the user passed on the
+     * command line in the Planner Options
+     *
+     * @param mode the pegasus mode
+     * @param options the planner options
+     * @return the log level to use for the planner
+     */
+    protected int computeLogLevel(PEGASUS_MODE mode, PlannerOptions options) {
+        int logLevel = PlannerOptions.DEFAULT_LOGGING_LEVEL;
+        switch (mode) {
+            case debug:
+                // PM-1818 set the planner log level to trace
+                logLevel = LogManager.TRACE_MESSAGE_LEVEL;
+                break;
+
+            case development:
+                // PM-1804 set the planner log level to debug
+                logLevel = LogManager.DEBUG_MESSAGE_LEVEL;
+                break;
+
+            default:
+                break;
+        }
+
+        // PM-1883 calculate the delta set by the user on the command line
+        // from the default logging level and add it to the log level computed
+        // from the modes. can decrease the level also
+        logLevel = logLevel + (options.getLoggingLevel() - PlannerOptions.DEFAULT_LOGGING_LEVEL);
+        if (logLevel < 0) {
+            // set it to fatal if nothing else
+            logLevel = LogManager.FATAL_MESSAGE_LEVEL;
+        }
+        return logLevel;
     }
 }
