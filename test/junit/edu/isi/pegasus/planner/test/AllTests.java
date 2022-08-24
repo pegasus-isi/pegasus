@@ -60,6 +60,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.code.generator.condor.style.GliteTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.CondorTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.CondorGTest.class,
+    edu.isi.pegasus.planner.common.PegasusConfigurationTest.class,
     edu.isi.pegasus.planner.mapper.output.FlatOutputMapperTest.class,
     edu.isi.pegasus.planner.mapper.output.HashedOutputMapperTest.class,
     edu.isi.pegasus.planner.mapper.output.ReplicaOutputMapperTest.class,
