@@ -120,6 +120,15 @@ public class PegasusConfigurationTest {
         testComputeLogLevel(PEGASUS_MODE.development, options, LogManager.FATAL_MESSAGE_LEVEL);
     }
 
+    @Test
+    public void testLogLevelForDevelopmentModeWithInsaneVerboseOption() {
+        PlannerOptions options = new PlannerOptions();
+        for (int i = 0; i < 10; i++) {
+            options.incrementLogging(); // simulates -v
+        }
+        testComputeLogLevel(PEGASUS_MODE.debug, options, LogManager.TRACE_MESSAGE_LEVEL);
+    }
+
     private void testComputeLogLevel(PEGASUS_MODE mode, PlannerOptions options, int expected) {
         PegasusConfiguration pc = new PegasusConfiguration(mLogger);
         int actual = pc.computeLogLevel(mode, options);

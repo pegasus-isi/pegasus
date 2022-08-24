@@ -792,6 +792,12 @@ public class PegasusConfiguration {
             // set it to fatal if nothing else
             logLevel = LogManager.FATAL_MESSAGE_LEVEL;
         }
+
+        // also we cannot have a level higher a TRACE level
+        logLevel =
+                logLevel > LogManager.TRACE_MESSAGE_LEVEL
+                        ? LogManager.TRACE_MESSAGE_LEVEL
+                        : logLevel;
         return logLevel;
     }
 }
