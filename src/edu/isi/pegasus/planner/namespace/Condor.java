@@ -178,6 +178,9 @@ public class Condor extends Namespace {
     /** The condor universe key value for parallel universe. */
     public static final String PARALLEL_UNIVERSE = "parallel";
 
+    /** The preserve_relative_paths key for condor file io */
+    public static final String PRESERVE_RELATIVE_PATHS_KEY = "preserve_relative_paths";
+
     /** concurrency limits key */
     public static String CONCURRENCY_LIMITS_KEY = "concurrency_limits";
 
@@ -630,6 +633,8 @@ public class Condor extends Namespace {
                         || key.compareTo(Condor.PERIODIC_REMOVE_KEY) == 0
                         || key.compareTo(Condor.PERIODIC_HOLD) == 0) {
                     res = VALID_KEY;
+                } else if (key.compareTo(Condor.PRESERVE_RELATIVE_PATHS_KEY) == 0) {
+                    res = NOT_PERMITTED_KEY;
                 } else {
                     res = UNKNOWN_KEY;
                 }
