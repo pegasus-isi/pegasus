@@ -15,6 +15,7 @@ from .transformation_catalog import Transformation, TransformationCatalog
 from .writable import Writable, _CustomEncoder, _filter_out_nones
 
 from Pegasus.client._client import from_env
+from Pegasus.client.status import Status
 
 PEGASUS_VERSION = "5.0"
 
@@ -1080,6 +1081,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.name = name
         self.infer_dependencies = infer_dependencies
 
+        self._display_status = Status()
+
         # client specific members
         self._submit_dir = None
         self._braindump = None
@@ -1316,10 +1319,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             self._submit_dir, verbose=verbose, grid=grid
         )
 
-    @_chained
+    #@_chained
     @_needs_submit_dir
-    @_needs_client
-    def status(self, *, long: bool = False, verbose: int = 0):
+    #@_needs_client
+    def status(self, *, json: bool = False):
         """
         status(self, long: bool = False, verbose: int = 0)
         Monitor the workflow by quering Condor and directories.
@@ -1331,8 +1334,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :raises PegasusClientError: pegasus-status encountered an error
         :return: self
         """
-
-        self._client.status(self._submit_dir, long=long, verbose=verbose)
+        return self._display_status.status(self._submit_dir, json=json)
+        #self._client.status(self._submit_dir, long=long, verbose=verbose)
 
     @_needs_submit_dir
     @_needs_client

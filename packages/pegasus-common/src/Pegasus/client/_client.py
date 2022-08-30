@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import BinaryIO, Dict, List, Union
 
 from Pegasus import braindump, yaml
+from Pegasus.client import status
 
 # Set log formatting s.t. only messages are shown. Output from pegasus
 # commands will already contain log level categories so it isn't necessary
@@ -64,6 +65,7 @@ class Client:
         self._analyzer = path.join(base, "pegasus-analyzer")
         self._statistics = path.join(base, "pegasus-statistics")
         self._graph = path.join(base, "pegasus-graphviz")
+        self._retrieve_status = status.Status()
 
     def plan(
         self,
@@ -445,12 +447,14 @@ class Client:
 
     def get_status(self, root_wf_name: str, submit_dir: str) -> Union[dict, None]:
         """Returns a dict containing pegasus-status output"""
-        cmd = [self._status, "--long", submit_dir]
+        """cmd = [self._status, "--long", submit_dir]
         result = self._exec(cmd, stream_stdout=False, stream_stderr=False)
 
         return Client._parse_status_output(
             status_output=result.stdout, root_wf_name=root_wf_name
-        )
+        )"""
+
+        return self._retrieve_status.fetch_status(submit_dir, json=True)
 
     def wait(self, root_wf_name: str, submit_dir: str, delay: int = 5):
         """Prints progress bar and blocks until workflow completes or fails"""
