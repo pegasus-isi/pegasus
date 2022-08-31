@@ -155,6 +155,23 @@ public class StageInTest {
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
                 false);
     }
+    
+    /**
+     * PM-1875 
+     * Test to ensure there is bypass in condor io mode , if the replica catalog location is a
+     * file URL on the compute site, but the PFN does not end in the basename of the LFN
+     */
+    @Test
+    public void testBypassForCondorIOWithFileURLOnComputeSiteWithDeepLFN() {
+        //update the test workflow for this first
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
+        inputFile.setLFN("deep/f.in");
+        testBypass(
+                new ReplicaCatalogEntry("file:///input/deep/f.in", "compute"),
+                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
+                false);
+    }
 
     /**
      * Test to ensure there is bypass in condorio mode for file URL's on compute site, when compute
