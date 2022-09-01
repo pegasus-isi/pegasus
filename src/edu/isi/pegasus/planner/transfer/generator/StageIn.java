@@ -723,13 +723,8 @@ public class StageIn extends Abstract {
                     } else if (fileSite.equals(computeSiteEntry.getSiteHandle())) {
                         // PM-1783 allow for compute site file URLs to be bypassed
                         // if the compute site is visible to the submit host
-                        bypass = computeSiteEntry.isVisibleToLocalSite();
+                        bypass = computeSiteEntry.isVisibleToLocalSite() || true;
                     }
-                }
-                if (bypass) {
-                    // in condor io  we cannot remap the destination URL
-                    // we need to make sure the PFN ends with lfn to enable bypass
-                    bypass = entry.getPFN().endsWith(file.getLFN());
                 }
             } else {
                 // Non Shared FS case: we can bypass all url's safely
