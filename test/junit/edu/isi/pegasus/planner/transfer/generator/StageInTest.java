@@ -185,7 +185,7 @@ public class StageInTest {
      * site has auxillary.local set to true PM-1783
      */
     @Test
-    public void testBypassForCondorIOWithFileURLOnLocalWithAuxillaryLocal() {
+    public void testBypassForCondorIOWithFileURLOnComputeWithAuxillaryLocal() {
         SiteStore s = mBag.getHandleToSiteStore();
         SiteCatalogEntry computeSite = s.lookup("compute");
 
@@ -194,6 +194,24 @@ public class StageInTest {
 
         testBypass(
                 new ReplicaCatalogEntry("file:///input/f.in", "compute"),
+                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
+                true);
+    }
+
+    /**
+     * Test to ensure there is bypass in condorio mode for file URL's on compute site, when compute
+     * site has auxillary.local set to true PM-1783, PM-1855
+     */
+    @Test
+    public void testBypassForCondorIOWithFileURLOnLocalWithAuxillaryLocal() {
+        SiteStore s = mBag.getHandleToSiteStore();
+        SiteCatalogEntry computeSite = s.lookup("compute");
+
+        // add the profile
+        computeSite.addProfile(new Profile("pegasus", Pegasus.LOCAL_VISIBLE_KEY, "true"));
+
+        testBypass(
+                new ReplicaCatalogEntry("file:///input/f.in", "local"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
                 true);
     }
