@@ -17,7 +17,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -32,6 +31,7 @@ import edu.isi.pegasus.planner.transfer.SLS;
 import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -189,6 +189,7 @@ public class Condor implements SLS {
 
         Set files = job.getInputFiles();
         Collection<FileTransfer> result = new LinkedList();
+        Set<PegasusFile> bypassTXs = new LinkedHashSet();
         String destDir = workerNodeDirectory;
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
@@ -197,6 +198,14 @@ public class Condor implements SLS {
             if (lfn.equals(ENV.X509_USER_PROXY_KEY)) {
                 // ignore the proxy file for time being
                 // as we picking it from the head node directory
+                continue;
+            }
+
+            // PM-1885 for inputs that need to be bypassed, defer to the
+            // Transfer SLS implementation. We check this before check for deep
+            // LFN
+            if (pf.doBypassStaging()) {
+                bypassTXs.add(pf);
                 continue;
             }
 
@@ -217,6 +226,26 @@ public class Condor implements SLS {
                             destDir,
                             // PM-1875 we expand escape varialbe if job run in container
                             job.getContainer() != null));
+        }
+
+        if (!bypassTXs.isEmpty()) {
+            Set<PegasusFile> original = job.getInputFiles();
+            job.setInputFiles(bypassTXs);
+            Collection<FileTransfer> bypassFileTXs =
+                    this.mTransferSLSHandle.determineSLSInputTransfers(
+                            job,
+                            fileName,
+                            stagingSiteServer,
+                            stagingSiteDirectory,
+                            workerNodeDirectory);
+            for (FileTransfer ft : bypassFileTXs) {
+                mLogger.log(
+                        "File will be bypassed using pegasus-transfer " + ft,
+                        LogManager.TRACE_MESSAGE_LEVEL);
+                result.add(ft);
+            }
+            // reset the complete collection back as input files for the job
+            job.setInputFiles(original);
         }
         return result;
     }
@@ -326,7 +355,10 @@ public class Condor implements SLS {
                 // we need a GET URL. we don't know what site is associated with
                 // the source URL. Get the first matching one
                 // PM-698
-                cacheLocation = mPlannerCache.lookup(lfn, FileServerType.OPERATION.get);
+                // cacheLocation = mPlannerCache.lookup(lfn, FileServerType.OPERATION.get);
+                // PM-1885 nothing to do as for bypass files we now defer to the
+                // Transfer SLS implementation
+                continue;
             }
             if (cacheLocation == null) {
                 // nothing in the cache
