@@ -112,47 +112,55 @@ public class StageInTest {
     }
 
     @Test
+    /**
+     * After PM-1885 this should be true, as in CondorIO mode we let pegasus-transfer handle bypass
+     * files in the PegasusLite script
+     */
     public void testBypassForCondorIOWithNonFileURL() {
         testBypass(
                 new ReplicaCatalogEntry("http://example.isi.edu/input/f.in", "compute"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
-                false);
+                true);
     }
 
     /**
-     * Test to ensure there is no bypass in condor io mode , if the replica catalog location is a
-     * file url on compute site
+     * Test to ensure there is bypass in condor io mode , if the replica catalog location is a file
+     * url on compute site. After PM-1885 this should be true, as in CondorIO mode we let
+     * pegasus-transfer handle bypass files in the PegasusLite script
      */
     @Test
     public void testBypassForCondorIOWithFileURLOnComputeSite() {
         testBypass(
                 new ReplicaCatalogEntry("file:///input/f.a", "compute"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
-                false);
+                true);
     }
 
     /**
      * Test to ensure there is bypass in condor io mode , if the replica catalog location is a file
-     * URL on the local site
+     * URL on the local site. After PM-1885 this should be false, as in CondorIO mode we let
+     * pegasus-transfer handle bypass files in the PegasusLite script
      */
     @Test
-    public void testBypassForCondorIOWithFileURLOnLocalSiteA() {
+    public void testBypassForCondorIOWithFileURLOnLocalSite() {
         testBypass(
                 new ReplicaCatalogEntry("file:///input/f.in", "local"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
-                true);
+                false);
     }
 
     /**
      * PM-1875, PM-1885 Test to ensure there is bypass in condor io mode , if the replica catalog
      * location is a file URL on the local site, but the PFN does not end in the basename of the LFN
+     * After PM-1885 this should be false, as in CondorIO mode we let pegasus-transfer handle bypass
+     * files in the PegasusLite script
      */
     @Test
     public void testBypassForCondorIOWithFileURLOnLocalSiteWithRandomBasename() {
         testBypass(
                 new ReplicaCatalogEntry("file:///input/f.random", "local"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
-                true);
+                false);
     }
 
     /**
