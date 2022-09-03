@@ -713,43 +713,26 @@ public class StageIn extends Abstract {
             boolean isFileURL = entry.getPFN().startsWith(PegasusURL.FILE_URL_SCHEME);
             String fileSite = entry.getResourceHandle();
 
-            if (mPegasusConfiguration.jobSetupForCondorIO(job, mProps)) {
-                // additional check for condor io
-                // we need to inspect the URL and it's location
-                // only file urls for input files are eligible for bypass
-                if (isFileURL) {
-                    if (fileSite.equals("local")) {
-                        bypass = true;
-                    } else if (fileSite.equals(computeSiteEntry.getSiteHandle())) {
-                        // PM-1783 allow for compute site file URLs to be bypassed
-                        // if the compute site is visible to the submit host
+            // PM-1885 no special handling for CondorIO, as now CondorIO mode
+            // also defers to NonSharedFS/Transfer SLS implementation for bypassed
+            // files
+            // Non Shared FS case: we can bypass all url's safely
+            // other than file urls
+            if (isFileURL) {
+                // PM-1783 for file url's bypass staging can be triggered only
+                // if file site is same as the compute site OR
+                // auxillary.local  is set to true for the compute site and file site is local
+                bypass = fileSite.equalsIgnoreCase(computeSite);
+                if (!bypass) {
+                    // check for auxillary.local for the compute site only if a file
+                    // URL is for local site
+                    if (fileSite.equalsIgnoreCase("local")) {
                         bypass = computeSiteEntry.isVisibleToLocalSite();
                     }
                 }
-                if (bypass) {
-                    // in condor io  we cannot remap the destination URL
-                    // we need to make sure the PFN ends with lfn to enable bypass
-                    bypass = entry.getPFN().endsWith(file.getLFN());
-                }
             } else {
-                // Non Shared FS case: we can bypass all url's safely
-                // other than file urls
-                if (isFileURL) {
-                    // PM-1783 for file url's bypass staging can be triggered only
-                    // if file site is same as the compute site OR
-                    // auxillary.local  is set to true for the compute site and file site is local
-                    bypass = fileSite.equalsIgnoreCase(computeSite);
-                    if (!bypass) {
-                        // check for auxillary.local for the compute site only if a file
-                        // URL is for local site
-                        if (fileSite.equalsIgnoreCase("local")) {
-                            bypass = computeSiteEntry.isVisibleToLocalSite();
-                        }
-                    }
-                } else {
-                    // for non shared fs case
-                    bypass = true;
-                }
+                // for non shared fs case
+                bypass = true;
             }
         }
 
