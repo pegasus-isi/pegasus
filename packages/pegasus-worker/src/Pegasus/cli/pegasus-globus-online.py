@@ -185,7 +185,7 @@ def mkdir(request):
                 child_dirs.append(dir_name)
             try:
                 response = transfer_client.operation_ls(
-                    request["endpoint"], path=base_path, limit=2
+                    request["endpoint"], path=base_path, query_params={"limit": 2}
                 )
             except globus_sdk.TransferAPIError as e:
                 logger.warn("Finding existing parent dir for mkdir " + f)
@@ -244,14 +244,12 @@ def transfer(request):
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
         label = os.environ["PEGASUS_WF_UUID"] + " - " + os.environ["PEGASUS_DAG_JOB_ID"]
 
-    ####update this to operation_mkdir in the future
-    # transfer_client.operation_mkdir
-    # set up a new delete transfer
+    # set up a new data transfer
     deadline = datetime.utcnow() + timedelta(hours=24)
     transfer_data = globus_sdk.TransferData(
         transfer_client,
-        request["src_endpoint"],
-        request["dst_endpoint"],
+        source_endpoint=request["src_endpoint"],
+        destination_endpoint=request["dst_endpoint"],
         label=label,
         deadline=deadline,
         notify_on_succeeded=False,
@@ -304,7 +302,7 @@ def remove(request):
     deadline = datetime.utcnow() + timedelta(hours=24)
     del_data = globus_sdk.DeleteData(
         transfer_client,
-        request["endpoint"],
+        endpoint=request["endpoint"],
         label=label,
         recursive=request["recursive"],
         deadline=deadline,
@@ -378,6 +376,8 @@ def main():
     # Die nicely when asked to (Ctrl+C, system shutdown)
     signal.signal(signal.SIGINT, prog_sigint_handler)
     signal.signal(signal.SIGTERM, prog_sigint_handler)
+
+    logger.info("Globus SDK Version: %s" % globus_sdk.__version__)
 
     if options.mkdir:
         mkdir(data)
