@@ -6,7 +6,6 @@ from tempfile import TemporaryDirectory
 from textwrap import dedent
 
 import Pegasus
-from Pegasus.api import *
 from Pegasus.client.status import Status
 
 
