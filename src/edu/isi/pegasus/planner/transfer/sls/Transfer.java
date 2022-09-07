@@ -352,7 +352,7 @@ public class Transfer implements SLS {
                                     + lfn
                                     + " for job "
                                     + job.getID(),
-                            LogManager.DEBUG_MESSAGE_LEVEL);
+                            LogManager.WARNING_MESSAGE_LEVEL);
                 }
             }
             if (cacheLocations == null || cacheLocations.isEmpty()) {
