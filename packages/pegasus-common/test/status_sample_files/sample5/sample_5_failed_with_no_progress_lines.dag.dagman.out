@@ -1,0 +1,252 @@
+08/17/22 17:08:26 ******************************************************
+08/17/22 17:08:26 ** condor_scheduniv_exec.236559.0 (CONDOR_DAGMAN) STARTING UP
+08/17/22 17:08:26 ** /usr/bin/condor_dagman
+08/17/22 17:08:26 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+08/17/22 17:08:26 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+08/17/22 17:08:26 ** $CondorVersion: 9.10.0 2022-07-14 BuildID: 596547 PackageID: 9.10.0-1 $
+08/17/22 17:08:26 ** $CondorPlatform: x86_64_AlmaLinux8 $
+08/17/22 17:08:26 ** PID = 348898
+08/17/22 17:08:26 ** Log last touched time unavailable (No such file or directory)
+08/17/22 17:08:26 ******************************************************
+08/17/22 17:08:26 Using config source: /etc/condor/condor_config
+08/17/22 17:08:26 Using local config sources: 
+08/17/22 17:08:26    /etc/condor/config.d/00-htcondor-9.0.config
+08/17/22 17:08:26    /etc/condor/config.d/10-isi-main.conf
+08/17/22 17:08:26    /etc/condor/config.d/20-machine-specifics.conf
+08/17/22 17:08:26    /etc/condor/config.d/80-pegasus.conf
+08/17/22 17:08:26    /etc/condor/config.d/90-common-overrides.conf
+08/17/22 17:08:26    /etc/condor/config.d/99-local.conf
+08/17/22 17:08:26    /etc/condor/condor_config.local
+08/17/22 17:08:26 config Macros = 117, Sorted = 117, StringBytes = 3520, TablesBytes = 4308
+08/17/22 17:08:26 CLASSAD_CACHING is ENABLED
+08/17/22 17:08:26 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+08/17/22 17:08:26 Daemoncore: Listening at <0.0.0.0:43066> on TCP (ReliSock) and UDP (SafeSock).
+08/17/22 17:08:26 DaemonCore: command socket at <128.9.46.30:43066?addrs=128.9.46.30-43066&alias=bamboo.isi.edu>
+08/17/22 17:08:26 DaemonCore: private command socket at <128.9.46.30:43066?addrs=128.9.46.30-43066&alias=bamboo.isi.edu>
+08/17/22 17:08:26 DAGMAN_USE_STRICT setting: 0
+08/17/22 17:08:26 DAGMAN_VERBOSITY setting: 3
+08/17/22 17:08:26 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+08/17/22 17:08:26 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+08/17/22 17:08:26 DAGMAN_SUBMIT_DELAY setting: 0
+08/17/22 17:08:26 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+08/17/22 17:08:26 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+08/17/22 17:08:26 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+08/17/22 17:08:26 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+08/17/22 17:08:26 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+08/17/22 17:08:26 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+08/17/22 17:08:26 DAGMAN_DEFAULT_PRIORITY setting: 0
+08/17/22 17:08:26 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+08/17/22 17:08:26 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+08/17/22 17:08:26 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+08/17/22 17:08:26 DAGMAN_RETRY_NODE_FIRST setting: False
+08/17/22 17:08:26 DAGMAN_MAX_JOBS_IDLE setting: 1000
+08/17/22 17:08:26 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+08/17/22 17:08:26 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+08/17/22 17:08:26 DAGMAN_MAX_POST_SCRIPTS setting: 20
+08/17/22 17:08:26 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+08/17/22 17:08:26 DAGMAN_MUNGE_NODE_NAMES setting: True
+08/17/22 17:08:26 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+08/17/22 17:08:26 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+08/17/22 17:08:26 DAGMAN_ALWAYS_RUN_POST setting: False
+08/17/22 17:08:26 DAGMAN_CONDOR_SUBMIT_EXE setting: /usr/bin/condor_submit
+08/17/22 17:08:26 DAGMAN_USE_DIRECT_SUBMIT setting: True
+08/17/22 17:08:26 DAGMAN_DEFAULT_APPEND_VARS setting: False
+08/17/22 17:08:26 DAGMAN_ABORT_DUPLICATES setting: True
+08/17/22 17:08:26 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+08/17/22 17:08:26 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+08/17/22 17:08:26 DAGMAN_AUTO_RESCUE setting: True
+08/17/22 17:08:26 DAGMAN_MAX_RESCUE_NUM setting: 100
+08/17/22 17:08:26 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+08/17/22 17:08:26 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+08/17/22 17:08:26 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+08/17/22 17:08:26 DAGMAN_MAX_JOB_HOLDS setting: 100
+08/17/22 17:08:26 DAGMAN_HOLD_CLAIM_TIME setting: 20
+08/17/22 17:08:26 ALL_DEBUG setting: 
+08/17/22 17:08:26 DAGMAN_DEBUG setting: 
+08/17/22 17:08:26 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+08/17/22 17:08:26 DAGMAN_REMOVE_NODE_JOBS setting: True
+08/17/22 17:08:26 DAGMAN will adjust edges after parsing
+08/17/22 17:08:26 argv[0] == "condor_scheduniv_exec.236559.0"
+08/17/22 17:08:26 argv[1] == "-Notification"
+08/17/22 17:08:26 argv[2] == "never"
+08/17/22 17:08:26 argv[3] == "-Debug"
+08/17/22 17:08:26 argv[4] == "3"
+08/17/22 17:08:26 argv[5] == "-Lockfile"
+08/17/22 17:08:26 argv[6] == "inner.dag.lock"
+08/17/22 17:08:26 argv[7] == "-Dag"
+08/17/22 17:08:26 argv[8] == "inner.dag"
+08/17/22 17:08:26 argv[9] == "-Condorlog"
+08/17/22 17:08:26 argv[10] == "inner.log"
+08/17/22 17:08:26 argv[11] == "-AutoRescue"
+08/17/22 17:08:26 argv[12] == "1"
+08/17/22 17:08:26 argv[13] == "-DoRescueFrom"
+08/17/22 17:08:26 argv[14] == "0"
+08/17/22 17:08:26 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+08/17/22 17:08:26 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+08/17/22 17:08:26 TOKEN: No token found.
+08/17/22 17:08:26 
+Unrecognized argument: -Condorlog
+08/17/22 17:08:26 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+08/17/22 17:08:26 **** condor_scheduniv_exec.236559.0 (condor_DAGMAN) pid 348898 EXITING WITH STATUS 1
+08/17/22 17:08:37 ******************************************************
+08/17/22 17:08:37 ** condor_scheduniv_exec.236561.0 (CONDOR_DAGMAN) STARTING UP
+08/17/22 17:08:37 ** /usr/bin/condor_dagman
+08/17/22 17:08:37 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+08/17/22 17:08:37 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+08/17/22 17:08:37 ** $CondorVersion: 9.10.0 2022-07-14 BuildID: 596547 PackageID: 9.10.0-1 $
+08/17/22 17:08:37 ** $CondorPlatform: x86_64_AlmaLinux8 $
+08/17/22 17:08:37 ** PID = 349214
+08/17/22 17:08:37 ** Log last touched 8/17 17:08:26
+08/17/22 17:08:37 ******************************************************
+08/17/22 17:08:37 Using config source: /etc/condor/condor_config
+08/17/22 17:08:37 Using local config sources: 
+08/17/22 17:08:37    /etc/condor/config.d/00-htcondor-9.0.config
+08/17/22 17:08:37    /etc/condor/config.d/10-isi-main.conf
+08/17/22 17:08:37    /etc/condor/config.d/20-machine-specifics.conf
+08/17/22 17:08:37    /etc/condor/config.d/80-pegasus.conf
+08/17/22 17:08:37    /etc/condor/config.d/90-common-overrides.conf
+08/17/22 17:08:37    /etc/condor/config.d/99-local.conf
+08/17/22 17:08:37    /etc/condor/condor_config.local
+08/17/22 17:08:37 config Macros = 117, Sorted = 117, StringBytes = 3520, TablesBytes = 4308
+08/17/22 17:08:37 CLASSAD_CACHING is ENABLED
+08/17/22 17:08:37 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+08/17/22 17:08:37 Daemoncore: Listening at <0.0.0.0:48103> on TCP (ReliSock) and UDP (SafeSock).
+08/17/22 17:08:37 DaemonCore: command socket at <128.9.46.30:48103?addrs=128.9.46.30-48103&alias=bamboo.isi.edu>
+08/17/22 17:08:37 DaemonCore: private command socket at <128.9.46.30:48103?addrs=128.9.46.30-48103&alias=bamboo.isi.edu>
+08/17/22 17:08:37 DAGMAN_USE_STRICT setting: 0
+08/17/22 17:08:37 DAGMAN_VERBOSITY setting: 3
+08/17/22 17:08:37 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+08/17/22 17:08:37 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+08/17/22 17:08:37 DAGMAN_SUBMIT_DELAY setting: 0
+08/17/22 17:08:37 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+08/17/22 17:08:37 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+08/17/22 17:08:37 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+08/17/22 17:08:37 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+08/17/22 17:08:37 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+08/17/22 17:08:37 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+08/17/22 17:08:37 DAGMAN_DEFAULT_PRIORITY setting: 0
+08/17/22 17:08:37 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+08/17/22 17:08:37 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+08/17/22 17:08:37 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+08/17/22 17:08:37 DAGMAN_RETRY_NODE_FIRST setting: False
+08/17/22 17:08:37 DAGMAN_MAX_JOBS_IDLE setting: 1000
+08/17/22 17:08:37 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+08/17/22 17:08:37 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+08/17/22 17:08:37 DAGMAN_MAX_POST_SCRIPTS setting: 20
+08/17/22 17:08:37 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+08/17/22 17:08:37 DAGMAN_MUNGE_NODE_NAMES setting: True
+08/17/22 17:08:37 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+08/17/22 17:08:37 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+08/17/22 17:08:37 DAGMAN_ALWAYS_RUN_POST setting: False
+08/17/22 17:08:37 DAGMAN_CONDOR_SUBMIT_EXE setting: /usr/bin/condor_submit
+08/17/22 17:08:37 DAGMAN_USE_DIRECT_SUBMIT setting: True
+08/17/22 17:08:37 DAGMAN_DEFAULT_APPEND_VARS setting: False
+08/17/22 17:08:37 DAGMAN_ABORT_DUPLICATES setting: True
+08/17/22 17:08:37 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+08/17/22 17:08:37 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+08/17/22 17:08:37 DAGMAN_AUTO_RESCUE setting: True
+08/17/22 17:08:37 DAGMAN_MAX_RESCUE_NUM setting: 100
+08/17/22 17:08:37 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+08/17/22 17:08:37 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+08/17/22 17:08:37 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+08/17/22 17:08:37 DAGMAN_MAX_JOB_HOLDS setting: 100
+08/17/22 17:08:37 DAGMAN_HOLD_CLAIM_TIME setting: 20
+08/17/22 17:08:37 ALL_DEBUG setting: 
+08/17/22 17:08:37 DAGMAN_DEBUG setting: 
+08/17/22 17:08:37 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+08/17/22 17:08:37 DAGMAN_REMOVE_NODE_JOBS setting: True
+08/17/22 17:08:37 DAGMAN will adjust edges after parsing
+08/17/22 17:08:37 argv[0] == "condor_scheduniv_exec.236561.0"
+08/17/22 17:08:37 argv[1] == "-Notification"
+08/17/22 17:08:37 argv[2] == "never"
+08/17/22 17:08:37 argv[3] == "-Debug"
+08/17/22 17:08:37 argv[4] == "3"
+08/17/22 17:08:37 argv[5] == "-Lockfile"
+08/17/22 17:08:37 argv[6] == "inner.dag.lock"
+08/17/22 17:08:37 argv[7] == "-Dag"
+08/17/22 17:08:37 argv[8] == "inner.dag"
+08/17/22 17:08:37 argv[9] == "-Condorlog"
+08/17/22 17:08:37 argv[10] == "inner.log"
+08/17/22 17:08:37 argv[11] == "-AutoRescue"
+08/17/22 17:08:37 argv[12] == "1"
+08/17/22 17:08:37 argv[13] == "-DoRescueFrom"
+08/17/22 17:08:37 argv[14] == "0"
+08/17/22 17:08:37 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+08/17/22 17:08:37 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+08/17/22 17:08:37 TOKEN: No token found.
+08/17/22 17:08:37 
+Unrecognized argument: -Condorlog
+08/17/22 17:08:37 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+08/17/22 17:08:37 **** condor_scheduniv_exec.236561.0 (condor_DAGMAN) pid 349214 EXITING WITH STATUS 1
