@@ -3,10 +3,9 @@ import time
 import json
 import yaml
 import re
+import os
 from pathlib import Path
-from os import path
 from typing import Dict, List, Union
-
 from Pegasus import braindump
 from Pegasus.client import condor
 
@@ -54,7 +53,7 @@ class Status:
         self.JS_REMOVING = "Del"
 
         self.root_wf_uuid = None
-        self.pegasus_wf_name = None
+        self.root_wf_name = None
 
         self._job_status_codes = {1:self.JS_IDLE,
                                   2:self.JS_RUN,
@@ -68,58 +67,48 @@ class Status:
                         self.K_READY: 0,
                         self.K_PRE: 0,
                         self.K_QUEUED: 0,
-                        self.K_POST: 0.0,
+                        self.K_POST: 0,
                         self.K_SUCCEEDED: 0,
                         self.K_FAILED: 0,
                         self.K_PERCENT_DONE: 0.0,
                         self.K_TOTAL: 0
                     },
                     "dags": {
-                        "root": {
-                            self.K_UNREADY: 0,
-                            self.K_READY: 0,
-                            self.K_PRE: 0,
-                            self.K_QUEUED: 0,
-                            self.K_POST: 0,
-                            self.K_SUCCEEDED: 0,
-                            self.K_FAILED: 0,
-                            self.K_PERCENT_DONE: 0.0,
-                            self.K_TOTAL: 0,
-                            self.K_DAGNAME: None,
-                            self.K_DAGSTATE: None
-                        }
+                        "root": {}
                     }
                 }
 
 
-    def fetch_status(self, submit_dir: str, *, json : bool=False) -> Union[Dict, None]:
+    def fetch_status(self, submit_dir: str, *, json : bool=False, long : bool=False) -> Union[Dict, None]:
         """
         Shows the workflow status or returns a Dict containing status output
         :return: current status information
         :rtype: Union[dict, None]
         """
-
         rv_condor_q = self._get_q_values(submit_dir)
         rv_progress = self._get_progress(submit_dir)
-        if json:
+        if json :
             return rv_progress
-        if rv_condor_q :
-            self._show_condor_jobs(rv_condor_q)
-        else :
-            self._log.info("(No matching jobs found in Condor Q)")
-        self._show_job_progress(rv_progress)
+        else:
+            if rv_condor_q :
+                self._show_condor_jobs(rv_condor_q)
+            else :
+                self._log.info("(No matching jobs found in Condor Q)")
+            if rv_progress:
+                self._show_job_progress(rv_progress)
 
 
     def _get_q_values(self, submit_dir: str):
         """ Internal method to retrieve Condor Q jobs
             Uses braindump to retrieve values of Attributes set by Pegasus
         """
-
-        braindump = self._get_braindump(submit_dir)
-        self.root_wf_uuid = braindump.root_wf_uuid
-        self.pegasus_wf_name = braindump.pegasus_wf_name
-
-        return self._get_condor_jobs(self.root_wf_uuid)
+        try :
+            braindump = self._get_braindump(submit_dir)
+            self.root_wf_uuid = braindump.root_wf_uuid
+            self.root_wf_name = braindump.pegasus_wf_name
+            return self._get_condor_jobs(self.root_wf_uuid)
+        except :
+            return None
 
 
     def _show_condor_jobs(self, condor_jobs: list):
@@ -153,57 +142,113 @@ class Status:
     def _get_progress(self, submit_dir: str) -> Dict:
         """Internal method to get workflow progress by parsing dagman.out file"""
 
-        dagman_file = '{}/{}.dag.dagman.out'.format(submit_dir,self.pegasus_wf_name)
+        dagman_list = self._get_all_dagmans(submit_dir)
+        #if wrong submit_dir is given or no dagman files found
+        if not dagman_list:
+            return None
 
-        with open(dagman_file,'r') as f:
-            for line in f:
-                dag_status_line = re.match(r'\d\d/\d\d/\d\d\ \d\d:\d\d:\d\d DAG status',line)
-                #MM/DD/YY HH:MM:SS DAG status: 0 (DAG_STATUS_OK)
+        dag_dict = None
+        for dagman_file in dagman_list:
 
-                nodes_total_line = re.match(r'(?=.*(nodes total:))',line)
-                #MM/DD/YY HH:MM:SS Of 10 nodes total:
+            wf_name = dagman_file.split('/')[-1].split('.')[0]
 
-                jobs_progress_line = re.match(r'\d\d/\d\d/\d\d\ \d\d:\d\d:\d\d\ (\s*([0-9])){7}',line)
-                #    0        1       2       3       4        5      6        7          8    <-- indices
-                #MM/DD/YY hh:mm:ss  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
-                #MM/DD/YY hh:mm:ss   ===     ===      ===     ===     ===        ===      ===
-                #MM/DD/YY hh:mm:ss    12       0       22       0       0         83        0
+            #if the directory is root directory
+            if dagman_file[:dagman_file.rfind('/')] == submit_dir:
+                dag_dict = "root"
+                dag_name = '*{}.dag'.format(wf_name)
 
-                if dag_status_line:
-                    dag_status = int(line.split()[4])
-                if nodes_total_line:
-                    total_nodes = line.split()[3]
-                if jobs_progress_line:
-                    temp_values = line.split()
-                    self.status_output["dags"]["root"] = {
-                            self.K_UNREADY: int(temp_values[7]),
-                            self.K_READY: int(temp_values[6]),
-                            self.K_PRE: int(temp_values[3]),
-                            self.K_QUEUED: int(temp_values[4]),
-                            self.K_POST: int(temp_values[5]),
-                            self.K_SUCCEEDED: int(temp_values[2]),
-                            self.K_FAILED: int(temp_values[8]),
-                            self.K_PERCENT_DONE: float("{:.2f}".format((int(temp_values[2])/int(total_nodes))*100)),
-                            self.K_TOTAL: int(total_nodes),
-                            self.K_DAGNAME: '{}.dag'.format(self.pegasus_wf_name),
-                        }
-                    # Non-zero exitcode shows Failure
-                    if dag_status:
-                        self.status_output["dags"]["root"][self.K_DAGSTATE] = self.DAG_FAIL
+            #if the directory is a sub-workflow directory
+            else:
+                dag_dict = wf_name
+                dag_name = '{}.dag'.format(wf_name)
 
-                    # Else Zero exitcode shows DAG_OK status
-                    else:
+            #initializing a dict for each DAG, to be added to the common structure returned
+            self.status_output["dags"][dag_dict] = {
+                                self.K_UNREADY: 0,
+                                self.K_READY: 0,
+                                self.K_PRE: 0,
+                                self.K_QUEUED: 0,
+                                self.K_POST: 0,
+                                self.K_SUCCEEDED: 0,
+                                self.K_FAILED: 0,
+                                self.K_PERCENT_DONE: 0.0,
+                                self.K_TOTAL: 0,
+                                self.K_DAGNAME: dag_name,
+                                self.K_DAGSTATE: None
+                            }
 
-                        #Check for Success DAG status
-                        if self.status_output["dags"]["root"][self.K_PERCENT_DONE] == 100.0 :
-                            self.status_output["dags"]["root"][self.K_DAGSTATE] = self.DAG_DONE
+            #parsing the dagman.out file
+            with open(dagman_file,'r') as f:
+                for line in f:
+                    dag_status_line = re.match(r'\d\d/\d\d/\d\d\ \d\d:\d\d:\d\d DAG status',line)
+                    #MM/DD/YY HH:MM:SS DAG status: 0 (DAG_STATUS_OK)
 
-                        #Else it's Running DAG status
+                    nodes_total_line = re.match(r'(?=.*(nodes total:))',line)
+                    #MM/DD/YY HH:MM:SS Of 10 nodes total:
+
+                    jobs_progress_line = re.match(r'\d\d/\d\d/\d\d\ \d\d:\d\d:\d\d\ (\s*([0-9])){7}',line)
+                    #    0        1       2       3       4        5      6        7          8    <-- indices
+                    #MM/DD/YY hh:mm:ss  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+                    #MM/DD/YY hh:mm:ss   ===     ===      ===     ===     ===        ===      ===
+                    #MM/DD/YY hh:mm:ss    12       0       22       0       0         83        0
+
+                    if dag_status_line:
+                        dag_status = int(line.split()[4])
+                    if nodes_total_line:
+                        total_nodes = line.split()[3]
+                    if jobs_progress_line:
+                        temp_values = line.split()
+                        self.status_output["dags"][dag_dict] = {
+                                self.K_UNREADY: int(temp_values[7]),
+                                self.K_READY: int(temp_values[6]),
+                                self.K_PRE: int(temp_values[3]),
+                                self.K_QUEUED: int(temp_values[4]),
+                                self.K_POST: int(temp_values[5]),
+                                self.K_SUCCEEDED: int(temp_values[2]),
+                                self.K_FAILED: int(temp_values[8]),
+                                self.K_PERCENT_DONE: float("{:.2f}".format((int(temp_values[2])/int(total_nodes))*100)),
+                                self.K_TOTAL: int(total_nodes),
+                                self.K_DAGNAME: dag_name,
+                            }
+                        # Non-zero exitcode shows Failure
+                        if dag_status:
+                            self.status_output["dags"][dag_dict][self.K_DAGSTATE] = self.DAG_FAIL
+
+                        # Else Zero exitcode shows DAG_OK status
                         else:
-                            self.status_output["dags"]["root"][self.K_DAGSTATE] = self.DAG_OK
+
+                            #Check for Success DAG status
+                            if self.status_output["dags"][dag_dict][self.K_PERCENT_DONE] == 100.0 :
+                                self.status_output["dags"][dag_dict][self.K_DAGSTATE] = self.DAG_DONE
+
+                            #Else it's Running DAG status
+                            else:
+                                self.status_output["dags"][dag_dict][self.K_DAGSTATE] = self.DAG_OK
+
+                    #if dagman.out file has no job progress updates due to DAG failure
+                    else:
+                        exit_status_line = re.match(r'(?=.*(EXITING WITH STATUS \d))',line)
+                        if exit_status_line and self.status_output["dags"][dag_dict][self.K_DAGSTATE] == None:
+                            exit_status = int(line.split()[-1])
+                            if exit_status:
+                                self.status_output["dags"][dag_dict][self.K_DAGSTATE] = self.DAG_FAIL
 
         return self.status_output
 
+    def _get_all_dagmans(self, submit_dir:str) -> List:
+        """
+        Internal method which receives a submit directory
+        :return List: .dagman.out files with absolute paths
+        """
+        dagmans = []
+
+        # Traversing the dirs and sub-dirs in bottom-up approach
+        for root, directories, files in os.walk(submit_dir, topdown=False, followlinks=False):
+            for file in files:
+                if file.endswith('.dag.dagman.out'):
+                    dagmans.append(os.path.join(root, file))
+
+        return dagmans
 
     def _show_job_progress(self, values: dict):
         """Internal method to display workflow progress"""
@@ -244,7 +289,7 @@ class Status:
 
         except FileNotFoundError:
             raise WorkflowInstanceError(
-                "Unable to load braindump file: {}".format(path)
+                "Unable to load braindump file: {}".format(os.path)
             )
         return bd
 

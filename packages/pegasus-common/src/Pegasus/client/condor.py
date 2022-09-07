@@ -6,11 +6,8 @@ import logging
 from functools import partial
 from typing import BinaryIO, Dict, List, Union
 
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(logging.Formatter("%(message)s"))
 
-_logger = logging.getLogger("pegasus.client")
-#_logger.addHandler(console_handler)
+_logger = logging.getLogger("Pegasus.client.status")
 _logger.propagate = False
 
 
@@ -76,8 +73,8 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
                 proc,
                 proc.stdout,
                 out,
-                _logger if stream_stdout else None,
-                20
+                _logger if stream_stderr else None,
+                logging.INFO
             ),
         )
     stream_handlers.append(stdout_handler)
@@ -92,7 +89,7 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
                 proc.stderr,
                 err,
                 _logger if stream_stderr else None,
-                40,
+                logging.ERROR,
             ),
         )
     stream_handlers.append(stderr_handler)
@@ -110,16 +107,8 @@ def _q(cmd):
 
     if not cmd:
         raise ValueError("cmd is required")
-    #rv = _exec(cmd=cmd)
-    #return rv.json
-    proc = subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout,stderr = proc.communicate()
-    stdout = stdout.decode('utf-8')
-    if stdout:
-        q_json = json.loads(stdout)
-    else:
-        q_json = None
-    return q_json
+    rv = _exec(cmd=cmd)
+    return rv.json
 
 
 class Result:
