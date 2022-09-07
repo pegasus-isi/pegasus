@@ -223,13 +223,6 @@ public class PegasusLite implements GridStart {
     protected boolean mEnforceStrictChecksOnWPVersion;
 
     /**
-     * This member variable if set causes the destination URL for the symlink jobs to have
-     * symlink:// url if the pool attributed associated with the pfn is same as a particular jobs
-     * execution pool.
-     */
-    protected boolean mUseSymLinks;
-
-    /**
      * Whether PegasusLite should download from the worker package from website in any case or not
      */
     protected boolean mAllowWPDownloadFromWebsite;
@@ -276,7 +269,6 @@ public class PegasusLite implements GridStart {
             mWorkerPackageMap = new HashMap<String, String>();
         }
         mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
-        mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mAllowWPDownloadFromWebsite = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
 
         Version version = Version.instance();
@@ -916,25 +908,6 @@ public class PegasusLite implements GridStart {
                     sb.append("EOF").append('\n');
                     sb.append('\n');
                 }
-
-                // stage input files if this is a dax or a dag job
-                /* PM-1608 not sure why this is not handled in container wrappers
-                if ((job instanceof DAXJob || job instanceof DAGJob) && (!inputFiles.isEmpty())) {
-                    appendStderrFragment(sb, "Staging in input data and executables");
-                    sb.append("# stage in data and executables").append('\n');
-                    sb.append(sls.invocationString(job, null));
-                    if (mUseSymLinks && job.getContainer() == null) {
-                        // PM-1135 allow the transfer executable to symlink input file urls
-                        // PM-1197 we have to disable symlink if a job is set to
-                        // be launched via a container
-                        sb.append(" --symlink ");
-                    }
-                    sb.append(" 1>&2").append(" << 'EOF'").append('\n');
-                    sb.append(convertToTransferInputFormat(inputFiles, PegasusFile.LINKAGE.input));
-                    sb.append("EOF").append('\n');
-                    sb.append('\n');
-                }
-                */
                 // end of PM-1608 not sure why this is not handled in wrapper
             }
             if (this.mDoIntegrityChecking) {
