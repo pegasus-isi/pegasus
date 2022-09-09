@@ -43,14 +43,14 @@ local_site.add_directories(
 # CCG site
 ccg_site = Site(name="CCG", arch=Arch.X86_64, os_type=OS.LINUX)
 ccg_site.add_grids(
-    Grid(grid_type=Grid.BATCH, contact="corbusier.isi.edu", scheduler_type=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
-    Grid(grid_type=Grid.BATCH, contact="corbusier.isi.edu", scheduler_type=Scheduler.SLURM, job_type=SupportedJobs.COMPUTE),
+    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu", scheduler_type=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
+    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu", scheduler_type=Scheduler.SLURM, job_type=SupportedJobs.COMPUTE),
 )
 ccg_site.add_directories(
     Directory(Directory.SHARED_SCRATCH, "/nfs/bamboo/scratch-90-days/CCG/scratch")
-        .add_file_servers(FileServer("scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch", Operation.ALL)),
+        .add_file_servers(FileServer("scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch", Operation.ALL)),
     Directory(Directory.LOCAL_STORAGE, "/nfs/bamboo/scratch-90-days/CCG/outputs")
-        .add_file_servers(FileServer("scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/outputs", Operation.ALL))
+        .add_file_servers(FileServer("scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/outputs", Operation.ALL))
 )
 ccg_site.add_env(PEGASUS_HOME="/opt/pegasus")
 ccg_site.add_profiles(Namespace.PEGASUS, style="ssh", change_dir="true", SSH_PRIVATE_KEY="/scitech/home/bamboo/.ssh/workflow_id_rsa")
