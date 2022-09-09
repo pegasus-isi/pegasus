@@ -52,12 +52,12 @@ sites:
   grids: 
    - 
     type: "batch" 
-    contact: "corbusier.isi.edu" 
+    contact: "slurm-pegasus.isi.edu" 
     scheduler: "slurm" 
     jobtype: "compute" 
    - 
     type: "batch" 
-    contact: "corbusier.isi.edu" 
+    contact: "slurm-pegasus.isi.edu" 
     scheduler: "slurm" 
     jobtype: "compute" 
   profiles: 
