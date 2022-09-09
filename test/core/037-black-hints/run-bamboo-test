@@ -47,15 +47,15 @@ cat >sites.xml <<EOF
     </site>
 
     <site  handle="CCG" arch="x86_64" os="LINUX">
-        <grid  type="batch" contact="corbusier.isi.edu" scheduler="slurm" jobtype="auxillary"/>
+        <grid  type="batch" contact="slurm-pegasus.isi.edu" scheduler="slurm" jobtype="auxillary"/>
 	        <!-- incorrect end point given deliberately -->
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor1" scheduler="Condor" jobtype="compute"/>
 
         <directory type="shared-scratch" path="/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/scratch">
-            <file-server operation="all" url="scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/scratch"/>
+            <file-server operation="all" url="scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/scratch"/>
         </directory>
         <directory type="local-storage" path="/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/outputs">
-            <file-server operation="all" url="scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/outputs"/>
+            <file-server operation="all" url="scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/outputs"/>
         </directory>
         <profile namespace="pegasus" key="style">ssh</profile>
         <profile namespace="pegasus" key="change.dir">true</profile>

@@ -4,6 +4,7 @@ set -e
 
 export PYTHONPATH=`pegasus-config --python`
 
+
 echo "Generating sleep workflow"
 # writes the file "inner_sleep_workflow.yml" which is referenced in
 # workflow.py 
