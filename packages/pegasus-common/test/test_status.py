@@ -30,10 +30,10 @@ def test_should_create_Status(status):
                 "pre": 0,
                 "queued": 0,
                 "post": 0,
-                "succeeded": 0,
+                "succeeded": 17,
                 "failed": 0,
-                "percent_done": 0.0,
-                "total": 0,
+                "percent_done": 100.0,
+                "total": 17,
             },
             "dags": {
                 "root": {
@@ -47,7 +47,7 @@ def test_should_create_Status(status):
                     "percent_done": 100.0,
                     "state": "Success",
                     "total": 17,
-                    "dagname": "*sample_1_success.dag",
+                    "dagname": "sample_1_success.dag",
                 }
             }
         }
@@ -57,15 +57,15 @@ def test_should_create_Status(status):
             './status_sample_files/sample2',
             {
             "totals": {
-                "unready": 0,
+                "unready": 28,
                 "ready": 0,
                 "pre": 0,
-                "queued": 0,
+                "queued": 1,
                 "post": 0,
                 "succeeded": 0,
                 "failed": 0,
                 "percent_done": 0.0,
-                "total": 0,
+                "total": 29,
             },
             "dags": {
                 "root": {
@@ -79,7 +79,7 @@ def test_should_create_Status(status):
                     "percent_done": 0.0,
                     "state": "Running",
                     "total": 29,
-                    "dagname": "*sample_2_held.dag",
+                    "dagname": "sample_2_held.dag",
                 }
             }
         }
@@ -89,15 +89,15 @@ def test_should_create_Status(status):
             './status_sample_files/sample3',
             {
             "totals": {
-                "unready": 0,
+                "unready": 9,
                 "ready": 0,
                 "pre": 0,
                 "queued": 0,
                 "post": 0,
-                "succeeded": 0,
-                "failed": 0,
-                "percent_done": 0.0,
-                "total": 0,
+                "succeeded": 8,
+                "failed": 3,
+                "percent_done": 40.0,
+                "total": 20,
             },
             "dags": {
                 "root": {
@@ -111,7 +111,7 @@ def test_should_create_Status(status):
                     "percent_done": 40.0,
                     "state": "Failure",
                     "total": 20,
-                    "dagname": "*sample_3_failure.dag",
+                    "dagname": "sample_3_failure.dag",
                 }
             }
         }
@@ -121,15 +121,15 @@ def test_should_create_Status(status):
             './status_sample_files/sample4',
             {
             "totals": {
-                "unready": 0,
+                "unready": 21,
                 "ready": 0,
                 "pre": 0,
-                "queued": 0,
+                "queued": 4,
                 "post": 0,
-                "succeeded": 0,
+                "succeeded": 4,
                 "failed": 0,
-                "percent_done": 0.0,
-                "total": 0,
+                "percent_done": 13.79,
+                "total": 29,
             },
             "dags": {
                 "root": {
@@ -143,7 +143,7 @@ def test_should_create_Status(status):
                     "percent_done": 13.79,
                     "state": "Failure",
                     "total": 29,
-                    "dagname": "*sample_4_removed.dag",
+                    "dagname": "sample_4_removed.dag",
                 }
             }
         }
@@ -175,7 +175,7 @@ def test_should_create_Status(status):
                     "percent_done": 0.0,
                     "state": "Failure",
                     "total": 0,
-                    "dagname": "*sample_5_failed_with_no_progress_lines.dag",
+                    "dagname": "sample_5_failed_with_no_progress_lines.dag",
                 }
             }
         }

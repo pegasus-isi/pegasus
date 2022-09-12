@@ -1950,7 +1950,7 @@ class TestWorkflow:
         #Pegasus.client._client.Client.status.assert_called_once_with(
         #    wf._submit_dir, long=0, verbose=0
         #)
-        Pegasus.client.status.Status.fetch_status.assert_called_once_with(wf._submit_dir, json=False)
+        Pegasus.client.status.Status.fetch_status.assert_called_once_with(wf._submit_dir, json=False, long=False)
 
     def test_get_status(self, wf, mocker):
         expected = {
