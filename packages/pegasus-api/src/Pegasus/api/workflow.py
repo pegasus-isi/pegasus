@@ -1081,8 +1081,6 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         self.name = name
         self.infer_dependencies = infer_dependencies
 
-        self._display_status = Status()
-
         # client specific members
         self._submit_dir = None
         self._braindump = None
@@ -1334,7 +1332,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :raises PegasusClientError: pegasus-status encountered an error
         :return: self
         """
-        return self._display_status.status(self._submit_dir, json=json)
+        display_status = Status()
+        return display_status.fetch_status(self._submit_dir, json=json, long=long)
         #self._client.status(self._submit_dir, long=long, verbose=verbose)
 
     @_needs_submit_dir
