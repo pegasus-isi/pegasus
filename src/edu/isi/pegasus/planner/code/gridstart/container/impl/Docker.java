@@ -150,10 +150,15 @@ public class Docker extends Abstract {
                 .append(ROOT_PATH_VARIABLE_KEY)
                 .append("=\\$PATH ;") // PM-1630 preserve the path for root user
                 .append("if ! grep -q -E  \"^$cont_group:\" /etc/group ; then ")
-                .append("groupadd --gid $cont_groupid $cont_group ;")
+                .append("groupadd -f --gid $cont_groupid $cont_group ;")
                 .append("fi; ")
                 .append("if ! id $cont_user 2>/dev/null >/dev/null; then ")
-                .append("useradd --uid $cont_userid --gid $cont_groupid $cont_user; ")
+                .append("   if id $cont_userid 2>/dev/null >/dev/null; then ")
+                // PM-1809 the userid already exists. let the container os decide userid
+                .append("       useradd --gid $cont_groupid $cont_user; ")
+                .append("   else ")
+                .append("       useradd --uid $cont_userid --gid $cont_groupid $cont_user; ")
+                .append("   fi; ")
                 .append("fi; ")
                 .append("su $cont_user -c ");
         sb.append("\\\"");
