@@ -155,7 +155,7 @@ public class Docker extends Abstract {
                 .append("if ! id $cont_user 2>/dev/null >/dev/null; then ")
                 .append("   if id $cont_userid 2>/dev/null >/dev/null; then ")
                 // PM-1809 the userid already exists. let the container os decide userid
-                .append("       useradd --gid $cont_groupid $cont_user; ")
+                .append("       useradd -o --uid $cont_userid --gid $cont_groupid $cont_user; ")
                 .append("   else ")
                 .append("       useradd --uid $cont_userid --gid $cont_groupid $cont_user; ")
                 .append("   fi; ")
