@@ -4,6 +4,8 @@ import json
 import yaml
 import re
 import os
+import sys
+import io
 from pathlib import Path
 from typing import Dict, List, Union
 from collections import defaultdict
@@ -18,6 +20,10 @@ class Status:
     def __init__(self):
         self._log = logging.getLogger(__name__)
         self._log.addHandler(console_handler)
+        self.string_logs = io.StringIO()
+        self.console_handler2 = logging.StreamHandler(self.string_logs)
+        self.console_handler2.setFormatter(logging.Formatter("%(message)s"))
+        self._log.addHandler(self.console_handler2)
         self._log.propagate = False
 
         """Keys are defined as follows
@@ -58,6 +64,7 @@ class Status:
         self.root_wf_name = None
         self.is_hierarchical = False
         self.dag_tree_struct = None
+        self.progress_string = None
 
         self._job_status_codes = {1:self.JS_IDLE,
                                   2:self.JS_RUN,
@@ -100,9 +107,10 @@ class Status:
             if rv_condor_q :
                 self._show_condor_jobs(rv_condor_q)
             else :
-                self._log.info("(No matching jobs found in Condor Q)")
-            if rv_progress:
+                self._log.info("\n(No matching jobs found in Condor Q)")
+            if rv_progress :
                 self._show_job_progress(rv_progress,long)
+        self.progress_string = self.string_logs.getvalue()
 
 
     def _get_q_values(self, submit_dir: str):
@@ -121,7 +129,7 @@ class Status:
     def _show_condor_jobs(self, condor_jobs: list):
         """Internal method to display the Condor Q jobs and attributes"""
 
-        self._log.info("{:5}{:^11}{:25}".format('STAT','IN_STATE','JOB'))
+        self._log.info("\n{:5}{:^11}{:25}".format('STAT','IN_STATE','JOB'))
         job_counts = {self.JS_IDLE:0,
                        self.JS_RUN:0,
                        self.JS_HELD:0,
@@ -172,9 +180,9 @@ class Status:
             with (Path(submit_dir) / "braindump.yml").open("r") as f:
                 bd = braindump.load(f)
 
-        except FileNotFoundError:
-            raise WorkflowInstanceError(
-                "Unable to load braindump file: {}".format(os.path)
+        except :
+            raise FileNotFoundError(
+                "Unable to load braindump file, invalid submit directory!"
             )
         return bd
 
@@ -239,6 +247,7 @@ class Status:
             self.dag_tree_struct = ["root"]
 
         return self.status_output
+
 
     def _parse_dagman_file(self, dagman_file, dag_name, dag_dict):
         #parsing the dagman.out file
@@ -402,7 +411,7 @@ class Status:
                                                                  done[bool(dag_state_counts["Success"])],
                                                                  fail[bool(dag_state_counts["Failure"])],
                                                                  run[bool(dag_state_counts["Running"])])
-        self._log.info(summary_line[:-1].rstrip(' ')+')')
+        self._log.info(summary_line[:-1].rstrip(' ')+')\n')
 
 
     def _get_dag_tree_structure(self, dagman_list, submit_dir):
@@ -452,6 +461,3 @@ class Status:
             if isinstance(paths[path], dict):
                 extension = bar if pointer == t else space
                 yield from self.print_tree(paths[path], prefix=prefix+extension)
-
-class WorkflowInstanceError(Exception):
-    pass

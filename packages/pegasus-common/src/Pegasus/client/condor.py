@@ -1,15 +1,12 @@
 import subprocess
-import json
-import io
 import threading
 import logging
 from functools import partial
 from typing import BinaryIO, Dict, List, Union
-
+from Pegasus.client import _client as cli
 
 _logger = logging.getLogger("Pegasus.client.status")
 _logger.propagate = False
-
 
 def _handle_stream(
         proc: subprocess.Popen,
@@ -61,7 +58,6 @@ def _handle_stream(
                     log(l)
                 break
 
-
 def _exec(cmd, stream_stdout=True, stream_stderr=False):
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stream_handlers = []
@@ -98,9 +94,8 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
     for sh in stream_handlers:
         sh.join()
 
-    result = Result(cmd, b"".join(out), b"".join(err))
+    result = cli.Result(cmd, b"".join(out), b"".join(err))
     return result
-
 
 def _q(cmd):
     """Returns the output of condor_q cmd in JSON format"""
@@ -109,42 +104,3 @@ def _q(cmd):
         raise ValueError("cmd is required")
     rv = _exec(cmd=cmd)
     return rv.json
-
-
-class Result:
-    """An object to store outcome from the execution of a Condor command."""
-
-    def __init__(self, cmd, stdout_bytes, stderr_bytes):
-        self.cmd = cmd
-        self._stdout_bytes = stdout_bytes
-        self._stderr_bytes = stderr_bytes
-        self._json = None
-
-    @property
-    def output(self):
-        """Return standard output as str."""
-        return self.stdout
-
-    @property
-    def stdout(self):
-        """Return standard output as str."""
-        if self._stdout_bytes is None:
-            raise ValueError("stdout not captured")
-        return self._stdout_bytes.decode().replace("\r\n", "\n")
-
-    @property
-    def stderr(self):
-        """Return standard error as str."""
-        if self._stderr_bytes is None:
-            raise ValueError("stderr not captured")
-        return self._stderr_bytes.decode().replace("\r\n", "\n")
-
-    @property
-    def json(self):
-        """Return standard out as JSON."""
-        if self._stdout_bytes:
-            if not self._json:
-                self._json = json.loads(self.output)
-            return self._json
-        else:
-            return None
