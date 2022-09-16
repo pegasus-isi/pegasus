@@ -1,0 +1,952 @@
+09/15/22 15:26:34 ******************************************************
+09/15/22 15:26:34 ** condor_scheduniv_exec.341.0 (CONDOR_DAGMAN) STARTING UP
+09/15/22 15:26:34 ** /usr/bin/condor_dagman
+09/15/22 15:26:34 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+09/15/22 15:26:34 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+09/15/22 15:26:34 ** $CondorVersion: 9.11.0 2022-08-25 BuildID: 602587 PackageID: 9.11.0-1 $
+09/15/22 15:26:34 ** $CondorPlatform: x86_64_AlmaLinux8 $
+09/15/22 15:26:34 ** PID = 3684769
+09/15/22 15:26:34 ** Log last touched time unavailable (No such file or directory)
+09/15/22 15:26:34 ******************************************************
+09/15/22 15:26:34 Using config source: /home/mzalam/wf/condor/etc/condor_config
+09/15/22 15:26:34 Using local config sources: 
+09/15/22 15:26:34    /home/mzalam/wf/condor/local/config.d/00-personal-condor
+09/15/22 15:26:34 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
+09/15/22 15:26:34 CLASSAD_CACHING is ENABLED
+09/15/22 15:26:34 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+09/15/22 15:26:34 Daemoncore: Listening at <0.0.0.0:19947> on TCP (ReliSock) and UDP (SafeSock).
+09/15/22 15:26:34 DaemonCore: command socket at <128.9.46.53:19947?addrs=128.9.46.53-19947&alias=workflow.isi.edu>
+09/15/22 15:26:34 DaemonCore: private command socket at <128.9.46.53:19947?addrs=128.9.46.53-19947&alias=workflow.isi.edu>
+09/15/22 15:26:34 DAGMAN_USE_STRICT setting: 1
+09/15/22 15:26:34 DAGMAN_VERBOSITY setting: 3
+09/15/22 15:26:34 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+09/15/22 15:26:34 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+09/15/22 15:26:34 DAGMAN_SUBMIT_DELAY setting: 0
+09/15/22 15:26:34 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+09/15/22 15:26:34 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+09/15/22 15:26:34 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+09/15/22 15:26:34 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+09/15/22 15:26:34 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+09/15/22 15:26:34 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+09/15/22 15:26:34 DAGMAN_DEFAULT_PRIORITY setting: 0
+09/15/22 15:26:34 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+09/15/22 15:26:34 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+09/15/22 15:26:34 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+09/15/22 15:26:34 DAGMAN_RETRY_NODE_FIRST setting: False
+09/15/22 15:26:34 DAGMAN_MAX_JOBS_IDLE setting: 1000
+09/15/22 15:26:34 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+09/15/22 15:26:34 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+09/15/22 15:26:34 DAGMAN_MAX_POST_SCRIPTS setting: 20
+09/15/22 15:26:34 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+09/15/22 15:26:34 DAGMAN_MUNGE_NODE_NAMES setting: True
+09/15/22 15:26:34 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+09/15/22 15:26:34 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+09/15/22 15:26:34 DAGMAN_ALWAYS_RUN_POST setting: False
+09/15/22 15:26:34 DAGMAN_CONDOR_SUBMIT_EXE setting: /home/mzalam/wf/condor/bin/condor_submit
+09/15/22 15:26:34 DAGMAN_USE_DIRECT_SUBMIT setting: True
+09/15/22 15:26:34 DAGMAN_DEFAULT_APPEND_VARS setting: False
+09/15/22 15:26:34 DAGMAN_ABORT_DUPLICATES setting: True
+09/15/22 15:26:34 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+09/15/22 15:26:34 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+09/15/22 15:26:34 DAGMAN_AUTO_RESCUE setting: True
+09/15/22 15:26:34 DAGMAN_MAX_RESCUE_NUM setting: 100
+09/15/22 15:26:34 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+09/15/22 15:26:34 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+09/15/22 15:26:34 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+09/15/22 15:26:34 DAGMAN_MAX_JOB_HOLDS setting: 100
+09/15/22 15:26:34 DAGMAN_HOLD_CLAIM_TIME setting: 20
+09/15/22 15:26:34 ALL_DEBUG setting: 
+09/15/22 15:26:34 DAGMAN_DEBUG setting: 
+09/15/22 15:26:34 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+09/15/22 15:26:34 DAGMAN_REMOVE_NODE_JOBS setting: True
+09/15/22 15:26:34 DAGMAN will adjust edges after parsing
+09/15/22 15:26:34 argv[0] == "condor_scheduniv_exec.341.0"
+09/15/22 15:26:34 argv[1] == "-Notification"
+09/15/22 15:26:34 argv[2] == "never"
+09/15/22 15:26:34 argv[3] == "-Debug"
+09/15/22 15:26:34 argv[4] == "3"
+09/15/22 15:26:34 argv[5] == "-Lockfile"
+09/15/22 15:26:34 argv[6] == "inner.dag.lock"
+09/15/22 15:26:34 argv[7] == "-Dag"
+09/15/22 15:26:34 argv[8] == "inner.dag"
+09/15/22 15:26:34 argv[9] == "-Condorlog"
+09/15/22 15:26:34 argv[10] == "inner.log"
+09/15/22 15:26:34 argv[11] == "-AutoRescue"
+09/15/22 15:26:34 argv[12] == "1"
+09/15/22 15:26:34 argv[13] == "-DoRescueFrom"
+09/15/22 15:26:34 argv[14] == "0"
+09/15/22 15:26:34 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:26:34 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:26:34 
+Unrecognized argument: -Condorlog
+09/15/22 15:26:34 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+09/15/22 15:26:34 **** condor_scheduniv_exec.341.0 (condor_DAGMAN) pid 3684769 EXITING WITH STATUS 1
+09/15/22 15:26:44 ******************************************************
+09/15/22 15:26:44 ** condor_scheduniv_exec.343.0 (CONDOR_DAGMAN) STARTING UP
+09/15/22 15:26:44 ** /usr/bin/condor_dagman
+09/15/22 15:26:44 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+09/15/22 15:26:44 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+09/15/22 15:26:44 ** $CondorVersion: 9.11.0 2022-08-25 BuildID: 602587 PackageID: 9.11.0-1 $
+09/15/22 15:26:44 ** $CondorPlatform: x86_64_AlmaLinux8 $
+09/15/22 15:26:44 ** PID = 3685053
+09/15/22 15:26:44 ** Log last touched 9/15 15:26:34
+09/15/22 15:26:44 ******************************************************
+09/15/22 15:26:44 Using config source: /home/mzalam/wf/condor/etc/condor_config
+09/15/22 15:26:44 Using local config sources: 
+09/15/22 15:26:44    /home/mzalam/wf/condor/local/config.d/00-personal-condor
+09/15/22 15:26:44 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
+09/15/22 15:26:44 CLASSAD_CACHING is ENABLED
+09/15/22 15:26:44 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+09/15/22 15:26:44 Daemoncore: Listening at <0.0.0.0:14661> on TCP (ReliSock) and UDP (SafeSock).
+09/15/22 15:26:44 DaemonCore: command socket at <128.9.46.53:14661?addrs=128.9.46.53-14661&alias=workflow.isi.edu>
+09/15/22 15:26:44 DaemonCore: private command socket at <128.9.46.53:14661?addrs=128.9.46.53-14661&alias=workflow.isi.edu>
+09/15/22 15:26:44 DAGMAN_USE_STRICT setting: 1
+09/15/22 15:26:44 DAGMAN_VERBOSITY setting: 3
+09/15/22 15:26:44 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+09/15/22 15:26:44 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+09/15/22 15:26:44 DAGMAN_SUBMIT_DELAY setting: 0
+09/15/22 15:26:44 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+09/15/22 15:26:44 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+09/15/22 15:26:44 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+09/15/22 15:26:44 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+09/15/22 15:26:44 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+09/15/22 15:26:44 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+09/15/22 15:26:44 DAGMAN_DEFAULT_PRIORITY setting: 0
+09/15/22 15:26:44 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+09/15/22 15:26:44 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+09/15/22 15:26:44 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+09/15/22 15:26:44 DAGMAN_RETRY_NODE_FIRST setting: False
+09/15/22 15:26:44 DAGMAN_MAX_JOBS_IDLE setting: 1000
+09/15/22 15:26:44 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+09/15/22 15:26:44 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+09/15/22 15:26:44 DAGMAN_MAX_POST_SCRIPTS setting: 20
+09/15/22 15:26:44 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+09/15/22 15:26:44 DAGMAN_MUNGE_NODE_NAMES setting: True
+09/15/22 15:26:44 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+09/15/22 15:26:44 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+09/15/22 15:26:44 DAGMAN_ALWAYS_RUN_POST setting: False
+09/15/22 15:26:44 DAGMAN_CONDOR_SUBMIT_EXE setting: /home/mzalam/wf/condor/bin/condor_submit
+09/15/22 15:26:44 DAGMAN_USE_DIRECT_SUBMIT setting: True
+09/15/22 15:26:44 DAGMAN_DEFAULT_APPEND_VARS setting: False
+09/15/22 15:26:44 DAGMAN_ABORT_DUPLICATES setting: True
+09/15/22 15:26:44 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+09/15/22 15:26:44 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+09/15/22 15:26:44 DAGMAN_AUTO_RESCUE setting: True
+09/15/22 15:26:44 DAGMAN_MAX_RESCUE_NUM setting: 100
+09/15/22 15:26:44 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+09/15/22 15:26:44 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+09/15/22 15:26:44 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+09/15/22 15:26:44 DAGMAN_MAX_JOB_HOLDS setting: 100
+09/15/22 15:26:44 DAGMAN_HOLD_CLAIM_TIME setting: 20
+09/15/22 15:26:44 ALL_DEBUG setting: 
+09/15/22 15:26:44 DAGMAN_DEBUG setting: 
+09/15/22 15:26:44 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+09/15/22 15:26:44 DAGMAN_REMOVE_NODE_JOBS setting: True
+09/15/22 15:26:44 DAGMAN will adjust edges after parsing
+09/15/22 15:26:44 argv[0] == "condor_scheduniv_exec.343.0"
+09/15/22 15:26:44 argv[1] == "-Notification"
+09/15/22 15:26:44 argv[2] == "never"
+09/15/22 15:26:44 argv[3] == "-Debug"
+09/15/22 15:26:44 argv[4] == "3"
+09/15/22 15:26:44 argv[5] == "-Lockfile"
+09/15/22 15:26:44 argv[6] == "inner.dag.lock"
+09/15/22 15:26:44 argv[7] == "-Dag"
+09/15/22 15:26:44 argv[8] == "inner.dag"
+09/15/22 15:26:44 argv[9] == "-Condorlog"
+09/15/22 15:26:44 argv[10] == "inner.log"
+09/15/22 15:26:44 argv[11] == "-AutoRescue"
+09/15/22 15:26:44 argv[12] == "1"
+09/15/22 15:26:44 argv[13] == "-DoRescueFrom"
+09/15/22 15:26:44 argv[14] == "0"
+09/15/22 15:26:44 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:26:44 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:26:44 
+Unrecognized argument: -Condorlog
+09/15/22 15:26:44 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+09/15/22 15:26:44 **** condor_scheduniv_exec.343.0 (condor_DAGMAN) pid 3685053 EXITING WITH STATUS 1
+09/15/22 15:33:07 ******************************************************
+09/15/22 15:33:07 ** condor_scheduniv_exec.345.0 (CONDOR_DAGMAN) STARTING UP
+09/15/22 15:33:07 ** /usr/bin/condor_dagman
+09/15/22 15:33:07 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+09/15/22 15:33:07 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+09/15/22 15:33:07 ** $CondorVersion: 9.11.0 2022-08-25 BuildID: 602587 PackageID: 9.11.0-1 $
+09/15/22 15:33:07 ** $CondorPlatform: x86_64_AlmaLinux8 $
+09/15/22 15:33:07 ** PID = 3687383
+09/15/22 15:33:07 ** Log last touched 9/15 15:26:44
+09/15/22 15:33:07 ******************************************************
+09/15/22 15:33:07 Using config source: /home/mzalam/wf/condor/etc/condor_config
+09/15/22 15:33:07 Using local config sources: 
+09/15/22 15:33:07    /home/mzalam/wf/condor/local/config.d/00-personal-condor
+09/15/22 15:33:07 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
+09/15/22 15:33:07 CLASSAD_CACHING is ENABLED
+09/15/22 15:33:07 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+09/15/22 15:33:07 Daemoncore: Listening at <0.0.0.0:30433> on TCP (ReliSock) and UDP (SafeSock).
+09/15/22 15:33:07 DaemonCore: command socket at <128.9.46.53:30433?addrs=128.9.46.53-30433&alias=workflow.isi.edu>
+09/15/22 15:33:07 DaemonCore: private command socket at <128.9.46.53:30433?addrs=128.9.46.53-30433&alias=workflow.isi.edu>
+09/15/22 15:33:07 DAGMAN_USE_STRICT setting: 1
+09/15/22 15:33:07 DAGMAN_VERBOSITY setting: 3
+09/15/22 15:33:07 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+09/15/22 15:33:07 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+09/15/22 15:33:07 DAGMAN_SUBMIT_DELAY setting: 0
+09/15/22 15:33:07 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+09/15/22 15:33:07 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+09/15/22 15:33:07 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+09/15/22 15:33:07 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+09/15/22 15:33:07 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+09/15/22 15:33:07 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+09/15/22 15:33:07 DAGMAN_DEFAULT_PRIORITY setting: 0
+09/15/22 15:33:07 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+09/15/22 15:33:07 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+09/15/22 15:33:07 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+09/15/22 15:33:07 DAGMAN_RETRY_NODE_FIRST setting: False
+09/15/22 15:33:07 DAGMAN_MAX_JOBS_IDLE setting: 1000
+09/15/22 15:33:07 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+09/15/22 15:33:07 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+09/15/22 15:33:07 DAGMAN_MAX_POST_SCRIPTS setting: 20
+09/15/22 15:33:07 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+09/15/22 15:33:07 DAGMAN_MUNGE_NODE_NAMES setting: True
+09/15/22 15:33:07 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+09/15/22 15:33:07 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+09/15/22 15:33:07 DAGMAN_ALWAYS_RUN_POST setting: False
+09/15/22 15:33:07 DAGMAN_CONDOR_SUBMIT_EXE setting: /home/mzalam/wf/condor/bin/condor_submit
+09/15/22 15:33:07 DAGMAN_USE_DIRECT_SUBMIT setting: True
+09/15/22 15:33:07 DAGMAN_DEFAULT_APPEND_VARS setting: False
+09/15/22 15:33:07 DAGMAN_ABORT_DUPLICATES setting: True
+09/15/22 15:33:07 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+09/15/22 15:33:07 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+09/15/22 15:33:07 DAGMAN_AUTO_RESCUE setting: True
+09/15/22 15:33:07 DAGMAN_MAX_RESCUE_NUM setting: 100
+09/15/22 15:33:07 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+09/15/22 15:33:07 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+09/15/22 15:33:07 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+09/15/22 15:33:07 DAGMAN_MAX_JOB_HOLDS setting: 100
+09/15/22 15:33:07 DAGMAN_HOLD_CLAIM_TIME setting: 20
+09/15/22 15:33:07 ALL_DEBUG setting: 
+09/15/22 15:33:07 DAGMAN_DEBUG setting: 
+09/15/22 15:33:07 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+09/15/22 15:33:07 DAGMAN_REMOVE_NODE_JOBS setting: True
+09/15/22 15:33:07 DAGMAN will adjust edges after parsing
+09/15/22 15:33:07 argv[0] == "condor_scheduniv_exec.345.0"
+09/15/22 15:33:07 argv[1] == "-Notification"
+09/15/22 15:33:07 argv[2] == "never"
+09/15/22 15:33:07 argv[3] == "-Debug"
+09/15/22 15:33:07 argv[4] == "3"
+09/15/22 15:33:07 argv[5] == "-Lockfile"
+09/15/22 15:33:07 argv[6] == "inner.dag.lock"
+09/15/22 15:33:07 argv[7] == "-Dag"
+09/15/22 15:33:07 argv[8] == "inner.dag"
+09/15/22 15:33:07 argv[9] == "-Condorlog"
+09/15/22 15:33:07 argv[10] == "inner.log"
+09/15/22 15:33:07 argv[11] == "-AutoRescue"
+09/15/22 15:33:07 argv[12] == "1"
+09/15/22 15:33:07 argv[13] == "-DoRescueFrom"
+09/15/22 15:33:07 argv[14] == "0"
+09/15/22 15:33:07 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:33:07 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:33:07 
+Unrecognized argument: -Condorlog
+09/15/22 15:33:07 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+09/15/22 15:33:07 **** condor_scheduniv_exec.345.0 (condor_DAGMAN) pid 3687383 EXITING WITH STATUS 1
+09/15/22 15:33:17 ******************************************************
+09/15/22 15:33:17 ** condor_scheduniv_exec.346.0 (CONDOR_DAGMAN) STARTING UP
+09/15/22 15:33:17 ** /usr/bin/condor_dagman
+09/15/22 15:33:17 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+09/15/22 15:33:17 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+09/15/22 15:33:17 ** $CondorVersion: 9.11.0 2022-08-25 BuildID: 602587 PackageID: 9.11.0-1 $
+09/15/22 15:33:17 ** $CondorPlatform: x86_64_AlmaLinux8 $
+09/15/22 15:33:17 ** PID = 3687772
+09/15/22 15:33:17 ** Log last touched 9/15 15:33:07
+09/15/22 15:33:17 ******************************************************
+09/15/22 15:33:17 Using config source: /home/mzalam/wf/condor/etc/condor_config
+09/15/22 15:33:17 Using local config sources: 
+09/15/22 15:33:17    /home/mzalam/wf/condor/local/config.d/00-personal-condor
+09/15/22 15:33:17 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
+09/15/22 15:33:17 CLASSAD_CACHING is ENABLED
+09/15/22 15:33:17 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+09/15/22 15:33:17 Daemoncore: Listening at <0.0.0.0:19701> on TCP (ReliSock) and UDP (SafeSock).
+09/15/22 15:33:17 DaemonCore: command socket at <128.9.46.53:19701?addrs=128.9.46.53-19701&alias=workflow.isi.edu>
+09/15/22 15:33:17 DaemonCore: private command socket at <128.9.46.53:19701?addrs=128.9.46.53-19701&alias=workflow.isi.edu>
+09/15/22 15:33:17 DAGMAN_USE_STRICT setting: 1
+09/15/22 15:33:17 DAGMAN_VERBOSITY setting: 3
+09/15/22 15:33:17 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+09/15/22 15:33:17 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+09/15/22 15:33:17 DAGMAN_SUBMIT_DELAY setting: 0
+09/15/22 15:33:17 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+09/15/22 15:33:17 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+09/15/22 15:33:17 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+09/15/22 15:33:17 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+09/15/22 15:33:17 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+09/15/22 15:33:17 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+09/15/22 15:33:17 DAGMAN_DEFAULT_PRIORITY setting: 0
+09/15/22 15:33:17 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+09/15/22 15:33:17 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+09/15/22 15:33:17 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+09/15/22 15:33:17 DAGMAN_RETRY_NODE_FIRST setting: False
+09/15/22 15:33:17 DAGMAN_MAX_JOBS_IDLE setting: 1000
+09/15/22 15:33:17 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+09/15/22 15:33:17 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+09/15/22 15:33:17 DAGMAN_MAX_POST_SCRIPTS setting: 20
+09/15/22 15:33:17 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+09/15/22 15:33:17 DAGMAN_MUNGE_NODE_NAMES setting: True
+09/15/22 15:33:17 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+09/15/22 15:33:17 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+09/15/22 15:33:17 DAGMAN_ALWAYS_RUN_POST setting: False
+09/15/22 15:33:17 DAGMAN_CONDOR_SUBMIT_EXE setting: /home/mzalam/wf/condor/bin/condor_submit
+09/15/22 15:33:17 DAGMAN_USE_DIRECT_SUBMIT setting: True
+09/15/22 15:33:17 DAGMAN_DEFAULT_APPEND_VARS setting: False
+09/15/22 15:33:17 DAGMAN_ABORT_DUPLICATES setting: True
+09/15/22 15:33:17 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+09/15/22 15:33:17 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+09/15/22 15:33:17 DAGMAN_AUTO_RESCUE setting: True
+09/15/22 15:33:17 DAGMAN_MAX_RESCUE_NUM setting: 100
+09/15/22 15:33:17 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+09/15/22 15:33:17 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+09/15/22 15:33:17 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+09/15/22 15:33:17 DAGMAN_MAX_JOB_HOLDS setting: 100
+09/15/22 15:33:17 DAGMAN_HOLD_CLAIM_TIME setting: 20
+09/15/22 15:33:17 ALL_DEBUG setting: 
+09/15/22 15:33:17 DAGMAN_DEBUG setting: 
+09/15/22 15:33:17 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+09/15/22 15:33:17 DAGMAN_REMOVE_NODE_JOBS setting: True
+09/15/22 15:33:17 DAGMAN will adjust edges after parsing
+09/15/22 15:33:17 argv[0] == "condor_scheduniv_exec.346.0"
+09/15/22 15:33:17 argv[1] == "-Notification"
+09/15/22 15:33:17 argv[2] == "never"
+09/15/22 15:33:17 argv[3] == "-Debug"
+09/15/22 15:33:17 argv[4] == "3"
+09/15/22 15:33:17 argv[5] == "-Lockfile"
+09/15/22 15:33:17 argv[6] == "inner.dag.lock"
+09/15/22 15:33:17 argv[7] == "-Dag"
+09/15/22 15:33:17 argv[8] == "inner.dag"
+09/15/22 15:33:17 argv[9] == "-Condorlog"
+09/15/22 15:33:17 argv[10] == "inner.log"
+09/15/22 15:33:17 argv[11] == "-AutoRescue"
+09/15/22 15:33:17 argv[12] == "1"
+09/15/22 15:33:17 argv[13] == "-DoRescueFrom"
+09/15/22 15:33:17 argv[14] == "0"
+09/15/22 15:33:17 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:33:17 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:33:17 
+Unrecognized argument: -Condorlog
+09/15/22 15:33:17 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+09/15/22 15:33:17 **** condor_scheduniv_exec.346.0 (condor_DAGMAN) pid 3687772 EXITING WITH STATUS 1
+09/15/22 15:38:11 ******************************************************
+09/15/22 15:38:11 ** condor_scheduniv_exec.348.0 (CONDOR_DAGMAN) STARTING UP
+09/15/22 15:38:11 ** /usr/bin/condor_dagman
+09/15/22 15:38:11 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+09/15/22 15:38:11 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+09/15/22 15:38:11 ** $CondorVersion: 9.11.0 2022-08-25 BuildID: 602587 PackageID: 9.11.0-1 $
+09/15/22 15:38:11 ** $CondorPlatform: x86_64_AlmaLinux8 $
+09/15/22 15:38:11 ** PID = 3688980
+09/15/22 15:38:11 ** Log last touched 9/15 15:33:17
+09/15/22 15:38:11 ******************************************************
+09/15/22 15:38:11 Using config source: /home/mzalam/wf/condor/etc/condor_config
+09/15/22 15:38:11 Using local config sources: 
+09/15/22 15:38:11    /home/mzalam/wf/condor/local/config.d/00-personal-condor
+09/15/22 15:38:11 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
+09/15/22 15:38:11 CLASSAD_CACHING is ENABLED
+09/15/22 15:38:11 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+09/15/22 15:38:11 Daemoncore: Listening at <0.0.0.0:21997> on TCP (ReliSock) and UDP (SafeSock).
+09/15/22 15:38:11 DaemonCore: command socket at <128.9.46.53:21997?addrs=128.9.46.53-21997&alias=workflow.isi.edu>
+09/15/22 15:38:11 DaemonCore: private command socket at <128.9.46.53:21997?addrs=128.9.46.53-21997&alias=workflow.isi.edu>
+09/15/22 15:38:11 DAGMAN_USE_STRICT setting: 1
+09/15/22 15:38:11 DAGMAN_VERBOSITY setting: 3
+09/15/22 15:38:11 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+09/15/22 15:38:11 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+09/15/22 15:38:11 DAGMAN_SUBMIT_DELAY setting: 0
+09/15/22 15:38:11 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+09/15/22 15:38:11 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+09/15/22 15:38:11 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+09/15/22 15:38:11 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+09/15/22 15:38:11 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+09/15/22 15:38:11 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+09/15/22 15:38:11 DAGMAN_DEFAULT_PRIORITY setting: 0
+09/15/22 15:38:11 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+09/15/22 15:38:11 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+09/15/22 15:38:11 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+09/15/22 15:38:11 DAGMAN_RETRY_NODE_FIRST setting: False
+09/15/22 15:38:11 DAGMAN_MAX_JOBS_IDLE setting: 1000
+09/15/22 15:38:11 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+09/15/22 15:38:11 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+09/15/22 15:38:11 DAGMAN_MAX_POST_SCRIPTS setting: 20
+09/15/22 15:38:11 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+09/15/22 15:38:11 DAGMAN_MUNGE_NODE_NAMES setting: True
+09/15/22 15:38:11 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+09/15/22 15:38:11 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+09/15/22 15:38:11 DAGMAN_ALWAYS_RUN_POST setting: False
+09/15/22 15:38:11 DAGMAN_CONDOR_SUBMIT_EXE setting: /home/mzalam/wf/condor/bin/condor_submit
+09/15/22 15:38:11 DAGMAN_USE_DIRECT_SUBMIT setting: True
+09/15/22 15:38:11 DAGMAN_DEFAULT_APPEND_VARS setting: False
+09/15/22 15:38:11 DAGMAN_ABORT_DUPLICATES setting: True
+09/15/22 15:38:11 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+09/15/22 15:38:11 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+09/15/22 15:38:11 DAGMAN_AUTO_RESCUE setting: True
+09/15/22 15:38:11 DAGMAN_MAX_RESCUE_NUM setting: 100
+09/15/22 15:38:11 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+09/15/22 15:38:11 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+09/15/22 15:38:11 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+09/15/22 15:38:11 DAGMAN_MAX_JOB_HOLDS setting: 100
+09/15/22 15:38:11 DAGMAN_HOLD_CLAIM_TIME setting: 20
+09/15/22 15:38:11 ALL_DEBUG setting: 
+09/15/22 15:38:11 DAGMAN_DEBUG setting: 
+09/15/22 15:38:11 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+09/15/22 15:38:11 DAGMAN_REMOVE_NODE_JOBS setting: True
+09/15/22 15:38:11 DAGMAN will adjust edges after parsing
+09/15/22 15:38:11 argv[0] == "condor_scheduniv_exec.348.0"
+09/15/22 15:38:11 argv[1] == "-Notification"
+09/15/22 15:38:11 argv[2] == "never"
+09/15/22 15:38:11 argv[3] == "-Debug"
+09/15/22 15:38:11 argv[4] == "3"
+09/15/22 15:38:11 argv[5] == "-Lockfile"
+09/15/22 15:38:11 argv[6] == "inner.dag.lock"
+09/15/22 15:38:11 argv[7] == "-Dag"
+09/15/22 15:38:11 argv[8] == "inner.dag"
+09/15/22 15:38:11 argv[9] == "-Condorlog"
+09/15/22 15:38:11 argv[10] == "inner.log"
+09/15/22 15:38:11 argv[11] == "-AutoRescue"
+09/15/22 15:38:11 argv[12] == "1"
+09/15/22 15:38:11 argv[13] == "-DoRescueFrom"
+09/15/22 15:38:11 argv[14] == "0"
+09/15/22 15:38:11 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:38:11 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:38:11 
+Unrecognized argument: -Condorlog
+09/15/22 15:38:11 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+09/15/22 15:38:11 **** condor_scheduniv_exec.348.0 (condor_DAGMAN) pid 3688980 EXITING WITH STATUS 1
+09/15/22 15:38:25 ******************************************************
+09/15/22 15:38:25 ** condor_scheduniv_exec.349.0 (CONDOR_DAGMAN) STARTING UP
+09/15/22 15:38:25 ** /usr/bin/condor_dagman
+09/15/22 15:38:25 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+09/15/22 15:38:25 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+09/15/22 15:38:25 ** $CondorVersion: 9.11.0 2022-08-25 BuildID: 602587 PackageID: 9.11.0-1 $
+09/15/22 15:38:25 ** $CondorPlatform: x86_64_AlmaLinux8 $
+09/15/22 15:38:25 ** PID = 3689350
+09/15/22 15:38:25 ** Log last touched 9/15 15:38:11
+09/15/22 15:38:25 ******************************************************
+09/15/22 15:38:25 Using config source: /home/mzalam/wf/condor/etc/condor_config
+09/15/22 15:38:25 Using local config sources: 
+09/15/22 15:38:25    /home/mzalam/wf/condor/local/config.d/00-personal-condor
+09/15/22 15:38:25 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
+09/15/22 15:38:25 CLASSAD_CACHING is ENABLED
+09/15/22 15:38:25 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+09/15/22 15:38:25 Daemoncore: Listening at <0.0.0.0:1399> on TCP (ReliSock) and UDP (SafeSock).
+09/15/22 15:38:25 DaemonCore: command socket at <128.9.46.53:1399?addrs=128.9.46.53-1399&alias=workflow.isi.edu>
+09/15/22 15:38:25 DaemonCore: private command socket at <128.9.46.53:1399?addrs=128.9.46.53-1399&alias=workflow.isi.edu>
+09/15/22 15:38:25 DAGMAN_USE_STRICT setting: 1
+09/15/22 15:38:25 DAGMAN_VERBOSITY setting: 3
+09/15/22 15:38:25 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+09/15/22 15:38:25 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+09/15/22 15:38:25 DAGMAN_SUBMIT_DELAY setting: 0
+09/15/22 15:38:25 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+09/15/22 15:38:25 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+09/15/22 15:38:25 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+09/15/22 15:38:25 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+09/15/22 15:38:25 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+09/15/22 15:38:25 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+09/15/22 15:38:25 DAGMAN_DEFAULT_PRIORITY setting: 0
+09/15/22 15:38:25 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+09/15/22 15:38:25 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+09/15/22 15:38:25 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+09/15/22 15:38:25 DAGMAN_RETRY_NODE_FIRST setting: False
+09/15/22 15:38:25 DAGMAN_MAX_JOBS_IDLE setting: 1000
+09/15/22 15:38:25 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+09/15/22 15:38:25 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+09/15/22 15:38:25 DAGMAN_MAX_POST_SCRIPTS setting: 20
+09/15/22 15:38:25 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+09/15/22 15:38:25 DAGMAN_MUNGE_NODE_NAMES setting: True
+09/15/22 15:38:25 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+09/15/22 15:38:25 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+09/15/22 15:38:25 DAGMAN_ALWAYS_RUN_POST setting: False
+09/15/22 15:38:25 DAGMAN_CONDOR_SUBMIT_EXE setting: /home/mzalam/wf/condor/bin/condor_submit
+09/15/22 15:38:25 DAGMAN_USE_DIRECT_SUBMIT setting: True
+09/15/22 15:38:25 DAGMAN_DEFAULT_APPEND_VARS setting: False
+09/15/22 15:38:25 DAGMAN_ABORT_DUPLICATES setting: True
+09/15/22 15:38:25 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+09/15/22 15:38:25 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+09/15/22 15:38:25 DAGMAN_AUTO_RESCUE setting: True
+09/15/22 15:38:25 DAGMAN_MAX_RESCUE_NUM setting: 100
+09/15/22 15:38:25 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+09/15/22 15:38:25 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+09/15/22 15:38:25 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+09/15/22 15:38:25 DAGMAN_MAX_JOB_HOLDS setting: 100
+09/15/22 15:38:25 DAGMAN_HOLD_CLAIM_TIME setting: 20
+09/15/22 15:38:25 ALL_DEBUG setting: 
+09/15/22 15:38:25 DAGMAN_DEBUG setting: 
+09/15/22 15:38:25 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+09/15/22 15:38:25 DAGMAN_REMOVE_NODE_JOBS setting: True
+09/15/22 15:38:25 DAGMAN will adjust edges after parsing
+09/15/22 15:38:25 argv[0] == "condor_scheduniv_exec.349.0"
+09/15/22 15:38:25 argv[1] == "-Notification"
+09/15/22 15:38:25 argv[2] == "never"
+09/15/22 15:38:25 argv[3] == "-Debug"
+09/15/22 15:38:25 argv[4] == "3"
+09/15/22 15:38:25 argv[5] == "-Lockfile"
+09/15/22 15:38:25 argv[6] == "inner.dag.lock"
+09/15/22 15:38:25 argv[7] == "-Dag"
+09/15/22 15:38:25 argv[8] == "inner.dag"
+09/15/22 15:38:25 argv[9] == "-Condorlog"
+09/15/22 15:38:25 argv[10] == "inner.log"
+09/15/22 15:38:25 argv[11] == "-AutoRescue"
+09/15/22 15:38:25 argv[12] == "1"
+09/15/22 15:38:25 argv[13] == "-DoRescueFrom"
+09/15/22 15:38:25 argv[14] == "0"
+09/15/22 15:38:25 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:38:25 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:38:25 
+Unrecognized argument: -Condorlog
+09/15/22 15:38:25 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+09/15/22 15:38:25 **** condor_scheduniv_exec.349.0 (condor_DAGMAN) pid 3689350 EXITING WITH STATUS 1
+09/15/22 15:38:57 ******************************************************
+09/15/22 15:38:57 ** condor_scheduniv_exec.351.0 (CONDOR_DAGMAN) STARTING UP
+09/15/22 15:38:57 ** /usr/bin/condor_dagman
+09/15/22 15:38:57 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+09/15/22 15:38:57 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+09/15/22 15:38:57 ** $CondorVersion: 9.11.0 2022-08-25 BuildID: 602587 PackageID: 9.11.0-1 $
+09/15/22 15:38:57 ** $CondorPlatform: x86_64_AlmaLinux8 $
+09/15/22 15:38:57 ** PID = 3689782
+09/15/22 15:38:57 ** Log last touched 9/15 15:38:25
+09/15/22 15:38:57 ******************************************************
+09/15/22 15:38:57 Using config source: /home/mzalam/wf/condor/etc/condor_config
+09/15/22 15:38:57 Using local config sources: 
+09/15/22 15:38:57    /home/mzalam/wf/condor/local/config.d/00-personal-condor
+09/15/22 15:38:57 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
+09/15/22 15:38:57 CLASSAD_CACHING is ENABLED
+09/15/22 15:38:57 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+09/15/22 15:38:57 Daemoncore: Listening at <0.0.0.0:20749> on TCP (ReliSock) and UDP (SafeSock).
+09/15/22 15:38:57 DaemonCore: command socket at <128.9.46.53:20749?addrs=128.9.46.53-20749&alias=workflow.isi.edu>
+09/15/22 15:38:57 DaemonCore: private command socket at <128.9.46.53:20749?addrs=128.9.46.53-20749&alias=workflow.isi.edu>
+09/15/22 15:38:57 DAGMAN_USE_STRICT setting: 1
+09/15/22 15:38:57 DAGMAN_VERBOSITY setting: 3
+09/15/22 15:38:57 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+09/15/22 15:38:57 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+09/15/22 15:38:57 DAGMAN_SUBMIT_DELAY setting: 0
+09/15/22 15:38:57 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+09/15/22 15:38:57 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+09/15/22 15:38:57 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+09/15/22 15:38:57 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+09/15/22 15:38:57 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+09/15/22 15:38:57 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+09/15/22 15:38:57 DAGMAN_DEFAULT_PRIORITY setting: 0
+09/15/22 15:38:57 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+09/15/22 15:38:57 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+09/15/22 15:38:57 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+09/15/22 15:38:57 DAGMAN_RETRY_NODE_FIRST setting: False
+09/15/22 15:38:57 DAGMAN_MAX_JOBS_IDLE setting: 1000
+09/15/22 15:38:57 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+09/15/22 15:38:57 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+09/15/22 15:38:57 DAGMAN_MAX_POST_SCRIPTS setting: 20
+09/15/22 15:38:57 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+09/15/22 15:38:57 DAGMAN_MUNGE_NODE_NAMES setting: True
+09/15/22 15:38:57 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+09/15/22 15:38:57 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+09/15/22 15:38:57 DAGMAN_ALWAYS_RUN_POST setting: False
+09/15/22 15:38:57 DAGMAN_CONDOR_SUBMIT_EXE setting: /home/mzalam/wf/condor/bin/condor_submit
+09/15/22 15:38:57 DAGMAN_USE_DIRECT_SUBMIT setting: True
+09/15/22 15:38:57 DAGMAN_DEFAULT_APPEND_VARS setting: False
+09/15/22 15:38:57 DAGMAN_ABORT_DUPLICATES setting: True
+09/15/22 15:38:57 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+09/15/22 15:38:57 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+09/15/22 15:38:57 DAGMAN_AUTO_RESCUE setting: True
+09/15/22 15:38:57 DAGMAN_MAX_RESCUE_NUM setting: 100
+09/15/22 15:38:57 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+09/15/22 15:38:57 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+09/15/22 15:38:57 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+09/15/22 15:38:57 DAGMAN_MAX_JOB_HOLDS setting: 100
+09/15/22 15:38:57 DAGMAN_HOLD_CLAIM_TIME setting: 20
+09/15/22 15:38:57 ALL_DEBUG setting: 
+09/15/22 15:38:57 DAGMAN_DEBUG setting: 
+09/15/22 15:38:57 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+09/15/22 15:38:57 DAGMAN_REMOVE_NODE_JOBS setting: True
+09/15/22 15:38:57 DAGMAN will adjust edges after parsing
+09/15/22 15:38:57 argv[0] == "condor_scheduniv_exec.351.0"
+09/15/22 15:38:57 argv[1] == "-Notification"
+09/15/22 15:38:57 argv[2] == "never"
+09/15/22 15:38:57 argv[3] == "-Debug"
+09/15/22 15:38:57 argv[4] == "3"
+09/15/22 15:38:57 argv[5] == "-Lockfile"
+09/15/22 15:38:57 argv[6] == "inner.dag.lock"
+09/15/22 15:38:57 argv[7] == "-Dag"
+09/15/22 15:38:57 argv[8] == "inner.dag"
+09/15/22 15:38:57 argv[9] == "-Condorlog"
+09/15/22 15:38:57 argv[10] == "inner.log"
+09/15/22 15:38:57 argv[11] == "-AutoRescue"
+09/15/22 15:38:57 argv[12] == "1"
+09/15/22 15:38:57 argv[13] == "-DoRescueFrom"
+09/15/22 15:38:57 argv[14] == "0"
+09/15/22 15:38:57 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:38:57 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:38:57 
+Unrecognized argument: -Condorlog
+09/15/22 15:38:57 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+09/15/22 15:38:57 **** condor_scheduniv_exec.351.0 (condor_DAGMAN) pid 3689782 EXITING WITH STATUS 1
+09/15/22 15:39:12 ******************************************************
+09/15/22 15:39:12 ** condor_scheduniv_exec.352.0 (CONDOR_DAGMAN) STARTING UP
+09/15/22 15:39:12 ** /usr/bin/condor_dagman
+09/15/22 15:39:12 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+09/15/22 15:39:12 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+09/15/22 15:39:12 ** $CondorVersion: 9.11.0 2022-08-25 BuildID: 602587 PackageID: 9.11.0-1 $
+09/15/22 15:39:12 ** $CondorPlatform: x86_64_AlmaLinux8 $
+09/15/22 15:39:12 ** PID = 3690037
+09/15/22 15:39:12 ** Log last touched 9/15 15:38:57
+09/15/22 15:39:12 ******************************************************
+09/15/22 15:39:12 Using config source: /home/mzalam/wf/condor/etc/condor_config
+09/15/22 15:39:12 Using local config sources: 
+09/15/22 15:39:12    /home/mzalam/wf/condor/local/config.d/00-personal-condor
+09/15/22 15:39:12 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
+09/15/22 15:39:12 CLASSAD_CACHING is ENABLED
+09/15/22 15:39:12 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+09/15/22 15:39:12 Daemoncore: Listening at <0.0.0.0:16457> on TCP (ReliSock) and UDP (SafeSock).
+09/15/22 15:39:12 DaemonCore: command socket at <128.9.46.53:16457?addrs=128.9.46.53-16457&alias=workflow.isi.edu>
+09/15/22 15:39:12 DaemonCore: private command socket at <128.9.46.53:16457?addrs=128.9.46.53-16457&alias=workflow.isi.edu>
+09/15/22 15:39:12 DAGMAN_USE_STRICT setting: 1
+09/15/22 15:39:12 DAGMAN_VERBOSITY setting: 3
+09/15/22 15:39:12 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+09/15/22 15:39:12 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+09/15/22 15:39:12 DAGMAN_SUBMIT_DELAY setting: 0
+09/15/22 15:39:12 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+09/15/22 15:39:12 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+09/15/22 15:39:12 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+09/15/22 15:39:12 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+09/15/22 15:39:12 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+09/15/22 15:39:12 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+09/15/22 15:39:12 DAGMAN_DEFAULT_PRIORITY setting: 0
+09/15/22 15:39:12 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+09/15/22 15:39:12 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+09/15/22 15:39:12 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+09/15/22 15:39:12 DAGMAN_RETRY_NODE_FIRST setting: False
+09/15/22 15:39:12 DAGMAN_MAX_JOBS_IDLE setting: 1000
+09/15/22 15:39:12 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+09/15/22 15:39:12 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+09/15/22 15:39:12 DAGMAN_MAX_POST_SCRIPTS setting: 20
+09/15/22 15:39:12 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+09/15/22 15:39:12 DAGMAN_MUNGE_NODE_NAMES setting: True
+09/15/22 15:39:12 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+09/15/22 15:39:12 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+09/15/22 15:39:12 DAGMAN_ALWAYS_RUN_POST setting: False
+09/15/22 15:39:12 DAGMAN_CONDOR_SUBMIT_EXE setting: /home/mzalam/wf/condor/bin/condor_submit
+09/15/22 15:39:12 DAGMAN_USE_DIRECT_SUBMIT setting: True
+09/15/22 15:39:12 DAGMAN_DEFAULT_APPEND_VARS setting: False
+09/15/22 15:39:12 DAGMAN_ABORT_DUPLICATES setting: True
+09/15/22 15:39:12 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+09/15/22 15:39:12 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+09/15/22 15:39:12 DAGMAN_AUTO_RESCUE setting: True
+09/15/22 15:39:12 DAGMAN_MAX_RESCUE_NUM setting: 100
+09/15/22 15:39:12 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+09/15/22 15:39:12 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+09/15/22 15:39:12 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+09/15/22 15:39:12 DAGMAN_MAX_JOB_HOLDS setting: 100
+09/15/22 15:39:12 DAGMAN_HOLD_CLAIM_TIME setting: 20
+09/15/22 15:39:12 ALL_DEBUG setting: 
+09/15/22 15:39:12 DAGMAN_DEBUG setting: 
+09/15/22 15:39:12 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+09/15/22 15:39:12 DAGMAN_REMOVE_NODE_JOBS setting: True
+09/15/22 15:39:12 DAGMAN will adjust edges after parsing
+09/15/22 15:39:12 argv[0] == "condor_scheduniv_exec.352.0"
+09/15/22 15:39:12 argv[1] == "-Notification"
+09/15/22 15:39:12 argv[2] == "never"
+09/15/22 15:39:12 argv[3] == "-Debug"
+09/15/22 15:39:12 argv[4] == "3"
+09/15/22 15:39:12 argv[5] == "-Lockfile"
+09/15/22 15:39:12 argv[6] == "inner.dag.lock"
+09/15/22 15:39:12 argv[7] == "-Dag"
+09/15/22 15:39:12 argv[8] == "inner.dag"
+09/15/22 15:39:12 argv[9] == "-Condorlog"
+09/15/22 15:39:12 argv[10] == "inner.log"
+09/15/22 15:39:12 argv[11] == "-AutoRescue"
+09/15/22 15:39:12 argv[12] == "1"
+09/15/22 15:39:12 argv[13] == "-DoRescueFrom"
+09/15/22 15:39:12 argv[14] == "0"
+09/15/22 15:39:12 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:39:12 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+09/15/22 15:39:12 
+Unrecognized argument: -Condorlog
+09/15/22 15:39:12 
+Usage: condor_dagman -f -t -l .
+		-Lockfile <NAME.dag.lock>
+		-Dag <NAME.dag>
+		-CsdVersion <version string>
+		[-Help]
+		[-Version]
+		[-Debug <level>]
+		[-MaxIdle <int N>]
+		[-MaxJobs <int N>]
+		[-MaxPre <int N>]
+		[-MaxPost <int N>]
+		[-MaxHold <int N>]
+		(obsolete) [-NoEventChecks]
+		(obsolete) [-AllowLogError]
+		[-DontAlwaysRunPost]
+		[-AlwaysRunPost]
+		[-WaitForDebug]
+		[-UseDagDir]
+		[-AutoRescue <0|1>]
+		[-DoRescueFrom <int N>]
+		[-AllowVersionMismatch]
+		[-DumpRescue]
+		[-Verbose]
+		[-Force]
+		[-Notification <never|always|complete|error>]
+		[-Suppress_notification]
+		[-Dont_Suppress_notification]
+		[-Dagman <dagman_executable>]
+		[-Outfile_dir <directory>]
+		[-Update_submit]
+		[-Import_env]
+		[-Priority <int N>]
+		[-dont_use_default_node_log] (no longer allowed)
+		[-DoRecov]
+	where NAME is the name of your DAG.
+	default -Debug is -Debug 3
+09/15/22 15:39:12 **** condor_scheduniv_exec.352.0 (condor_DAGMAN) pid 3690037 EXITING WITH STATUS 1
