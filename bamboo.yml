@@ -80,7 +80,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/alpine-3.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
                           ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
@@ -105,7 +105,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/alpine-3.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -134,7 +134,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/alpine-3.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -184,7 +184,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/debian-10.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
                           ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
@@ -209,7 +209,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/debian-10.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -238,7 +238,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/debian-10.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -288,7 +288,10 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/debian-11.sif \
+                      # debugging of env
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
+                          env
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
                           ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
@@ -313,7 +316,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/debian-11.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -342,7 +345,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/debian-11.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -418,7 +421,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-7.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
                           ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
@@ -443,7 +446,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-7.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -472,7 +475,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-7.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -522,7 +525,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
@@ -547,7 +550,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -576,7 +579,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -626,7 +629,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
                           ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
@@ -651,7 +654,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -680,7 +683,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -730,7 +733,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
                           ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
@@ -755,7 +758,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -784,7 +787,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -841,7 +844,7 @@ project:
                       export bamboo_buildKey=${bamboo_buildKey}
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant code-format-java
               artifactDependencies:
                 - name: pegasus-source
@@ -869,7 +872,7 @@ project:
                       export bamboo_buildKey=${bamboo_buildKey}
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant code-format-python
               artifactDependencies:
                 - name: pegasus-source
@@ -897,7 +900,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant dist-doc
               artifactDefinitions:
                 - name: pegasus-doc
@@ -952,7 +955,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/alpine-3.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
                           ant dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_alpine_3
@@ -986,7 +989,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_8
@@ -1028,7 +1031,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-7.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
                           ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_7
@@ -1066,7 +1069,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_8
@@ -1109,7 +1112,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/debian-10.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_10
@@ -1130,6 +1133,9 @@ project:
                 - capabilityKey: apptainer
                   matchType: !equals
                     matchValue: true
+                - capabilityKey: hostname
+                  matchType: !equals
+                    matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB11
@@ -1148,7 +1154,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/debian-11.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_11
@@ -1169,6 +1175,9 @@ project:
                 - capabilityKey: apptainer
                   matchType: !equals
                     matchValue: true
+                - capabilityKey: hostname
+                  matchType: !equals
+                    matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXOSX
@@ -1223,7 +1232,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_18
@@ -1244,6 +1253,9 @@ project:
                 - capabilityKey: apptainer
                   matchType: !equals
                     matchValue: true
+                - capabilityKey: hostname
+                  matchType: !equals
+                    matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUF
@@ -1261,7 +1273,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       export APPTAINER_DISABLE_CACHE=true
-                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_20
@@ -1282,6 +1294,9 @@ project:
                 - capabilityKey: apptainer
                   matchType: !equals
                     matchValue: true
+                - capabilityKey: hostname
+                  matchType: !equals
+                    matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
