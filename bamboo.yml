@@ -2308,7 +2308,7 @@ project:
             - key: T18C
               name: 018-black-condorc-hybrid
               description: TODO
-	      enabled: false
+              enabled: false
               tasks:
                 - !script
                   description: Cleanup
@@ -2337,7 +2337,7 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T18B
               name: 018-black-condorc-staging-site
-	      enabled: false
+              enabled: false
               description: TODO
               tasks:
                 - !script
