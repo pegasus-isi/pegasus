@@ -896,7 +896,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant dist-doc
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                          ant dist-doc
               artifactDefinitions:
                 - name: pegasus-doc
                   copyPattern: "pegasus-doc-*.tar.gz"
@@ -905,12 +907,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 8
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BR
@@ -952,7 +951,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant dist-worker dist-release
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/alpine-3.sif \
+                          ant dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_alpine_3
                   copyPattern: "pegasus-binary-*-x86_64_alpine_3.tar.gz"
@@ -965,12 +966,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: alpine
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 3
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR8
@@ -987,7 +985,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant dist-rpm dist-worker dist-release
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                          ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_8
                   copyPattern: "pegasus-binary-*-x86_64_rhel_8.tar.gz"
@@ -1008,12 +1008,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 8
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR7
@@ -1030,7 +1027,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant dist-rpm dist-worker dist-release
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-7.sif \
+                          ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_7
                   copyPattern: "pegasus-binary-*-x86_64_rhel_7.tar.gz"
@@ -1047,12 +1046,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 7
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR8
@@ -1069,7 +1065,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant dist-rpm dist-worker dist-release
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                          ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_8
                   copyPattern: "pegasus-binary-*-x86_64_rhel_8.tar.gz"
@@ -1090,12 +1088,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 8
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
@@ -1113,7 +1108,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant clean dist-deb dist-worker dist-release
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/debian-10.sif \
+                          ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_10
                   copyPattern: "pegasus-binary-*-x86_64_deb_10.tar.gz"
@@ -1130,12 +1127,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 10
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB11
@@ -1153,7 +1147,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant clean dist-deb dist-worker dist-release
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/debian-11.sif \
+                          ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_11
                   copyPattern: "pegasus-binary-*-x86_64_deb_11.tar.gz"
@@ -1170,12 +1166,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 11
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXOSX
@@ -1229,7 +1222,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant clean dist-deb dist-worker dist-release
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                          ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_18
                   copyPattern: "pegasus-binary-*-x86_64_ubuntu_18.tar.gz"
@@ -1246,12 +1241,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: ubuntu
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 18
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUF
@@ -1268,7 +1260,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant clean dist-deb dist-worker dist-release
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                          ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_20
                   copyPattern: "pegasus-binary-*-x86_64_ubuntu_20.tar.gz"
@@ -1285,12 +1279,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: ubuntu
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 20
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
