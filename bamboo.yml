@@ -79,16 +79,15 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-kickstart test-transfer
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/alpine-3.sif \
+                          ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: alpine
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 3
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: A3JUT
@@ -105,7 +104,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-java
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/alpine-3.sif \
+                          ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -113,12 +114,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: alpine
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 3
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: A3PUT
@@ -135,7 +133,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-python
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/alpine-3.sif \
+                          ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -164,12 +164,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: alpine
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 3
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D10CUT
