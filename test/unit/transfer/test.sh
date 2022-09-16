@@ -202,17 +202,17 @@ run_test test_local_cp
 run_test test_integrity_local_cp
 
 # requires singularity v3.0 or greater for all transfers to work
-if (singularity --version) >/dev/null 2>&1; then
-    run_test test_singularity_containers
-else
-    skip_test test_singularity_containers
-fi
+#if (singularity --version) >/dev/null 2>&1; then
+#    run_test test_singularity_containers
+#else
+#    skip_test test_singularity_containers
+#fi
 
-if (docker image list) >/dev/null 2>&1; then
-    run_test test_docker_containers
-else
-    skip_test test_docker_containers
-fi
+#if (docker image list) >/dev/null 2>&1; then
+#    run_test test_docker_containers
+#else
+#    skip_test test_docker_containers
+#fi
 
 run_test test_symlink
 run_test test_symlink_should_fail
