@@ -31,7 +31,7 @@ def setup_installer_dependencies():
     global install_requires
 
     if subprocess.call(["which", "mysql_config"]) == 0:
-        install_requires.append("mysqlclient")
+        install_requires.append("mysqlclient<2.0.0")
 
 
 #
