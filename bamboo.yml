@@ -179,16 +179,15 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-kickstart test-transfer
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/debian-10.sif \
+                          ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 10
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D10JUT
@@ -205,7 +204,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-java
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/debian-10.sif \
+                          ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -213,12 +214,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 10
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D10PUT
@@ -235,7 +233,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-python
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/debian-10.sif \
+                          ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -260,12 +260,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 10
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D11CUT
@@ -282,16 +279,15 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-kickstart test-transfer
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/debian-11.sif \
+                          ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 11
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D11JUT
@@ -308,7 +304,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-java
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/debian-11.sif \
+                          ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -316,12 +314,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 11
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: D11PUT
@@ -338,7 +333,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-python
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/debian-11.sif \
+                          ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -367,12 +364,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: debian
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 11
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: OCUT
@@ -415,16 +409,15 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-kickstart test-transfer
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-7.sif \
+                          ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 7
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: R7JUT
@@ -441,7 +434,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-java
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-7.sif \
+                          ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -449,12 +444,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 7
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: R7PUT
@@ -471,7 +463,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-python
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-7.sif \
+                          ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -496,12 +490,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 7
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: R8CUT
@@ -518,16 +509,15 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-kickstart test-pmc test-transfer test-integrity
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                          ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 8
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: R8JUT
@@ -544,7 +534,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-java
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                          ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -552,12 +544,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 8
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: R8PUT
@@ -574,7 +563,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-python
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                          ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -599,12 +590,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 8
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUB
@@ -621,16 +609,15 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-kickstart test-pmc test-transfer test-integrity
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                          ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: ubuntu
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 18
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUB
@@ -647,7 +634,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-java
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                          ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -655,12 +644,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: ubuntu
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 18
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUB
@@ -677,7 +663,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-python
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                          ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -702,12 +690,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: ubuntu
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 18
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUF
@@ -724,16 +709,15 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-kickstart test-pmc test-transfer test-integrity
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                          ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: ubuntu
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 20
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTJUF
@@ -750,7 +734,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-java
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                          ant test-java
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
@@ -758,12 +744,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: ubuntu
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 20
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: UTPUF
@@ -780,7 +763,9 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      ant test-python
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                          ant test-python
                 - !junitParser
                   description: Parse Test Report
                   testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
@@ -805,12 +790,9 @@ project:
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: ubuntu
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 20
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
@@ -834,16 +816,15 @@ project:
                       export CI=true
                       export bamboo_buildKey=${bamboo_buildKey}
                       cd pegasus-source
-                      ant code-format-java
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                          ant code-format-java
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 8
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: PCF
@@ -863,16 +844,15 @@ project:
                       export CI=true
                       export bamboo_buildKey=${bamboo_buildKey}
                       cd pegasus-source
-                      ant code-format-python
+                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer exec https://data.isi.edu/bamboo/images/rhel-8.sif \
+                          ant code-format-python
               artifactDependencies:
                 - name: pegasus-source
               requirements:
-                - capabilityKey: distro
+                - capabilityKey: apptainer
                   matchType: !equals
-                    matchValue: centos
-                - capabilityKey: release
-                  matchType: !equals
-                    matchValue: 8
+                    matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
         - name: Build
