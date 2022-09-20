@@ -4497,12 +4497,18 @@ class SimilarWorkSet:
                 local_name = None
                 temp_name = None
 
+                # which handler to use depends on if it is a single or two
+                # stage handler
+                handler = self._primary_handler
+                if self._secondary_handler is not None:
+                     handler = self._secondary_handler
+
                 # local files are a special case
                 if t.get_dst_proto() == "file":
                     local_name = t.get_dst_path()
                 else:
                     # first verify that we can actually pull the file back
-                    if not self._primary_handler.protocol_check(
+                    if not handler.protocol_check(
                         t.get_dst_proto(), "file"
                     ):
                         logger.warn(
@@ -4521,7 +4527,7 @@ class SimilarWorkSet:
                     (
                         success_verify,
                         failed_verify,
-                    ) = self._primary_handler.do_transfers([t_verify])
+                    ) = handler.do_transfers([t_verify])
                     if failed_verify is []:
                         failed_list.append(t)
                         self.clean_up_temp_file(temp_name)
