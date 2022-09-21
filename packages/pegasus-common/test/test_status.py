@@ -1,6 +1,7 @@
 import os
 import time
 import pytest
+import math
 import logging
 from textwrap import dedent
 
@@ -520,7 +521,7 @@ def test_get_condor_jobs(mocker,status):
             [
                 {
                     'JobStatus':2,
-                    'EnteredCurrentStatus':time.time()-500,
+                    'EnteredCurrentStatus':math.floor(time.time()-500),
                     'pegasus_wf_xformation': 'pegasus::dagman',
                     'Iwd':'root/workflow/submit/directory',
                     'pegasus_wf_dag_job_id':'sample-workflow-0',
@@ -528,19 +529,19 @@ def test_get_condor_jobs(mocker,status):
                 },
                 {
                     'JobStatus':2,
-                    'EnteredCurrentStatus':time.time()-300,
+                    'EnteredCurrentStatus':math.floor(time.time()-300),
                     'pegasus_wf_xformation':'pegasus::job',
                     'pegasus_wf_dag_job_id':'job1',
                 },
                 {
                     'JobStatus':1,
-                    'EnteredCurrentStatus':time.time()-200,
+                    'EnteredCurrentStatus':math.floor(time.time()-200),
                     'pegasus_wf_xformation': 'pegasus::job',
                     'pegasus_wf_dag_job_id':'job2',
                 },
                 {
                     'JobStatus':1,
-                    'EnteredCurrentStatus':time.time()-100,
+                    'EnteredCurrentStatus':math.floor(time.time()-100),
                     'pegasus_wf_xformation': 'pegasus::job',
                     'pegasus_wf_dag_job_id':'job3',
                 }
