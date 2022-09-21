@@ -177,7 +177,7 @@ def test_should_create_Status(status):
                     "dagname": "sample_5_failed_with_no_progress_lines.dag",
                 }
             }
-        }
+        } 
         ),
         (
             'dagman_which_does_not_exists should return None',
@@ -241,7 +241,7 @@ def test_should_create_Status(status):
                     'state': 'Success'
                 }
             }
-        }
+        } 
         ),
         (
            'sample2_hr_failure',
@@ -286,7 +286,7 @@ def test_should_create_Status(status):
                     'state': 'Failure'
                 }
             }
-        }
+        } 
         )
     ]
 )
@@ -297,25 +297,6 @@ def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir,
     assert status.fetch_status(submit_dir, json=True) == expected_dict
     status._get_q_values.assert_called_once_with(submit_dir)
 
-'''
-Will be modified as expected output of wrong dir input will be changed to throw an error
-instead of displaying ("No matchin jobs found")
-
-def test_fetch_status_invalid_submit_dir(mocker, status, caplog):
-    mocker.patch("Pegasus.client.status.Status._get_q_values",return_value=None)
-    mocker.patch("Pegasus.client.status.Status._get_progress",return_value=None)
-
-    submit_dir = "random/submit/directory"
-
-    temp_logger = logging.getLogger("testing_fetch_status")
-    with caplog.at_level(logging.DEBUG):
-        status.fetch_status(submit_dir)
-
-    assert "No matchin jobs found" in caplog.text
-
-    Pegasus.client.status.Status._get_q_values.assert_called_once_with(submit_dir)
-    Pegasus.client.status.Status._get_progress.assert_called_once_with(submit_dir)
-'''
 
 @pytest.mark.parametrize(
     "pegasus_wf_name_from_bd, samples_dir, expected_output",
@@ -327,10 +308,10 @@ def test_fetch_status_invalid_submit_dir(mocker, status, caplog):
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE
-                   0       0      0      0       0       17        0     100.0
+                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
+                   0       0      0      0       0       17        0     100.0  
                 Summary: 1 DAG total (Success:1)
-
+                
                 """
             )
         ),
@@ -341,10 +322,10 @@ def test_fetch_status_invalid_submit_dir(mocker, status, caplog):
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE
-                   28      0      0      1       0        0        0      0.0
+                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
+                   28      0      0      1       0        0        0      0.0   
                 Summary: 1 DAG total (Running:1)
-
+                
                 """
             )
         ),
@@ -355,10 +336,10 @@ def test_fetch_status_invalid_submit_dir(mocker, status, caplog):
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE
-                   9       0      0      0       0        8        3      40.0
+                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
+                   9       0      0      0       0        8        3      40.0  
                 Summary: 1 DAG total (Failure:1)
-
+                
                 """
             )
         ),
@@ -369,10 +350,10 @@ def test_fetch_status_invalid_submit_dir(mocker, status, caplog):
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE
-                   21      0      0      4       0        4        0     13.79
+                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
+                   21      0      0      4       0        4        0     13.79  
                 Summary: 1 DAG total (Failure:1)
-
+                
                 """
             )
         ),
@@ -383,10 +364,10 @@ def test_fetch_status_invalid_submit_dir(mocker, status, caplog):
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE
-                   0       0      0      0       0        0        0      0.0
+                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
+                   0       0      0      0       0        0        0      0.0   
                 Summary: 1 DAG total (Failure:1)
-
+                
                 """
             )
         ),
@@ -398,10 +379,10 @@ def test_fetch_status_invalid_submit_dir(mocker, status, caplog):
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE
-                   0       0      0      0       0       33        0     100.0
+                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
+                   0       0      0      0       0       33        0     100.0  
                 Summary: 3 DAGs total (Success:3)
-
+                
                 """
             )
         ),
@@ -412,10 +393,10 @@ def test_fetch_status_invalid_submit_dir(mocker, status, caplog):
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE
-                   4       0      0      0       0        8        1     61.54
+                UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
+                   4       0      0      0       0        8        1     61.54  
                 Summary: 2 DAGs total (Failure:2)
-
+                
                 """
             )
         )
@@ -430,7 +411,7 @@ def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples
         assert status.progress_string == expected_output
     Pegasus.client.status.Status._get_q_values.assert_called_once_with(submit_dir)
 
-
+    
 @pytest.mark.parametrize(
     "pegasus_wf_name_from_bd, samples_dir, expected_output",
     [
@@ -441,10 +422,10 @@ def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME
-                   0      0     0    0     0     17    0   100.0 Success sample_1_success.dag
+                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
+                   0      0     0    0     0     17    0   100.0 Success sample_1_success.dag     
                 Summary: 1 DAG total (Success:1)
-
+                
                 """
             )
         ),
@@ -455,10 +436,10 @@ def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME
-                  28      0     0    1     0     0     0    0.0  Running sample_2_held.dag
+                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
+                  28      0     0    1     0     0     0    0.0  Running sample_2_held.dag        
                 Summary: 1 DAG total (Running:1)
-
+                
                 """
             )
         ),
@@ -469,10 +450,10 @@ def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME
-                   9      0     0    0     0     8     3    40.0 Failure sample_3_failure.dag
+                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
+                   9      0     0    0     0     8     3    40.0 Failure sample_3_failure.dag     
                 Summary: 1 DAG total (Failure:1)
-
+                
                 """
             )
         ),
@@ -484,13 +465,13 @@ def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME
-                   0      0     0    0     0     13    0   100.0 Success sample1_hr_success.dag
-                   0      0     0    0     0     4     0   100.0 Success   ├─sleep-wf-0.dag
-                   0      0     0    0     0     16    0   100.0 Success   └─inner.dag
-                   0      0     0    0     0     33    0   100.0         TOTALS(33 jobs)
+                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
+                   0      0     0    0     0     13    0   100.0 Success sample1_hr_success.dag   
+                   0      0     0    0     0     4     0   100.0 Success   ├─sleep-wf-0.dag       
+                   0      0     0    0     0     16    0   100.0 Success   └─inner.dag            
+                   0      0     0    0     0     33    0   100.0         TOTALS(33 jobs)          
                 Summary: 3 DAGs total (Success:3)
-
+                
                 """
             )
         ),
@@ -501,12 +482,12 @@ def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples
                 """
                 (No matching jobs found in Condor Q)
 
-                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME
-                   4      0     0    0     0     8     1   61.54 Failure sample2_hr_failure.dag
-                   0      0     0    0     0     0     0    0.0  Failure   └─inner.dag
-                   4      0     0    0     0     8     1   61.54         TOTALS(13 jobs)
+                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
+                   4      0     0    0     0     8     1   61.54 Failure sample2_hr_failure.dag   
+                   0      0     0    0     0     0     0    0.0  Failure   └─inner.dag            
+                   4      0     0    0     0     8     1   61.54         TOTALS(13 jobs)          
                 Summary: 2 DAGs total (Failure:2)
-
+                
                 """
             )
         )
@@ -517,7 +498,7 @@ def test_show_dag_progress_long(mocker,caplog,status,pegasus_wf_name_from_bd, sa
     mocker.patch("Pegasus.client.status.Status._get_q_values",return_value=None)
     submit_dir = os.path.join(directory,samples_dir)
     with caplog.at_level(logging.INFO):
-        status.fetch_status(submit_dir,long=True)
+        status.fetch_status(submit_dir,long=True) 
         assert status.progress_string == expected_output
     Pegasus.client.status.Status._get_q_values.assert_called_once_with(submit_dir)
 
@@ -566,11 +547,11 @@ def test_get_condor_jobs(mocker,status):
             ],
             dedent(
                 """
-                STAT  IN_STATE  JOB
+                STAT  IN_STATE  JOB                      
                 Run     08:20   sample-workflow-0 (root/workflow/submit/directory)
-                Run     05:00    ┣━job1
-                Idle    03:20    ┣━job2
-                Idle    01:40    ┗━job3
+                Run     05:00    ┣━job1                     
+                Idle    03:20    ┣━job2                     
+                Idle    01:40    ┗━job3                     
                 Summary: 4 Condor jobs total (I:2 R:2)
                 """
             )
@@ -582,17 +563,17 @@ def test_show_condor_jobs(mocker,caplog,status,condor_q_values,expected_output):
     mocker.patch("Pegasus.client.status.Status._get_progress",return_value=None)
     submit_dir = 'submit_dir'
     with caplog.at_level(logging.INFO):
-        status.fetch_status(submit_dir)
+        status.fetch_status(submit_dir) 
         assert status.progress_string == expected_output
     Pegasus.client.status.Status._get_q_values.assert_called_once_with(submit_dir)
-
+    
 def test_valid_braindump_dir(mocker,status):
     mocker.patch("Pegasus.client.status.Status._get_condor_jobs",return_value=['job1','job2'])
     submit_dir = os.path.join(directory,'status_sample_files/sample1')
     assert status._get_q_values(submit_dir) == ['job1','job2']
     assert status.root_wf_uuid == "d943d68b-ffc6-4154-8b82-9d8be4dbd683"
     assert status.root_wf_name == "Drug-Combination-Therapy-0"
-
+    
 def test_get_braindump_invalid_dir(mocker,status):
     submit_dir = 'some/random/directory'
     with pytest.raises(FileNotFoundError) as err:
