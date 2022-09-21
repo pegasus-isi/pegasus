@@ -79,7 +79,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
                           ant test-kickstart test-transfer
               artifactDependencies:
@@ -104,7 +104,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
                           ant test-java
                 - !junitParser
@@ -133,7 +133,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
                           ant test-python
                 - !junitParser
@@ -179,7 +179,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
                           ant test-kickstart test-transfer
               artifactDependencies:
@@ -204,7 +204,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
                           ant test-java
                 - !junitParser
@@ -233,7 +233,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
                           ant test-python
                 - !junitParser
@@ -279,7 +279,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       # debugging of env
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
                           env
@@ -307,7 +307,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
                           ant test-java
                 - !junitParser
@@ -336,7 +336,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
                           ant test-python
                 - !junitParser
@@ -412,7 +412,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
                           ant test-kickstart test-transfer
               artifactDependencies:
@@ -437,7 +437,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
                           ant test-java
                 - !junitParser
@@ -466,7 +466,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
                           ant test-python
                 - !junitParser
@@ -512,7 +512,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
@@ -537,7 +537,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant test-java
                 - !junitParser
@@ -566,7 +566,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant test-python
                 - !junitParser
@@ -612,7 +612,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
                           ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
@@ -637,7 +637,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
                           ant test-java
                 - !junitParser
@@ -666,7 +666,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
                           ant test-python
                 - !junitParser
@@ -712,7 +712,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
                           ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
@@ -737,7 +737,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
                           ant test-java
                 - !junitParser
@@ -766,7 +766,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
                           ant test-python
                 - !junitParser
@@ -819,7 +819,7 @@ project:
                       export CI=true
                       export bamboo_buildKey=${bamboo_buildKey}
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant code-format-java
               artifactDependencies:
@@ -847,7 +847,7 @@ project:
                       export CI=true
                       export bamboo_buildKey=${bamboo_buildKey}
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant code-format-python
               artifactDependencies:
@@ -875,7 +875,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant dist-doc
               artifactDefinitions:
@@ -930,7 +930,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
                           ant dist-worker dist-release
               artifactDefinitions:
@@ -964,7 +964,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant dist-rpm dist-worker dist-release
               artifactDefinitions:
@@ -1006,7 +1006,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
                           ant dist-rpm dist-worker dist-release
               artifactDefinitions:
@@ -1044,7 +1044,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
                           ant dist-rpm dist-worker dist-release
               artifactDefinitions:
@@ -1087,7 +1087,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
@@ -1129,7 +1129,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
@@ -1207,7 +1207,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
@@ -1248,7 +1248,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      export APPTAINER_DISABLE_CACHE=true
+                      apptainer cache clean --days 1 --force || true
                       apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
