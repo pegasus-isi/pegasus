@@ -3446,7 +3446,7 @@ class StashHandler(TransferHandlerBase):
                 # use --methods as we want to exclude cvmfs - it can take a
                 # long time to update, and we have seen partial files being
                 # published there in the past
-                cmd = "%s --methods=http,xrootd '%s' '%s'" % (
+                cmd = "%s '%s' '%s'" % (
                     tools.full_path("stashcp"),
                     src_path,
                     local_dir,
