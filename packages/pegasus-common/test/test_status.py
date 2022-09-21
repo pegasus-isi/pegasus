@@ -549,10 +549,10 @@ def test_get_condor_jobs(mocker,status):
             dedent(
                 """
                 STAT  IN_STATE  JOB                      
-                Run     08:20   sample-workflow-0 (root/workflow/submit/directory)
-                Run     05:00    ┣━job1                     
-                Idle    03:20    ┣━job2                     
-                Idle    01:40    ┗━job3                     
+                Run     00:00   sample-workflow-0 (root/workflow/submit/directory)
+                Run     00:00    ┣━job1                     
+                Idle    00:00    ┣━job2                     
+                Idle    00:00    ┗━job3                     
                 Summary: 4 Condor jobs total (I:2 R:2)
                 """
             )
@@ -562,6 +562,7 @@ def test_get_condor_jobs(mocker,status):
 def test_show_condor_jobs(mocker,caplog,status,condor_q_values,expected_output):
     mocker.patch("Pegasus.client.status.Status._get_q_values",return_value=condor_q_values)
     mocker.patch("Pegasus.client.status.Status._get_progress",return_value=None)
+    mocker.patch("time.strftime",return_value='00:00')
     submit_dir = 'submit_dir'
     with caplog.at_level(logging.INFO):
         status.fetch_status(submit_dir) 
