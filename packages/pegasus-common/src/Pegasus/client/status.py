@@ -6,6 +6,7 @@ import re
 import os
 import sys
 import io
+import math
 from pathlib import Path
 from typing import Dict, List, Union
 from collections import defaultdict
@@ -139,7 +140,7 @@ class Status:
         for index,each_job in enumerate(condor_jobs):
             status = self._job_status_codes[each_job['JobStatus']]
             job_counts[status] += 1
-            in_state = time.strftime('%M:%S', time.gmtime(int(time.time() - each_job['EnteredCurrentStatus'])))
+            in_state = time.strftime('%M:%S', time.gmtime(math.floor(time.time() - each_job['EnteredCurrentStatus'])))
             if index == len(condor_jobs)-1:
                 handle_bar_value = '\u2517'
             else:
