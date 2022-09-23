@@ -468,8 +468,8 @@ def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples
 
                 UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
                    0      0     0    0     0     13    0   100.0 Success sample1_hr_success.dag   
-                   0      0     0    0     0     4     0   100.0 Success   ├─sleep-wf-0.dag       
-                   0      0     0    0     0     16    0   100.0 Success   └─inner.dag            
+                   0      0     0    0     0     4     0   100.0 Success   ├─inner.dag            
+                   0      0     0    0     0     16    0   100.0 Success   └─sleep-wf-0.dag       
                    0      0     0    0     0     33    0   100.0         TOTALS(33 jobs)          
                 Summary: 3 DAGs total (Success:3)
                 
