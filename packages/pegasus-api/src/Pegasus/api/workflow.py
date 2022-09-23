@@ -1320,7 +1320,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     #@_chained
     @_needs_submit_dir
     #@_needs_client
-    def status(self, *, json: bool = False):
+    def status(self, *, json: bool = False, long: bool = False):
         """
         status(self, long: bool = False, verbose: int = 0)
         Monitor the workflow by quering Condor and directories.
