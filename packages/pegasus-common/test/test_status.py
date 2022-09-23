@@ -460,23 +460,6 @@ def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples
         ),
         #Hierarchical Workflow tests
         (
-            'sample1_hr_success',
-            'status_sample_files/sample1_hr',
-            dedent(
-                """
-                (No matching jobs found in Condor Q)
-
-                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
-                   0      0     0    0     0     13    0   100.0 Success sample1_hr_success.dag   
-                   0      0     0    0     0     4     0   100.0 Success   ├─inner.dag            
-                   0      0     0    0     0     16    0   100.0 Success   └─sleep-wf-0.dag       
-                   0      0     0    0     0     33    0   100.0         TOTALS(33 jobs)          
-                Summary: 3 DAGs total (Success:3)
-                
-                """
-            )
-        ),
-        (
             'sample2_hr_failure',
             'status_sample_files/sample2_hr',
             dedent(
