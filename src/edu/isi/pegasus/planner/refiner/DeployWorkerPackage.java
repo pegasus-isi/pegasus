@@ -886,7 +886,7 @@ public class DeployWorkerPackage extends Engine {
             // PM-1127 do an extra site if both source and destination
             // site match and are set to local
             NameValue<String, String> source = ft.getSourceURL();
-            NameValue<String, String> destination = ft.getSourceURL();
+            NameValue<String, String> destination = ft.getDestURL();
             if (source.getKey().equals(destination.getKey()) && source.getKey().equals("local")) {
                 // make sure the full canonical urls are different
                 // only if source and destination urls both are file
