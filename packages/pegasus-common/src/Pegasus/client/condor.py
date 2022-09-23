@@ -93,8 +93,8 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
 
     for sh in stream_handlers:
         sh.join()
-
-    result = cli.Result(cmd, b"".join(out), b"".join(err))
+    exit_code = proc.returncode
+    result = cli.Result(cmd, exit_code, b"".join(out), b"".join(err))
     return result
 
 def _q(cmd):
@@ -102,5 +102,5 @@ def _q(cmd):
 
     if not cmd:
         raise ValueError("cmd is required")
-    rv = _exec(cmd=cmd)
+    rv = _exec(cmd=cmd)  
     return rv.json
