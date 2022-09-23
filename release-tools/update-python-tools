@@ -41,6 +41,7 @@ for TOOL in \
     pegasus-monitord \
     pegasus-preflight-check \
     pegasus-remove \
+    pegasus-status \
     pegasus-run \
     pegasus-s3 \
     pegasus-service \
@@ -52,4 +53,3 @@ for TOOL in \
     cat pegasus-python-wrapper | sed "s/%%BASE_NAME%%/$TOOL/" >$TOOL
     chmod 755 $TOOL
 done
-
