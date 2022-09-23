@@ -410,12 +410,7 @@ public class PegasusLite implements GridStart {
             job.vdsNS.construct(Pegasus.CHANGE_DIR_KEY, "false");
             job.vdsNS.construct(Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false");
 
-            File jobWrapper = wrapJobWithPegasusLite(job, isGlobusJob);
-
-            // the job wrapper requires the common functions file
-            // from the submit host
-            job.condorVariables.addIPFileForTransfer(this.mLocalPathToPegasusLiteCommon);
-
+            boolean workerPackageStagingForJob = false;
             // PM-1225 worker package transfer is only triggered for non sub dax jobs
             if (!(job instanceof DAXJob)) {
                 // figure out transfer of worker package for compute jobs
@@ -431,6 +426,7 @@ public class PegasusLite implements GridStart {
                                     "Unable to figure out worker package location for job "
                                             + job.getID());
                         }
+                        workerPackageStagingForJob = true;
                         job.condorVariables.addIPFileForTransfer(location);
                     } else {
                         mLogger.log(
@@ -467,6 +463,12 @@ public class PegasusLite implements GridStart {
                     }
                 }
             }
+
+            File jobWrapper = wrapJobWithPegasusLite(job, isGlobusJob, workerPackageStagingForJob);
+
+            // the job wrapper requires the common functions file
+            // from the submit host
+            job.condorVariables.addIPFileForTransfer(this.mLocalPathToPegasusLiteCommon);
 
             // the .sh file is set as the executable for the job
             // in addition to setting transfer_executable as true
@@ -675,7 +677,7 @@ public class PegasusLite implements GridStart {
     }
 
     /**
-     * Generates a seqexec input file for the job. The function first enables the job via kickstart
+     * Generates a seqexec input file for the job.The function first enables the job via kickstart
      * module for worker node execution and then retrieves the commands to put in the input file
      * from the environment variables specified for kickstart.
      *
@@ -694,9 +696,12 @@ public class PegasusLite implements GridStart {
      * @param isGlobusJob is <code>true</code>, if the job generated a line <code>universe = globus
      *     </code>, and thus runs remotely. Set to <code>false</code>, if the job runs on the submit
      *     host in any way.
+     * @param workerPackageStagingForJob whether a worker package is being explicitly staged for the
+     *     job per user preference.
      * @return the file handle to the seqexec input file
      */
-    protected File wrapJobWithPegasusLite(Job job, boolean isGlobusJob) {
+    protected File wrapJobWithPegasusLite(
+            Job job, boolean isGlobusJob, boolean workerPackageStagingForJob) {
         File shellWrapper = new File(job.getFileFullPath(mSubmitDir, ".sh"));
 
         // PM-971 for auxillary jobs we don't need to worry about
@@ -721,6 +726,11 @@ public class PegasusLite implements GridStart {
             stagingSiteDirectory = mSiteStore.getInternalWorkDirectory(job, true);
             workerNodeDir = getWorkerNodeDirectory(job);
         }
+
+        // PM-1872 disable strict worker check if user is doing explicit
+        // worker package staging for the job
+        boolean enforceStrictChecksOnWPVersion =
+                workerPackageStagingForJob ? false : this.mEnforceStrictChecksOnWPVersion;
 
         // PM-810 load SLS factory per job
         SLS sls = mSLSFactory.loadInstance(job);
@@ -755,7 +765,7 @@ public class PegasusLite implements GridStart {
                     .append("\"")
                     .append('\n');
             sb.append("pegasus_lite_enforce_strict_wp_check=\"")
-                    .append(this.mEnforceStrictChecksOnWPVersion)
+                    .append(enforceStrictChecksOnWPVersion)
                     .append("\"")
                     .append('\n');
             sb.append("pegasus_lite_version_allow_wp_auto_download=\"")
