@@ -1466,9 +1466,7 @@ public class Job extends Data implements GraphNodeContent {
      */
     public static String getStagedExecutableBaseName(
             String txNamespace, String txName, String txVersion) {
-        // PM-1222 and PM-1377
-        // used for creating clustered job names
-        return Job.makeDAGManCompliant(combine(txNamespace, txName, txVersion));
+        return combine(txNamespace, txName, txVersion);
     }
 
     /**
