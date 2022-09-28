@@ -370,7 +370,6 @@ public class TransformationCatalogEntry implements CatalogEntry {
      * @param transformationFQDN
      */
     public void addDependantTransformation(String transformationFQDN) {
-
         PegasusFile pf = new PegasusFile(transformationFQDN);
         pf.setType(PegasusFile.EXECUTABLE_FILE);
         this.addDependantTransformation(pf);
