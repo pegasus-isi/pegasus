@@ -183,7 +183,10 @@ public class Horizontal
             } else {
                 // at boundary collapse jobs
                 collapseJobs(
-                        previous.getStagedExecutableBaseName(), clusterList, partition.getID());
+                        Job.makeDAGManCompliant(
+                                previous.getStagedExecutableBaseName()), // PM-1222 and PM-1377
+                        clusterList,
+                        partition.getID());
                 clusterList = new LinkedList();
                 clusterList.add(job);
             }
@@ -191,7 +194,11 @@ public class Horizontal
         }
         // cluster the last clusterList
         if (previous != null) {
-            collapseJobs(previous.getStagedExecutableBaseName(), clusterList, partition.getID());
+            collapseJobs(
+                    Job.makeDAGManCompliant(
+                            previous.getStagedExecutableBaseName()), // PM-1222 and PM-1377
+                    clusterList,
+                    partition.getID());
         }
     }
 

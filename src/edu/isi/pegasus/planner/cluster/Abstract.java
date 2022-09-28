@@ -254,9 +254,9 @@ public abstract class Abstract implements Clusterer {
      * @return name
      */
     protected String getLogicalNameForJobs(List<Job> jobs) {
-
+        // PM-1222 and PM-1377
         Job firstJob = (Job) jobs.get(0);
-        return firstJob.getStagedExecutableBaseName();
+        return Job.makeDAGManCompliant(firstJob.getStagedExecutableBaseName());
     }
 
     /**
