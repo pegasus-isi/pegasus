@@ -680,6 +680,27 @@ generate_output_file( FILE *out, unsigned long xsize )
     fputc( '\n', out );
 }
 
+/**
+ * create a deep directory if it does not exist
+ * paramtr: file_path  the directory to be created. must end in /
+ * mode:    mode to assign to the directory 
+ */
+int
+mkpath(char* file_path, mode_t mode) {
+    for (char* p = strchr(file_path + 1, '/'); p; p = strchr(p + 1, '/')) {
+        *p = '\0';
+	fprintf( stdout, "trying to create dir %s\n", file_path);
+        if (mkdir(file_path, mode) == -1) {
+            if (errno != EEXIST) {
+                *p = '/';
+                return -1;
+            }
+        }
+        *p = '/';
+    }
+    return 0;
+}
+
 int
 main( int argc, char *argv[] )
 {
@@ -931,9 +952,22 @@ main( int argc, char *argv[] )
                 }
                 else 
                 {
-
-
-                    out = fopen( iox[2][i], "w" );
+		    strcpy(filename, iox[2][i]);
+		    fprintf(stdout, "output file to be generated is %s\n", filename) ;
+		    // is there a directory path specified
+		    char* last_index =  strrchr( filename, '/' );  
+		    if (last_index != NULL){
+			 char directory[256];
+			 /* ensure that directory has the trailing */
+			 memcpy(directory, filename, sizeof(char) * (last_index - filename + 1));
+			 directory[ last_index - filename + 1 ] = '\0';
+		         fprintf(stdout, "need to create directory is %s\n", directory) ;
+			 if (mkpath(directory, 0777) != 0) {
+			   fprintf( stderr, "[error] Unable to mkdir %s: %d: %s\n", directory, errno, strerror(errno));
+			   return 1;
+			 }
+		    }
+		    out = fopen( iox[2][i], "w" );
                 }
             }
 
@@ -946,7 +980,6 @@ main( int argc, char *argv[] )
                         const char *xsize_str = iox[4][ i % iox[4].size() ];  
                         xsize = strtoul(xsize_str, 0, 10) * data_unit_multiplier( data_unit );
                     }
-
                     generate_output_file( out, xsize );
                 }
                 else
