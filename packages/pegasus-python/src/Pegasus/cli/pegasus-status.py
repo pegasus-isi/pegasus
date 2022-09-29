@@ -25,7 +25,6 @@ configureLogging(level=logging.DEBUG)
     help="Show all DAG states, including sub-DAGs, default only totals",
 )
 @click.option(
-    "--json",
     "-j",
     is_flag=True,
     default=False,
@@ -41,14 +40,6 @@ configureLogging(level=logging.DEBUG)
     nargs=1
 )
 @click.option(
-    "--attrs",
-    "-a",
-    type=str,
-    metavar='<attribute>',
-    help="The job attribute column to be shown in condor q",
-    multiple=True
-)
-@click.option(
     "--dirs",
     "-D",
     is_flag=True,
@@ -56,13 +47,28 @@ configureLogging(level=logging.DEBUG)
     show_default=True,
     help="Show dagnames with path realtive to submit directory",
 )
+@click.option(
+    "--legend",
+    "-L",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Legend explaining the columns in the output",
+)
+@click.option(
+    "--noqueue",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Turns off the output from parsing Condor Q",
+)
 @click.argument(
     "submit-dir",
     required=True,
     type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
     nargs=1
 )
-def get_wf_status(ctx, long, json, watch, attrs, dirs, submit_dir):
+def get_wf_status(ctx, long, j, watch, dirs, legend, noqueue, submit_dir):
     """pegasus-status helps to retrieve status of a given workflow."""
     
     if not submit_dir :
@@ -71,7 +77,6 @@ def get_wf_status(ctx, long, json, watch, attrs, dirs, submit_dir):
     
     else:
         cwd = os.getcwd()
-
         submit_dir = str(Path(submit_dir).resolve())
         try:
             os.chdir(submit_dir)
@@ -89,11 +94,12 @@ def get_wf_status(ctx, long, json, watch, attrs, dirs, submit_dir):
             click.style("Error: ",fg="red",bold=True),submit_dir)
         )
         ctx.exit(1)
-    
-    if json:
+        
+    if j:
         progress = Status()
-        print(json.dumps(progress.fetch_status(submit_dir=submit_dir,json=json, dirs=dirs),indent=2))
+        print(json.dumps(progress.fetch_status(submit_dir=submit_dir,json=j,dirs=dirs,legend=legend,noqueue=noqueue),indent=2))
         exit(0)
+        
     elif watch:
         continue_running = True
         while(continue_running):
@@ -102,15 +108,16 @@ def get_wf_status(ctx, long, json, watch, attrs, dirs, submit_dir):
                 screen_size = shutil.get_terminal_size().columns
                 click.echo("{}".format('Press Ctrl+C to exit'))
                 progress = Status()
-                progress.fetch_status(submit_dir=submit_dir,long=long,dirs=dirs)
+                progress.fetch_status(submit_dir=submit_dir,long=long,dirs=dirs,legend=legend,noqueue=noqueue)
                 if progress.kill_signal:
                     break
                 time.sleep(watch)
             except KeyboardInterrupt:
                 break
+                
     else:
         progress = Status()
-        progress.fetch_status(submit_dir=submit_dir,long=long,dirs=dirs)
+        progress.fetch_status(submit_dir=submit_dir,long=long,dirs=dirs,legend=legend,noqueue=noqueue)
 
 
 if __name__ == "__main__":

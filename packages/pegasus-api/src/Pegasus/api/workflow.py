@@ -1320,7 +1320,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     #@_chained
     @_needs_submit_dir
     #@_needs_client
-    def status(self, *, json: bool = False, long: bool = False):
+    def status(self, *, json:bool=False,long:bool=False,dirs:bool=False,legend:bool=False,noqueue:bool=False):
         """
         status(self, long: bool = False, verbose: int = 0)
         Monitor the workflow by quering Condor and directories.
@@ -1333,7 +1333,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :return: self
         """
         display_status = Status()
-        return display_status.fetch_status(self._submit_dir, json=json, long=long)
+        return display_status.fetch_status(self._submit_dir,json=json,long=long,dirs=dirs,legend=legend,noqueue=noqueue)
         #self._client.status(self._submit_dir, long=long, verbose=verbose)
 
     @_needs_submit_dir
