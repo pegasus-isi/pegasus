@@ -1,9 +1,9 @@
 import os
 import time
 import pytest
-import math
 import logging
-from textwrap import dedent
+from collections import defaultdict
+from textwrap import dedent,wrap
 
 import Pegasus
 from Pegasus.client.status import Status
@@ -180,11 +180,6 @@ def test_should_create_Status(status):
             }
         } 
         ),
-        (
-            'dagman_which_does_not_exists should return None',
-            'random/submit/directory',
-            None
-        ),
         #Hierarchical workflow tests
         (
            'sample1_hr_success',
@@ -292,15 +287,16 @@ def test_should_create_Status(status):
     ]
 )
 def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir, expected_dict):
-    status.pegasus_wf_name = pegasus_wf_name_from_bd
-    mocker.patch("Pegasus.client.status.Status._get_q_values")
+    mocker.patch("Pegasus.client.status.Status.get_braindump")
+    mocker.patch("Pegasus.client.status.Status.get_q_values",return_value=None)
     submit_dir = os.path.join(directory,samples_dir)
+    status.root_wf_name = pegasus_wf_name_from_bd
     assert status.fetch_status(submit_dir, json=True) == expected_dict
-    status._get_q_values.assert_called_once_with(submit_dir)
+    status.get_q_values.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
-    "pegasus_wf_name_from_bd, samples_dir, expected_output",
+    "wf_name_from_bd, samples_dir, expected_output",
     [
         (
             'sample_1_success',
@@ -403,18 +399,19 @@ def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir,
         )
     ]
 )
-def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples_dir, expected_output):
-    status.pegasus_wf_name = pegasus_wf_name_from_bd
-    mocker.patch("Pegasus.client.status.Status._get_q_values",return_value=None)
+def test_show_dag_progress(mocker,caplog,status,wf_name_from_bd, samples_dir, expected_output):
+    mocker.patch("Pegasus.client.status.Status.get_braindump")
+    mocker.patch("Pegasus.client.status.Status.get_q_values",return_value=None)
+    status.root_wf_name = wf_name_from_bd
     submit_dir = os.path.join(directory,samples_dir)
     with caplog.at_level(logging.INFO):
         status.fetch_status(submit_dir)
         assert status.progress_string == expected_output
-    Pegasus.client.status.Status._get_q_values.assert_called_once_with(submit_dir)
+    Pegasus.client.status.Status.get_q_values.assert_called_once_with()
 
-    
+
 @pytest.mark.parametrize(
-    "pegasus_wf_name_from_bd, samples_dir, expected_output",
+    "wf_name_from_bd, samples_dir, expected_output",
     [
         (
             'sample_1_success',
@@ -477,90 +474,170 @@ def test_show_dag_progress(mocker,caplog,status,pegasus_wf_name_from_bd, samples
         )
     ]
 )
-def test_show_dag_progress_long(mocker,caplog,status,pegasus_wf_name_from_bd, samples_dir, expected_output):
-    status.pegasus_wf_name = pegasus_wf_name_from_bd
-    mocker.patch("Pegasus.client.status.Status._get_q_values",return_value=None)
+def test_show_dag_progress_long(mocker,caplog,status,wf_name_from_bd, samples_dir, expected_output):
+    mocker.patch("Pegasus.client.status.Status.get_braindump")
+    mocker.patch("Pegasus.client.status.Status.get_q_values",return_value=None)
+    status.root_wf_name = wf_name_from_bd
     submit_dir = os.path.join(directory,samples_dir)
     with caplog.at_level(logging.INFO):
         status.fetch_status(submit_dir,long=True) 
         assert status.progress_string == expected_output
-    Pegasus.client.status.Status._get_q_values.assert_called_once_with(submit_dir)
+    Pegasus.client.status.Status.get_q_values.assert_called_once_with()
 
 
-def test_get_condor_jobs(mocker,status):
+def test_get_condor_q_values(mocker,status):
     q_values = [{'JobID':1,'Iwd':'dir1'},{'JobID':2,'Iwd':'dir2'}]
     mocker.patch("Pegasus.client.condor._q", return_value=q_values)
-    mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
-    root_wf_uuid = 'root_wf_uuid'
-    expression = r""'pegasus_wf_uuid == "{}"'"".format(root_wf_uuid)
+    status.root_wf_uuid = 'root_wf_uuid'
+    expression = r""'pegasus_root_wf_uuid == "{}"'"".format(status.root_wf_uuid)
     cmd = ['condor_q','-constraint',expression,'-json']
-    assert status._get_condor_jobs(root_wf_uuid) == q_values
+    assert status.get_q_values() == q_values
     Pegasus.client.condor._q.assert_called_once_with(cmd)
 
-@pytest.mark.parametrize(
-    "condor_q_values, expected_output",
-    [
-        (
-            [
+    
+@pytest.fixture
+def condor_q_values():
+    return [
                 {
                     'JobStatus':2,
-                    'EnteredCurrentStatus':math.floor(time.time()-500),
+                    'EnteredCurrentStatus':0,
                     'pegasus_wf_xformation': 'pegasus::dagman',
                     'Iwd':'root/workflow/submit/directory',
                     'pegasus_wf_dag_job_id':'sample-workflow-0',
-                    'pegasus_wf_name':'sample-workflow-0'
+                    'pegasus_wf_name':'sample-workflow-0',
+                    'pegasus_wf_uuid':'uuid-0',
+                    'ClusterId': 4700,
+                    'pegasus_site': 'local',
+                    'UserLog': 'root/workflow/submit/directory/sample-workflow-0.log'
                 },
                 {
                     'JobStatus':2,
-                    'EnteredCurrentStatus':math.floor(time.time()-300),
+                    'EnteredCurrentStatus':0,
                     'pegasus_wf_xformation':'pegasus::job',
                     'pegasus_wf_dag_job_id':'job1',
+                    'pegasus_wf_uuid':'uuid-0',
+                    'ClusterId': 4701,
+                    'pegasus_site': 'local',
+                    'UserLog': 'root/workflow/submit/directory/sample-workflow-0.log'
                 },
                 {
                     'JobStatus':1,
-                    'EnteredCurrentStatus':math.floor(time.time()-200),
+                    'EnteredCurrentStatus':0,
                     'pegasus_wf_xformation': 'pegasus::job',
                     'pegasus_wf_dag_job_id':'job2',
+                    'pegasus_wf_uuid':'uuid-0',
+                    'ClusterId': 4702,
+                    'pegasus_site': 'local',
+                    'UserLog': 'root/workflow/submit/directory/sample-workflow-0.log'
                 },
                 {
                     'JobStatus':1,
-                    'EnteredCurrentStatus':math.floor(time.time()-100),
+                    'EnteredCurrentStatus':0,
                     'pegasus_wf_xformation': 'pegasus::job',
                     'pegasus_wf_dag_job_id':'job3',
+                    'pegasus_wf_uuid':'uuid-0',
+                    'ClusterId': 4703,
+                    'pegasus_site': 'local',
+                    'UserLog': 'root/workflow/submit/directory/sample-workflow-0.log'
                 }
-            ],
+            ]
+
+@pytest.mark.parametrize(
+    "long, expected_output",
+    [
+        (
+            False,
             dedent(
                 """
                 STAT  IN_STATE  JOB                      
-                Run     00:00   sample-workflow-0 (root/workflow/submit/directory)
-                Run     00:00    ┣━job1                     
-                Idle    00:00    ┣━job2                     
-                Idle    00:00    ┗━job3                     
+                 Run    00:00   sample-workflow-0 (root/workflow/submit/directory)
+                 Run    00:00   ┣━job1                   
+                Idle    00:00   ┣━job2                   
+                Idle    00:00   ┗━job3                   
+                Summary: 4 Condor jobs total (I:2 R:2)
+                """
+            )
+        ),
+        (
+            True,
+            dedent(
+                """
+                 ID   SITE  STAT  IN_STATE  JOB                      
+                4700  local  Run    00:00   sample-workflow-0 (root/workflow/submit/directory)
+                4701  local  Run    00:00   ┣━job1                   
+                4702  local Idle    00:00   ┣━job2                   
+                4703  local Idle    00:00   ┗━job3                   
                 Summary: 4 Condor jobs total (I:2 R:2)
                 """
             )
         )
     ]
 )
-def test_show_condor_jobs(mocker,caplog,status,condor_q_values,expected_output):
-    mocker.patch("Pegasus.client.status.Status._get_q_values",return_value=condor_q_values)
-    mocker.patch("Pegasus.client.status.Status._get_progress",return_value=None)
-    mocker.patch("time.strftime",return_value='00:00')
+def test_show_condor_jobs(mocker,caplog,status,condor_q_values,long,expected_output):
+    mocker.patch("Pegasus.client.status.Status.get_braindump")
+    mocker.patch("Pegasus.client.status.Status.get_q_values",return_value=condor_q_values)
+    mocker.patch("Pegasus.client.status.Status.get_progress",return_value=None)
+    mocker.patch("Pegasus.client.status.Status.get_time",return_value='00:00')
     submit_dir = 'submit_dir'
     with caplog.at_level(logging.INFO):
-        status.fetch_status(submit_dir) 
+        status.root_wf_uuid='uuid-0'
+        status.fetch_status(submit_dir,long=long) 
         assert status.progress_string == expected_output
-    Pegasus.client.status.Status._get_q_values.assert_called_once_with(submit_dir)
+    Pegasus.client.status.Status.get_q_values.assert_called_once_with()
+    
+def test_json_condor_jobs(mocker,status):
+    condor_q_values = [
+                {'Iwd':'root/workflow/submit/directory',
+                 'UserLog': 'root/workflow/submit/directory/sample-workflow-0.log',
+                 'pegasus_wf_uuid':'uuid-0'
+                },
+                {'JobStatus':2,
+                 'ClusterId': 4701,
+                 'pegasus_wf_uuid':'uuid-0'
+                }
+            ]
+    
+    expected_value = {
+          "totals": {
+            "unready": 0,
+            "ready": 0,
+            "pre": 0,
+            "queued": 0,
+            "post": 0,
+            "succeeded": 0,
+            "failed": 0,
+            "percent_done": 0.0,
+            "total": 0
+          },
+          "dags": {
+            "root": {}
+          }
+        }
+    expected_value["condor_jobs"] = defaultdict(dict)
+    expected_value["condor_jobs"]["uuid-0"] = {"DAG_NAME": "sample-workflow-0",
+                                               "DAG_CONDOR_JOBS": [
+                                                   {'Iwd':'root/workflow/submit/directory',
+                                                    'UserLog': 'root/workflow/submit/directory/sample-workflow-0.log',
+                                                   },
+                                                   {'JobStatus':2,
+                                                    'ClusterId': 4701,
+                                                   }
+                                               ]
+                                              }
+    mocker.patch("Pegasus.client.status.Status.get_braindump")
+    mocker.patch("Pegasus.client.status.Status.get_q_values",return_value=condor_q_values)
+    mocker.patch("Pegasus.client.status.Status.get_progress",return_value=None)
+    submit_dir = 'submit_dir'
+    assert status.fetch_status(submit_dir,json=True) == expected_value
     
 def test_valid_braindump_dir(mocker,status):
-    mocker.patch("Pegasus.client.status.Status._get_condor_jobs",return_value=['job1','job2'])
     submit_dir = os.path.join(directory,'status_sample_files/sample1')
-    assert status._get_q_values(submit_dir) == ['job1','job2']
+    status.get_braindump(submit_dir)
     assert status.root_wf_uuid == "d943d68b-ffc6-4154-8b82-9d8be4dbd683"
     assert status.root_wf_name == "Drug-Combination-Therapy-0"
     
 def test_get_braindump_invalid_dir(mocker,status):
     submit_dir = 'some/random/directory'
     with pytest.raises(FileNotFoundError) as err:
-        status._get_braindump(submit_dir) == ''
+        status.get_braindump(submit_dir) == ''
     assert "Unable to load braindump file" in str(err)
