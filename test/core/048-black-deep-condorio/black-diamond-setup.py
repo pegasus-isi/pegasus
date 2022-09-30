@@ -136,8 +136,8 @@ TransformationCatalog().add_containers(base_container).add_transformations(prepr
 # --- Workflow -----------------------------------------------------------------
 print("Generating workflow")
 
-fb1 = File("deep/f.b1")
-fb2 = File("deep/f.b2")
+fb1 = File("deep/out/f.b1")
+fb2 = File("deep/out/f.b2")
 fc1 = File("deep/f.c1")
 fc2 = File("deep/f.c2")
 fd = File("f.d")
