@@ -6,6 +6,7 @@ import re
 import os
 import sys
 import io
+import shutil
 from pathlib import Path
 from typing import Dict, List, Union
 from collections import defaultdict
@@ -83,7 +84,8 @@ class Status:
                                  'pegasus_site',
                                  'JobPrio',
                                  'ClusterId',
-                                 'UserLog'
+                                 'UserLog',
+                                 'HoldReason'
                                ])
         
         self.job_status_codes = { 1:self.JS_IDLE,
@@ -135,6 +137,8 @@ class Status:
             if self.rv_condor_q :
                 d = defaultdict(list)
                 for job in self.rv_condor_q:
+                    status_name = self.job_status_codes[job['JobStatus']]
+                    job["JobStatus"] = status_name
                     d[job["pegasus_wf_uuid"]].append({k:v for k,v in job.items() if k in self.job_attr_set})
                 self.status_output["condor_jobs"] = defaultdict(dict)
                 for uuid,job_list in d.items():
@@ -189,7 +193,7 @@ class Status:
         
         if long:
             idcol='{:^5}'.format('ID')
-            st = '{:^7}'.format('SITE')
+            st = '{:^11}'.format('SITE')
         else:
             idcol=''
             st=''
@@ -222,20 +226,27 @@ class Status:
             jobs_list = d[wf_uuid]
             pointers = [t] * (len(jobs_list) - 1) + [L]
             for pointer, job in zip(pointers, jobs_list):
+                
                 status = self.job_status_codes[job['JobStatus']]
                 if long:
                     jobid = '{:^5}'.format(job["ClusterId"])
-                    site = '{:^7}'.format(job["pegasus_site"])
+                    site = '{:^11}'.format(job["pegasus_site"])
                 else:
                     jobid = ''
                     site = ''
+                
                 job_counts[status] += 1
                 in_state = self.get_time(int(time.time() - job['EnteredCurrentStatus']))
+                
                 if job['pegasus_wf_xformation'] == 'pegasus::dagman':
                     job_name = '{} ({})'.format(job['pegasus_wf_name'],job['Iwd'])
                 else :
                     job_name = prefix + pointer + job['pegasus_wf_dag_job_id']
+                
                 self.log.info("{}{}{:^5}{:^11}{:25}".format(jobid,site,status,in_state,job_name))
+                if status == 'Held':
+                    screen_size = shutil.get_terminal_size().columns
+                    self.log.info("{}{}..".format(L,job['HoldReason'][:screen_size-5]))
                 
                 if job['pegasus_wf_xformation'] == 'condor::dagman':
                     extension = bar if pointer == t else space

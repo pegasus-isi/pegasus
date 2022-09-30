@@ -562,11 +562,11 @@ def condor_q_values():
             True,
             dedent(
                 """
-                 ID   SITE  STAT  IN_STATE  JOB                      
-                4700  local  Run    00:00   sample-workflow-0 (root/workflow/submit/directory)
-                4701  local  Run    00:00   ┣━job1                   
-                4702  local Idle    00:00   ┣━job2                   
-                4703  local Idle    00:00   ┗━job3                   
+                 ID     SITE    STAT  IN_STATE  JOB                      
+                4700    local    Run    00:00   sample-workflow-0 (root/workflow/submit/directory)
+                4701    local    Run    00:00   ┣━job1                   
+                4702    local   Idle    00:00   ┣━job2                   
+                4703    local   Idle    00:00   ┗━job3                   
                 Summary: 4 Condor jobs total (I:2 R:2)
                 """
             )
@@ -589,7 +589,8 @@ def test_json_condor_jobs(mocker,status):
     condor_q_values = [
                 {'Iwd':'root/workflow/submit/directory',
                  'UserLog': 'root/workflow/submit/directory/sample-workflow-0.log',
-                 'pegasus_wf_uuid':'uuid-0'
+                 'pegasus_wf_uuid':'uuid-0',
+                 'JobStatus':2
                 },
                 {'JobStatus':2,
                  'ClusterId': 4701,
@@ -618,8 +619,9 @@ def test_json_condor_jobs(mocker,status):
                                                "DAG_CONDOR_JOBS": [
                                                    {'Iwd':'root/workflow/submit/directory',
                                                     'UserLog': 'root/workflow/submit/directory/sample-workflow-0.log',
+                                                    'JobStatus':'Run'
                                                    },
-                                                   {'JobStatus':2,
+                                                   {'JobStatus':'Run',
                                                     'ClusterId': 4701,
                                                    }
                                                ]
@@ -629,7 +631,11 @@ def test_json_condor_jobs(mocker,status):
     mocker.patch("Pegasus.client.status.Status.get_progress",return_value=None)
     submit_dir = 'submit_dir'
     assert status.fetch_status(submit_dir,json=True) == expected_value
-    
+
+def test_get_time(mocker,status):
+    expected_value = '02:46:40'
+    assert status.get_time(10000) == expected_value
+
 def test_valid_braindump_dir(mocker,status):
     submit_dir = os.path.join(directory,'status_sample_files/sample1')
     status.get_braindump(submit_dir)
@@ -641,3 +647,4 @@ def test_get_braindump_invalid_dir(mocker,status):
     with pytest.raises(FileNotFoundError) as err:
         status.get_braindump(submit_dir) == ''
     assert "Unable to load braindump file" in str(err)
+    
