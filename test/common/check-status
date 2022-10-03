@@ -3,8 +3,8 @@
 
 function update_status
 {
-   STATUS=`pegasus-status --noqueue | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
-   SUMMARY=`pegasus-status | grep "Condor jobs total" | sed 's/Summary: //'`
+   STATUS=$(pegasus-status -j $RUNDIR | jq -r '.dags.root.state')
+   SUMMARY=$(pegasus-status --noqueue $RUNDIR 2>&1)
 }
 
 
@@ -24,7 +24,8 @@ function show_state
 }
 
 
-echo "CURRENT DIR is " `pwd`
+RUNDIR=$(pwd)
+echo "RUNDIR is $RUNDIR"
 
 if [ ! -e braindump.yml ]; then
     echo "braindump.yml was not found in this directory. Planner probably failed!" 1>&2
@@ -45,7 +46,7 @@ while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
     NOW=`date +'%s'`
     if [ $NOW -gt $MAX_TS ]; then
         echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2
-        pegasus-remove `pwd`
+        pegasus-remove $RUNDIR
         STATUS=TIMEOUT
         sleep 1m
         break;
