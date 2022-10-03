@@ -4,8 +4,8 @@ set -e
 
 function update_status
 {
-   STATUS=`pegasus-status --noqueue | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
-   SUMMARY=`pegasus-status | grep "Condor jobs total" | sed 's/Summary: //'`
+   STATUS=$(pegasus-status -j $RUN_DIR | jq -r '.dags.root.state')
+   SUMMARY=$(pegasus-status --noqueue $RUN_DIR 2>&1)
 }
 
 
