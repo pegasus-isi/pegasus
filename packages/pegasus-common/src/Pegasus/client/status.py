@@ -5,7 +5,6 @@ import yaml
 import re
 import os
 import sys
-import io
 import shutil
 from pathlib import Path
 from typing import Dict, List, Union
@@ -21,10 +20,6 @@ class Status:
     def __init__(self):
         self.log = logging.getLogger(__name__)
         self.log.addHandler(console_handler)
-        self.string_logs = io.StringIO()
-        self.console_handler2 = logging.StreamHandler(self.string_logs)
-        self.console_handler2.setFormatter(logging.Formatter("%(message)s"))
-        self.log.addHandler(self.console_handler2)
         self.log.propagate = False
 
         """Keys are defined as follows
@@ -56,44 +51,6 @@ class Status:
         self.DAG_OK = "Running"
         self.DAG_DONE = "Success"
         self.DAG_FAIL = "Failure"
-
-        self.JS_RUN = "Run"
-        self.JS_IDLE = "Idle"
-        self.JS_HELD = "Held"
-        self.JS_REMOVING = "Del"
-
-        self.root_wf_uuid = None
-        self.root_wf_name = None
-        self.is_hierarchical = False
-        self.dag_tree_struct = None
-        self.progress_string = None
-        self.show_dirs = None
-        self.kill_signal = False
-        self.rv_condor_q = None
-        
-        self.uuid_to_name = {}
-        self.job_attr_set = set(['Iwd',
-                                 'JobStatus',
-                                 'EnteredCurrentStatus',
-                                 'pegasus_wf_xformation',
-                                 'pegasus_wf_name',
-                                 'pegasus_wf_dag_job_id',
-                                 'pegasus_wf_dax_job_id',
-                                 'Cmd',
-                                 'ClusterId',
-                                 'pegasus_site',
-                                 'JobPrio',
-                                 'ClusterId',
-                                 'UserLog',
-                                 'HoldReason'
-                               ])
-        
-        self.job_status_codes = { 1:self.JS_IDLE,
-                                  2:self.JS_RUN,
-                                  3:self.JS_REMOVING,
-                                  5:self.JS_HELD
-                                 }
-
         self.status_output = {
                     self.K_TOTALS: {
                         self.K_UNREADY: 0,
@@ -111,52 +68,107 @@ class Status:
                     }
                 }
 
+        self.JS_RUN = "Run"
+        self.JS_IDLE = "Idle"
+        self.JS_HELD = "Held"
+        self.JS_COMPLETED = "Done"
+        self.JS_REMOVING = "Del"
+        self.JS_TRANSF_OUT = "Tsfr"
+        self.JS_SUSPENDED = "Spnd"
+        self.job_status_codes = { 1:self.JS_IDLE,
+                                  2:self.JS_RUN,
+                                  3:self.JS_REMOVING,
+                                  4:self.JS_COMPLETED,
+                                  5:self.JS_HELD,
+                                  6:self.JS_TRANSF_OUT,
+                                  7:self.JS_SUSPENDED
+                                 }
+        
+        self.root_wf_uuid = None
+        self.root_wf_name = None
+        self.is_hierarchical = False
+        self.dag_tree_struct = None
+        self.progress_string = None
+        self.show_dirs = None
+        self.kill_signal = False
+        self.rv_condor_q = None
+        self.submit_dir_entered = False
+        self.q_cmd = None
+        
+        self.uuid_to_name = {}
+        self.job_attr_set = set(['Iwd',
+                                 'JobStatus',
+                                 'EnteredCurrentStatus',
+                                 'pegasus_wf_xformation',
+                                 'pegasus_wf_name',
+                                 'pegasus_wf_dag_job_id',
+                                 'pegasus_wf_dax_job_id',
+                                 'Cmd',
+                                 'ClusterId',
+                                 'pegasus_site',
+                                 'JobPrio',
+                                 'ClusterId',
+                                 'UserLog',
+                                 'HoldReason',
+                                 'JobStatusName',
+                                 'CondorPlatform',
+                                 'CondorVersion',
+                                 'ContainerImage',
+                                 'EC2AccessKeyId',
+                                 'EC2AmiID',
+                                 'EC2InstanceName',
+                                 'EC2InstanceType',
+                                 'EC2SpotRequestID',
+                                 'EC2StatusReasonCode',
+                                 'EC2BlockDeviceMapping',
+                                 'EC2ParameterNames',
+                                 'EC2RemoteVirtualMachineName',
+                                 'OutputDestination',
+                               ])
+        
 
-    def fetch_status(self, 
-                     submit_dir: str, 
+    def fetch_status(self,
+                     submit_dir: str=None, 
                      json : bool=False, 
                      long : bool=False,
                      dirs : bool=False,
                      legend : bool=False,
-                     noqueue : bool=False) -> Union[Dict, None]:
+                     noqueue : bool=False,
+                     debug : bool=False) -> Union[Dict, None]:
         """
         Shows the workflow status or returns a Dict containing status output
         :return: current status information
         :rtype: Union[dict, None]
         """
-        
+        if submit_dir:
+            self.submit_dir_entered = True
         self.show_dirs = dirs
-        self.get_braindump(submit_dir)
+        
+        if self.submit_dir_entered:
+            self.get_braindump(submit_dir)
         
         if not noqueue:
             self.rv_condor_q = self.get_q_values()
         
-        rv_progress = self.get_progress(submit_dir)
+        if self.submit_dir_entered:
+            rv_progress = self.get_progress(submit_dir)
         
         if json :
             if self.rv_condor_q :
-                d = defaultdict(list)
-                for job in self.rv_condor_q:
-                    status_name = self.job_status_codes[job['JobStatus']]
-                    job["JobStatus"] = status_name
-                    d[job["pegasus_wf_uuid"]].append({k:v for k,v in job.items() if k in self.job_attr_set})
-                self.status_output["condor_jobs"] = defaultdict(dict)
-                for uuid,job_list in d.items():
-                    dag_name = job_list[0]['UserLog'].split('/')[-1].split('.')[0]
-                    if dag_name == self.root_wf_name: dag_name = "root"
-                    self.status_output["condor_jobs"][uuid]["DAG_NAME"] = dag_name
-                    self.status_output["condor_jobs"][uuid]["DAG_CONDOR_JOBS"] = job_list
+                self.get_condor_q_dict(self.rv_condor_q)
             return self.status_output
         
         else:
+            if debug and not noqueue:
+                self.show_debug_info()
             if self.rv_condor_q :
                 self.show_condor_jobs(self.rv_condor_q,long,legend)
             elif not noqueue :
-                self.log.info("\n(No matching jobs found in Condor Q)")
-            if rv_progress :
+                print("\n(No matching jobs found in Condor Q)")
+            if self.submit_dir_entered and rv_progress :
                 self.show_job_progress(rv_progress,long,legend)
-        self.progress_string = self.string_logs.getvalue()
 
+                
     def get_braindump(self, submit_dir: str):
         try:
             with (Path(submit_dir) / "braindump.yml").open("r") as f:
@@ -168,17 +180,41 @@ class Status:
                 "Unable to load braindump file, invalid submit directory!"
             )
         return bd
+
     
+    def show_debug_info(self):
+        print("condor_q command used to retrieve jobs in Condor Q :")
+        print("{} {}".format(shutil.which("condor_q"),' '.join(self.q_cmd[1:])))
+
+        
     def get_q_values(self):
         """ Internal method to retrieve Condor Q jobs
         """
         try :
-            expression = r""'pegasus_root_wf_uuid == "{}"'"".format(self.root_wf_uuid)
-            cmd = ['condor_q','-constraint',expression,'-json']
-            return condor._q(cmd)
+            if self.submit_dir_entered:
+                expression = r""'pegasus_root_wf_uuid == "{}"'"".format(self.root_wf_uuid)
+                self.q_cmd = ['condor_q','-constraint',expression,'-json']
+            else:
+                self.q_cmd = ['condor_q','-json']
+            return condor._q(self.q_cmd)
         except :
             return None
 
+        
+    def get_condor_q_dict(self, condor_jobs: list):
+        d = defaultdict(list)
+        for job in condor_jobs:
+            status_name = self.job_status_codes[job['JobStatus']]
+            job["JobStatusName"] = status_name
+            d[job["pegasus_wf_uuid"]].append({k:v for k,v in job.items() if k in self.job_attr_set})
+        self.status_output["condor_jobs"] = defaultdict(dict)
+        for wf_uuid,job_list in d.items():
+            dag_name = job_list[0]['UserLog'].split('/')[-1].split('.')[0]
+            if dag_name == self.root_wf_name: dag_name = "root"
+            self.status_output["condor_jobs"][wf_uuid]["DAG_NAME"] = dag_name
+            self.status_output["condor_jobs"][wf_uuid]["DAG_CONDOR_JOBS"] = job_list
+
+            
     def show_condor_jobs(self, condor_jobs: list, long: bool, legend: bool):
         """Internal method to display the Condor Q jobs and attributes"""
         
@@ -199,24 +235,28 @@ class Status:
             st=''
         
         if legend: 
-                self.log.info("\n{}{}{}{}STAT: {}  IN_STATE: {}  JOB: {}".format(idcol.strip(),column_descr['id'][long_val],
+                print("\n{}{}{}{}STAT: {}  IN_STATE: {}  JOB: {}".format(idcol.strip(),column_descr['id'][long_val],
                                                                                  st.rstrip(),column_descr['site'][long_val],
                                                                                  column_descr['stat'],
                                                                                  column_descr['in_state'],
                                                                                  column_descr['job']))
                 
-        self.log.info("\n{}{}{:5}{:^11}{:25}".format(idcol,st,'STAT','IN_STATE','JOB'))
-        
-        job_counts = {self.JS_IDLE:0,
+        print("\n{}{}{:5}{:^11}{:25}".format(idcol,st,'STAT','IN_STATE','JOB'))
+
+        job_counts = { self.JS_IDLE:0,
                        self.JS_RUN:0,
                        self.JS_HELD:0,
-                       self.JS_REMOVING:0
+                       self.JS_COMPLETED:0,
+                       self.JS_REMOVING:0,
+                       self.JS_TRANSF_OUT:0,
+                       self.JS_SUSPENDED:0
                       }
         
         d = defaultdict(list)
-        
+        root_wf_uuids = set()
         for job in condor_jobs:
             d[job["pegasus_wf_uuid"]].append({k:v for k,v in job.items() if k in self.job_attr_set})
+            root_wf_uuids.add(job["pegasus_root_wf_uuid"])
         
         def print_q(wf_uuid, prefix: str = ''):
             space =  '  '
@@ -225,9 +265,10 @@ class Status:
             L =   '\u2517\u2501'
             jobs_list = d[wf_uuid]
             pointers = [t] * (len(jobs_list) - 1) + [L]
+            
             for pointer, job in zip(pointers, jobs_list):
-                
                 status = self.job_status_codes[job['JobStatus']]
+                
                 if long:
                     jobid = '{:^5}'.format(job["ClusterId"])
                     site = '{:^11}'.format(job["pegasus_site"])
@@ -243,16 +284,20 @@ class Status:
                 else :
                     job_name = prefix + pointer + job['pegasus_wf_dag_job_id']
                 
-                self.log.info("{}{}{:^5}{:^11}{:25}".format(jobid,site,status,in_state,job_name))
+                print("{}{}{:^5}{:^11}{:25}".format(jobid,site,status,in_state,job_name))
                 if status == 'Held':
                     screen_size = shutil.get_terminal_size().columns
-                    self.log.info("{}{}..".format(L,job['HoldReason'][:screen_size-5]))
+                    print("{}{}..".format(L,job['HoldReason'][:screen_size-5]))
                 
                 if job['pegasus_wf_xformation'] == 'condor::dagman':
                     extension = bar if pointer == t else space
                     print_q(self.get_braindump(Path(job["Iwd"])).wf_uuid, prefix=prefix+extension)
-                    
-        print_q(self.root_wf_uuid)
+        
+        if self.submit_dir_entered:            
+            print_q(self.root_wf_uuid)
+        else:
+            for each_root_wf in root_wf_uuids:
+                print_q(each_root_wf)
         
         idle = {False:'', True:'I:{} '.format(job_counts["Idle"])}
         run = {False:'', True:'R:{} '.format(job_counts["Run"])}
@@ -267,8 +312,9 @@ class Status:
                                                                           run[bool(job_counts["Run"])],
                                                                           held[bool(job_counts["Held"])],
                                                                           rem[bool(job_counts["Del"])])
-        self.log.info(summary_line[:-1].rstrip(' ')+')')        
+        print(summary_line[:-1].rstrip(' ')+')')        
 
+        
     def get_time(self, time) -> str:
         """Internal method to get time elapsed for a job in dd:hh:mm:ss format"""
         day = "{0:0=2d}".format(time // (24 * 3600))
@@ -290,6 +336,18 @@ class Status:
         dagman_list = self.get_all_dagmans(Path(submit_dir))
         #if wrong submit_dir is given or no dagman files found
         if not dagman_list:
+            self.status_output["dags"]["root"] = {
+                                self.K_UNREADY: 0,
+                                self.K_READY: 0,
+                                self.K_PRE: 0,
+                                self.K_QUEUED: 0,
+                                self.K_POST: 0,
+                                self.K_SUCCEEDED: 0,
+                                self.K_FAILED: 0,
+                                self.K_PERCENT_DONE: 0.0,
+                                self.K_TOTAL: 0,
+                                self.K_DAGSTATE: None
+                            }
             return None
         
         dag_dict = None
@@ -458,7 +516,7 @@ class Status:
                     }
         
         if legend:
-            self.log.info("\nUNREADY: {}  READY: {}  PRE : {}\n{}: {}  POST: {}  {}: {}\n{}: {}  %DONE: {} {}{}{}{}".format(
+            print("\nUNREADY: {}  READY: {}  PRE : {}\n{}: {}  POST: {}  {}: {}\n{}: {}  %DONE: {} {}{}{}{}".format(
                 column_descr['unready'],column_descr['ready'],column_descr['pre'],
                 column_names['queued'][long_val].strip(),column_descr['queued'],
                 column_descr['post'], column_names['completed'][long_val].strip(),column_descr['completed'],
@@ -466,7 +524,7 @@ class Status:
                 column_descr['percent_done'],column_names['state'][long_val].strip(),column_descr['state'][long_val],
                 column_names['dagname'][long_val].strip(),column_descr['dagname'][long_val]))
         
-        self.log.info("\n{}{}{}{}{}{}{}{}{}{}".format(column_names['unready'][long_val],
+        print("\n{}{}{}{}{}{}{}{}{}{}".format(column_names['unready'][long_val],
                                                        column_names['ready'][long_val],
                                                        column_names['pre'][long_val],
                                                        column_names['queued'][long_val],
@@ -479,7 +537,7 @@ class Status:
 
         if long_val == 0:
             dag_totals = values["totals"]
-            self.log.info("{:^8}{:^8}{:^6}{:^8}{:^8}{:^9}{:^9}{:^8}".format(dag_totals["unready"],
+            print("{:^8}{:^8}{:^6}{:^8}{:^8}{:^9}{:^9}{:^8}".format(dag_totals["unready"],
                                                                 dag_totals["ready"],
                                                                 dag_totals["pre"],
                                                                 dag_totals["queued"],
@@ -509,7 +567,7 @@ class Status:
                     state = dag_dict[self.K_DAGSTATE]
                     name = each_dag[1]
                   
-                self.log.info("{:^7}{:^7}{:^5}{:^6}{:^6}{:^6}{:^6}{:^6}{:^8}{:25}".format(dag_dict[self.K_UNREADY],
+                print("{:^7}{:^7}{:^5}{:^6}{:^6}{:^6}{:^6}{:^6}{:^8}{:25}".format(dag_dict[self.K_UNREADY],
                                                                                            dag_dict[self.K_READY],
                                                                                            dag_dict[self.K_PRE],
                                                                                            dag_dict[self.K_QUEUED],
@@ -536,7 +594,7 @@ class Status:
                                                                  done[bool(dag_state_counts["Success"])],
                                                                  fail[bool(dag_state_counts["Failure"])],
                                                                  run[bool(dag_state_counts["Running"])])
-        self.log.info(summary_line[:-1].rstrip(' ')+')\n')
+        print(summary_line[:-1].rstrip(' ')+')\n')
 
 
     def get_dag_tree_structure(self, dagman_list, submit_dir):

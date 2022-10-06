@@ -1,18 +1,18 @@
 import os
 import json
-from pathlib import Path
 import logging
 import optparse
 import shutil
 import time
 import click
 import sys
+from pathlib import Path
+from datetime import datetime
 
 from Pegasus.client.status import Status
 from Pegasus.tools.utils import configureLogging, slurp_braindb
 
 configureLogging(level=logging.DEBUG)
-
 
 @click.command(options_metavar='<options>')
 @click.pass_context
@@ -25,6 +25,7 @@ configureLogging(level=logging.DEBUG)
     help="Show all DAG states, including sub-DAGs, default only totals",
 )
 @click.option(
+    "--jsonrv",
     "-j",
     is_flag=True,
     default=False,
@@ -57,26 +58,37 @@ configureLogging(level=logging.DEBUG)
 )
 @click.option(
     "--noqueue",
+    "-Q",
     is_flag=True,
     default=False,
     show_default=True,
     help="Turns off the output from parsing Condor Q",
 )
+@click.option(
+    "--debug",
+    "-d",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Internal debugging tool",
+)
 @click.argument(
     "submit-dir",
-    required=True,
+    required=False,
     type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
     nargs=1
 )
-def get_wf_status(ctx, long, j, watch, dirs, legend, noqueue, submit_dir):
+def get_wf_status(ctx, long, jsonrv, watch, dirs, legend, noqueue, debug, submit_dir):
     """pegasus-status helps to retrieve status of a given workflow."""
-    
+        
     if not submit_dir :
-        print("You must provide a submit-directory to get workflow status.")
-        ctx.exit(1)
+        cwd = os.getcwd()
+        if slurp_braindb(cwd):
+            submit_dir = cwd
+        else:
+            submit_dir = None
     
     else:
-        cwd = os.getcwd()
         submit_dir = str(Path(submit_dir).resolve())
         try:
             os.chdir(submit_dir)
@@ -87,26 +99,29 @@ def get_wf_status(ctx, long, j, watch, dirs, legend, noqueue, submit_dir):
             )
             ctx.exit(1)
             
-    braindb = slurp_braindb(submit_dir)
-    if not braindb:
-        click.secho(
-            "{}{} is not a valid workflow submit-directory".format(
-            click.style("Error: ",fg="red",bold=True),submit_dir)
-        )
-        ctx.exit(1)
+        braindb = slurp_braindb(submit_dir)
+        if not braindb:
+            click.secho(
+                "{}{} is not a valid workflow submit-directory".format(
+                click.style("Error: ",fg="red",bold=True),submit_dir)
+            )
+            ctx.exit(1)
         
-    if j:
+    if jsonrv:
         progress = Status()
-        print(json.dumps(progress.fetch_status(submit_dir=submit_dir,json=j,dirs=dirs,legend=legend,noqueue=noqueue),indent=2))
-        exit(0)
+        print(json.dumps(progress.fetch_status(submit_dir=submit_dir,json=jsonrv,dirs=dirs,legend=legend,noqueue=noqueue,debug=debug),
+                         indent=2))
         
     elif watch:
         continue_running = True
         while(continue_running):
             try:
                 os.system('clear')
-                screen_size = shutil.get_terminal_size().columns
-                click.echo("{}".format('Press Ctrl+C to exit'))
+                size = shutil.get_terminal_size().columns // 3
+                ctrlc = '{0:<{1}}'.format('Press Ctrl+C to exit',size)
+                pid = '{0:^{1}}'.format('(pid='+str(os.getpid())+')',size)
+                clock = '{0:>{1}}'.format(datetime.now().strftime('%a %b-%d-%Y %H:%M:%S'),size)
+                click.echo("{}{}{}".format(ctrlc,pid,clock))
                 progress = Status()
                 progress.fetch_status(submit_dir=submit_dir,long=long,dirs=dirs,legend=legend,noqueue=noqueue)
                 if progress.kill_signal:
@@ -117,8 +132,7 @@ def get_wf_status(ctx, long, j, watch, dirs, legend, noqueue, submit_dir):
                 
     else:
         progress = Status()
-        progress.fetch_status(submit_dir=submit_dir,long=long,dirs=dirs,legend=legend,noqueue=noqueue)
-
+        progress.fetch_status(submit_dir=submit_dir,long=long,dirs=dirs,legend=legend,noqueue=noqueue,debug=debug)
 
 if __name__ == "__main__":
     get_wf_status()
