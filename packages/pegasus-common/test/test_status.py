@@ -783,6 +783,9 @@ def test_debug_mode(mocker,status,capsys):
     """
     )
     mocker.patch("shutil.which",return_value='/usr/condor/bin/condor_q')
+    mocker.patch("Pegasus.client.status.Status.get_q_values",return_value=None)
+    mocker.patch("Pegasus.client.status.Status.get_progress",return_value=None)
+    status.q_cmd=['condor_q','-json']
     status.fetch_status(debug=True)
     captured = capsys.readouterr()
     assert captured.out == expected_value
