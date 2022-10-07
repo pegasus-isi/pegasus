@@ -167,6 +167,7 @@ class Status:
                 print("\n(No matching jobs found in Condor Q)")
             if self.submit_dir_entered and rv_progress :
                 self.show_job_progress(rv_progress,long,legend)
+            else: print()
 
                 
     def get_braindump(self, submit_dir: str):
@@ -190,15 +191,12 @@ class Status:
     def get_q_values(self):
         """ Internal method to retrieve Condor Q jobs
         """
-        try :
-            if self.submit_dir_entered:
-                expression = r""'pegasus_root_wf_uuid == "{}"'"".format(self.root_wf_uuid)
-                self.q_cmd = ['condor_q','-constraint',expression,'-json']
-            else:
-                self.q_cmd = ['condor_q','-json']
-            return condor._q(self.q_cmd)
-        except :
-            return None
+        if self.submit_dir_entered:
+            expression = r""'pegasus_root_wf_uuid == "{}"'"".format(self.root_wf_uuid)
+            self.q_cmd = ['condor_q','-constraint',expression,'-json']
+        else:
+            self.q_cmd = ['condor_q','-json']
+        return condor._q(self.q_cmd)
 
         
     def get_condor_q_dict(self, condor_jobs: list):
@@ -594,7 +592,7 @@ class Status:
                                                                  done[bool(dag_state_counts["Success"])],
                                                                  fail[bool(dag_state_counts["Failure"])],
                                                                  run[bool(dag_state_counts["Running"])])
-        print(summary_line[:-1].rstrip(' ')+')\n')
+        print(summary_line[:-1].rstrip(' ')+')')
 
 
     def get_dag_tree_structure(self, dagman_list, submit_dir):

@@ -309,7 +309,6 @@ def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir,
                 UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
                    0       0      0      0       0       17        0     100.0  
                 Summary: 1 DAG total (Success:1)
-                
                 """
             )
         ),
@@ -323,7 +322,6 @@ def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir,
                 UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
                    28      0      0      1       0        0        0      0.0   
                 Summary: 1 DAG total (Running:1)
-                
                 """
             )
         ),
@@ -337,7 +335,6 @@ def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir,
                 UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
                    9       0      0      0       0        8        3      40.0  
                 Summary: 1 DAG total (Failure:1)
-                
                 """
             )
         ),
@@ -351,7 +348,6 @@ def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir,
                 UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
                    21      0      0      4       0        4        0     13.79  
                 Summary: 1 DAG total (Failure:1)
-                
                 """
             )
         ),
@@ -365,7 +361,6 @@ def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir,
                 UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
                    0       0      0      0       0        0        0      0.0   
                 Summary: 1 DAG total (Failure:1)
-                
                 """
             )
         ),
@@ -380,7 +375,6 @@ def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir,
                 UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
                    0       0      0      0       0       33        0     100.0  
                 Summary: 3 DAGs total (Success:3)
-                
                 """
             )
         ),
@@ -394,7 +388,6 @@ def test_fetch_status_json(mocker, status, pegasus_wf_name_from_bd, samples_dir,
                 UNREADY  READY   PRE   QUEUED   POST   SUCCESS  FAILURE  %DONE  
                    4       0      0      0       0        8        1     61.54  
                 Summary: 2 DAGs total (Failure:2)
-                
                 """
             )
         )
@@ -410,13 +403,40 @@ def test_show_dag_progress(mocker,capsys,status,wf_name_from_bd, samples_dir, ex
     assert captured.out == expected_output
     Pegasus.client.status.Status.get_q_values.assert_called_once_with()
 
+    
+def test_show_dag_progress_with_legend(mocker,capsys,status):
+    wf_name_from_bd='sample_1_success'
+    samples_dir='status_sample_files/sample1'
+    expected_output=dedent(
+                """
+                (No matching jobs found in Condor Q)
+                
+                UNREADY: Jobs blocked by dependencies  READY: Jobs ready for submission  PRE : PRE-Scripts running
+                IN_Q: Submitted jobs  POST: POST-Scripts running  DONE: Job completed with success
+                FAIL: Jobs completed with failure  %DONE: Success percentage STATE: Workflow state DAGNAME: Name of workflow
+
+                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
+                   0      0     0    0     0     17    0   100.0 Success sample_1_success.dag     
+                Summary: 1 DAG total (Success:1)
+                """
+            )
+    mocker.patch("Pegasus.client.status.Status.get_braindump")
+    mocker.patch("Pegasus.client.status.Status.get_q_values",return_value=None)
+    status.root_wf_name = wf_name_from_bd
+    submit_dir = os.path.join(directory,samples_dir)
+    status.fetch_status(submit_dir,legend=True,long=True)
+    captured = capsys.readouterr()
+    assert captured.out == expected_output
+    Pegasus.client.status.Status.get_q_values.assert_called_once_with()
+
 
 @pytest.mark.parametrize(
-    "wf_name_from_bd, samples_dir, expected_output",
+    "wf_name_from_bd, samples_dir, dirs_option, expected_output",
     [
         (
             'sample_1_success',
             'status_sample_files/sample1',
+            False,
             dedent(
                 """
                 (No matching jobs found in Condor Q)
@@ -424,13 +444,13 @@ def test_show_dag_progress(mocker,capsys,status,wf_name_from_bd, samples_dir, ex
                 UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
                    0      0     0    0     0     17    0   100.0 Success sample_1_success.dag     
                 Summary: 1 DAG total (Success:1)
-                
                 """
             )
         ),
         (
             'sample_2_held',
             'status_sample_files/sample2',
+            False,
             dedent(
                 """
                 (No matching jobs found in Condor Q)
@@ -438,13 +458,13 @@ def test_show_dag_progress(mocker,capsys,status,wf_name_from_bd, samples_dir, ex
                 UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
                   28      0     0    1     0     0     0    0.0  Running sample_2_held.dag        
                 Summary: 1 DAG total (Running:1)
-                
                 """
             )
         ),
         (
             'sample_3_failure',
             'status_sample_files/sample3',
+            False,
             dedent(
                 """
                 (No matching jobs found in Condor Q)
@@ -452,7 +472,6 @@ def test_show_dag_progress(mocker,capsys,status,wf_name_from_bd, samples_dir, ex
                 UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
                    9      0     0    0     0     8     3    40.0 Failure sample_3_failure.dag     
                 Summary: 1 DAG total (Failure:1)
-                
                 """
             )
         ),
@@ -460,6 +479,7 @@ def test_show_dag_progress(mocker,capsys,status,wf_name_from_bd, samples_dir, ex
         (
             'sample2_hr_failure',
             'status_sample_files/sample2_hr',
+            False,
             dedent(
                 """
                 (No matching jobs found in Condor Q)
@@ -469,22 +489,42 @@ def test_show_dag_progress(mocker,capsys,status,wf_name_from_bd, samples_dir, ex
                    0      0     0    0     0     0     0    0.0  Failure   └─inner.dag            
                    4      0     0    0     0     8     1   61.54         TOTALS(13 jobs)          
                 Summary: 2 DAGs total (Failure:2)
-                
+                """
+            )
+        ),
+                (
+            'sample2_hr_failure',
+            'status_sample_files/sample2_hr',
+            True,
+            dedent(
+                """
+                (No matching jobs found in Condor Q)
+
+                UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
+                   4      0     0    0     0     8     1   61.54 Failure sample2_hr_failure.dag   
+                   0      0     0    0     0     0     0    0.0  Failure   └─sub_workflows/inner/inner.dag
+                   4      0     0    0     0     8     1   61.54         TOTALS(13 jobs)          
+                Summary: 2 DAGs total (Failure:2)
                 """
             )
         )
     ]
 )
-def test_show_dag_progress_long(mocker,capsys,status,wf_name_from_bd, samples_dir, expected_output):
+def test_show_dag_progress_long(mocker,capsys,status,wf_name_from_bd, samples_dir, dirs_option, expected_output):
     mocker.patch("Pegasus.client.status.Status.get_braindump")
     mocker.patch("Pegasus.client.status.Status.get_q_values",return_value=None)
     status.root_wf_name = wf_name_from_bd
     submit_dir = os.path.join(directory,samples_dir)
-    status.fetch_status(submit_dir,long=True)
+    status.fetch_status(submit_dir,long=True, dirs=dirs_option)
     captured = capsys.readouterr()
     print(captured.out)
     assert captured.out == expected_output
     Pegasus.client.status.Status.get_q_values.assert_called_once_with()
+
+    
+def test_get_progress_no_dagmans_found(mocker,status):
+    submit_dir = 'invalid/submit/dir'
+    assert status.get_progress(submit_dir) == None
 
     
 @pytest.mark.parametrize(
@@ -507,9 +547,8 @@ def test_get_q_values(mocker,status,submit_dir_entered,cmd):
     status.submit_dir_entered = submit_dir_entered
     assert status.get_q_values() == q_values
     Pegasus.client.condor._q.assert_called_once_with(cmd)
-
-
     
+
 @pytest.fixture
 def condor_q_values():
     return [
@@ -574,6 +613,7 @@ def condor_q_values():
                 Idle    00:00   ┣━job2                   
                 Idle    00:00   ┗━job3                   
                 Summary: 4 Condor jobs total (I:2 R:2)
+                
                 """
             )
         ),
@@ -587,6 +627,7 @@ def condor_q_values():
                 4702    local   Idle    00:00   ┣━job2                   
                 4703    local   Idle    00:00   ┗━job3                   
                 Summary: 4 Condor jobs total (I:2 R:2)
+                
                 """
             )
         )
@@ -738,6 +779,7 @@ def test_debug_mode(mocker,status,capsys):
 /usr/condor/bin/condor_q -json
 
 (No matching jobs found in Condor Q)
+
     """
     )
     mocker.patch("shutil.which",return_value='/usr/condor/bin/condor_q')
