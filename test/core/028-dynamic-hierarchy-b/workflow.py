@@ -53,7 +53,7 @@ ccg_site.add_directories(
         .add_file_servers(FileServer("scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/outputs", Operation.ALL))
 )
 ccg_site.add_env(PEGASUS_HOME="/opt/pegasus")
-ccg_site.add_profiles(Namespace.PEGASUS, style="ssh", change_dir="true", SSH_PRIVATE_KEY="/scitech/home/bamboo/.ssh/workflow_id_rsa")
+ccg_site.add_profiles(Namespace.PEGASUS, style="ssh", change_dir="true", SSH_PRIVATE_KEY="/scitech/shared/home/bamboo/.ssh/workflow_id_rsa")
 
 sc.add_sites(local_site, ccg_site)
 sc.write()
