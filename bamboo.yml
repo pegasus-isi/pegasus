@@ -1180,8 +1180,8 @@ project:
                     matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXOSX
-              name: Build OSX
+            - key: BXOSXI12
+              name: Build macOS Intel 12
               tasks:
                 - !script
                   description: Untar source
@@ -1215,6 +1215,49 @@ project:
                 - capabilityKey: platform
                   matchType: !equals
                     matchValue: macos
+                - capabilityKey: release
+                  matchType: !matches
+                    matchValue: 12\..*
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXOSXA12
+              name: Build macOS Arm 12
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !customTask
+                  pluginKey: com.atlassian.bamboo.plugins.ant:task.builder.ant
+                  description: Binary Packages
+                  taskConfig:
+                    label: Ant
+                    environmentVariables: 'PATH="${PATH}:/opt/homebrew/bin'
+                    target: dist-worker dist-release
+                    buildJdk: JDK
+                    workingSubDirectory: pegasus-source
+              artifactDefinitions:
+                - name: pegasus-binary-arm64_macos
+                  copyPattern: "pegasus-binary-*.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-arm64_macos
+                  copyPattern: "pegasus-worker-*.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: arch
+                  matchType: !equals
+                    matchValue: arm64
+                - capabilityKey: platform
+                  matchType: !equals
+                    matchValue: macos
+                - capabilityKey: release
+                  matchType: !matches
+                    matchValue: 12\..*
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUB
@@ -1390,6 +1433,7 @@ project:
                 - name: pegasus-binary-x86_64_deb_10
                 - name: pegasus-binary-x86_64_deb_11
                 - name: pegasus-binary-x86_64_macos
+                - name: pegasus-binary-arm64_macos
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_rhel_8
                 - name: pegasus-binary-x86_64_ubuntu_18
@@ -1410,6 +1454,7 @@ project:
                 - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_deb_11
                 - name: pegasus-worker-x86_64_macos
+                - name: pegasus-worker-arm64_macos
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_rhel_8
                 - name: pegasus-worker-x86_64_ubuntu_18
