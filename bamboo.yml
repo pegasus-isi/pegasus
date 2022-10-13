@@ -1217,7 +1217,7 @@ project:
                     matchValue: macos
                 - capabilityKey: release
                   matchType: !matches
-                    matchValue: 12\..*
+                    regex: 12\..*
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXOSXA12
@@ -1257,7 +1257,7 @@ project:
                     matchValue: macos
                 - capabilityKey: release
                   matchType: !matches
-                    matchValue: 12\..*
+                    regex: 12\..*
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUB
