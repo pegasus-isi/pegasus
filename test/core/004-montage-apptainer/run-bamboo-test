@@ -4,8 +4,6 @@ set -e
 
 TOP_DIR=`pwd`
 
-export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
-
 rm -rf montage-workflow-v3
 git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 
@@ -14,9 +12,9 @@ echo
 
 cd montage-workflow-v3
 
-singularity exec \
+apptainer exec \
             --bind $PWD \
-            library://rynge/default/montage:latest \
+            https://data.isi.edu/montage/images/montage-workflow-v3.sif \
             $PWD/montage-workflow.py \
                 --work-dir $PWD \
                 --tc-target container \
@@ -31,7 +29,7 @@ pegasus-plan \
         --dir work \
         --cluster horizontal \
         --submit \
-	data/montage-workflow.yml \
+        data/montage-workflow.yml \
         | tee $TOP_DIR/plan.out
 
 

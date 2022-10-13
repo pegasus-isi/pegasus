@@ -1825,7 +1825,7 @@ project:
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: false
             - key: T4N13
-              name: 004-montage-singularity
+              name: 004-montage-apptainer
               description: TODO
               tasks:
                 - !script
