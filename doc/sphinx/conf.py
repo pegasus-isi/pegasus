@@ -30,9 +30,9 @@ copyright = "2019, Pegasus Team"
 author = "Pegasus Team"
 
 # The short X.Y version
-version = "5.0.3dev"
+version = "5.0.0dev"
 # The full version, including alpha/beta/rc tags
-release = "5.0.3dev"
+release = "5.0.0dev"
 
 
 # -- General configuration ---------------------------------------------------
@@ -74,7 +74,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
