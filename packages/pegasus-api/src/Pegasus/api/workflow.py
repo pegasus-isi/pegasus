@@ -1322,15 +1322,76 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     #@_needs_client
     def status(self, *, json:bool=False,long:bool=False,dirs:bool=False,legend:bool=False,noqueue:bool=False,debug:bool=False):
         """
-        status(self, long: bool = False, verbose: int = 0)
+        status(self, long: bool = False, json:bool=False, dirs:bool=False, legend:bool=False, noqueue:bool=False, debug:bool=False)
         Monitor the workflow by quering Condor and directories.
+        Also returns current status information of the workflow as a dict in the
+        following format:
+        .. code-block:: python
+
+            {
+                "totals": {
+                    "unready": <int>,
+                    "ready": <int>,
+                    "pre": <int>,
+                    "queued": <int>,
+                    "post": <int>,
+                    "succeeded": <int>,
+                    "failed": <int>,
+                    "percent_done": <float>,
+                    "total": <int>
+                },
+                "dags": {
+                    "root": {
+                        "unready": <int>,
+                        "ready": <int>,
+                        "pre": <int>,
+                        "queued": <int>,
+                        "post": <int>,
+                        "succeeded": <int>,
+                        "failed": <int>,
+                        "percent_done": <float>,
+                        "state": <"Running" | "Success" | "Failure">,
+                        "dagname": <str>
+                    }
+                },
+                "condor_jobs": {
+                        "<str:wf_uuid>" : {
+                                "DAG_NAME": <str>
+                                "DAG_CONDOR_JOBS": <List of Job Dictionaries>
+                    }
+                }
+            }
+
+        Keys are defined as follows
+            * :code:`unready`: Jobs blocked by dependencies
+            * :code:`ready`: Jobs ready for submission
+            * :code:`pre`: PRE-Scripts running
+            * :code:`queued`: Submitted jobs
+            * :code:`post`: POST-Scripts running
+            * :code:`succeeded`: Job completed with success
+            * :code:`failed`: Jobs completed with failure
+            * :code:`percent_done`: Success percentage
+            * :code:`state`: Workflow state
+            * :code:`dagname`: Name of workflow
+            * :code:`condor_jobs`: A dict of jobs in Condor Q, with WF_UUID as key for each workflow
+            * :code:`DAG_NAME`: Workflow name
+            * :code:`DAG_CONDOR_JOBS`: List of jobs in Condor Q, each job is a Dict of Job ClassAd attributes
 
         :param long: Show all DAG states, including sub-DAGs, default only totals. defaults to False
         :type long: bool, optional
-        :param verbose:  verbosity, defaults to False
-        :type verbose: int, optional
+        :param json: returns current status information of the workflow as a JSON serializable dictionary, defaults to False
+        :type json: bool, optional
+        :param dirs: shows relative paths for sub-DAGs, works with long option, defaults to False
+        :type dirs: bool, optional
+        :param legend: shows a legend explaining the columns in the output, defaults to False
+        :type legend: bool, optional
+        :param noqueue: turns off the output from parsing Condor Q, defaults to False
+        :type noqueue: bool, optional
+        :param debug: 
+        :type debug: bool, optional
         :raises PegasusClientError: pegasus-status encountered an error
-        :return: self
+        :return: self, current status information
+        :rtype: Union[Dict,None]
         """
         display_status = Status()
         return display_status.fetch_status(self._submit_dir,json=json,long=long,dirs=dirs,legend=legend,noqueue=noqueue,debug=debug)

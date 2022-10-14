@@ -25,10 +25,11 @@ Description
 ===========
 
 **pegasus-status** shows the current state of the Condor Q and a
-workflow, depending on settings. It requires a valid run directory to
-to show the status of a workflow. If no valid run directory could be
-determined, it throws an error with the specified reason for it. If a run 
-directory was specified, status about the workflow will be displayed.
+workflow, depending on settings. If no valid run directory could be
+determined, including the current directory, **pegasus-status** will
+show all jobs of the current user and no workflows. If a run directory
+was specified, or the current directory is a valid run directory, status
+about the workflow will also be shown.
 
 Many options will modify the behavior of this program, such as : watch mode,
 the presence of jobs in the queue, progress in the workflow directory,
@@ -97,12 +98,14 @@ Options
 **-j**
    This option returns the status of the workflow in a JSON serializable data
    structure (Python dict). Sample of this structure is shown below, where the
-   keys are - 
+   keys are -
+
 + *totals* : contains the overall progress of the workflow
 + *dags* : contains progress regarding each workflow, in case of hierarchical workflows each sub-DAG with it's name as corresponding key
 + *condor_jobs*: contains all the jobs in Q belonging to a specific workflow, with it's unique *wf_uuid* as corresponding key. Furthermore, each workflow has *DAG_NAME* key and *DAG_CONDOR_JOBS* key with a list of condor Q jobs of the corresponding DAG
+
 | If there are no jobs of the workflow in the condor Q, *condor_jobs* is absent from the returned structure. By default, **-j** option is off.
-   
+
 .. code-block:: json
 
     {
