@@ -46,7 +46,7 @@ condorpool_site.add_pegasus_profile(style="condor")
 cartman_data_site = Site(name="cartman-data", arch=Arch.X86_64, os_type=OS.LINUX)
 cartman_data_site.add_directories(
     Directory(directory_type=Directory.SHARED_SCRATCH, path=TOP_DIR / "staging-site/scratch")
-        .add_file_servers(FileServer(url="gsiftp://bamboo.isi.edu/{}".format(TOP_DIR / "staging-site/scratch"), operation_type=Operation.ALL))
+        .add_file_servers(FileServer(url="webdavs://workflow.isi.edu/webdav/scratch-90-days/{}".format(TOP_DIR / "staging-site/scratch"), operation_type=Operation.ALL))
 )
 
 sc.add_sites(local_site, condorpool_site, cartman_data_site)
@@ -148,6 +148,3 @@ wf.plan(
 
 with open("submit_dir", "w") as f:
     f.write(str(wf.braindump.submit_dir))
-
-
-
