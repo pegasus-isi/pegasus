@@ -255,6 +255,8 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
   <target name="compile-aws-batch" depends="compile-planner" description="Compile Pegasus AWS Batch Code">
+    <echo>${toString:build.aws.classpath}</echo>
+    <echo>${toString:build.classpath}</echo>
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
