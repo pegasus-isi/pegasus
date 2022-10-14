@@ -1324,8 +1324,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
         status(self, long: bool = False, json:bool=False, dirs:bool=False, legend:bool=False, noqueue:bool=False, debug:bool=False)
         Monitor the workflow by quering Condor and directories.
+        
         Also returns current status information of the workflow as a dict in the
         following format:
+        
         .. code-block:: python
 
             {
