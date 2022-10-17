@@ -79,8 +79,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
+                      scitech-bamboo-apptainer alpine-3 \
                           ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
@@ -104,8 +103,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
+                      scitech-bamboo-apptainer alpine-3 \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -133,8 +131,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
+                      scitech-bamboo-apptainer alpine-3 \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -179,8 +176,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
+                      scitech-bamboo-apptainer debian-10 \
                           ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
@@ -204,8 +200,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
+                      scitech-bamboo-apptainer debian-10 \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -233,8 +228,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
+                      scitech-bamboo-apptainer debian-10 \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -279,11 +273,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      # debugging of env
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
-                          env
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
+                      scitech-bamboo-apptainer debian-11 \
                           ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
@@ -307,8 +297,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
+                      scitech-bamboo-apptainer debian-11 \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -336,8 +325,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
+                      scitech-bamboo-apptainer debian-11 \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -412,8 +400,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
+                      scitech-bamboo-apptainer rhel-7 \
                           ant test-kickstart test-transfer
               artifactDependencies:
                 - name: pegasus-source
@@ -437,8 +424,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
+                      scitech-bamboo-apptainer rhel-7 \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -466,8 +452,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
+                      scitech-bamboo-apptainer rhel-7 \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -512,8 +497,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      scitech-bamboo-apptainer rhel-8 \
                           ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
@@ -537,8 +521,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      scitech-bamboo-apptainer rhel-8 \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -566,8 +549,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      scitech-bamboo-apptainer rhel-8 \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -612,8 +594,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                      scitech-bamboo-apptainer ubuntu-18 \
                           ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
@@ -637,8 +618,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                      scitech-bamboo-apptainer ubuntu-18 \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -666,8 +646,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                      scitech-bamboo-apptainer ubuntu-18 \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -712,8 +691,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                      scitech-bamboo-apptainer ubuntu-20 \
                           ant test-kickstart test-pmc test-transfer test-integrity
               artifactDependencies:
                 - name: pegasus-source
@@ -737,8 +715,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                      scitech-bamboo-apptainer ubuntu-20 \
                           ant test-java
                 - !junitParser
                   description: Parse Test Report
@@ -766,8 +743,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                      scitech-bamboo-apptainer ubuntu-20 \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -819,8 +795,7 @@ project:
                       export CI=true
                       export bamboo_buildKey=${bamboo_buildKey}
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      scitech-bamboo-apptainer rhel-8 \
                           ant code-format-java
               artifactDependencies:
                 - name: pegasus-source
@@ -847,8 +822,7 @@ project:
                       export CI=true
                       export bamboo_buildKey=${bamboo_buildKey}
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      scitech-bamboo-apptainer rhel-8 \
                           ant code-format-python
               artifactDependencies:
                 - name: pegasus-source
@@ -875,8 +849,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      scitech-bamboo-apptainer rhel-8 \
                           ant dist-doc
               artifactDefinitions:
                 - name: pegasus-doc
@@ -930,8 +903,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/alpine-3.sif \
+                      scitech-bamboo-apptainer alpine-3 \
                           ant dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_alpine_3
@@ -964,8 +936,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      scitech-bamboo-apptainer rhel-8 \
                           ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_8
@@ -1006,8 +977,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-7.sif \
+                      scitech-bamboo-apptainer rhel-7 \
                           ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_7
@@ -1044,8 +1014,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/rhel-8.sif \
+                      scitech-bamboo-apptainer rhel-8 \
                           ant dist-rpm dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_rhel_8
@@ -1087,8 +1056,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-10.sif \
+                      scitech-bamboo-apptainer debian-10 \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_10
@@ -1129,8 +1097,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/debian-11.sif \
+                      scitech-bamboo-apptainer debian-11 \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_11
@@ -1250,8 +1217,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-18.sif \
+                      scitech-bamboo-apptainer ubuntu-18 \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_18
@@ -1291,8 +1257,7 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      apptainer cache clean --days 1 --force || true
-                      apptainer exec --cleanenv https://data.isi.edu/bamboo/images/ubuntu-20.sif \
+                      scitech-bamboo-apptainer ubuntu-20 \
                           ant clean dist-deb dist-worker dist-release
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_20
