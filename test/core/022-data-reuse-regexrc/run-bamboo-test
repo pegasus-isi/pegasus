@@ -4,4 +4,4 @@ set -e
 
 echo "Running workflow_gen.py"
 export PYTHONPATH=`pegasus-config --python`
-python3 workflow_gen.py
+python3 workflow_gen.py 2>&1 | tee plan.out

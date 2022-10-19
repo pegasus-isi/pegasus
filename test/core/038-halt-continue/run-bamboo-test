@@ -4,8 +4,8 @@ set -e
 
 function update_status
 {
-   STATUS=$(pegasus-status -j $RUN_DIR | jq -r '.dags.root.state')
-   SUMMARY=$(pegasus-status --noqueue $RUN_DIR 2>&1)
+   STATUS=`pegasus-status --noqueue | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
+   SUMMARY=`pegasus-status | grep "Condor jobs total" | sed 's/Summary: //'`
 }
 
 
@@ -180,4 +180,3 @@ if cat monitord.log* | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unabl
     echo
     exit 1
 fi
-
