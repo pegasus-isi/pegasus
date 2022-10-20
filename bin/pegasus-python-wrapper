@@ -20,18 +20,6 @@ BASE_NAME=%%BASE_NAME%%
 # only discover Python once, even if multiple Pegasus tools are called
 if [ "x$PEGASUS_PYTHON" = "x" ]; then
 
-    # some tools are made to work both in 2 and 3, but most are 3 only
-    ALLOW_PY2=0
-    for NAME in \
-        pegasus-transfer \
-        pegasus-s3 \
-        pegasus-integrity \
-    ; do
-        if [ "X$NAME" = "X$BASE_NAME" ]; then
-            ALLOW_PY2=1
-        fi
-    done
-
     # PATH must be visible to which
     export PATH
 
@@ -39,17 +27,9 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
     I=0
     eval PEXE_LIST$I="$(which python3 2>/dev/null)"
     I=$((I+1))
-    if [ $ALLOW_PY2 = 1 ]; then
-        eval PEXE_LIST$I="$(which python 2>/dev/null)"
-        I=$((I+1))
-    fi
     # has to be last to find user defined environments
     eval PEXE_LIST$I="/usr/bin/python3"
     I=$((I+1))
-    if [ $ALLOW_PY2 = 1 ]; then
-        eval PEXE_LIST$I="/usr/bin/python"
-        I=$((I+1))
-    fi
 
     # Look for a python in the give list
     for i in `seq $I`; do
@@ -65,14 +45,10 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
         exit 1
     fi
 
-    # Some quick validations - only for Python 3, also exclude pegasus-config as
-    # it is annoying when we can't run for example Java tools because of a missing
-    # Python module.
-    if [ $ALLOW_PY2 = 0 ]; then
-        if [ "x$BASE_NAME" != "xpegasus-config" ]; then
-            # this is just a warning for now
-            "$PEXE" "$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py" || true
-        fi
+    # Some quick validations
+    if [ "x$BASE_NAME" != "xpegasus-config" ]; then
+        # this is just a warning for now
+        "$PEXE" "$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py" || true
     fi
 
     # remember the Python version to use when calling other Pegasus tools
