@@ -423,6 +423,8 @@ class Status:
                 #MM/DD/YY hh:mm:ss  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
                 #MM/DD/YY hh:mm:ss   ===     ===      ===     ===     ===        ===      ===
                 #MM/DD/YY hh:mm:ss    12       0       22       0       0         83        0
+                
+                exit_status_line = re.match(r'(?=.*(EXITING WITH STATUS \d))',line)
 
                 if dag_status_line:
                         dag_status = int(line.split()[4])
@@ -458,13 +460,12 @@ class Status:
                             else:
                                 self.status_output["dags"][dag_dict][self.K_DAGSTATE] = self.DAG_OK
                     
-                #if dagman.out file has no job progress updates due to DAG failure
-                else:
-                        exit_status_line = re.match(r'(?=.*(EXITING WITH STATUS \d))',line)
-                        if exit_status_line and self.status_output["dags"][dag_dict][self.K_DAGSTATE] == None:
-                            exit_status = int(line.split()[-1])
-                            if exit_status:
-                                self.status_output["dags"][dag_dict][self.K_DAGSTATE] = self.DAG_FAIL    
+                if exit_status_line :
+                    exit_status = int(line.split()[-1])
+                    if exit_status:
+                        self.status_output["dags"][dag_dict][self.K_DAGSTATE] = self.DAG_FAIL
+                    else:
+                        self.status_output["dags"][dag_dict][self.K_DAGSTATE] = self.DAG_DONE   
 
 
     def get_all_dagmans(self, submit_dir:str) -> List:
