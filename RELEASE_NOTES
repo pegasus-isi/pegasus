@@ -1,4 +1,65 @@
 ===============================
+Release Notes for Pegasus 5.0.3
+===============================
+
+
+We are happy to announce the release of Pegasus 5.0.3, which is a minor bug fix release for Pegasus 5.0 branch.  This release has some important updates namely
+
+Per Job Symlinking
+New Containers exercise in the Pegasus Tutorial
+The release also has important bug fixes related to correctly detecting job  failures for grid universe jobs.
+
+We invite our users to give it a try.
+
+The release can be downloaded from:
+https://pegasus.isi.edu/downloads
+
+
+JIRA items
+----------------------------
+Exhaustive list of features, improvements and bug fixes can be found below.
+
+New Features and Improvements
+-----------------------------
+
+1) [PM-1873] – Add a containers focussed exercise to the tutorial
+
+2) [PM-1875] – Support deep LFN’s in CondorIO mode
+
+3) [PM-1806] – Fix dest filenames for transformations
+
+4) [PM-1815] – Prevent pegasus-lite failure when user passes -w to docker
+
+5) [PM-1871] – Remove the “version” parameter from worker package transformation in TC documentation
+
+6) [PM-1879] – Per job symlinking
+
+7) [PM-1885] – Allow bypass of input files in CondorIO mode to be similar to behavior for nonsharedfs
+
+8) [PM-1876] – implement moveto support in pegasus-transfer
+
+9) [PM-1877] – mimic transfer_output_remaps in pegasus-lite-local.sh for local universe jobs
+
+Bugs Fixed
+----------
+1) [PM-1809] – Job fails when a container has a pre-existing group with the same gid as the one being created with groupadd
+
+2) [PM-1864] – request_memory and request_disk does not get applied for local universe jobs
+
+3) [PM-1868] – pegasus-init cli tool not working
+
+4) [PM-1872] – Unable to locate executable when pegasus::worker transform is overridden
+
+5) [PM-1878] – hierarchical workflows broken on recent condor install
+
+6) [PM-1883] – users cannot decrease planner logging if pegasus.mode is set to debug
+
+7) [PM-1884] – pegasus-remove does does not remove a running workflow
+
+8) [PM-1887] – update broken bamboo tests
+
+
+===============================
 Release Notes for Pegasus 5.0.2
 ===============================
 We are happy to announce the release of Pegasus 5.0.2, which is a minor bug
