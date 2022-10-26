@@ -2,12 +2,14 @@
 Release Notes for Pegasus 5.0.3
 ===============================
 
+We are happy to announce the release of Pegasus 5.0.3, which is a minor bug fix release for Pegasus 5.0
+branch.  This release has some important updates namely
 
-We are happy to announce the release of Pegasus 5.0.3, which is a minor bug fix release for Pegasus 5.0 branch.  This release has some important updates namely
-
-Per Job Symlinking
-New Containers exercise in the Pegasus Tutorial
-The release also has important bug fixes related to correctly detecting job  failures for grid universe jobs.
+- Support for Deep LFN’s in CondorIO Mode
+  	  If you are using bypass of staging for input files, then support for deep LFN’s depends
+	  on associated HTCondor ticket 1325 that will be fixed in HTCondor release 10.0.1. 
+- Per Job Symlinking
+- New Containers exercise in the Pegasus Tutorial
 
 We invite our users to give it a try.
 
@@ -18,6 +20,7 @@ https://pegasus.isi.edu/downloads
 JIRA items
 ----------------------------
 Exhaustive list of features, improvements and bug fixes can be found below.
+Pegasus JIRA is accessible at https://jira.isi.edu/
 
 New Features and Improvements
 -----------------------------
@@ -42,7 +45,8 @@ New Features and Improvements
 
 Bugs Fixed
 ----------
-1) [PM-1809] – Job fails when a container has a pre-existing group with the same gid as the one being created with groupadd
+1) [PM-1809] – Job fails when a container has a pre-existing group with the same gid as the
+               one being created with groupadd
 
 2) [PM-1864] – request_memory and request_disk does not get applied for local universe jobs
 
