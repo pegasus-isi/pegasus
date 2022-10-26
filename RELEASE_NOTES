@@ -7,7 +7,7 @@ branch.  This release has some important updates namely
 
 - Support for Deep LFN’s in CondorIO Mode
   	  If you are using bypass of staging for input files, then support for deep LFN’s depends
-	  on associated HTCondor ticket 1325 that will be fixed in HTCondor release 10.0.1. 
+	  on associated HTCondor ticket 1325 that will be fixed in HTCondor release 10.1.0. 
 - Per Job Symlinking
 - New Containers exercise in the Pegasus Tutorial
 
