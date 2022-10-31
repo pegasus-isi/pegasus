@@ -3810,7 +3810,7 @@ class WebdavHandler(TransferHandlerBase):
                 if not logger.isEnabledFor(logging.DEBUG):
                     cmd += " --silent"
                 cmd += (
-                    " --fail --show-error --location"
+                    " --fail --show-error --location-trusted"
                     + " --user '"
                     + username
                     + ":"
@@ -3835,7 +3835,7 @@ class WebdavHandler(TransferHandlerBase):
                 if not logger.isEnabledFor(logging.DEBUG):
                     cmd += " --silent"
                 cmd += (
-                    " --fail --show-error --location"
+                    " --fail --show-error --location-trusted"
                     + " --user '"
                     + username
                     + ":"
@@ -3904,7 +3904,7 @@ class WebdavHandler(TransferHandlerBase):
             if not logger.isEnabledFor(logging.DEBUG):
                 cmd += " --silent"
             cmd += (
-                " --fail --show-error --location"
+                " --fail --show-error --location-trusted"
                 + " --user '"
                 + username
                 + ":"
@@ -3964,7 +3964,7 @@ class WebdavHandler(TransferHandlerBase):
             if not logger.isEnabledFor(logging.DEBUG):
                 cmd += " --silent"
             cmd += (
-                " --show-error --location --user '"
+                " --show-error --location-trusted --user '"
                 + username
                 + ":"
                 + password
