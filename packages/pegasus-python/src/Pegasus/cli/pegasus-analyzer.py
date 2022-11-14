@@ -26,6 +26,7 @@ Usage: pegasus-analyzer [options]
 # Revision : $Revision: 2012 $
 
 
+import json
 import logging
 import optparse
 import os
@@ -1234,6 +1235,9 @@ def analyze_db(config_properties):
     held_jobs = workflow_stats.get_total_held_jobs()
     held = len(held_jobs)
 
+    # jobs failing
+    failing, filtered_count, failing_jobs = workflow_stats.get_failing_jobs()
+
     # PM-1762 need to retrieve workflow states also, as you can
     # have workflow with zero failed jobs, but still the workflow failed
     # for example trying to run a workflow again from the same directory
@@ -1292,6 +1296,17 @@ def analyze_db(config_properties):
             print_console("last_job_instance_id   : %s" % (held_job[0] or "-"))
             print_console("reason                 : %s" % (held_job.reason or "-"))
             print_console()
+
+    print_console("Failing jobs' details".center(80, "*"))
+    failing_job_instances = []
+    for i in range(len(failing_jobs)):
+        failing_jobs[i] = failing_jobs[i]._asdict()
+        failing_job_instances.append(failing_jobs[i]["job_instance_id"])
+        print(json.dumps(failing_jobs[i]))
+
+    for id in failing_job_instances:
+        print(workflow_stats.get_job_instance_info(id))
+    exit(1)
 
     # Now, print information about jobs that failed...
     if failed > 0:

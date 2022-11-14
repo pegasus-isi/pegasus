@@ -164,6 +164,7 @@ from sqlalchemy.types import Float, Integer
 from Pegasus.db import connection
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.schema import *
+from Pegasus.service.dashboard import queries
 
 # Main stats class.
 
@@ -187,7 +188,7 @@ class StampedeStatistics:
         self._time_filter_mode = None
         self._host_filter = None
         self._xform_filter = {"include": None, "exclude": None}
-
+        self._connection_string = connString
         self._wfs = []
 
     def initialize(self, root_wf_uuid=None, root_wf_id=None):
@@ -529,6 +530,28 @@ class StampedeStatistics:
             JobInstance.exitcode != None
         )  # noqa: E711
         return q.count()
+
+    def get_failing_jobs(self):
+        """
+        Returns jobs that are failing as in the most recent instance is running (exitcode is None).
+        However, previous job retries have failed.
+        :return:
+        """
+
+        # sanity check. this query does not expand to sub workflows. only the current
+        # level of the workflow
+        if self._expand:
+            self.log.error(
+                "For failing jobs expansion to sub workflows is not possible"
+            )
+            raise ValueError(
+                "For failing jobs expansion to sub workflows is not possible"
+            )
+
+        workflow = queries.WorkflowInfo(
+            self._connection_string, wf_id=self._root_wf_id, wf_uuid=self._root_wf_uuid
+        )
+        return workflow.get_failing_jobs()
 
     def _get_total_failed_jobs_status(self):
         """
