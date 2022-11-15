@@ -26,7 +26,6 @@ Usage: pegasus-analyzer [options]
 # Revision : $Revision: 2012 $
 
 
-import json
 import logging
 import optparse
 import os
@@ -1513,16 +1512,15 @@ def analyze_db(config_properties):
     # PM-1890 print failing jobs before failed jobs
     if len(failing_jobs) > 0:
         print_console("Failing jobs' details".center(80, "*"))
-        failing_job_instances = []
         for i in range(len(failing_jobs)):
             failing_jobs[i] = failing_jobs[i]._asdict()
-            failing_job_instances.append(failing_jobs[i]["job_instance_id"])
-            print(json.dumps(failing_jobs[i]))
-
-        for id in failing_job_instances:
-            job_tasks = workflow_stats.get_invocation_info(id)
+            # print(json.dumps(failing_jobs[i]))
+            failing_job_id = failing_jobs[i]["job_instance_id"]
+            job_tasks = workflow_stats.get_invocation_info(failing_job_id)
             print_job_instance(
-                id, workflow_stats.get_job_instance_info(id)[0], job_tasks
+                failing_job_id,
+                workflow_stats.get_job_instance_info(failing_job_id)[0],
+                job_tasks,
             )
 
     # Now, print information about jobs that failed...
