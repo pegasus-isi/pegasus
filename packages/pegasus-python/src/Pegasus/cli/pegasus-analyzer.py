@@ -44,7 +44,6 @@ from Pegasus.tools import kickstart_parser, utils
 root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-analyzer")
 
-
 utils.configureLogging(level=logging.WARNING)
 
 # --- regular expressions -------------------------------------------------------------
@@ -54,6 +53,7 @@ re_parse_script_pre = re.compile(r"^SCRIPT PRE (\S+) (.*)")
 re_parse_condor_subs = re.compile(r'(\S+)="([^"]+)"')
 re_collapse_condor_subs = re.compile(r"\$\([^\)]*\)")
 re_ks_invocation = re.compile(r"^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b.*")
+
 
 # --- classes -------------------------------------------------------------------------
 class WORKFLOW_STATUS(Enum):
@@ -143,6 +143,7 @@ unknown = 0  # Number of jobs in an unknown state
 held = 0  # number of held jobs
 failed_jobs = []  # List of jobs that failed
 unknown_jobs = []  # List of jobs that neither succeeded nor failed
+
 
 # --- functions -----------------------------------------------------------------------
 
@@ -1231,7 +1232,7 @@ def backticks(cmd_line):
         o = o.decode()
 
 
-def print_top_summary(workflow_status=None):
+def print_top_summary(workflow_status=None, submit_dir=input_dir):
     """
     This function prints the summary for the analyzer report,
     which is the same for the long and short output versions
@@ -1240,7 +1241,7 @@ def print_top_summary(workflow_status=None):
     summary = "Summary".center(80, "*")
     print_console(summary)
     print_console()
-    print_console(" Submit Directory   : %s" % (input_dir or top_dir))
+    print_console(" Submit Directory   : %s" % (submit_dir))
     if workflow_status:
         print_console(" Workflow Status    : %s" % (workflow_status.value))
 
@@ -1438,10 +1439,70 @@ def analyze_db(config_properties):
         logger.error("Failed to load the database." + output_db_url)
         logger.warning(traceback.format_exc())
         sys.exit(1)
+    finally:
+        # Done with the database
+        workflow_stats.close()
+
+    descendant_wfs_ids = workflow_stats.get_descendants(wf_uuid)
+    logger.debug(
+        "Descendant Workflows database ids for %s are %s"
+        % (wf_uuid, descendant_wfs_ids)
+    )
+
+    wf_id = None
+    wf_details = {}  # stores all wf details indexed by database id of a wf
+    for wf_detail in workflow_stats.get_workflow_details(descendant_wfs_ids):
+        wf_details[wf_detail.wf_id] = wf_detail
+        if wf_detail.wf_uuid == wf_uuid:
+            wf_id = wf_detail.wf_id
+
+    print(wf_details)
+    if wf_id is None:
+        logger.error(
+            "Unable to determine the database id for workflow with uuid %s" % wf_uuid
+        )
+
+    traverse_all = True
+    wf_ids = []
+    if traverse_all:
+        wf_ids.extend(descendant_wfs_ids)
+    else:
+        # we only do the workflow on which submit directory analyzer is called
+        wf_ids.append(wf_id)
+
+    for wf_id in wf_ids:
+        wf_detail = wf_details[wf_id]
+        logger.debug(
+            "Running analyzer on workflow with database id {} in submit dir {}".format(
+                wf_id, wf_detail.submit_dir
+            )
+        )
+        analyze_db_for_wf(config_properties, output_db_url, wf_id, wf_detail.submit_dir)
+
+    # TODO: throw exceptions. catch them and determine exitcode
+    exit(0)
+
+
+def analyze_db_for_wf(config_properties, output_db_url, wf_id, submit_dir):
+    """
+    This function runs the analyzer using data from the database.
+    """
+    global total, success, failed, unsubmitted, unknown, held
+
+    # Now, let's try to access the database
+    try:
+        workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
+        workflow_stats.initialize(root_wf_id=wf_id)
+    except DBAdminError as err:
+        logger.error("Failed to load the database." + output_db_url)
+        logger.warning(err)
+        sys.exit(1)
+    except Exception:
+        logger.error("Failed to load the database." + output_db_url)
+        logger.warning(traceback.format_exc())
+        sys.exit(1)
 
     total = workflow_stats.get_total_jobs_status()
-    # success = workflow_stats.get_total_succeeded_jobs_status()
-    # failed = workflow_stats.get_total_failed_jobs_status()
     total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
     success = total_success_failed.succeeded
     failed = total_success_failed.failed
@@ -1482,7 +1543,7 @@ def analyze_db(config_properties):
         )
 
     # Let's print the results
-    print_top_summary(workflow_status)
+    print_top_summary(workflow_status, submit_dir)
     check_for_wf_start()
 
     # Exit if summary mode is on
@@ -1491,7 +1552,7 @@ def analyze_db(config_properties):
             # Workflow has failures, exit with exitcode 2
             sys.exit(2)
         # Workflow has no failures, exit with exitcode 0
-        sys.exit(0)
+        return
 
     # PM-1126 print information about held jobs
     if held > 0:
@@ -1551,22 +1612,18 @@ def analyze_db(config_properties):
                 print_console(("Failed Sub Workflow").center(80, "="))
                 subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
                 print_console(("").center(80, "="))
-    """
-                else:
-                    log.error("unexpected job instance returned by database!")
-                    log.error("returned: %d - expected: %d" % (job_instance_info[0], my_job[0]))
-                    continue
-    """
 
     # Done with the database
     workflow_stats.close()
 
     if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
         # Workflow has failures, exit with exitcode 2
-        sys.exit(2)
+        logger.error("Workflow in submit directory %s failed" % input_dir)
+        # TODO: throw exception instead
+        #  sys.exit(2)
 
     # Workflow has no failures, exit with exitcode 0
-    sys.exit(0)
+    return
 
 
 def addon(options):
@@ -2004,7 +2061,6 @@ if options.workflow_type is not None:
 
 for num in range(0, indent_length):
     indent += "\t"
-
 
 # print_console( "%s: initializing..." % (prog_base) )
 
