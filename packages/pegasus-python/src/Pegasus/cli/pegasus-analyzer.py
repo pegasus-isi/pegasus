@@ -129,6 +129,7 @@ strict_mode = 0  # Gets out/err filenames from submit file
 summary_mode = 0  # Print just the summary output
 debug_mode = 0  # Mode that enables debugging a single job
 recurse_mode = False  # Mode that automatically recurses into failed sub workflows.
+traverse_all = False  # Mode that automatically traverses all descendant sub workflows.
 indent_length = 0  # the number of tabs to print before printing to console
 indent = ""  # the corresponding indent string
 print_invocation = 0  # Prints invocation command for failed jobs
@@ -1456,13 +1457,11 @@ def analyze_db(config_properties):
         if wf_detail.wf_uuid == wf_uuid:
             wf_id = wf_detail.wf_id
 
-    print(wf_details)
     if wf_id is None:
         logger.error(
             "Unable to determine the database id for workflow with uuid %s" % wf_uuid
         )
 
-    traverse_all = True
     wf_ids = []
     if traverse_all:
         wf_ids.extend(descendant_wfs_ids)
@@ -1983,6 +1982,13 @@ parser.add_option(
     help="Just print the summary and exit",
 )
 parser.add_option(
+    "-T",
+    "--traverse-all",
+    action="store_true",
+    dest="traverse_all",
+    help="traverse through all sub workflows for this workflow in the database",
+)
+parser.add_option(
     "--debug-job",
     action="store",
     type="string",
@@ -2034,6 +2040,8 @@ if options.quiet_mode is not None:
     quiet_mode = options.quiet_mode
 if options.recurse_mode is not None:
     recurse_mode = options.recurse_mode
+if options.traverse_all is not None:
+    traverse_all = options.traverse_all
 if options.indent_length is not None:
     indent_length = indent_length + options.indent_length
 if options.use_files is not None:
@@ -2087,6 +2095,13 @@ if debug_mode == 1:
     # Enter debug mode if job name given
     # This function does not return
     debug_workflow()
+
+# sanity check
+if recurse_mode and traverse_all:
+    logger.error(
+        "Options --recurse and --traverse-all are mutually exclusive. Please specify only one of these options"
+    )
+    sys.exit(1)
 
 # Run the analyzer
 if use_files:
