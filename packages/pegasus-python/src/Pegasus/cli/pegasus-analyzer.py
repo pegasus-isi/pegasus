@@ -44,7 +44,6 @@ from Pegasus.tools import kickstart_parser, utils
 root_logger = logging.getLogger()
 logger = logging.getLogger("pegasus-analyzer")
 
-
 utils.configureLogging(level=logging.WARNING)
 
 # --- regular expressions -------------------------------------------------------------
@@ -54,6 +53,7 @@ re_parse_script_pre = re.compile(r"^SCRIPT PRE (\S+) (.*)")
 re_parse_condor_subs = re.compile(r'(\S+)="([^"]+)"')
 re_collapse_condor_subs = re.compile(r"\$\([^\)]*\)")
 re_ks_invocation = re.compile(r"^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b.*")
+
 
 # --- classes -------------------------------------------------------------------------
 class WORKFLOW_STATUS(Enum):
@@ -103,6 +103,32 @@ class Job:
         self.state = new_state
 
 
+# --- exceptions ----------------------------------------------------------------------
+class AnalyzerError(Exception):
+    pass
+
+
+class WorkflowFailureError(Exception):
+    def __init__(self, message, wf_uuid=None, submit_dir=None):
+        """
+        :param message: Exception message
+        :param wf_uuid: workflow_uuid of the failed workflow
+        :param submit_dir: submit dir for workflow failed
+        """
+        super().__init__(message)
+
+        self.wf_uuid = wf_uuid
+        self.submit_dir = submit_dir
+
+    def __str__(self):
+        message = super().__str__()
+        if self.wf_uuid:
+            message += " wf_uuid: " + self.wf_uuid
+        if self.submit_dir:
+            message += " submit dir: " + self.submit_dir
+        return message
+
+
 # --- constants -----------------------------------------------------------------------
 
 MAXLOGFILE = 1000  # For log file rotation, check files .000 to .999
@@ -129,6 +155,7 @@ strict_mode = 0  # Gets out/err filenames from submit file
 summary_mode = 0  # Print just the summary output
 debug_mode = 0  # Mode that enables debugging a single job
 recurse_mode = False  # Mode that automatically recurses into failed sub workflows.
+traverse_all = False  # Mode that automatically traverses all descendant sub workflows.
 indent_length = 0  # the number of tabs to print before printing to console
 indent = ""  # the corresponding indent string
 print_invocation = 0  # Prints invocation command for failed jobs
@@ -877,6 +904,221 @@ def print_output_error(job):
         dump_file(err_file)
 
 
+def print_job_instance(job_instance_id, job_instance_info, job_tasks):
+    """
+    The function prints information related to one job instance retried from the
+    stampede database
+    :param job_instance_id the job_instance_id from the job_instance table
+    :param job_instance_info: the job instance with which the tasks are associated
+    :param job_tasks: all the tasks (invocation records) for a particular condor job/job instance
+    :return subwf_cmd: if the job is a sub workflow job, then returns the command that is
+                       required to invoke pegasus-analyzer on the sub workflow.
+    """
+
+    sub_wf_cmd = None
+    print_console()
+    print_console(job_instance_info.job_name.center(80, "="))
+    print_console()
+    print_console(" last state: %s" % (job_instance_info.state or "-"))
+
+    print_console("       site: %s" % (job_instance_info.site or "-"))
+    print_console("submit file: %s" % (job_instance_info.submit_file or "-"))
+    print_console("output file: %s" % (job_instance_info.stdout_file or "-"))
+    print_console(" error file: %s" % (job_instance_info.stderr_file or "-"))
+    if print_invocation:
+        print_console()
+        print_console(
+            "To re-run this job, use: %s %s"
+            % ((job_instance_info.executable or "-"), (job_instance_info.argv or "-"))
+        )
+        print_console()
+    if print_pre_script and len(job_instance_info.pre_executable or "") > 0:
+        print_console()
+        print_console("SCRIPT PRE:")
+        print_console(
+            "%s %s"
+            % (
+                (job_instance_info.pre_executable or ""),
+                (job_instance_info.pre_argv or ""),
+            )
+        )
+        print_console()
+    if job_instance_info.subwf_dir is not None:
+        # This job has a sub workflow
+        user_cmd = " %s" % (prog_base)
+        my_wfdir = os.path.normpath(job_instance_info.subwf_dir)
+        if my_wfdir.find(job_instance_info.submit_dir) >= 0:
+            # Path to dagman_out file includes original submit_dir, let's try to change it...
+            my_wfdir = os.path.normpath(
+                my_wfdir.replace((job_instance_info.submit_dir + os.sep), "", 1)
+            )
+            my_wfdir = os.path.join(input_dir, my_wfdir)
+
+        # get any options that need to be invoked for the sub workflow
+        extraOptions = addon(options)
+        sub_wf_cmd = "{} {} -d {} --top-dir {}".format(
+            user_cmd, extraOptions, my_wfdir, (top_dir or input_dir),
+        )
+        if not recurse_mode:
+            # we print only if recurse mode is disabled
+            print_console(" This job contains sub workflows!")
+            print_console(" Please run the command below for more information:")
+            print_console(sub_wf_cmd)
+            # print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (top_dir or input_dir))
+        print()
+    print()
+
+    # print all the tasks associated with the job
+    print_tasks_info(job_instance_id, job_instance_info, job_tasks)
+    return sub_wf_cmd
+
+
+def print_tasks_info(job_instance_id, job_instance_info, job_tasks):
+    """
+       The function prints information related to one job instance retried from the
+       stampede database
+       :param job_instance_id: the job_instance_id from the job_instance table
+       :param job_instance_info: the job instance with which the tasks are associated
+       :param job_tasks: all the tasks (invocation records) for a particular condor job/job instance
+       :return:
+       """
+
+    # Unquote stdout and stderr
+    ji_stdout_text = utils.unquote(job_instance_info.stdout_text or "").decode("UTF-8")
+    ji_stderr_text = utils.unquote(job_instance_info.stderr_text or "").decode("UTF-8")
+    ji_stdout_text = ji_stdout_text.strip(" \n\r\t")
+    ji_stderr_text = ji_stderr_text.strip(" \n\r\t")
+
+    some_tasks_failed = False
+    for my_task in job_tasks:
+        # PM-798 we want to detect if some tasks failed or not
+        if my_task[0] < -1:
+            # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
+            continue
+        some_tasks_failed = some_tasks_failed or (my_task[1] != 0)
+
+    # PM-798 track whether we need to actually print the condor job stderr or not
+    # we only print if there is no information in the kickstart record
+    my_print_job_stderr = True
+
+    # Now, print task information
+    for my_task in job_tasks:
+        if my_task[0] < -1:
+            # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
+            continue
+
+        if my_task[1] == 0 and some_tasks_failed:
+            # Skip tasks that succeeded only if we know some tasks did fail
+            continue
+
+        # Got a task with a non-zero exitcode
+        my_exitcode = utils.raw_to_regular(my_task[1])
+
+        # Print task summary
+        print_console(("Task #" + str(my_task[0]) + " - Summary").center(80, "-"))
+        print_console()
+        print_console("site        : %s" % (job_instance_info.site or "-"))
+        print_console("hostname    : %s" % (job_instance_info.hostname or "-"))
+        print_console("executable  : %s" % (str(my_task[2] or "-")))
+        print_console("arguments   : %s" % (str(my_task[3] or "-")))
+        print_console("exitcode    : %s" % (str(my_exitcode)))
+        print_console("working dir : %s" % (job_instance_info.work_dir or "-"))
+        print_console()
+
+        if not quiet_mode:
+            # Now, print task stdout and stderr, if anything is there
+            my_stdout_str = "#@ %d stdout" % (my_task[0])
+            my_stderr_str = "#@ %d stderr" % (my_task[0])
+
+            # Start with stdout
+            my_stdout_start = ji_stdout_text.find(my_stdout_str)
+            if my_stdout_start >= 0:
+                my_stdout_start = my_stdout_start + len(my_stdout_str) + 1
+                my_stdout_end = ji_stdout_text.find("#@", my_stdout_start)
+                if my_stdout_end < 0:
+                    # Next comment not found, possibly the last entry
+                    my_stdout_end = len(ji_stdout_text)
+                else:
+                    my_stdout_end = my_stdout_end - 1
+
+                if my_stdout_end - my_stdout_start > 0:
+                    # Something to display
+                    my_print_job_stderr = False
+                    print_console(
+                        (
+                            "Task #"
+                            + str(my_task[0])
+                            + " - "
+                            + str(my_task[4])
+                            + " - "
+                            + str(my_task[5])
+                            + " - stdout"
+                        ).center(80, "-")
+                    )
+                    print_console()
+                    print_console(ji_stdout_text[my_stdout_start:my_stdout_end])
+                    print_console()
+
+            # Now print stderr (from the kickstart output file)
+            my_stderr_start = ji_stdout_text.find(my_stderr_str)
+            if my_stderr_start >= 0:
+                my_stderr_start = my_stderr_start + len(my_stderr_str) + 1
+                my_stderr_end = ji_stdout_text.find("#@", my_stderr_start)
+                if my_stderr_end < 0:
+                    # Next comment not found, possibly the last entry
+                    my_stderr_end = len(ji_stdout_text)
+                else:
+                    my_stderr_end = my_stderr_end - 1
+
+                if my_stderr_end - my_stderr_start > 0:
+                    # Something to display
+                    my_print_job_stderr = False
+                    print_console(
+                        (
+                            "Task #"
+                            + str(my_task[0])
+                            + " - "
+                            + str(my_task[4])
+                            + " - "
+                            + str(my_task[5])
+                            + " - Kickstart stderr"
+                        ).center(80, "-")
+                    )
+                    print_console()
+                    print_console(ji_stdout_text[my_stderr_start:my_stderr_end])
+                    print_console()
+
+            # PM-808 print jobinstance stdout for prescript failures only.
+            if my_task[0] == -1 and ji_stdout_text is not None:
+                print_console(
+                    (
+                        "Task #"
+                        + str(my_task[0])
+                        + " - "
+                        + str(my_task[4])
+                        + " - "
+                        + str(my_task[5])
+                        + " - stdout"
+                    ).center(80, "-")
+                )
+                print_console()
+                print_console(ji_stdout_text)
+                print_console()
+
+    # Now print the stderr output from the .err file
+    if ji_stderr_text.strip("\n\t \r") != "" and my_print_job_stderr:
+        # Something to display
+        # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
+        print_console(
+            ("Job stderr file - %s" % (job_instance_info.stderr_file or "-")).center(
+                80, "-"
+            )
+        )
+        print_console()
+        print_console(ji_stderr_text)
+        print_console()
+
+
 def print_job_info(job):
     """
     This function prints the information about a particular job
@@ -1016,7 +1258,7 @@ def backticks(cmd_line):
         o = o.decode()
 
 
-def print_top_summary(workflow_status=None):
+def print_top_summary(workflow_status=None, submit_dir=input_dir):
     """
     This function prints the summary for the analyzer report,
     which is the same for the long and short output versions
@@ -1025,7 +1267,7 @@ def print_top_summary(workflow_status=None):
     summary = "Summary".center(80, "*")
     print_console(summary)
     print_console()
-    print_console(" Submit Directory   : %s" % (input_dir or top_dir))
+    print_console(" Submit Directory   : %s" % (submit_dir))
     if workflow_status:
         print_console(" Workflow Status    : %s" % (workflow_status.value))
 
@@ -1203,36 +1445,104 @@ def analyze_db(config_properties):
         )
         wf_uuid = connection.get_wf_uuid(input_dir)
     except connection.ConnectionError as e:
-        logger.error(e)
-        sys.exit(1)
+        raise AnalyzerError(
+            "Unable to connect to database for workflow in %s", input_dir, e
+        )
 
     # Nothing to do if we cannot resolve the database URL
     if output_db_url is None:
-        logger.error("cannot find database URL, exiting...")
-        sys.exit(1)
+        raise ValueError("Database URL is required")
 
     # Now, let's try to access the database
+    workflow_stats = None
     try:
         workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
         workflow_stats.initialize(wf_uuid)
-    except DBAdminError as err:
-        logger.error("Failed to load the database." + output_db_url)
-        logger.warning(err)
-        sys.exit(1)
-    except Exception:
-        logger.error("Failed to load the database." + output_db_url)
-        logger.warning(traceback.format_exc())
-        sys.exit(1)
+        descendant_wfs_ids = workflow_stats.get_descendants(wf_uuid)
+    except DBAdminError as e:
+        raise AnalyzerError("Failed to load the database - " + output_db_url, e)
+    finally:
+        if workflow_stats:
+            # Done with the database
+            workflow_stats.close()
+
+    logger.debug(
+        "Descendant Workflows database ids for %s are %s"
+        % (wf_uuid, descendant_wfs_ids)
+    )
+
+    wf_id = None
+    wf_details = {}  # stores all wf details indexed by database id of a wf
+    for wf_detail in workflow_stats.get_workflow_details(descendant_wfs_ids):
+        wf_details[wf_detail.wf_id] = wf_detail
+        if wf_detail.wf_uuid == wf_uuid:
+            wf_id = wf_detail.wf_id
+
+    if wf_id is None:
+        logger.error(
+            "Unable to determine the database id for workflow with uuid %s" % wf_uuid
+        )
+
+    wf_ids = []
+    if traverse_all:
+        wf_ids.extend(descendant_wfs_ids)
+    else:
+        # we only do the workflow on which submit directory analyzer is called
+        wf_ids.append(wf_id)
+
+    for wf_id in wf_ids:
+        wf_detail = wf_details[wf_id]
+        logger.debug(
+            "Running analyzer on workflow with database id {} in submit dir {}".format(
+                wf_id, wf_detail.submit_dir
+            )
+        )
+
+        failed = 0
+        workflow_stats = None
+        try:
+            # for each wf initialize a new workflow stats object
+            workflow_stats = stampede_statistics.StampedeStatistics(
+                output_db_url, False
+            )
+            workflow_stats.initialize(root_wf_id=wf_id)
+            analyze_db_for_wf(
+                workflow_stats, wf_detail.wf_uuid, wf_detail.submit_dir,
+            )
+        except DBAdminError as e:
+            raise AnalyzerError("Failed to load the database - " + output_db_url, e)
+        except WorkflowFailureError as e:
+            logger.error(e)
+            failed += 1
+        finally:
+            if workflow_stats:
+                workflow_stats.close()
+
+    # TODO: throw exceptions. catch them and determine exitcode
+    if failed > 0:
+        raise WorkflowFailureError("One or more workflows failed")
+
+
+def analyze_db_for_wf(workflow_stats, wf_uuid, submit_dir):
+    """
+    This function runs the analyzer using data from the database.
+    :param workflow_stats: the stampede statistics object initialized with the workflow, we want to analyze
+    :param wf_uuid:  the uuid of the workflow we are analyzing
+    :param submit_dir: the submit dir for the workflow
+    :return:
+    """
+    global total, success, failed, unsubmitted, unknown, held
 
     total = workflow_stats.get_total_jobs_status()
-    # success = workflow_stats.get_total_succeeded_jobs_status()
-    # failed = workflow_stats.get_total_failed_jobs_status()
     total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
     success = total_success_failed.succeeded
     failed = total_success_failed.failed
 
     held_jobs = workflow_stats.get_total_held_jobs()
     held = len(held_jobs)
+
+    # jobs failing
+    failing, filtered_count, failing_jobs = workflow_stats.get_failing_jobs()
 
     # PM-1762 need to retrieve workflow states also, as you can
     # have workflow with zero failed jobs, but still the workflow failed
@@ -1264,16 +1574,18 @@ def analyze_db(config_properties):
         )
 
     # Let's print the results
-    print_top_summary(workflow_status)
+    print_top_summary(workflow_status, submit_dir)
     check_for_wf_start()
 
     # Exit if summary mode is on
     if summary_mode:
         if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
             # Workflow has failures, exit with exitcode 2
-            sys.exit(2)
+            raise WorkflowFailureError(
+                "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
+            )
         # Workflow has no failures, exit with exitcode 0
-        sys.exit(0)
+        return
 
     # PM-1126 print information about held jobs
     if held > 0:
@@ -1293,242 +1605,55 @@ def analyze_db(config_properties):
             print_console("reason                 : %s" % (held_job.reason or "-"))
             print_console()
 
+    # PM-1890 print failing jobs before failed jobs
+    if len(failing_jobs) > 0:
+        print_console("Failing jobs' details".center(80, "*"))
+        for i in range(len(failing_jobs)):
+            failing_jobs[i] = failing_jobs[i]._asdict()
+            # print(json.dumps(failing_jobs[i]))
+            failing_job_id = failing_jobs[i]["job_instance_id"]
+            job_tasks = workflow_stats.get_invocation_info(failing_job_id)
+            print_job_instance(
+                failing_job_id,
+                workflow_stats.get_job_instance_info(failing_job_id)[0],
+                job_tasks,
+            )
+
     # Now, print information about jobs that failed...
     if failed > 0:
         # Get list of failed jobs from database
-        my_failed_jobs = workflow_stats.get_failed_job_instances()
+        failed_jobs = workflow_stats.get_failed_job_instances()
 
         # Print header
         print_console("Failed jobs' details".center(80, "*"))
 
         # Now process one by one...
-        for my_job in my_failed_jobs:
-            my_info = workflow_stats.get_job_instance_info(my_job[0])[0]
-            my_tasks = workflow_stats.get_invocation_info(my_job[0])
+        for my_job in failed_jobs:
+            job_instance_info = workflow_stats.get_job_instance_info(my_job[0])[0]
+            job_tasks = workflow_stats.get_invocation_info(my_job[0])
 
-            # Unquote stdout and stderr
-            my_info_stdout_text = utils.unquote(my_info.stdout_text or "").decode(
-                "UTF-8"
+            sub_wf_cmd = print_job_instance(
+                job_instance_info.job_instance_id,
+                workflow_stats.get_job_instance_info(job_instance_info.job_instance_id)[
+                    0
+                ],
+                job_tasks,
             )
-            my_info_stderr_text = utils.unquote(my_info.stderr_text or "").decode(
-                "UTF-8"
-            )
-            my_info_stdout_text = my_info_stdout_text.strip(" \n\r\t")
-            my_info_stderr_text = my_info_stderr_text.strip(" \n\r\t")
 
-            if my_job[0] == my_info.job_instance_id:
-                sub_wf_cmd = None
-                print_console()
-                print_console(my_info.job_name.center(80, "="))
-                print_console()
-                print_console(" last state: %s" % (my_info.state or "-"))
-
-                print_console("       site: %s" % (my_info.site or "-"))
-                print_console("submit file: %s" % (my_info.submit_file or "-"))
-                print_console("output file: %s" % (my_info.stdout_file or "-"))
-                print_console(" error file: %s" % (my_info.stderr_file or "-"))
-                if print_invocation:
-                    print_console()
-                    print_console(
-                        "To re-run this job, use: %s %s"
-                        % ((my_info.executable or "-"), (my_info.argv or "-"))
-                    )
-                    print_console()
-                if print_pre_script and len(my_info.pre_executable or "") > 0:
-                    print_console()
-                    print_console("SCRIPT PRE:")
-                    print_console(
-                        "%s %s"
-                        % ((my_info.pre_executable or ""), (my_info.pre_argv or ""))
-                    )
-                    print_console()
-                if my_info.subwf_dir is not None:
-                    # This job has a sub workflow
-                    user_cmd = " %s" % (prog_base)
-                    my_wfdir = os.path.normpath(my_info.subwf_dir)
-                    if my_wfdir.find(my_info.submit_dir) >= 0:
-                        # Path to dagman_out file includes original submit_dir, let's try to change it...
-                        my_wfdir = os.path.normpath(
-                            my_wfdir.replace((my_info.submit_dir + os.sep), "", 1)
-                        )
-                        my_wfdir = os.path.join(input_dir, my_wfdir)
-
-                    # get any options that need to be invoked for the sub workflow
-                    extraOptions = addon(options)
-                    sub_wf_cmd = "{} {} -d {} --top-dir {}".format(
-                        user_cmd, extraOptions, my_wfdir, (top_dir or input_dir),
-                    )
-
-                    if not recurse_mode:
-                        # we print only if recurse mode is disabled
-                        print_console(" This job contains sub workflows!")
-                        print_console(
-                            " Please run the command below for more information:"
-                        )
-                        print_console(sub_wf_cmd)
-                        # print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (top_dir or input_dir))
-                    print()
-                print()
-
-                some_tasks_failed = False
-                for my_task in my_tasks:
-                    # PM-798 we want to detect if some tasks failed or not
-                    if my_task[0] < -1:
-                        # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
-                        continue
-                    some_tasks_failed = some_tasks_failed or (my_task[1] != 0)
-
-                # PM-798 track whether we need to actually print the condor job stderr or not
-                # we only print if there is no information in the kickstart record
-                my_print_job_stderr = True
-
-                # Now, print task information
-                for my_task in my_tasks:
-                    if my_task[0] < -1:
-                        # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
-                        continue
-
-                    if my_task[1] == 0 and some_tasks_failed:
-                        # Skip tasks that succeeded only if we know some tasks did fail
-                        continue
-
-                    # Got a task with a non-zero exitcode
-                    my_exitcode = utils.raw_to_regular(my_task[1])
-
-                    # Print task summary
-                    print_console(
-                        ("Task #" + str(my_task[0]) + " - Summary").center(80, "-")
-                    )
-                    print_console()
-                    print_console("site        : %s" % (my_info.site or "-"))
-                    print_console("hostname    : %s" % (my_info.hostname or "-"))
-                    print_console("executable  : %s" % (str(my_task[2] or "-")))
-                    print_console("arguments   : %s" % (str(my_task[3] or "-")))
-                    print_console("exitcode    : %s" % (str(my_exitcode)))
-                    print_console("working dir : %s" % (my_info.work_dir or "-"))
-                    print_console()
-
-                    if not quiet_mode:
-                        # Now, print task stdout and stderr, if anything is there
-                        my_stdout_str = "#@ %d stdout" % (my_task[0])
-                        my_stderr_str = "#@ %d stderr" % (my_task[0])
-
-                        # Start with stdout
-                        my_stdout_start = my_info_stdout_text.find(my_stdout_str)
-                        if my_stdout_start >= 0:
-                            my_stdout_start = my_stdout_start + len(my_stdout_str) + 1
-                            my_stdout_end = my_info_stdout_text.find(
-                                "#@", my_stdout_start
-                            )
-                            if my_stdout_end < 0:
-                                # Next comment not found, possibly the last entry
-                                my_stdout_end = len(my_info_stdout_text)
-                            else:
-                                my_stdout_end = my_stdout_end - 1
-
-                            if my_stdout_end - my_stdout_start > 0:
-                                # Something to display
-                                my_print_job_stderr = False
-                                print_console(
-                                    (
-                                        "Task #"
-                                        + str(my_task[0])
-                                        + " - "
-                                        + str(my_task[4])
-                                        + " - "
-                                        + str(my_task[5])
-                                        + " - stdout"
-                                    ).center(80, "-")
-                                )
-                                print_console()
-                                print_console(
-                                    my_info_stdout_text[my_stdout_start:my_stdout_end]
-                                )
-                                print_console()
-
-                        # Now print stderr (from the kickstart output file)
-                        my_stderr_start = my_info_stdout_text.find(my_stderr_str)
-                        if my_stderr_start >= 0:
-                            my_stderr_start = my_stderr_start + len(my_stderr_str) + 1
-                            my_stderr_end = my_info_stdout_text.find(
-                                "#@", my_stderr_start
-                            )
-                            if my_stderr_end < 0:
-                                # Next comment not found, possibly the last entry
-                                my_stderr_end = len(my_info_stdout_text)
-                            else:
-                                my_stderr_end = my_stderr_end - 1
-
-                            if my_stderr_end - my_stderr_start > 0:
-                                # Something to display
-                                my_print_job_stderr = False
-                                print_console(
-                                    (
-                                        "Task #"
-                                        + str(my_task[0])
-                                        + " - "
-                                        + str(my_task[4])
-                                        + " - "
-                                        + str(my_task[5])
-                                        + " - Kickstart stderr"
-                                    ).center(80, "-")
-                                )
-                                print_console()
-                                print_console(
-                                    my_info_stdout_text[my_stderr_start:my_stderr_end]
-                                )
-                                print_console()
-
-                        # PM-808 print jobinstance stdout for prescript failures only.
-                        if my_task[0] == -1 and my_info_stdout_text is not None:
-                            print_console(
-                                (
-                                    "Task #"
-                                    + str(my_task[0])
-                                    + " - "
-                                    + str(my_task[4])
-                                    + " - "
-                                    + str(my_task[5])
-                                    + " - stdout"
-                                ).center(80, "-")
-                            )
-                            print_console()
-                            print_console(my_info_stdout_text)
-                            print_console()
-
-                # Now print the stderr output from the .err file
-                if my_info_stderr_text.strip("\n\t \r") != "" and my_print_job_stderr:
-                    # Something to display
-                    # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
-                    print_console(
-                        ("Job stderr file - %s" % (my_info.stderr_file or "-")).center(
-                            80, "-"
-                        )
-                    )
-                    print_console()
-                    print_console(my_info_stderr_text)
-                    print_console()
-
-                # recurse for sub workflow
-                if sub_wf_cmd is not None and recurse_mode:
-                    print_console(("Failed Sub Workflow").center(80, "="))
-                    subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
-                    print_console(("").center(80, "="))
-
-            else:
-                log.error("unexpected job instance returned by database!")
-                log.error("returned: %d - expected: %d" % (my_info[0], my_job[0]))
-                continue
-
-    # Done with the database
-    workflow_stats.close()
+            # recurse for sub workflow
+            if sub_wf_cmd is not None and recurse_mode:
+                print_console(("Failed Sub Workflow").center(80, "="))
+                subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
+                print_console(("").center(80, "="))
 
     if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
         # Workflow has failures, exit with exitcode 2
-        sys.exit(2)
+        raise WorkflowFailureError(
+            "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
+        )
 
     # Workflow has no failures, exit with exitcode 0
-    sys.exit(0)
+    return
 
 
 def addon(options):
@@ -1888,6 +2013,13 @@ parser.add_option(
     help="Just print the summary and exit",
 )
 parser.add_option(
+    "-T",
+    "--traverse-all",
+    action="store_true",
+    dest="traverse_all",
+    help="traverse through all sub workflows for this workflow in the database",
+)
+parser.add_option(
     "--debug-job",
     action="store",
     type="string",
@@ -1939,6 +2071,8 @@ if options.quiet_mode is not None:
     quiet_mode = options.quiet_mode
 if options.recurse_mode is not None:
     recurse_mode = options.recurse_mode
+if options.traverse_all is not None:
+    traverse_all = options.traverse_all
 if options.indent_length is not None:
     indent_length = indent_length + options.indent_length
 if options.use_files is not None:
@@ -1967,7 +2101,6 @@ if options.workflow_type is not None:
 for num in range(0, indent_length):
     indent += "\t"
 
-
 # print_console( "%s: initializing..." % (prog_base) )
 
 if options.dag_filename is not None:
@@ -1994,11 +2127,28 @@ if debug_mode == 1:
     # This function does not return
     debug_workflow()
 
+# sanity check
+if recurse_mode and traverse_all:
+    logger.error(
+        "Options --recurse and --traverse-all are mutually exclusive. Please specify only one of these options"
+    )
+    sys.exit(1)
+
 # Run the analyzer
 if use_files:
     analyze_files()
 else:
-    analyze_db(options.config_properties)
+    try:
+        analyze_db(options.config_properties)
+    except AnalyzerError as err:
+        logger.error(err)
+        sys.exit(1)
+    except WorkflowFailureError as err:
+        logger.error(err)
+        sys.exit(2)
+    except Exception:
+        logger.error(traceback.format_exc())
+        sys.exit(1)
 
 # Done!
 print("Done".center(80, "*"))
