@@ -1499,40 +1499,39 @@ def analyze_db(config_properties):
         )
 
         failed = 0
+        workflow_stats = None
         try:
-            analyze_db_for_wf(
-                config_properties,
-                output_db_url,
-                wf_id,
-                wf_detail.wf_uuid,
-                wf_detail.submit_dir,
+            # for each wf initialize a new workflow stats object
+            workflow_stats = stampede_statistics.StampedeStatistics(
+                output_db_url, False
             )
+            workflow_stats.initialize(root_wf_id=wf_id)
+            analyze_db_for_wf(
+                workflow_stats, wf_detail.wf_uuid, wf_detail.submit_dir,
+            )
+        except DBAdminError as e:
+            raise AnalyzerError("Failed to load the database - " + output_db_url, e)
         except WorkflowFailureError as e:
             logger.error(e)
             failed += 1
+        finally:
+            if workflow_stats:
+                workflow_stats.close()
 
     # TODO: throw exceptions. catch them and determine exitcode
     if failed > 0:
         raise WorkflowFailureError("One or more workflows failed")
 
 
-def analyze_db_for_wf(config_properties, output_db_url, wf_id, wf_uuid, submit_dir):
+def analyze_db_for_wf(workflow_stats, wf_uuid, submit_dir):
     """
     This function runs the analyzer using data from the database.
+    :param workflow_stats: the stampede statistics object initialized with the workflow, we want to analyze
+    :param wf_uuid:  the uuid of the workflow we are analyzing
+    :param submit_dir: the submit dir for the workflow
+    :return:
     """
     global total, success, failed, unsubmitted, unknown, held
-
-    # Nothing to do if we cannot resolve the database URL
-    if output_db_url is None:
-        raise ValueError("Database URL is required")
-
-    # Now, let's try to access the database
-    workflow_stats = None
-    try:
-        workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
-        workflow_stats.initialize(root_wf_id=wf_id)
-    except DBAdminError as e:
-        raise AnalyzerError("Failed to load the database - " + output_db_url, e)
 
     total = workflow_stats.get_total_jobs_status()
     total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
@@ -1646,9 +1645,6 @@ def analyze_db_for_wf(config_properties, output_db_url, wf_id, wf_uuid, submit_d
                 print_console(("Failed Sub Workflow").center(80, "="))
                 subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
                 print_console(("").center(80, "="))
-
-    # Done with the database
-    workflow_stats.close()
 
     if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
         # Workflow has failures, exit with exitcode 2
