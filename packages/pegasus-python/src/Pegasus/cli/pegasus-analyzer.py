@@ -103,6 +103,32 @@ class Job:
         self.state = new_state
 
 
+# --- exceptions ----------------------------------------------------------------------
+class AnalyzerError(Exception):
+    pass
+
+
+class WorkflowFailureError(Exception):
+    def __init__(self, message, wf_uuid=None, submit_dir=None):
+        """
+        :param message: Exception message
+        :param wf_uuid: workflow_uuid of the failed workflow
+        :param submit_dir: submit dir for workflow failed
+        """
+        super().__init__(message)
+
+        self.wf_uuid = wf_uuid
+        self.submit_dir = submit_dir
+
+    def __str__(self):
+        message = super().__str__()
+        if self.wf_uuid:
+            message += " wf_uuid: " + self.wf_uuid
+        if self.submit_dir:
+            message += " submit dir: " + self.submit_dir
+        return message
+
+
 # --- constants -----------------------------------------------------------------------
 
 MAXLOGFILE = 1000  # For log file rotation, check files .000 to .999
@@ -144,7 +170,6 @@ unknown = 0  # Number of jobs in an unknown state
 held = 0  # number of held jobs
 failed_jobs = []  # List of jobs that failed
 unknown_jobs = []  # List of jobs that neither succeeded nor failed
-
 
 # --- functions -----------------------------------------------------------------------
 
@@ -1420,31 +1445,27 @@ def analyze_db(config_properties):
         )
         wf_uuid = connection.get_wf_uuid(input_dir)
     except connection.ConnectionError as e:
-        logger.error(e)
-        sys.exit(1)
+        raise AnalyzerError(
+            "Unable to connect to database for workflow in %s", input_dir, e
+        )
 
     # Nothing to do if we cannot resolve the database URL
     if output_db_url is None:
-        logger.error("cannot find database URL, exiting...")
-        sys.exit(1)
+        raise ValueError("Database URL is required")
 
     # Now, let's try to access the database
+    workflow_stats = None
     try:
         workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
         workflow_stats.initialize(wf_uuid)
-    except DBAdminError as err:
-        logger.error("Failed to load the database." + output_db_url)
-        logger.warning(err)
-        sys.exit(1)
-    except Exception:
-        logger.error("Failed to load the database." + output_db_url)
-        logger.warning(traceback.format_exc())
-        sys.exit(1)
+        descendant_wfs_ids = workflow_stats.get_descendants(wf_uuid)
+    except DBAdminError as e:
+        raise AnalyzerError("Failed to load the database - " + output_db_url, e)
     finally:
-        # Done with the database
-        workflow_stats.close()
+        if workflow_stats:
+            # Done with the database
+            workflow_stats.close()
 
-    descendant_wfs_ids = workflow_stats.get_descendants(wf_uuid)
     logger.debug(
         "Descendant Workflows database ids for %s are %s"
         % (wf_uuid, descendant_wfs_ids)
@@ -1476,30 +1497,42 @@ def analyze_db(config_properties):
                 wf_id, wf_detail.submit_dir
             )
         )
-        analyze_db_for_wf(config_properties, output_db_url, wf_id, wf_detail.submit_dir)
+
+        failed = 0
+        try:
+            analyze_db_for_wf(
+                config_properties,
+                output_db_url,
+                wf_id,
+                wf_detail.wf_uuid,
+                wf_detail.submit_dir,
+            )
+        except WorkflowFailureError as e:
+            logger.error(e)
+            failed += 1
 
     # TODO: throw exceptions. catch them and determine exitcode
-    exit(0)
+    if failed > 0:
+        raise WorkflowFailureError("One or more workflows failed")
 
 
-def analyze_db_for_wf(config_properties, output_db_url, wf_id, submit_dir):
+def analyze_db_for_wf(config_properties, output_db_url, wf_id, wf_uuid, submit_dir):
     """
     This function runs the analyzer using data from the database.
     """
     global total, success, failed, unsubmitted, unknown, held
 
+    # Nothing to do if we cannot resolve the database URL
+    if output_db_url is None:
+        raise ValueError("Database URL is required")
+
     # Now, let's try to access the database
+    workflow_stats = None
     try:
         workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
         workflow_stats.initialize(root_wf_id=wf_id)
-    except DBAdminError as err:
-        logger.error("Failed to load the database." + output_db_url)
-        logger.warning(err)
-        sys.exit(1)
-    except Exception:
-        logger.error("Failed to load the database." + output_db_url)
-        logger.warning(traceback.format_exc())
-        sys.exit(1)
+    except DBAdminError as e:
+        raise AnalyzerError("Failed to load the database - " + output_db_url, e)
 
     total = workflow_stats.get_total_jobs_status()
     total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
@@ -1549,7 +1582,9 @@ def analyze_db_for_wf(config_properties, output_db_url, wf_id, submit_dir):
     if summary_mode:
         if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
             # Workflow has failures, exit with exitcode 2
-            sys.exit(2)
+            raise WorkflowFailureError(
+                "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
+            )
         # Workflow has no failures, exit with exitcode 0
         return
 
@@ -1617,9 +1652,9 @@ def analyze_db_for_wf(config_properties, output_db_url, wf_id, submit_dir):
 
     if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
         # Workflow has failures, exit with exitcode 2
-        logger.error("Workflow in submit directory %s failed" % input_dir)
-        # TODO: throw exception instead
-        #  sys.exit(2)
+        raise WorkflowFailureError(
+            "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
+        )
 
     # Workflow has no failures, exit with exitcode 0
     return
@@ -2107,7 +2142,17 @@ if recurse_mode and traverse_all:
 if use_files:
     analyze_files()
 else:
-    analyze_db(options.config_properties)
+    try:
+        analyze_db(options.config_properties)
+    except AnalyzerError as err:
+        logger.error(err)
+        sys.exit(1)
+    except WorkflowFailureError as err:
+        logger.error(err)
+        sys.exit(2)
+    except Exception:
+        logger.error(traceback.format_exc())
+        sys.exit(1)
 
 # Done!
 print("Done".center(80, "*"))
