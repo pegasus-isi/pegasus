@@ -242,7 +242,7 @@ class StampedeStatistics:
                 else:
                     tree[parent_node] = [row.wf_id]
 
-            self._get_descendants(tree, self._root_wf_id)
+            self._get_descendants(tree, self._root_wf_id, self._wfs)
 
         self.log.debug("Descendant workflow ids %s", self._wfs)
 
@@ -317,7 +317,7 @@ class StampedeStatistics:
             raise ValueError("No results found for wf_uuid: %s", wf_uuid)
         return wfs
 
-    def _get_descendants(self, tree, wf_node, wfs=None):
+    def _get_descendants(self, tree, wf_node, wfs):
         """
         If the root_wf_uuid given to initialize function is not the UUID of the root work-flow, and
         expand_workflow was set to True, then this recursive function determines all child work-flows.
@@ -330,7 +330,9 @@ class StampedeStatistics:
             raise ValueError("Tree, or node cannot be None")
 
         if wfs is None:
-            wfs = self._wfs
+            raise ValueError(
+                "wfs should be a list in which list of descendants has to be stored"
+            )
 
         if wf_node in tree:
 
@@ -612,10 +614,16 @@ class StampedeStatistics:
                 "For failing jobs expansion to sub workflows is not possible"
             )
 
-        workflow = queries.WorkflowInfo(
-            self._connection_string, wf_id=self._root_wf_id, wf_uuid=self._root_wf_uuid
-        )
-        return workflow.get_failing_jobs()
+        try:
+            workflow = queries.WorkflowInfo(
+                self._connection_string,
+                wf_id=self._root_wf_id,
+                wf_uuid=self._root_wf_uuid,
+            )
+            return workflow.get_failing_jobs()
+        finally:
+            if workflow:
+                workflow.close()
 
     def _get_total_failed_jobs_status(self):
         """
