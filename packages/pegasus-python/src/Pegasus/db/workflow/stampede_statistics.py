@@ -308,7 +308,7 @@ class StampedeStatistics:
             else:
                 tree[parent_node] = [row.wf_id]
 
-        self._get_descendants(tree, wfs, wf_id)
+        self._get_descendants(tree, wf_id, wfs)
 
         self.log.debug("Descendant workflow ids %s", wfs)
 
@@ -317,41 +317,27 @@ class StampedeStatistics:
             raise ValueError("No results found for wf_uuid: %s", wf_uuid)
         return wfs
 
-    def _get_descendants(self, tree, wf_node):
+    def _get_descendants(self, tree, wf_node, wfs=None):
         """
         If the root_wf_uuid given to initialize function is not the UUID of the root work-flow, and
         expand_workflow was set to True, then this recursive function determines all child work-flows.
-        @tree A dictionary when key is the parent_wf_id and value is a list of its child wf_id's.
-        @wf_node The node for which to determine descendants.
+        :param tree: A dictionary when key is the parent_wf_id and value is a list of its child wf_id's.
+        :param wf_node: The node for which to determine descendants.
+        :param wfs: the list containing the descendants of the node.
+        :return:
         """
-
         if tree is None or wf_node is None:
             raise ValueError("Tree, or node cannot be None")
 
-        if wf_node in tree:
-
-            self._wfs.extend(tree[wf_node])
-
-            for wf in tree[wf_node]:
-                self._get_descendants(tree, wf)
-
-    def _get_descendants(self, tree, wfs, wf_node):
-        """
-        If the root_wf_uuid given to initialize function is not the UUID of the root work-flow, and
-        expand_workflow was set to True, then this recursive function determines all child work-flows.
-        @tree A dictionary when key is the parent_wf_id and value is a list of its child wf_id's.
-        @wf_node The node for which to determine descendants.
-        """
-
-        if tree is None or wf_node is None:
-            raise ValueError("Tree, or node cannot be None")
+        if wfs is None:
+            wfs = self._wfs
 
         if wf_node in tree:
 
             wfs.extend(tree[wf_node])
 
             for wf in tree[wf_node]:
-                self._get_descendants(tree, wfs, wf)
+                self._get_descendants(tree, wf, wfs)
 
     def close(self):
         self.log.debug("close")
@@ -1140,34 +1126,16 @@ class StampedeStatistics:
 
         return q.first()
 
-    def get_workflow_details(self):
-        """
-        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowdetails
-        """
-        q = self.session.query(
-            Workflow.wf_id,
-            Workflow.wf_uuid,
-            Workflow.parent_wf_id,
-            Workflow.root_wf_id,
-            Workflow.dag_file_name,
-            Workflow.submit_hostname,
-            Workflow.submit_dir,
-            Workflow.planner_arguments,
-            Workflow.user,
-            Workflow.grid_dn,
-            Workflow.planner_version,
-            Workflow.dax_label,
-            Workflow.dax_version,
-        )
-        q = q.filter(Workflow.wf_id.in_(self._wfs))
-        return q.all()
-
-    def get_workflow_details(self, wfs):
+    def get_workflow_details(self, wfs=None):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowdetails
         :param wfs:  list of workflow ids
         :return: workflow details for the workflows queried
         """
+
+        if wfs is None:
+            wfs = self._wfs
+
         q = self.session.query(
             Workflow.wf_id,
             Workflow.wf_uuid,
