@@ -3683,80 +3683,26 @@ class SingularityHandler(TransferHandlerBase):
             )
             return [[], transfers_l]
 
-        # singularity library requires version 3.0 or greater, therefore we check
-        # if library is used as a source protocol in any of the transfers and
-        # verify that the minimum required version of singularity is installed
-        is_library_used = False
-
-        for transfer in transfers_l:
-            if transfer.get_src_proto() == "library":
-                is_library_used = True
-                logger.debug("Singularity library is used as a source protocol")
-                break
-
-        if is_library_used:
-            if tools.major_version("singularity") < 3:
-                logger.error(
-                    "Singularity 3.0 or above is required for pulling images from the library"
-                )
-                return [[], transfers_l]
-        else:
-            # the "pull" command was introduced in 2.3 to support pulls from the hub and Docker
-            if tools.major_version("singularity") < 2 or (
-                tools.major_version("singularity") == 2
-                and tools.minor_version("singularity") < 3
-            ):
-                logger.error(
-                    "Singularity 2.3 or above is required for pulling images from the hub or docker"
-                )
-                return [[], transfers_l]
-
         successful_l = []
         failed_l = []
         for t in transfers_l:
             self._pre_transfer_attempt(t)
             t_start = time.time()
 
-            # singularity pull --name only accepts a filename, not a full path, so
+            # singularity pull only accepts a filename, not a full path, so
             # download and then move to the correct location
 
             target_name = hashlib.sha224(t.get_dst_path().encode("utf-8")).hexdigest()
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
 
-            if tools.major_version("singularity") < 3:
-                cmd = "%s pull --name '%s' '%s' && mv %s* '%s'" % (
-                    tools.full_path("singularity"),
-                    target_name,
-                    t.src_url(),
-                    target_name,
-                    t.get_dst_path(),
-                )
-
-            # --name is no longer needed to specify an output file after v2
-            elif (
-                tools.major_version("singularity") >= 3
-                and tools.minor_version("singularity") < 2
-            ):
-
-                cmd = "%s pull '%s' '%s' && mv %s* '%s'" % (
-                    tools.full_path("singularity"),
-                    target_name,
-                    t.src_url(),
-                    target_name,
-                    t.get_dst_path(),
-                )
-
-            # --allow-unauthenticated is required after v3.2 to avoid a prompt
-            # checking to see if we would like to download an unsigned image
-            else:
-                cmd = "%s pull --allow-unauthenticated '%s' '%s' && mv %s* '%s'" % (
-                    tools.full_path("singularity"),
-                    target_name,
-                    t.src_url(),
-                    target_name,
-                    t.get_dst_path(),
-                )
+            cmd = "%s pull --allow-unauthenticated '%s' '%s' && mv %s* '%s'" % (
+                tools.full_path("singularity"),
+                target_name,
+                t.src_url(),
+                target_name,
+                t.get_dst_path(),
+            )
 
             logger.debug("Using Singularity command: '%s'" % (cmd))
 
