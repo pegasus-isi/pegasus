@@ -19,7 +19,6 @@ install_requires = [
     "requests>2.23",
     "sqlalchemy>1.3,<1.4",
     "pegasus-wms.api",
-    "pegasus-wms.dax",
     "pegasus-wms.common",
     "pegasus-wms.worker",
 ]
