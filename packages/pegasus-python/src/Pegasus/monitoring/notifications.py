@@ -126,9 +126,7 @@ class Notifications:
         except OSError:
             # No error here...
             pass
-        logger.warning(
-            "notification terminated: {} - {}".format(my_notification, my_action)
-        )
+        logger.warning(f"notification terminated: {my_notification} - {my_action}")
 
     def service_notifications(self):
         """

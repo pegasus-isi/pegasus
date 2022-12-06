@@ -76,7 +76,7 @@ def salvage_log_file(condor_log):
                 log.debug("# log $result exists, rescuing from DAGMan.")
                 try:
                     shutil.copyfile(cl, _cl)
-                    click.secho("Rescued {} as {}".format(cl, _cl), err=True)
+                    click.secho(f"Rescued {cl} as {_cl}", err=True)
                 except OSError as e:
                     raise ValueError(str(e))
                 break

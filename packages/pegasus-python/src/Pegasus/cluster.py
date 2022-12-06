@@ -85,9 +85,7 @@ class RecordParser:
         "Expect the next token to be item and return its value"
         token, value = self.nextToken()
         if token != item:
-            raise RecordParseException(
-                "Expected '{}', got '{}'".format(item, token), self.string
-            )
+            raise RecordParseException(f"Expected '{item}', got '{token}'", self.string)
         return value
 
     def parse(self):

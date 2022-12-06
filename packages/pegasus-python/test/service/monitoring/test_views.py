@@ -253,7 +253,7 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
     def test_get_workflow_uuids(self, cli):
         uuid = "7193de8c-a28d-4eca-b576-1b1c3c4f668b"
         rv = cli.get_context(
-            "/api/v1/user/{}/root/{}/workflow/{}".format(self.user, uuid, uuid),
+            f"/api/v1/user/{self.user}/root/{uuid}/workflow/{uuid}",
             pre_callable=self.pre_callable,
         )
 

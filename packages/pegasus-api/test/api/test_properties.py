@@ -85,7 +85,7 @@ def test_set_item_fail(caplog, k, v, props):
         (
             "Pegasus.api.properties",
             logging.WARNING,
-            "Unrecognized property key: '{}' has been set to '{}'".format(k, v),
+            f"Unrecognized property key: '{k}' has been set to '{v}'",
         )
     ]
 

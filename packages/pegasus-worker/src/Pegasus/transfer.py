@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import hashlib
-import io
 import json
 import logging
 import math
@@ -172,18 +170,18 @@ class PegasusURL:
     def get_url(self):
         # srm-copy is using broken urls - wants an extra /
         if self.proto == "srm" or self.proto == "root":
-            return "%s://%s/%s" % (self.proto, self.host, self.path)
-        return "%s://%s%s" % (self.proto, self.host, self.path)
+            return "{}://{}/{}".format(self.proto, self.host, self.path)
+        return "{}://{}{}".format(self.proto, self.host, self.path)
 
     def get_url_encoded(self):
-        return "%s://%s%s" % (self.proto, self.host, urllib.quote(self.path))
+        return "{}://{}{}".format(self.proto, self.host, urllib.quote(self.path))
 
     def get_url_dirname(self):
         dn = os.path.dirname(self.path)
-        return "%s://%s%s" % (self.proto, self.host, dn)
+        return "{}://{}{}".format(self.proto, self.host, dn)
 
 
-class TransferBase(object):
+class TransferBase:
     """
     Base class for mkdirs, removes and transfers
     """
@@ -205,7 +203,7 @@ class Mkdir(TransferBase):
     """
 
     def __init(self):
-        super(Mkdir, self).__init__()
+        super().__init__()
         self._target_url = None
 
     def set_url(self, site_label, url):
@@ -233,7 +231,7 @@ class Remove(TransferBase):
     """
 
     def __init(self):
-        super(Remove, self).__init__()
+        super().__init__()
         self._target_url = None
         self._recursive = False
 
@@ -313,7 +311,7 @@ class Transfer(TransferBase):
         """
         Initializes the transfer class
         """
-        super(Transfer, self).__init__()
+        super().__init__()
 
         self.lfn = ""
 
@@ -331,7 +329,9 @@ class Transfer(TransferBase):
         )
 
     def __str__(self):
-        return "%s -> %s" % (self._src_urls[0].get_url(), self._dst_urls[0].get_url())
+        return "{} -> {}".format(
+            self._src_urls[0].get_url(), self._dst_urls[0].get_url()
+        )
 
     def set_lfn(self, lfn):
         self.lfn = lfn
@@ -476,7 +476,7 @@ class Transfer(TransferBase):
         self._sub_transfer_count = len(self._src_urls) * len(self._dst_urls)
 
 
-class TransferHandlerBase(object):
+class TransferHandlerBase:
     """
     Base class for all transfer handlers. Derived classes should set the
     protocol map (for example ["http->file"]) and implement the following
@@ -615,10 +615,8 @@ class TransferHandlerBase(object):
             return
 
         self.lock.acquire()
-        cmd = '%s --generate-fullstat-yaml="%s=%s"' % (
-            tools.full_path("pegasus-integrity"),
-            lfn,
-            fname,
+        cmd = '{} --generate-fullstat-yaml="{}={}"'.format(
+            tools.full_path("pegasus-integrity"), lfn, fname,
         )
         try:
             tc = utils.TimedCommand(cmd)
@@ -796,11 +794,10 @@ class FileHandler(TransferHandlerBase):
 
             # some of the time, PegasusLite can tell us to take shortcut and symlink the files
             if symlink_file_transfer:
-                cmd = "ln -f -s '%s' '%s'" % (t.get_src_path(), t.get_dst_path())
+                cmd = "ln -f -s '{}' '{}'".format(t.get_src_path(), t.get_dst_path())
             else:
-                cmd = "/bin/cp -f -R -L '%s' '%s'" % (
-                    t.get_src_path(),
-                    t.get_dst_path(),
+                cmd = "/bin/cp -f -R -L '{}' '{}'".format(
+                    t.get_src_path(), t.get_dst_path(),
                 )
             try:
                 tc = utils.TimedCommand(cmd)
@@ -865,7 +862,7 @@ class GridFtpHandler(TransferHandlerBase):
             # prefer gfal if installed
             if (
                 "PEGASUS_FORCE_GUC" not in os.environ
-                and tools.find("gfal-mkdir", "--version", "\(gfal2 ([\.0-9]+)\)")
+                and tools.find("gfal-mkdir", "--version", r"\(gfal2 ([\.0-9]+)\)")
                 is not None
             ):
                 handler = GFALHandler()
@@ -929,13 +926,14 @@ class GridFtpHandler(TransferHandlerBase):
             "PEGASUS_FORCE_GUC" not in os.environ
             and transfers_l[0].get_src_proto() != "sshftp"
             and transfers_l[0].get_dst_proto() != "sshftp"
-            and tools.find("gfal-copy", "--version", "\(gfal2 ([\.0-9]+)\)") is not None
+            and tools.find("gfal-copy", "--version", r"\(gfal2 ([\.0-9]+)\)")
+            is not None
         ):
             handler = GFALHandler()
             [successful_l, failed_l] = handler.do_transfers(transfers_l)
             return [successful_l, failed_l]
 
-        if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") is None:
+        if tools.find("globus-url-copy", "-version", r"([0-9]+\.[0-9]+)") is None:
             logger.error(
                 "Unable to do gsiftp transfers because gfal-copy/globus-url-copy could not be found"
             )
@@ -1027,7 +1025,7 @@ class GridFtpHandler(TransferHandlerBase):
         if (
             "PEGASUS_FORCE_GUC" not in os.environ
             and removes_l[0].get_proto() != "sshftp"
-            and tools.find("gfal-rm", "--version", "\(gfal2 ([\.0-9]+)\)") is not None
+            and tools.find("gfal-rm", "--version", r"\(gfal2 ([\.0-9]+)\)") is not None
         ):
             handler = GFALHandler()
             [successful_l, failed_l] = handler.do_removes(removes_l)
@@ -1076,7 +1074,7 @@ class GridFtpHandler(TransferHandlerBase):
             tmp_fd, tmp_name = tempfile.mkstemp(
                 prefix="pegasus-transfer-", suffix=".lst"
             )
-            tmp_file = io.open(tmp_fd, "w+")
+            tmp_file = open(tmp_fd, "w+")
         except Exception:
             raise RuntimeError(
                 "Unable to create tmp file for" + " globus-url-copy transfers"
@@ -1084,8 +1082,10 @@ class GridFtpHandler(TransferHandlerBase):
 
         for i, t in enumerate(transfers):
             num_pairs += 1
-            logger.debug("   adding %s %s" % (t.src_url_encoded(), t.dst_url_encoded()))
-            tmp_file.write("%s %s\n" % (t.src_url_encoded(), t.dst_url_encoded()))
+            logger.debug(
+                "   adding {} {}".format(t.src_url_encoded(), t.dst_url_encoded())
+            )
+            tmp_file.write("{} {}\n".format(t.src_url_encoded(), t.dst_url_encoded()))
 
         tmp_file.close()
 
@@ -1306,8 +1306,8 @@ class HttpHandler(TransferHandlerBase):
                 del os.environ["http_proxy"]
 
         if (
-            tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is None
-            and tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None
+            tools.find("wget", "--version", r"([0-9]+\.[0-9]+)") is None
+            and tools.find("curl", "--version", r" ([0-9]+\.[0-9]+)") is None
         ):
             logger.error(
                 "Unable to do http/https transfers because neither curl nor wget could not be found"
@@ -1413,7 +1413,7 @@ class HPSSHandler(TransferHandlerBase):
                     return
 
             # copy user defined credential to default credential path
-            cmd = "/bin/cp -f '%s' '%s'" % (user_defined_cred, default_cred)
+            cmd = "/bin/cp -f '{}' '{}'".format(user_defined_cred, default_cred)
             try:
                 tc = utils.TimedCommand(cmd)
                 tc.run()
@@ -1511,7 +1511,7 @@ class HPSSHandler(TransferHandlerBase):
             tmp_fd, tmp_name = tempfile.mkstemp(
                 prefix="pegasus-transfer-", suffix=".lst"
             )
-            tmp_file = io.open(tmp_fd, "w+")
+            tmp_file = open(tmp_fd, "w+")
         except Exception:
             raise RuntimeError("Unable to create tmp file for" + " hpss transfers")
 
@@ -1528,7 +1528,7 @@ class HPSSHandler(TransferHandlerBase):
                 # we need post transfer move as directory needs to be flattened
                 # for example hpss/set2/f.c from tar has to be moved to f.c
                 logger.debug(
-                    "file %s from tar has to be moved to %s" % (src_file, t.lfn)
+                    "file {} from tar has to be moved to {}".format(src_file, t.lfn)
                 )
                 files_to_move[t.lfn] = src_file
 
@@ -1589,7 +1589,9 @@ class HPSSHandler(TransferHandlerBase):
                     except Exception as err:
                         # only log. we will catch subsequently in verify_local_file
                         logger.error(
-                            "Error renaming %s to %s :%s" % (src_file, dst_file, err)
+                            "Error renaming {} to {} :{}".format(
+                                src_file, dst_file, err
+                            )
                         )
 
                 if verify_local_file(t.get_dst_path()):
@@ -1740,7 +1742,7 @@ class IRodsHandler(TransferHandlerBase):
     def do_mkdirs(self, mkdir_list):
 
         tools = utils.Tools()
-        if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
+        if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
                 "Unable to do irods transfers becuase iget could not be found in the current path"
             )
@@ -1778,7 +1780,7 @@ class IRodsHandler(TransferHandlerBase):
         """
 
         tools = utils.Tools()
-        if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
+        if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
                 "Unable to do irods transfers becuase iget could not be found in the current path"
             )
@@ -1857,7 +1859,7 @@ class IRodsHandler(TransferHandlerBase):
 
     def do_removes(self, removes_list):
         tools = utils.Tools()
-        if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
+        if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
                 "Unable to do irods transfers becuase iget could not be found in the current path"
             )
@@ -1926,7 +1928,7 @@ class IRodsHandler(TransferHandlerBase):
 
             password = None
             ticket = None
-            h = open(env["IRODS_ENVIRONMENT_FILE"], "r")
+            h = open(env["IRODS_ENVIRONMENT_FILE"])
             for line in h:
                 # json - irods 4.0
                 items = line.split(":", 2)
@@ -2055,17 +2057,15 @@ class S3Handler(TransferHandlerBase):
             ):
                 # s3 -> s3
                 env = self._s3_cred_env(t.get_src_site_label())
-                cmd = tools.full_path("pegasus-s3") + " cp -f -c '%s' '%s'" % (
-                    t.src_url(),
-                    t.dst_url(),
+                cmd = tools.full_path("pegasus-s3") + " cp -f -c '{}' '{}'".format(
+                    t.src_url(), t.dst_url(),
                 )
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
                 env = self._s3_cred_env(t.get_src_site_label())
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
-                cmd = tools.full_path("pegasus-s3") + " get '%s' '%s'" % (
-                    t.src_url(),
-                    t.get_dst_path(),
+                cmd = tools.full_path("pegasus-s3") + " get '{}' '{}'".format(
+                    t.src_url(), t.get_dst_path(),
                 )
             else:
                 # this is a 'put'
@@ -2076,9 +2076,8 @@ class S3Handler(TransferHandlerBase):
                         self._post_transfer_attempt(t, False, t_start)
                         continue
                 env = self._s3_cred_env(t.get_dst_site_label())
-                cmd = tools.full_path("pegasus-s3") + " put -f -b '%s' '%s'" % (
-                    t.get_src_path(),
-                    t.dst_url(),
+                cmd = tools.full_path("pegasus-s3") + " put -f -b '{}' '{}'".format(
+                    t.get_src_path(), t.dst_url(),
                 )
 
             try:
@@ -2107,7 +2106,7 @@ class S3Handler(TransferHandlerBase):
             tmp_fd, tmp_name = tempfile.mkstemp(
                 prefix="pegasus-transfer-", suffix=".lst"
             )
-            tmp_file = io.open(tmp_fd, "w+")
+            tmp_file = open(tmp_fd, "w+")
         except Exception:
             raise RuntimeError("Unable to create tmp file for pegasus-s3 cleanup")
 
@@ -2227,7 +2226,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             tmp_fd, tmp_name = tempfile.mkstemp(
                 prefix="pegasus-transfer-", suffix=".json"
             )
-            tmp_file = io.open(tmp_fd, "w+")
+            tmp_file = open(tmp_fd, "w+")
         except Exception:
             raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
         tmp_file.write(json.dumps(spec, indent=2))
@@ -2288,7 +2287,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             tmp_fd, tmp_name = tempfile.mkstemp(
                 prefix="pegasus-transfer-", suffix=".json"
             )
-            tmp_file = io.open(tmp_fd, "w+")
+            tmp_file = open(tmp_fd, "w+")
         except Exception:
             raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
         tmp_file.write(json.dumps(spec, indent=2))
@@ -2344,7 +2343,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             tmp_fd, tmp_name = tempfile.mkstemp(
                 prefix="pegasus-transfer-", suffix=".json"
             )
-            tmp_file = io.open(tmp_fd, "w+")
+            tmp_file = open(tmp_fd, "w+")
         except Exception:
             raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
         tmp_file.write(json.dumps(spec, indent=2))
@@ -2432,7 +2431,7 @@ class GSHandler(TransferHandlerBase):
 
     def do_mkdirs(self, mkdir_l):
         tools = utils.Tools()
-        if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
+        if tools.find("gsutil", "version", r"gsutil version: ([\.0-9a-zA-Z]+)") is None:
             logger.error(
                 "Unable to do Google Storage transfers because the gsutil tool could not be found"
             )
@@ -2473,7 +2472,7 @@ class GSHandler(TransferHandlerBase):
     def do_transfers(self, transfers_l):
 
         tools = utils.Tools()
-        if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
+        if tools.find("gsutil", "version", r"gsutil version: ([\.0-9a-zA-Z]+)") is None:
             logger.error(
                 "Unable to do Google Storage transfers because the gsutil tool could not be found"
             )
@@ -2497,11 +2496,11 @@ class GSHandler(TransferHandlerBase):
             # use cp for gs->gs transfers, and get/put when one end is a file://
             if t.get_src_proto() == "gs" and t.get_dst_proto() == "gs":
                 # gs -> gs
-                cmd = "gsutil -q cp '%s' '%s'" % (t.src_url(), t.dst_url())
+                cmd = "gsutil -q cp '{}' '{}'".format(t.src_url(), t.dst_url())
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
-                cmd = "gsutil -q cp '%s' '%s'" % (t.src_url(), t.get_dst_path())
+                cmd = "gsutil -q cp '{}' '{}'".format(t.src_url(), t.get_dst_path())
             else:
                 # this is a 'put'
                 # src has to exist and be readable
@@ -2509,7 +2508,7 @@ class GSHandler(TransferHandlerBase):
                     failed_l.append(t)
                     self._post_transfer_attempt(t, False, t_start)
                     continue
-                cmd = "gsutil -q cp '%s' '%s'" % (t.get_src_path(), t.dst_url())
+                cmd = "gsutil -q cp '{}' '{}'".format(t.get_src_path(), t.dst_url())
 
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=env)
@@ -2527,7 +2526,7 @@ class GSHandler(TransferHandlerBase):
 
     def do_removes(self, removes_l):
         tools = utils.Tools()
-        if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
+        if tools.find("gsutil", "version", r"gsutil version: ([\.0-9a-zA-Z]+)") is None:
             logger.error(
                 "Unable to do Google Storage transfers because the gsutil tool could not be found"
             )
@@ -2599,7 +2598,7 @@ class GSHandler(TransferHandlerBase):
             tmp_fd, self._tmp_name = tempfile.mkstemp(
                 prefix="pegasus-transfer-", suffix=".lst"
             )
-            tmp_file = io.open(tmp_fd, "w+")
+            tmp_file = open(tmp_fd, "w+")
         except Exception:
             raise RuntimeError("Unable to create tmp file for gs boto file")
         try:
@@ -2632,7 +2631,7 @@ class GFALHandler(TransferHandlerBase):
     def do_mkdirs(self, mkdir_list):
 
         tools = utils.Tools()
-        if tools.find("gfal-mkdir", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
+        if tools.find("gfal-mkdir", "--version", r"\(gfal2 ([\.0-9]+)\)") is None:
             logger.error(
                 "Unable to do xrood/srm mkdir because gfal-mkdir could not be found"
             )
@@ -2665,7 +2664,7 @@ class GFALHandler(TransferHandlerBase):
     def do_transfers(self, transfers_l):
 
         tools = utils.Tools()
-        if tools.find("gfal-copy", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
+        if tools.find("gfal-copy", "--version", r"\(gfal2 ([\.0-9]+)\)") is None:
             logger.error(
                 "Unable to do xrootr/srm transfers because gfal-copy could not be found"
             )
@@ -2693,7 +2692,7 @@ class GFALHandler(TransferHandlerBase):
             cmd = "gfal-copy -f -p -t 7200 -T 7200"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
-            cmd = cmd + " '%s' '%s'" % (t.src_url(), t.dst_url())
+            cmd = cmd + " '{}' '{}'".format(t.src_url(), t.dst_url())
 
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=self._gfal_creds(t))
@@ -2712,7 +2711,7 @@ class GFALHandler(TransferHandlerBase):
     def do_removes(self, mkdir_list):
 
         tools = utils.Tools()
-        if tools.find("gfal-rm", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
+        if tools.find("gfal-rm", "--version", r"\(gfal2 ([\.0-9]+)\)") is None:
             logger.error(
                 "Unable to do xrood/srm removes because gfal-rm could not be found"
             )
@@ -3356,9 +3355,8 @@ class StashHandler(TransferHandlerBase):
         for t in transfers:
 
             # copy a 0-byte file to create the dir
-            cmd = "%s /dev/null '%s/.create'" % (
-                tools.full_path("stashcp"),
-                t.get_url(),
+            cmd = "{} /dev/null '{}/.create'".format(
+                tools.full_path("stashcp"), t.get_url(),
             )
             try:
                 tc = utils.TimedCommand(cmd)
@@ -3404,12 +3402,10 @@ class StashHandler(TransferHandlerBase):
                     dst_path = re.sub("^/osgconnect", "", t.get_dst_path())
 
                     prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = "/bin/cp '%s' '%s'" % (src_path, dst_path)
+                    cmd = "/bin/cp '{}' '{}'".format(src_path, dst_path)
                 else:
-                    cmd = "%s '%s' '%s'" % (
-                        tools.full_path("stashcp"),
-                        t.get_src_path(),
-                        t.dst_url(),
+                    cmd = "{} '{}' '{}'".format(
+                        tools.full_path("stashcp"), t.get_src_path(), t.dst_url(),
                     )
             else:
                 # read
@@ -3424,15 +3420,13 @@ class StashHandler(TransferHandlerBase):
                 # use --methods as we want to exclude cvmfs - it can take a
                 # long time to update, and we have seen partial files being
                 # published there in the past
-                cmd = "%s '%s' '%s'" % (
-                    tools.full_path("stashcp"),
-                    src_path,
-                    local_dir,
+                cmd = "{} '{}' '{}'".format(
+                    tools.full_path("stashcp"), src_path, local_dir,
                 )
                 remote_fname = os.path.basename(t.get_src_path())
                 local_fname = os.path.basename(t.get_dst_path())
                 if remote_fname != local_fname:
-                    cmd += " && mv '%s' '%s'" % (remote_fname, local_fname)
+                    cmd += " && mv '{}' '{}'".format(remote_fname, local_fname)
 
             try:
                 tc = utils.TimedCommand(cmd)
@@ -3510,7 +3504,7 @@ class SymlinkHandler(TransferHandlerBase):
                     successful_l.append(t)
                     continue
 
-            cmd = "ln -f -s '%s' '%s'" % (t.get_src_path(), t.get_dst_path())
+            cmd = "ln -f -s '{}' '{}'".format(t.get_src_path(), t.get_dst_path())
             try:
                 tc = utils.TimedCommand(cmd, timeout_secs=60)
                 tc.run()
@@ -3569,7 +3563,7 @@ class MovetoHandler(TransferHandlerBase):
                 failed_l.append(t)
                 continue
 
-            cmd = "mv '%s' '%s'" % (t.get_src_path(), t.get_dst_path())
+            cmd = "mv '{}' '{}'".format(t.get_src_path(), t.get_dst_path())
             try:
                 tc = utils.TimedCommand(cmd, timeout_secs=600)
                 tc.run()
@@ -3596,7 +3590,7 @@ class DockerHandler(TransferHandlerBase):
     def do_transfers(self, transfers_l):
 
         tools = utils.Tools()
-        if tools.find("docker", "--version", "([0-9]+\.[0-9]+\.[0-9]+)") is None:
+        if tools.find("docker", "--version", r"([0-9]+\.[0-9]+\.[0-9]+)") is None:
             logger.error(
                 "Unable to do pull Docker images as docker command could not be found"
             )
@@ -3613,7 +3607,7 @@ class DockerHandler(TransferHandlerBase):
             src_path = re.sub("^docker:/+", "", src_path)
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
-            cmd = "%s pull '%s' && %s save -o '%s' '%s'" % (
+            cmd = "{} pull '{}' && {} save -o '{}' '{}'".format(
                 tools.full_path("docker"),
                 src_path,
                 tools.full_path("docker"),
@@ -3655,7 +3649,7 @@ class SingularityHandler(TransferHandlerBase):
     def do_transfers(self, transfers_l):
 
         tools = utils.Tools()
-        if tools.find("singularity", "--version", "^([0-9]+\.[0-9]+)") is None:
+        if tools.find("singularity", "--version", r"^([0-9]+\.[0-9]+)") is None:
             logger.error(
                 "Unable to do pull Singularity images as singularity command could not be found"
             )
@@ -3667,7 +3661,7 @@ class SingularityHandler(TransferHandlerBase):
             self._pre_transfer_attempt(t)
             t_start = time.time()
 
-            cmd = "%s pull --allow-unauthenticated '%s' '%s' && mv %s* '%s'" % (
+            cmd = "{} pull --allow-unauthenticated '{}' '{}' && mv {}* '{}'".format(
                 tools.full_path("singularity"),
                 target_name,
                 t.src_url(),
@@ -3705,7 +3699,7 @@ class WebdavHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        if tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None:
+        if tools.find("curl", "--version", r" ([0-9]+\.[0-9]+)") is None:
             logger.error(
                 "Unable to do webdav transfers because curl could not be found"
             )
@@ -3725,7 +3719,7 @@ class WebdavHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        if tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None:
+        if tools.find("curl", "--version", r" ([0-9]+\.[0-9]+)") is None:
             logger.error(
                 "Unable to do webdav transfers because curl could not be found"
             )
@@ -3829,7 +3823,7 @@ class WebdavHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        if tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None:
+        if tools.find("curl", "--version", r" ([0-9]+\.[0-9]+)") is None:
             logger.error(
                 "Unable to do webdav transfers because curl could not be found"
             )
@@ -4203,7 +4197,7 @@ class Panorama:
             req.add_header("Authorization", authheader)
             try:
                 u = urllib2.urlopen(req)
-            except IOError as e:
+            except OSError as e:
                 logger.error("Unable to publish to Panorama: " + str(e))
                 return
             data = u.read()
@@ -4440,16 +4434,14 @@ class SimilarWorkSet:
                 # stage handler
                 handler = self._primary_handler
                 if self._secondary_handler is not None:
-                     handler = self._secondary_handler
+                    handler = self._secondary_handler
 
                 # local files are a special case
                 if t.get_dst_proto() == "file":
                     local_name = t.get_dst_path()
                 else:
                     # first verify that we can actually pull the file back
-                    if not handler.protocol_check(
-                        t.get_dst_proto(), "file"
-                    ):
+                    if not handler.protocol_check(t.get_dst_proto(), "file"):
                         logger.warn(
                             "Unable to pull file from "
                             + t.get_dst_proto()
@@ -4463,10 +4455,7 @@ class SimilarWorkSet:
                     t_verify.lfn = t.lfn
                     t_verify.add_src(t.get_dst_site_label(), t.dst_url())
                     t_verify.add_dst("local", "file://" + temp_name)
-                    (
-                        success_verify,
-                        failed_verify,
-                    ) = handler.do_transfers([t_verify])
+                    (success_verify, failed_verify,) = handler.do_transfers([t_verify])
                     if failed_verify is []:
                         failed_list.append(t)
                         self.clean_up_temp_file(temp_name)
@@ -4548,7 +4537,9 @@ class SimilarWorkSet:
             logger.error("lfn is required when enabling checksumming")
             return
 
-        cmd = '%s --verify="%s=%s"' % (tools.full_path("pegasus-integrity"), lfn, fname)
+        cmd = '{} --verify="{}={}"'.format(
+            tools.full_path("pegasus-integrity"), lfn, fname
+        )
         try:
             tc = utils.TimedCommand(cmd)
             tc.run()
@@ -4854,7 +4845,7 @@ def verify_local_file(path):
 
     # check readability
     try:
-        f = open(path, "r")
+        f = open(path)
         f.close()
     except Exception:
         logger.error("File is not readable: " + path)
@@ -4947,7 +4938,7 @@ def iso_prefix_formatted(n):
     elif n > (1024):
         prefix = "K"
         n = n / (1024)
-    return "%.1f %s" % (n, prefix)
+    return "{:.1f} {}".format(n, prefix)
 
 
 def json_object_decoder(obj):
@@ -5133,7 +5124,7 @@ def pegasus_transfer(
     else:
         logger.info("Reading transfer specification from %s" % (file))
         try:
-            input_file = open(file, "r")
+            input_file = open(file)
         except Exception as err:
             logger.critical("Error opening input file: %s" % (err))
             raise

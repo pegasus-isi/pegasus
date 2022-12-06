@@ -30,15 +30,13 @@ class WorkflowBase:
     _indent = 1
 
     def __init__(self):
-        self.log = logging.getLogger(
-            "{}.{}".format(self.__module__, self.__class__.__name__)
-        )
+        self.log = logging.getLogger(f"{self.__module__}.{self.__class__.__name__}")
 
     def __repr__(self):
         spacer = "  "
         retval = "%s:" % self.__class__
         if self._indent > 1:
-            retval = "\n{}+++ {}:".format(spacer * self._indent, self.__class__)
+            retval = f"\n{spacer * self._indent}+++ {self.__class__}:"
         for i in dir(self):
             if (
                 i.startswith("_")
@@ -54,7 +52,7 @@ class WorkflowBase:
                     spacer * self._indent, i, eval("self.%s" % i),
                 )
             except NotImplementedError as e:
-                retval += "\n{}* {} : WARNING: {}".format(spacer * self._indent, i, e)
+                retval += f"\n{spacer * self._indent}* {i} : WARNING: {e}"
         return retval
 
 

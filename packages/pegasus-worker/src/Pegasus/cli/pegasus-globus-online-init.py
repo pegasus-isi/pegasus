@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
 
 import os
 from argparse import ArgumentParser
@@ -40,7 +39,7 @@ config.set("oauth", "client_id", client_id)
 pegasus_scopes = [TransferScopes.all]
 for c in args.endpoints:
     sb = GCSCollectionScopeBuilder(c, known_scopes=[TransferScopes.all])
-    pegasus_scopes.append("{0}[*{1}]".format(TransferScopes.all, sb.data_access))
+    pegasus_scopes.append("{}[*{}]".format(TransferScopes.all, sb.data_access))
     pegasus_scopes.append(sb.data_access)
 
 client = globus_sdk.NativeAppAuthClient(client_id)
@@ -50,7 +49,7 @@ else:
     client.oauth2_start_flow(requested_scopes=pegasus_scopes)
 
 authorize_url = client.oauth2_get_authorize_url()
-print("Please go to this URL and login: {0}".format(authorize_url))
+print("Please go to this URL and login: {}".format(authorize_url))
 
 get_input = getattr(__builtins__, "raw_input", input)
 auth_code = get_input("Please enter the code you get after login here: ").strip()

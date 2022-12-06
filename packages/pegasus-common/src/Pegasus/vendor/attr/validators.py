@@ -41,7 +41,7 @@ class _InstanceOfValidator:
             )
 
     def __repr__(self):
-        return "<instance_of validator for type {type!r}>".format(type=self.type)
+        return f"<instance_of validator for type {self.type!r}>"
 
 
 def instance_of(type):
@@ -82,7 +82,7 @@ class _MatchesReValidator:
             )
 
     def __repr__(self):
-        return "<matches_re validator for pattern {regex!r}>".format(regex=self.regex)
+        return f"<matches_re validator for pattern {self.regex!r}>"
 
 
 def matches_re(regex, flags=0, func=None):
@@ -118,7 +118,7 @@ def matches_re(regex, flags=0, func=None):
         if fullmatch:
             match_func = pattern.fullmatch
         else:
-            pattern = re.compile(r"(?:{})\Z".format(regex), flags)
+            pattern = re.compile(fr"(?:{regex})\Z", flags)
             match_func = pattern.match
 
     return _MatchesReValidator(pattern, flags, match_func)
@@ -217,7 +217,7 @@ class _InValidator:
             )
 
     def __repr__(self):
-        return "<in_ validator with options {options!r}>".format(options=self.options)
+        return f"<in_ validator with options {self.options!r}>"
 
 
 def in_(options):
@@ -289,9 +289,7 @@ class _DeepIterable:
 
     def __repr__(self):
         iterable_identifier = (
-            ""
-            if self.iterable_validator is None
-            else " {iterable!r}".format(iterable=self.iterable_validator)
+            "" if self.iterable_validator is None else f" {self.iterable_validator!r}"
         )
         return (
             "<deep_iterable validator for{iterable_identifier}"

@@ -217,7 +217,7 @@ class Properties:
         *_pattern_props,
     )
 
-    _cfg_header_len = len("[{}]\n".format(DEFAULTSECT))
+    _cfg_header_len = len(f"[{DEFAULTSECT}]\n")
 
     @staticmethod
     def ls(prop: Optional[str] = None):

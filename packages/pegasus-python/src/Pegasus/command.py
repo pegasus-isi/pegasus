@@ -76,7 +76,7 @@ class CompoundCommand(Command):
 
         lines = ["\n\nCommands:"]
         for cmd, cmdclass in self.commands:
-            lines.append("    {:<20} {}".format(cmd, cmdclass.description))
+            lines.append(f"    {cmd:<20} {cmdclass.description}")
 
         self.parser.usage += "\n".join(lines)
 

@@ -70,9 +70,7 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
         "PEGASUS_SERVICE_URL_PREFIX", app.config.get("PEGASUS_SERVICE_URL_PREFIX", None)
     )
     if pegasus_service_url_prefix:
-        logging.info(
-            "Using non-standard URL prefix: {}".format(pegasus_service_url_prefix)
-        )
+        logging.info(f"Using non-standard URL prefix: {pegasus_service_url_prefix}")
         app.config["APPLICATION_ROOT"] = pegasus_service_url_prefix
 
     pegasusdir = os.path.expanduser("~/.pegasus")

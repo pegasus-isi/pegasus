@@ -37,7 +37,7 @@ class Version(BaseVersion):
         :param force:
         :return:
         """
-        log.debug("Updating to version {}".format(DB_VERSION))
+        log.debug(f"Updating to version {DB_VERSION}")
         try:
             self.db.execute("DROP TABLE sequences")
         except Exception:
@@ -144,7 +144,7 @@ class Version(BaseVersion):
             command = (
                 "psql %s" % url.database
                 if not url.password
-                else "export PGPASSWORD={}; psql {}".format(url.password, url.database)
+                else f"export PGPASSWORD={url.password}; psql {url.database}"
             )
             if url.username:
                 command += " -U %s" % url.username
@@ -166,7 +166,7 @@ class Version(BaseVersion):
 
     def downgrade(self, force=False):
         """."""
-        log.debug("Downgrading from version {}".format(DB_VERSION))
+        log.debug(f"Downgrading from version {DB_VERSION}")
 
     def _drop_indexes(self, index_list):
         """"."""
@@ -174,7 +174,7 @@ class Version(BaseVersion):
             try:
                 if self.db.get_bind().driver == "mysqldb":
                     self.db.execute(
-                        "DROP INDEX {} ON {}".format(index[0], index[1].__tablename__)
+                        f"DROP INDEX {index[0]} ON {index[1].__tablename__}"
                     )
                 else:
                     self.db.execute("DROP INDEX %s" % index[0])
@@ -522,12 +522,12 @@ class Version(BaseVersion):
         """"."""
         try:
             if {tbl.__tablename__}.issubset(self.db.get_bind().table_names()):
-                log.debug("Updating table: {}".format(tbl.__tablename__))
+                log.debug(f"Updating table: {tbl.__tablename__}")
                 for stmt in create_stmt:
                     self.db.execute(stmt)
 
                 resultproxy = self.db.execute(
-                    "PRAGMA table_info('{}')".format(tbl.__tablename__)
+                    f"PRAGMA table_info('{tbl.__tablename__}')"
                 )
                 cols = []
                 for rowproxy in resultproxy:
@@ -543,7 +543,7 @@ class Version(BaseVersion):
                         )
                     )
 
-                self.db.execute("DROP TABLE {}".format(tbl.__tablename__))
+                self.db.execute(f"DROP TABLE {tbl.__tablename__}")
                 self.db.execute(
                     "ALTER TABLE {} RENAME TO {}".format(
                         tbl.__tablename__ + "_new", tbl.__tablename__

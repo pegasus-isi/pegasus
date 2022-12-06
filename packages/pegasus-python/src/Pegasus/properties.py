@@ -41,7 +41,7 @@ def load(fp: TextIO, *args, **kwargs) -> Properties:
     conf = ConfigParser()
     # preserve case for keys
     conf.optionxform = str
-    conf.read_string("[{}]\n".format(DEFAULTSECT) + fp.read())
+    conf.read_string(f"[{DEFAULTSECT}]\n" + fp.read())
 
     props = Properties()
     for k, v in conf[DEFAULTSECT].items():
@@ -62,7 +62,7 @@ def loads(s: str, *args, **kwargs) -> Properties:
     conf = ConfigParser()
     # preserve case for keys
     conf.optionxform = str
-    conf.read_string("[{}]\n".format(DEFAULTSECT) + s)
+    conf.read_string(f"[{DEFAULTSECT}]\n" + s)
 
     props = Properties()
     for k, v in conf[DEFAULTSECT].items():

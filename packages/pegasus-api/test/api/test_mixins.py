@@ -489,4 +489,4 @@ def test_to_mb_invalid_input(value):
     with pytest.raises(ValueError) as e:
         to_mb(value)
 
-    assert "value: {} should be a str".format(value) in str(e)
+    assert f"value: {value} should be a str" in str(e)

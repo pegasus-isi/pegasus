@@ -108,8 +108,7 @@ def test_load_tr_specs_file_not_found(caplog):
         load_tr_specs(invalid_file_name)
 
     assert (
-        "Unable to find transformation spec file: {}".format(invalid_file_name)
-        in caplog.text
+        f"Unable to find transformation spec file: {invalid_file_name}" in caplog.text
     )
 
 

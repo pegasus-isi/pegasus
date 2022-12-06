@@ -126,9 +126,7 @@ def connect(
         # PM-898 monitord sends props as None and connect_args has the
         # right values for the connection
         connect_args = _parse_props(dburi, props, db_type, connect_args)
-        log.debug(
-            "Connecting to: {} with connection params as {}".format(dburi, connect_args)
-        )
+        log.debug(f"Connecting to: {dburi} with connection params as {connect_args}")
 
         engine = create_engine(
             dburi, echo=echo, pool_recycle=True, connect_args=connect_args
@@ -140,16 +138,16 @@ def connect(
     except exc.OperationalError as e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
             raise ConnectionError(
-                "MySQL database should be previously created: {} ({})".format(e, dburi),
+                f"MySQL database should be previously created: {e} ({dburi})",
                 given_version=pegasus_version,
                 db_type=db_type,
             )
         raise ConnectionError(
-            "{} ({})".format(e, dburi), given_version=pegasus_version, db_type=db_type
+            f"{e} ({dburi})", given_version=pegasus_version, db_type=db_type
         )
     except Exception as e:
         raise ConnectionError(
-            "{} ({})".format(e, dburi), given_version=pegasus_version, db_type=db_type
+            f"{e} ({dburi})", given_version=pegasus_version, db_type=db_type
         )
 
     Session = orm.sessionmaker(
@@ -202,15 +200,13 @@ def connect(
                 output = out.decode("utf8").strip()
                 output = output[output.find("\n") + 1 :]
                 raise ConnectionError(
-                    "Database is locked ({}):\n{}".format(dburi, output),
+                    f"Database is locked ({dburi}):\n{output}",
                     given_version=pegasus_version,
                     db_type=db_type,
                 )
             else:
                 raise ConnectionError(
-                    "{} ({})".format(e, dburi),
-                    given_version=pegasus_version,
-                    db_type=db_type,
+                    f"{e} ({dburi})", given_version=pegasus_version, db_type=db_type,
                 )
 
     if not create and schema_check:
@@ -599,7 +595,7 @@ def _validate(dburi):
                 import MySQLdb  # noqa: F401
 
     except ImportError as e:
-        raise ConnectionError("Missing Python module: {} ({})".format(e, dburi))
+        raise ConnectionError(f"Missing Python module: {e} ({dburi})")
 
 
 def _check_db_permissions(dburi, db_type, mask=None):

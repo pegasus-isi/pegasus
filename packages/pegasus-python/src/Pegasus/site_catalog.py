@@ -123,7 +123,7 @@ def _to_sc(d: dict) -> SiteCatalog:
         return sc
 
     except KeyError:
-        raise PegasusError("error parsing {}".format(d))
+        raise PegasusError(f"error parsing {d}")
 
 
 def load(fp: TextIO, *args, **kwargs) -> SiteCatalog:

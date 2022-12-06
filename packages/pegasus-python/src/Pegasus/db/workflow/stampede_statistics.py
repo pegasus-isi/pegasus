@@ -171,9 +171,7 @@ from Pegasus.service.dashboard import queries
 
 class StampedeStatistics:
     def __init__(self, connString, expand_workflow=True):
-        self.log = logging.getLogger(
-            "{}.{}".format(self.__module__, self.__class__.__name__)
-        )
+        self.log = logging.getLogger(f"{self.__module__}.{self.__class__.__name__}")
         try:
             self.session = connection.connect(connString)
         except connection.ConnectionError as e:

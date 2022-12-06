@@ -37,7 +37,7 @@ class MetadataMixin:
             if isinstance(arg, dict):
                 self.metadata.update({key: str(value) for key, value in arg.items()})
             else:
-                raise TypeError("{arg} must be of type dict".format(arg=arg))
+                raise TypeError(f"{arg} must be of type dict")
 
         for key, value in kwargs.items():
             self.metadata[key] = str(value)
@@ -239,7 +239,7 @@ class ProfileMixin:
         ns: Namespace,
         key: Optional[str] = None,
         value: Optional[Union[str, int, float, bool, Path]] = None,
-        **kw
+        **kw,
     ):
         r"""
         add_profiles(self, ns: Namespace, key: Optional[str] = None, value: Optional[str, int, float, bool, Path] = None, **kw)
@@ -318,7 +318,7 @@ class ProfileMixin:
         max_wall_time: int = None,
         min_memory: int = None,
         project: str = None,
-        queue: str = None
+        queue: str = None,
     ):
         """Add Globus profile(s).
 
@@ -387,7 +387,7 @@ class ProfileMixin:
         when_to_transfer_output: str = None,
         condor_collector: str = None,
         grid_resource: str = None,
-        cream_attributes: str = None
+        cream_attributes: str = None,
     ):
         """Add Condor profile(s).
 
@@ -532,7 +532,7 @@ class ProfileMixin:
         label: str = None,
         pegasus_lite_env_source: Union[str, Path] = None,
         SSH_PRIVATE_KEY: str = None,
-        relative_submit_dir: Union[str, Path] = None
+        relative_submit_dir: Union[str, Path] = None,
     ):
         """Add Pegasus profile(s).
 
@@ -646,7 +646,7 @@ class ProfileMixin:
         *,
         execution_site: str = None,
         pfn: Union[str, Path] = None,
-        grid_job_type: str = None
+        grid_job_type: str = None,
     ):
         """Add Selector(s).
 
@@ -695,7 +695,7 @@ class ProfileMixin:
         max_post: str = None,
         max_jobs: str = None,
         max_idle: str = None,
-        post_scope: str = None
+        post_scope: str = None,
     ):
         """Add Dagman profile(s).
 

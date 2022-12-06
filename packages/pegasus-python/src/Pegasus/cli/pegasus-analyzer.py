@@ -602,7 +602,7 @@ def find_file(input_dir, file_type):
         if file.endswith(file_type):
             return os.path.join(input_dir, file)
 
-    logger.error("could not find any {} file in {}".format(file_type, input_dir))
+    logger.error(f"could not find any {file_type} file in {input_dir}")
     sys.exit(1)
 
 
@@ -1136,7 +1136,7 @@ def print_job_info(job):
         user_cmd = " %s -s " % (prog_base)
         if output_dir is not None:
             user_cmd = user_cmd + " --output-dir %s" % (output_dir)
-        print_console("{} -f {}".format(user_cmd, jobs[job].dag_path))
+        print_console(f"{user_cmd} -f {jobs[job].dag_path}")
         print_console()
         return
 
@@ -1743,7 +1743,7 @@ fi
                 if len(my_job.initial_dir):
                     # Add the initial dir to all files to be copied
                     my_file = os.path.join(my_job.initial_dir, my_file)
-                debug_script.write("cp {} {}\n".format(my_file, debug_dir))
+                debug_script.write(f"cp {my_file} {debug_dir}\n")
 
         # Extra newline before executing the job
         debug_script.write("\n")

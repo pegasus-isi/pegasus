@@ -84,7 +84,7 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.get_context(
-            "/ensembles/{}/triggers".format(ensemble), pre_callable=self.pre_callable,
+            f"/ensembles/{ensemble}/triggers", pre_callable=self.pre_callable,
         )
 
         assert rv.status_code == 200
@@ -245,7 +245,7 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.post_context(
-            "/ensembles/{}/triggers/cron".format(ensemble),
+            f"/ensembles/{ensemble}/triggers/cron",
             pre_callable=self.pre_callable,
             data=request_data,
         )
@@ -460,7 +460,7 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.post_context(
-            "/ensembles/{}/triggers/file_pattern".format(ensemble),
+            f"/ensembles/{ensemble}/triggers/file_pattern",
             pre_callable=self.pre_callable,
             data=request_data,
         )
@@ -514,8 +514,7 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.delete_context(
-            "/ensembles/{}/triggers/{}".format(ensemble, trigger),
-            pre_callable=self.pre_callable,
+            f"/ensembles/{ensemble}/triggers/{trigger}", pre_callable=self.pre_callable,
         )
 
         assert rv.status_code == status_code

@@ -99,9 +99,7 @@ class BaseResource:
     def prefixed_fields(self):
         if self._prefixed_fields is None:
             self._prefixed_fields = {field for field in self.fields}
-            self._prefixed_fields |= {
-                "{}.{}".format(self.prefix, field) for field in self.fields
-            }
+            self._prefixed_fields |= {f"{self.prefix}.{field}" for field in self.fields}
 
         return self._prefixed_fields
 

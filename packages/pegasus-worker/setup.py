@@ -9,7 +9,7 @@ home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 install_requires = [
     "six>=1.9.0",
     "boto3>1.12",
-    "globus-sdk>=3.5.0",
+    "globus-sdk>=3.5.0;python_version>'3.5'",
 ]
 
 
@@ -59,6 +59,7 @@ setup(
         "Operating System :: Unix",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",

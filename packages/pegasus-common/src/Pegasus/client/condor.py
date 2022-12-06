@@ -1,20 +1,22 @@
+import logging
 import subprocess
 import threading
-import logging
 from functools import partial
-from typing import BinaryIO, Dict, List, Union
+from typing import BinaryIO
+
 from Pegasus.client import _client as cli
 
 _logger = logging.getLogger("Pegasus.client.status")
 _logger.propagate = False
 
+
 def _handle_stream(
-        proc: subprocess.Popen,
-        stream: BinaryIO,
-        dst: list,
-        logger: logging.Logger = None,
-        log_lvl: int = None,
-    ):
+    proc: subprocess.Popen,
+    stream: BinaryIO,
+    dst: list,
+    logger: logging.Logger = None,
+    log_lvl: int = None,
+):
     """Handler for processing and logging byte streams from subprocess.Popen.
     :param proc: subprocess.Popen object used to run a pegasus CLI tool
     :type proc: subprocess.Popen
@@ -31,16 +33,16 @@ def _handle_stream(
     def _log(logger: logging.Logger, log_lvl: int, msg: bytes):
         if logger:
             log_func = {
-                    10: logger.debug,
-                    20: logger.info,
-                    30: logger.warning,
-                    40: logger.error,
-                    50: logger.critical,
-                }
+                10: logger.debug,
+                20: logger.info,
+                30: logger.warning,
+                40: logger.error,
+                50: logger.critical,
+            }
             try:
-                    log_func[log_lvl](msg.decode().strip())
+                log_func[log_lvl](msg.decode().strip())
             except KeyError:
-                    raise ValueError("invalid log_lvl: {}".format(log_lvl))
+                raise ValueError(f"invalid log_lvl: {log_lvl}")
 
     log = partial(_log, logger, log_lvl)
 
@@ -48,15 +50,16 @@ def _handle_stream(
         line = stream.readline()
 
         if line:
-                dst.append(line)
-                log(line)
+            dst.append(line)
+            log(line)
 
         # Has proc terminated? If so, collect remaining output and exit.
         if proc.poll() is not None:
-                for l in stream.readlines():
-                    dst.append(l)
-                    log(l)
-                break
+            for l in stream.readlines():
+                dst.append(l)
+                log(l)
+            break
+
 
 def _exec(cmd, stream_stdout=True, stream_stderr=False):
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -64,30 +67,24 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
     # out is not synchronized, don't access until after stdout_handler completes
     out = []
     stdout_handler = threading.Thread(
-            target=_handle_stream,
-            args=(
-                proc,
-                proc.stdout,
-                out,
-                _logger if stream_stderr else None,
-                logging.INFO
-            ),
-        )
+        target=_handle_stream,
+        args=(proc, proc.stdout, out, _logger if stream_stderr else None, logging.INFO),
+    )
     stream_handlers.append(stdout_handler)
     stdout_handler.start()
 
     # err is not synchronized, don't access until after stderr_handler completes
     err = []
     stderr_handler = threading.Thread(
-            target=_handle_stream,
-            args=(
-                proc,
-                proc.stderr,
-                err,
-                _logger if stream_stderr else None,
-                logging.ERROR,
-            ),
-        )
+        target=_handle_stream,
+        args=(
+            proc,
+            proc.stderr,
+            err,
+            _logger if stream_stderr else None,
+            logging.ERROR,
+        ),
+    )
     stream_handlers.append(stderr_handler)
     stderr_handler.start()
 
@@ -97,10 +94,11 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
     result = cli.Result(cmd, exit_code, b"".join(out), b"".join(err))
     return result
 
+
 def _q(cmd):
     """Returns the output of condor_q cmd in JSON format"""
 
     if not cmd:
         raise ValueError("cmd is required")
-    rv = _exec(cmd=cmd)  
+    rv = _exec(cmd=cmd)
     return rv.json

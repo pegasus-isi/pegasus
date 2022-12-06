@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 ##
 #  Copyright 2007-2011 University Of Southern California
 #
@@ -19,8 +17,6 @@
 """Provides common functions used by all workflow programs."""
 
 
-from __future__ import print_function
-
 import logging
 import os
 import re
@@ -30,7 +26,6 @@ import tempfile
 import threading
 import time
 
-import six
 from six.moves.builtins import int
 
 # Module variables
@@ -41,8 +36,7 @@ def force_str(s):
     """
     force s to be str - should work both in py2 and py3
     """
-    if six.PY3:
-        return s.decode()
+    return s.decode()
     return s
 
 
@@ -55,7 +49,7 @@ def backticks(cmd_line):
     )
 
 
-class TimedCommand(object):
+class TimedCommand:
     """ Provides a shell callout with a timeout """
 
     def __init__(
@@ -88,8 +82,8 @@ class TimedCommand(object):
 
             # custom environment for the subshell
             sub_env = os.environ.copy()
-            for key, value in six.iteritems(self._env_overrides):
-                logger.debug("ENV override: %s = %s" % (key, value))
+            for key, value in self._env_overrides.items():
+                logger.debug("ENV override: {} = {}".format(key, value))
                 sub_env[key] = value
 
             self._process = subprocess.Popen(
@@ -175,7 +169,7 @@ class TimedCommand(object):
         return self._duration
 
 
-class Tools(object):
+class Tools:
     """
     Singleton for detecting and maintaining tools we depend on
     """
@@ -261,7 +255,7 @@ class Tools(object):
                     self._info[executable]["version"] = version
 
                 # if possible, break up version into major, minor, patch
-                re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
+                re_version = re.compile(r"([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
                 result = re_version.search(version)
                 if result:
                     self._info[executable]["version_major"] = int(result.group(1))

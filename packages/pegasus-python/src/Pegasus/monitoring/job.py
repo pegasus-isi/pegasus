@@ -106,7 +106,7 @@ class IntegrityMetric:
             self.failed += other.failed
             self.duration += other.duration
             return
-        raise KeyError("Objects not compatible {} {}".format(self, other))
+        raise KeyError(f"Objects not compatible {self} {other}")
 
 
 class Job:
@@ -971,9 +971,7 @@ class Job:
 
         # sanity check
         if job_type == "unknown" or job_type == "unassigned":
-            logger.warning(
-                "Job {} has unknown type {}".format(self._exec_job_id, job_type)
-            )
+            logger.warning(f"Job {self._exec_job_id} has unknown type {job_type}")
 
         # if error_count > 0:
         #  print kwargs

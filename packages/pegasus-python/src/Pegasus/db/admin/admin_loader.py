@@ -170,7 +170,7 @@ def get_class(version, db):
     :param db: DB session object
     :return: a database version class
     """
-    module = "Pegasus.db.admin.versions.v{}".format(version)
+    module = f"Pegasus.db.admin.versions.v{version}"
     mod = __import__(module, fromlist=["Version"])
     klass = getattr(mod, "Version")
     return klass(db)
@@ -221,7 +221,7 @@ def db_create(
         raise DBAdminError(e, db=db, given_version=pegasus_version)
 
     if verbose and v > 0:
-        print("Database has been updated: {}".format(dburi))
+        print(f"Database has been updated: {dburi}")
 
     print_db_version(print_version, v if v > 0 else CURRENT_DB_VERSION, db, parse=True)
 
@@ -316,15 +316,15 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
             max_range = _get_max_minor_version(i)
 
         for j in range(max_range, 0, -1):
-            k = get_class("{}-{}".format(i, j), db)
+            k = get_class(f"{i}-{j}", db)
             k.downgrade(force)
-            actual_version = float("{}.{}".format(i, j - 1))
+            actual_version = float(f"{i}.{j - 1}")
             _update_version(db, actual_version)
 
         if i > version:
             k = get_class(i, db)
             k.downgrade(force)
-            actual_version = float("{}.{}".format(i - 1, _get_max_minor_version(i - 1)))
+            actual_version = float(f"{i - 1}.{_get_max_minor_version(i - 1)}")
             _update_version(db, actual_version)
 
         if actual_version == version:
@@ -344,7 +344,7 @@ def parse_pegasus_version(pegasus_version=None):
         if pegasus_version in COMPATIBILITY:
             return COMPATIBILITY[pegasus_version]
         raise DBAdminError(
-            "Version does not exist: {}.".format(pegasus_version),
+            f"Version does not exist: {pegasus_version}.",
             given_version=pegasus_version,
         )
     return CURRENT_DB_VERSION
@@ -398,7 +398,7 @@ def all_workflows_db(
     print("Verifying and %s workflow databases:" % msg[0])
     i = counts["running"]
     for dburi in db_urls:
-        log.debug("{} '{}'...".format(msg[0], dburi))
+        log.debug(f"{msg[0]} '{dburi}'...")
         i += 1
         sys.stdout.write("\r%d/%d" % (i, counts["total"]))
         sys.stdout.flush()
@@ -469,7 +469,7 @@ def print_db_version(print_version, db_version, db, parse=True):
     """
     if print_version:
         current_version = _db_current_version(db_version, db, parse=True)
-        print("Database version: '{}' ({})".format(current_version, db.get_bind().url))
+        print(f"Database version: '{current_version}' ({db.get_bind().url})")
 
 
 def get_version(db, sanity_check=True):
@@ -538,7 +538,7 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
     if current_version == version:
         try:
             _verify_tables(db, current_version)
-            log.debug("Database is already updated: {}".format(db.get_bind().url))
+            log.debug(f"Database is already updated: {db.get_bind().url}")
             return 0
         except DBAdminError:
             current_version = 0
@@ -571,16 +571,16 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
 
         for j in range(1, max_range + 1):
             try:
-                k = get_class("{}-{}".format(i, j), db)
+                k = get_class(f"{i}-{j}", db)
                 k.update(force=force)
-                v = float("{}.{}".format(i, j))
+                v = float(f"{i}.{j}")
             except ImportError:
                 break
 
     if v > current_version:
         _update_version(db, v)
         if verbose:
-            print("Database has been updated: {}".format(db.get_bind().url))
+            print(f"Database has been updated: {db.get_bind().url}")
     else:
         v = 0
     return v
@@ -606,7 +606,7 @@ def _backup_db(db):
     if url.drivername == "sqlite" and str(url).lower() != "sqlite://":
         dest_file = "{}-{}".format(url.database, time.strftime("%Y%m%d-%H%M%S"))
         shutil.copy(url.database, dest_file)
-        log.debug("Created backup database file at: {}".format(dest_file))
+        log.debug(f"Created backup database file at: {dest_file}")
 
     elif url.drivername == "mysql" or url.drivername == "postgresql":
         # Backup MySQL database
@@ -616,10 +616,10 @@ def _backup_db(db):
             command = (
                 "mysqldump"
                 if not url.password
-                else "export MYSQL_PWD={}; mysqldump".format(url.password)
+                else f"export MYSQL_PWD={url.password}; mysqldump"
             )
             if url.username:
-                command += " -u {}".format(url.username)
+                command += f" -u {url.username}"
 
         # Backup PostgreSQL database
         elif url.drivername == "postgresql":
@@ -628,16 +628,16 @@ def _backup_db(db):
             command = (
                 "pg_dump"
                 if not url.password
-                else "export PGPASSWORD={}; pg_dump".format(url.password)
+                else f"export PGPASSWORD={url.password}; pg_dump"
             )
             if url.username:
-                command += " -U {}".format(url.username)
+                command += f" -U {url.username}"
 
         if url.host:
-            command += " -h {}".format(url.host)
+            command += f" -h {url.host}"
 
         dest_file = "{}-{}.sql".format(url.database, time.strftime("%Y%m%d-%H%M%S"))
-        command += " {} > {}".format(url.database, dest_file)
+        command += f" {url.database} > {dest_file}"
         child = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
@@ -646,7 +646,7 @@ def _backup_db(db):
             if "Error 2013" in err:
                 err += "\nPlease, refer to the pegasus-db-admin troubleshooting for possible ways to fix this error."
             raise DBAdminError(err, db=db)
-        log.debug("Created backup database file at: {}".format(dest_file))
+        log.debug(f"Created backup database file at: {dest_file}")
 
 
 def _verify_tables(db, db_version=None):

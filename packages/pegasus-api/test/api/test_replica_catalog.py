@@ -64,7 +64,7 @@ class TestFile:
         with pytest.raises(TypeError) as e:
             File(lfn)
 
-        assert "invalid lfn: {lfn}".format(lfn=lfn) in str(e)
+        assert f"invalid lfn: {lfn}" in str(e)
 
     @pytest.mark.parametrize(
         "lfn,size,expected",
@@ -408,7 +408,7 @@ class TestReplicaCatalog:
         try:
             expected_file.unlink()
         except FileNotFoundError:
-            pytest.fail("could not find {}".format(expected_file))
+            pytest.fail(f"could not find {expected_file}")
 
     def test_replica_catalog_ordering_on_yml_write(self):
         ReplicaCatalog().write()

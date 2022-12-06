@@ -55,20 +55,18 @@ class TriggerManager(threading.Thread):
                 self.trigger_dao = Triggers(session)
                 self.ensemble_dao = Ensembles(session)
                 triggers = self.trigger_dao.list_triggers()
-                self.log.info("processing {} triggers".format(len(triggers)))
+                self.log.info(f"processing {len(triggers)} triggers")
                 for t in triggers:
                     t_name = TriggerManager.get_tname(t)
                     if t.state == "READY":
                         self.start_trigger(t)
                     elif t.state == "RUNNING" and t_name not in self.running:
                         # restart
-                        self.log.debug("{} not in memory, restarting it".format(t_name))
+                        self.log.debug(f"{t_name} not in memory, restarting it")
                         self.start_trigger(t)
                     elif t.state == "RUNNING" and not self.running[t_name].is_alive():
                         # exited
-                        self.log.debug(
-                            "{} exited, removing references to it".format(t_name)
-                        )
+                        self.log.debug(f"{t_name} exited, removing references to it")
                         self.stop_trigger(t)
                     elif t.state == "STOPPED":
                         self.stop_trigger(t)
@@ -85,7 +83,7 @@ class TriggerManager(threading.Thread):
         """
 
         trigger_name = TriggerManager.get_tname(trigger)
-        self.log.debug("starting {}".format(trigger_name))
+        self.log.debug(f"starting {trigger_name}")
 
         workflow = json.loads(trigger.workflow)
         required_args = {
@@ -105,9 +103,7 @@ class TriggerManager(threading.Thread):
             t = FilePatternTrigger(**required_args, **trigger_specific_kwargs)
 
         else:
-            raise NotImplementedError(
-                "unsupported trigger type: {}".format(trigger.type)
-            )
+            raise NotImplementedError(f"unsupported trigger type: {trigger.type}")
 
         # keep ref to trigger thread
         self.running[trigger_name] = t
@@ -131,7 +127,7 @@ class TriggerManager(threading.Thread):
         """
         # using reference to trigger, tell trigger to shutdown
         target_trigger = TriggerManager.get_tname(trigger)
-        self.log.debug("stopping {}".format(target_trigger))
+        self.log.debug(f"stopping {target_trigger}")
         self.running[target_trigger].shutdown()
         del self.running[target_trigger]
 
@@ -165,7 +161,7 @@ class TriggerThread(threading.Thread):
 
         threading.Thread.__init__(self, name=(ensemble_id, trigger))
 
-        self.log = logging.getLogger("trigger.{}::{}".format(ensemble_id, trigger))
+        self.log = logging.getLogger(f"trigger.{ensemble_id}::{trigger}")
         self.ensemble_id = ensemble_id
         self.ensemble = ensemble
         self.trigger = trigger
@@ -178,7 +174,7 @@ class TriggerThread(threading.Thread):
 
     def shutdown(self):
         """Gracefully shutdown this thread by setting the stop_event."""
-        self.log.info("shutting down".format(self.name))
+        self.log.info(f"shutting down")
         self.stop_event.set()
 
 
@@ -194,7 +190,7 @@ class CronTrigger(TriggerThread):
         workflow_script: str,
         workflow_args: Optional[List[str]] = None,
         timeout: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
 
         TriggerThread.__init__(
@@ -211,7 +207,7 @@ class CronTrigger(TriggerThread):
         self.elapsed = 0
 
     def __repr__(self):
-        return "<CronTrigger {} interval={}s>".format(self.name, self.interval)
+        return f"<CronTrigger {self.name} interval={self.interval}s>"
 
     def run(self):
         """CronTrigger main loop."""
@@ -233,9 +229,9 @@ class CronTrigger(TriggerThread):
                 cp = subprocess.run(cmd, stderr=subprocess.PIPE)
 
                 if cp.returncode == 0:
-                    self.log.info("executed cmd: {}".format(cmd))
+                    self.log.info(f"executed cmd: {cmd}")
                 else:
-                    self.log.error("encountered an error executing cmd: {}".format(cmd))
+                    self.log.error(f"encountered an error executing cmd: {cmd}")
                     stderr = (
                         cp.stderr.decode()
                         if isinstance(cp.stderr, bytes)
@@ -272,7 +268,7 @@ class FilePatternTrigger(TriggerThread):
         workflow_script: str,
         workflow_args: Optional[List[str]] = None,
         timeout: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         TriggerThread.__init__(
             self,
@@ -319,11 +315,9 @@ class FilePatternTrigger(TriggerThread):
                     cp = subprocess.run(cmd, stderr=subprocess.PIPE)
 
                     if cp.returncode == 0:
-                        self.log.info("executed cmd: {}".format(cmd))
+                        self.log.info(f"executed cmd: {cmd}")
                     else:
-                        self.log.error(
-                            "encountered error executing cmd: {}".format(cmd)
-                        )
+                        self.log.error(f"encountered error executing cmd: {cmd}")
                         stderr = (
                             cp.stderr.decode()
                             if isinstance(cp.stderr, bytes)

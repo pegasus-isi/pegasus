@@ -449,7 +449,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.checksum = checksum
 
     def _get_key(self):
-        return "{}::{}::{}".format(self.namespace, self.name, self.version)
+        return f"{self.namespace}::{self.name}::{self.version}"
 
     @_chained
     def add_sites(self, *transformation_sites: TransformationSite):
@@ -598,9 +598,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     def __eq__(self, other):
         if isinstance(other, Transformation):
             return self._get_key() == other._get_key()
-        raise ValueError(
-            "Transformation cannot be compared with {}".format(type(other))
-        )
+        raise ValueError(f"Transformation cannot be compared with {type(other)}")
 
 
 class TransformationCatalog(Writable):

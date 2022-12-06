@@ -41,16 +41,16 @@ def get_bin(name, exe):
 
     if HOME is not None:
         if not os.path.isdir(HOME):
-            raise EMError("{} is not a directory: {}".format(name, HOME))
+            raise EMError(f"{name} is not a directory: {HOME}")
         BIN = os.path.join(HOME, "bin")
         if not os.path.isdir(BIN):
-            raise EMError("{}/bin is not a directory: {}".format(name, BIN))
+            raise EMError(f"{name}/bin is not a directory: {BIN}")
         exepath = os.path.join(BIN, exe)
 
     exepath = exepath or pathfind(exe)
 
     if not os.path.isfile(exepath):
-        raise EMError("{} not found: {}".format(exe, exepath))
+        raise EMError(f"{exe} not found: {exepath}")
 
     BIN = os.path.dirname(exepath)
 
@@ -264,9 +264,7 @@ class WorkflowProcessor:
 
         logfile = self.workflow.get_logfile()
 
-        runscript(
-            "pegasus-run {} >>{} 2>&1".format(submitdir, logfile), env=get_script_env()
-        )
+        runscript(f"pegasus-run {submitdir} >>{logfile} 2>&1", env=get_script_env())
 
     def get_dashboard(self):
         "Get the dashboard record for the workflow"

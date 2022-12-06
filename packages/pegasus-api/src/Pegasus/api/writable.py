@@ -26,7 +26,7 @@ class _CustomEncoder(json.JSONEncoder):
             if callable(obj.__json__):
                 return obj.__json__()
             else:
-                raise TypeError("__json__ is not callable for {}".format(obj))
+                raise TypeError(f"__json__ is not callable for {obj}")
 
         return json.JSONEncoder.default(self, obj)
 
@@ -41,9 +41,7 @@ def _filter_out_nones(_dict):
     :rtype: dict
     """
     if not isinstance(_dict, dict):
-        raise TypeError(
-            "invalid _dict: {}; _dict must be of type {}".format(_dict, type(dict))
-        )
+        raise TypeError(f"invalid _dict: {_dict}; _dict must be of type {type(dict)}")
 
     return OrderedDict([(k, v) for k, v in _dict.items() if v is not None])
 
@@ -183,6 +181,4 @@ class Writable:
                     self._path = str(Path(file.name).resolve())
 
         else:
-            raise TypeError(
-                "{file} must be of type str or file object".format(file=file)
-            )
+            raise TypeError(f"{file} must be of type str or file object")

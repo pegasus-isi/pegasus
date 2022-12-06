@@ -674,9 +674,7 @@ def check_timeperiod(option, opt, value):
     try:
         return timeToSec(value)
     except ValueError:
-        raise OptionValueError(
-            "option {}: invalid time period value: {!r}".format(opt, value)
-        )
+        raise OptionValueError(f"option {opt}: invalid time period value: {value!r}")
 
 
 _BPAT = re.compile(r"(\d+)\s*(\S+)")
@@ -869,7 +867,7 @@ def process_kvp(option, all={}, _bool={}, type="AMQP"):
         raise ValueError("argument '%s' not in form name=value" % option)
     key, value = parts
     if all and (key not in all):
-        raise ValueError("unknown {} option '{}'.".format(type, key))
+        raise ValueError(f"unknown {type} option '{key}'.")
     if key in _bool:
         value = as_bool(value)
     return key, value

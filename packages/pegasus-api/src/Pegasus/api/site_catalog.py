@@ -197,7 +197,7 @@ class Directory:
 
         if not path.is_absolute():
             raise ValueError(
-                "invalid path: {}, path must be given as an absolute path".format(path)
+                f"invalid path: {path}, path must be given as an absolute path"
             )
 
         self.path = str(path)
@@ -439,9 +439,7 @@ class Site(ProfileMixin):
         """
         for g in grids:
             if not isinstance(g, Grid):
-                raise TypeError(
-                    "invalid grid: {grid}; grid must be of type Grid".format(grid=g)
-                )
+                raise TypeError(f"invalid grid: {g}; grid must be of type Grid")
 
             self.grids.append(g)
 
@@ -520,9 +518,7 @@ class SiteCatalog(Writable):
         """
         for s in sites:
             if not isinstance(s, Site):
-                raise TypeError(
-                    "invalid site: {site}; site must be of type Site".format(site=s)
-                )
+                raise TypeError(f"invalid site: {s}; site must be of type Site")
 
             if s.name in self.sites:
                 raise DuplicateError(

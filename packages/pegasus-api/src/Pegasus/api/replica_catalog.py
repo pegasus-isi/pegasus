@@ -28,7 +28,7 @@ class _PFN:
         return hash((self.site, self.pfn))
 
     def __repr__(self):
-        return "<_PFN site: {}, pfn: {}>".format(self.site, self.pfn)
+        return f"<_PFN site: {self.site}, pfn: {self.pfn}>"
 
     def __json__(self):
         return OrderedDict([("site", self.site), ("pfn", self.pfn)])
@@ -54,9 +54,7 @@ class File(MetadataMixin):
         :type size: int
         """
         if not isinstance(lfn, str):
-            raise TypeError(
-                "invalid lfn: {lfn}; lfn must be of type str".format(lfn=lfn)
-            )
+            raise TypeError(f"invalid lfn: {lfn}; lfn must be of type str")
 
         self.metadata = OrderedDict()
         self.lfn = lfn
@@ -76,7 +74,7 @@ class File(MetadataMixin):
         return False
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, self.lfn)
+        return f"<{self.__class__.__name__} {self.lfn}>"
 
     def __json__(self):
         return _filter_out_nones(
@@ -196,7 +194,7 @@ class ReplicaCatalog(Writable):
         # restricting pattern to single pfn (may be relaxed in future release)
         if (pattern, True) in self.entries:
             raise DuplicateError(
-                "Pattern: {} already exists in this replica catalog".format(pattern)
+                f"Pattern: {pattern} already exists in this replica catalog"
             )
 
         # handle Path obj if given for pfn

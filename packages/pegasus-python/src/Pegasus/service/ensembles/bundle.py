@@ -52,9 +52,7 @@ class Bundle:
             return
 
         if not self.contains(filename) and not os.path.isfile(filename):
-            raise BundleException(
-                "Invalid {}: No such file: {}".format(propname, filename)
-            )
+            raise BundleException(f"Invalid {propname}: No such file: {filename}")
 
     def verify(self):
         # Make sure the dax property is set

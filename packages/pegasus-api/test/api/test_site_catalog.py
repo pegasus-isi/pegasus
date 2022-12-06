@@ -579,7 +579,7 @@ class TestSiteCatalog:
         try:
             expected_file.unlink()
         except FileNotFoundError:
-            pytest.fail("could not find {}".format(expected_file))
+            pytest.fail(f"could not find {expected_file}")
 
     def test_site_catalog_key_ordering_on_yml_write(self):
         SiteCatalog().write()

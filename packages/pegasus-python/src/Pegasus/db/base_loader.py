@@ -21,9 +21,7 @@ class BaseLoader:
         """Will be overridden by subclasses to take
         parameters specific to their function.
         """
-        self.log = logging.getLogger(
-            "{}.{}".format(self.__module__, self.__class__.__name__)
-        )
+        self.log = logging.getLogger(f"{self.__module__}.{self.__class__.__name__}")
         self.dburi = dburi
 
         # PM-898 all props passed should have pegasus prefix stripped off
