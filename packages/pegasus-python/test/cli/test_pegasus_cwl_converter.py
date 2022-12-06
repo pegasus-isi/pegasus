@@ -24,7 +24,7 @@ get_basename = cwl_converter.get_basename
 get_name = cwl_converter.get_name
 load_tr_specs = cwl_converter.load_tr_specs
 load_wf_inputs = cwl_converter.load_wf_inputs
-main = cwl_converter.main
+main = cwl_converter._main
 parse_args = cwl_converter.parse_args
 
 
@@ -1075,9 +1075,7 @@ def test_main(mocker):
         )
         tr_spec_file.seek(0)
 
-        mocker.patch("Pegasus.cli.pegasus-cwl-converter.parse_args", return_value=args)
-
-        assert main() == 0
+        assert main(args) == 0
 
     with open(converted_wf_file_path) as f:
         result = yaml.load(f)

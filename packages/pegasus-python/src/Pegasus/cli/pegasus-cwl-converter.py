@@ -568,10 +568,7 @@ def build_pegasus_wf(
     return wf
 
 
-def main():
-    args = parse_args()
-    setup_logger(args.debug)
-
+def _main(args):
     cwl_wf = cwl.load_document(args.cwl_workflow_file_path)
     log.info(f"Loaded cwl workflow: {args.cwl_workflow_file_path}")
 
@@ -592,6 +589,13 @@ def main():
     log.info(f"Workflow written to {args.output_file_path}")
 
     return 0
+
+
+def main():
+    args = parse_args()
+    setup_logger(args.debug)
+
+    _main(args)
 
 
 if __name__ == "__main__":
