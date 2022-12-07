@@ -578,12 +578,9 @@ def build_pegasus_wf(
     return wf
 
 
-def main():
-    args = parse_args()
-    setup_logger(args.debug)
-
+def _main(args):
     cwl_wf = cwl.load_document(args.cwl_workflow_file_path)
-    log.info("Loaded cwl workflow: {}".format(args.cwl_workflow_file_path))
+    log.info(f"Loaded cwl workflow: {args.cwl_workflow_file_path}")
 
     wf_inputs = load_wf_inputs(args.workflow_inputs_file_path)
     tr_specs = load_tr_specs(args.transformation_spec_file_path)
@@ -599,9 +596,16 @@ def main():
     wf.add_replica_catalog(rc)
 
     wf.write(file=args.output_file_path)
-    log.info("Workflow written to {}".format(args.output_file_path))
+    log.info(f"Workflow written to {args.output_file_path}")
 
     return 0
+
+
+def main():
+    args = parse_args()
+    setup_logger(args.debug)
+
+    _main(args)
 
 
 if __name__ == "__main__":

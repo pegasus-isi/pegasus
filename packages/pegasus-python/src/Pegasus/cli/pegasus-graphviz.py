@@ -552,7 +552,8 @@ class emit_dot:
 
         # Render edges
         for p in nodes:
-            for c in p.children:
+            children = sorted(p.children, key=lambda n: n.id)
+            for c in children:
                 c.renderEdge(self, p)
 
         self.out.write("}\n")
