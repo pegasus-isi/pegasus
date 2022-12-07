@@ -1,5 +1,6 @@
 import datetime
-import getpass
+import os
+import pwd
 import json
 
 import pytest
@@ -15,7 +16,7 @@ from Pegasus.service.ensembles.views import to_seconds
 class NoAuthFlaskTestCase:
     @pytest.fixture(autouse=True)
     def init(self, emapp):
-        self.user = getpass.getuser()
+        self.user = pwd.getpwuid(os.getuid()).pw_name
 
     @staticmethod
     def pre_callable():
@@ -37,7 +38,7 @@ class NoAuthFlaskTestCase:
                 state="ACTIVE",
                 max_running=1,
                 max_planning=1,
-                username=getpass.getuser(),
+                username=pwd.getpwuid(os.getuid()).pw_name,
             )
         )
 
