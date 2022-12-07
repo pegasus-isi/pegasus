@@ -10,7 +10,7 @@ from Pegasus.tools import worker_utils as utils
 
 logging.basicConfig(level=logging.DEBUG)
 
-PEGASUS_LOCATION=utils.backticks("which pegasus-keg")
+PEGASUS_LOCATION=utils.backticks("which pegasus-keg").strip()
 
 
 # --- Work Dir Setup -----------------------------------------------------------
