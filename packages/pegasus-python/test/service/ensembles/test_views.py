@@ -1,7 +1,7 @@
 import datetime
+import json
 import os
 import pwd
-import json
 
 import pytest
 from flask import g
