@@ -6,10 +6,11 @@ from pathlib import Path
 from datetime import datetime
 
 from Pegasus.api import *
+from Pegasus.tools import worker_utils as utils
 
 logging.basicConfig(level=logging.DEBUG)
 
-PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
+PEGASUS_LOCATION=utils.backticks("which pegasus-keg").strip()
 
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-5.0-" + datetime.now().strftime("%s")
