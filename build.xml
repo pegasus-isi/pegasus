@@ -791,13 +791,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="test-integrity" depends="dist" description="Run integrity unit tests">
-    <exec executable="./test.sh" dir="test/unit/integrity" failonerror="true">
-        <arg line="${dist.bin}"/>
-    </exec>
-  </target>
-
-  <target name="test" depends="dist,test-python,test-kickstart,test-pmc,test-transfer,test-integrity,test-java" description="Run all unit tests"/>
+  <target name="test" depends="dist,test-python,test-kickstart,test-pmc,test-transfer,test-java" description="Run all unit tests"/>
 
   <target name="test-python" description="Execute python unit tests">
     <exec executable="tox" dir="packages/pegasus-common" failonerror="true">

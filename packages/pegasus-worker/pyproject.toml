@@ -43,6 +43,12 @@ exclude       = '''
 '''
 
 
+[tool.pytest.ini_options]
+
+"resource-path.directory-name-tests" = "test"
+"resource-path.directory-name-test-resources" = "resources"
+
+
 [build-system]
 
 requires      = ["setuptools>=44.0.0", "wheel"]
