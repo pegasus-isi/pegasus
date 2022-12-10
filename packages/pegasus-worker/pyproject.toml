@@ -24,7 +24,7 @@ skip              = [
 
 [tool.black]
 
-target-version = ["py27"]
+target-version = ["py35"]
 
 exclude       = '''
 /(
