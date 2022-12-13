@@ -88,16 +88,13 @@
   <echo>Python library subdir: ${dist.python-lib.subdir}</echo>
   <property name="dist.python-lib" location="${dist.dir}/${dist.python-lib.subdir}"/>
 
-  <macrodef name="package-binary">
+  <macrodef name="compile-python">
     <attribute name="name"/>
     <sequential>
-      <!-- creates the binary tarball -->
-      <exec executable="sh" dir="dist" failonerror="true">
-        <arg value="-c"/>
-        <arg value="tar --exclude=\.git --exclude=\.gitignore --exclude=pegasus-python-wrapper -cf @{name}.tar pegasus-${pegasus.version}"/>
+      <mkdir dir="${dist.python-lib}"/>
+      <exec executable="${dist.python}" dir="packages/@{name}" failonerror="true">
+        <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
       </exec>
-      <gzip src="dist/@{name}.tar" destfile="dist/@{name}.tar.gz"/>
-      <delete file="dist/@{name}.tar"/>
     </sequential>
   </macrodef>
 
@@ -110,7 +107,20 @@
         <arg line="prefix=${dist.dir}"/>
         <arg line="datadir=${dist.data}"/>
         <arg line="install"/>
-        </exec>
+      </exec>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="package-binary">
+    <attribute name="name"/>
+    <sequential>
+      <!-- creates the binary tarball -->
+      <exec executable="sh" dir="dist" failonerror="true">
+        <arg value="-c"/>
+        <arg value="tar --exclude=\.git --exclude=\.gitignore --exclude=pegasus-python-wrapper -cf @{name}.tar pegasus-${pegasus.version}"/>
+      </exec>
+      <gzip src="dist/@{name}.tar" destfile="dist/@{name}.tar.gz"/>
+      <delete file="dist/@{name}.tar"/>
     </sequential>
   </macrodef>
 
@@ -245,21 +255,23 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </fail>
   </target>
 
-  <target name="compile-python" depends="setup">
-    <mkdir dir="${dist.python-lib}"/>
-    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
-      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
-    </exec>
-    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
-      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
-    </exec>
-    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
-      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
-    </exec>
-    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
-      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
-    </exec>
+  <target name="compile-pegasus-common" depends="setup">
+    <compile-python name="pegasus-common"/>
+  </target>
 
+  <target name="compile-pegasus-api" depends="setup">
+    <compile-python name="pegasus-api"/>
+  </target>
+
+  <target name="compile-pegasus-worker" depends="setup">
+    <compile-python name="pegasus-worker"/>
+  </target>
+
+  <target name="compile-pegasus-python" depends="setup">
+    <compile-python name="pegasus-python"/>
+  </target>
+
+  <target name="compile-python" depends="compile-pegasus-common,compile-pegasus-api,compile-pegasus-worker,compile-pegasus-python">
     <!-- Update pegasus-config -->
     <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PEGASUS_VERSION@" value="${pegasus.version}" />
     <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@LIBDIR@" value="${dist.lib.subdir}" />
@@ -355,6 +367,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="compile-pegasus-kickstart" depends="setup" description="Compile Pegasus Kickstart">
     <make-c-tool name="pegasus-kickstart"/>
   </target>
+
   <target name="compile-pegasus-mpi-cluster" depends="setup" description="Compile Pegasus MPI Cluster">
     <make-c-tool name="pegasus-mpi-cluster"/>
   </target>
@@ -622,7 +635,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <include name="RELEASE_NOTES"/>
       </fileset>
     </copy>
-
   </target>
 
   <target name="dist-release" depends="dist-common" description="Build binary release tarball">
@@ -724,16 +736,21 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </junit>
   </target>
 
-  <target name="test-kickstart" depends="compile-c" description="Run kickstart unit tests">
-    <exec executable="/bin/sh" dir="packages/pegasus-kickstart" failonerror="true">
-        <arg line="-c 'make test'"/>
+  <target name="test-kickstart" depends="compile-pegasus-kickstart,compile-pegasus-worker" description="Run kickstart unit tests">
+    <copy file="bin/pegasus-python-wrapper" tofile="${dist.bin}/pegasus-integrity" preservelastmodified="true"/>
+    <chmod perm="0755" type="file" file="${dist.bin}/pegasus-integrity"/>
+    <exec executable="release-tools/update-python-tools" failonerror="true">
+      <arg value="${dist.bin}"/>
+    </exec>
+        <exec executable="${make}" dir="packages/pegasus-kickstart" failonerror="true">
+        <arg line="test"/>
         <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
     </exec>
   </target>
 
-  <target name="test-pmc" description="Run PMC unit tests">
-    <exec executable="/bin/sh" dir="packages/pegasus-mpi-cluster" failonerror="true">
-        <arg line="-c 'make test'"/>
+  <target name="test-pmc" depends="compile-pegasus-mpi-cluster" description="Run PMC unit tests">
+    <exec executable="${make}" dir="packages/pegasus-mpi-cluster" failonerror="true">
+        <arg line="test"/>
     </exec>
   </target>
 
