@@ -374,13 +374,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="compile-c" depends="setup,compile-pegasus-cluster,compile-pegasus-keg,compile-pegasus-kickstart,compile-pegasus-mpi-cluster" description="Compile C tools"/>
 
-  <!-- <target name="compile-pmc" depends="setup" description="Compile Pegasus MPI cluster">
-    <exec executable="${make}" dir="packages/pegasus-mpi-cluster" failonerror="true">
-      <arg line="prefix=${dist.dir}"/>
-      <arg line="install"/>
-    </exec>
-  </target> -->
-
   <target name="compile-r" description="Compile R Pegasus API">
       <mkdir dir="${dist.share}/r"/>
       <exec executable="./setup.sh" dir="packages/pegasus-dax-r/Pegasus" failonerror="true">
