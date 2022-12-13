@@ -510,7 +510,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       scitech-bamboo-apptainer rhel-8 \
-                          ant test-kickstart test-pmc test-transfer test-integrity
+                          ant test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -611,7 +611,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       scitech-bamboo-apptainer ubuntu-18 \
-                          ant test-kickstart test-pmc test-transfer test-integrity
+                          ant test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -712,7 +712,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       scitech-bamboo-apptainer ubuntu-20 \
-                          ant test-kickstart test-pmc test-transfer test-integrity
+                          ant test-kickstart test-pmc test-transfer
               artifactDependencies:
                 - name: pegasus-source
               requirements:
