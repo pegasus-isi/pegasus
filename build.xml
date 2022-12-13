@@ -699,12 +699,18 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="test-java" depends="jar,jar-junit" description="Run java unit tests">
     <!-- Copy required YAML schemas -->
-    <!-- Copied from dist-common, can be replaced by a new, shared targe -->
+    <!-- Copied from dist-common, can be replaced by a new, shared target -->
     <mkdir dir="${dist.share}"/>
     <copy preservelastmodified="true" todir="${dist.share}">
       <fileset dir="share/pegasus" includes="**/*">
         <exclude name=".gitignore"/>
       </fileset>
+    </copy>
+
+    <!-- etc -->
+    <mkdir dir="${dist.etc}"/>
+    <copy preservelastmodified="true" todir="${dist.etc}">
+      <fileset dir="etc" includes="**/*"/>
     </copy>
 
     <mkdir dir="${junitreport.dir}"/>
