@@ -74,7 +74,7 @@ libinterpose.so: interpose.c
 	$(CC) $(CFLAGS) -pthread -shared -fPIC -o libinterpose.so interpose.c -ldl $(LI_LDFLAGS)
 
 version.h:
-	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
+	$(CURDIR)/../../release-tools/getversion --header > $(CURDIR)/version.h
 
 install: $(TARGET)
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin

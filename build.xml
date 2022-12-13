@@ -88,6 +88,32 @@
   <echo>Python library subdir: ${dist.python-lib.subdir}</echo>
   <property name="dist.python-lib" location="${dist.dir}/${dist.python-lib.subdir}"/>
 
+  <macrodef name="package-binary">
+    <attribute name="name"/>
+    <sequential>
+      <!-- creates the binary tarball -->
+      <exec executable="sh" dir="dist" failonerror="true">
+        <arg value="-c"/>
+        <arg value="tar --exclude=\.git --exclude=\.gitignore --exclude=pegasus-python-wrapper -cf @{name}.tar pegasus-${pegasus.version}"/>
+      </exec>
+      <gzip src="dist/@{name}.tar" destfile="dist/@{name}.tar.gz"/>
+      <delete file="dist/@{name}.tar"/>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="make-c-tool">
+    <attribute name="name"/>
+    <sequential>
+      <exec executable="${make}" dir="packages/@{name}" failonerror="true">
+        <env key="prefix" value="${dist.dir}"/>
+        <env key="datadir" value="${dist.data}"/>
+        <arg line="prefix=${dist.dir}"/>
+        <arg line="datadir=${dist.data}"/>
+        <arg line="install"/>
+        </exec>
+    </sequential>
+  </macrodef>
+
   <target name="setup" depends="set-git-hash">
     <echo>Git hash: ${pegasus.build.git.hash}</echo>
 
@@ -132,6 +158,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </filterset>
     </copy>
   </target>
+
   <target name="set-git-hash" unless="pegasus.build.git.hash">
     <!-- Get Git Hash if it isn't already set -->
     <echo>Setting pegasus.build.git.hash</echo>
@@ -141,37 +168,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-   <!-- Java code format -->
-  <target name="code-format-java" description="Java code format">
-    <fileset id="java.source" dir=".">
-      <include name="src/**/*.java"/>
-      <exclude name="src/**/aws/**/CloudWatchLog.java"/>
-      <include name="test/junit/**/*.java"/>
-    </fileset>
-
-    <pathconvert refid="java.source" property="java.source" pathsep=" " />
-
-    <java jar="${basedir}/release-tools/jars/google-java-format-1.7-all-deps.jar" fork="true" maxmemory="128m" resultproperty="java.format.error">
-      <arg value="--aosp"/>
-      <arg value="--replace" unless:true="${CI}" />
-      <arg line="--set-exit-if-changed --dry-run" if:true="${CI}" />
-      <arg line="${java.source}"/>
-    </java>
-
-    <fail>
-      Lint Error
-      # -- NOTE -- #
-      Invalid Java code format, run `ant code-format-java` and commit the changes to fix the issue.
-      # -- NOTE -- #
-      <condition>
-        <not>
-          <equals arg1="${java.format.error}" arg2="0"></equals>
-        </not>
-      </condition>
-    </fail>
-  </target>
-
-   <!-- Python code format -->
+  <!-- Python code format -->
   <target name="code-format-python" description="Python code format">
     <exec executable="tox" dir="packages/pegasus-common" resultproperty="python-common.format.error">
       <env key="CI" value="${CI}"/>
@@ -216,6 +213,69 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         </or>
       </condition>
     </fail>
+  </target>
+
+  <!-- Java code format -->
+  <target name="code-format-java" description="Java code format">
+    <fileset id="java.source" dir=".">
+      <include name="src/**/*.java"/>
+      <exclude name="src/**/aws/**/CloudWatchLog.java"/>
+      <include name="test/junit/**/*.java"/>
+    </fileset>
+
+    <pathconvert refid="java.source" property="java.source" pathsep=" " />
+
+    <java jar="${basedir}/release-tools/jars/google-java-format-1.7-all-deps.jar" fork="true" maxmemory="128m" resultproperty="java.format.error">
+      <arg value="--aosp"/>
+      <arg value="--replace" unless:true="${CI}" />
+      <arg line="--set-exit-if-changed --dry-run" if:true="${CI}" />
+      <arg line="${java.source}"/>
+    </java>
+
+    <fail>
+      Lint Error
+      # -- NOTE -- #
+      Invalid Java code format, run `ant code-format-java` and commit the changes to fix the issue.
+      # -- NOTE -- #
+      <condition>
+        <not>
+          <equals arg1="${java.format.error}" arg2="0"></equals>
+        </not>
+      </condition>
+    </fail>
+  </target>
+
+  <target name="compile-python" depends="setup">
+    <mkdir dir="${dist.python-lib}"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
+      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
+    </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
+      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
+    </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
+      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
+    </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
+      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
+    </exec>
+
+    <!-- Update pegasus-config -->
+    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PEGASUS_VERSION@" value="${pegasus.version}" />
+    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@LIBDIR@" value="${dist.lib.subdir}" />
+    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PYTHON_LIBDIR@" value="${dist.python-lib.subdir}" />
+
+    <chmod perm="0755" type="file">
+      <fileset dir="${dist.python-lib}">
+        <include name="Pegasus/cli/*"/>
+        <include name="Pegasus/tools/kickstart_parser.py"/>
+      </fileset>
+    </chmod>
+  </target>
+
+  <target name="compile-externals" depends="setup" description="Compile external dependencies">
+    <exec executable="${make}" dir="src/externals" failonerror="true">
+    </exec>
   </target>
 
   <target name="compile-common" depends="setup" description="Compile common java code">
@@ -284,11 +344,40 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </javac>
   </target>
 
+  <target name="compile-pegasus-cluster" depends="setup" description="Compile Pegasus Cluster">
+    <make-c-tool name="pegasus-cluster"/>
+  </target>
+
+  <target name="compile-pegasus-keg" depends="setup" description="Compile Pegasus Keg">
+    <make-c-tool name="pegasus-keg"/>
+  </target>
+
+  <target name="compile-pegasus-kickstart" depends="setup" description="Compile Pegasus Kickstart">
+    <make-c-tool name="pegasus-kickstart"/>
+  </target>
+  <target name="compile-pegasus-mpi-cluster" depends="setup" description="Compile Pegasus MPI Cluster">
+    <make-c-tool name="pegasus-mpi-cluster"/>
+  </target>
+
+  <target name="compile-c" depends="setup,compile-pegasus-cluster,compile-pegasus-keg,compile-pegasus-kickstart,compile-pegasus-mpi-cluster" description="Compile C tools"/>
+
+  <!-- <target name="compile-pmc" depends="setup" description="Compile Pegasus MPI cluster">
+    <exec executable="${make}" dir="packages/pegasus-mpi-cluster" failonerror="true">
+      <arg line="prefix=${dist.dir}"/>
+      <arg line="install"/>
+    </exec>
+  </target> -->
+
+  <target name="compile-r" description="Compile R Pegasus API">
+      <mkdir dir="${dist.share}/r"/>
+      <exec executable="./setup.sh" dir="packages/pegasus-dax-r/Pegasus" failonerror="true">
+        <arg line="${dist.share}/r" />
+      </exec>
+  </target>
+
   <target name="compile-java" depends="compile-vdl,compile-planner,compile-common,compile-junit" description="Copile all java code"/>
 
-  <target name="compile" depends="compile-java,compile-ctools,compile-externals" description="Compile all code"/>
-
-  <target name="jar" depends="jar-planner,jar-junit,jar-vdl" description="Generate all jar files"/>
+  <target name="compile" depends="compile-java,compile-c,compile-externals" description="Compile all code"/>
 
   <target name="jar-planner" depends="compile-common,compile-planner" description="Generate planner jar">
     <mkdir dir="${dist.jars}"/>
@@ -320,6 +409,8 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
          excludes="*.class,org/griphyn/vdl/**/*Test.class,org/griphyn/vdl/*Test.class,edu/isi/pegasus/**/*.jar"/>
     <chmod perm="644" file="${dist.jars}/vdl.jar"/>
   </target>
+
+  <target name="jar" depends="jar-planner,jar-vdl" description="Generate all jar files"/>
 
   <target name="doc-user-guide" depends="setup" description="Generate user guide from sphinx source">
     <mkdir dir="${dist.doc}"/>
@@ -354,7 +445,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   </target>
 
-  <target name="doc-java" depends="setup,doc-user-guide" description="Generate java documentation">
+  <target name="doc-java" depends="setup" description="Generate java documentation">
     <delete dir="${dist.doc}/wordpress/javadoc"/>
     <javadoc destdir="${dist.doc}/wordpress/javadoc"
              Author="true"
@@ -366,7 +457,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
              classpathref="build.classpath">
       <packageset dir="src">
         <include name="edu/isi/pegasus/planner/dax/**"/>
-	<include name="edu/isi/pegasus/planner/selector/**"/>
+	  <include name="edu/isi/pegasus/planner/selector/**"/>
       </packageset>
       <fileset dir="src" includes="*.java"/>
       <doctitle><![CDATA[PEGASUS ${pegasus.version}]]></doctitle>
@@ -375,7 +466,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </javadoc>
   </target>
 
-  <target name="doc-r" depends="setup,doc-user-guide,compile-r" description="Generate r documentation">
+  <target name="doc-r" depends="setup,compile-r" description="Generate r documentation">
     <delete dir="${dist.doc}/wordpress/r"/>
     <mkdir dir="${dist.doc}/wordpress/r"/>
     <exec executable="./doc/r-docs" dir="${basedir}" failonerror="true">
@@ -383,7 +474,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="doc-schemas" depends="setup,doc-user-guide" description="Generate schemas">
+  <target name="doc-schemas" depends="setup" description="Generate schemas">
     <!-- doc schemas -->
     <mkdir dir="${dist.doc}/schemas"/>
     <copy preservelastmodified="true" todir="${dist.doc}/schemas">
@@ -402,72 +493,15 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <fixcrlf srcdir="${dist.doc}/wordpress/schemas" includes="**/*.yml" eol="lf"/>
   </target>
 
-  <target name="doc" depends="setup,doc-schemas,doc-user-guide,doc-java,doc-r" description="Generate documentation"/>
+  <target name="doc" depends="setup,doc-user-guide,doc-java,doc-r,doc-schemas" description="Generate documentation"/>
 
-  <target name="compile-ctools" depends="setup" description="Compile C tools">
-    <exec executable="${make}" dir="src/tools" failonerror="true">
-      <env key="prefix" value="${dist.dir}"/>
-      <env key="datadir" value="${dist.data}"/>
-      <arg line="prefix=${dist.dir}"/>
-      <arg line="datadir=${dist.data}"/>
-      <arg line="install"/>
-    </exec>
-  </target>
-
-  <target name="compile-pmc" depends="setup" description="Compile Pegasus MPI cluster">
-    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
-      <arg line="prefix=${dist.dir}"/>
-      <arg line="install"/>
-    </exec>
-  </target>
-
-  <target name="compile-externals" depends="setup" description="Compile external dependencies">
-    <exec executable="${make}" dir="src/externals" failonerror="true">
-    </exec>
-  </target>
-
-  <target name="dist-doc" depends="dist-clean,doc" description="Build documentation tarball">
+  <target name="dist-doc" depends="doc" description="Build documentation tarball">
     <tar destfile="dist/pegasus-doc-${pegasus.version}.tar.gz"
          basedir="dist" longfile="gnu" compression="gzip"
          includes="pegasus-${pegasus.version}/share/man/**,pegasus-${pegasus.version}/share/doc/**"/>
   </target>
 
-  <target name="compile-python" depends="dist-clean,setup">
-    <mkdir dir="${dist.python-lib}"/>
-    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
-      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
-    </exec>
-    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
-      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
-    </exec>
-    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
-      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
-    </exec>
-    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
-      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
-    </exec>
-
-    <!-- Update pegasus-config -->
-    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PEGASUS_VERSION@" value="${pegasus.version}" />
-    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@LIBDIR@" value="${dist.lib.subdir}" />
-    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PYTHON_LIBDIR@" value="${dist.python-lib.subdir}" />
-
-    <chmod perm="0755" type="file">
-      <fileset dir="${dist.python-lib}">
-        <include name="Pegasus/cli/*"/>
-        <include name="Pegasus/tools/kickstart_parser.py"/>
-      </fileset>
-    </chmod>
-  </target>
-
-  <target name="compile-r" description="Compile R Pegasus API">
-      <mkdir dir="${dist.share}/r"/>
-      <exec executable="./setup.sh" dir="packages/pegasus-dax-r/Pegasus" failonerror="true">
-        <arg line="${dist.share}/r" />
-      </exec>
-  </target>
-
-  <target name="dist-r" depends="dist-clean,compile-r" description="Copy R DAX tarball to dist folder">
+  <target name="dist-r" depends="compile-r" description="Copy R DAX tarball to dist folder">
       <copy preservelastmodified="true" todir="dist">
           <fileset dir="${dist.share}/r" includes="*.tar.gz"/>
           <mapper>
@@ -476,7 +510,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </copy>
   </target>
 
-  <target name="dist-worker" depends="dist-clean,setup,compile-ctools,compile-python,compile-externals" description="Build worker tarball">
+  <target name="dist-worker" depends="setup,compile-c,compile-python,compile-externals" description="Build worker tarball">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -513,7 +547,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist-common" depends="dist-clean,setup,jar-planner,jar-aws-batch,jar-vdl,compile-ctools,compile-python,compile-externals,compile-r,dist-worker">
+  <target name="dist-common" depends="setup,jar,jar-aws-batch,compile-c,compile-python,compile-externals,compile-r,dist-worker">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -591,19 +625,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   </target>
 
-  <macrodef name="package-binary">
-    <attribute name="name"/>
-    <sequential>
-      <!-- creates the binary tarball -->
-      <exec executable="sh" dir="dist" failonerror="true">
-        <arg value="-c"/>
-        <arg value="tar --exclude=\.git --exclude=\.gitignore --exclude=pegasus-python-wrapper -cf @{name}.tar pegasus-${pegasus.version}"/>
-      </exec>
-      <gzip src="dist/@{name}.tar" destfile="dist/@{name}.tar.gz"/>
-      <delete file="dist/@{name}.tar"/>
-    </sequential>
-  </macrodef>
-
   <target name="dist-release" depends="dist-common" description="Build binary release tarball">
     <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
   </target>
@@ -612,15 +633,141 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-nodocs-${pegasus.version}-${dist.arch}"/>
   </target>
 
+  <target name="dist-source" description="Build source tarball">
+    <exec executable="release-tools/create-source-tar" failonerror="true">
+      <arg line="${pegasus.version}"/>
+    </exec>
+  </target>
+
+  <target name="dist-python-source" description="Build source tarball for Pegasus Python Modules">
+    <replace file="packages/pegasus-common/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;" />
+    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    </exec>
+    <replace file="packages/pegasus-common/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
+    <replace file="packages/pegasus-api/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    </exec>
+    <replace file="packages/pegasus-api/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
+    <replace file="packages/pegasus-python/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    </exec>
+    <replace file="packages/pegasus-python/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
+    <replace file="packages/pegasus-worker/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    </exec>
+    <replace file="packages/pegasus-worker/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+  </target>
+
+  <target name="dist-rpm" depends="dist-source,setup" description="Build RPM package">
+    <exec executable="release-tools/build-rpms" failonerror="true">
+      <arg line="${pegasus.version}"/>
+    </exec>
+  </target>
+
+  <target name="dist-deb" depends="dist-source,setup" description="Build Debian package">
+    <exec executable="release-tools/build-deb" failonerror="true">
+      <arg line="${pegasus.version} ${dist.osid}"/>
+    </exec>
+  </target>
+
+  <target name="test-python" description="Execute python unit tests">
+    <exec executable="tox" dir="packages/pegasus-common" failonerror="true">
+      <arg line="--recreate"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-api" failonerror="true">
+      <arg line="--recreate"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-worker" failonerror="true">
+      <arg line="--recreate"/>
+    </exec>
+    <exec executable="tox" dir="packages/pegasus-python" failonerror="true">
+      <arg line="--recreate"/>
+    </exec>
+  </target>
+
+  <target name="test-java" depends="jar,jar-junit" description="Run java unit tests">
+    <!-- Copy required YAML schemas -->
+    <!-- Copied from dist-common, can be replaced by a new, shared targe -->
+    <mkdir dir="${dist.share}"/>
+    <copy preservelastmodified="true" todir="${dist.share}">
+      <fileset dir="share/pegasus" includes="**/*">
+        <exclude name=".gitignore"/>
+      </fileset>
+    </copy>
+
+    <mkdir dir="${junitreport.dir}"/>
+    <junit printsummary="yes" haltonfailure="yes" fork="true" forkmode="once">
+      <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
+      <sysproperty key="pegasus.home.schemadir" value="${dist.schema}"/>
+      <sysproperty key="pegasus.home.bindir" value="${dist.bin}"/>
+      <sysproperty key="pegasus.home.sysconfdir" value="${dist.etc}"/>
+      <sysproperty key="pegasus.home.sharedstatedir" value="${dist.share}"/>
+      <classpath>
+        <path refid="build.classpath"/>
+        <path refid="build.aws.classpath"/>
+        <path refid="java.test.classpath"/>
+        <path location="${dist.jars}/pegasus.jar"/>
+        <path location="${dist.jars}/pegasus-test.jar"/>
+        <path location="${dist.jars}/vdl.jar"/>
+      </classpath>
+
+      <formatter type="xml" usefile="yes"/>
+      <formatter type="brief" usefile="no"/>
+      <test name="edu.isi.pegasus.planner.test.AllTests" todir="${junitreport.dir}"/>
+    </junit>
+  </target>
+
+  <target name="test-kickstart" depends="compile-c" description="Run kickstart unit tests">
+    <exec executable="/bin/sh" dir="packages/pegasus-kickstart" failonerror="true">
+        <arg line="-c 'make test'"/>
+        <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
+    </exec>
+  </target>
+
+  <target name="test-pmc" description="Run PMC unit tests">
+    <exec executable="/bin/sh" dir="packages/pegasus-mpi-cluster" failonerror="true">
+        <arg line="-c 'make test'"/>
+    </exec>
+  </target>
+
+  <target name="test-c" depends="test-kickstart,test-pmc" description="Run C unit tests"/>
+
+  <target name="test-transfer" depends="dist-common,compile-externals" description="Run transfer unit tests">
+    <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true">
+      <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
+    </exec>
+  </target>
+
+  <target name="test" depends="dist,test-python,test-java,test-c,test-transfer" description="Run all unit tests"/>
+
+  <target name="tutorial-image-build" depends="setup" description="Builds the Docker based tutorial container image">
+      <exec executable="docker" dir="tutorial/docker" failonerror="true">
+          <arg line="build --no-cache --build-arg CACHEBUST=${ISODATE.utc} --build-arg PEGASUS_VERSION=${pegasus.version} -t pegasus/tutorial:${pegasus.version} ."/>
+    </exec>
+  </target>
+
   <!-- This target should clean everything _except_ the dist directory
        as we need it in multistep builds in bamboo -->
   <target name="dist-clean">
     <delete dir="${dist.dir}"/>
     <delete dir="build"/>
-    <exec executable="${make}" dir="src/tools" failonerror="false">
+    <exec executable="${make}" dir="packages/pegasus-cluster" failonerror="false">
       <arg line="distclean"/>
     </exec>
-    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="false">
+    <exec executable="${make}" dir="packages/pegasus-keg" failonerror="false">
+      <arg line="distclean"/>
+    </exec>
+    <exec executable="${make}" dir="packages/pegasus-kickstart" failonerror="false">
+      <arg line="distclean"/>
+    </exec>
+    <exec executable="${make}" dir="packages/pegasus-mpi-cluster" failonerror="false">
       <arg line="distclean"/>
     </exec>
     <exec executable="${make}" dir="src/externals" failonerror="false">
@@ -704,114 +851,4 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="clean" depends="dist-clean" description="Delete all build artifacts">
     <delete dir="dist"/>
   </target>
-
-  <target name="dist-source" depends="dist-clean" description="Build source tarball">
-    <exec executable="release-tools/create-source-tar" failonerror="true">
-      <arg line="${pegasus.version}"/>
-    </exec>
-  </target>
-
-  <target name="dist-python-source" description="Build source tarball for Pegasus Python Modules">
-    <replace file="packages/pegasus-common/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;" />
-    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
-    </exec>
-    <replace file="packages/pegasus-common/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
-
-    <replace file="packages/pegasus-api/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
-    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
-    </exec>
-    <replace file="packages/pegasus-api/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
-
-    <replace file="packages/pegasus-python/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
-    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
-    </exec>
-    <replace file="packages/pegasus-python/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
-
-    <replace file="packages/pegasus-worker/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
-    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
-    </exec>
-    <replace file="packages/pegasus-worker/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
-  </target>
-
-  <target name="dist-rpm" depends="dist-source,setup" description="Build RPM package">
-    <exec executable="release-tools/build-rpms" failonerror="true">
-      <arg line="${pegasus.version}"/>
-    </exec>
-  </target>
-
-  <target name="dist-deb" depends="dist-source,setup" description="Build Debian package">
-    <exec executable="release-tools/build-deb" failonerror="true">
-      <arg line="${pegasus.version} ${dist.osid}"/>
-    </exec>
-  </target>
-
-  <target name="test-java" depends="dist-common,jar,compile-externals" description="Run java unit tests">
-    <mkdir dir="${junitreport.dir}"/>
-    <junit printsummary="yes" haltonfailure="yes" fork="true" forkmode="once">
-      <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
-      <sysproperty key="pegasus.home.schemadir" value="${dist.schema}"/>
-      <sysproperty key="pegasus.home.bindir" value="${dist.bin}"/>
-      <sysproperty key="pegasus.home.sysconfdir" value="${dist.etc}"/>
-      <sysproperty key="pegasus.home.sharedstatedir" value="${dist.share}"/>
-      <classpath>
-        <path refid="build.classpath"/>
-        <path refid="build.aws.classpath"/>
-        <path refid="java.test.classpath"/>
-        <path location="${dist.jars}/pegasus.jar"/>
-        <path location="${dist.jars}/pegasus-test.jar"/>
-        <path location="${dist.jars}/vdl.jar"/>
-      </classpath>
-
-      <formatter type="xml" usefile="yes"/>
-      <formatter type="brief" usefile="no"/>
-      <test name="edu.isi.pegasus.planner.test.AllTests" todir="${junitreport.dir}"/>
-    </junit>
-  </target>
-
-  <target name="test-kickstart" depends="dist" description="Run kickstart unit tests">
-    <exec executable="/bin/sh" dir="src/tools/pegasus-kickstart" failonerror="true">
-        <arg line="-c 'make test'"/>
-        <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
-    </exec>
-  </target>
-
-  <target name="test-pmc" description="Run PMC unit tests">
-    <exec executable="/bin/sh" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
-        <arg line="-c 'make test'"/>
-    </exec>
-  </target>
-
-  <target name="test-transfer" depends="dist-common,compile-externals" description="Run transfer unit tests">
-    <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true">
-      <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
-    </exec>
-  </target>
-
-  <target name="test" depends="dist,test-python,test-kickstart,test-pmc,test-transfer,test-java" description="Run all unit tests"/>
-
-  <target name="test-python" description="Execute python unit tests">
-    <exec executable="tox" dir="packages/pegasus-common" failonerror="true">
-      <arg line="--recreate"/>
-    </exec>
-    <exec executable="tox" dir="packages/pegasus-api" failonerror="true">
-      <arg line="--recreate"/>
-    </exec>
-    <exec executable="tox" dir="packages/pegasus-worker" failonerror="true">
-      <arg line="--recreate"/>
-    </exec>
-    <exec executable="tox" dir="packages/pegasus-python" failonerror="true">
-      <arg line="--recreate"/>
-    </exec>
-  </target>
-
-  <target name="tutorial-image-build" depends="setup" description="Builds the Docker based tutorial container image">
-      <exec executable="docker" dir="tutorial/docker" failonerror="true">
-          <arg line="build --no-cache --build-arg CACHEBUST=${ISODATE.utc} --build-arg PEGASUS_VERSION=${pegasus.version} -t pegasus/tutorial:${pegasus.version} ."/>
-    </exec>
-  </target>
-
 </project>
