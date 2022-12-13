@@ -7,7 +7,7 @@ CXX = mpicxx
 CC = $(CXX)
 LD = $(CXX)
 CXXFLAGS = -g -Wall -ansi
-LDFLAGS = 
+LDFLAGS =
 RM = rm -f
 INSTALL = install
 MAKE = make
@@ -20,13 +20,13 @@ MAKE = make
 #CXXFLAGS += -fno-omit-frame-pointer
 #LDFLAGS += -lprofiler
 
-# If you want to call fsyncdata() when a record is written to the 
+# If you want to call fsyncdata() when a record is written to the
 # rescue log, then enable -DSYNC_RESCUE. If you want to enable
 # it when data is written to a collective I/O file, then enable
 # -DSYNC_IODATA. This will protect the application in the case
 # where the system fails, but it adds quite a lot of overhead
 # (typically ~10ms for most disks) per write. In the case of the
-# rescue log, enabling SYNC_RESCUE causes PMC to handle no more 
+# rescue log, enabling SYNC_RESCUE causes PMC to handle no more
 # than about 100 tasks/second. Enabling SYNC_IODATA can reduce
 # that even more.
 #CXXFLAGS += -DSYNC_IODATA -DSYNC_RESCUE
@@ -34,7 +34,7 @@ MAKE = make
 OS=$(shell uname -s)
 ifeq (Linux,$(OS))
   OPSYS = LINUX
-  SIGN = 
+  SIGN =
   LIBNUMA=$(shell /sbin/ldconfig -p | grep libnuma.so)
   NUMAIF=$(shell ls /usr/include/numaif.h)
   ifneq ($(LIBNUMA),)
@@ -50,7 +50,7 @@ ifeq (Darwin,$(OS))
 endif
 ifeq (GNU/kFreeBSD,$(OS))
   OPSYS = GNUKFREEBSD
-  SIGN = 
+  SIGN =
 endif
 ifndef OPSYS
   $(error Unsupported OS: $(OS))
@@ -124,7 +124,7 @@ depends.mk: version.h $(shell ls *.cpp)
 	g++ -MM *.cpp > depends.mk
 
 version.h:
-	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
+	$(CURDIR)/../../release-tools/getversion --header > $(CURDIR)/version.h
 
 ifeq ($(shell which ctags || echo n),n)
 tags:

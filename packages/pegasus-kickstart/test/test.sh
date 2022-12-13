@@ -20,7 +20,7 @@ function run_test {
 function kickstart {
     $KICKSTART "$@" >test.out 2>test.err
     RC=$?
-    ../../../../release-tools/yaml-validator test.out >/dev/null
+    ../../../release-tools/yaml-validator test.out >/dev/null
     if [ $? -ne 0 ]; then
         cat test.err test.out
         echo "Invalid YAML"
@@ -522,15 +522,15 @@ function test_integrity_failure {
 function test_integrity_yaml_inc {
     # do this test multiple times
     for I in `seq 100`; do
-    
+
         kickstart $PEGASUS_BIN_DIR/pegasus-integrity --generate-fullstat-yaml=testintegrity.data=testintegrity.data
         rc=$?
-    
+
         if [ $rc -ne 0 ]; then
             echo "Kickstart failed to run"
             return 1
         fi
-    
+
         # verify it has the right output
         if ! (grep '"testintegrity.data":' test.out) >/dev/null 2>&1; then
             echo "Unable to find the included integrity data in ks output"
@@ -555,7 +555,7 @@ function test_w_with_rel_exec {
 }
 
 function test_locale {
-    kickstart printf "Default \E[33mYellow\E[0m Normal\n" 
+    kickstart printf "Default \E[33mYellow\E[0m Normal\n"
     ec=$?
     return $ec
 }
