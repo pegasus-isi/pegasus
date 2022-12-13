@@ -1,9 +1,9 @@
 #
-# Makefile 
+# Makefile
 #
 INSTALL = install
 RM      = rm -f
-CXX	= g++ -ffor-scope 
+CXX	= g++ -ffor-scope
 CXXFLAGS += -O -Wall
 LD      = $(CXX)
 LOADLIBES = -lm
@@ -14,7 +14,7 @@ MAJOR   = $(firstword $(subst ., ,$(VERSION)))
 SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
 EXTRA_OBJ = basic.o
 EXTRA_INC = version.h
-
+MUSLLIBC = $(shell gcc -dumpmachine | grep musl | wc -l)
 
 
 ifndef ${prefix}
@@ -22,7 +22,7 @@ ifndef ${prefix}
 endif
 
 ifndef ${datadir}
-  datadir = $(prefix)/share 
+  datadir = $(prefix)/share
 endif
 
 ifeq (DARWIN,${SYSTEM})
@@ -55,7 +55,11 @@ endif
 %.o : %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
+ifeq (0,$(strip ${MUSLLIBC}))
 all: pegasus-keg
+else
+all:
+endif
 
 pegasus-keg: pegasus-keg.o $(EXTRA_OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
@@ -68,9 +72,9 @@ linux.o: linux.cc linux.hh basic.hh
 version.h:
 	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
 
-install: pegasus-keg 
+install: pegasus-keg
 	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
-	
+
 test check: pegasus-keg
 	@./pegasus-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
 
@@ -80,7 +84,7 @@ clean:
 distclean: clean
 	$(RM) pegasus-keg
 
-# MPI version	
+# MPI version
 
 MPICC	= mpicc
 MPICCFLAGS = -DWITH_MPI
