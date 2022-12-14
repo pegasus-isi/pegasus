@@ -190,6 +190,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="--recreate"/>
       <arg line="-e lint"/>
     </exec>
+    <exec executable="tox" dir="packages/pegasus-dax-python" resultproperty="python-dax.format.error">
+      <env key="CI" value="${CI}"/>
+      <arg line="--recreate"/>
+      <arg line="-e lint"/>
+    </exec>
     <exec executable="tox" dir="packages/pegasus-worker" resultproperty="python-worker.format.error">
       <env key="CI" value="${CI}"/>
       <arg line="--recreate"/>
@@ -213,6 +218,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
           </not>
           <not>
             <equals arg1="${python-api.format.error}" arg2="0"></equals>
+          </not>
+          <not>
+            <equals arg1="${python-dax.format.error}" arg2="0"></equals>
           </not>
           <not>
             <equals arg1="${python-worker.format.error}" arg2="0"></equals>
@@ -263,6 +271,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <compile-python name="pegasus-api"/>
   </target>
 
+  <target name="compile-pegasus-dax-python" depends="setup">
+    <compile-python name="pegasus-dax-python"/>
+  </target>
+
   <target name="compile-pegasus-worker" depends="setup">
     <compile-python name="pegasus-worker"/>
   </target>
@@ -271,7 +283,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <compile-python name="pegasus-python"/>
   </target>
 
-  <target name="compile-python" depends="compile-pegasus-common,compile-pegasus-api,compile-pegasus-worker,compile-pegasus-python">
+  <target name="compile-python" depends="compile-pegasus-common,compile-pegasus-api,compile-pegasus-dax-python,compile-pegasus-worker,compile-pegasus-python">
     <!-- Update pegasus-config -->
     <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PEGASUS_VERSION@" value="${pegasus.version}" />
     <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@LIBDIR@" value="${dist.lib.subdir}" />
@@ -288,6 +300,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="compile-externals" depends="setup" description="Compile external dependencies">
     <exec executable="${make}" dir="src/externals" failonerror="true">
     </exec>
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
+      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
+    </copy>
   </target>
 
   <target name="compile-common" depends="setup" description="Compile common java code">
@@ -532,24 +547,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="release-tools/update-python-tools" failonerror="true">
       <arg value="${dist.bin}"/>
     </exec>
-
-    <!-- lib -->
-    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
-      <fileset dir="lib/pegasus/externals/python">
-          <include name="**/boto3/**/*"/>
-          <include name="**/botocore/**/*"/>
-          <include name="**/jmespath/**/*"/>
-          <include name="**/dateutil/**/*"/>
-          <include name="**/s3transfer/**/*"/>
-          <include name="**/urllib3/**/*"/>
-          <include name="**/globus_sdk/**/*"/>
-          <include name="six"/>
-          <include name="six.py"/>
-      </fileset>
-    </copy>
-
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
-
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
@@ -581,9 +579,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <mkdir dir="${dist.lib}/pegasus/perl"/>
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/perl">
       <fileset dir="packages/pegasus-perl" includes="**/*.pm"/>
-    </copy>
-    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
-      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
     </copy>
 
     <!-- share -->
@@ -657,6 +652,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
     <replace file="packages/pegasus-api/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
 
+    <replace file="packages/pegasus-dax-python/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
+    <exec executable="${dist.python}" dir="packages/pegasus-dax-python" failonerror="true">
+      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    </exec>
+    <replace file="packages/pegasus-dax-python/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
     <replace file="packages/pegasus-python/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
     <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
       <arg line="setup.py sdist --dist-dir ../../dist"/>
@@ -689,6 +690,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="tox" dir="packages/pegasus-api" failonerror="true">
       <arg line="--recreate"/>
     </exec>
+    <exec executable="tox" dir="packages/pegasus-dax-python" failonerror="true">
+      <arg line="--recreate"/>
+    </exec>
     <exec executable="tox" dir="packages/pegasus-worker" failonerror="true">
       <arg line="--recreate"/>
     </exec>
@@ -697,15 +701,27 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="test-java" depends="jar,jar-junit" description="Run java unit tests">
+  <target name="test-java" depends="jar,jar-junit,compile-pegasus-common,compile-pegasus-python,compile-externals" description="Run java unit tests">
     <!-- Copy required YAML schemas -->
-    <!-- Copied from dist-common, can be replaced by a new, shared targe -->
+    <!-- Copied from dist-common, can be replaced by a new, shared target -->
     <mkdir dir="${dist.share}"/>
     <copy preservelastmodified="true" todir="${dist.share}">
       <fileset dir="share/pegasus" includes="**/*">
         <exclude name=".gitignore"/>
       </fileset>
     </copy>
+
+    <!-- etc -->
+    <mkdir dir="${dist.etc}"/>
+    <copy preservelastmodified="true" todir="${dist.etc}">
+      <fileset dir="etc" includes="**/*"/>
+    </copy>
+
+    <copy file="bin/pegasus-python-wrapper" tofile="${dist.bin}/pegasus-db-admin" preservelastmodified="true"/>
+    <chmod perm="0755" type="file" file="${dist.bin}/pegasus-db-admin"/>
+    <exec executable="release-tools/update-python-tools" failonerror="true">
+      <arg value="${dist.bin}"/>
+    </exec>
 
     <mkdir dir="${junitreport.dir}"/>
     <junit printsummary="yes" haltonfailure="yes" fork="true" forkmode="once">
@@ -749,7 +765,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="test-c" depends="test-kickstart,test-pmc" description="Run C unit tests"/>
 
-  <target name="test-transfer" depends="dist-common,compile-externals" description="Run transfer unit tests">
+  <target name="test-transfer" depends="compile-pegasus-kickstart,compile-pegasus-worker" description="Run transfer unit tests">
+    <copy file="bin/pegasus-python-wrapper" tofile="${dist.bin}/pegasus-transfer" preservelastmodified="true"/>
+    <chmod perm="0755" type="file" file="${dist.bin}/pegasus-transfer"/>
+    <exec executable="release-tools/update-python-tools" failonerror="true">
+      <arg value="${dist.bin}"/>
+    </exec>
     <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true">
       <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
     </exec>
@@ -792,6 +813,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="false">
       <arg line="setup.py clean --all"/>
     </exec>
+    <exec executable="${dist.python}" dir="packages/pegasus-dax-python" failonerror="false">
+      <arg line="setup.py clean --all"/>
+    </exec>
     <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="false">
       <arg line="setup.py clean --all"/>
     </exec>
@@ -823,6 +847,19 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </delete>
     <delete>
       <dirset dir="packages/pegasus-api" includes="**/__pycache__"/>
+    </delete>
+
+    <delete dir="packages/pegasus-dax-python/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
+    <delete dir="packages/pegasus-dax-python/.cache"/>
+    <delete dir="packages/pegasus-dax-python/.coverage"/>
+    <delete dir="packages/pegasus-dax-python/.pytest_cache"/>
+    <delete dir="packages/pegasus-dax-python/test-reports"/>
+    <delete dir="packages/pegasus-dax-python/htmlcov"/>
+    <delete>
+      <fileset dir="packages/pegasus-dax-python" includes="**/*.pyc"/>
+    </delete>
+    <delete>
+      <dirset dir="packages/pegasus-dax-python" includes="**/__pycache__"/>
     </delete>
 
     <delete dir="packages/pegasus-worker/.tox" followsymlinks="false" removenotfollowedsymlinks="true"/>
