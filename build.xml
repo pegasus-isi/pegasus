@@ -375,7 +375,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <make-c-tool name="pegasus-mpi-cluster"/>
   </target>
 
-  <target name="compile-c" depends="setup,compile-pegasus-cluster,compile-pegasus-keg,compile-pegasus-kickstart,compile-pegasus-mpi-cluster" description="Compile C tools"/>
+  <target name="compile-c" depends="setup,compile-pegasus-cluster,compile-pegasus-keg,compile-pegasus-kickstart" description="Compile C tools"/>
 
   <target name="compile-r" description="Compile R Pegasus API">
       <mkdir dir="${dist.share}/r"/>
