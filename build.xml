@@ -698,7 +698,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="test-java" depends="jar,jar-junit,compile-pegasus-python,compile-externals" description="Run java unit tests">
+  <target name="test-java" depends="jar,jar-junit,compile-pegasus-common,compile-pegasus-python,compile-externals" description="Run java unit tests">
     <!-- Copy required YAML schemas -->
     <!-- Copied from dist-common, can be replaced by a new, shared target -->
     <mkdir dir="${dist.share}"/>
