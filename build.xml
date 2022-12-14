@@ -697,7 +697,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="test-java" depends="jar,jar-junit" description="Run java unit tests">
+  <target name="test-java" depends="jar,jar-junit,compile-pegasus-python,compile-externals" description="Run java unit tests">
     <!-- Copy required YAML schemas -->
     <!-- Copied from dist-common, can be replaced by a new, shared target -->
     <mkdir dir="${dist.share}"/>
@@ -712,6 +712,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <copy preservelastmodified="true" todir="${dist.etc}">
       <fileset dir="etc" includes="**/*"/>
     </copy>
+
+    <copy file="bin/pegasus-python-wrapper" tofile="${dist.bin}/pegasus-db-admin" preservelastmodified="true"/>
+    <chmod perm="0755" type="file" file="${dist.bin}/pegasus-db-admin"/>
+    <exec executable="release-tools/update-python-tools" failonerror="true">
+      <arg value="${dist.bin}"/>
+    </exec>
 
     <mkdir dir="${junitreport.dir}"/>
     <junit printsummary="yes" haltonfailure="yes" fork="true" forkmode="once">
@@ -755,7 +761,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="test-c" depends="test-kickstart,test-pmc" description="Run C unit tests"/>
 
-  <target name="test-transfer" depends="dist-common,compile-externals" description="Run transfer unit tests">
+  <target name="test-transfer" depends="compile-pegasus-kickstart,compile-pegasus-worker,compile-externals" description="Run transfer unit tests">
+    <copy file="bin/pegasus-python-wrapper" tofile="${dist.bin}/pegasus-transfer" preservelastmodified="true"/>
+    <chmod perm="0755" type="file" file="${dist.bin}/pegasus-transfer"/>
+    <exec executable="release-tools/update-python-tools" failonerror="true">
+      <arg value="${dist.bin}"/>
+    </exec>
     <exec executable="./test.sh" dir="test/unit/transfer" failonerror="true">
       <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
     </exec>
