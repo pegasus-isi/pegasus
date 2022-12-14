@@ -762,7 +762,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="test-c" depends="test-kickstart,test-pmc" description="Run C unit tests"/>
 
-  <target name="test-transfer" depends="compile-pegasus-kickstart,compile-pegasus-worker,compile-externals" description="Run transfer unit tests">
+  <target name="test-transfer" depends="compile-pegasus-kickstart,compile-pegasus-worker" description="Run transfer unit tests">
     <copy file="bin/pegasus-python-wrapper" tofile="${dist.bin}/pegasus-transfer" preservelastmodified="true"/>
     <chmod perm="0755" type="file" file="${dist.bin}/pegasus-transfer"/>
     <exec executable="release-tools/update-python-tools" failonerror="true">
