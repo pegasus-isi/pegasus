@@ -72,14 +72,18 @@ linux.o: linux.cc linux.hh basic.hh
 version.h:
 	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
 
+ifeq (0,$(strip ${MUSLLIBC}))
 install: pegasus-keg
 	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
+else
+install:
+endif
 
 test check: pegasus-keg
 	@./pegasus-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
 
 clean:
-	$(RM) pegasus-keg.o core core.* $(EXTRA_OBJ) $(EXTRA_COBJ)
+	$(RM) pegasus-keg.o core core.* $(EXTRA_OBJ) $(EXTRA_COBJ) version.h
 
 distclean: clean
 	$(RM) pegasus-keg
