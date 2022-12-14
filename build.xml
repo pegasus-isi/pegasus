@@ -287,8 +287,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="compile-externals" depends="setup" description="Compile external dependencies">
     <exec executable="${make}" dir="src/externals" failonerror="true">
-      <arg line="prefix=${dist.dir}"/>
     </exec>
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
+      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
+    </copy>
   </target>
 
   <target name="compile-common" depends="setup" description="Compile common java code">
