@@ -13,7 +13,7 @@ ifndef ${prefix}
     prefix = $(CURDIR)/../../../
 endif
 
-libdir = ${prefix}/$(shell $(CURDIR)/../../../release-tools/determine-lib-dir)/pegasus
+libdir = ${prefix}/$(shell $(CURDIR)/../../release-tools/determine-lib-dir)/pegasus
 
 OBJS =getif.o
 OBJS+=utils.o
