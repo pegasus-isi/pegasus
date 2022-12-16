@@ -734,6 +734,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg value="${dist.bin}"/>
     </exec>
 
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
+      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
+    </copy>
+
     <mkdir dir="${junitreport.dir}"/>
     <junit printsummary="yes" haltonfailure="yes" fork="true" forkmode="once">
       <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
