@@ -287,9 +287,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="compile-externals" depends="setup" description="Compile external dependencies">
     <exec executable="${make}" dir="src/externals" failonerror="true">
     </exec>
-    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
-      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
-    </copy>
   </target>
 
   <target name="compile-common" depends="setup" description="Compile common java code">
@@ -534,6 +531,19 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="release-tools/update-python-tools" failonerror="true">
       <arg value="${dist.bin}"/>
     </exec>
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
+      <fileset dir="lib/pegasus/externals/python">
+        <include name="**/boto3/**/*"/>
+        <include name="**/botocore/**/*"/>
+        <include name="**/jmespath/**/*"/>
+        <include name="**/dateutil/**/*"/>
+        <include name="**/s3transfer/**/*"/>
+        <include name="**/urllib3/**/*"/>
+        <include name="**/globus_sdk/**/*"/>
+        <include name="six"/>
+        <include name="six.py"/>
+      </fileset>
+    </copy>
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
@@ -565,6 +575,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <mkdir dir="${dist.lib}/pegasus/perl"/>
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/perl">
       <fileset dir="packages/pegasus-perl" includes="**/*.pm"/>
+    </copy>
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
+      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
     </copy>
 
     <!-- share -->
