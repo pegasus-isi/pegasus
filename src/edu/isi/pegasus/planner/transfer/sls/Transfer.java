@@ -370,6 +370,12 @@ public class Transfer implements SLS {
                     url.append(PegasusURL.FILE_URL_SCHEME)
                             .append("//")
                             .append(stagingSiteDirectory);
+
+                    if (containerLFN != null) {
+                        // PM-1893 if running inside a container then make sure
+                        // staging site directory gets mounted
+                        c.addMountPoint(stagingSiteDirectory + ":" + stagingSiteDirectory);
+                    }
                 } else {
                     url.append(
                             mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite));

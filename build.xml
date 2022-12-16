@@ -279,7 +279,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
     <chmod perm="0755" type="file">
       <fileset dir="${dist.python-lib}">
-        <include name="Pegasus/cli/*"/>
         <include name="Pegasus/tools/kickstart_parser.py"/>
       </fileset>
     </chmod>
@@ -416,7 +415,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <jar destfile="${dist.jars}/vdl.jar" basedir="${build.src}"
          includes="org/griphyn/vdl/**/*.class,org/griphyn/vdl/*.class"
          excludes="*.class,org/griphyn/vdl/**/*Test.class,org/griphyn/vdl/*Test.class,edu/isi/pegasus/**/*.jar"/>
-    <chmod perm="644" file="${dist.jars}/vdl.jar"/>
+    <chmod perm="0644" file="${dist.jars}/vdl.jar"/>
   </target>
 
   <target name="jar" depends="jar-planner,jar-vdl" description="Generate all jar files"/>
@@ -523,8 +522,8 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
+          <exclude name=".gitignore"/>
           <exclude name="pegasus-python-wrapper"/>
-          <!-- add script files to copy as necessary -->
       </fileset>
     </copy>
     <chmod perm="0755" type="file">
@@ -539,12 +538,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist-common" depends="setup,jar,jar-aws-batch,compile-c,compile-python,compile-externals,compile-r,dist-worker">
+  <target name="dist-common" depends="setup,jar,jar-aws-batch,compile-c,compile-python,compile-externals,compile-r">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
         <exclude name=".gitignore"/>
-        <exclude name="pegasus-config"/>
         <exclude name="pegasus-python-wrapper"/>
       </fileset>
     </copy>
@@ -613,11 +611,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </copy>
   </target>
 
-  <target name="dist-release" depends="dist-common" description="Build binary release tarball">
+  <target name="dist-release" depends="dist-worker,dist-common" description="Build binary release tarball">
     <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist" depends="dist-common" description="Build binary release tarball without documentation">
+  <target name="dist" depends="dist-worker,dist-common" description="Build binary release tarball without documentation">
     <package-binary name="pegasus-nodocs-${pegasus.version}-${dist.arch}"/>
   </target>
 
@@ -730,9 +728,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="release-tools/update-python-tools" failonerror="true">
       <arg value="${dist.bin}"/>
     </exec>
-        <exec executable="${make}" dir="packages/pegasus-kickstart" failonerror="true">
-        <arg line="test"/>
-        <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
+    <exec executable="${make}" dir="packages/pegasus-kickstart" failonerror="true">
+      <arg line="test"/>
+      <env key="PEGASUS_BIN_DIR" value="${dist.bin}"/>
     </exec>
   </target>
 
