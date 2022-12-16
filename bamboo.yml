@@ -946,47 +946,6 @@ project:
                     matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
-            - key: BXR8
-              name: Build RHEL 8
-              tasks:
-                - !script
-                  description: Untar source
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: "tar xzf pegasus-source.tar.gz"
-                - !script
-                  description: Binary Packages
-                  inlineScript:
-                    interpreter: !scriptInterpreter LEGACY_SH_BAT
-                    scriptBody: |
-                      cd pegasus-source
-                      scitech-bamboo-apptainer rhel-8 \
-                          ant dist-rpm dist-worker dist-release
-              artifactDefinitions:
-                - name: pegasus-binary-x86_64_rhel_8
-                  copyPattern: "pegasus-binary-*-x86_64_rhel_8.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-rpm-x86_64_rhel_8
-                  copyPattern: "*x86_64.rpm"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-worker-x86_64_rhel_8
-                  copyPattern: "pegasus-worker-*-x86_64_rhel_8.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-srcrpm
-                  copyPattern: "*.src.rpm"
-                  location: pegasus-source/dist
-                  isShared: true
-              artifactDependencies:
-                - name: pegasus-source
-              requirements:
-                - capabilityKey: apptainer
-                  matchType: !equals
-                    matchValue: true
-              miscellaneous:
-                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR7
               name: Build RHEL 7
               tasks:
@@ -1081,7 +1040,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       scitech-bamboo-apptainer debian-10 \
-                          ant clean dist-deb dist-worker dist-release
+                          ant dist-worker dist-release dist-deb
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_10
                   copyPattern: "pegasus-binary-*-x86_64_deb_10.tar.gz"
@@ -1122,7 +1081,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       scitech-bamboo-apptainer debian-11 \
-                          ant clean dist-deb dist-worker dist-release
+                          ant dist-worker dist-release dist-deb
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_deb_11
                   copyPattern: "pegasus-binary-*-x86_64_deb_11.tar.gz"
@@ -1282,7 +1241,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       scitech-bamboo-apptainer ubuntu-18 \
-                          ant clean dist-deb dist-worker dist-release
+                          ant dist-worker dist-release dist-deb
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_18
                   copyPattern: "pegasus-binary-*-x86_64_ubuntu_18.tar.gz"
@@ -1322,7 +1281,7 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       scitech-bamboo-apptainer ubuntu-20 \
-                          ant clean dist-deb dist-worker dist-release
+                          ant dist-worker dist-release dist-deb
               artifactDefinitions:
                 - name: pegasus-binary-x86_64_ubuntu_20
                   copyPattern: "pegasus-binary-*-x86_64_ubuntu_20.tar.gz"

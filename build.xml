@@ -550,7 +550,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist-common" depends="setup,jar,jar-aws-batch,compile-c,compile-python,compile-externals,compile-r,dist-worker">
+  <target name="dist-common" depends="setup,jar,jar-aws-batch,compile-c,compile-python,compile-externals,compile-r">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -623,11 +623,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </copy>
   </target>
 
-  <target name="dist-release" depends="dist-common" description="Build binary release tarball">
+  <target name="dist-release" depends="dist-worker,dist-common" description="Build binary release tarball">
     <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist" depends="dist-common" description="Build binary release tarball without documentation">
+  <target name="dist" depends="dist-worker,dist-common" description="Build binary release tarball without documentation">
     <package-binary name="pegasus-nodocs-${pegasus.version}-${dist.arch}"/>
   </target>
 
