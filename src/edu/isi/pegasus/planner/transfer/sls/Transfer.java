@@ -370,10 +370,15 @@ public class Transfer implements SLS {
                     url.append(PegasusURL.FILE_URL_SCHEME)
                             .append("//")
                             .append(stagingSiteDirectory);
-
+                    mLogger.log(
+                            "Using file url for lfn " + lfn + " " + url,
+                            LogManager.TRACE_MESSAGE_LEVEL);
                     if (containerLFN != null) {
                         // PM-1893 if running inside a container then make sure
                         // staging site directory gets mounted
+                        mLogger.log(
+                                "Adding mount point " + stagingSiteDirectory + " to container " + c,
+                                LogManager.TRACE_MESSAGE_LEVEL);
                         c.addMountPoint(stagingSiteDirectory + ":" + stagingSiteDirectory);
                     }
                 } else {
