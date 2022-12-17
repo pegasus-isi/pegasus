@@ -1527,7 +1527,7 @@ project:
                   taskConfig:
                     label: Ant
                     environmentVariables: "PATH=/usr/lib64/mpich/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
-                    target: clean dist-worker dist-common compile-pmc
+                    target: clean dist-worker dist-common compile-pegasus-mpi-cluster
                     buildJdk: JDK
                 - !script
                   description: Install Binaries
