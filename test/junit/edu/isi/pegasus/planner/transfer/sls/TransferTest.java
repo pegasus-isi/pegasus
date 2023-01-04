@@ -25,6 +25,8 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container.MountPoint;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -162,6 +164,38 @@ public class TransferTest {
         expectedOutput.addDestination("compute", "file://$PWD/f.in");
 
         this.testStageIn("compute", expectedOutput);
+    }
+
+    @Test
+    // PM-1893
+    public void testForStageInWithSharedFSSemanticsAndContainer() {
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.in");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+
+        SiteCatalogEntry computeSiteEntry = this.mBag.getHandleToSiteStore().lookup("compute");
+        Directory sharedScratch = computeSiteEntry.getDirectory(Directory.TYPE.shared_scratch);
+        sharedScratch.setSharedFileSystemAccess(true);
+
+        // staging site and compute site are the same
+        expectedOutput.addSource(
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.in");
+        expectedOutput.addDestination("compute", "file://$PWD/f.in");
+
+        // associate container with job
+        Job j = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        j.setContainer(new Container("centos8"));
+
+        this.testStageIn("compute", expectedOutput);
+        // the container with the job should have a mount point associated
+        Container c = j.getContainer();
+        assertNotNull(c.getMountPoints());
+        assertEquals(1, c.getMountPoints().size());
+        MountPoint expectedMP = new MountPoint();
+        expectedMP.setSourceDirectory("/internal/workflows/compute/shared-scratch");
+        expectedMP.setDestinationDirectory("/internal/workflows/compute/shared-scratch");
+        assertEquals(expectedMP, c.getMountPoints().toArray()[0]);
     }
 
     /**
