@@ -122,7 +122,7 @@ Ubuntu
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
 
-      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu fossa main' >/etc/apt/sources.list.d/pegasus.list
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu focal main' >/etc/apt/sources.list.d/pegasus.list
 
       apt-get update
 
