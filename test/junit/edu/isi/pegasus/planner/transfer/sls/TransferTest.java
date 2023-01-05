@@ -32,6 +32,7 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -196,6 +197,48 @@ public class TransferTest {
         expectedMP.setSourceDirectory("/internal/workflows/compute/shared-scratch");
         expectedMP.setDestinationDirectory("/internal/workflows/compute/shared-scratch");
         assertEquals(expectedMP, c.getMountPoints().toArray()[0]);
+    }
+
+    @Test
+    // PM-1893
+    public void testForStageInWithSharedFSSemanticsAndContainerWithBypasson() {
+        mLogger.logEventStart(
+                "test.transfer.sls.transfer", "sharedfs", Integer.toString(mTestNumber));
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.in");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+
+        SiteCatalogEntry computeSiteEntry = this.mBag.getHandleToSiteStore().lookup("compute");
+        Directory sharedScratch = computeSiteEntry.getDirectory(Directory.TYPE.shared_scratch);
+        sharedScratch.setSharedFileSystemAccess(true);
+
+        // staging site and compute site are the same
+        String sourceURL = "file:///path/on/shared/scratch/host/os/f.in";
+        expectedOutput.addSource("compute", sourceURL);
+        expectedOutput.addDestination("compute", "file://$PWD/f.in");
+
+        // associate container with job and sourceDir has to be mounted
+        Job j = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        Container c = new Container("centos8");
+        MountPoint mp = new MountPoint();
+        c.addMountPoint(
+                new MountPoint("/path/on/shared/scratch/host/os:/path/on/shared/scratch/host/os"));
+        j.setContainer(c);
+
+        // set bypass on for the input files
+        for (PegasusFile pf : j.getInputFiles()) {
+            pf.setForBypassStaging();
+        }
+        // the bypass location is retrieved from the planner cache. set in there
+        PlannerCache cache = new PlannerCache();
+        cache.initialize(mBag, mDAG);
+        cache.insert("f.in", sourceURL, "compute", FileServerType.OPERATION.get);
+        mBag.add(PegasusBag.PLANNER_CACHE, cache);
+
+        this.testStageIn("compute", expectedOutput);
+
+        mLogger.logEventCompletion();
     }
 
     /**
