@@ -348,10 +348,10 @@ public class Transfer implements SLS {
                 cacheLocations = mPlannerCache.lookupAllEntries(lfn, computeSite, OPERATION.get);
                 if (cacheLocations.isEmpty()) {
                     mLogger.log(
-                            "Unable to find location of lfn in planner(get) cache with input staging bypassed "
-                                    + lfn
-                                    + " for job "
-                                    + job.getID(),
+                            constructMessage(
+                                    job,
+                                    lfn,
+                                    "Unable to find location of lfn in planner(get) cache with input staging bypassed"),
                             LogManager.WARNING_MESSAGE_LEVEL);
                 }
             }
@@ -453,10 +453,13 @@ public class Transfer implements SLS {
                                 // on the missing source path that is only visible in the container
                                 ft.setVerifySymlinkSource(false);
                                 mLogger.log(
-                                        "Replaced source URL on host "
-                                                + sourceURL
-                                                + " with path in the container "
-                                                + source.getPFN(),
+                                        constructMessage(
+                                                job,
+                                                lfn,
+                                                "Replaced source URL on host "
+                                                        + sourceURL
+                                                        + " with path in the container "
+                                                        + source.getPFN()),
                                         LogManager.DEBUG_MESSAGE_LEVEL);
                             }
                         }
@@ -473,10 +476,13 @@ public class Transfer implements SLS {
                                 if (replacedURL != null) {
                                     source.setPFN(replacedURL);
                                     mLogger.log(
-                                            "Replaced source URL on host "
-                                                    + sourceURL
-                                                    + " with path in the container "
-                                                    + source.getPFN(),
+                                            constructMessage(
+                                                    job,
+                                                    lfn,
+                                                    "Replaced source URL on host "
+                                                            + sourceURL
+                                                            + " with path in the container "
+                                                            + source.getPFN()),
                                             LogManager.DEBUG_MESSAGE_LEVEL);
                                 } else {
                                     throw new RuntimeException(
@@ -879,15 +885,11 @@ public class Transfer implements SLS {
      */
     private String constructMessage(Job job, String lfn, String message) {
         StringBuilder sb = new StringBuilder();
-        sb.append("For")
-                .append(" ")
-                .append("(")
-                .append(job.getID())
-                .append(",")
-                .append(lfn)
-                .append(")")
-                .append(" ")
-                .append(message);
+        sb.append("For").append(" ").append("(").append(job.getID());
+        if (lfn != null) {
+            sb.append(",").append(lfn).append(")");
+        }
+        sb.append(" ").append(message);
         return sb.toString();
     }
 }
