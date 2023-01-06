@@ -348,10 +348,10 @@ public class Transfer implements SLS {
                 cacheLocations = mPlannerCache.lookupAllEntries(lfn, computeSite, OPERATION.get);
                 if (cacheLocations.isEmpty()) {
                     mLogger.log(
-                            "Unable to find location of lfn in planner(get) cache with input staging bypassed "
-                                    + lfn
-                                    + " for job "
-                                    + job.getID(),
+                            constructMessage(
+                                    job,
+                                    lfn,
+                                    "Unable to find location of lfn in planner(get) cache with input staging bypassed"),
                             LogManager.WARNING_MESSAGE_LEVEL);
                 }
             }
@@ -435,28 +435,64 @@ public class Transfer implements SLS {
                 }
             }
 
-            if (symlink && containerLFN != null) {
-                // PM-1197 special handling for the case where job is to be
-                // launched in a container.Normally, we can only symlink the
-                // container image.
-                if (!pf.getLFN().equals(containerLFN)) {
-                    symlink = false;
-                    // PM-1298 check if source file directory is mounted
-                    for (ReplicaCatalogEntry source : sources) {
-                        String sourceURL = source.getPFN();
-                        String replacedURL = c.getPathInContainer(sourceURL);
-                        if (replacedURL != null) {
-                            symlink = true;
-                            source.setPFN(replacedURL);
-                            // we don't want pegasus-transfer to fail in PegasusLite
-                            // on the missing source path that is only visible in the container
-                            ft.setVerifySymlinkSource(false);
-                            mLogger.log(
-                                    "Replaced source URL on host "
-                                            + sourceURL
-                                            + " with path in the container "
-                                            + source.getPFN(),
-                                    LogManager.DEBUG_MESSAGE_LEVEL);
+            if (containerLFN != null) {
+                if (symlink) {
+                    // PM-1197 special handling for the case where job is to be
+                    // launched in a container.Normally, we can only symlink the
+                    // container image.
+                    if (!pf.getLFN().equals(containerLFN)) {
+                        symlink = false;
+                        // PM-1298 check if source file directory is mounted
+                        for (ReplicaCatalogEntry source : sources) {
+                            String sourceURL = source.getPFN();
+                            String replacedURL = c.getPathInContainer(sourceURL);
+                            if (replacedURL != null) {
+                                symlink = true;
+                                source.setPFN(replacedURL);
+                                // we don't want pegasus-transfer to fail in PegasusLite
+                                // on the missing source path that is only visible in the container
+                                ft.setVerifySymlinkSource(false);
+                                mLogger.log(
+                                        constructMessage(
+                                                job,
+                                                lfn,
+                                                "Replaced source URL on host "
+                                                        + sourceURL
+                                                        + " with path in the container "
+                                                        + source.getPFN()),
+                                        LogManager.DEBUG_MESSAGE_LEVEL);
+                            }
+                        }
+                    }
+                } else {
+                    // PM-1893 when job is launched inside a container, we
+                    // want to make sure the file URL's are mounted correctly
+                    // for files other than the container image itself
+                    if (!pf.getLFN().equals(containerLFN)) {
+                        for (ReplicaCatalogEntry source : sources) {
+                            String sourceURL = source.getPFN();
+                            if (sourceURL.startsWith(PegasusURL.FILE_URL_SCHEME)) {
+                                String replacedURL = c.getPathInContainer(sourceURL);
+                                if (replacedURL != null) {
+                                    source.setPFN(replacedURL);
+                                    mLogger.log(
+                                            constructMessage(
+                                                    job,
+                                                    lfn,
+                                                    "Replaced source URL on host "
+                                                            + sourceURL
+                                                            + " with path in the container "
+                                                            + source.getPFN()),
+                                            LogManager.DEBUG_MESSAGE_LEVEL);
+                                } else {
+                                    throw new RuntimeException(
+                                            constructMessage(
+                                                    job,
+                                                    lfn,
+                                                    "source url directory is not mounted in the container "
+                                                            + sourceURL));
+                                }
+                            }
                         }
                     }
                 }
@@ -837,5 +873,23 @@ public class Transfer implements SLS {
 
         // the profile value can turn symlinking off
         return !job.vdsNS.getBooleanValue(Pegasus.NO_SYMLINK_KEY);
+    }
+
+    /**
+     * Helper message to construct a log message
+     *
+     * @param job
+     * @param lfn
+     * @param message
+     * @return
+     */
+    private String constructMessage(Job job, String lfn, String message) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("For").append(" ").append("(").append(job.getID());
+        if (lfn != null) {
+            sb.append(",").append(lfn).append(")");
+        }
+        sb.append(" ").append(message);
+        return sb.toString();
     }
 }
