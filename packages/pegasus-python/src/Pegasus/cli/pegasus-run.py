@@ -286,6 +286,10 @@ pegasus-remove %(submit_dir)s"""
                     click.style("Error: ", fg="red", bold=True)
                     + "Running %s failed with %d" % (e.cmd, rc)
                 )
+                click.secho(
+                    click.style("Message: ", fg="red", bold=True)
+                    + str(e.output or e.stderr, encoding="utf-8").strip()
+                )
                 ctx.exit(rc)
 
     elif config["type"] == "shell":
