@@ -75,7 +75,7 @@ pegasus_lite_log()
 pegasus_lite_worker_package()
 {
     # many ways of providing worker package
-    if pegasus_lite_internal_wp_shipped || pegasus_lite_internal_wp_in_env || pegasus_lite_internal_wp_download; then
+    if pegasus_lite_internal_wp_shipped || pegasus_lite_wp_untarred || pegasus_lite_internal_wp_in_env || pegasus_lite_internal_wp_download; then
         return 0
     fi
     return 1
@@ -115,6 +115,45 @@ pegasus_lite_internal_wp_shipped()
         export PATH
         return 0
     fi
+    return 1
+}
+
+pegasus_lite_wp_untarred()
+{
+    system=$(pegasus_lite_get_system)
+
+    # does the job have access to an untarred pegasus worker.
+    # can happen in case when job runs in application container
+    # and worker package has already been untarred in pegasuslite
+    # on the HOSTOS
+    pegasus_lite_log "Checking for untar worker package in $pegasus_lite_start_dir"
+    untar_dir=$(ls -d $pegasus_lite_start_dir/* | grep -E 'pegasus-[0-9]+\.[0-9]+\.[0-9]+[a-zA-Z0-9]*-*') >/dev/null 2>&1
+    if [ "X$untar_dir" != "X" ]; then
+        pegasus_lite_log "The job contained a Pegasus worker package that was already untarred in $untar_dir"
+    
+        if [ "X$pegasus_lite_enforce_strict_wp_check" = "Xtrue" ]; then
+	    # make sure the provided worker package provided is for the this platform
+	    if [ $? = 0 ]; then
+                wp_name=`(cd $pegasus_lite_start_dir && ls $untar_dir | head -n 1) 2>/dev/null`
+                if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
+		    pegasus_lite_log "Warning: worker package $wp_name does not seem to match the system $system"
+		    return 1
+                fi 
+	    fi
+        else
+	    pegasus_lite_log "Skipping sanity check of included worker package because pegasus.transfer.worker.package.strict=$pegasus_lite_enforce_strict_wp_check"
+        fi
+
+        # determine the path of the worker package - this might not match the planner/lite versions
+        # as the user might have specified a different worker package
+        worker_package_dir=$untar_dir
+
+        unset PEGASUS_HOME
+        PATH=${worker_package_dir}/bin:$PATH
+        export PATH
+        return 0
+    fi
+
     return 1
 }
 
