@@ -831,6 +831,37 @@ catalog with:
          }
        }
 
+.. _transfer-worker-package_staging_containers:
+
+Staging of Worker Package into Containers
+-----------------------------------------
+
+When a job runs in an application container, the job encounter two (potentially incompatible)
+OS'es. The first one is the HOST OS where the job get launched by the resource manager (such
+as SLURM etc.) The other is the OS in the container, in which the job is set to run. Normally,
+by default PegasusLite scripts at runtime (both on the HOST OS and in the Container OS) will
+automatically, download an appropriate worker pacakge for the platform. However in some cases,
+you might want to disable this behavior. Some examples are below
+
+* The worker nodes where the job runs do not have access to the internet
+* The Pegasus Website is down
+* You want to optimize and not download packages for each job from the Pegasus website.
+
+In this case, worker package staging functionality can be of help. However, worker package
+staging in Pegasus allows you to specify a worker package for a site in the Site
+Catalog, and not explicitly for a container. In general, for most of linux flavors, the same
+worker package should work on the host OS and container OS. If you are using similar
+flavors of linux, the following settings in your properties can help you turn off downloads
+of worker package from the Pegasus website, and instead use the worker package specified in
+the Transformation Catalog.
+
+* pegasus.transfer.worker.package=true
+* pegasus.transfer.worker.package.autodownload=false
+
+.. note::
+    In the script that gets invoked in the application container to launch a job, the
+    strict checking of worker package versions is always disabled.
+
 .. _staging-job-checkpoint-files:
 
 Staging of Job Checkpoint Files
