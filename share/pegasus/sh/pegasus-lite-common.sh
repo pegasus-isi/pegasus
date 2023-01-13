@@ -122,7 +122,7 @@ pegasus_lite_wp_untarred()
 {
     system=$(pegasus_lite_get_system)
 
-    # does the job have access to an untarred pegasus worker.
+    # PM-1894 does the job have access to an untarred pegasus worker.
     # can happen in case when job runs in application container
     # and worker package has already been untarred in pegasuslite
     # on the HOSTOS
@@ -148,6 +148,12 @@ pegasus_lite_wp_untarred()
         # as the user might have specified a different worker package
         worker_package_dir=$untar_dir
 
+	# extra failsafe . attempt to see if we can run pegasus-kickstart out of untar dir
+	if ! (${worker_package_dir}/bin/pegasus-kickstart true) >/dev/null 2>&1 ; then
+	    pegasus_lite_log "Warning: unable to execute pegasus-kickstart out of $untar_dir . Will not use this install."
+	    return 1
+	fi
+	
         unset PEGASUS_HOME
         PATH=${worker_package_dir}/bin:$PATH
         export PATH
