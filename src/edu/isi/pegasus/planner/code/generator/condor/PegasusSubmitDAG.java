@@ -223,20 +223,11 @@ public class PegasusSubmitDAG {
                     if (line.startsWith("queue")) {
                         // backtrack to previous file position i.e just before queue
                         raf.seek(previous);
-                        StringBuilder dagmanEnv = new StringBuilder(dagmanEnvString);
-                        if (dagmanEnvString.isEmpty()) {
-                            dagmanEnv.append("environment=");
-                        } else {
-                            dagmanEnv.append(";");
-                        }
-                        for (Iterator it = env.getProfileKeyIterator(); it.hasNext(); ) {
-                            String key = (String) it.next();
-                            dagmanEnv.append(key).append("=").append(env.get(key)).append(";");
-                        }
+                        String updatedDagmanEnv = getUpdatedDAGManEnv(dagmanEnvString, env);
                         mLogger.log(
-                                "Updated environment for dagman is " + dagmanEnv.toString(),
+                                "Updated environment for dagman is " + updatedDagmanEnv,
                                 LogManager.DEBUG_MESSAGE_LEVEL);
-                        raf.writeBytes(dagmanEnv.toString());
+                        raf.writeBytes(updatedDagmanEnv);
                         raf.writeBytes(System.getProperty("line.separator", "\r\n"));
                         raf.writeBytes("queue");
                         break;
@@ -394,6 +385,49 @@ public class PegasusSubmitDAG {
             // ignore
         }
         return value;
+    }
+
+    /**
+     * Updates a environment classad in the dagman submit file to include any pegasus added env
+     * profiles
+     *
+     * @param existingEnv the line in the dagman.condor.sub file containing the environment classad
+     * @param envProfiles the pegasus profiles to be added
+     * @return updated dagman environment
+     */
+    protected String getUpdatedDAGManEnv(String existingEnv, ENV envProfiles) {
+        StringBuilder dagmanEnv = new StringBuilder();
+        // PM-1895 after 10.2.0 default separator is whitespace, unless the envProfiles string
+        // explicity ends with ;
+        String separator = existingEnv.isEmpty() || existingEnv.endsWith("\"") ? " " : ";";
+        if (existingEnv.isEmpty()) {
+            dagmanEnv.append("environment=");
+            if (separator.equals(" ")) {
+                // whitespace separated envProfiles string needs to start with "
+                dagmanEnv.append("\"");
+            }
+        } else {
+            if (existingEnv.endsWith("\"")) {
+                // PM-1895 10.2.0 or later, condor always uses the new quoting
+                // mechanism for environment, where the whole string is quoted
+                existingEnv = existingEnv.substring(0, existingEnv.length() - 1);
+            }
+            dagmanEnv = new StringBuilder(existingEnv);
+            dagmanEnv.append(separator);
+        }
+        for (Iterator it = envProfiles.getProfileKeyIterator(); it.hasNext(); ) {
+            String key = (String) it.next();
+            dagmanEnv.append(key).append("=").append(envProfiles.get(key)).append(separator);
+        }
+        ;
+        if (separator.equals(" ")) {
+            // end with enclosing quote
+            if (separator.equals(" ")) {
+                // whitespace separated envProfiles string needs to start with "
+                dagmanEnv.append("\"");
+            }
+        }
+        return dagmanEnv.toString();
     }
 
     private static class PSDStreamGobblerCallback implements StreamGobblerCallback {
