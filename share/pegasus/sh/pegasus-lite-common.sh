@@ -134,7 +134,7 @@ pegasus_lite_wp_untarred()
         if [ "X$pegasus_lite_enforce_strict_wp_check" = "Xtrue" ]; then
 	    # make sure the provided worker package provided is for the this platform
 	    if [ $? = 0 ]; then
-                wp_name=`(cd $pegasus_lite_start_dir && ls $untar_dir | head -n 1) 2>/dev/null`
+                wp_name=`(cd $pegasus_lite_start_dir && ls -d $untar_dir | head -n 1) 2>/dev/null`
                 if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
 		    pegasus_lite_log "Warning: worker package $wp_name does not seem to match the system $system"
 		    return 1
