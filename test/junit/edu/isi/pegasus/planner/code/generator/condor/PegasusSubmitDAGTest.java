@@ -106,10 +106,4 @@ public class PegasusSubmitDAGTest {
         assertEquals(expected, actual);
         mLogger.logEventCompletion();
     }
-
-    // TODO add test methods here.
-    // The methods must be annotated with annotation @Test. For example:
-    //
-    // @Test
-    // public void hello() {}
 }
