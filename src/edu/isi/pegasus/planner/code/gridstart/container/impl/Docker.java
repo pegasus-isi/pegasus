@@ -340,7 +340,8 @@ public class Docker extends Abstract {
         sb.append("pegasus_lite_version_minor=$pegasus_lite_version_minor").append("\n");
         sb.append("pegasus_lite_version_patch=$pegasus_lite_version_patch").append("\n");
 
-        sb.append("pegasus_lite_enforce_strict_wp_check=$pegasus_lite_enforce_strict_wp_check").append("\n");
+        sb.append("pegasus_lite_enforce_strict_wp_check=$pegasus_lite_enforce_strict_wp_check")
+                .append("\n");
 
         sb.append(
                         "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download")
