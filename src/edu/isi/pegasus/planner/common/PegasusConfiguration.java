@@ -430,8 +430,9 @@ public class PegasusConfiguration {
         Properties p = new Properties();
         // sanity check
         if (configuration == null) {
-            // default is the sharedfs
-            configuration = SHARED_FS_CONFIGURATION_VALUE;
+            // default is the value set in default configuration
+            // 5.0 onwards that is condorio
+            configuration = DEFAULT_DATA_CONFIGURATION_VALUE;
         }
 
         if (configuration.equalsIgnoreCase(DEPRECATED_S3_CONFIGURATION_VALUE)
