@@ -1278,8 +1278,7 @@ public class PegasusProperties implements Cloneable {
      *
      * <p>Referred to by "pegasus.transfer.worker.package.strict" property.
      *
-     * @return boolean value specified in the properties file,else true in case of non boolean value
-     *     being specified or property not being set.
+     * @return boolean value specified in the properties file,else null
      */
     public boolean enforceStrictChecksForWorkerPackage() {
         return Boolean.parse(

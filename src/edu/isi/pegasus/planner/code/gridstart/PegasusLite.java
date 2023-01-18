@@ -268,8 +268,16 @@ public class PegasusLite implements GridStart {
         if (mWorkerPackageMap == null) {
             mWorkerPackageMap = new HashMap<String, String>();
         }
-        mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
+        mEnforceStrictChecksOnWPVersion = enforceStrictChecksForWorkerPackage(bag);
         mAllowWPDownloadFromWebsite = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
+        mLogger.log(
+                "Enforce strict checks for worker package in PegasusLite: "
+                        + mEnforceStrictChecksOnWPVersion,
+                LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log(
+                "Allow download of worker package in PegasusLite from Pegasus Website: "
+                        + mAllowWPDownloadFromWebsite,
+                LogManager.CONFIG_MESSAGE_LEVEL);
 
         Version version = Version.instance();
         mMajorVersionLevel = version.getMajor();
@@ -727,11 +735,6 @@ public class PegasusLite implements GridStart {
             workerNodeDir = getWorkerNodeDirectory(job);
         }
 
-        // PM-1872 disable strict worker check if user is doing explicit
-        // worker package staging for the job
-        boolean enforceStrictChecksOnWPVersion =
-                workerPackageStagingForJob ? false : this.mEnforceStrictChecksOnWPVersion;
-
         // PM-810 load SLS factory per job
         SLS sls = mSLSFactory.loadInstance(job);
 
@@ -765,7 +768,7 @@ public class PegasusLite implements GridStart {
                     .append("\"")
                     .append('\n');
             sb.append("pegasus_lite_enforce_strict_wp_check=\"")
-                    .append(enforceStrictChecksOnWPVersion)
+                    .append(this.mEnforceStrictChecksOnWPVersion)
                     .append("\"")
                     .append('\n');
             sb.append("pegasus_lite_version_allow_wp_auto_download=\"")
@@ -1407,5 +1410,23 @@ public class PegasusLite implements GridStart {
                 }
             }
         }
+    }
+
+    /**
+     * Convenience method to compute whether to enable strict checks for worker package or not
+     *
+     * @param bag
+     * @return
+     */
+    protected boolean enforceStrictChecksForWorkerPackage(PegasusBag bag) {
+        // default value is true
+        boolean strict = mProps.enforceStrictChecksForWorkerPackage();
+        if (bag.getOriginalPegasusProperties().transferWorkerPackage()) {
+            // PM-1872 disable strict worker check if user is doing explicit
+            // worker package staging for the job by specifically mentioning
+            // in properties
+            strict = false;
+        }
+        return strict;
     }
 }
