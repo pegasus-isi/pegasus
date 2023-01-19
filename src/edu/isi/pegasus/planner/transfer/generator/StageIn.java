@@ -232,6 +232,7 @@ public class StageIn extends Abstract {
             // if the LFN is not specified as an input file in the DAX
             // lets add it PM-667 more of a sanity check.
             daxFile.setTransferFlag(PegasusFile.TRANSFER_MANDATORY);
+            daxFile.setUseForPlanning();
             job.getInputFiles().add(daxFile);
             searchFiles.add(daxFile);
         }
