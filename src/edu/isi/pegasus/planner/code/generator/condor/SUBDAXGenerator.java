@@ -180,13 +180,13 @@ public class SUBDAXGenerator {
      * A boolean to track whether we need to use for planner flag associated with the input files of
      * pegasusWorkflow/sub workflow jobs or not.
      */
-    private boolean mCheckUseForPlannerFlag;
+    private boolean mCheckUseForPlanningFlag;
 
     /** The default constructor. */
     public SUBDAXGenerator() {
         mNumFormatter = new DecimalFormat("0000");
         mMetricsReporter = new Metrics();
-        mCheckUseForPlannerFlag = true;
+        mCheckUseForPlanningFlag = true;
     }
 
     /**
@@ -224,7 +224,7 @@ public class SUBDAXGenerator {
         }
 
         // PM-1898 boolean to determine if we have to consider forPlanner flag
-        mCheckUseForPlannerFlag = computeUseForPlannerFlag(dag);
+        mCheckUseForPlanningFlag = computeUseForPlannerFlag(dag);
 
         // PM-1132 initialize the PegasusLite Wrapper
         mGridStartFactory = this.initializeGridStartFactory(bag, dag);
@@ -669,7 +669,7 @@ public class SUBDAXGenerator {
 
         Set<PegasusFile> inputs = new HashSet();
         for (PegasusFile input : dagJob.getInputFiles()) {
-            if (!mCheckUseForPlannerFlag || input.forPlannerUse()) {
+            if (!mCheckUseForPlanningFlag || input.useForPlanning()) {
                 // PM-1898 we want to add input file based on forPlanner flag
                 // associated with files for daxes greater than 5.0.4
                 // for prior versions we add all files

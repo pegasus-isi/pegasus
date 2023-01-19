@@ -71,7 +71,7 @@ public class PegasusFile extends Data {
     public static final int BYPASS_BIT_FLAG = 4;
 
     /** If set, means can be considered for bypass staging */
-    public static final int PLANNER_USE_BIT_FLAG = 5;
+    public static final int PLANNING_USE_BIT_FLAG = 5;
 
     /** The number of transient flags. This is the length of the BitSet in the flags fields. */
     public static final int NO_OF_TRANSIENT_FLAGS = 6;
@@ -221,7 +221,7 @@ public class PegasusFile extends Data {
         // unless dial value results it being turned off
         mFlags.set(PegasusFile.INTEGRITY_BIT_FLAG);
         // by default files are not marked for planner use
-        mFlags.clear(PegasusFile.PLANNER_USE_BIT_FLAG);
+        mFlags.clear(PegasusFile.PLANNING_USE_BIT_FLAG);
 
         mLogicalFile = "";
         // by default the type is DATA
@@ -591,8 +591,8 @@ public class PegasusFile extends Data {
     }
 
     /** Sets the file to be used for planning purposes */
-    public void setForPlannerUse() {
-        mFlags.set(PLANNER_USE_BIT_FLAG);
+    public void setUseForPlanning() {
+        mFlags.set(PLANNING_USE_BIT_FLAG);
     }
 
     /**
@@ -600,8 +600,8 @@ public class PegasusFile extends Data {
      *
      * @param value the boolean value to which the flag should be set to.
      */
-    public void setForPlannerUse(boolean value) {
-        mFlags.set(PLANNER_USE_BIT_FLAG, value);
+    public void setUseForPlanning(boolean value) {
+        mFlags.set(PLANNING_USE_BIT_FLAG, value);
     }
 
     /**
@@ -609,8 +609,8 @@ public class PegasusFile extends Data {
      *
      * @return boolean indicating if the file is for planner use.
      */
-    public boolean forPlannerUse() {
-        return mFlags.get(PLANNER_USE_BIT_FLAG);
+    public boolean useForPlanning() {
+        return mFlags.get(PLANNING_USE_BIT_FLAG);
     }
 
     /** Sets the integrity flag denoting the file should be integrity checked */
