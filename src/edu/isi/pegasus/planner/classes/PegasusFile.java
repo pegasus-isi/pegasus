@@ -70,8 +70,11 @@ public class PegasusFile extends Data {
     /** If set, means can be considered for bypass staging */
     public static final int BYPASS_BIT_FLAG = 4;
 
+    /** If set, means can be considered for bypass staging */
+    public static final int PLANNER_USE_BIT_FLAG = 5;
+
     /** The number of transient flags. This is the length of the BitSet in the flags fields. */
-    public static final int NO_OF_TRANSIENT_FLAGS = 5;
+    public static final int NO_OF_TRANSIENT_FLAGS = 6;
 
     /**
      * The mode where the transfer for this file to the pool is constructed and the transfer job
@@ -217,6 +220,8 @@ public class PegasusFile extends Data {
         // PM-1375 all files are eligible for integrity checking
         // unless dial value results it being turned off
         mFlags.set(PegasusFile.INTEGRITY_BIT_FLAG);
+        // by default files are not marked for planner use
+        mFlags.clear(PegasusFile.PLANNER_USE_BIT_FLAG);
 
         mLogicalFile = "";
         // by default the type is DATA
@@ -579,10 +584,33 @@ public class PegasusFile extends Data {
     /**
      * Returns cleanup denoting whether the file can be cleaned up or not
      *
-     * @return true denoting the file can be cleaned up.
+     * @return boolean denoting the file can be cleaned up.
      */
     public boolean canBeCleanedup() {
         return mFlags.get(CLEANUP_BIT_FLAG);
+    }
+
+    /** Sets the file to be used for planning purposes */
+    public void setForPlannerUse() {
+        mFlags.set(PLANNER_USE_BIT_FLAG);
+    }
+
+    /**
+     * Sets the file to be used for planning purposes
+     *
+     * @param value the boolean value to which the flag should be set to.
+     */
+    public void setForPlannerUse(boolean value) {
+        mFlags.set(PLANNER_USE_BIT_FLAG, value);
+    }
+
+    /**
+     * Returns boolean denoting whether the file is for planner use or not
+     *
+     * @return boolean indicating if the file is for planner use.
+     */
+    public boolean forPlannerUse() {
+        return mFlags.get(PLANNER_USE_BIT_FLAG);
     }
 
     /** Sets the integrity flag denoting the file should be integrity checked */
@@ -950,7 +978,7 @@ public class PegasusFile extends Data {
                 .append("\n Size         :")
                 .append(mSize)
                 .append(
-                        "\n Transient Flags (transfer,optional,dontRegister,cleanup,integrity,bypass):")
+                        "\n Transient Flags (transfer,optional,dontRegister,cleanup,integrity,bypass,plannerUse):")
                 .append(" ( ")
                 .append(getTransferFlag())
                 .append(",");

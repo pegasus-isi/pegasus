@@ -1277,7 +1277,7 @@ public class PegasusProperties implements Cloneable {
      * Default value is true.
      *
      * <p>Referred to by "pegasus.transfer.worker.package.strict" property.
-     * 
+     *
      * @return boolean value specified in the properties file,else true in case of non boolean value
      *     being specified or property not being set.
      */
