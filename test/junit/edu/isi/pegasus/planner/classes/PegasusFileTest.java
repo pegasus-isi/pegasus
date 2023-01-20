@@ -107,6 +107,20 @@ public class PegasusFileTest {
     }
 
     @Test
+    public void testUsesForPlanningFlag() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test = "lfn: f.b2\n" + "forPlanning: true\n" + "type: output\n";
+
+        PegasusFile pf = mapper.readValue(test, PegasusFile.class);
+        assertNotNull(pf);
+        assertEquals("f.b2", pf.getLFN());
+        assertTrue(pf.useForPlanning());
+        assertEquals("output", pf.getLinkage().toString());
+    }
+
+    @Test
     public void testUsesMetadata() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);

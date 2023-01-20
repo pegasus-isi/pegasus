@@ -1079,6 +1079,10 @@ public class PegasusFile extends Data {
                         pf.setSize(node.get(key).asText());
                         break;
 
+                    case FOR_PLANNING:
+                        pf.setUseForPlanning(node.get(key).asBoolean());
+                        break;
+
                     default:
                         this.complainForUnsupportedKey(
                                 WorkflowKeywords.USES.getReservedName(), key, node);
