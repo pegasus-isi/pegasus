@@ -40,7 +40,7 @@ public class ADAGTest {
         System.out.println(result);
         String expected =
                 "---\n"
-                        + "pegasus: \"5.0\"\n"
+                        + "pegasus: \"5.0.4\"\n"
                         + "x-pegasus:\n"
                         + "  createdBy: \"vahi\"\n"
                         + "  createdOn: \"2021-11-18T23:43:41Z\"\n"
@@ -164,7 +164,7 @@ public class ADAGTest {
         String result = wf.toYAML();
         String expected =
                 "---\n"
-                        + "pegasus: \"5.0\"\n"
+                        + "pegasus: \"5.0.4\"\n"
                         + "x-pegasus:\n"
                         + "  createdBy: \"ryantanaka\"\n"
                         + "  createdOn: \"2020-07-17T03:58:49Z\"\n"
