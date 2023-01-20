@@ -28,6 +28,56 @@ import org.junit.Test;
 public class ADAGTest {
 
     @Test
+    public void testForPlanningFlagInPegasusWorkflowJob() {
+        ADAG wf = new ADAG("test");
+        DAX preD = new DAX("test", "subwf.yml");
+        preD.uses(new File("sites.yml"), File.LINK.INPUT, File.TRANSFER.TRUE, true, true);
+        wf.addDAX(preD);
+
+        String result = wf.toYAML();
+        System.out.println(result);
+        String expected =
+                "---\n"
+                        + "pegasus: \"5.0.4\"\n"
+                        + "x-pegasus:\n"
+                        + "  createdBy: \"bamboo\"\n"
+                        + "  createdOn: \"today\"\n"
+                        + "  apiLang: \"java\"\n"
+                        + "name: \"test\"\n"
+                        + "metadata:\n"
+                        + "  wf.api: \"java\"\n"
+                        + "jobs:\n"
+                        + " -\n"
+                        + "  type: \"pegasusWorkflow\"\n"
+                        + "  file: \"subwf.yml\"\n"
+                        + "  id: \"test\"\n"
+                        + "  arguments: []\n"
+                        + "  uses:\n"
+                        + "   -\n"
+                        + "    lfn: \"sites.yml\"\n"
+                        + "    type: \"input\"\n"
+                        + "    stageOut: true\n"
+                        + "    registerReplica: true\n"
+                        + "    forPlanning: true\n";
+
+        // use a fixed "createdOn" value for test
+        String createdOn = "\"today\"";
+        String pattern1 = "\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"";
+        result = result.replaceAll(pattern1, createdOn);
+        expected = expected.replaceAll(pattern1, createdOn);
+
+        // use a fixed "createdBy" value for test
+        String createdBy = "createdBy: \"bamboo\"";
+        String pattern2 = "createdBy: \\p{Print}+";
+        result = result.replaceAll(pattern2, createdBy);
+        expected = expected.replaceAll(pattern2, createdBy);
+
+        // System.out.println(result);
+
+        assertEquals(expected, result);
+    }
+
+    @Test
     public void testDAXJobArgumentsSerialization() {
         ADAG wf = new ADAG("test");
         DAX preD = new DAX("test", "subwf.yml");
