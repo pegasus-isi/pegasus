@@ -1334,7 +1334,7 @@ public class AbstractJob {
      * @param transfer transfer flag indicating whether file should be transferred or not
      * @param register whether to register the file
      * @param forPlanning whether the file is to be used for planning purposes
-     * @returnunSu AbstractJob
+     * @return AbstractJob
      */
     public AbstractJob uses(
             File file,
