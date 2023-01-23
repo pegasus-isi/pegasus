@@ -12,6 +12,11 @@ TESTDIR=$(cd $testdir && pwd)
 TEST_NAME=`basename $TESTDIR`
 export TEST_NAME
 
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
+PEGASUS_LOCAL_BIN_DIR=$BIN_DIR
+export PEGASUS_LOCAL_BIN_DIR
+
 #input file directory
 input_dir=/scitech/shared/scratch-90-days/bamboo/${TEST_NAME}
 mkdir -p ${input_dir}
