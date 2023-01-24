@@ -8,7 +8,7 @@ from Pegasus.api.errors import DuplicateError
 from Pegasus.api.mixins import ProfileMixin
 from Pegasus.api.writable import Writable, _filter_out_nones
 
-PEGASUS_VERSION = "5.0"
+PEGASUS_VERSION = "5.0.4"
 
 __all__ = [
     "Arch",

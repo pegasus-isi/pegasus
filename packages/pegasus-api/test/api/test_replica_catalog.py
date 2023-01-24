@@ -322,7 +322,7 @@ class TestReplicaCatalog:
         rc.add_regex_replica("local", "*.txt", "/path", metadata={"creator": "ryan"})
         result = _tojson(rc)
         expected = {
-            "pegasus": "5.0",
+            "pegasus": "5.0.4",
             "replicas": [
                 {
                     "lfn": "f.a",
@@ -362,7 +362,7 @@ class TestReplicaCatalog:
         rc.add_regex_replica("local", "*.txt", "/path", metadata={"creator": "ryan"})
 
         expected = {
-            "pegasus": "5.0",
+            "pegasus": "5.0.4",
             "replicas": [
                 {
                     "lfn": "f.a",
@@ -427,5 +427,5 @@ class TestReplicaCatalog:
         - pegasus
         - replicas
         """
-        p = re.compile(r"x-pegasus:[\w\W]+pegasus: '5.0'[\w\W]+replicas:[\w\W]+")
+        p = re.compile(r"x-pegasus:[\w\W]+pegasus: 5.0.4[\w\W]+replicas:[\w\W]+")
         assert p.match(result) is not None

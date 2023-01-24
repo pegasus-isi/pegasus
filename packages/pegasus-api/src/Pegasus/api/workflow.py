@@ -16,7 +16,7 @@ from .writable import Writable, _CustomEncoder, _filter_out_nones
 
 from Pegasus.client._client import from_env
 
-PEGASUS_VERSION = "5.0"
+PEGASUS_VERSION = "5.0.4"
 
 __all__ = ["AbstractJob", "Job", "SubWorkflow", "Workflow"]
 
@@ -896,6 +896,7 @@ class _Use:
                         self.file.metadata if len(self.file.metadata) > 0 else None,
                     ),
                     ("size", self.file.size),
+                    ("forPlanning", self.file.for_planning),
                     ("type", self._type),
                     ("stageOut", self.stage_out),
                     ("registerReplica", self.register_replica),

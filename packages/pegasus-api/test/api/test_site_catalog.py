@@ -598,5 +598,5 @@ class TestSiteCatalog:
         - pegasus
         - sites
         """
-        p = re.compile(r"x-pegasus:[\w\W]+pegasus: '5.0'[\w\W]+sites:[\w\W]")
+        p = re.compile(r"x-pegasus:[\w\W]+pegasus: 5.0.4[\w\W]+sites:[\w\W]")
         assert p.match(result) is not None
