@@ -67,10 +67,11 @@ class TestFile:
         assert "invalid lfn: {lfn}".format(lfn=lfn) in str(e)
 
     @pytest.mark.parametrize(
-        "lfn,size,expected",
+        "lfn,size,for_planning,expected",
         [
-            ("f1", None, {"lfn": "f1"}),
-            ("f2", 2048, {"lfn": "f2", "size": 2048, "metadata": {"size": 2048}}),
+            ("f1", None, True, {"lfn": "f1", "forPlanning": True}),
+            ("f2", 2048, False, {"lfn": "f2", "size": 2048, "metadata": {"size": 2048}}),
+            ("f3", 1024, True, {"lfn": "f3", "size": 1024, "forPlanning": True, "metadata": {"size": 1024}})
         ],
     )
     def test_tojson_no_metadata(self, lfn, size, expected):
@@ -95,6 +96,15 @@ class TestFile:
         file_schema = load_schema("rc-5.0.json")["$defs"]["file"]
         validate(instance=result, schema=file_schema)
 
+        assert result == expected
+    
+    def test_tojson_forplanning_with_metdata(self, convert_yaml_schemas_to_json, load_schema):
+        result = File("subwf_tc.yml", size=1024).add_metadata(creator="zaiyan").__json__()
+        expected = {
+            "lfn": "subwf_tc.yml",
+            "metadata": {"creator": "zaiyan", "size": 1024},
+            "size": 1024,
+        }
         assert result == expected
 
 
