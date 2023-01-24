@@ -1403,7 +1403,7 @@ class TestWorkflow:
             result = yaml.safe_load(f)
 
         expected = {
-            "pegasus": "5.0",
+            "pegasus": "5.0.4",
             "name": "test",
             "siteCatalog": {"sites": []},
             "replicaCatalog": {"replicas": []},
@@ -1489,7 +1489,7 @@ class TestWorkflow:
                     ReplicaCatalog().add_replica("local", "lfn", "pfn")
                 ),
                 {
-                    "pegasus": "5.0",
+                    "pegasus": "5.0.4",
                     "name": "abc",
                     "replicaCatalog": {
                         "replicas": [
@@ -1527,7 +1527,7 @@ class TestWorkflow:
                     .add_inputs(File("if.txt"))
                 ),
                 {
-                    "pegasus": "5.0",
+                    "pegasus": "5.0.4",
                     "name": "abc",
                     "replicaCatalog": {
                         "replicas": [
@@ -1619,7 +1619,7 @@ class TestWorkflow:
         - jobDependencies
         """
         p = re.compile(
-            r"x-pegasus:[\w\W]+pegasus: '5.0'[\w\W]+name:[\w\W]+hooks:[\w\W]+profiles:[\w\W]+metadata:[\w\W]+siteCatalog:[\w\W]+replicaCatalog:[\w\W]+transformationCatalog:[\w\W]+jobs:[\w\W]+jobDependencies:[\w\W]+"
+            r"x-pegasus:[\w\W]+pegasus: 5.0.4[\w\W]+name:[\w\W]+hooks:[\w\W]+profiles:[\w\W]+metadata:[\w\W]+siteCatalog:[\w\W]+replicaCatalog:[\w\W]+transformationCatalog:[\w\W]+jobs:[\w\W]+jobDependencies:[\w\W]+"
         )
         assert p.match(result) is not None
 

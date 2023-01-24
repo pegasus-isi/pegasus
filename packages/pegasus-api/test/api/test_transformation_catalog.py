@@ -876,7 +876,7 @@ class TestTransformationCatalog:
         )
 
         expected = {
-            "pegasus": "5.0",
+            "pegasus": "5.0.4",
             "transformations": [
                 {"name": "t1", "sites": []},
                 {"name": "t2", "sites": []},
@@ -922,7 +922,7 @@ class TestTransformationCatalog:
         - containers
         """
         p = re.compile(
-            r"x-pegasus:[\w\W]+pegasus: '5.0'[\w\W]+transformations:[\w\W]+containers[\w\W]+"
+            r"x-pegasus:[\w\W]+pegasus: 5.0.4[\w\W]+transformations:[\w\W]+containers[\w\W]+"
         )
         assert p.match(result) is not None
 
