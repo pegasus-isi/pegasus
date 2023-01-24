@@ -74,8 +74,8 @@ class TestFile:
             ("f3", 1024, True, {"lfn": "f3", "size": 1024, "forPlanning": True, "metadata": {"size": 1024}})
         ],
     )
-    def test_tojson_no_metadata(self, lfn, size, expected):
-        assert File(lfn, size).__json__() == expected
+    def test_tojson_no_metadata(self, lfn, size, for_planning, expected):
+        assert File(lfn, size, for_planning).__json__() == expected
 
     def test_eq(self):
         assert File("a") == File("a")
@@ -97,13 +97,14 @@ class TestFile:
         validate(instance=result, schema=file_schema)
 
         assert result == expected
-    
-    def test_tojson_forplanning_with_metdata(self, convert_yaml_schemas_to_json, load_schema):
-        result = File("subwf_tc.yml", size=1024).add_metadata(creator="zaiyan").__json__()
+        
+    def test_tojson_forplanning_with_metdata(self):
+        result = File("subwf_tc.yml", size=1024, for_planning=True).add_metadata(creator="zaiyan").__json__()
         expected = {
             "lfn": "subwf_tc.yml",
             "metadata": {"creator": "zaiyan", "size": 1024},
             "size": 1024,
+            "forPlanning": True
         }
         assert result == expected
 
