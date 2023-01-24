@@ -328,7 +328,7 @@ def test_build_pegasus_tc_with_containers_using_dockerPull():
     result = json.loads(json.dumps(build_pegasus_tc(tr_specs, wf), cls=_CustomEncoder))
 
     assert result == {
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
         "transformations": [
             {
                 "name": "tar",
@@ -386,7 +386,7 @@ def test_build_pegasus_tc_with_containers_using_dockerLoad():
     result = json.loads(json.dumps(build_pegasus_tc(tr_specs, wf), cls=_CustomEncoder))
 
     assert result == {
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
         "transformations": [
             {
                 "name": "tar",
@@ -464,7 +464,7 @@ def test_build_pegasus_tc_with_duplicate_containers():
         pytest.fail("Duplicate error should have been caught.")
 
     assert result == {
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
         "transformations": [
             {
                 "name": "tar",
@@ -964,7 +964,7 @@ def test_build_pegasus_wf():
             },
         ],
         "name": "cwl-converted-pegasus-workflow",
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
     }
 
     expected["jobs"] = sorted(expected["jobs"], key=lambda job: job["id"])
@@ -1106,7 +1106,7 @@ def test_main(mocker):
             }
         ],
         "name": "cwl-converted-pegasus-workflow",
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
         "replicaCatalog": {
             "replicas": [
                 {"lfn": "if", "pfns": [{"pfn": "/path/to/file.txt", "site": "local"}]}
