@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.client.CPlanner;
 import edu.isi.pegasus.planner.code.GridStart;
@@ -175,10 +176,17 @@ public class SUBDAXGenerator {
     /** The path to pegasus-lite-common.sh */
     private File mPegasusLiteCommon;
 
+    /**
+     * A boolean to track whether we need to use for planner flag associated with the input files of
+     * pegasusWorkflow/sub workflow jobs or not.
+     */
+    private boolean mCheckUseForPlanningFlag;
+
     /** The default constructor. */
     public SUBDAXGenerator() {
         mNumFormatter = new DecimalFormat("0000");
         mMetricsReporter = new Metrics();
+        mCheckUseForPlanningFlag = true;
     }
 
     /**
@@ -214,6 +222,9 @@ public class SUBDAXGenerator {
             mLogger.log(
                     "Condor Version detected is " + mCondorVersion, LogManager.DEBUG_MESSAGE_LEVEL);
         }
+
+        // PM-1898 boolean to determine if we have to consider forPlanner flag
+        mCheckUseForPlanningFlag = computeUseForPlannerFlag(dag);
 
         // PM-1132 initialize the PegasusLite Wrapper
         mGridStartFactory = this.initializeGridStartFactory(bag, dag);
@@ -655,7 +666,17 @@ public class SUBDAXGenerator {
 
         // make sure inputs and output files are set same as dag job
         // that is what we want PegasusLite to handle for PM-1132
-        preScriptJob.setInputFiles(dagJob.getInputFiles());
+
+        Set<PegasusFile> inputs = new HashSet();
+        for (PegasusFile input : dagJob.getInputFiles()) {
+            if (!mCheckUseForPlanningFlag || input.useForPlanning()) {
+                // PM-1898 we want to add input file based on forPlanner flag
+                // associated with files for daxes greater than 5.0.4
+                // for prior versions we add all files
+                inputs.add(input);
+            }
+        }
+        preScriptJob.setInputFiles(inputs);
         preScriptJob.setOutputFiles(dagJob.getOutputFiles());
 
         // arguments are just $@ since the prescript in the invocation contains
@@ -1715,5 +1736,28 @@ public class SUBDAXGenerator {
         }
         String execSites = sb.length() > 1 ? sb.substring(0, sb.length() - 1) : sb.toString();
         job.condorVariables.construct("+pegasus_execution_sites", "\"" + execSites + "\"");
+    }
+
+    /**
+     * Returns a boolean indicating whether we need to use the forPlannerFlag associated with input
+     * files, when wrapping the pegasusWorkflow job with PegasusLite
+     *
+     * @param dag
+     * @return
+     */
+    protected boolean computeUseForPlannerFlag(ADag dag) {
+        // default is false, if we cannot compute version of the dax
+        boolean use = false;
+        String daxVersion = dag.getDAXVersion();
+        long v_5_0_4 = CondorVersion.numericValue("5.0.4");
+        if (daxVersion != null) {
+            // strip any suffixes such as rc1 etc to ensure numeric major.minor patch version
+            daxVersion = daxVersion.replaceAll("([0-9]+\\.[0-9]+\\.[0-9]*)[\\p{ASCII}\\s]*", "$1");
+            long value = CondorVersion.numericValue(daxVersion);
+            if (value >= v_5_0_4) {
+                use = true;
+            }
+        }
+        return use;
     }
 }

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -o  pipefail
 
 # this variable is expanded by the planner when
 # parsing in the sites.xml file in the conf directory
@@ -47,5 +48,33 @@ pegasus-plan \
     --cluster horizontal \
     --force \
     -v \
-    --submit \
-    blackdiamond.dax 
+    blackdiamond.dax | tee $TOPDIR/plan.out
+
+
+WORK_DIR=`cat $TOPDIR/plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
+if [ "x$WORK_DIR" = "x" ]; then
+    echo "Unable to determine work directory from the planner output"
+    exit 1
+fi
+echo "work directory is $WORK_DIR"
+cd $WORK_DIR
+
+
+# make sure certain bash variables have the right values
+for variable in pegasus_lite_enforce_strict_wp_check pegasus_lite_version_allow_wp_auto_download; do
+    echo "Searching for $variable"
+    for pegasus_lite_sh in `find $WORK_DIR -name \*ID\*.sh`; do
+        for match in `(grep $variable $pegasus_lite_sh | awk '{print $1;}') 2>/dev/null `; do
+            # variable can appear twice in the pegasus lite script
+	    #echo "match is $match"
+	    if (echo $match | grep $variable  | grep "false" ) >/dev/null 2>&1; then
+		echo "Error: $pegasus_lite_sh has $variable set to false. Should be true"
+		exit 1
+            fi
+        done
+    done
+done
+
+# now we are good to submit
+echo "Submitting the workflow for execution"
+pegasus-run $WORK_DIR

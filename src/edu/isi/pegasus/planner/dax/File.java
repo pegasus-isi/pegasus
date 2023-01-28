@@ -70,8 +70,15 @@ public class File extends CatalogType {
     protected boolean mRegister = true;
     /** Should the file be transferred on generation. */
     protected TRANSFER mTransfer = TRANSFER.TRUE;
+
     /** Is the file an executable. */
     protected boolean mExecutable = false;
+
+    /**
+     * A boolean tracking whether a file is for use of planner i.e. to be used for planning a sub
+     * workflow.
+     */
+    protected boolean useForPlanning = false;
 
     /** File size of the file no units required */
     protected String mSize = "";
@@ -118,6 +125,7 @@ public class File extends CatalogType {
         this.mTransfer = f.getTransfer();
         this.mExecutable = f.getExecutable();
         this.mSize = f.getSize();
+        this.useForPlanning = f.useForPlanning();
         this.mMetadata = new LinkedHashSet<MetaData>(f.mMetadata);
     }
 
@@ -288,6 +296,36 @@ public class File extends CatalogType {
     }
 
     /**
+     * Mark the file to be used for planner.
+     *
+     * @param value boolean
+     * @return File
+     */
+    public File setUseForPlanning(boolean value) {
+        useForPlanning = value;
+        return this;
+    }
+
+    /**
+     * Mark the file to be used for planner.
+     *
+     * @return File
+     */
+    public File setUseForPlanning() {
+        useForPlanning = true;
+        return this;
+    }
+
+    /**
+     * Returns boolean indicating whether the file is marked for planner use.
+     *
+     * @return boolean
+     */
+    public boolean useForPlanning() {
+        return useForPlanning;
+    }
+
+    /**
      * Set the size of the file.
      *
      * @param size size of the file
@@ -355,6 +393,7 @@ public class File extends CatalogType {
         this.mExecutable = f.getExecutable();
         this.mSize = f.getSize();
         this.mMetadata = f.getMetaData();
+        this.useForPlanning = f.useForPlanning();
         return f;
     }
 
@@ -432,6 +471,12 @@ public class File extends CatalogType {
             if (mExecutable) {
                 writer.writeAttribute("executable", "true");
             }
+
+            if (useForPlanning) {
+                throw new UnsupportedOperationException(
+                        "forPlanning attribute is only supported with yaml formatted abstract workflows");
+            }
+
             if (mSize != null && !mSize.isEmpty()) {
                 writer.writeAttribute("size", mSize);
             }
@@ -565,6 +610,11 @@ public class File extends CatalogType {
             // executable
             if (f.mExecutable) {
                 gen.writeBooleanField("executable", f.mExecutable);
+            }
+
+            // forPlanner
+            if (f.useForPlanning) {
+                gen.writeBooleanField("forPlanning", f.useForPlanning);
             }
 
             gen.writeEndObject();

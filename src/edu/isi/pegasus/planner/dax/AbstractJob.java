@@ -1034,6 +1034,38 @@ public class AbstractJob {
      * @param file the file used by the job
      * @param link indicating whether file is input or output
      * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register the file or not
+     * @param forPlanning whether the file is required for use by planner
+     * @return AbstractJob
+     */
+    public AbstractJob uses(
+            String file,
+            File.LINK link,
+            File.TRANSFER transfer,
+            boolean register,
+            boolean forPlanning) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        f.setTransfer(transfer);
+        f.setUseForPlanning(forPlanning);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+
+    /**
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
      * @param register whether to register file or not
      * @param size size of the file
      * @return AbstractJob
@@ -1282,6 +1314,38 @@ public class AbstractJob {
         File f = new File(file, link);
         f.setTransfer(transfer);
         f.setRegister(register);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log(
+                    "Job "
+                            + Separator.combine(mNamespace, mName, mVersion)
+                            + "already contains a file "
+                            + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                            + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+
+    /**
+     * @param file the file used by the job
+     * @param link indicating whether file is input or output
+     * @param transfer transfer flag indicating whether file should be transferred or not
+     * @param register whether to register the file
+     * @param forPlanning whether the file is to be used for planning purposes
+     * @return AbstractJob
+     */
+    public AbstractJob uses(
+            File file,
+            File.LINK link,
+            File.TRANSFER transfer,
+            boolean register,
+            boolean forPlanning) {
+        File f = new File(file, link);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setUseForPlanning(forPlanning);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {

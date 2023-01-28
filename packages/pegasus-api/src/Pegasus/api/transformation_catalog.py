@@ -10,7 +10,7 @@ from .writable import Writable, _filter_out_nones
 
 from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_str
 
-PEGASUS_VERSION = "5.0"
+PEGASUS_VERSION = "5.0.4"
 
 __all__ = [
     "Container",

@@ -50,6 +50,7 @@ public enum WorkflowKeywords {
     REGISTER_REPLICA("registerReplica"),
     OPTIONAL("optional"),
     BYPASS("bypass"),
+    FOR_PLANNING("forPlanning"),
     SIZE("size"),
     JOB_DEPENDENCIES("jobDependencies"),
     CHILDREN("children");

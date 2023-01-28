@@ -128,6 +128,12 @@ public class PegasusBag implements Bag, Cloneable {
     /** The handle to the <code>PegasusProperties</code>. */
     private PegasusProperties mProps;
 
+    /**
+     * The handle to the <code>PegasusProperties</code> that is passed in the first ever setting of
+     * the properties.
+     */
+    private PegasusProperties mOriginalProps;
+
     /** The options passed to the planner. */
     private PlannerOptions mPOptions;
 
@@ -197,9 +203,12 @@ public class PegasusBag implements Bag, Cloneable {
 
         switch (k) {
             case 0: // PEGASUS_PROPERTIES
-                if (value != null && value instanceof PegasusProperties)
+                if (value != null && value instanceof PegasusProperties) {
                     mProps = (PegasusProperties) value;
-                else valid = false;
+                    if (this.mOriginalProps == null) {
+                        mOriginalProps = (PegasusProperties) mProps.clone();
+                    }
+                } else valid = false;
                 break;
 
             case 1: // PLANNER_OPTIONS
@@ -389,6 +398,16 @@ public class PegasusBag implements Bag, Cloneable {
      */
     public PegasusProperties getPegasusProperties() {
         return (PegasusProperties) get(PegasusBag.PEGASUS_PROPERTIES);
+    }
+
+    /**
+     * A convenience method to get original PegasusProperties that were passed when the setter
+     * method was used
+     *
+     * @return the handle to the properties.
+     */
+    public PegasusProperties getOriginalPegasusProperties() {
+        return this.mOriginalProps;
     }
 
     /**
