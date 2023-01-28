@@ -596,6 +596,107 @@ project:
                     matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: R9CUT
+              name: RHEL 9 Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      scitech-bamboo-apptainer rhel-9 \
+                          ant test-kickstart test-pmc test-transfer
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: apptainer
+                  matchType: !equals
+                    matchValue: true
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: R9JUT
+              name: RHEL 9 Java Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Java Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      scitech-bamboo-apptainer rhel-9 \
+                          ant test-java
+                - !junitParser
+                  description: Parse Test Report
+                  testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: apptainer
+                  matchType: !equals
+                    matchValue: true
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: R9PUT
+              name: RHEL 9 Python Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Python Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      scitech-bamboo-apptainer rhel-9 \
+                          ant test-python
+                - !junitParser
+                  description: Parse Test Report
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: Coverage Report - Pegasus Common
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-common/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus API
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-api/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus DAX
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus Worker
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-worker/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus WMS
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-python/htmlcov/
+                  isShared: false
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: apptainer
+                  matchType: !equals
+                    matchValue: true
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: UTCUB
               name: Ubuntu 18.04 Unit Tests
               tasks:
@@ -764,6 +865,107 @@ project:
                     scriptBody: |
                       cd pegasus-source
                       scitech-bamboo-apptainer ubuntu-20 \
+                          ant test-python
+                - !junitParser
+                  description: Parse Test Report
+                  testResultsDirectory: pegasus-source/packages/*/test-reports/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDefinitions:
+                - name: Coverage Report - Pegasus Common
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-common/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus API
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-api/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus DAX
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-dax-python/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus Worker
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-worker/htmlcov/
+                  isShared: false
+                - name: Coverage Report - Pegasus WMS
+                  copyPattern: "*"
+                  location: pegasus-source/packages/pegasus-python/htmlcov/
+                  isShared: false
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: apptainer
+                  matchType: !equals
+                    matchValue: true
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: UJCUF
+              name: Ubuntu 22.04 Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      scitech-bamboo-apptainer ubuntu-22 \
+                          ant test-kickstart test-pmc test-transfer
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: apptainer
+                  matchType: !equals
+                    matchValue: true
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: UJJUF
+              name: Ubuntu 22.04 Java Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Java Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      scitech-bamboo-apptainer ubuntu-22 \
+                          ant test-java
+                - !junitParser
+                  description: Parse Test Report
+                  testResultsDirectory: pegasus-source/build/tests/classes/junitreport/*.xml
+                  pickUpTestResultsCreatedOutsideOfBuild: false
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: apptainer
+                  matchType: !equals
+                    matchValue: true
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: UJPUF
+              name: Ubuntu 22.04 Python Unit Tests
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Python Unit Tests
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      scitech-bamboo-apptainer ubuntu-22 \
                           ant test-python
                 - !junitParser
                   description: Parse Test Report
@@ -1010,6 +1212,47 @@ project:
                   isShared: true
                 - name: pegasus-worker-x86_64_rhel_8
                   copyPattern: "pegasus-worker-*-x86_64_rhel_8.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-srcrpm
+                  copyPattern: "*.src.rpm"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: apptainer
+                  matchType: !equals
+                    matchValue: true
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXR9
+              name: Build RHEL 9
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      scitech-bamboo-apptainer rhel-9 \
+                          ant dist-rpm dist-worker dist-release
+              artifactDefinitions:
+                - name: pegasus-binary-x86_64_rhel_9
+                  copyPattern: "pegasus-binary-*-x86_64_rhel_9.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-rpm-x86_64_rhel_9
+                  copyPattern: "*x86_64.rpm"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-x86_64_rhel_9
+                  copyPattern: "pegasus-worker-*-x86_64_rhel_9.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
                 - name: pegasus-srcrpm
@@ -1306,6 +1549,46 @@ project:
                     matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXJF
+              name: Build Ubuntu 22.04 LTS
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      scitech-bamboo-apptainer ubuntu-22 \
+                          ant dist-worker dist-release dist-deb
+              artifactDefinitions:
+                - name: pegasus-binary-x86_64_ubuntu_22
+                  copyPattern: "pegasus-binary-*-x86_64_ubuntu_22.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-deb-x86_64_ubuntu_22
+                  copyPattern: "*.deb"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-x86_64_ubuntu_22
+                  copyPattern: "pegasus-worker-*-x86_64_ubuntu_22.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: apptainer
+                  matchType: !equals
+                    matchValue: true
+                - capabilityKey: hostname
+                  matchType: !equals
+                    matchValue: build-1.pegasus.isi.edu
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
 
         - name: Deploy
           description: Deploy Artifacts
@@ -1401,17 +1684,21 @@ project:
                 - name: pegasus-binary-arm64_macos_13
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_rhel_8
+                - name: pegasus-binary-x86_64_rhel_9
                 - name: pegasus-binary-x86_64_ubuntu_18
                 - name: pegasus-binary-x86_64_ubuntu_20
+                - name: pegasus-binary-x86_64_ubuntu_22
                 - name: pegasus-deb-x86_64_deb_10
                 - name: pegasus-deb-x86_64_deb_11
                 - name: pegasus-deb-x86_64_ubuntu_18
                 - name: pegasus-deb-x86_64_ubuntu_20
+                - name: pegasus-deb-x86_64_ubuntu_22
                 - name: pegasus-doc
                 - name: pegasus-python-source-versioned
                 - name: pegasus-r-pegasus
                 - name: pegasus-rpm-x86_64_rhel_7
                 - name: pegasus-rpm-x86_64_rhel_8
+                - name: pegasus-rpm-x86_64_rhel_9
                 - name: pegasus-source
                 - name: pegasus-source-versioned
                 - name: pegasus-srcrpm
@@ -1423,8 +1710,10 @@ project:
                 - name: pegasus-worker-arm64_macos_13
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_rhel_8
+                - name: pegasus-worker-x86_64_rhel_9
                 - name: pegasus-worker-x86_64_ubuntu_18
                 - name: pegasus-worker-x86_64_ubuntu_20
+                - name: pegasus-worker-x86_64_ubuntu_22
               requirements:
                 - capabilityKey: hostname
                   matchType: !equals
