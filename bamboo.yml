@@ -9,6 +9,8 @@ project:
           name: Pegasus
           repoSlug: pegasus-isi/pegasus
           branch: 5.0
+          authType: !password
+            userName: pegasus-isi
           advancedOptions:
             useShallowClones: true
       stages:
