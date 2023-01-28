@@ -5,10 +5,12 @@ project:
     - key: BNT50
       name: Build and Test (5.0)
       scm:
-        - !git
+        - !github
           name: Pegasus
-          url: https://github.com/pegasus-isi/pegasus.git
+          repoSlug: pegasus-isi/pegasus
           branch: 5.0
+          advancedOptions:
+            useShallowClones: true
       stages:
         - name: Source Checkout
           jobs:
