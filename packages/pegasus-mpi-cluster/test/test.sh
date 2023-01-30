@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# when running the mpi tests under the container and with MPI4,
+# libfabric might complain: https://github.com/ofiwg/libfabric/issues/6332
+export RDMAV_FORK_SAFE=1
+
 PMC=./pegasus-mpi-cluster
 
 function run_test {
