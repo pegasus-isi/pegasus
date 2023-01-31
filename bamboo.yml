@@ -1181,6 +1181,10 @@ project:
                   copyPattern: "pegasus-worker-*-x86_64_rhel_7.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
+                - name: pegasus-srcrpm-x86_64_rhel_7
+                  copyPattern: "*.src.rpm"
+                  location: pegasus-source/dist
+                  isShared: true
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -1218,7 +1222,7 @@ project:
                   copyPattern: "pegasus-worker-*-x86_64_rhel_8.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-srcrpm
+                - name: pegasus-srcrpm-x86_64_rhel_8
                   copyPattern: "*.src.rpm"
                   location: pegasus-source/dist
                   isShared: true
@@ -1259,7 +1263,7 @@ project:
                   copyPattern: "pegasus-worker-*-x86_64_rhel_9.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-srcrpm
+                - name: pegasus-srcrpm-x86_64_rhel_9
                   copyPattern: "*.src.rpm"
                   location: pegasus-source/dist
                   isShared: true
@@ -1653,6 +1657,8 @@ project:
                       cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/7/x86_64/
                       mkdir -p $DOWNLOADS/rhel/8/x86_64
                       cp $DOWNLOADS/pegasus-*el8.x86_64.rpm $DOWNLOADS/rhel/8/x86_64/
+                      mkdir -p $DOWNLOADS/rhel/9/x86_64
+                      cp $DOWNLOADS/pegasus-*el9.x86_64.rpm $DOWNLOADS/rhel/9/x86_64/
 
                       # standard filenames for RPMs - used by tutorial VM
                       cd pegasus/$VERSION
@@ -1661,6 +1667,9 @@ project:
                       fi
                       if [ ! -e pegasus-$VERSION-1.el8.x86_64.rpm ]; then
                           cp pegasus-*el8.x86_64.rpm pegasus-$VERSION-1.el8.x86_64.rpm
+                      fi
+                      if [ ! -e pegasus-$VERSION-1.el9.x86_64.rpm ]; then
+                          cp pegasus-*el9.x86_64.rpm pegasus-$VERSION-1.el9.x86_64.rpm
                       fi
                       # standard filesnames for DEBs
                       for TIMESTAMPED in `ls *dev20*.deb`; do
@@ -1705,7 +1714,9 @@ project:
                 - name: pegasus-rpm-x86_64_rhel_9
                 - name: pegasus-source
                 - name: pegasus-source-versioned
-                - name: pegasus-srcrpm
+                - name: pegasus-srcrpm-x86_64_rhel_7
+                - name: pegasus-srcrpm-x86_64_rhel_8
+                - name: pegasus-srcrpm-x86_64_rhel_9
                 - name: pegasus-worker-x86_64_alpine_3
                 - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_deb_11
