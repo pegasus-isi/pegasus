@@ -1181,10 +1181,6 @@ project:
                   copyPattern: "pegasus-worker-*-x86_64_rhel_7.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-srcrpm-x86_64_rhel_7
-                  copyPattern: "*.src.rpm"
-                  location: pegasus-source/dist
-                  isShared: true
               artifactDependencies:
                 - name: pegasus-source
               requirements:
@@ -1220,10 +1216,6 @@ project:
                   isShared: true
                 - name: pegasus-worker-x86_64_rhel_8
                   copyPattern: "pegasus-worker-*-x86_64_rhel_8.tar.gz"
-                  location: pegasus-source/dist
-                  isShared: true
-                - name: pegasus-srcrpm-x86_64_rhel_8
-                  copyPattern: "*.src.rpm"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1263,7 +1255,7 @@ project:
                   copyPattern: "pegasus-worker-*-x86_64_rhel_9.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-srcrpm-x86_64_rhel_9
+                - name: pegasus-srcrpm
                   copyPattern: "*.src.rpm"
                   location: pegasus-source/dist
                   isShared: true
@@ -1649,6 +1641,8 @@ project:
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/focal/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu20_amd64.deb $DOWNLOADS/ubuntu/dists/focal/main/binary-amd64/
+                      mkdir -p $DOWNLOADS/ubuntu/dists/jammy/main/binary-amd64
+                      cp $DOWNLOADS/pegasus_*ubuntu22_amd64.deb $DOWNLOADS/ubuntu/dists/jammy/main/binary-amd64/
 
                       # rhel
                       mkdir -p $DOWNLOADS/rhel/src
@@ -1714,9 +1708,7 @@ project:
                 - name: pegasus-rpm-x86_64_rhel_9
                 - name: pegasus-source
                 - name: pegasus-source-versioned
-                - name: pegasus-srcrpm-x86_64_rhel_7
-                - name: pegasus-srcrpm-x86_64_rhel_8
-                - name: pegasus-srcrpm-x86_64_rhel_9
+                - name: pegasus-srcrpm
                 - name: pegasus-worker-x86_64_alpine_3
                 - name: pegasus-worker-x86_64_deb_10
                 - name: pegasus-worker-x86_64_deb_11
