@@ -18,57 +18,63 @@ if [ "$(uname -s)" == "Darwin" ]; then
     echo "WARNING: Condor doesn't normally ship with glite on OSX, so this is unlikely to work"
 fi
 
+if ! which condor_config_val >/dev/null 2>&1; then
+    echo "ERROR: Unable to find condor_config_val: Specify GLITE_LOCATION or add Condor to your PATH"
+    exit 1
+fi
+
+# PM-1897 BLAHP configuration naming/layout changed - the rest of this
+# script has a "new" and "old" way of handling the config
+BLAHPD_LOCATION=$(condor_config_val BLAHPD_LOCATION || true)
+GLITE_LOCATION=$(condor_config_val GLITE_LOCATION || true)
+
+# user provided override
 if [ $# -eq 1 ]; then
-    # User provided the glite dir
-    GLITE_LOCATION=$1
+    BLAHPD_LOCATION=$1
 
-    if [ ! -d "$GLITE_LOCATION" ]; then
-        echo "GLITE_LOCATION does not exist: $GLITE_LOCATION"
-        exit 1
-    fi
-else
-    # We need to find the glite dir
-    if ! which condor_config_val >/dev/null 2>&1; then
-        echo "ERROR: Unable to find condor_config_val: Specify GLITE_LOCATION or add Condor to your PATH"
-        exit 1
-    fi
-
-    # Make sure the directory exists
-    GLITE_LOCATION=$(condor_config_val GLITE_LOCATION || true)
-    if [ ! -d "$GLITE_LOCATION" ]; then
-        echo "ERROR: GLITE_LOCATION from condor_config_val does not exist: $GLITE_LOCATION"
-        echo "Condor might not be installed correctly, or you might be missing the condor-externals package."
-        echo "If you are on Mac OS X, then your Condor probably doesn't have glite."
+    if [ ! -d "$BLAHPD_LOCATION" ]; then
+        echo "Directory does not exist: $BLAHPD_LOCATION"
         exit 1
     fi
 fi
 
-# Do some sanity checks to make sure we have the right dir
-GLITE_CONFIG=$GLITE_LOCATION/etc/batch_gahp.config
-GLITE_BIN_DIR=$GLITE_LOCATION/bin
+# new way
+if [ -d "$BLAHPD_LOCATION" ]; then
+    # in case of RPM installs, we need to from /usr to /
+    if [ "$BLAHPD_LOCATION" = "/usr" ]; then
+        BLAHPD_LOCATION=""
+    fi
+    BLAHPD_CONFIG="$BLAHPD_LOCATION/etc/blah.config"
+    BLAHPD_SCRIPTS_DIR="$BLAHPD_LOCATION/etc/blahp"
 
-for f in "$GLITE_CONFIG" "$GLITE_BIN_DIR"; do
+# old way
+elif [ -d "$GLITE_LOCATION" ]; then
+    BLAHPD_CONFIG="$GLITE_LOCATION/etc/batch_gahp.config"
+    BLAHPD_SCRIPTS_DIR="$GLITE_LOCATION/bin"
+fi
+
+for f in "$BLAHPD_CONFIG" "$BLAHPD_SCRIPTS_DIR"; do
     if [ ! -e "$f" ]; then
-        echo "ERROR: It looks like your GLITE_LOCATION is not correct"
-        echo "This file seems to be missing: $f"
+        echo "ERROR: It looks like your BLAHPD_LOCATION / GLITE_LOCATION is not correct"
+        echo "Missing file/directory: $f"
         echo "If Condor is not installed, then you will need to install it before proceeding."
         echo "If you have Condor installed, then you might be missing the condor-externals package."
         echo "If you are on Mac OS X, then your Condor probably doesn't have glite."
-        echo "Please confirm your GLITE_LOCATION and try again"
+        echo "Please confirm your BLAHPD_LOCATION / GLITE_LOCATION and try again"
         exit 1
     fi
 done
 
 # Copy all the pegasus scripts to the glite bin dir
 for f in "$PEGASUS_GLITE_DIR"/*.{sh,py}; do
-    echo "Installing "`basename "$f"`" "
-    cp "$f" $GLITE_BIN_DIR/
+    echo "Installing "`basename "$f"`" into $BLAHPD_SCRIPTS_DIR/"
+    cp "$f" $BLAHPD_SCRIPTS_DIR/
 done
 
 # Edit GLITE_CONFIG to add moab support
 echo "Adding moab support to batch_gahp.config"
-GLITE_CONFIG_BAK=$GLITE_CONFIG.$(date +%F)
-cp $GLITE_CONFIG $GLITE_CONFIG_BAK
+BLAHPD_CONFIG_BAK=$BLAHPD_CONFIG.$(date +%F)
+cp $BLAHPD_CONFIG $BLAHPD_CONFIG_BAK
 awk '
 BEGIN {
     FS="=";
@@ -93,5 +99,5 @@ END {
         print("moab_binpath=`which msub 2>/dev/null|sed '\''s|/[^/]*$||'\''`")
     }
 }
-' $GLITE_CONFIG_BAK > $GLITE_CONFIG
+' $BLAHPD_CONFIG_BAK > $BLAHPD_CONFIG
 
