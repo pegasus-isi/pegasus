@@ -183,14 +183,12 @@ def get_jsdl_filename(input_dir):
     try:
         my_wf_params = utils.slurp_braindb(input_dir)
     except Exception:
-        logger.error("cannot read braindump.txt file... exiting...")
-        sys.exit(1)
+        raise AnalyzerError("cannot read braindump.txt file... exiting...")
 
     if "wf_uuid" in my_wf_params:
         return my_wf_params["wf_uuid"] + "-" + jsdl_filename
 
-    logger.error("braindump.txt does not contain wf_uuid... exiting...")
-    sys.exit(1)
+    raise AnalyzerError("braindump.txt does not contain wf_uuid... exiting...")
 
 
 def create_temp_logfile(name):
@@ -201,7 +199,7 @@ def create_temp_logfile(name):
     try:
         tmp_file = tempfile.mkstemp(prefix="%s-" % (name), suffix=".log", dir="/tmp")
     except Exception:
-        return None
+        raise AnalyzerError("could not create a temporary logfile")
 
     # Close file, we will use it later
     os.close(tmp_file[0])
@@ -322,8 +320,8 @@ def get_pegasus_lite_wrapper(my_job):
             SUB = open(pegasus_lite_wrapper)
         except Exception:
             # print "error opening submit file: %s" % (my_job.sub_file)
-            # fail silently for now...
-            return None
+            raise AnalyzerError("error opening submit file: " + my_job.sub_file)
+            
         else:
             SUB.close()
 
@@ -438,7 +436,7 @@ def parse_submit_file(my_job):
             SUB = open(my_job.sub_file)
         except Exception:
             # print "error opening submit file: %s" % (my_job.sub_file)
-            # fail silently for now...
+            raise AnalyzerError(f"error opening submit file: {my_job.sub_file}")
             return
 
         # submit file found
@@ -595,15 +593,14 @@ def find_file(input_dir, file_type):
     try:
         file_list = os.listdir(input_dir)
     except Exception:
-        logger.error("cannot read directory: %s" % (input_dir))
-        sys.exit(1)
+        raise AnalyzerError("cannot read directory: " + input_dir)
 
     for file in file_list:
         if file.endswith(file_type):
             return os.path.join(input_dir, file)
+            
+    raise AnalyzerError(f"could not find any {file_type} file in {input_dir}")
 
-    logger.error(f"could not find any {file_type} file in {input_dir}")
-    sys.exit(1)
 
 
 def parse_dag_file(dag_fn):
@@ -615,8 +612,7 @@ def parse_dag_file(dag_fn):
     try:
         DAG = open(dag_fn)
     except Exception:
-        logger.error("could not open dag file %s: exiting..." % (dag_fn))
-        sys.exit(1)
+        raise AnalyzerError(f"could not open dag file {dag_fn}: exiting...")
 
     # Loop through the dag file
     for line in DAG:
@@ -701,8 +697,7 @@ def parse_jobstate_log(jobstate_fn):
     try:
         JSDL = open(jobstate_fn)
     except Exception:
-        logger.error("could not open file %s: exiting..." % (jobstate_fn))
-        sys.exit(1)
+        raise AnalyzerError(f"could not open file {jobstate_fn}: exiting...")
 
     # Loop through the log file
     for line in JSDL:
@@ -781,8 +776,7 @@ def invoke_monitord(dagman_out_file, output_dir):
     try:
         status, output = commands.getstatusoutput(monitord_cmd)
     except Exception:
-        logger.error("could not invoke monitord, exiting...")
-        sys.exit(1)
+        raise AnalyzerError("could not invoke monitord, exiting...")
 
 
 def dump_file(file):
@@ -1366,12 +1360,10 @@ def analyze_files():
                 invoke_monitord("%s.dagman.out" % (dag_path), None)
             else:
                 # User must provide the --output-dir option
-                logger.error("%s is not writable" % (input_dir))
-                logger.error(
-                    "user must specify directory for new monitord logs with the --output-dir option"
-                )
-                logger.error("exiting...")
-                sys.exit(1)
+                raise AnalyzerError(input_dir 
+                                    + " is not writable. "
+                                    + "User must specify directory for new monitord logs with the --output-dir option,"
+                                    + " exiting...")                             
     else:
         if output_dir is not None:
             # jobstate.log file uses wf_uuid as prefix and is inside output_dir
@@ -1383,14 +1375,12 @@ def analyze_files():
     try:
         jsdl_stat = os.stat(jsdl_path)
     except Exception:
-        logger.error("could not access %s, exiting..." % (jsdl_path))
-        sys.exit(1)
+        raise AnalyzerError("could not access " + jsdl_path + ", exiting...")
 
     try:
         dagman_out_stat = os.stat(dagman_out_path)
     except Exception:
-        logger.error("could not access %s, exiting..." % (dagman_out_path))
-        sys.exit(1)
+        raise AnalyzerError("could not access " + dagman_out_path + ", exiting...")
 
     # Compare mtime for both files
     if dagman_out_stat[8] > jsdl_stat[8]:
@@ -1427,9 +1417,10 @@ def analyze_files():
 
     if failed > 0:
         # Workflow has failures, exit with exitcode 2
-        sys.exit(2)
+        raise WorkflowFailureError("One or more workflows failed")
+    
     # Workflow has no failures, exit with exitcode 0
-    sys.exit(0)
+    return
 
 
 def analyze_db(config_properties):
@@ -1706,8 +1697,7 @@ def debug_condor(my_job):
     try:
         debug_script = open(debug_script_name, "w")
     except Exception:
-        logger.error("cannot create debug script %s" % (debug_script))
-        sys.exit(1)
+        raise AnalyzerError(f"cannot create debug script {debug_script}")
 
     try:
         # Start with the bash line
@@ -1818,8 +1808,7 @@ exit $STATUS
         )
 
     except Exception:
-        logger.error("cannot write to file %s" % (debug_script))
-        sys.exit(1)
+        raise AnalyzerError(f"cannot write to file {debug_script}")
 
     # We are done writing the file!
     debug_script.close()
@@ -1828,10 +1817,7 @@ exit $STATUS
         # Make our debug script executable
         os.chmod(debug_script_name, 0o755)
     except Exception:
-        logger.error(
-            "cannot change permissions for the debug script %s" % (debug_script)
-        )
-        sys.exit(1)
+        raise AnalyzerError(f"cannot change permissions for the debug script {debug_script}")
 
     # Print next step
     print()
@@ -1861,8 +1847,7 @@ def debug_workflow():
     my_job.sub_file = debug_job
 
     if not os.access(debug_job, os.R_OK):
-        logger.error("cannot access job submit file: %s" % (debug_job))
-        sys.exit(1)
+        raise AnalyzerError(f"cannot access job submit file: {debug_job}")
 
     # Handle the temporary directory option
     if debug_dir is None:
@@ -1870,8 +1855,8 @@ def debug_workflow():
         try:
             debug_dir = tempfile.mkdtemp()
         except Exception:
-            logger.error("could not create temporary directory!")
-            sys.exit(1)
+            raise AnalyzerError(f"could not create temporary directory!")
+
     else:
         # Make sure directory specified is writable
         debug_dir = os.path.abspath(debug_dir)
@@ -1884,8 +1869,7 @@ def debug_workflow():
 
         # Check if we can write to the debug directory
         if not os.access(debug_dir, os.W_OK):
-            logger.error("not able to write to temporary directory: %s" % (debug_dir))
-            sys.exit(1)
+            raise AnalyzerError(f"not able to write to temporary directory: {debug_dir}")
 
     # Handle workflow type
     if workflow_type is not None:
@@ -1893,8 +1877,7 @@ def debug_workflow():
             logger.info("debugging condor type workflow")
             debug_condor(my_job)
         else:
-            logger.error("workflow type %s not supported!" % (workflow_type))
-            sys.exit(1)
+            raise AnalyzerError(f"workflow type {workflow_type} not supported!")
     else:
         logger.info("debugging condor type workflow")
         debug_condor(my_job)
@@ -2136,7 +2119,17 @@ if recurse_mode and traverse_all:
 
 # Run the analyzer
 if use_files:
-    analyze_files()
+    try:
+        analyze_files()
+    except AnalyzerError as err:
+        logger.error(err)
+        sys.exit(1)
+    except WorkflowFailureError as err:
+        logger.error(err)
+        sys.exit(2)
+    except Exception:
+        logger.error(traceback.format_exc())
+        sys.exit(1)
 else:
     try:
         analyze_db(options.config_properties)
