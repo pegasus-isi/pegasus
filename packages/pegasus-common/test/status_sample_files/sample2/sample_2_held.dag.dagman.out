@@ -1,0 +1,131 @@
+08/31/22 17:40:33 ******************************************************
+08/31/22 17:40:33 ** condor_scheduniv_exec.3.0 (CONDOR_DAGMAN) STARTING UP
+08/31/22 17:40:33 ** /Users/zaiyan/condor/bin/condor_dagman
+08/31/22 17:40:33 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+08/31/22 17:40:33 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+08/31/22 17:40:33 ** $CondorVersion: 9.11.0 Aug 25 2022 BuildID: 602587 $
+08/31/22 17:40:33 ** $CondorPlatform: x86_64_MacOSX15 $
+08/31/22 17:40:33 ** PID = 84993
+08/31/22 17:40:33 ** Log last touched time unavailable (No such file or directory)
+08/31/22 17:40:33 ******************************************************
+08/31/22 17:40:33 Using config source: /Users/zaiyan/condor/etc/condor_config
+08/31/22 17:40:33 Using local config sources: 
+08/31/22 17:40:33    /Users/zaiyan/condor/local/config.d/00-personal-condor
+08/31/22 17:40:33 config Macros = 62, Sorted = 61, StringBytes = 1915, TablesBytes = 2280
+08/31/22 17:40:33 CLASSAD_CACHING is ENABLED
+08/31/22 17:40:33 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+08/31/22 17:40:33 DaemonCore: No command port requested.
+08/31/22 17:40:33 DAGMAN_USE_STRICT setting: 1
+08/31/22 17:40:33 DAGMAN_VERBOSITY setting: 3
+08/31/22 17:40:33 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+08/31/22 17:40:33 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+08/31/22 17:40:33 DAGMAN_SUBMIT_DELAY setting: 0
+08/31/22 17:40:33 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+08/31/22 17:40:33 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+08/31/22 17:40:33 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+08/31/22 17:40:33 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+08/31/22 17:40:33 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+08/31/22 17:40:33 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+08/31/22 17:40:33 DAGMAN_DEFAULT_PRIORITY setting: 0
+08/31/22 17:40:33 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+08/31/22 17:40:33 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+08/31/22 17:40:33 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+08/31/22 17:40:33 DAGMAN_RETRY_NODE_FIRST setting: False
+08/31/22 17:40:33 DAGMAN_MAX_JOBS_IDLE setting: 1000
+08/31/22 17:40:33 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+08/31/22 17:40:33 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+08/31/22 17:40:33 DAGMAN_MAX_POST_SCRIPTS setting: 20
+08/31/22 17:40:33 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+08/31/22 17:40:33 DAGMAN_MUNGE_NODE_NAMES setting: True
+08/31/22 17:40:33 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+08/31/22 17:40:33 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+08/31/22 17:40:33 DAGMAN_ALWAYS_RUN_POST setting: False
+08/31/22 17:40:33 DAGMAN_CONDOR_SUBMIT_EXE setting: /Users/zaiyan/condor/bin/condor_submit
+08/31/22 17:40:33 DAGMAN_USE_DIRECT_SUBMIT setting: True
+08/31/22 17:40:33 DAGMAN_DEFAULT_APPEND_VARS setting: False
+08/31/22 17:40:33 DAGMAN_ABORT_DUPLICATES setting: True
+08/31/22 17:40:33 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+08/31/22 17:40:33 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+08/31/22 17:40:33 DAGMAN_AUTO_RESCUE setting: True
+08/31/22 17:40:33 DAGMAN_MAX_RESCUE_NUM setting: 100
+08/31/22 17:40:33 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+08/31/22 17:40:33 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+08/31/22 17:40:33 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+08/31/22 17:40:33 DAGMAN_MAX_JOB_HOLDS setting: 100
+08/31/22 17:40:33 DAGMAN_HOLD_CLAIM_TIME setting: 20
+08/31/22 17:40:33 ALL_DEBUG setting: 
+08/31/22 17:40:33 DAGMAN_DEBUG setting: 
+08/31/22 17:40:33 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+08/31/22 17:40:33 DAGMAN_REMOVE_NODE_JOBS setting: True
+08/31/22 17:40:33 DAGMAN will adjust edges after parsing
+08/31/22 17:40:33 argv[0] == "condor_scheduniv_exec.3.0"
+08/31/22 17:40:33 argv[1] == "-Lockfile"
+08/31/22 17:40:33 argv[2] == "Drug-Combination-Therapy-0.dag.lock"
+08/31/22 17:40:33 argv[3] == "-AutoRescue"
+08/31/22 17:40:33 argv[4] == "1"
+08/31/22 17:40:33 argv[5] == "-DoRescueFrom"
+08/31/22 17:40:33 argv[6] == "0"
+08/31/22 17:40:33 argv[7] == "-Dag"
+08/31/22 17:40:33 argv[8] == "Drug-Combination-Therapy-0.dag"
+08/31/22 17:40:33 argv[9] == "-MaxPost"
+08/31/22 17:40:33 argv[10] == "20"
+08/31/22 17:40:33 argv[11] == "-Suppress_notification"
+08/31/22 17:40:33 argv[12] == "-CsdVersion"
+08/31/22 17:40:33 argv[13] == "$CondorVersion: 9.11.0 Aug 25 2022 BuildID: 602587 $"
+08/31/22 17:40:33 argv[14] == "-Dagman"
+08/31/22 17:40:33 argv[15] == "/Users/zaiyan/condor/bin/condor_dagman"
+08/31/22 17:40:33 Workflow batch-id: <3.0>
+08/31/22 17:40:33 Workflow batch-name: <Drug-Combination-Therapy-0.dag+3>
+08/31/22 17:40:33 Workflow accounting_group: <>
+08/31/22 17:40:33 Workflow accounting_group_user: <>
+08/31/22 17:40:33 Warning: failed to get attribute DAGNodeName
+08/31/22 17:40:33 DAGMAN_LOG_ON_NFS_IS_ERROR setting: False
+08/31/22 17:40:33 Default node log file is: </Users/zaiyan/Desktop/status_work/covid/zaiyan/pegasus/Drug-Combination-Therapy/run0002/./Drug-Combination-Therapy-0.dag.nodes.log>
+08/31/22 17:40:33 DAG Lockfile will be written to Drug-Combination-Therapy-0.dag.lock
+08/31/22 17:40:33 DAG Input file is Drug-Combination-Therapy-0.dag
+08/31/22 17:40:33 Parsing 1 dagfiles
+08/31/22 17:40:33 Parsing Drug-Combination-Therapy-0.dag ...
+08/31/22 17:40:33 Adjusting edges
+08/31/22 17:40:33 Dag contains 29 total jobs
+08/31/22 17:40:33 Warning: ProcessId not confirmed unique
+08/31/22 17:40:33 Bootstrapping...
+08/31/22 17:40:33 Number of pre-completed nodes: 0
+08/31/22 17:40:33 MultiLogFiles: truncating log file /Users/zaiyan/Desktop/status_work/covid/zaiyan/pegasus/Drug-Combination-Therapy/run0002/./Drug-Combination-Therapy-0.dag.nodes.log
+08/31/22 17:40:33 DAG status: 0 (DAG_STATUS_OK)
+08/31/22 17:40:33 Of 29 nodes total:
+08/31/22 17:40:33  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+08/31/22 17:40:33   ===     ===      ===     ===     ===        ===      ===
+08/31/22 17:40:33     0       0        0       0       1         28        0
+08/31/22 17:40:33 0 job proc(s) currently held
+08/31/22 17:40:33 DAGMan Runtime Statistics: [ EventCycleTimeCount = 0.0; EventCycleTimeSum = 0.0; LogProcessCycleTimeCount = 0.0; LogProcessCycleTimeSum = 0.0; SleepCycleTimeCount = 0.0; SleepCycleTimeSum = 0.0; SubmitCycleTimeCount = 0.0; SubmitCycleTimeSum = 0.0; ]
+08/31/22 17:40:33 Registering condor_event_timer...
+08/31/22 17:40:34 Submitting HTCondor Node create_dir_Drug-Combination-Therapy_0_local job(s)...
+08/31/22 17:40:34 Submitting node create_dir_Drug-Combination-Therapy_0_local from file 00/00/create_dir_Drug-Combination-Therapy_0_local.sub using direct job submission
+08/31/22 17:40:34 Submit warning: Submit:0:the line 'JOB = create_dir_Drug-Combination-Therapy_0_local' was unused by DAGMAN. Is it a typo?
+08/31/22 17:40:34 	assigned HTCondor ID (4.0.0)
+08/31/22 17:40:34 Just submitted 1 job this cycle...
+08/31/22 17:40:34 DAG status: 0 (DAG_STATUS_OK)
+08/31/22 17:40:34 Of 29 nodes total:
+08/31/22 17:40:34  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+08/31/22 17:40:34   ===     ===      ===     ===     ===        ===      ===
+08/31/22 17:40:34     0       0        1       0       0         28        0
+08/31/22 17:40:34 0 job proc(s) currently held
+08/31/22 17:40:34 DAGMan Runtime Statistics: [ EventCycleTimeCount = 0.0; EventCycleTimeSum = 0.0; LogProcessCycleTimeCount = 0.0; LogProcessCycleTimeSum = 0.0; SleepCycleTimeCount = 0.0; SleepCycleTimeSum = 0.0; SubmitCycleTimeAvg = 0.02078890800476074; SubmitCycleTimeCount = 1.0; SubmitCycleTimeMax = 0.02078890800476074; SubmitCycleTimeMin = 0.02078890800476074; SubmitCycleTimeStd = 0.02078890800476074; SubmitCycleTimeSum = 0.02078890800476074; ]
+08/31/22 17:40:39 Currently monitoring 1 HTCondor log file(s)
+08/31/22 17:40:39 Reassigning the id of job create_dir_Drug-Combination-Therapy_0_local from (4.0.0) to (4.0.0)
+08/31/22 17:40:39 Event: ULOG_SUBMIT for HTCondor Node create_dir_Drug-Combination-Therapy_0_local (4.0.0) {08/31/22 17:40:34}
+08/31/22 17:40:39 Number of idle job procs: 1
+08/31/22 17:40:39 Event: ULOG_EXECUTE for HTCondor Node create_dir_Drug-Combination-Therapy_0_local (4.0.0) {08/31/22 17:40:34}
+08/31/22 17:40:39 Number of idle job procs: 0
+08/31/22 17:40:39 Event: ULOG_JOB_EVICTED for HTCondor Node create_dir_Drug-Combination-Therapy_0_local (4.0.0) {08/31/22 17:40:34}
+08/31/22 17:40:39 Number of idle job procs: 1
+08/31/22 17:40:39 Event: ULOG_JOB_HELD for HTCondor Node create_dir_Drug-Combination-Therapy_0_local (4.0.0) {08/31/22 17:40:34}
+08/31/22 17:40:39   Hold reason: Failed to execute '/Users/zaiyan/Desktop/pegasus-5.0.2/bin/../bin/pegasus-kickstart' with arguments -n pegasus::dirmanager -N null -i - -R local -L Drug-Combination-Therapy -T 2022-08-31T17:40:29-07:00 /Users/zaiyan/Desktop/pegasus-5.0.2/bin/../bin/pegasus-transfer: (errno=8: 'Exec format error')
+08/31/22 17:40:39 Number of idle job procs: 1
+08/31/22 17:40:39 DAG status: 0 (DAG_STATUS_OK)
+08/31/22 17:40:39 Of 29 nodes total:
+08/31/22 17:40:39  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+08/31/22 17:40:39   ===     ===      ===     ===     ===        ===      ===
+08/31/22 17:40:39     0       0        1       0       0         28        0
+08/31/22 17:40:39 1 job proc(s) currently held
+08/31/22 17:40:39 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.02111005783081055; EventCycleTimeCount = 1.0; EventCycleTimeMax = 0.02111005783081055; EventCycleTimeMin = 0.02111005783081055; EventCycleTimeStd = 0.02111005783081055; EventCycleTimeSum = 0.02111005783081055; LogProcessCycleTimeAvg = 0.001680135726928711; LogProcessCycleTimeCount = 1.0; LogProcessCycleTimeMax = 0.001680135726928711; LogProcessCycleTimeMin = 0.001680135726928711; LogProcessCycleTimeStd = 0.001680135726928711; LogProcessCycleTimeSum = 0.001680135726928711; SleepCycleTimeAvg = 5.001193046569824; SleepCycleTimeCount = 1.0; SleepCycleTimeMax = 5.001193046569824; SleepCycleTimeMin = 5.001193046569824; SleepCycleTimeStd = 5.001193046569824; SleepCycleTimeSum = 5.001193046569824; SubmitCycleTimeAvg = 0.01045346260070801; SubmitCycleTimeCount = 2.0; SubmitCycleTimeMax = 0.02078890800476074; SubmitCycleTimeMin = 0.0001180171966552734; SubmitCycleTimeStd = 0.01461652706357805; SubmitCycleTimeSum = 0.02090692520141602; ]

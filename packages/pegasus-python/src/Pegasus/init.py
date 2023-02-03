@@ -33,9 +33,7 @@ pegasus_major_minor_version = (
 pegasushub_site_catalogs_url = "https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs/{}/Sites.py".format(
     pegasus_major_minor_version
 )
-wf_sites = os.path.join(
-    pegasushub_data_path, "{}/Sites.py".format(pegasus_major_minor_version)
-)
+wf_sites = os.path.join(pegasushub_data_path, f"{pegasus_major_minor_version}/Sites.py")
 
 
 def update_site_catalogs(wf_sites):
@@ -264,13 +262,13 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
         )
     )
     if queue_name:
-        click.echo('This workflow will target queue "{}"'.format(queue_name))
+        click.echo(f'This workflow will target queue "{queue_name}"')
 
     if project_name:
-        click.echo('The project allocation used is "{}"'.format(project_name))
+        click.echo(f'The project allocation used is "{project_name}"')
 
     if pegasus_home:
-        click.echo('The PEGASUS_HOME location is "{}"'.format(pegasus_home))
+        click.echo(f'The PEGASUS_HOME location is "{pegasus_home}"')
 
     old_dir = os.getcwd()
     os.chdir(wf_dir)
@@ -335,7 +333,7 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
     click.echo("Creating properties file...")
     commands = create_pegasus_properties(commands)
 
-    click.echo("Creating site catalog for {}...".format(site))
+    click.echo(f"Creating site catalog for {site}...")
     exec_site.write()
 
     commands.append("#### Generating Sites Catalog ####")

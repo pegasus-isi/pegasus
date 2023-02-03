@@ -177,9 +177,7 @@ class Workflow:
                     ),
                 )
             )
-            logger.warning(
-                "error sending event to dashboard db: {} --> {}".format(event, kwargs)
-            )
+            logger.warning(f"error sending event to dashboard db: {event} --> {kwargs}")
             logger.warning(traceback.format_exc())
             self._database_disabled = True
 
@@ -451,7 +449,7 @@ class Workflow:
             my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
         else:
             my_fn = os.path.join(
-                self._output_dir, "{}-{}".format(self._wf_uuid, MONITORD_STATE_FILE)
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_STATE_FILE}"
             )
 
         try:
@@ -505,7 +503,7 @@ class Workflow:
             my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
         else:
             my_fn = os.path.join(
-                self._output_dir, "{}-{}".format(self._wf_uuid, MONITORD_STATE_FILE)
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_STATE_FILE}"
             )
 
         try:
@@ -551,7 +549,7 @@ class Workflow:
             my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
         else:
             my_recover_file = os.path.join(
-                self._output_dir, "{}-{}".format(self._wf_uuid, MONITORD_RECOVER_FILE)
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_RECOVER_FILE}"
             )
 
         if os.access(my_recover_file, os.F_OK):
@@ -588,7 +586,7 @@ class Workflow:
             my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
         else:
             my_recover_file = os.path.join(
-                self._output_dir, "{}-{}".format(self._wf_uuid, MONITORD_RECOVER_FILE)
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_RECOVER_FILE}"
             )
         try:
             RECOVER = open(my_recover_file, "w")
@@ -1141,7 +1139,7 @@ class Workflow:
             self._jsd_file = os.path.join(rundir, my_jsd)
         else:
             self._jsd_file = os.path.join(
-                rundir, self._output_dir, "{}-{}".format(self._wf_uuid, my_jsd)
+                rundir, self._output_dir, f"{self._wf_uuid}-{my_jsd}"
             )
 
         if not os.path.isfile(self._jsd_file):
@@ -1202,7 +1200,7 @@ class Workflow:
             my_start_file = os.path.join(self._run_dir, MONITORD_START_FILE)
         else:
             my_start_file = os.path.join(
-                self._output_dir, "{}-{}".format(self._wf_uuid, MONITORD_START_FILE)
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_START_FILE}"
             )
 
         my_now = int(time.time())
@@ -1213,7 +1211,7 @@ class Workflow:
             my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
         else:
             my_touch_name = os.path.join(
-                self._output_dir, "{}-{}".format(self._wf_uuid, MONITORD_DONE_FILE)
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}"
             )
 
         try:
@@ -1360,7 +1358,7 @@ class Workflow:
             my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
         else:
             my_recover_file = os.path.join(
-                self._output_dir, "{}-{}".format(self._wf_uuid, MONITORD_RECOVER_FILE)
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_RECOVER_FILE}"
             )
 
         self.write_to_jobstate(
@@ -1384,7 +1382,7 @@ class Workflow:
             my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
         else:
             my_touch_name = os.path.join(
-                self._output_dir, "{}-{}".format(self._wf_uuid, MONITORD_DONE_FILE)
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}"
             )
         try:
             TOUCH = open(my_touch_name, "w")
@@ -1414,7 +1412,7 @@ class Workflow:
 
                     # Copy common condor log to local directory
                     my_log = utils.out2log(self._run_dir, self._out_file)[0]
-                    my_cmd = "/bin/cp -p {} {}.copy".format(self._condorlog, my_log)
+                    my_cmd = f"/bin/cp -p {self._condorlog} {my_log}.copy"
                     my_status, my_output = commands.getstatusoutput(my_cmd)
 
                     if my_status == 0:
@@ -1427,9 +1425,7 @@ class Workflow:
                             try:
                                 os.rename("%s.copy" % (my_log), my_log)
                             except Exception:
-                                logger.error(
-                                    "renaming {}.copy to {}".format(my_log, my_log)
-                                )
+                                logger.error(f"renaming {my_log}.copy to {my_log}")
                             else:
                                 logger.info("copied common log to %s" % (self._run_dir))
                     else:
@@ -1463,7 +1459,7 @@ class Workflow:
 
         # Make sure the job is there
         if not (jobid, my_job_submit_seq) in self._jobs:
-            logger.warning("cannot find job: {}, {}".format(jobid, my_job_submit_seq))
+            logger.warning(f"cannot find job: {jobid}, {my_job_submit_seq}")
             return None
 
         my_job = self._jobs[jobid, my_job_submit_seq]
@@ -2072,9 +2068,7 @@ class Workflow:
         # Start empty
         for lfn in files.keys():
             metadata = files[lfn]
-            logger.debug(
-                "Generating metadata events for file {} {}".format(lfn, metadata)
-            )
+            logger.debug(f"Generating metadata events for file {lfn} {metadata}")
             kwargs = {}
 
             # sample event generated by planner for rc meta
@@ -2559,9 +2553,7 @@ class Workflow:
         if my_job_submit_seq is not None:
             # Job already exists
             if not (jobid, my_job_submit_seq) in self._jobs:
-                logger.warning(
-                    "cannot find job: {}, {}".format(jobid, my_job_submit_seq)
-                )
+                logger.warning(f"cannot find job: {jobid}, {my_job_submit_seq}")
                 return
 
             my_job = self._jobs[jobid, my_job_submit_seq]
@@ -2579,9 +2571,7 @@ class Workflow:
 
             # Make sure job is not already there
             if (jobid, my_job_submit_seq) in self._jobs:
-                logger.warning(
-                    "trying to add job twice: {}, {}".format(jobid, my_job_submit_seq)
-                )
+                logger.warning(f"trying to add job twice: {jobid}, {my_job_submit_seq}")
                 return
 
             # PM-1334 log extra errors if dag file is not populated
@@ -2656,7 +2646,7 @@ class Workflow:
 
         # Make sure job is already there
         if not (jobid, job_submit_seq) in self._jobs:
-            logger.warning("cannot find job: {}, {}".format(jobid, job_submit_seq))
+            logger.warning(f"cannot find job: {jobid}, {job_submit_seq}")
             return
 
         my_job = self._jobs[jobid, job_submit_seq]
@@ -2679,7 +2669,7 @@ class Workflow:
             if jobid in self._jobs_map:
                 job_submit_seq = self._jobs_map[jobid]
         if not (jobid, job_submit_seq) in self._jobs:
-            logger.warning("cannot find job: {}, {}".format(jobid, job_submit_seq))
+            logger.warning(f"cannot find job: {jobid}, {job_submit_seq}")
             return
         # Got it
         my_job = self._jobs[jobid, job_submit_seq]
@@ -2938,7 +2928,7 @@ class Workflow:
 
         # Find job
         if not (jobid, job_submit_seq) in self._jobs:
-            logger.warning("cannot find job: {}, {}".format(jobid, job_submit_seq))
+            logger.warning(f"cannot find job: {jobid}, {job_submit_seq}")
             return None, None
 
         # Check if we have an entry for this job
@@ -3040,9 +3030,7 @@ class Workflow:
 
             # Make sure the job is there
             if not (jobid, my_job_submit_seq) in self._jobs:
-                logger.warning(
-                    "cannot find job: {}, {}".format(jobid, my_job_submit_seq)
-                )
+                logger.warning(f"cannot find job: {jobid}, {my_job_submit_seq}")
                 return None
 
             my_job = self._jobs[jobid, my_job_submit_seq]

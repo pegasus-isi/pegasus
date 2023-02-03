@@ -47,7 +47,7 @@ def choice(question, options, default):
 def yesno(question, default="y"):
     "Ask the user a yes/no question"
     while True:
-        sys.stdout.write("{} (y/n) [{}]: ".format(question, default))
+        sys.stdout.write(f"{question} (y/n) [{default}]: ")
         answer = sys.stdin.readline().strip().lower()
         if len(answer) == 0:
             answer = default
@@ -61,7 +61,7 @@ def query(question, default=None):
     "Ask the user a question and return the response"
     while True:
         if default:
-            sys.stdout.write("{} [{}]: ".format(question, default))
+            sys.stdout.write(f"{question} [{default}]: ")
         else:
             sys.stdout.write("%s: " % question)
         answer = sys.stdin.readline().strip().replace(" ", "_")

@@ -16,7 +16,7 @@ pegasus-analyzer - debugs a workflow.
                        [--debug-job job][--debug-dir debug_dir]
                        [--local-executable local user executable]
                        [--conf|-c property_file] [--files]
-                       [--top-dir dir_name] [--recurse|-r]
+                       [--top-dir dir_name] [--traverse-all|t] [--recurse|-r]
                        [--indent|-I indent_length]
                        [workflow_directory]
 
@@ -154,6 +154,16 @@ Options
    sub-workflow. This allows the analyzer to find the database it needs
    to access.
 
+**-T** ; \ **--traverse-all**
+   This option set **pegasus-analyzer** to go through all the descendant
+   workflows of the workflow running in the submit directory passed,
+   irrespective of the fact whether the workflow has succeeded or failed.
+   This option is useful when running **pegasus-analyzer** on a running
+   hierarchical workflow, to detect failures in sub-workflows that are
+   currently running.
+   This option is mutually exclusive to the **--recurse** option, that
+   recurses through only failed sub workflow jobs.
+
 **-r**; \ **--recurse**
    This option sets **pegasus-analyzer** to automatically recurse into
    sub workflows in case of failure. By default, if a workflow has a sub
@@ -163,6 +173,8 @@ Options
    sub workflow failed. If this option is set, then the analyzer
    automatically issues the command invocation and in addition displays
    the failed jobs in the sub workflow.
+   This option is mutually exclusive to the **--traverse-all** option,
+   that traverses through all descendant workflows.
 
 **-I**; \ **--indent**
    This option sets **indent** length to use when walking displaying

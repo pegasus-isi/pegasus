@@ -20,9 +20,13 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+    edu.isi.pegasus.common.util.CommonPropertiesTest.class,
+    edu.isi.pegasus.common.util.CondorVersionTest.class,
     edu.isi.pegasus.common.util.VersionTest.class,
     edu.isi.pegasus.common.util.PegasusURLTest.class,
     edu.isi.pegasus.common.util.FileDetectorTest.class,
+    edu.isi.pegasus.common.util.GLiteEscapeTest.class,
+    edu.isi.pegasus.common.util.VariableExpanderTest.class,
     edu.isi.pegasus.planner.namespace.PegasusTest.class,
     edu.isi.pegasus.planner.namespace.MetadataTest.class,
     edu.isi.pegasus.planner.catalog.replica.ReplicaFactoryTest.class,
@@ -53,17 +57,17 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.cluster.RuntimeClusteringTest.class,
     edu.isi.pegasus.planner.code.GridStartTest.class,
     edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscapeTest.class,
+    edu.isi.pegasus.planner.code.generator.condor.PegasusSubmitDAGTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.GliteTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.CondorTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.CondorGTest.class,
+    edu.isi.pegasus.planner.common.PegasusConfigurationTest.class,
     edu.isi.pegasus.planner.mapper.output.FlatOutputMapperTest.class,
     edu.isi.pegasus.planner.mapper.output.HashedOutputMapperTest.class,
     edu.isi.pegasus.planner.mapper.output.ReplicaOutputMapperTest.class,
     edu.isi.pegasus.planner.mapper.output.FixedOutputMapperTest.class,
     edu.isi.pegasus.planner.refiner.DataReuseEngineTest.class,
     edu.isi.pegasus.planner.refiner.InterPoolEngineTest.class,
-    edu.isi.pegasus.common.util.GLiteEscapeTest.class,
-    edu.isi.pegasus.common.util.VariableExpanderTest.class,
     edu.isi.pegasus.planner.partitioner.graph.CycleCheckerTest.class,
     edu.isi.pegasus.planner.parser.DAXParserFactoryTest.class,
     edu.isi.pegasus.planner.parser.dax.DAXParser3Test.class,
@@ -71,6 +75,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.dax.ADAGTest.class,
     edu.isi.pegasus.planner.transfer.generator.StageOutTest.class,
     edu.isi.pegasus.planner.transfer.generator.StageInTest.class,
-    edu.isi.pegasus.planner.transfer.sls.TransferTest.class
+    edu.isi.pegasus.planner.transfer.sls.TransferTest.class,
+    edu.isi.pegasus.planner.transfer.sls.CondorTest.class
 })
 public class AllTests {}

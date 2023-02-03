@@ -129,9 +129,7 @@ class EventSink:
     """
 
     def __init__(self):
-        self._log = logging.getLogger(
-            "{}.{}".format(self.__module__, self.__class__.__name__)
-        )
+        self._log = logging.getLogger(f"{self.__module__}.{self.__class__.__name__}")
         # Set listing events handled to be kept consistent with dict in workflow loader
         self._acceptedEvents = (
             "stampede.wf.plan",
@@ -207,7 +205,7 @@ class DBEventSink(EventSink):
         props=None,
         db_type=None,
         backup=False,
-        **kw
+        **kw,
     ):
         self._namespace = namespace
         # pick the right database loader based on prefix
@@ -319,10 +317,10 @@ class AMQPEventSink(EventSink):
         ssl_enabled=False,
         props=None,
         connect_timeout=None,
-        **kw
+        **kw,
     ):
         super().__init__()
-        self._log.info("Encoder used {} Properties received {}".format(encoder, props))
+        self._log.info(f"Encoder used {encoder} Properties received {props}")
         self._encoder = encoder
         self._handled_events = set()
         self._handle_all_events = False
@@ -659,7 +657,7 @@ def create_wf_event_sink(
         if url.port is None:
             url.port = 14380
         sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc, prefix), **kw)
-        _type, _name = "network", "{}:{}".format(url.host, url.port)
+        _type, _name = "network", f"{url.host}:{url.port}"
     elif url.scheme in ["amqp", "amqps"]:
         # amqp://[USERNAME:PASSWORD@]<hostname>[:port]/[<virtualhost>]/<exchange_name>
         if amqp is None:
@@ -695,13 +693,13 @@ def create_wf_event_sink(
             props=sink_props,
             **kw,
         )
-        _type, _name = "AMQP", "{}:{}/{}".format(url.host, url.port, url.path)
+        _type, _name = "AMQP", f"{url.host}:{url.port}/{url.path}"
     else:
         # load the appropriate DBEvent on basis of prefix passed
         sink = DBEventSink(dest, namespace=prefix, props=sink_props, **kw)
         _type, _name = "DB", dest
 
-    log.info("output type={} namespace={} name={}".format(_type, prefix, _name))
+    log.info(f"output type={_type} namespace={prefix} name={_name}")
 
     return sink
 

@@ -46,25 +46,25 @@ public class BlackDiamondDAX {
 
         File fa1 = new File("f.a.1");
         fa1.addPhysicalFile("root://data.ci-connect.net//user/rynge/public/test.txt", "xrootd");
-        fa1.addPhysicalFile("http://obelix.isi.edu/non-existant.txt", "web");
+        fa1.addPhysicalFile("http://data.isi.edu/non-existant.txt", "web");
         fa1.addPhysicalFile("file:///etc/hosts", "condorpool");
         fa1.addPhysicalFile("file:///etc/hosts", "local");
         dax.addFile(fa1);
         
         File fa2 = new File("f.a.2");
-        fa2.addPhysicalFile("http://obelix.isi.edu/", "web");
+        fa2.addPhysicalFile("http://data.isi.edu/", "web");
         fa2.addPhysicalFile("file:///non-existant.txt", "condorpool");
         dax.addFile(fa2);
         
         File fa3 = new File("f.a.3");
-        fa3.addPhysicalFile("http://obelix.isi.edu/non-existant-1.txt", "web");
-        fa3.addPhysicalFile("http://obelix.isi.edu/non-existant-2.txt", "web");
-        fa3.addPhysicalFile("http://obelix.isi.edu/non-existant-3.txt", "web");
-        fa3.addPhysicalFile("http://obelix.isi.edu/non-existant-4.txt", "web");
-        fa3.addPhysicalFile("http://obelix.isi.edu/non-existant-5.txt", "web");
-        fa3.addPhysicalFile("http://obelix.isi.edu/non-existant-6.txt", "web");
-        fa3.addPhysicalFile("http://obelix.isi.edu/non-existant-7.txt", "web");
-        fa3.addPhysicalFile("http://obelix.isi.edu/", "web");
+        fa3.addPhysicalFile("http://data.isi.edu/non-existant-1.txt", "web");
+        fa3.addPhysicalFile("http://data.isi.edu/non-existant-2.txt", "web");
+        fa3.addPhysicalFile("http://data.isi.edu/non-existant-3.txt", "web");
+        fa3.addPhysicalFile("http://data.isi.edu/non-existant-4.txt", "web");
+        fa3.addPhysicalFile("http://data.isi.edu/non-existant-5.txt", "web");
+        fa3.addPhysicalFile("http://data.isi.edu/non-existant-6.txt", "web");
+        fa3.addPhysicalFile("http://data.isi.edu/non-existant-7.txt", "web");
+        fa3.addPhysicalFile("http://data.isi.edu/", "web");
         fa3.addPhysicalFile("file:///non-existant.txt", "condorpool");
         fa1.addPhysicalFile("file:///non-existant.txt", "local");
         dax.addFile(fa3);
@@ -84,7 +84,7 @@ public class BlackDiamondDAX {
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
         preprocess.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         preprocess.setInstalled( false );
-        //preprocess.addPhysicalFile("http://obelix.isi.edu/tests/pegasus-keg", "web");
+        //preprocess.addPhysicalFile("http://data.isi.edu/tests/pegasus-keg", "web");
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");

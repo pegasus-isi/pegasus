@@ -1,11 +1,11 @@
 #!/bin/sh
 
 # Wrapper for CLI Python tools - main purpose is to select a good
-# Python version to use, then execute the real tool 
+# Python version to use, then execute the real tool
 
 # Always set PEGASUS_HOME based on where the tool was run from
-PEGASUS_HOME=`dirname $0`"/.."
-PEGASUS_HOME=`cd $PEGASUS_HOME && pwd`
+PEGASUS_HOME="`dirname "$0"`/.."
+PEGASUS_HOME=`cd "$PEGASUS_HOME" && pwd`
 export PEGASUS_HOME
 
 # when running tools from /bin, / becomes a special case
@@ -20,62 +20,45 @@ BASE_NAME=%%BASE_NAME%%
 # only discover Python once, even if multiple Pegasus tools are called
 if [ "x$PEGASUS_PYTHON" = "x" ]; then
 
-    # some tools are made to work both in 2 and 3, but most are 3 only
-    ALLOW_PY2=0
-    for NAME in \
-        pegasus-transfer \
-        pegasus-s3 \
-        pegasus-integrity \
-    ; do
-        if [ "X$NAME" = "X$BASE_NAME" ]; then
-            ALLOW_PY2=1
-        fi
-    done
-    
     # PATH must be visible to which
     export PATH
-    
+
     # first look in the PATH
-    PEXE_LIST="$(which python3 2>/dev/null)"
-    if [ $ALLOW_PY2 = 1 ]; then
-        PEXE_LIST="$PEXE_LIST $(which python 2>/dev/null)"
-    fi
+    I=0
+    eval PEXE_LIST$I="$(which python3 2>/dev/null)"
+    I=$((I+1))
     # has to be last to find user defined environments
-    PEXE_LIST="$PEXE_LIST /usr/bin/python3"
-    if [ $ALLOW_PY2 = 1 ]; then
-        PEXE_LIST="$PEXE_LIST /usr/bin/python"
-    fi
-    
+    eval PEXE_LIST$I="/usr/bin/python3"
+    I=$((I+1))
+
     # Look for a python in the give list
-    for PEXE in $PEXE_LIST; do
+    for i in `seq $I`; do
+        VAR=\$PEXE_LIST$((i-1))
+        PEXE=`eval echo $VAR`
         if [ -e "$PEXE" ]; then
             break
         fi
     done
-    
+
     if [ "x$PEXE" = "x" ]; then
         echo "ERROR: Unable to find Python! Looked in: $PEXE_LIST. PATH=$PATH" >&2
         exit 1
     fi
 
-    # Some quick validations - only for Python 3, also exclude pegasus-config as
-    # it is annoying when we can't run for example Java tools because of a missing
-    # Python module.
-    if [ $ALLOW_PY2 = 0 ]; then
-        if [ "x$BASE_NAME" != "xpegasus-config" ]; then
-            # this is just a warning for now
-            $PEXE $PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py || true
-        fi
+    # Some quick validations
+    if [ "x$BASE_NAME" != "xpegasus-config" ]; then
+        # this is just a warning for now
+        "$PEXE" "$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py" || true
     fi
 
     # remember the Python version to use when calling other Pegasus tools
     PEGASUS_PYTHON=$PEXE
     export PEGASUS_PYTHON
-    
+
     # set up a PYTHONPATH so the tools do not have to worry about that, but remember the original one
     PEGASUS_ORIG_PYTHONPATH=$PYTHONPATH
     export PEGASUS_ORIG_PYTHONPATH
-    PYTHONPATH=$PEGASUS_HOME/@PYTHON_LIBDIR@:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python${PYTHONPATH:+:}${PYTHONPATH}
+    PYTHONPATH="$PEGASUS_HOME/@PYTHON_LIBDIR@:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python${PYTHONPATH:+:}${PYTHONPATH}"
     export PYTHONPATH
     PEGASUS_PYTHONPATH_SET=1
     export PEGASUS_PYTHONPATH_SET
@@ -84,8 +67,8 @@ fi
 
 # Build a full path to our real Python tool (we used to depend on pegasus-config
 # here, but as that has a dependency on perl, we are shortcutting it)
-TOOL_PATH=$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/$BASE_NAME.py
+TOOL_PATH="$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/$BASE_NAME.py"
 
 # now execute
-exec $PEGASUS_PYTHON $TOOL_PATH "$@"
+exec "$PEGASUS_PYTHON" "$TOOL_PATH" "$@"
 

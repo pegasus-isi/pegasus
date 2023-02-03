@@ -133,7 +133,13 @@ public class CommonPropertiesTest {
         System.setProperty(expectedKey, expectedValue);
         CommonProperties p = new CommonProperties(null);
 
-        assertEquals(expectedValue, p.getProperty(expectedKey));
+        try {
+            assertEquals(expectedValue, p.getProperty(expectedKey));
+        } finally {
+            // important, as we are setting the property in the JVM
+            // if not clear other unit tests get affected!
+            System.clearProperty(expectedKey);
+        }
         mLogger.logEventCompletion();
     }
 

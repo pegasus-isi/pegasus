@@ -42,7 +42,7 @@ echo "This is sample input to KEG" > ${input_file}
 mkdir -p outputs
 mkdir -p staging-site
 
-export REMOTE_PEGASUS_HOME=/lizard/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
+export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
 
 # build the dax generator
 export PYTHONPATH=`pegasus-config --python`
@@ -63,7 +63,11 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu${TOPDIR}/staging-site/scratch"
+      url: "scp://bamboo@bamboo.isi.edu${TOPDIR}/staging-site/scratch"
+  profiles:
+    pegasus:
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
+
  -
   name: "condorpool"
   arch: "x86_64"
@@ -84,18 +88,18 @@ sites:
   directories:
    -
     type: "sharedStorage"
-    path: "/lizard/scratch-90-days/testing/$USER/black-diamond-output/$RUN_ID"
+    path: "/scitech/shared/scratch-90-days/testing/$USER/black-diamond-output/$RUN_ID"
     fileServers:
      -
       operation: "all"
-      url: "file:///lizard/scratch-90-days/$USER/storage/black-diamond-output/$RUN_ID"
+      url: "file:///scitech/shared/scratch-90-days/$USER/storage/black-diamond-output/$RUN_ID"
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days/$USER/scratch/$RUN_ID"
+    path: "/scitech/shared/scratch-90-days/$USER/scratch/$RUN_ID"
     fileServers:
      -
       operation: "all"
-      url: "file:///lizard/scratch-90-days/$USER/scratch/$RUN_ID"
+      url: "file:///scitech/shared/scratch-90-days/$USER/scratch/$RUN_ID"
   profiles:
     env:
       PEGASUS_HOME: "$REMOTE_PEGASUS_HOME"
@@ -154,7 +158,6 @@ pegasus-plan \
     --dir work/submit \
     --cleanup $clean_up \
     --submit ${planner_args} \
-    ${DAX} 
+    ${DAX}
 
 set +x
-

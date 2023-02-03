@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from Pegasus.DAX3 import *
 import sys
@@ -23,7 +23,7 @@ def add_file_checksum(f, path):
 
 def add_level(level_id, num_jobs, input_files, final_outputs):
 
-    inputs_per_job = len(input_files) / num_jobs
+    inputs_per_job = int(len(input_files) / num_jobs)
     output_files = []
 
     print("Level " + str(level_id) + ": " + str(inputs_per_job) + " inputs per job")
@@ -34,7 +34,7 @@ def add_level(level_id, num_jobs, input_files, final_outputs):
 
     for i in range(num_jobs):
         job = Job(name="level" + str(level_id))
-   
+
         # executable
         job.uses(keg, link=Link.INPUT)
 
@@ -55,7 +55,7 @@ def add_level(level_id, num_jobs, input_files, final_outputs):
         wf.addJob(job)
 
     return output_files
-    
+
 
 l1_outputs = add_level(1, 50, [], False)
 l2_outputs = add_level(2, 10, l1_outputs, False)
@@ -64,4 +64,3 @@ l2_outputs = add_level(3, 20, l2_outputs, True)
 f = open("dax.xml", "w")
 wf.writeXML(f)
 f.close()
-

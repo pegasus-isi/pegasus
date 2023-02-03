@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from Pegasus.DAX3 import *
 import sys
 import os
 
 if len(sys.argv) != 3:
-	print "Usage: %s PEGASUS_HOME char" % (sys.argv[0])
+	print("Usage: %s PEGASUS_HOME char" % (sys.argv[0]))
 	sys.exit(1)
 
 char = ord(sys.argv[2][0])

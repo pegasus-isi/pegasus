@@ -24,7 +24,7 @@ skip              = [
 
 [tool.black]
 
-target-version = ["py27"]
+target-version = ["py35"]
 
 exclude       = '''
 /(
@@ -41,6 +41,12 @@ exclude       = '''
   | Pegasus/cli
 )/
 '''
+
+
+[tool.pytest.ini_options]
+
+"resource-path.directory-name-tests" = "test"
+"resource-path.directory-name-test-resources" = "resources"
 
 
 [build-system]

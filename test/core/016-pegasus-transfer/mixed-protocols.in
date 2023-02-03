@@ -1,7 +1,7 @@
 [
  { "type": "transfer",
    "id": 1,
-   "src_urls": [ { "site_label": "Workflow", "url": "gsiftp://workflow.isi.edu/local-scratch/ptesting/transfer-tests/medium-files/a.txt" } ],
+   "src_urls": [ { "site_label": "Workflow", "url": "scp://bamboo@workflow.isi.edu/local-scratch/ptesting/transfer-tests/medium-files/a.txt" } ],
    "dest_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt" } ] 
  }
 ]

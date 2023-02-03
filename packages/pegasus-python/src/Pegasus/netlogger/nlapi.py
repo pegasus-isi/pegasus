@@ -346,16 +346,16 @@ class Log:
             k = k.replace("__", ".")
             if isinstance(v, str):
                 v = quotestr(v)
-                fields.append("{}={}".format(k, v))
+                fields.append(f"{k}={v}")
             elif isinstance(v, float):
-                fields.append("{}={:f}".format(k, v))
+                fields.append(f"{k}={v:f}")
             elif isinstance(v, int):
                 fields.append("%s=%d" % (k, v))
             else:
                 s = str(v)
                 if " " in s or "\t" in s:
                     s = '"%s"' % s
-                fields.append("{}={}".format(k, s))
+                fields.append(f"{k}={s}")
 
     def format(self, event, ts, level, kw):
         if not self._pretty:
@@ -405,13 +405,11 @@ class Log:
                 del kw["msg"]
             else:
                 msg = None
-            remainder = ",".join(
-                "{}={}".format(key, value) for key, value in kw.items()
-            )
+            remainder = ",".join(f"{key}={value}" for key, value in kw.items())
             if msg:
-                buf = "{} {:<6} {} | {}. {}".format(ts, level, event, msg, remainder)
+                buf = f"{ts} {level:<6} {event} | {msg}. {remainder}"
             else:
-                buf = "{} {:<6} {} | {}".format(ts, level, event, remainder)
+                buf = f"{ts} {level:<6} {event} | {remainder}"
             # add traceback
             if tbstr:
                 buf += "\n" + tbstr

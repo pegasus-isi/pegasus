@@ -180,4 +180,3 @@ if cat monitord.log* | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unabl
     echo
     exit 1
 fi
-

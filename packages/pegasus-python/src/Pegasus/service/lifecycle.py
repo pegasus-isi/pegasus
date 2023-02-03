@@ -174,7 +174,7 @@ def teardown_request(response):
     delta = end_time - start_time
     uid = getattr(request, "uid", "no-uid")
 
-    log.debug("Request ID: {} took {} seconds".format(uid, delta.total_seconds()))
+    log.debug(f"Request ID: {uid} took {delta.total_seconds()} seconds")
 
     return response
 

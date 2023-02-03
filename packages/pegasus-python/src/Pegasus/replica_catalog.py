@@ -58,7 +58,7 @@ def _to_rc(d: dict) -> ReplicaCatalog:
                     )
 
     except KeyError:
-        raise PegasusError("error parsing {}".format(d))
+        raise PegasusError(f"error parsing {d}")
 
     return rc
 

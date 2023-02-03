@@ -32,17 +32,17 @@ cat >sites.yml <<EOF
 pegasus: "5.0"
 sites:
  -
-  name: "cartman-data"
+  name: "data"
   arch: "x86"
   os.type: "linux"
   directories:
    -
     type: "sharedScratch"
-    path: "${TOPDIR}/staging-site/scratch"
+    path: "/webdav/scratch-90-days/${TOPDIR}/staging-site/scratch"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/${TOPDIR}/staging-site/scratch"
+      url: "webdavs://workflow.isi.edu/webdav/scratch-90-days/${TOPDIR}/staging-site/scratch"
  -
   name: "condorpool"
   arch: "x86_64"
@@ -84,7 +84,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
-    --staging-site cartman-data \
+    --staging-site data \
     --dir work \
     --output-sites local \
     blackdiamond.yml  | tee $TOPDIR/plan.out
@@ -96,5 +96,3 @@ echo
 echo
 echo "Starting the workflow..."
 pegasus-run $WORK_DIR
-
-

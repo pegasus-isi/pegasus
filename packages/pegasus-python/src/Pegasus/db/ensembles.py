@@ -171,7 +171,7 @@ class EnsembleWorkflow(EnsembleBase):
             ):
                 raise EMError("Can only replan or rerun workflows in FAILED state")
         else:
-            raise EMError("Invalid state change: {} -> {}".format(self.state, state))
+            raise EMError(f"Invalid state change: {self.state} -> {state}")
 
         self.set_state(state)
 
@@ -195,7 +195,7 @@ class EnsembleWorkflow(EnsembleBase):
     def _get_file(self, suffix):
         edir = self.ensemble.get_localdir()
         wf = self.name
-        filename = "{}.{}".format(wf, suffix)
+        filename = f"{wf}.{suffix}"
         return os.path.join(edir, filename)
 
     def get_basedir(self):
@@ -365,7 +365,7 @@ class Ensembles:
         f.write("--output-site %s \\\n" % output_site)
 
         if staging_sites is not None and len(staging_sites) > 0:
-            pairs = ["{}={}".format(k, v) for k, v in staging_sites.items()]
+            pairs = [f"{k}={v}" for k, v in staging_sites.items()]
             f.write("--staging-site %s \\\n" % ",".join(pairs))
 
         if clustering is not None and len(clustering) > 0:
@@ -453,7 +453,7 @@ class Triggers:
         trigger_type: str,
         workflow_script: str,
         workflow_args: str,
-        **trigger_kwargs
+        **trigger_kwargs,
     ):
         """Insert a trigger
 

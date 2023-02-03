@@ -1073,7 +1073,12 @@ understands.
     | | See Also :                               |                                                                     |
     | |  pegasus.dir.submit.mapper               |                                                                     |
     +--------------------------------------------+---------------------------------------------------------------------+
-
+    | |                                          | | This profile allows you to turn off symlinking for a job.         |
+    | | Profile Key: nosymlink                   | | It only comes into play when symlinking for the workflow is       |
+    | | Scope : TC, SC, Abstract WF              | | turned on by setting the property                                 |
+    | | Since : 5.0.3                            | | pegasus.transfer.links to true                                    |
+    | | Type : Boolean                           |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
 
 
 .. _task-resource-profiles:

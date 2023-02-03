@@ -11,9 +11,7 @@ from Pegasus.db.schema import *
 # Main stats class.
 class StampedeWorkflowStatistics:
     def __init__(self, connString=None, expand_workflow=True):
-        self.log = logging.getLogger(
-            "{}.{}".format(self.__module__, self.__class__.__name__)
-        )
+        self.log = logging.getLogger(f"{self.__module__}.{self.__class__.__name__}")
         try:
             self.session = connection.connect(connString)
         except (connection.ConnectionError, DBAdminError) as e:

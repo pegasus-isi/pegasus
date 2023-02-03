@@ -1444,6 +1444,19 @@ public class CondorGenerator extends Abstract {
         // set the remote executable as condor executable
         job.condorVariables.construct(Condor.EXECUTABLE_KEY, job.getRemoteExecutable());
 
+        // PM-1875 transfer_output_remaps value should always be quoted.
+        // We quote it once
+        key = Condor.TRANSFER_OP_REMAPS_KEY;
+        if (cvar.containsKey(key)) {
+            value = (String) cvar.get(key);
+            try {
+                cvar.construct(key, CondorQuoteParser.quote(value, true));
+            } catch (CondorQuoteParserException ex) {
+
+                throw new RuntimeException("CondorQuoting Problem " + ex.getMessage());
+            }
+        }
+
         return;
     }
 

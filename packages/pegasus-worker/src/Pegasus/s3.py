@@ -72,15 +72,15 @@ def configure_logging(verbose, debug):
 
 def human_size(size):
     if size >= TB:
-        return "{0:6.1f}TB".format(size / float(TB))
+        return "{:6.1f}TB".format(size / float(TB))
     elif size >= GB:
-        return "{0:6.1f}GB".format(size / float(GB))
+        return "{:6.1f}GB".format(size / float(GB))
     elif size >= MB:
-        return "{0:6.1f}MB".format(size / float(MB))
+        return "{:6.1f}MB".format(size / float(MB))
     elif size >= KB:
-        return "{0:6.1f}KB".format(size / float(KB))
+        return "{:6.1f}KB".format(size / float(KB))
     else:
-        return "{0:6.0f}B".format(size)
+        return "{:6.0f}B".format(size)
 
 
 # see https://docs.aws.amazon.com/general/latest/gr/s3.html
@@ -241,7 +241,7 @@ def is_bucket_available(s3_client, bucket):
 
 def read_command_file(path):
     tokenizer = re.compile(r"\s+")
-    f = open(path, "r")
+    f = open(path)
     try:
         for line in f:
             line = line.strip()
@@ -258,7 +258,7 @@ class S3URI:
     def __init__(self, user, site, bucket=None, key=None, secure=False):
         self.user = user
         self.site = site
-        self.ident = "%s@%s" % (user, site)
+        self.ident = "{}@{}".format(user, site)
         self.bucket = bucket
         self.key = key
         self.secure = secure
@@ -330,7 +330,7 @@ def parse_uri(uri):
     if result.port is None:
         site = result.hostname
     else:
-        site = "%s:%s" % (result.hostname, result.port)
+        site = "{}:{}".format(result.hostname, result.port)
 
     return S3URI(user, site, bucket, key, secure)
 
@@ -364,7 +364,7 @@ def ls(args):
                     size = (
                         human_size(content["Size"])
                         if args.human_sized
-                        else "{0:13d}".format(content["Size"])
+                        else "{:13d}".format(content["Size"])
                     )
                     last_modified = content["LastModified"]
                     owner = content["Owner"]["DisplayName"]
@@ -556,7 +556,7 @@ def rm(args):
         if uri.key is None:
             raise Exception("URL for rm must contain a key: %s" % uri)
 
-        bid = "%s/%s" % (uri.ident, uri.bucket)
+        bid = "{}/{}".format(uri.ident, uri.bucket)
         buri = S3URI(uri.user, uri.site, uri.bucket, uri.secure)
 
         if bid not in buckets:
@@ -655,7 +655,7 @@ def get_key_for_path(path, infile, outkey):
     infile = infile.rstrip("/")
 
     if not infile.startswith(path):
-        raise Exception("file '%s' is not relative to '%s'" % (infile, path))
+        raise Exception("file '{}' is not relative to '{}'".format(infile, path))
 
     if outkey.endswith("/"):
         name = os.path.basename(path)

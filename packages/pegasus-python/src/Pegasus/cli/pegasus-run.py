@@ -76,7 +76,7 @@ def salvage_log_file(condor_log):
                 log.debug("# log $result exists, rescuing from DAGMan.")
                 try:
                     shutil.copyfile(cl, _cl)
-                    click.secho("Rescued {} as {}".format(cl, _cl), err=True)
+                    click.secho(f"Rescued {cl} as {_cl}", err=True)
                 except OSError as e:
                     raise ValueError(str(e))
                 break
@@ -285,6 +285,10 @@ pegasus-remove %(submit_dir)s"""
                 click.secho(
                     click.style("Error: ", fg="red", bold=True)
                     + "Running %s failed with %d" % (e.cmd, rc)
+                )
+                click.secho(
+                    click.style("Message: ", fg="red", bold=True)
+                    + str(e.output or e.stderr, encoding="utf-8").strip()
                 )
                 ctx.exit(rc)
 

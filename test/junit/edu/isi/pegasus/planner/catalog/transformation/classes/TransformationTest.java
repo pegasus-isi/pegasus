@@ -398,6 +398,34 @@ public class TransformationTest {
     }
 
     @Test
+    public void testCompoundTransformation() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "namespace: \"example\"\n"
+                        + "name: \"keg\"\n"
+                        + "version: \"1.0\"\n"
+                        + "sites:\n"
+                        + "  - name: \"isi\"\n"
+                        + "    pfn: \"/path/to/keg\"\n"
+                        + "requires:\n"
+                        + "  - \"dependent.keg\"";
+
+        Transformation tx = mapper.readValue(test, Transformation.class);
+        assertNotNull(tx);
+        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
+        TransformationCatalogEntry expected =
+                new TransformationCatalogEntry("example", "keg", "1.0");
+        expected.setResourceId("isi");
+        expected.setType(TCType.INSTALLED);
+        expected.setPhysicalTransformation("/path/to/keg");
+        expected.addDependantTransformation("dependent.keg");
+        assertEquals(expected.toString(), actual.toString());
+    }
+
+    @Test
     public void testCompleteTransformationDeserialization() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);

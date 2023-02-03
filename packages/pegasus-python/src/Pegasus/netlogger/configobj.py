@@ -739,7 +739,7 @@ class Section(dict):
     def __repr__(self):
         """x.__repr__() <==> repr(x)"""
         return "{%s}" % ", ".join(
-            ("{}: {}".format(repr(key), repr(self[key])))
+            (f"{repr(key)}: {repr(self[key])}")
             for key in (self.scalars + self.sections)
         )
 
@@ -1380,7 +1380,7 @@ class ConfigObj(Section):
 
     def __repr__(self):
         return "ConfigObj({%s})" % ", ".join(
-            ("{}: {}".format(repr(key), repr(self[key])))
+            (f"{repr(key)}: {repr(self[key])}")
             for key in (self.scalars + self.sections)
         )
 

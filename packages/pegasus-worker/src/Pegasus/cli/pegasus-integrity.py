@@ -5,7 +5,6 @@ Pegasus utility for checking file integrity after transfers
 
 Usage: pegasus-integrity-check [options]
 """
-from __future__ import print_function
 
 import glob
 import json
@@ -78,7 +77,7 @@ class Singleton(type):
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super().__call__(*args, **kwargs)
             cls.lock = threading.Lock()
         return cls._instances[cls]
 
@@ -168,7 +167,7 @@ def read_meta_data(f):
     """
     data = []
     try:
-        fp = open(f, "r")
+        fp = open(f)
         data = json.load(fp)
         fp.close()
     except Exception as err:
@@ -192,8 +191,8 @@ def generate_sha256(fname):
     """
 
     tools = utils.Tools()
-    tools.find("openssl", "version", "([0-9]+\.[0-9]+\.[0-9]+)")
-    tools.find("sha256sum", "--version", "([0-9]+\.[0-9]+)")
+    tools.find("openssl", "version", r"([0-9]+\.[0-9]+\.[0-9]+)")
+    tools.find("sha256sum", "--version", r"([0-9]+\.[0-9]+)")
 
     if tools.full_path("openssl"):
         cmd = tools.full_path("openssl")
@@ -248,9 +247,8 @@ def generate_yaml(lfn, pfn):
         return None
     ts_end = time.time()
 
-    return "      sha256: %s\n      checksum_timing: %.3f\n" % (
-        sha256,
-        ts_end - ts_start,
+    return "      sha256: {}\n      checksum_timing: {:.3f}\n".format(
+        sha256, ts_end - ts_start,
     )
 
 

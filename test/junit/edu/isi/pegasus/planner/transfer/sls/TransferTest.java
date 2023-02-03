@@ -25,11 +25,14 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container.MountPoint;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -38,6 +41,8 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -162,6 +167,80 @@ public class TransferTest {
         this.testStageIn("compute", expectedOutput);
     }
 
+    @Test
+    // PM-1893
+    public void testForStageInWithSharedFSSemanticsAndContainer() {
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.in");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+
+        SiteCatalogEntry computeSiteEntry = this.mBag.getHandleToSiteStore().lookup("compute");
+        Directory sharedScratch = computeSiteEntry.getDirectory(Directory.TYPE.shared_scratch);
+        sharedScratch.setSharedFileSystemAccess(true);
+
+        // staging site and compute site are the same
+        expectedOutput.addSource(
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.in");
+        expectedOutput.addDestination("compute", "file://$PWD/f.in");
+
+        // associate container with job
+        Job j = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        j.setContainer(new Container("centos8"));
+
+        this.testStageIn("compute", expectedOutput);
+        // the container with the job should have a mount point associated
+        Container c = j.getContainer();
+        assertNotNull(c.getMountPoints());
+        assertEquals(1, c.getMountPoints().size());
+        MountPoint expectedMP = new MountPoint();
+        expectedMP.setSourceDirectory("/internal/workflows/compute/shared-scratch");
+        expectedMP.setDestinationDirectory("/internal/workflows/compute/shared-scratch");
+        assertEquals(expectedMP, c.getMountPoints().toArray()[0]);
+    }
+
+    @Test
+    // PM-1893
+    public void testForStageInWithSharedFSSemanticsAndContainerWithBypasson() {
+        mLogger.logEventStart(
+                "test.transfer.sls.transfer", "sharedfs", Integer.toString(mTestNumber));
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.in");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+
+        SiteCatalogEntry computeSiteEntry = this.mBag.getHandleToSiteStore().lookup("compute");
+        Directory sharedScratch = computeSiteEntry.getDirectory(Directory.TYPE.shared_scratch);
+        sharedScratch.setSharedFileSystemAccess(true);
+
+        // staging site and compute site are the same
+        String sourceURL = "file:///path/on/shared/scratch/host/os/f.in";
+        expectedOutput.addSource("compute", sourceURL);
+        expectedOutput.addDestination("compute", "file://$PWD/f.in");
+
+        // associate container with job and sourceDir has to be mounted
+        Job j = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        Container c = new Container("centos8");
+        MountPoint mp = new MountPoint();
+        c.addMountPoint(
+                new MountPoint("/path/on/shared/scratch/host/os:/path/on/shared/scratch/host/os"));
+        j.setContainer(c);
+
+        // set bypass on for the input files
+        for (PegasusFile pf : j.getInputFiles()) {
+            pf.setForBypassStaging();
+        }
+        // the bypass location is retrieved from the planner cache. set in there
+        PlannerCache cache = new PlannerCache();
+        cache.initialize(mBag, mDAG);
+        cache.insert("f.in", sourceURL, "compute", FileServerType.OPERATION.get);
+        mBag.add(PegasusBag.PLANNER_CACHE, cache);
+
+        this.testStageIn("compute", expectedOutput);
+
+        mLogger.logEventCompletion();
+    }
+
     /**
      * PM-1789 symlink should be triggered only if compute site has a sharedFileSystem attribute set
      * to true on the shared scratch directory
@@ -207,6 +286,32 @@ public class TransferTest {
         expectedOutput.addDestination("compute", "symlink://$PWD/f.in");
 
         this.testStageIn("compute", expectedOutput);
+    }
+
+    /** PM-1879 turn off symlink via a job profile */
+    @Test
+    public void testSymlinkTurnOffInProfileForStageIn() {
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN("f.in");
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+
+        this.mProps.setProperty(PegasusProperties.PEGASUS_TRANSFER_LINKS_PROPERTY_KEY, "true");
+
+        SiteCatalogEntry computeSiteEntry = this.mBag.getHandleToSiteStore().lookup("compute");
+        Directory sharedScratch = computeSiteEntry.getDirectory(Directory.TYPE.shared_scratch);
+        sharedScratch.setSharedFileSystemAccess(true);
+
+        // since compute and staging site are the same, source is a file url not a gsiftp
+        expectedOutput.addSource(
+                "compute", "file:///internal/workflows/compute/shared-scratch/./f.in");
+        expectedOutput.addDestination("compute", "file://$PWD/f.in");
+
+        // add a profile to turn off symlink
+        Map<String, String> profiles = new HashMap();
+        profiles.put(Pegasus.NO_SYMLINK_KEY, "true");
+
+        this.testStageIn("compute", expectedOutput, profiles);
     }
 
     /** PM-1787 */
@@ -378,6 +483,11 @@ public class TransferTest {
     }
 
     private void testStageIn(String stagingSite, FileTransfer expected) {
+        this.testStageIn(stagingSite, expected, new HashMap<String, String>());
+    }
+
+    private void testStageIn(
+            String stagingSite, FileTransfer expected, Map<String, String> pegasusProfiles) {
 
         mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
         Transfer t = new Transfer();
@@ -385,6 +495,11 @@ public class TransferTest {
 
         Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
         job.setStagingSiteHandle(stagingSite);
+
+        for (String key : pegasusProfiles.keySet()) {
+            job.vdsNS.construct(key, pegasusProfiles.get(key));
+        }
+
         PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
         FileServer stagingSiteServer = null;
         String stagingSiteDirectory = null;

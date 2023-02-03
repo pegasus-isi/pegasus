@@ -132,16 +132,16 @@ def load_wf_inputs(input_spec_file_path: str) -> dict:
         with open(input_spec_file_path) as f:
             wf_inputs = yaml.load(f)
 
-        log.info("Loaded workflow inputs file: {}".format(input_spec_file_path))
+        log.info(f"Loaded workflow inputs file: {input_spec_file_path}")
     except FileNotFoundError:
-        log.exception("Unable to find {}".format(input_spec_file_path))
+        log.exception(f"Unable to find {input_spec_file_path}")
         sys.exit(1)
 
     return wf_inputs
 
 
 def load_tr_specs(tr_specs_file_path: str) -> dict:
-    log.info("Validating {}".format(tr_specs_file_path))
+    log.info(f"Validating {tr_specs_file_path}")
     schema = {
         "type": "object",
         "patternProperties": {
@@ -175,12 +175,10 @@ def load_tr_specs(tr_specs_file_path: str) -> dict:
         )
         sys.exit(1)
     except FileNotFoundError:
-        log.exception(
-            "Unable to find transformation spec file: {}".format(tr_specs_file_path)
-        )
+        log.exception(f"Unable to find transformation spec file: {tr_specs_file_path}")
         sys.exit(1)
 
-    log.info("Successfully loaded {}".format(tr_specs_file_path))
+    log.info(f"Successfully loaded {tr_specs_file_path}")
 
     return specs
 
@@ -195,7 +193,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
         )
 
         if cwl_cmd_ln_tool.baseCommand is None:
-            raise ValueError("{} requires a 'baseCommand'".format(cwl_cmd_ln_tool.id))
+            raise ValueError(f"{cwl_cmd_ln_tool.id} requires a 'baseCommand'")
 
         tool_path = PurePath(cwl_cmd_ln_tool.baseCommand)
 
@@ -206,7 +204,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
                 )
             )
 
-        log.debug("baseCommand: {}".format(tool_path))
+        log.debug(f"baseCommand: {tool_path}")
 
         # TODO: handle requirements (may not be needed or can manually add them in)
         site = "local"
@@ -287,7 +285,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
                 tool_path.name, site, str(tool_path), is_stageable
             )
         )
-        log.info("Adding <Transformation {}>".format(tr.name))
+        log.info(f"Adding <Transformation {tr.name}>")
 
         try:
             tc.add_transformations(tr)
@@ -319,7 +317,7 @@ def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
                 current_wf_inputs = wf_inputs[input_name]
             except KeyError:
                 log.exception(
-                    "Unable to obtain input: {} from input spec file".format(input_name)
+                    f"Unable to obtain input: {input_name} from input spec file"
                 )
                 sys.exit(1)
 
@@ -339,9 +337,7 @@ def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
                 )
                 sys.exit(1)
 
-    log.info(
-        "Building replica catalog complete. {} entries added".format(len(rc.entries))
-    )
+    log.info(f"Building replica catalog complete. {len(rc.entries)} entries added")
 
     return rc
 
@@ -355,7 +351,7 @@ def collect_files(cwl_wf: cwl.Workflow) -> dict:
         if _input.type == "File":
             f = get_basename(_input.id)
             wf_files[f] = f
-            log.info("Collected input file: {}".format(f))
+            log.info(f"Collected input file: {f}")
             log.debug("wf_files[{0}] = {0}".format(f))
 
         elif (
@@ -390,13 +386,11 @@ def collect_files(cwl_wf: cwl.Workflow) -> dict:
                         )
 
                 if any(c in "*$" for c in v):
-                    raise NotImplementedError(
-                        "Unable to resolve wildcards in {}".format(v)
-                    )
+                    raise NotImplementedError(f"Unable to resolve wildcards in {v}")
 
                 wf_files[k] = v
-                log.info("Collected output file: {}".format(k))
-                log.debug("wf_files[{}] = {}".format(k, v))
+                log.info(f"Collected output file: {k}")
+                log.debug(f"wf_files[{k}] = {v}")
             else:
                 raise NotImplementedError(
                     "Support for output types other than File is in development"
@@ -424,13 +418,11 @@ def collect_input_strings(wf_inputs: dict, cwl_wf: cwl.Workflow) -> dict:
 
             try:
                 wf_input_str[input_name] = wf_inputs[input_name]
-                log.info("Collected input string: {}".format(input_name))
-                log.debug(
-                    "wf_input_str[{}] = {}".format(input_name, wf_inputs[input_name])
-                )
+                log.info(f"Collected input string: {input_name}")
+                log.debug(f"wf_input_str[{input_name}] = {wf_inputs[input_name]}")
             except KeyError:
                 log.exception(
-                    "Unable to obtain input: {} from input spec file".format(input_name)
+                    f"Unable to obtain input: {input_name} from input spec file"
                 )
                 sys.exit(1)
 
@@ -452,7 +444,7 @@ def build_pegasus_wf(
 
     for step in cwl_wf.steps:
         step_name = get_basename(step.id)
-        log.info("Processing step: {}".format(step_name))
+        log.info(f"Processing step: {step_name}")
         cwl_cmd_ln_tool = (
             cwl.load_document(step.run) if isinstance(step.run, str) else step.run
         )
@@ -460,13 +452,13 @@ def build_pegasus_wf(
         job = Job(PurePath(cwl_cmd_ln_tool.baseCommand).name, _id=get_basename(step.id))
 
         # collect current step inputs
-        log.info("Collecting step inputs from {}".format(step_name))
+        log.info(f"Collecting step inputs from {step_name}")
         step_inputs = dict()
         for _input in step.in_:
             input_id = get_basename(_input.id)
 
             step_inputs[input_id] = get_basename(_input.source)
-            log.debug("step_inputs[{}] = {}".format(input_id, step_inputs[input_id]))
+            log.debug(f"step_inputs[{input_id}] = {step_inputs[input_id]}")
 
         # add inputs that are of type File
         for _input in cwl_cmd_ln_tool.inputs:
@@ -474,7 +466,7 @@ def build_pegasus_wf(
                 wf_file = File(wf_files[step_inputs[get_name(step.id, _input.id)]])
 
                 job.add_inputs(wf_file)
-                log.info("Step: {} added input file: {}".format(step_name, wf_file.lfn))
+                log.info(f"Step: {step_name} added input file: {wf_file.lfn}")
             """
             # TODO: handle File[] inputs
             elif isinstance(_input.type, cwl.CommandInputArraySchema):
@@ -490,15 +482,13 @@ def build_pegasus_wf(
                         )
             """
         # add job outputs that are of type File
-        log.info("Collecting step outputs from {}".format(step_name))
+        log.info(f"Collecting step outputs from {step_name}")
         for output in cwl_cmd_ln_tool.outputs:
             if output.type == "File":
                 wf_file = File(wf_files[get_name(step.id, output.id)])
 
                 job.add_outputs(wf_file)
-                log.info(
-                    "Step: {} added output file: {}".format(step_name, wf_file.lfn)
-                )
+                log.info(f"Step: {step_name} added output file: {wf_file.lfn}")
             else:
                 raise NotImplementedError(
                     "Support for output types other than File is in development"
@@ -567,23 +557,20 @@ def build_pegasus_wf(
         job.add_args(*args)
         wf.add_jobs(job)
 
-        log.info("Added job: {}".format(step.run))
-        log.info("\tcmd: {}".format(job.transformation))
-        log.info("\targs: {}".format(job.args))
-        log.info("\tinputs: {}".format([f.lfn for f in job.get_inputs()]))
-        log.info("\toutputs: {}".format([f.lfn for f in job.get_outputs()]))
+        log.info(f"Added job: {step.run}")
+        log.info(f"\tcmd: {job.transformation}")
+        log.info(f"\targs: {job.args}")
+        log.info(f"\tinputs: {[f.lfn for f in job.get_inputs()]}")
+        log.info(f"\toutputs: {[f.lfn for f in job.get_outputs()]}")
 
-    log.info("Building workflow complete. {} jobs added".format(len(wf.jobs)))
+    log.info(f"Building workflow complete. {len(wf.jobs)} jobs added")
 
     return wf
 
 
-def main():
-    args = parse_args()
-    setup_logger(args.debug)
-
+def _main(args):
     cwl_wf = cwl.load_document(args.cwl_workflow_file_path)
-    log.info("Loaded cwl workflow: {}".format(args.cwl_workflow_file_path))
+    log.info(f"Loaded cwl workflow: {args.cwl_workflow_file_path}")
 
     wf_inputs = load_wf_inputs(args.workflow_inputs_file_path)
     tr_specs = load_tr_specs(args.transformation_spec_file_path)
@@ -599,9 +586,16 @@ def main():
     wf.add_replica_catalog(rc)
 
     wf.write(file=args.output_file_path)
-    log.info("Workflow written to {}".format(args.output_file_path))
+    log.info(f"Workflow written to {args.output_file_path}")
 
     return 0
+
+
+def main():
+    args = parse_args()
+    setup_logger(args.debug)
+
+    _main(args)
 
 
 if __name__ == "__main__":

@@ -12,6 +12,15 @@ TESTDIR=$(cd $testdir && pwd)
 TEST_NAME=`basename $TESTDIR`
 export TEST_NAME
 
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
+PEGASUS_LOCAL_BIN_DIR=$BIN_DIR
+export PEGASUS_LOCAL_BIN_DIR
+
+#input file directory
+input_dir=/scitech/shared/scratch-90-days/bamboo/${TEST_NAME}
+mkdir -p ${input_dir}
+
 echo "Running blackdiamond.py"
 export PYTHONPATH=`pegasus-config --python`
 python3 blackdiamond.py 2>&1 | tee $TOP_DIR/plan.out
@@ -27,4 +36,3 @@ if [ "$NUM_JOBS" -gt "0" ]; then
     echo "ERROR: planner created $NUM_JOBS stage_in jobs . It should have created 0 as bypass is set for all files in workflow"
     exit 1
 fi
-

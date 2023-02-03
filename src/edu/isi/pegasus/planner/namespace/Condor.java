@@ -111,8 +111,11 @@ public class Condor extends Namespace {
     /** The name of the key that specifies transfer of input files. */
     public static final String TRANSFER_IP_FILES_KEY = "transfer_input_files";
 
-    /** The name of the key that specifies transfer of input files. */
+    /** The name of the key that specifies transfer of output files. */
     public static final String TRANSFER_OP_FILES_KEY = "transfer_output_files";
+
+    /** The name of the key that specifies transfer output remaps */
+    public static final String TRANSFER_OP_REMAPS_KEY = "transfer_output_remaps";
 
     /** The name of the key that specifies transfer of executable */
     public static final String TRANSFER_EXECUTABLE_KEY = "transfer_executable";
@@ -175,6 +178,9 @@ public class Condor extends Namespace {
     /** The condor universe key value for parallel universe. */
     public static final String PARALLEL_UNIVERSE = "parallel";
 
+    /** The preserve_relative_paths key for condor file io */
+    public static final String PRESERVE_RELATIVE_PATHS_KEY = "preserve_relative_paths";
+
     /** concurrency limits key */
     public static String CONCURRENCY_LIMITS_KEY = "concurrency_limits";
 
@@ -229,11 +235,22 @@ public class Condor extends Namespace {
      * Returns a comma separated list of files that are designated for transfer via condor file
      * transfer mechanism for the job.
      *
-     * @return a csv file else null
+     * @return a string else null
      */
     public String getOutputFilesForTransfer() {
         return (this.containsKey(Condor.TRANSFER_OP_FILES_KEY))
                 ? (String) this.get(Condor.TRANSFER_OP_FILES_KEY)
+                : null;
+    }
+
+    /**
+     * Returns a ; separated list of output file remaps
+     *
+     * @return a string else null
+     */
+    public String getOutputRemapsForTransfer() {
+        return (this.containsKey(Condor.TRANSFER_OP_REMAPS_KEY))
+                ? (String) this.get(Condor.TRANSFER_OP_REMAPS_KEY)
                 : null;
     }
 
@@ -271,6 +288,14 @@ public class Condor extends Namespace {
         }
     }
 
+    /**
+     * Remove the output files remaps that were designated for transfer using Condor File Transfer
+     * Mechanism.
+     */
+    public void removeOutputRemapsForTransfer() {
+        this.removeKey(Condor.TRANSFER_OP_REMAPS_KEY);
+    }
+
     /** Adds the executable for transfer via the condor file transfer mechanism. */
     public void setExecutableForTransfer() {
         this.construct(Condor.TRANSFER_EXECUTABLE_KEY, "true");
@@ -286,7 +311,6 @@ public class Condor extends Namespace {
      * @param file the path to the file on the submit host.
      */
     public void addIPFileForTransfer(Collection<String> files) {
-
         this.addFilesForTransfer(files, Condor.TRANSFER_IP_FILES_KEY);
     }
 
@@ -322,6 +346,35 @@ public class Condor extends Namespace {
      */
     public void addOPFileForTransfer(String file) {
         this.addFilesForTransfer(file, Condor.TRANSFER_OP_FILES_KEY);
+    }
+
+    /**
+     * Add a file that you want remapped to a new name using HTCondor inbuilt facility
+     *
+     * @param name
+     * @param newName
+     */
+    public void addOPFileForTransferRemap(String name, String newName) {
+        // sanity check
+        if (name == null || newName == null) {
+            return;
+        }
+        String files;
+        String addOn = name + "=" + newName;
+        // check if the key is already set.
+        if (this.containsKey(Condor.TRANSFER_OP_REMAPS_KEY)) {
+            // update the existing list.
+            files = (String) this.get(Condor.TRANSFER_OP_REMAPS_KEY);
+
+            if (files.charAt(files.length() - 1) == ';') {
+                files = files + addOn;
+            } else {
+                files = files + ";" + addOn;
+            }
+        } else {
+            files = addOn;
+        }
+        this.construct(Condor.TRANSFER_OP_REMAPS_KEY, files);
     }
 
     /**
@@ -452,6 +505,8 @@ public class Condor extends Namespace {
      *                        to stage in the kickstart.
      * transfer_input_files - supported, especially used to transfer proxies in
      *                        case of glide in pools.
+     * transfer_output_files - supported
+     * transfer_output_remaps - supported
      * universe         - supported, especially used to incorporate glide in pools.
      * x509userpoxy     - supported, overrides x509 default proxy and proxy transfers in
      *                    for glideins and vanilla jobs
@@ -578,6 +633,8 @@ public class Condor extends Namespace {
                         || key.compareTo(Condor.PERIODIC_REMOVE_KEY) == 0
                         || key.compareTo(Condor.PERIODIC_HOLD) == 0) {
                     res = VALID_KEY;
+                } else if (key.compareTo(Condor.PRESERVE_RELATIVE_PATHS_KEY) == 0) {
+                    res = NOT_PERMITTED_KEY;
                 } else {
                     res = UNKNOWN_KEY;
                 }
@@ -624,7 +681,8 @@ public class Condor extends Namespace {
                 if (key.compareTo(TRANSFER_EXECUTABLE_KEY) == 0
                         || key.compareTo(TRANSFER_IP_FILES_KEY) == 0) {
                     res = VALID_KEY;
-                } else if (key.compareTo("transfer_output") == 0) {
+                } else if (key.compareTo("transfer_output") == 0
+                        || key.compareTo(TRANSFER_OP_REMAPS_KEY) == 0) {
                     res = VALID_KEY;
                 } else if (key.compareTo("transfer_error") == 0) {
                     res = VALID_KEY;

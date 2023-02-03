@@ -3,7 +3,7 @@ import sys
 from Pegasus.DAX3 import *
 
 if len(sys.argv) != 2:
-    print "Usage: python daxgen.py DAXFILE"
+    print("Usage: python daxgen.py DAXFILE")
     exit(1)
 
 daxfile = sys.argv[1]

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import BinaryIO, Dict, List, Union
 
 from Pegasus import braindump, yaml
+from Pegasus.client import status
 
 # Set log formatting s.t. only messages are shown. Output from pegasus
 # commands will already contain log level categories so it isn't necessary
@@ -64,6 +65,7 @@ class Client:
         self._analyzer = path.join(base, "pegasus-analyzer")
         self._statistics = path.join(base, "pegasus-statistics")
         self._graph = path.join(base, "pegasus-graphviz")
+        self._retrieve_status = status.Status()
 
     def plan(
         self,
@@ -92,12 +94,12 @@ class Client:
         forward: List[str] = None,
         submit: bool = False,
         java_options: List[str] = None,
-        **kwargs
+        **kwargs,
     ):
         cmd = [self._plan]
 
         for k, v in kwargs.items():
-            cmd.append("-D{}={}".format(k, v))
+            cmd.append(f"-D{k}={v}")
 
         if basename:
             cmd.extend(("--basename", basename))
@@ -111,16 +113,14 @@ class Client:
         if cluster:
             if not isinstance(cluster, list):
                 raise TypeError(
-                    "invalid cluster: {}; list of str must be given".format(cluster)
+                    f"invalid cluster: {cluster}; list of str must be given"
                 )
 
             cmd.extend(("--cluster", ",".join(cluster)))
 
         if sites:
             if not isinstance(sites, list):
-                raise TypeError(
-                    "invalid sites: {}; list of str must be given".format(sites)
-                )
+                raise TypeError(f"invalid sites: {sites}; list of str must be given")
             cmd.extend(("--sites", ",".join(sites)))
 
         if output_sites:
@@ -150,9 +150,7 @@ class Client:
 
         if cache:
             if not isinstance(cache, list):
-                raise TypeError(
-                    "invalid cache: {}; list of str must be given".format(cache)
-                )
+                raise TypeError(f"invalid cache: {cache}; list of str must be given")
 
             cmd.extend(("--cache", ",".join(cache)))
 
@@ -182,7 +180,7 @@ class Client:
             if random_dir == True:
                 cmd.append("--randomdir")
             else:
-                cmd.append("--randomdir={}".format(random_dir))
+                cmd.append(f"--randomdir={random_dir}")
 
         if inherited_rc_files:
             if not isinstance(inherited_rc_files, list):
@@ -215,7 +213,7 @@ class Client:
         if forward:
             if not isinstance(forward, list):
                 raise TypeError(
-                    "invalid forward: {}; list of str must be given".format(forward)
+                    f"invalid forward: {forward}; list of str must be given"
                 )
 
             for opt in forward:
@@ -233,7 +231,7 @@ class Client:
                 )
 
             for opt in java_options:
-                cmd.append("-X{}".format(opt))
+                cmd.append(f"-X{opt}")
 
         # pegasus-plan will look for "workflow.yml" in cwd by default if
         # it is not given as last positional argument
@@ -261,13 +259,13 @@ class Client:
             self._log.info(submit_dir)
 
             self._log.info("\n*** To monitor the workflow you can run ***\n")
-            self._log.info("pegasus-status -l {}\n".format(submit_dir))
+            self._log.info(f"pegasus-status -l {submit_dir}\n")
 
             self._log.info("\n*** To remove your workflow run ***\n")
-            self._log.info("pegasus-remove {}\n".format(submit_dir))
+            self._log.info(f"pegasus-remove {submit_dir}\n")
         else:
             self._log.info("\n\n" + json_output["message"].strip() + "\n\n")
-            self._log.info("pegasus-run {}".format(submit_dir))
+            self._log.info(f"pegasus-run {submit_dir}")
 
         workflow = Workflow(submit_dir, self)
         return workflow
@@ -297,9 +295,9 @@ class Client:
         )
         self._log.info(submit_dir + "\n")
         self._log.info("*** To monitor the workflow you can run ***\n")
-        self._log.info("pegasus-status -l {}\n".format(submit_dir))
+        self._log.info(f"pegasus-status -l {submit_dir}\n")
         self._log.info("*** To remove your workflow run ***\n")
-        self._log.info("pegasus-remove {}".format(submit_dir))
+        self._log.info(f"pegasus-remove {submit_dir}")
 
         return rv.json
 
@@ -445,12 +443,14 @@ class Client:
 
     def get_status(self, root_wf_name: str, submit_dir: str) -> Union[dict, None]:
         """Returns a dict containing pegasus-status output"""
-        cmd = [self._status, "--long", submit_dir]
+        """cmd = [self._status, "--long", submit_dir]
         result = self._exec(cmd, stream_stdout=False, stream_stderr=False)
 
         return Client._parse_status_output(
             status_output=result.stdout, root_wf_name=root_wf_name
-        )
+        )"""
+
+        return self._retrieve_status.fetch_status(submit_dir, json=True)
 
     def wait(self, root_wf_name: str, submit_dir: str, delay: int = 5):
         """Prints progress bar and blocks until workflow completes or fails"""
@@ -521,11 +521,7 @@ class Client:
                         # unknown
                         print(bar, end="")
                 else:
-                    bar = (
-                        "\r["
-                        + ("-" * bar_len)
-                        + "] {percent:>5}% ..".format(percent=0.0)
-                    )
+                    bar = "\r[" + ("-" * bar_len) + f"] {0.0:>5}% .."
 
                     print(bar, end="")
 
@@ -597,20 +593,20 @@ class Client:
         if not no_simplify:
             cmd.append("--nosimplify")
 
-        cmd.append("--label={}".format(label))
+        cmd.append(f"--label={label}")
 
         if output:
-            cmd.append("--output={}".format(output))
+            cmd.append(f"--output={output}")
 
         if remove:
             for item in remove:
-                cmd.append("--remove={}".format(item))
+                cmd.append(f"--remove={item}")
 
         if width:
-            cmd.append("--width={}".format(width))
+            cmd.append(f"--width={width}")
 
         if height:
-            cmd.append("--height={}".format(height))
+            cmd.append(f"--height={height}")
 
         self._log.info(
             "\n####################\n# pegasus-graphviz #\n####################"
@@ -652,7 +648,7 @@ class Client:
                 try:
                     log_func[log_lvl](msg.decode().strip())
                 except KeyError:
-                    raise ValueError("invalid log_lvl: {}".format(log_lvl))
+                    raise ValueError(f"invalid log_lvl: {log_lvl}")
 
         log = partial(_log, logger, log_lvl)
 
@@ -717,7 +713,7 @@ class Client:
         result = Result(cmd, exit_code, b"".join(out), b"".join(err))
 
         if exit_code != 0:
-            raise PegasusClientError("Pegasus command: {} FAILED".format(cmd), result)
+            raise PegasusClientError(f"Pegasus command: {cmd} FAILED", result)
 
         return result
 
@@ -765,9 +761,7 @@ class Workflow:
             with (Path(submit_dir) / "braindump.yml").open("r") as f:
                 bd = braindump.load(f)
         except FileNotFoundError:
-            raise WorkflowInstanceError(
-                "Unable to load braindump file: {}".format(path)
-            )
+            raise WorkflowInstanceError(f"Unable to load braindump file: {path}")
 
         return bd
 

@@ -1,31 +1,31 @@
 [
  { "type": "transfer",
    "id": 1,
-   "src_urls": [ { "site_label": "local", "url": "file:///lfs1/pegasus-transfer-testing/originals/many-small-files/filesave.png" } ],
+   "src_urls": [ { "site_label": "local", "url": "file:///opt/pegasus-transfer-testing/originals/many-small-files/filesave.png" } ],
    "dest_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/filesave.png" } ] 
  }
  ,
  { "type": "transfer",
    "id": 2,
-   "src_urls": [ { "site_label": "local", "url": "file:///lfs1/pegasus-transfer-testing/originals/many-small-files/gtk-media-play-ltr.png" } ],
+   "src_urls": [ { "site_label": "local", "url": "file:///opt/pegasus-transfer-testing/originals/many-small-files/gtk-media-play-ltr.png" } ],
    "dest_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/gtk-media-play-ltr.png" } ] 
  }
  ,
  { "type": "transfer",
    "id": 3,
-   "src_urls": [ { "site_label": "local", "url": "file:///lfs1/pegasus-transfer-testing/originals/many-small-files/multimedia-volume-control.svg" } ],
+   "src_urls": [ { "site_label": "local", "url": "file:///opt/pegasus-transfer-testing/originals/many-small-files/multimedia-volume-control.svg" } ],
    "dest_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/multimedia-volume-control.svg" } ] 
  }
  ,
  { "type": "transfer",
    "id": 4,
-   "src_urls": [ { "site_label": "local", "url": "file:///lfs1/pegasus-transfer-testing/originals/medium-files/a.txt" } ],
+   "src_urls": [ { "site_label": "local", "url": "file:///opt/pegasus-transfer-testing/originals/medium-files/a.txt" } ],
    "dest_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt" } ] 
  }
  ,
  { "type": "transfer",
    "id": 5,
-   "src_urls": [ { "site_label": "local", "url": "file:///lfs1/pegasus-transfer-testing/originals/medium-files/b.txt" } ],
+   "src_urls": [ { "site_label": "local", "url": "file:///opt/pegasus-transfer-testing/originals/medium-files/b.txt" } ],
    "dest_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/b.txt" } ] 
  }
 ]

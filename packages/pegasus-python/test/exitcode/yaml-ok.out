@@ -38,7 +38,7 @@
       raw: 0
       regular_exitcode: 0
     executable:
-      file_name: /scitech/shared/lizard/scratch-90-days/bamboo/shared-scratch/bamboo/pegasus/diamond/20190215T140144-0800/diamond-findrange-4_0
+      file_name: /scitech/shared/scitech/shared/scratch-90-days/bamboo/shared-scratch/bamboo/pegasus/diamond/20190215T140144-0800/diamond-findrange-4_0
       mode: 0o100755
       size: 23176
       inode: 4214141
@@ -63,7 +63,7 @@
     procs:
   jobids:
     condor: 5363338.0
-  cwd: /scitech/shared/lizard/scratch-90-days/bamboo/shared-scratch/bamboo/pegasus/diamond/20190215T140144-0800
+  cwd: /scitech/shared/scitech/shared/scratch-90-days/bamboo/shared-scratch/bamboo/pegasus/diamond/20190215T140144-0800
   usage:
     utime: 0.011
     stime: 0.064
@@ -110,7 +110,7 @@
   files:
     final:
       lfn: "f.c1"
-      file_name: /scitech/shared/lizard/scratch-90-days/bamboo/shared-scratch/bamboo/pegasus/diamond/20190215T140144-0800/f.c1
+      file_name: /scitech/shared/scitech/shared/scratch-90-days/bamboo/shared-scratch/bamboo/pegasus/diamond/20190215T140144-0800/f.c1
       mode: 0o100644
       size: 220
       inode: 4213923

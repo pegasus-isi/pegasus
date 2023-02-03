@@ -181,7 +181,7 @@ def parse_properties(my_file, hashref={}):
                 # Parse successful
                 k = my_res.group(1)
                 v = my_res.group(2)
-                logger.debug("#Property being stored is # {} ==> {}".format(k, v))
+                logger.debug(f"#Property being stored is # {k} ==> {v}")
 
                 # Substitutions
                 subs = re_find_subs.search(v)
@@ -204,7 +204,7 @@ def parse_properties(my_file, hashref={}):
                 # Insert key, value into my_result
                 my_result[k] = v
             else:
-                logger.fatal("Illegal content in {}: {}".format(my_file, line))
+                logger.fatal(f"Illegal content in {my_file}: {line}")
                 sys.exit(1)
 
     my_file.close()
@@ -376,7 +376,7 @@ class Properties:
         my_file.write("# generated %s\n" % (time.asctime()))
         for my_key in self.m_config:
             # Write entry
-            my_file.write("{}={}\n".format(my_key, self.m_config[my_key]))
+            my_file.write(f"{my_key}={self.m_config[my_key]}\n")
             my_count = my_count + 1
 
         # Close file if not stdout

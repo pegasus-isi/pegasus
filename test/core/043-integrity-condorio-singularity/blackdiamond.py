@@ -83,14 +83,14 @@ print("Generating transformation catalog")
 tc = TransformationCatalog()
 
 # compute the initial hash for the container
-with open("/lfs1/bamboo-tests/data/osgvo-el7.img", "rb") as f:
+with open("/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif", "rb") as f:
     readable_hash = hashlib.sha256(f.read()).hexdigest()
 
 # A container that will be used to execute the following transformations.
 tools_container = Container(
-    "osgvo-el7", 
-    Container.SINGULARITY, 
-    image="gsiftp://bamboo.isi.edu/lfs1/bamboo-tests/data/osgvo-el7.img",
+    "osgvo-el7",
+    Container.SINGULARITY,
+    image="scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
     checksum={"sha256": readable_hash}
 )
 

@@ -15,8 +15,9 @@ from .transformation_catalog import Transformation, TransformationCatalog
 from .writable import Writable, _CustomEncoder, _filter_out_nones
 
 from Pegasus.client._client import from_env
+from Pegasus.client.status import Status
 
-PEGASUS_VERSION = "5.0"
+PEGASUS_VERSION = "5.0.4"
 
 __all__ = ["AbstractJob", "Job", "SubWorkflow", "Workflow"]
 
@@ -106,7 +107,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self,
         *output_files: Union[File, str],
         stage_out: bool = True,
-        register_replica: bool = True
+        register_replica: bool = True,
     ):
         """
         add_outputs(self, *output_files: Union[File, str], stage_out: bool = True, register_replica: bool = True)
@@ -473,20 +474,20 @@ class Job(AbstractJob):
         args = ""
 
         if self._id:
-            args += "_id={}, ".format(self._id)
+            args += f"_id={self._id}, "
 
         if self.namespace:
-            args += "namespace={}, ".format(self.namespace)
+            args += f"namespace={self.namespace}, "
 
-        args += "transformation={}".format(self.transformation)
+        args += f"transformation={self.transformation}"
 
         if self.version:
-            args += ", version={}".format(self.version)
+            args += f", version={self.version}"
 
         if self.node_label:
-            args += ", node_label={}".format(self.node_label)
+            args += f", node_label={self.node_label}"
 
-        return "Job({})".format(args)
+        return f"Job({args})"
 
 
 class SubWorkflow(AbstractJob):
@@ -583,7 +584,7 @@ class SubWorkflow(AbstractJob):
         forward: Optional[List[str]] = None,
         submit: bool = False,
         java_options: Optional[List[str]] = None,
-        **properties: Dict[str, str]
+        **properties: Dict[str, str],
     ):
         r"""
         add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: Optional[List[str]] = None, staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: Optional[str] = None, reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: Dict[str, str])
@@ -660,7 +661,7 @@ class SubWorkflow(AbstractJob):
         self._planner_args_already_set = True
 
         for k, v in properties.items():
-            self.add_args("-D{}={}".format(k, v))
+            self.add_args(f"-D{k}={v}")
 
         if basename:
             self.add_args("--basename", basename)
@@ -674,16 +675,14 @@ class SubWorkflow(AbstractJob):
         if cluster:
             if not isinstance(cluster, list):
                 raise TypeError(
-                    "invalid cluster: {}; list of str must be given".format(cluster)
+                    f"invalid cluster: {cluster}; list of str must be given"
                 )
 
             self.add_args("--cluster", ",".join(cluster))
 
         if sites:
             if not isinstance(sites, list):
-                raise TypeError(
-                    "invalid sites: {}; list of str must be given".format(sites)
-                )
+                raise TypeError(f"invalid sites: {sites}; list of str must be given")
             self.add_args("--sites", ",".join(sites))
 
         if output_sites:
@@ -706,17 +705,12 @@ class SubWorkflow(AbstractJob):
 
             self.add_args(
                 "--staging-site",
-                ",".join(
-                    "{site}={staging_site}".format(site=s, staging_site=ss)
-                    for s, ss in staging_sites.items()
-                ),
+                ",".join(f"{s}={ss}" for s, ss in staging_sites.items()),
             )
 
         if cache:
             if not isinstance(cache, list):
-                raise TypeError(
-                    "invalid cache: {}; list of str must be given".format(cache)
-                )
+                raise TypeError(f"invalid cache: {cache}; list of str must be given")
 
             self.add_args("--cache", ",".join(str(c) for c in cache))
 
@@ -746,7 +740,7 @@ class SubWorkflow(AbstractJob):
             if random_dir == True:
                 self.add_args("--randomdir")
             else:
-                self.add_args("--randomdir={}".format(random_dir))
+                self.add_args(f"--randomdir={random_dir}")
 
         if inherited_rc_files:
             if not isinstance(inherited_rc_files, list):
@@ -781,7 +775,7 @@ class SubWorkflow(AbstractJob):
         if forward:
             if not isinstance(forward, list):
                 raise TypeError(
-                    "invalid forward: {}; list of str must be given".format(forward)
+                    f"invalid forward: {forward}; list of str must be given"
                 )
 
             for opt in forward:
@@ -799,7 +793,7 @@ class SubWorkflow(AbstractJob):
                 )
 
             for opt in java_options:
-                self.add_args("-X{}".format(opt))
+                self.add_args(f"-X{opt}")
 
     def __json__(self):
         # error should only be raised internally if SubWorkflow was given a Workflow
@@ -818,9 +812,9 @@ class SubWorkflow(AbstractJob):
         args = ""
 
         if self._id:
-            args += "_id={}, ".format(self._id)
+            args += f"_id={self._id}, "
 
-        args += "file={}".format(self.file)
+        args += f"file={self.file}"
 
         if self.type == "condorWorkflow":
             args += ", is_planned=True"
@@ -828,9 +822,9 @@ class SubWorkflow(AbstractJob):
             args += ", is_planned=False"
 
         if self.node_label:
-            args += ", node_label={}".format(self.node_label)
+            args += f", node_label={self.node_label}"
 
-        return "SubWorkflow({})".format(args)
+        return f"SubWorkflow({args})"
 
 
 class _LinkType(Enum):
@@ -853,9 +847,7 @@ class _Use:
         bypass_staging=False,
     ):
         if not isinstance(file, File):
-            raise TypeError(
-                "invalid file: {file}; file must be of type File".format(file=file)
-            )
+            raise TypeError(f"invalid file: {file}; file must be of type File")
 
         self.file = file
 
@@ -884,7 +876,7 @@ class _Use:
     def __eq__(self, other):
         if isinstance(other, _Use):
             return self.file.lfn == other.file.lfn
-        raise ValueError("_Use cannot be compared with {}".format(type(other)))
+        raise ValueError(f"_Use cannot be compared with {type(other)}")
 
     def __json__(self):
         return _filter_out_nones(
@@ -896,6 +888,7 @@ class _Use:
                         self.file.metadata if len(self.file.metadata) > 0 else None,
                     ),
                     ("size", self.file.size),
+                    ("forPlanning", self.file.for_planning),
                     ("type", self._type),
                     ("stageOut", self.stage_out),
                     ("registerReplica", self.register_replica),
@@ -918,9 +911,7 @@ class _JobDependency:
                 self.parent_id == other.parent_id
                 and self.children_ids == other.children_ids
             )
-        raise ValueError(
-            "_JobDependency cannot be compared with {}".format(type(other))
-        )
+        raise ValueError(f"_JobDependency cannot be compared with {type(other)}")
 
     def __json__(self):
         return OrderedDict(
@@ -1187,7 +1178,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         forward: Optional[List[str]] = None,
         submit: bool = False,
         java_options: Optional[List[str]] = None,
-        **properties: Dict[str, str]
+        **properties: Dict[str, str],
     ):
         r"""
         plan(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: Dict[str,str])
@@ -1316,23 +1307,104 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             self._submit_dir, verbose=verbose, grid=grid
         )
 
-    @_chained
+    # @_chained
     @_needs_submit_dir
-    @_needs_client
-    def status(self, *, long: bool = False, verbose: int = 0):
+    # @_needs_client
+    def status(
+        self,
+        *,
+        json: bool = False,
+        long: bool = False,
+        dirs: bool = False,
+        legend: bool = False,
+        noqueue: bool = False,
+        debug: bool = False,
+    ):
         """
-        status(self, long: bool = False, verbose: int = 0)
+        status(self, long: bool = False, json:bool=False, dirs:bool=False, legend:bool=False, noqueue:bool=False, debug:bool=False)
         Monitor the workflow by quering Condor and directories.
+        
+        Also returns current status information of the workflow as a dict in the
+        following format:
+        
+        .. code-block:: python
+
+            {
+                "totals": {
+                    "unready": <int>,
+                    "ready": <int>,
+                    "pre": <int>,
+                    "queued": <int>,
+                    "post": <int>,
+                    "succeeded": <int>,
+                    "failed": <int>,
+                    "percent_done": <float>,
+                    "total": <int>
+                },
+                "dags": {
+                    "root": {
+                        "unready": <int>,
+                        "ready": <int>,
+                        "pre": <int>,
+                        "queued": <int>,
+                        "post": <int>,
+                        "succeeded": <int>,
+                        "failed": <int>,
+                        "percent_done": <float>,
+                        "state": <"Running" | "Success" | "Failure">,
+                        "dagname": <str>
+                    }
+                },
+                "condor_jobs": {
+                        "<str:wf_uuid>" : {
+                                "DAG_NAME": <str>
+                                "DAG_CONDOR_JOBS": <List of Job Dictionaries>
+                    }
+                }
+            }
+
+        Keys are defined as follows
+            * :code:`unready`: Jobs blocked by dependencies
+            * :code:`ready`: Jobs ready for submission
+            * :code:`pre`: PRE-Scripts running
+            * :code:`queued`: Submitted jobs
+            * :code:`post`: POST-Scripts running
+            * :code:`succeeded`: Job completed with success
+            * :code:`failed`: Jobs completed with failure
+            * :code:`percent_done`: Success percentage
+            * :code:`state`: Workflow state
+            * :code:`dagname`: Name of workflow
+            * :code:`condor_jobs`: A dict of jobs in Condor Q, with WF_UUID as key for each workflow
+            * :code:`DAG_NAME`: Workflow name
+            * :code:`DAG_CONDOR_JOBS`: List of jobs in Condor Q, each job is a Dict of Job ClassAd attributes
 
         :param long: Show all DAG states, including sub-DAGs, default only totals. defaults to False
         :type long: bool, optional
-        :param verbose:  verbosity, defaults to False
-        :type verbose: int, optional
+        :param json: returns current status information of the workflow as a JSON serializable dictionary, defaults to False
+        :type json: bool, optional
+        :param dirs: shows relative paths for sub-DAGs, works with long option, defaults to False
+        :type dirs: bool, optional
+        :param legend: shows a legend explaining the columns in the output, defaults to False
+        :type legend: bool, optional
+        :param noqueue: turns off the output from parsing Condor Q, defaults to False
+        :type noqueue: bool, optional
+        :param debug: 
+        :type debug: bool, optional
         :raises PegasusClientError: pegasus-status encountered an error
-        :return: self
+        :return: self, current status information
+        :rtype: Union[Dict,None]
         """
-
-        self._client.status(self._submit_dir, long=long, verbose=verbose)
+        display_status = Status()
+        return display_status.fetch_status(
+            self._submit_dir,
+            json=json,
+            long=long,
+            dirs=dirs,
+            legend=legend,
+            noqueue=noqueue,
+            debug=debug,
+        )
+        # self._client.status(self._submit_dir, long=long, verbose=verbose)
 
     @_needs_submit_dir
     @_needs_client
@@ -1501,9 +1573,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         # check that correct label parameter is used
         labels = {"label", "xform", "id", "xform-id", "label-xform", "label-id"}
         if label not in labels:
-            raise ValueError(
-                "Invalid label: {}, label must be one of {}".format(label, labels)
-            )
+            raise ValueError(f"Invalid label: {label}, label must be one of {labels}")
 
         self._client.graph(
             workflow_file=self._path,
@@ -1531,7 +1601,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
             if job._id in self.jobs:
                 raise DuplicateError(
-                    "Job with id {} already added to this workflow".format(job._id)
+                    f"Job with id {job._id} already added to this workflow"
                 )
 
             if isinstance(job, SubWorkflow):
@@ -1539,7 +1609,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
             self.jobs[job._id] = job
 
-            log.info("{workflow} added {job}".format(workflow=self.name, job=job))
+            log.info(f"{self.name} added {job}")
 
     def get_job(self, _id: str):
         """Retrieve the job with the given id
@@ -1551,9 +1621,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :rtype: Job
         """
         if _id not in self.jobs:
-            raise NotFoundError(
-                "job with _id={} not found in this workflow".format(_id)
-            )
+            raise NotFoundError(f"job with _id={_id} not found in this workflow")
 
         return self.jobs[_id]
 
@@ -1565,7 +1633,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
         next_id = None
         while not next_id or next_id in self.jobs:
-            next_id = "ID{:07d}".format(self.sequence)
+            next_id = f"ID{self.sequence:07d}"
             self.sequence += 1
 
         return next_id
@@ -1585,9 +1653,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :return: self
         """
         if not isinstance(sc, SiteCatalog):
-            raise TypeError(
-                "invalid catalog: {}; sc must be of type SiteCatalog".format(sc)
-            )
+            raise TypeError(f"invalid catalog: {sc}; sc must be of type SiteCatalog")
 
         if self.site_catalog is not None:
             raise DuplicateError(
@@ -1595,7 +1661,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             )
 
         self.site_catalog = sc
-        log.info("{workflow} added inline SiteCatalog".format(workflow=self.name))
+        log.info(f"{self.name} added inline SiteCatalog")
 
     @_chained
     def add_replica_catalog(self, rc: ReplicaCatalog):
@@ -1612,9 +1678,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :return: self
         """
         if not isinstance(rc, ReplicaCatalog):
-            raise TypeError(
-                "invalid catalog: {}; rc must be of type ReplicaCatalog".format(rc)
-            )
+            raise TypeError(f"invalid catalog: {rc}; rc must be of type ReplicaCatalog")
 
         if self.replica_catalog is not None:
             raise DuplicateError(
@@ -1622,7 +1686,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             )
 
         self.replica_catalog = rc
-        log.info("{workflow} added inline ReplicaCatalog".format(workflow=self.name))
+        log.info(f"{self.name} added inline ReplicaCatalog")
 
     @_chained
     def add_transformation_catalog(self, tc: TransformationCatalog):
@@ -1651,9 +1715,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             )
 
         self.transformation_catalog = tc
-        log.info(
-            "{workflow} added inline TransformationCatalog".format(workflow=self.name)
-        )
+        log.info(f"{self.name} added inline TransformationCatalog")
 
     @_chained
     def add_dependency(
@@ -1661,7 +1723,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         job: Union[Job, SubWorkflow],
         *,
         parents: List[Union[Job, SubWorkflow]] = [],
-        children: List[Union[Job, SubWorkflow]] = []
+        children: List[Union[Job, SubWorkflow]] = [],
     ):
         """
         add_dependency(self, job: Union[Job, SubWorkflow], *, parents: List[Union[Job, SubWorkflow]] = [], children: List[Union[Job, SubWorkflow]] = [])
@@ -1747,7 +1809,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
 
         if self.infer_dependencies:
-            log.info("inferring {workflow} dependencies".format(workflow=self.name))
+            log.info(f"inferring {self.name} dependencies")
             mapping = OrderedDict()
 
             """
@@ -1851,7 +1913,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         for _id, job in self.jobs.items():
             if isinstance(job, SubWorkflow) and isinstance(job.file, Workflow):
                 # serialize job (Workflow instance) to be <wf-name>_<id>.yml
-                workflow_file = Path.cwd() / "{}_{}.yml".format(job.file.name, job._id)
+                workflow_file = Path.cwd() / f"{job.file.name}_{job._id}.yml"
                 job.file.write(str(workflow_file))
 
                 # update job.file to be the file name just created

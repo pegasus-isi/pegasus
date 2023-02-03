@@ -3,6 +3,13 @@
 set -e
 
 TOP_DIR=`pwd`
+# determine TEST_NAME to setup site catalog                                                                                                                                                                       
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+fi
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+export TEST_NAME
 
 # limit the memory - this is to the test the common.sh ulimit check
 ulimit -m 512000
@@ -52,12 +59,12 @@ sites:
   grids: 
    - 
     type: "batch" 
-    contact: "corbusier.isi.edu" 
+    contact: "slurm-pegasus.isi.edu" 
     scheduler: "slurm" 
     jobtype: "compute" 
    - 
     type: "batch" 
-    contact: "corbusier.isi.edu" 
+    contact: "slurm-pegasus.isi.edu" 
     scheduler: "slurm" 
     jobtype: "compute" 
   profiles: 
@@ -68,7 +75,7 @@ sites:
       # set the remote directory 
       change.dir: 'true' 
       # the key to use for scp transfers 
-      SSH_PRIVATE_KEY: /scitech/home/bamboo/.ssh/workflow_id_rsa 
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa 
      env:
       PEGASUS_FORCE_GUC: "1"
  -
@@ -82,14 +89,14 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu$TOP_DIR/outputs"
+      url: "scp://bamboo@bamboo.isi.edu:$TOP_DIR/outputs"
    -
     type: "sharedScratch"
     path: "$TOP_DIR/scratch"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu$TOP_DIR/scratch"
+      url: "scp://bamboo@bamboo.isi.edu:$TOP_DIR/scratch"
   grids:
    -
     type: "gt5"
@@ -99,6 +106,8 @@ sites:
   profiles:
     env:
       PEGASUS_BIN_DIR: "$PEGASUS_BIN_DIR"
+    pegasus: 
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa 
  -
   name: "CCG_Staging"
   arch: "x86_64"
@@ -106,11 +115,11 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "/data/scratch/ptesting"
+    path: "/webdav/scitech/shared/scratch-90-days/${TEST_NAME}"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://workflow.isi.edu/local-scratch/ptesting"
+      url: "webdavs://workflow.isi.edu/webdav/scitech/shared/scratch-90-days/${TEST_NAME}"
 EOF
 
 echo

@@ -7,7 +7,7 @@ from .errors import DuplicateError
 from .mixins import MetadataMixin
 from .writable import Writable, _filter_out_nones
 
-PEGASUS_VERSION = "5.0"
+PEGASUS_VERSION = "5.0.4"
 
 __all__ = ["File", "ReplicaCatalog"]
 
@@ -28,7 +28,7 @@ class _PFN:
         return hash((self.site, self.pfn))
 
     def __repr__(self):
-        return "<_PFN site: {}, pfn: {}>".format(self.site, self.pfn)
+        return f"<_PFN site: {self.site}, pfn: {self.pfn}>"
 
     def __json__(self):
         return OrderedDict([("site", self.site), ("pfn", self.pfn)])
@@ -46,23 +46,27 @@ class File(MetadataMixin):
 
     """
 
-    def __init__(self, lfn: str, size: Optional[int] = None):
+    def __init__(self, lfn: str, size: Optional[int] = None, for_planning: Optional[bool] = False):
         """
         :param lfn: a unique logical filename
         :type lfn: str
         :param size: size in bytes, defaults to None
         :type size: int
+        :param for_planning: indicate that a file is to be used for planning purposes
+        :type for_planning: bool
         """
         if not isinstance(lfn, str):
-            raise TypeError(
-                "invalid lfn: {lfn}; lfn must be of type str".format(lfn=lfn)
-            )
+            raise TypeError(f"invalid lfn: {lfn}; lfn must be of type str")
 
         self.metadata = OrderedDict()
         self.lfn = lfn
         self.size = size
         if size:
             self.metadata["size"] = size
+        if for_planning:
+            self.for_planning = for_planning
+        else:
+            self.for_planning = None
 
     def __str__(self):
         return self.lfn
@@ -76,7 +80,7 @@ class File(MetadataMixin):
         return False
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, self.lfn)
+        return f"<{self.__class__.__name__} {self.lfn}>"
 
     def __json__(self):
         return _filter_out_nones(
@@ -85,6 +89,7 @@ class File(MetadataMixin):
                     ("lfn", self.lfn),
                     ("metadata", self.metadata if len(self.metadata) > 0 else None),
                     ("size", self.size),
+                    ("forPlanning", self.for_planning)
                 ]
             )
         )
@@ -196,7 +201,7 @@ class ReplicaCatalog(Writable):
         # restricting pattern to single pfn (may be relaxed in future release)
         if (pattern, True) in self.entries:
             raise DuplicateError(
-                "Pattern: {} already exists in this replica catalog".format(pattern)
+                f"Pattern: {pattern} already exists in this replica catalog"
             )
 
         # handle Path obj if given for pfn

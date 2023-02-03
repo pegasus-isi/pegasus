@@ -64,7 +64,7 @@ cat >sites.xml <<EOF
             <file-server operation="get" url="irods:///nara-renci-irods/home/rynge/workflows/scratch"/>
             <file-server operation="put" url="irods:///nara-renci-irods/home/rynge/workflows/scratch"/>
         </directory>
-        <profile namespace="pegasus" key="irodsEnvFile" >/localhome/bamboo/.irods/.irodsEnv</profile>
+        <profile namespace="pegasus" key="irodsEnvFile" >$HOME/.irods/.irodsEnv</profile>
     </site>
 </sitecatalog>
 EOF

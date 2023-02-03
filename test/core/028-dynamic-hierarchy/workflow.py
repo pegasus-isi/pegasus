@@ -42,10 +42,10 @@ ccg_site.add_grids(
     Grid(grid_type=Grid.GT5, contact="obelix.isi.edu/jobmanager-condor", scheduler_type=Scheduler.CONDOR, job_type=SupportedJobs.COMPUTE),
 )
 ccg_site.add_directories(
-    Directory(Directory.SHARED_SCRATCH, "/lizard/scratch-90-days/CCG/scratch")
-        .add_file_servers(FileServer("gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/scratch", Operation.ALL)),
-    Directory(Directory.LOCAL_STORAGE, "/lizard/scratch-90-days/CCG/outputs")
-        .add_file_servers(FileServer("gsiftp://obelix.isi.edu/lizard/scratch-90-days/CCG/outputs", Operation.ALL))
+    Directory(Directory.SHARED_SCRATCH, "/scitech/shared/scratch-90-days/CCG/scratch")
+        .add_file_servers(FileServer("gsiftp://obelix.isi.edu/scitech/shared/scratch-90-days/CCG/scratch", Operation.ALL)),
+    Directory(Directory.LOCAL_STORAGE, "/scitech/shared/scratch-90-days/CCG/outputs")
+        .add_file_servers(FileServer("gsiftp://obelix.isi.edu/scitech/shared/scratch-90-days/CCG/outputs", Operation.ALL))
 )
 ccg_site.add_env(PEGASUS_HOME="/usr/bin")
 

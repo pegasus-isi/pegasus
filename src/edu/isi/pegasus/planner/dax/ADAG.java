@@ -203,6 +203,8 @@ public class ADAG {
 
     public static final String PEGASUS_VENDOR_EXTENSION_KEY = "x-pegasus";
 
+    public static final String PEGASUS_YAML_ABSTRACT_WF_VERSION = "5.0.4";
+
     /**
      * Returns pegasus vendor extensions that we encode in each workflow
      *
@@ -1207,6 +1209,7 @@ public class ADAG {
      * @author Ryan Tanaka
      */
     static class JsonSerializer extends PegasusJsonSerializer<ADAG> {
+
         public JsonSerializer() {}
 
         /**
@@ -1221,7 +1224,7 @@ public class ADAG {
                 throws IOException, UnsupportedOperationException {
             gen.writeStartObject();
             // pegasus
-            gen.writeStringField("pegasus", "5.0");
+            gen.writeStringField("pegasus", PEGASUS_YAML_ABSTRACT_WF_VERSION);
 
             // write out pegasus vendor extensions
             gen.writeFieldName(ADAG.PEGASUS_VENDOR_EXTENSION_KEY);
@@ -1425,12 +1428,13 @@ public class ADAG {
         analyze.addMetaData("project", "pegasus");
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
-
+        /*
         Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
         diamond.uses(preprocess).uses(findrange).uses(analyze);
         diamond.uses(new File("config", File.LINK.INPUT));
 
         dax.addTransformation(diamond);
+        */
 
         Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");
         j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
@@ -1464,6 +1468,7 @@ public class ADAG {
         j3.addArgument("--site ").addArgument("local");
         j3.uses(new File("f.b2"), File.LINK.INPUT, "");
         j3.uses(new File("f.c2"), File.LINK.OUTPUT, File.TRANSFER.FALSE, false, false, false, "30");
+        j3.uses(new File("sites.yml"), File.LINK.INPUT, File.TRANSFER.TRUE, true, true);
         j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");
         j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");
         j3.addInvoke(

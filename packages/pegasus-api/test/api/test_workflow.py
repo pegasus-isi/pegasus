@@ -994,7 +994,7 @@ class TestWorkflow:
         with pytest.raises(ValueError) as e:
             Workflow(name=name)
 
-        assert "Invalid workflow name: {}".format(name) in str(e)
+        assert f"Invalid workflow name: {name}" in str(e)
 
     @pytest.mark.parametrize(
         "job",
@@ -1403,7 +1403,7 @@ class TestWorkflow:
             result = yaml.safe_load(f)
 
         expected = {
-            "pegasus": "5.0",
+            "pegasus": "5.0.4",
             "name": "test",
             "siteCatalog": {"sites": []},
             "replicaCatalog": {"replicas": []},
@@ -1489,7 +1489,7 @@ class TestWorkflow:
                     ReplicaCatalog().add_replica("local", "lfn", "pfn")
                 ),
                 {
-                    "pegasus": "5.0",
+                    "pegasus": "5.0.4",
                     "name": "abc",
                     "replicaCatalog": {
                         "replicas": [
@@ -1527,7 +1527,7 @@ class TestWorkflow:
                     .add_inputs(File("if.txt"))
                 ),
                 {
-                    "pegasus": "5.0",
+                    "pegasus": "5.0.4",
                     "name": "abc",
                     "replicaCatalog": {
                         "replicas": [
@@ -1619,7 +1619,7 @@ class TestWorkflow:
         - jobDependencies
         """
         p = re.compile(
-            r"x-pegasus:[\w\W]+pegasus: '5.0'[\w\W]+name:[\w\W]+hooks:[\w\W]+profiles:[\w\W]+metadata:[\w\W]+siteCatalog:[\w\W]+replicaCatalog:[\w\W]+transformationCatalog:[\w\W]+jobs:[\w\W]+jobDependencies:[\w\W]+"
+            r"x-pegasus:[\w\W]+pegasus: 5.0.4[\w\W]+name:[\w\W]+hooks:[\w\W]+profiles:[\w\W]+metadata:[\w\W]+siteCatalog:[\w\W]+replicaCatalog:[\w\W]+transformationCatalog:[\w\W]+jobs:[\w\W]+jobDependencies:[\w\W]+"
         )
         assert p.match(result) is not None
 
@@ -1940,14 +1940,24 @@ class TestWorkflow:
         assert "Workflow.run must be called before run_output can be accessed" in str(e)
 
     def test_status(self, wf, mocker):
-        mocker.patch("Pegasus.client._client.Client.status")
+        # mocker.patch("Pegasus.client._client.Client.status")
+        mocker.patch("Pegasus.client.status.Status.fetch_status")
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
 
         wf._submit_dir = "submit_dir"
         wf.status()
 
-        Pegasus.client._client.Client.status.assert_called_once_with(
-            wf._submit_dir, long=0, verbose=0
+        # Pegasus.client._client.Client.status.assert_called_once_with(
+        #    wf._submit_dir, long=0, verbose=0
+        # )
+        Pegasus.client.status.Status.fetch_status.assert_called_once_with(
+            wf._submit_dir,
+            dirs=False,
+            json=False,
+            legend=False,
+            long=False,
+            noqueue=False,
+            debug=False,
         )
 
     def test_get_status(self, wf, mocker):

@@ -44,7 +44,10 @@ Optional Software
 =================
 
 -  **mysqlclient**. Python module for MySQL access. Only needed if you
-   want to store the runtime database in MySQL (default is SQLite)
+   want to store the runtime database in MySQL (default is SQLite).
+   On server side, MySQL server 5.7 or higher is required, as Pegasus
+   creates databases encoded in *utf8mb4* charset.
+   
 
 -  **psycopg2**. Python module for PostgreSQL access. Only needed if you
    want to store the runtime database in PostgreSQL (default is SQLite)
@@ -119,7 +122,7 @@ Ubuntu
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
 
-      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu fossa main' >/etc/apt/sources.list.d/pegasus.list
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu focal main' >/etc/apt/sources.list.d/pegasus.list
 
       apt-get update
 

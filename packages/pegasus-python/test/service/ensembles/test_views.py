@@ -1,6 +1,7 @@
 import datetime
-import getpass
 import json
+import os
+import pwd
 
 import pytest
 from flask import g
@@ -15,7 +16,7 @@ from Pegasus.service.ensembles.views import to_seconds
 class NoAuthFlaskTestCase:
     @pytest.fixture(autouse=True)
     def init(self, emapp):
-        self.user = getpass.getuser()
+        self.user = pwd.getpwuid(os.getuid()).pw_name
 
     @staticmethod
     def pre_callable():
@@ -37,7 +38,7 @@ class NoAuthFlaskTestCase:
                 state="ACTIVE",
                 max_running=1,
                 max_planning=1,
-                username=getpass.getuser(),
+                username=pwd.getpwuid(os.getuid()).pw_name,
             )
         )
 
@@ -84,7 +85,7 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.get_context(
-            "/ensembles/{}/triggers".format(ensemble), pre_callable=self.pre_callable,
+            f"/ensembles/{ensemble}/triggers", pre_callable=self.pre_callable,
         )
 
         assert rv.status_code == 200
@@ -245,7 +246,7 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.post_context(
-            "/ensembles/{}/triggers/cron".format(ensemble),
+            f"/ensembles/{ensemble}/triggers/cron",
             pre_callable=self.pre_callable,
             data=request_data,
         )
@@ -460,7 +461,7 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.post_context(
-            "/ensembles/{}/triggers/file_pattern".format(ensemble),
+            f"/ensembles/{ensemble}/triggers/file_pattern",
             pre_callable=self.pre_callable,
             data=request_data,
         )
@@ -514,8 +515,7 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.delete_context(
-            "/ensembles/{}/triggers/{}".format(ensemble, trigger),
-            pre_callable=self.pre_callable,
+            f"/ensembles/{ensemble}/triggers/{trigger}", pre_callable=self.pre_callable,
         )
 
         assert rv.status_code == status_code

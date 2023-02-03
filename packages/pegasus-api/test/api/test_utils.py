@@ -43,7 +43,7 @@ def test_invalid__get_enum_str():
     with pytest.raises(TypeError) as e:
         _get_enum_str(int)
 
-    assert "invalid enum_cls: {_type}".format(_type=int) in str(e)
+    assert f"invalid enum_cls: {int}" in str(e)
 
 
 @pytest.fixture(scope="function")

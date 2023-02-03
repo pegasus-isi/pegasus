@@ -135,7 +135,7 @@ class SABase:
         for k, v in self.__dict__.items():
             if k == "_sa_instance_state":
                 continue
-            retval += "  * {} : {}\n".format(k, v)
+            retval += f"  * {k} : {v}\n"
         return retval
 
 

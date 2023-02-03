@@ -223,13 +223,6 @@ public class PegasusLite implements GridStart {
     protected boolean mEnforceStrictChecksOnWPVersion;
 
     /**
-     * This member variable if set causes the destination URL for the symlink jobs to have
-     * symlink:// url if the pool attributed associated with the pfn is same as a particular jobs
-     * execution pool.
-     */
-    protected boolean mUseSymLinks;
-
-    /**
      * Whether PegasusLite should download from the worker package from website in any case or not
      */
     protected boolean mAllowWPDownloadFromWebsite;
@@ -275,9 +268,16 @@ public class PegasusLite implements GridStart {
         if (mWorkerPackageMap == null) {
             mWorkerPackageMap = new HashMap<String, String>();
         }
-        mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
-        mUseSymLinks = mProps.getUseOfSymbolicLinks();
+        mEnforceStrictChecksOnWPVersion = enforceStrictChecksForWorkerPackage(bag);
         mAllowWPDownloadFromWebsite = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
+        mLogger.log(
+                "Enforce strict checks for worker package in PegasusLite: "
+                        + mEnforceStrictChecksOnWPVersion,
+                LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log(
+                "Allow download of worker package in PegasusLite from Pegasus Website: "
+                        + mAllowWPDownloadFromWebsite,
+                LogManager.CONFIG_MESSAGE_LEVEL);
 
         Version version = Version.instance();
         mMajorVersionLevel = version.getMajor();
@@ -418,12 +418,7 @@ public class PegasusLite implements GridStart {
             job.vdsNS.construct(Pegasus.CHANGE_DIR_KEY, "false");
             job.vdsNS.construct(Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false");
 
-            File jobWrapper = wrapJobWithPegasusLite(job, isGlobusJob);
-
-            // the job wrapper requires the common functions file
-            // from the submit host
-            job.condorVariables.addIPFileForTransfer(this.mLocalPathToPegasusLiteCommon);
-
+            boolean workerPackageStagingForJob = false;
             // PM-1225 worker package transfer is only triggered for non sub dax jobs
             if (!(job instanceof DAXJob)) {
                 // figure out transfer of worker package for compute jobs
@@ -439,6 +434,7 @@ public class PegasusLite implements GridStart {
                                     "Unable to figure out worker package location for job "
                                             + job.getID());
                         }
+                        workerPackageStagingForJob = true;
                         job.condorVariables.addIPFileForTransfer(location);
                     } else {
                         mLogger.log(
@@ -475,6 +471,12 @@ public class PegasusLite implements GridStart {
                     }
                 }
             }
+
+            File jobWrapper = wrapJobWithPegasusLite(job, isGlobusJob, workerPackageStagingForJob);
+
+            // the job wrapper requires the common functions file
+            // from the submit host
+            job.condorVariables.addIPFileForTransfer(this.mLocalPathToPegasusLiteCommon);
 
             // the .sh file is set as the executable for the job
             // in addition to setting transfer_executable as true
@@ -683,7 +685,7 @@ public class PegasusLite implements GridStart {
     }
 
     /**
-     * Generates a seqexec input file for the job. The function first enables the job via kickstart
+     * Generates a seqexec input file for the job.The function first enables the job via kickstart
      * module for worker node execution and then retrieves the commands to put in the input file
      * from the environment variables specified for kickstart.
      *
@@ -702,9 +704,12 @@ public class PegasusLite implements GridStart {
      * @param isGlobusJob is <code>true</code>, if the job generated a line <code>universe = globus
      *     </code>, and thus runs remotely. Set to <code>false</code>, if the job runs on the submit
      *     host in any way.
+     * @param workerPackageStagingForJob whether a worker package is being explicitly staged for the
+     *     job per user preference.
      * @return the file handle to the seqexec input file
      */
-    protected File wrapJobWithPegasusLite(Job job, boolean isGlobusJob) {
+    protected File wrapJobWithPegasusLite(
+            Job job, boolean isGlobusJob, boolean workerPackageStagingForJob) {
         File shellWrapper = new File(job.getFileFullPath(mSubmitDir, ".sh"));
 
         // PM-971 for auxillary jobs we don't need to worry about
@@ -916,25 +921,6 @@ public class PegasusLite implements GridStart {
                     sb.append("EOF").append('\n');
                     sb.append('\n');
                 }
-
-                // stage input files if this is a dax or a dag job
-                /* PM-1608 not sure why this is not handled in container wrappers
-                if ((job instanceof DAXJob || job instanceof DAGJob) && (!inputFiles.isEmpty())) {
-                    appendStderrFragment(sb, "Staging in input data and executables");
-                    sb.append("# stage in data and executables").append('\n');
-                    sb.append(sls.invocationString(job, null));
-                    if (mUseSymLinks && job.getContainer() == null) {
-                        // PM-1135 allow the transfer executable to symlink input file urls
-                        // PM-1197 we have to disable symlink if a job is set to
-                        // be launched via a container
-                        sb.append(" --symlink ");
-                    }
-                    sb.append(" 1>&2").append(" << 'EOF'").append('\n');
-                    sb.append(convertToTransferInputFormat(inputFiles, PegasusFile.LINKAGE.input));
-                    sb.append("EOF").append('\n');
-                    sb.append('\n');
-                }
-                */
                 // end of PM-1608 not sure why this is not handled in wrapper
             }
             if (this.mDoIntegrityChecking) {
@@ -994,70 +980,6 @@ public class PegasusLite implements GridStart {
             // the pegasus lite wrapped job itself does not have any
             // arguments passed
             job.setArguments("");
-
-            /* PM-1608 not sure why this is not handled in container wrappers
-            // transfer any output files created by dax/dag jobs
-            if ((job instanceof DAXJob || job instanceof DAGJob)
-                    && isCompute
-                    && // PM-971 for non compute jobs we don't do any sls transfers
-                    sls.needsSLSOutputTransfers(job)) {
-
-                FileServer stagingSiteServerForStore =
-                        stagingSiteEntry.selectHeadNodeScratchSharedFileServer(
-                                FileServer.OPERATION.put);
-                if (stagingSiteServerForStore == null) {
-                    this.complainForHeadNodeFileServer(job.getID(), job.getStagingSiteHandle());
-                }
-
-                String stagingSiteDirectoryForStore =
-                        mSiteStore.getInternalWorkDirectory(job, true);
-
-                // construct the postjob that transfers the output files
-                // back to head node exectionSiteDirectory
-                // to fix later. right now post constituentJob only created is pre constituentJob
-                // created
-                Collection<FileTransfer> files =
-                        sls.determineSLSOutputTransfers(
-                                job,
-                                sls.getSLSOutputLFN(job),
-                                stagingSiteServerForStore,
-                                stagingSiteDirectoryForStore,
-                                workerNodeDir);
-
-                // PM-779 split the checkpoint files from the output files
-                // as we want to stage them separately
-                Collection<FileTransfer> outputFiles = new LinkedList();
-                Collection<FileTransfer> chkpointFiles = new LinkedList();
-                for (FileTransfer ft : files) {
-                    if (ft.isCheckpointFile()) {
-                        chkpointFiles.add(ft);
-                    } else {
-                        outputFiles.add(ft);
-                    }
-                }
-
-                // PM-1608 any output files associated with the dax job should
-                // not be transferred in PegasusLite as only the planner is executed
-                // in the prescript
-                if (!outputFiles.isEmpty() && !(job instanceof DAXJob)) {
-                    // generate the stage out fragment for staging out outputs
-                    String postJob = sls.invocationString(job, null);
-                    appendStderrFragment(sb, "Staging out output files");
-                    sb.append("# stage out").append('\n');
-                    sb.append(postJob);
-
-                    sb.append(" 1>&2").append(" << 'EOF'").append('\n');
-                    sb.append(
-                            convertToTransferInputFormat(outputFiles, PegasusFile.LINKAGE.output));
-                    sb.append("EOF").append('\n');
-                    sb.append('\n');
-                }
-
-                // associate any credentials if required with the job
-                associateCredentials(job, files);
-            }
-            */
-            // end of PM-1608 not sure why this is not handled in wrapper
 
             sb.append("\n");
             sb.append("# clear the trap, and exit cleanly").append('\n');
@@ -1488,5 +1410,23 @@ public class PegasusLite implements GridStart {
                 }
             }
         }
+    }
+
+    /**
+     * Convenience method to compute whether to enable strict checks for worker package or not
+     *
+     * @param bag
+     * @return
+     */
+    protected boolean enforceStrictChecksForWorkerPackage(PegasusBag bag) {
+        // default value is true
+        boolean strict = mProps.enforceStrictChecksForWorkerPackage();
+        if (bag.getOriginalPegasusProperties().transferWorkerPackage()) {
+            // PM-1872 disable strict worker check if user is doing explicit
+            // worker package staging for the job by specifically mentioning
+            // in properties
+            strict = false;
+        }
+        return strict;
     }
 }

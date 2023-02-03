@@ -93,7 +93,13 @@ class FlaskTestClient:
             uri, method=method, data=data, headers=_headers, **kwargs
         ):
             try:
-                self.app.try_trigger_before_first_request_functions()
+                if not self.app._got_first_request:
+                    with self.app._before_request_lock:
+                        if not self.app._got_first_request:
+                            for func in self.app.before_first_request_funcs:
+                                self.app.ensure_sync(func)()
+
+                            self.app._got_first_request = True
 
                 # Pre process Request
                 rv = self.app.preprocess_request()

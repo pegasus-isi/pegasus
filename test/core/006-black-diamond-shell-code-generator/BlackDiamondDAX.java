@@ -40,7 +40,7 @@ public class BlackDiamondDAX {
     private static ADAG Diamond(String pegasus_location) throws Exception {
 
         java.io.File cwdFile = new java.io.File (".");
-        String cwd = cwdFile.getCanonicalPath(); 
+        String cwd = cwdFile.getCanonicalPath();
 
         ADAG dax = new ADAG("blackdiamond");
 
@@ -49,7 +49,7 @@ public class BlackDiamondDAX {
         dax.addFile(fa);
 
         File fa2 = new File("f.a2");
-        fa2.addPhysicalFile("gsiftp://bamboo.isi.edu" + cwd + "/f.a", "condorpool");
+        fa2.addPhysicalFile("scp://bamboo@bamboo.isi.edu" + cwd + "/f.a", "condorpool");
         dax.addFile(fa2);
 
         File fb1 = new File("f.b1");

@@ -24,7 +24,7 @@ get_basename = cwl_converter.get_basename
 get_name = cwl_converter.get_name
 load_tr_specs = cwl_converter.load_tr_specs
 load_wf_inputs = cwl_converter.load_wf_inputs
-main = cwl_converter.main
+main = cwl_converter._main
 parse_args = cwl_converter.parse_args
 
 
@@ -108,8 +108,7 @@ def test_load_tr_specs_file_not_found(caplog):
         load_tr_specs(invalid_file_name)
 
     assert (
-        "Unable to find transformation spec file: {}".format(invalid_file_name)
-        in caplog.text
+        f"Unable to find transformation spec file: {invalid_file_name}" in caplog.text
     )
 
 
@@ -329,7 +328,7 @@ def test_build_pegasus_tc_with_containers_using_dockerPull():
     result = json.loads(json.dumps(build_pegasus_tc(tr_specs, wf), cls=_CustomEncoder))
 
     assert result == {
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
         "transformations": [
             {
                 "name": "tar",
@@ -387,7 +386,7 @@ def test_build_pegasus_tc_with_containers_using_dockerLoad():
     result = json.loads(json.dumps(build_pegasus_tc(tr_specs, wf), cls=_CustomEncoder))
 
     assert result == {
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
         "transformations": [
             {
                 "name": "tar",
@@ -465,7 +464,7 @@ def test_build_pegasus_tc_with_duplicate_containers():
         pytest.fail("Duplicate error should have been caught.")
 
     assert result == {
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
         "transformations": [
             {
                 "name": "tar",
@@ -965,7 +964,7 @@ def test_build_pegasus_wf():
             },
         ],
         "name": "cwl-converted-pegasus-workflow",
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
     }
 
     expected["jobs"] = sorted(expected["jobs"], key=lambda job: job["id"])
@@ -1076,9 +1075,7 @@ def test_main(mocker):
         )
         tr_spec_file.seek(0)
 
-        mocker.patch("Pegasus.cli.pegasus-cwl-converter.parse_args", return_value=args)
-
-        assert main() == 0
+        assert main(args) == 0
 
     with open(converted_wf_file_path) as f:
         result = yaml.load(f)
@@ -1109,7 +1106,7 @@ def test_main(mocker):
             }
         ],
         "name": "cwl-converted-pegasus-workflow",
-        "pegasus": "5.0",
+        "pegasus": "5.0.4",
         "replicaCatalog": {
             "replicas": [
                 {"lfn": "if", "pfns": [{"pfn": "/path/to/file.txt", "site": "local"}]}

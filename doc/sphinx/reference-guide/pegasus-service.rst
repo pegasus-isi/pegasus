@@ -16,19 +16,21 @@ configured using the properties described below.
 
 .. table:: Pegasus Service Configuration Options
 
-   ================= ================= ======================================================================================================================================================================================================================================================================================================================================================================================================================================
-   Property          Default Value     Description
-   ================= ================= ======================================================================================================================================================================================================================================================================================================================================================================================================================================
-   SERVER_HOST       127.0.0.1         SERVER_HOST specifies the hostname/network interface on which the service listens for requests.
-   SERVER_PORT       5000              SERVER_PORT specifies the port number on which the service listens for requests.
-   CERTIFICATE       None              SSL certificate file used to encrypt sessions. If no certificate, key files are provided the service will generate and use self-signed certificates.
-   PRIVATE_KEY       None              SSL key file used to encrypt connections. If no certificate, key files are provided the service will generate and use self-signed certificates.
-   AUTHENTICATION    PAMAuthentication By default the service uses PAM authentication i.e. When prompted for a username and password users can use the credentials that they use to login to the machine. Users can specify NoAuthentication to disable username/password prompt.
-   ADMIN_USERS       None              ADMIN_USERS can be used to specify which users have the ability to access other users workflow info. If ADMIN_USERS is None, False, or '' then users can only access their own workflow information. If ADMIN_USERS is '*' then all users are admin users and can access everyones workflow information. If ADMIN_USERS = {'u1', .., 'un'} OR ['u1', .., 'un'] then only users u1, .., un can access other users workflow information.
-   PROCESS_SWITCHING True              File created by running Pegasus workflows have permissions as per user configuration. So one user migt not be able to view workflow information of other users. Setting PROCESS_SWITCHING to True makes the service change the process UID to the UID of the user whose information is being requested. pegasus-service must be started as root for PROCESS_SWITCHING to work. PROCESS_SWITCHING can be set to False.
-   USERNAME          ''                The username which pegasus-em client uses to connect to the pegasus-em server.
-   PASSWORD          ''                The password which pegasus-em client uses to connect to the pegasus-em server.
-   ================= ================= ======================================================================================================================================================================================================================================================================================================================================================================================================================================
+   ========================== ================= ======================================================================================================================================================================================================================================================================================================================================================================================================================================
+   Property                   Default Value     Description
+   ========================== ================= ======================================================================================================================================================================================================================================================================================================================================================================================================================================
+   SERVER_HOST                127.0.0.1         SERVER_HOST specifies the hostname/network interface on which the service listens for requests.
+   SERVER_PORT                5000              SERVER_PORT specifies the port number on which the service listens for requests.
+   CERTIFICATE                None              SSL certificate file used to encrypt sessions. If no certificate, key files are provided the service will generate and use self-signed certificates.
+   PRIVATE_KEY                None              SSL key file used to encrypt connections. If no certificate, key files are provided the service will generate and use self-signed certificates.
+   AUTHENTICATION             PAMAuthentication By default the service uses PAM authentication i.e. When prompted for a username and password users can use the credentials that they use to login to the machine. Users can specify NoAuthentication to disable username/password prompt.
+   ADMIN_USERS                None              ADMIN_USERS can be used to specify which users have the ability to access other users workflow info. If ADMIN_USERS is None, False, or '' then users can only access their own workflow information. If ADMIN_USERS is '*' then all users are admin users and can access everyones workflow information. If ADMIN_USERS = {'u1', .., 'un'} OR ['u1', .., 'un'] then only users u1, .., un can access other users workflow information.
+   PROCESS_SWITCHING          True              File created by running Pegasus workflows have permissions as per user configuration. So one user migt not be able to view workflow information of other users. Setting PROCESS_SWITCHING to True makes the service change the process UID to the UID of the user whose information is being requested. pegasus-service must be started as root for PROCESS_SWITCHING to work. PROCESS_SWITCHING can be set to False.
+   MAX_PROCESSES              None              If specified, starts the server in multi process mode. Should be used when process switching is enabled.
+   PEGASUS_SERVICE_URL_PREFIX None              Adds a prefix to the default base URL ie `/<PEGASUS_SERVICE_URL_PREFIX>/`.
+   USERNAME                   ''                The username which pegasus-em client uses to connect to the pegasus-em server.
+   PASSWORD                   ''                The password which pegasus-em client uses to connect to the pegasus-em server.
+   ========================== ================= ======================================================================================================================================================================================================================================================================================================================================================================================================================================
 
 All clients that connect to the web API will require the USERNAME and
 PASSWORD settings in the configuration file.
@@ -242,15 +244,15 @@ Cron Based Workflow Trigger
 
 If you need submit workflows at given time intervals, the ensemble manager can
 create a trigger using the ``pegasus-em cron-trigger`` command. For example,
-if you have created an ensemble called ``myruns`` and have the workflow 
-script ``/home/ryan/workflow.py``. The following command can be issued to 
+if you have created an ensemble called ``myruns`` and have the workflow
+script ``/home/ryan/workflow.py``. The following command can be issued to
 continually submit this workflow to the ensemble manager every hour:
 
 .. code-block::
 
    pegasus-em cron-trigger myruns mytrigger 1h /home/ryan/workflow.py -t 1d
 
-This trigger will timeout in 1 day. 
+This trigger will timeout in 1 day.
 
 File Pattern, Timed Interval, Based Workflow Trigger
 ----------------------------------------------------
@@ -267,12 +269,12 @@ command will periodically invoke :
 
 where ``--inputs`` includes any new file detected matching the given file pattern(s)
 during the current time interval. If no new files are picked up, no workflow will
-be submitted to the ensemble manager for the current time interval. 
+be submitted to the ensemble manager for the current time interval.
 
 The workflow generation script **must** have a CLI argument flag ``--inputs`` which
 takes one or more arguments as this is the interface between the ensemble manager
 trigger and the workflow. The workflow developer is responsible for handling those
-input file paths appropriately. 
+input file paths appropriately.
 
 The workflow script used with the trigger should be as follows:
 
@@ -315,10 +317,10 @@ Usage of the ``pegasus-em file-pattern-trigger`` command is as follows:
                         [--timeout TIMEOUT] \
                         [--args ARG1 [ARG2 ...]]
 
-- ``ENSEMBLE``: the name of the (already created) ensemble to which newly submitted 
+- ``ENSEMBLE``: the name of the (already created) ensemble to which newly submitted
   workflows will be added
 
-- ``TRIGGER``: a name to be associated with this trigger; may be used to shutdown 
+- ``TRIGGER``: a name to be associated with this trigger; may be used to shutdown
   the trigger
 
 - ``WORKFLOW_SCRIPT``: a workflow generation & planning script as outlined above
@@ -332,11 +334,11 @@ Usage of the ``pegasus-em file-pattern-trigger`` command is as follows:
 - ``TIMEOUT``: a timeout for the trigger; must be formatted as ``<int><s|m|h|d>`` (e.g. ``1h``)
 
 - ``ARG``: any additional arguments to be passed to the ``WORKFLOW_SCRIPT``;
-  these should be quoted when given (passed as a single string). 
- 
+  these should be quoted when given (passed as a single string).
+
 **Example Usage**
 
-:: 
+::
 
    pegasus-em file-pattern-trigger\
       myruns \
@@ -345,7 +347,7 @@ Usage of the ``pegasus-em file-pattern-trigger`` command is as follows:
       /home/ryan/workflow.py \
       /home/ryan/input/*.txt \
       --timeout 40s
-   
+
 This means that a trigger called ``10s_txt`` will be created for the ensemble
 ``myruns``. Every ``10 seconds``, this trigger will look for new ``*.txt``
 files in the ``/home/ryan/input`` directory. Say that on the current interval the files

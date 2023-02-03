@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from Pegasus.DAX3 import *
 import sys
 import os
 
 if len(sys.argv) != 2:
-	print "Usage: %s PEGASUS_HOME" % (sys.argv[0])
+	print("Usage: %s PEGASUS_HOME" % (sys.argv[0]))
 	sys.exit(1)
 
 # Create a abstract dag

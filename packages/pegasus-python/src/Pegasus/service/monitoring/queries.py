@@ -166,7 +166,7 @@ class WorkflowQueries:
             try:
                 field = getattr(resource[prefix], identifier)
             except (KeyError, AttributeError):
-                log.exception("Invalid field {}.{}".format(prefix, identifier))
+                log.exception(f"Invalid field {prefix}.{identifier}")
                 raise InvalidSortError("Invalid field %r" % identifier)
 
             if sort_dir == "ASC":
@@ -212,7 +212,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Root Workflow objects.
@@ -372,7 +372,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Workflow objects.
@@ -451,7 +451,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Workflowstate objects.
@@ -513,7 +513,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of all files associated with the Workflow.
@@ -591,7 +591,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Workflowstate objects.
@@ -680,7 +680,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Job objects.
@@ -763,7 +763,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Host objects.
@@ -848,7 +848,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the JobInstanceState objects.
@@ -929,7 +929,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Task objects.
@@ -991,7 +991,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Task objects.
@@ -1074,7 +1074,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the TaskMeta objects.
@@ -1136,7 +1136,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the JobInstance objects.
@@ -1250,7 +1250,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Invocation objects.
@@ -1313,7 +1313,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the Invocation objects.
@@ -1399,7 +1399,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the running Job objects.
@@ -1479,7 +1479,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the successful Job objects.
@@ -1563,7 +1563,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the failed Job objects.
@@ -1647,7 +1647,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         query=None,
         order=None,
         use_cache=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Returns a collection of the failing Job objects.

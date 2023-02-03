@@ -39,18 +39,18 @@ sites:
   directories:
    -
     type: "sharedStorage"
-    path: "/lizard/scratch-90-days/bamboo/$UUID/outputs"
+    path: "/scitech/shared/scratch-90-days/bamboo/$UUID/outputs"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/$UUID/outputs"
+      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID/outputs"
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days/bamboo/$UUID/scratch"
+    path: "/scitech/shared/scratch-90-days/bamboo/$UUID/scratch"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/$UUID/scratch"
+      url: "webdavs://workflow.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID/scratch"
   profiles:
     env:
       PEGASUS_HOME: "/usr"
@@ -70,17 +70,18 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/$TOPDIR/outputs"
+      url: "scp://bamboo@bamboo.isi.edu/$TOPDIR/outputs"
    -
     type: "sharedScratch"
     path: "$TOPDIR/work"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/$TOPDIR/work"
+      url: "scp://bamboo@bamboo.isi.edu/$TOPDIR/work"
   profiles:
     pegasus:
       clusters.num: "1"
+      ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
 EOF
 
 # plan and submit the  workflow

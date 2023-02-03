@@ -164,15 +164,14 @@ from sqlalchemy.types import Float, Integer
 from Pegasus.db import connection
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.schema import *
+from Pegasus.service.dashboard import queries
 
 # Main stats class.
 
 
 class StampedeStatistics:
     def __init__(self, connString, expand_workflow=True):
-        self.log = logging.getLogger(
-            "{}.{}".format(self.__module__, self.__class__.__name__)
-        )
+        self.log = logging.getLogger(f"{self.__module__}.{self.__class__.__name__}")
         try:
             self.session = connection.connect(connString)
         except connection.ConnectionError as e:
@@ -187,7 +186,7 @@ class StampedeStatistics:
         self._time_filter_mode = None
         self._host_filter = None
         self._xform_filter = {"include": None, "exclude": None}
-
+        self._connection_string = connString
         self._wfs = []
 
     def initialize(self, root_wf_uuid=None, root_wf_id=None):
@@ -241,7 +240,7 @@ class StampedeStatistics:
                 else:
                     tree[parent_node] = [row.wf_id]
 
-            self._get_descendants(tree, self._root_wf_id)
+            self._get_descendants(tree, self._root_wf_id, self._wfs)
 
         self.log.debug("Descendant workflow ids %s", self._wfs)
 
@@ -256,23 +255,89 @@ class StampedeStatistics:
         self.set_transformation_filter()
         return True
 
-    def _get_descendants(self, tree, wf_node):
+    def get_descendants(self, wf_uuid):
+        """
+        Returns descendants of any workflow in a hierarchical workflow
+        :param wf_uuid:
+        :return: list of the workflow ids that are descendants including
+                 the id for the node passed.
+        """
+        q = self.session.query(Workflow.root_wf_id, Workflow.wf_id, Workflow.wf_uuid)
+        q = q.filter(Workflow.wf_uuid == wf_uuid)
+        root_wf_id = None
+        wf_id = None
+        try:
+            result = q.one()
+            root_wf_id = result.root_wf_id
+            wf_id = result.wf_id
+        except orm.exc.MultipleResultsFound as e:
+            self.log.error("Multiple results found for wf_uuid: %s", wf_uuid)
+            raise
+        except orm.exc.NoResultFound as e:
+            self.log.error("No results found for wf_uuid: %s", wf_uuid)
+            raise
+
+        # will contain wf id's of the descendants of wf_uuid
+        wfs = []
+        wfs.insert(0, wf_id)
+
+        """
+        select parent_wf_id, wf_id from workflow where root_wf_id =
+        (select root_wf_id from workflow where wf_id=root_wf_id);
+        """
+        sub_q = (
+            self.session.query(Workflow.root_wf_id)
+            .filter(Workflow.wf_id == root_wf_id)
+            .subquery("root_wf")
+        )
+
+        q = self.session.query(Workflow.parent_wf_id, Workflow.wf_id).filter(
+            Workflow.root_wf_id == sub_q.c.root_wf_id
+        )
+
+        # @tree will hold the entire sub-work-flow dependency structure
+        # from the real root
+        tree = {}
+
+        for row in q.all():
+            parent_node = row.parent_wf_id
+            if parent_node in tree:
+                tree[parent_node].append(row.wf_id)
+            else:
+                tree[parent_node] = [row.wf_id]
+
+        self._get_descendants(tree, wf_id, wfs)
+
+        self.log.debug("Descendant workflow ids %s", wfs)
+
+        if not len(wfs):
+            self.log.error("No results found for wf_uuid: %s", wf_uuid)
+            raise ValueError("No results found for wf_uuid: %s", wf_uuid)
+        return wfs
+
+    def _get_descendants(self, tree, wf_node, wfs):
         """
         If the root_wf_uuid given to initialize function is not the UUID of the root work-flow, and
         expand_workflow was set to True, then this recursive function determines all child work-flows.
-        @tree A dictionary when key is the parent_wf_id and value is a list of its child wf_id's.
-        @wf_node The node for which to determine descendants.
+        :param tree: A dictionary when key is the parent_wf_id and value is a list of its child wf_id's.
+        :param wf_node: The node for which to determine descendants.
+        :param wfs: the list containing the descendants of the node.
+        :return:
         """
-
         if tree is None or wf_node is None:
             raise ValueError("Tree, or node cannot be None")
 
+        if wfs is None:
+            raise ValueError(
+                "wfs should be a list in which list of descendants has to be stored"
+            )
+
         if wf_node in tree:
 
-            self._wfs.extend(tree[wf_node])
+            wfs.extend(tree[wf_node])
 
             for wf in tree[wf_node]:
-                self._get_descendants(tree, wf)
+                self._get_descendants(tree, wf, wfs)
 
     def close(self):
         self.log.debug("close")
@@ -529,6 +594,34 @@ class StampedeStatistics:
             JobInstance.exitcode != None
         )  # noqa: E711
         return q.count()
+
+    def get_failing_jobs(self):
+        """
+        Returns jobs that are failing as in the most recent instance is running (exitcode is None).
+        However, previous job retries have failed.
+        :return:
+        """
+
+        # sanity check. this query does not expand to sub workflows. only the current
+        # level of the workflow
+        if self._expand:
+            self.log.error(
+                "For failing jobs expansion to sub workflows is not possible"
+            )
+            raise ValueError(
+                "For failing jobs expansion to sub workflows is not possible"
+            )
+
+        try:
+            workflow = queries.WorkflowInfo(
+                self._connection_string,
+                wf_id=self._root_wf_id,
+                wf_uuid=self._root_wf_uuid,
+            )
+            return workflow.get_failing_jobs()
+        finally:
+            if workflow:
+                workflow.close()
 
     def _get_total_failed_jobs_status(self):
         """
@@ -1039,10 +1132,16 @@ class StampedeStatistics:
 
         return q.first()
 
-    def get_workflow_details(self):
+    def get_workflow_details(self, wfs=None):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowdetails
+        :param wfs:  list of workflow ids
+        :return: workflow details for the workflows queried
         """
+
+        if wfs is None:
+            wfs = self._wfs
+
         q = self.session.query(
             Workflow.wf_id,
             Workflow.wf_uuid,
@@ -1058,7 +1157,7 @@ class StampedeStatistics:
             Workflow.dax_label,
             Workflow.dax_version,
         )
-        q = q.filter(Workflow.wf_id.in_(self._wfs))
+        q = q.filter(Workflow.wf_id.in_(wfs))
         return q.all()
 
     def get_workflow_retries(self):

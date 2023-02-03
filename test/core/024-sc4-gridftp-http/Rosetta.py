@@ -69,14 +69,14 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days/http-scratch/ptesting"
+    path: "/scitech/shared/scratch-90-days/http-scratch/ptesting"
     fileServers:
      -
       operation: "get"
       url: "http://workflow.isi.edu/shared-scratch/ptesting"
      -
       operation: "put"
-      url: "gsiftp://workflow.isi.edu/lizard/scratch-90-days/http-scratch/ptesting"
+      url: "scp://ptesting@workflow.isi.edu/scitech/shared/scratch-90-days/http-scratch/ptesting"
  -
   name: "local"
   arch: "x86_64"
@@ -101,6 +101,8 @@ sites:
   profiles:
     env:
       PEGASUS_BIN_DIR: "{pegasus_bin_dir}"
+    pegasus:
+      ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
 """.format(
     work_dir=str(WORK_DIR), pegasus_bin_dir=PEGASUS_BIN_DIR
 )

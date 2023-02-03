@@ -758,8 +758,7 @@ public class Job extends Data implements GraphNodeContent {
         } else if (url.startsWith("gsiftp")
                 || url.startsWith("xroot")
                 || url.startsWith("root")
-                || url.startsWith("srm")
-                || url.startsWith("go")) {
+                || url.startsWith("srm")) {
             this.addCredentialType(site, CredentialHandler.TYPE.x509);
         } else if (url.startsWith("gsiscp")) {
             // is this the correct place to verify the URL?
@@ -1467,9 +1466,7 @@ public class Job extends Data implements GraphNodeContent {
      */
     public static String getStagedExecutableBaseName(
             String txNamespace, String txName, String txVersion) {
-        // PM-1222 and PM-1377
-        // used for creating clustered job names
-        return Job.makeDAGManCompliant(combine(txNamespace, txName, txVersion));
+        return combine(txNamespace, txName, txVersion);
     }
 
     /**

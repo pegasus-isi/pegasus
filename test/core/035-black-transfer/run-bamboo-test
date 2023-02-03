@@ -10,7 +10,7 @@ fi
 
 TOPDIR=`pwd`
 
-CONDOR_POOL_SHARED_FS=/lizard/scratch-90-days/bamboo
+CONDOR_POOL_SHARED_FS=/scitech/shared/scratch-90-days/bamboo
 mkdir -p $CONDOR_POOL_SHARED_FS/inputs
 
 # generate the input file
@@ -42,11 +42,12 @@ cat > sites.xml <<EOF
 </site>
 <site handle="condorpool" arch="x86_64" os="LINUX" >
         <directory  path="${CONDOR_POOL_SHARED_FS}/shared-scratch" type="shared-scratch" free-size="" total-size="">
-             <file-server  operation="all" url="gsiftp://bamboo.isi.edu/${CONDOR_POOL_SHARED_FS}/shared-scratch">
-                </file-server> 
-        </directory>           
+             <file-server  operation="all" url="scp://bamboo@bamboo.isi.edu/${CONDOR_POOL_SHARED_FS}/shared-scratch">
+                </file-server>
+        </directory>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="pegasus" key="ssh_private_key" >/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
 </site>
 
 </sitecatalog>
@@ -72,7 +73,7 @@ find $WORK_DIR -name "stage_in_remote*.in" | grep -e ".*" 1> /dev/null 2>&1
 EC=$?
 set -e
 
-if [ $EC -ne 0 ]; then 
+if [ $EC -ne 0 ]; then
     echo "Planner did not create any remote stagein jobs"
     exit 1
 fi
@@ -102,4 +103,3 @@ fi
 
 #now submit the workflow to run
 pegasus-run  $WORK_DIR
-

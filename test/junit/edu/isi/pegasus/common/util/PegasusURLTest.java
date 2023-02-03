@@ -127,6 +127,19 @@ public class PegasusURLTest {
         mLogger.logEventCompletion();
     }
 
+    @Test
+    public void testMoveToURL() {
+        mLogger.logEventStart(
+                "test.common.util.PegasusURL", "set", Integer.toString(mTestNumber++));
+        testURL(
+                "moveto:///test/dir",
+                PegasusURL.MOVETO_PROTOCOL,
+                "",
+                "/test/dir",
+                PegasusURL.MOVETO_PROTOCOL_SCHEME + "//");
+        mLogger.logEventCompletion();
+    }
+
     @After
     public void tearDown() {
         mLogger = null;

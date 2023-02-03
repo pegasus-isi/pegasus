@@ -19,27 +19,27 @@ sites:
         PEGASUS_HOME: "${PEGASUS_BIN_DIR}/.."
       pegasus:
         clusters.num: 1
-        SSH_PRIVATE_KEY: "/localhome/bamboo/.ssh/workflow_id_rsa"
+        SSH_PRIVATE_KEY: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
 
   - name: obelix
     arch: x86_64
     os.type: linux
     directories:
       - type: sharedScratch
-        path: /data/scratch/http/${TEST_NAME}
+        path: /tmp/${TEST_NAME}
         fileServers:
           - operation: all
-            url: scp://ptesting@obelix.isi.edu/data/scratch/http/${TEST_NAME}
+            url: scp://bamboo@bamboo.isi.edu/tmp/${TEST_NAME}
 
   - name: condorpool
     arch: x86_64
     os.type: linux
     directories:
       - type: sharedScratch
-        path: /lizard/scratch-90-days/${TEST_NAME}
+        path: /scitech/shared/scratch-90-days/${TEST_NAME}
         fileServers:
           - operation: all
-            url: scp://bamboo@bamboo.isi.edu/lizard/scratch-90-days/${TEST_NAME}
+            url: scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}
     profiles:
       condor:
         universe: vanilla

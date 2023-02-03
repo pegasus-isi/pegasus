@@ -179,7 +179,7 @@ def _to_wf(d: dict) -> Workflow:
 
         return wf
     except (KeyError, ValueError):
-        raise PegasusError("error parsing {}".format(d))
+        raise PegasusError(f"error parsing {d}")
 
 
 def load(fp: TextIO, *args, **kwargs) -> Workflow:

@@ -35,6 +35,8 @@ $defs:
         type: boolean
       bypass:
         type: boolean
+      forPlanning:
+        type: boolean
     additionalProperties: false
     required:
       - lfn

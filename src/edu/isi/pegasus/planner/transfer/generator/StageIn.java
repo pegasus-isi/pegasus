@@ -232,6 +232,7 @@ public class StageIn extends Abstract {
             // if the LFN is not specified as an input file in the DAX
             // lets add it PM-667 more of a sanity check.
             daxFile.setTransferFlag(PegasusFile.TRANSFER_MANDATORY);
+            daxFile.setUseForPlanning();
             job.getInputFiles().add(daxFile);
             searchFiles.add(daxFile);
         }
@@ -327,6 +328,8 @@ public class StageIn extends Abstract {
         // sDirURL would be the url to the source directory.
         // dDirPutURL would be the url to the destination directoy
         // and is always a networked url.
+
+        boolean symlinkingEnabledForJob = symlinkingEnabled(job, this.mUseSymLinks);
 
         for (Iterator it = searchFiles.iterator(); it.hasNext(); ) {
             String sourceURL = null, destPutURL = null, destGetURL = null;
@@ -486,7 +489,7 @@ public class StageIn extends Abstract {
                 candidateNum++;
                 boolean bypassFirstLevelStagingForCandidateLocation = false;
                 if (symLinkSelectedLocation =
-                        (mUseSymLinks
+                        (symlinkingEnabledForJob
                                 && selLoc.getResourceHandle().equals(job.getStagingSiteHandle())
                                 && !pf.isExecutable() // PM-1086 symlink only data files as chmod
                         // fails on symlinked file
@@ -711,43 +714,26 @@ public class StageIn extends Abstract {
             boolean isFileURL = entry.getPFN().startsWith(PegasusURL.FILE_URL_SCHEME);
             String fileSite = entry.getResourceHandle();
 
-            if (mPegasusConfiguration.jobSetupForCondorIO(job, mProps)) {
-                // additional check for condor io
-                // we need to inspect the URL and it's location
-                // only file urls for input files are eligible for bypass
-                if (isFileURL) {
-                    if (fileSite.equals("local")) {
-                        bypass = true;
-                    } else if (fileSite.equals(computeSiteEntry.getSiteHandle())) {
-                        // PM-1783 allow for compute site file URLs to be bypassed
-                        // if the compute site is visible to the submit host
+            // PM-1885 no special handling for CondorIO, as now CondorIO mode
+            // also defers to NonSharedFS/Transfer SLS implementation for bypassed
+            // files
+            // Non Shared FS case: we can bypass all url's safely
+            // other than file urls
+            if (isFileURL) {
+                // PM-1783 for file url's bypass staging can be triggered only
+                // if file site is same as the compute site OR
+                // auxillary.local  is set to true for the compute site and file site is local
+                bypass = fileSite.equalsIgnoreCase(computeSite);
+                if (!bypass) {
+                    // check for auxillary.local for the compute site only if a file
+                    // URL is for local site
+                    if (fileSite.equalsIgnoreCase("local")) {
                         bypass = computeSiteEntry.isVisibleToLocalSite();
                     }
                 }
-                if (bypass) {
-                    // in condor io  we cannot remap the destination URL
-                    // we need to make sure the PFN ends with lfn to enable bypass
-                    bypass = entry.getPFN().endsWith(file.getLFN());
-                }
             } else {
-                // Non Shared FS case: we can bypass all url's safely
-                // other than file urls
-                if (isFileURL) {
-                    // PM-1783 for file url's bypass staging can be triggered only
-                    // if file site is same as the compute site OR
-                    // auxillary.local  is set to true for the compute site and file site is local
-                    bypass = fileSite.equalsIgnoreCase(computeSite);
-                    if (!bypass) {
-                        // check for auxillary.local for the compute site only if a file
-                        // URL is for local site
-                        if (fileSite.equalsIgnoreCase("local")) {
-                            bypass = computeSiteEntry.isVisibleToLocalSite();
-                        }
-                    }
-                } else {
-                    // for non shared fs case
-                    bypass = true;
-                }
+                // for non shared fs case
+                bypass = true;
             }
         }
 
@@ -1121,5 +1107,22 @@ public class StageIn extends Abstract {
             String lfn, String pfn, String site, FileServerType.OPERATION type) {
 
         mPlannerCache.insert(lfn, pfn, site, type);
+    }
+
+    /**
+     * A convenience method that indicates whether to enable symlinking for a job or not
+     *
+     * @param job the job for which symlinking needs to be enabled
+     * @param workflowSymlinking whether the user has turned on symlinking for workflow or not
+     * @return
+     */
+    protected boolean symlinkingEnabled(Job job, boolean workflowSymlinking) {
+        if (!workflowSymlinking) {
+            // user does not have symlinking enabled for the workflow
+            return false;
+        }
+
+        // the profile value can turn symlinking off
+        return !job.vdsNS.getBooleanValue(Pegasus.NO_SYMLINK_KEY);
     }
 }

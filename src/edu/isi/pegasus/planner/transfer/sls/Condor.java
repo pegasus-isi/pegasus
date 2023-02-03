@@ -17,7 +17,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -25,14 +24,16 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.SLS;
 import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
 /**
  * This uses the Condor File Transfer mechanism for the second level staging.
@@ -66,6 +67,12 @@ public class Condor implements SLS {
      */
     private PlannerCache mPlannerCache;
 
+    /**
+     * Handle to the Transfer SLS implementation that we use for supporting deep LFN renaming on
+     * stage-in of input files in the PegasusLite Script of the job
+     */
+    private Transfer mTransferSLSHandle;
+
     /** The default constructor. */
     public Condor() {}
 
@@ -80,6 +87,8 @@ public class Condor implements SLS {
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
         mPlannerCache = bag.getHandleToPlannerCache();
+        mTransferSLSHandle = new Transfer();
+        mTransferSLSHandle.initialize(bag);
     }
 
     /**
@@ -104,18 +113,24 @@ public class Condor implements SLS {
      * @return invocation string
      */
     public String invocationString(Job job, File slsFile) {
-        return null;
+        return this.mTransferSLSHandle.invocationString(job, slsFile);
     }
 
     /**
      * Returns a boolean indicating whether it will an input file for a job to do the transfers.
-     * Transfer reads from stdin the file transfers that it needs to do. Always returns true, as we
-     * need to transfer the proxy always.
+     * Transfer reads from stdin the file transfers that it needs to do.
      *
      * @param job the job being detected.
-     * @return false
+     * @return true if any input file is a deep LFN, else false
      */
+    @Override
     public boolean needsSLSInputTransfers(Job job) {
+        for (PegasusFile pf : job.getInputFiles()) {
+            String lfn = pf.getLFN();
+            if (lfn.contains(File.separator)) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -151,7 +166,10 @@ public class Condor implements SLS {
     }
 
     /**
-     * Generates a second level staging file of the input files to the worker node directory.
+     * Generates a second level staging file of the input files to the worker node directory. For
+     * CondorFile IO this usually returns null, unless there are deep lfn's associated with the
+     * files to be transferred. In this case, this function allows us to get around the missing
+     * transfer_input_remaps functionality in HTCondor
      *
      * @param job job for which the file is being created
      * @param fileName name of the file that needs to be written out.
@@ -169,7 +187,67 @@ public class Condor implements SLS {
             String stagingSiteDirectory,
             String workerNodeDirectory) {
 
-        return null;
+        Set files = job.getInputFiles();
+        Collection<FileTransfer> result = new LinkedList();
+        Set<PegasusFile> bypassTXs = new LinkedHashSet();
+        String destDir = workerNodeDirectory;
+        for (Iterator it = files.iterator(); it.hasNext(); ) {
+            PegasusFile pf = (PegasusFile) it.next();
+            String lfn = pf.getLFN();
+
+            if (lfn.equals(ENV.X509_USER_PROXY_KEY)) {
+                // ignore the proxy file for time being
+                // as we picking it from the head node directory
+                continue;
+            }
+
+            // PM-1885 for inputs that need to be bypassed, defer to the
+            // Transfer SLS implementation. We check this before check for deep
+            // LFN
+            if (pf.doBypassStaging()) {
+                bypassTXs.add(pf);
+                continue;
+            }
+
+            // PM-1875 only when a lfn is deep LFN, we create file transfer pairs
+            // that use pegasus-transfer to rename the files in the condor
+            // scratch directory that is the same as the bash variable
+            // $pegasus_lite_work_dir in the PegaussLite script at job runtime
+            boolean deepLFN = lfn.contains(File.separator);
+            if (!deepLFN) {
+                continue;
+            }
+            // In CondorIO case, condor file io has already  gotten the job the compute site
+            // before PegasusLitejob starts
+            result.add(
+                    fileTransferForMoveOfInputs(
+                            pf,
+                            job.getSiteHandle(),
+                            destDir,
+                            // PM-1875 we expand escape varialbe if job run in container
+                            job.getContainer() != null));
+        }
+
+        if (!bypassTXs.isEmpty()) {
+            Set<PegasusFile> original = job.getInputFiles();
+            job.setInputFiles(bypassTXs);
+            Collection<FileTransfer> bypassFileTXs =
+                    this.mTransferSLSHandle.determineSLSInputTransfers(
+                            job,
+                            fileName,
+                            stagingSiteServer,
+                            stagingSiteDirectory,
+                            workerNodeDirectory);
+            for (FileTransfer ft : bypassFileTXs) {
+                mLogger.log(
+                        "File will be bypassed using pegasus-transfer " + ft,
+                        LogManager.TRACE_MESSAGE_LEVEL);
+                result.add(ft);
+            }
+            // reset the complete collection back as input files for the job
+            job.setInputFiles(original);
+        }
+        return result;
     }
 
     /**
@@ -265,7 +343,7 @@ public class Condor implements SLS {
             String lfn = pf.getLFN();
 
             // sanity check case
-            sanityCheckForDeepLFN(job.getID(), lfn, "input");
+            // sanityCheckForDeepLFN(job.getID(), lfn, "input");
 
             ReplicaCatalogEntry cacheLocation = null;
 
@@ -277,7 +355,10 @@ public class Condor implements SLS {
                 // we need a GET URL. we don't know what site is associated with
                 // the source URL. Get the first matching one
                 // PM-698
-                cacheLocation = mPlannerCache.lookup(lfn, FileServerType.OPERATION.get);
+                // cacheLocation = mPlannerCache.lookup(lfn, FileServerType.OPERATION.get);
+                // PM-1885 nothing to do as for bypass files we now defer to the
+                // Transfer SLS implementation
+                continue;
             }
             if (cacheLocation == null) {
                 // nothing in the cache
@@ -305,7 +386,7 @@ public class Condor implements SLS {
             String lfn = pf.getLFN();
 
             // sanity check case
-            sanityCheckForDeepLFN(job.getID(), lfn, "output");
+            // sanityCheckForDeepLFN(job.getID(), lfn, "output");
 
             // ignore any input files of FileTransfer as they are first level
             // staging put in by Condor Transfer refiner
@@ -315,35 +396,18 @@ public class Condor implements SLS {
 
             // add an output file for transfer
             files.add(lfn);
+
+            // check for deep lfn
+            if (lfn.contains(File.separator)) {
+                // PM-1875 if the output file is a deep LFN then add
+                // transfer_output_remaps key, with name as basename
+                // and new name as the deep LFN
+                job.condorVariables.addOPFileForTransferRemap(new File(lfn).getName(), lfn);
+            }
         }
         job.condorVariables.addOPFileForTransfer(files);
 
         return true;
-    }
-
-    /**
-     * Complains for a deep lfn if separator character is found in the lfn
-     *
-     * @param id the id of the associated job
-     * @param lfn lfn of file
-     * @param type type of file as string
-     */
-    private void sanityCheckForDeepLFN(String id, String lfn, String type) throws RuntimeException {
-        if (lfn.contains(File.separator)) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Condor File Transfers don't support deep LFN's. ")
-                    .append(" The ")
-                    .append(type)
-                    .append(" file ")
-                    .append(lfn)
-                    .append(" for job ")
-                    .append(id)
-                    .append(
-                            " has a file separator. Set the property pegasus.data.configuration to ")
-                    .append(PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE)
-                    .append(" .");
-            throw new RuntimeException(sb.toString());
-        }
     }
 
     /**
@@ -353,5 +417,115 @@ public class Condor implements SLS {
      */
     public String getDescription() {
         return "SLS backend using Condor File Transfers to the worker node";
+    }
+
+    /**
+     * Creates a file transfer object that results in the move of the file in the job working
+     * directory to the deep LFN.
+     *
+     * @param pf the PegasusFile that needs to be copied
+     * @param siteHandle the compute site where job runs
+     * @param destDir the destination directory on the worker node
+     * @param escapeEnvVariable whether to escape environment variable in the generated source and
+     *     destination
+     * @return generated FileTransfer
+     */
+    protected FileTransfer fileTransferForMoveOfInputs(
+            PegasusFile pf, String siteHandle, String destDir, boolean escapeEnvVariable) {
+        FileTransfer ft = new FileTransfer();
+
+        String lfn = pf.getLFN();
+        ft.setLFN(pf.getLFN());
+        // ensure that right type gets associated, especially
+        // whether a file is a checkpoint file or not
+        ft.setType(pf.getType());
+
+        // the source URL is the basename of the file in the directory
+        // on the worker node .
+        StringBuffer sourceURL = new StringBuffer();
+        sourceURL.append(PegasusURL.FILE_URL_SCHEME).append("//");
+        if (escapeEnvVariable) {
+            // PM-1875 when a job is run through a container, then data stage-in
+            // happens inside the container. so we need to ensure
+            // the variable does not expanded on the host OS where pegasuslite
+            // script runs
+            sourceURL.append("\\");
+        }
+        sourceURL
+                .append("$pegasus_lite_work_dir")
+                .append(File.separator)
+                .append(new File(lfn).getName());
+        // In CondorIO case, condor file io has already  gotten the job the compute site
+        // before PegasusLitejob starts
+        ft.addSource(siteHandle, sourceURL.toString());
+
+        // the destination is the complete LFN in $pegasus_lite_work_dir ($PWD)
+        // directory
+        StringBuffer destURL = new StringBuffer();
+        destURL.append(PegasusURL.MOVETO_PROTOCOL_SCHEME)
+                .append("//")
+                .append(destDir)
+                .append(File.separator)
+                .append(lfn);
+        ft.addDestination(siteHandle, destURL.toString());
+        return ft;
+    }
+
+    /**
+     * Creates a file transfer object that results in a symlink in the job working directory to the
+     * source file copied over by the HTCondor file transfer.
+     *
+     * @param pf the PegasusFile that needs to be copied
+     * @param siteHandle the compute site where job runs
+     * @param destDir the destination directory on the worker node
+     * @return generated FileTransfer
+     */
+    protected FileTransfer fileTransferForSymlinkOfInputs(
+            PegasusFile pf, String siteHandle, String destDir) {
+        FileTransfer ft = new FileTransfer();
+
+        String lfn = pf.getLFN();
+        ft.setLFN(pf.getLFN());
+        // ensure that right type gets associated, especially
+        // whether a file is a checkpoint file or not
+        ft.setType(pf.getType());
+
+        // for symlinking with deep LFN's we do relative paths in the
+        // HTCondor assigned job workdir
+        destDir = ".";
+
+        // the source URL is the basename of the file in the directory
+        // on the worker node . However, symlinking happens w.r.t to the destination dir
+        // so if we need to link f.a -> deep/f.a, the command triggered should
+        // be ln -s ../f.a deep/f.a
+        StringBuilder sourceURL = new StringBuilder();
+        StringBuilder sourceDir = new StringBuilder();
+        int index = 0;
+        while ((index = lfn.indexOf(File.separatorChar, index)) != -1) {
+            sourceDir.append("..").append(File.separator);
+            index += 1;
+        }
+        if (sourceDir.length() == 0) {
+            // empty source dir computed. means just a flat lfn
+            sourceDir.append(".").append(File.separator);
+        }
+
+        sourceURL
+                .append(PegasusURL.FILE_URL_SCHEME)
+                .append("//")
+                .append(sourceDir)
+                .append(new File(lfn).getName());
+
+        ft.addSource(siteHandle, sourceURL.toString());
+
+        // the destination is the deep LFN
+        StringBuffer destURL = new StringBuffer();
+        destURL.append(PegasusURL.SYMLINK_URL_SCHEME)
+                .append("//")
+                .append(destDir)
+                .append(File.separator)
+                .append(lfn);
+        ft.addDestination(siteHandle, destURL.toString());
+        return ft;
     }
 }

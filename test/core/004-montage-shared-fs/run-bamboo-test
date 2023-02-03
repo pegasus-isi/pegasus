@@ -4,7 +4,7 @@ set -e
 
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/current/bin:$PATH
+export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 export PYTHONPATH=`pegasus-config --python`
 
 rm -rf montage-workflow-v3
@@ -35,22 +35,22 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "/lizard/scratch-90-days/bamboo/work"
+    path: "/scitech/shared/scratch-90-days/bamboo/work"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/work"
+      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/work"
    -
     type: "sharedStorage"
-    path: "/lizard/scratch-90-days/bamboo/outputs"
+    path: "/scitech/shared/scratch-90-days/bamboo/outputs"
     fileServers:
      -
       operation: "all"
-      url: "gsiftp://bamboo.isi.edu/lizard/scratch-90-days/bamboo/outputs"
+      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
   profiles:
     env:
-      MONTAGE_HOME: "/ccg/software/montage/current"
-      PEGASUS_HOME: "/lizard/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION"
+      MONTAGE_HOME: "/scitech/shared/software/el8/montage/current"
+      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION"
       http_proxy: "workflow.isi.edu:3128"
     condor:
       requirements: "(TARGET.FileSystemDomain =!= \"\")"
@@ -83,9 +83,10 @@ sites:
     jobtype: "auxillary"
   profiles:
     env:
-      GLOBUS_LOCATION: "/ccg/software/globus/default"
-      GLOBUS_TCP_PORT_RANGE: "40000,50000"
       http_proxy: "workflow.isi.edu:3128"
+  profiles:
+    pegasus:
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
 EOF
 
 cp ../pegasus.properties .

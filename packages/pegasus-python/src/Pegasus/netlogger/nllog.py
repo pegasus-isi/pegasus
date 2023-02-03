@@ -120,7 +120,7 @@ class DoesLogging:
     def __init__(self, name=None):
         if name is None:
             if self.__module__ != "__main__":
-                name = "{}.{}".format(self.__module__, self.__class__.__name__)
+                name = f"{self.__module__}.{self.__class__.__name__}"
             else:
                 name = self.__class__.__name__
         self.log = _logger(name)
@@ -688,7 +688,7 @@ class OptionParser(optparse.OptionParser):
                     else:
                         handler = logging.FileHandler(logfile)
                 except OSError as err:
-                    self.error("Cannot open log file '{}': {}".format(logfile, err))
+                    self.error(f"Cannot open log file '{logfile}': {err}")
                 sys.stderr = handler.stream
                 handler.setFormatter(logging.Formatter("%(message)s"))
         else:
@@ -710,7 +710,7 @@ class OptionParser(optparse.OptionParser):
                     else:
                         handler = logging.FileHandler(logfile)
                 except OSError as err:
-                    self.error("Cannot open log file '{}': {}".format(logfile, err))
+                    self.error(f"Cannot open log file '{logfile}': {err}")
                 handler.setFormatter(logging.Formatter("%(message)s"))
         if handler:
             log.addHandler(handler)

@@ -129,7 +129,7 @@ def _to_tc(d: dict) -> TransformationCatalog:
         return tc
 
     except KeyError:
-        raise PegasusError("error parsing {}".format(d))
+        raise PegasusError(f"error parsing {d}")
 
 
 def load(fp: TextIO, *args, **kwargs) -> TransformationCatalog:

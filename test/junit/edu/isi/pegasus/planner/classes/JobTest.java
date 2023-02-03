@@ -298,6 +298,29 @@ public class JobTest {
         DAGJob job = (DAGJob) mapper.readValue(test, Job.class);
     }
 
+    @Test
+    public void testStagedExecutableBasename() throws IOException {
+        Job j = new Job();
+        j.setTransformation("pegasus", "keg", "5.0");
+        assertEquals("pegasus-keg-5.0", j.getStagedExecutableBaseName());
+    }
+
+    // PM-1806
+    @Test
+    public void testStagedExecutableBasenameWithDots() throws IOException {
+        Job j = new Job();
+        j.setTransformation("pegasus.namespace", "keg.rajiv", "5.0");
+        assertEquals("pegasus.namespace-keg.rajiv-5.0", j.getStagedExecutableBaseName());
+    }
+
+    // PM-1806
+    @Test
+    public void testStagedExecutableBasenameWithDotInName() throws IOException {
+        Job j = new Job();
+        j.setTransformation(null, "keg.rajiv", null);
+        assertEquals("keg.rajiv", j.getStagedExecutableBaseName());
+    }
+
     private void testPegasusFile(PegasusFile expected, PegasusFile actual) {
         assertNotNull(actual);
         assertEquals(expected.getLFN(), actual.getLFN());

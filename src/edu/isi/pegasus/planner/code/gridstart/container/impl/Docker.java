@@ -150,10 +150,15 @@ public class Docker extends Abstract {
                 .append(ROOT_PATH_VARIABLE_KEY)
                 .append("=\\$PATH ;") // PM-1630 preserve the path for root user
                 .append("if ! grep -q -E  \"^$cont_group:\" /etc/group ; then ")
-                .append("groupadd --gid $cont_groupid $cont_group ;")
+                .append("groupadd -f --gid $cont_groupid $cont_group ;")
                 .append("fi; ")
                 .append("if ! id $cont_user 2>/dev/null >/dev/null; then ")
-                .append("useradd --uid $cont_userid --gid $cont_groupid $cont_user; ")
+                .append("   if id $cont_userid 2>/dev/null >/dev/null; then ")
+                // PM-1809 the userid already exists. let the container os decide userid
+                .append("       useradd -o --uid $cont_userid --gid $cont_groupid $cont_user; ")
+                .append("   else ")
+                .append("       useradd --uid $cont_userid --gid $cont_groupid $cont_user; ")
+                .append("   fi; ")
                 .append("fi; ")
                 .append("su $cont_user -c ");
         sb.append("\\\"");
@@ -335,14 +340,18 @@ public class Docker extends Abstract {
         sb.append("pegasus_lite_version_minor=$pegasus_lite_version_minor").append("\n");
         sb.append("pegasus_lite_version_patch=$pegasus_lite_version_patch").append("\n");
 
-        // explicitly set the strict check to false, as we want to pick up pegasus version
-        // in the container if specified
-        sb.append("pegasus_lite_enforce_strict_wp_check=false").append("\n");
+        sb.append("pegasus_lite_enforce_strict_wp_check=$pegasus_lite_enforce_strict_wp_check")
+                .append("\n");
 
         sb.append(
                         "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download")
                 .append("\n");
-        sb.append("pegasus_lite_work_dir=").append(Docker.CONTAINER_WORKING_DIRECTORY).append("\n");
+
+        // PM-1875 we need to export the pegasus_lite_work_dir variable to
+        // ensure pegasus-transfer picks from the environment
+        sb.append("export pegasus_lite_work_dir=")
+                .append(Docker.CONTAINER_WORKING_DIRECTORY)
+                .append("\n");
 
         sb.append("\n");
         sb.append(". ./pegasus-lite-common.sh").append("\n");

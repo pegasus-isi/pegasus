@@ -26,13 +26,13 @@ RUN dnf -y install --allowerasing --nobest \
      python3-pip \
      python3-pyOpenSSL \
      python3-PyYAML \
-     python3-setuptools \
      sudo \
      supervisor \
      tar \
-     vim \ 
+     vim \
      wget
 
+ADD ./config/start.sh /start.sh
 ADD ./config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD ./config/wrapdocker /usr/local/bin/wrapdocker
 ADD ./config/htcondor-wrapper /usr/local/bin/htcondor-wrapper
@@ -40,10 +40,12 @@ RUN chmod +x /usr/local/bin/wrapdocker /usr/local/bin/htcondor-wrapper
 RUN usermod -aG docker scitech
 
 # Python packages
+# argon2-cffi-bindings which jupyter requires has a requirements for setuptools_scm>=6.2
+RUN python3 -m pip install 'setuptools_scm>=6'
 RUN python3 -m pip install jupyter
 
 # Locale and timezone
-ENV LANG en_US.UTF-8 
+ENV LANG en_US.UTF-8
 RUN cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
 # HTCondor
@@ -54,6 +56,7 @@ RUN dnf -y config-manager --add-repo=https://research.cs.wisc.edu/htcondor/yum/r
 
 RUN usermod -a -G condor scitech
 RUN chmod -R g+w /var/{lib,log,lock,run}/condor
+ADD ./config/10-dynamic-slots /etc/condor/config.d/10-dynamic-slots
 
 # Pegasus -- rebuild everything below here
 #            http://dev.im-bot.com/docker-select-caching/
@@ -64,7 +67,7 @@ RUN dnf -y install https://download.pegasus.isi.edu/pegasus/$PEGASUS_VERSION/peg
 ADD ./notebooks /home/scitech/notebooks
 RUN chown -R scitech /home/scitech/
 
-RUN echo -e "condor_master > /dev/null 2>&1" >> /home/scitech/.bashrc
+#RUN echo -e "condor_master > /dev/null 2>&1" >> /home/scitech/.bashrc
 
 # User setup
 RUN echo -e "scitech ALL=(ALL)       NOPASSWD:ALL\n" >> /etc/sudoers
@@ -85,14 +88,10 @@ ADD ./config/kernel.json /usr/local/share/jupyter/kernels/python3/kernel.json
 RUN echo -e "export PATH=/home/scitech/.pyenv/bin:\$PATH:/usr/lib64/mpich/bin" >> /home/scitech/.bashrc
 
 # Set notebook password to 'scitech'. This pw will be used instead of token authentication
-RUN mkdir /home/scitech/.jupyter \ 
+RUN mkdir /home/scitech/.jupyter \
     && echo "{ \"NotebookApp\": { \"password\": \"sha1:30a323540baa:6eec8eaf3b4e0f44f2f2aa7b504f80d5bf0ad745\" } }" >> /home/scitech/.jupyter/jupyter_notebook_config.json
 
-# wrapdocker required for nested docker containers
-#ENTRYPOINT ["sudo", "/usr/local/bin/wrapdocker"]
-#CMD ["su", "-", "scitech", "-c", "/usr/local/bin/start-services"] 
-
 USER root
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/start.sh"]
 
 

@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+
+TOP_DIR=`pwd`
+
+rm -rf montage-workflow-v3
+git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+
+echo
+echo
+
+cd montage-workflow-v3
+
+apptainer exec \
+            --bind $PWD \
+            https://data.isi.edu/montage/images/montage-workflow-v3.sif \
+            $PWD/montage-workflow.py \
+                --work-dir $PWD \
+                --tc-target container \
+                --center "275.196290 -16.171530" \
+                --degrees 0.5 \
+                --band 2mass:j:green \
+                --band 2mass:h:blue \
+                --band 2mass:k:red
+
+pegasus-plan \
+        -Denv.http_proxy=workflow.isi.edu:3128 \
+        --dir work \
+        --cluster horizontal \
+        --submit \
+        data/montage-workflow.yml \
+        | tee $TOP_DIR/plan.out
+
+

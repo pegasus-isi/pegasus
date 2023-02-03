@@ -39,7 +39,7 @@ def test_from_env(mocker):
         from_env()
         shutil.which.assert_called_once_with("pegasus-version")
     except ValueError as e:
-        pytest.fail("should not have thrown {}".format(e))
+        pytest.fail(f"should not have thrown {e}")
 
 
 def test_from_env_no_pegasus_home(monkeypatch):
@@ -504,7 +504,7 @@ class TestClient:
         ],
     )
     def test_get_status(self, mocker, client, status_output_str, expected_dict):
-        mocker.patch(
+        """mocker.patch(
             "Pegasus.client._client.Client._exec",
             return_value=Result(
                 cmd=["/path/bin/pegasus-status", "--long", "submit_dir"],
@@ -512,8 +512,14 @@ class TestClient:
                 stdout_bytes=status_output_str,
                 stderr_bytes=b"",
             ),
+        )"""
+        mocker.patch(
+            "Pegasus.client.status.Status.fetch_status", return_value=expected_dict
         )
         assert client.get_status("wf-name", "submit_dir") == expected_dict
+        Pegasus.client.status.Status.fetch_status.assert_called_once_with(
+            "submit_dir", json=True
+        )
 
     @pytest.mark.parametrize(
         "status_output, expected_progress_bar",

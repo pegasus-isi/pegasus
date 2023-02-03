@@ -229,9 +229,9 @@ def _make_attr_tuple_class(cls_name, attr_names):
         __slots__ = ()
         x = property(itemgetter(0))
     """
-    attr_class_name = "{}Attributes".format(cls_name)
+    attr_class_name = f"{cls_name}Attributes"
     attr_class_template = [
-        "class {}(tuple):".format(attr_class_name),
+        f"class {attr_class_name}(tuple):",
         "    __slots__ = ()",
     ]
     if attr_names:
@@ -469,7 +469,7 @@ class _ClassBuilder:
             self._cls_dict["__delattr__"] = _frozen_delattrs
 
     def __repr__(self):
-        return "<_ClassBuilder(cls={cls})>".format(cls=self._cls.__name__)
+        return f"<_ClassBuilder(cls={self._cls.__name__})>"
 
     def build_class(self):
         """
@@ -1054,7 +1054,7 @@ def _generate_unique_filename(cls, func_name):
 
         # Looks like this spot is taken. Try again.
         count += 1
-        extra = "-{}".format(count)
+        extra = f"-{count}"
 
 
 def _make_hash(cls, attrs, frozen, cache_hash):
@@ -1150,8 +1150,8 @@ def _make_eq(cls, attrs):
         lines.append("    return  (")
         others = ["    ) == ("]
         for a in attrs:
-            lines.append("        self.{},".format(a.name))
-            others.append("        other.{},".format(a.name))
+            lines.append(f"        self.{a.name},")
+            others.append(f"        other.{a.name},")
 
         lines += others + ["    )"]
     else:
@@ -1362,9 +1362,7 @@ def fields(cls):
         raise TypeError("Passed object must be a class.")
     attrs = getattr(cls, "__attrs_attrs__", None)
     if attrs is None:
-        raise NotAnAttrsClassError(
-            "{cls!r} is not an attrs-decorated class.".format(cls=cls)
-        )
+        raise NotAnAttrsClassError(f"{cls!r} is not an attrs-decorated class.")
     return attrs
 
 
@@ -1390,9 +1388,7 @@ def fields_dict(cls):
         raise TypeError("Passed object must be a class.")
     attrs = getattr(cls, "__attrs_attrs__", None)
     if attrs is None:
-        raise NotAnAttrsClassError(
-            "{cls!r} is not an attrs-decorated class.".format(cls=cls)
-        )
+        raise NotAnAttrsClassError(f"{cls!r} is not an attrs-decorated class.")
     return ordered_dict((a.name, a) for a in attrs)
 
 
@@ -1531,16 +1527,14 @@ def _attrs_to_init_script(
                 if a.converter is not None:
                     lines.append(
                         fmt_setter_with_converter(
-                            attr_name, init_factory_name + "({})".format(maybe_self),
+                            attr_name, init_factory_name + f"({maybe_self})",
                         )
                     )
                     conv_name = _init_converter_pat.format(a.name)
                     names_for_globals[conv_name] = a.converter
                 else:
                     lines.append(
-                        fmt_setter(
-                            attr_name, init_factory_name + "({})".format(maybe_self),
-                        )
+                        fmt_setter(attr_name, init_factory_name + f"({maybe_self})",)
                     )
                 names_for_globals[init_factory_name] = a.default.factory
             else:
@@ -1578,12 +1572,12 @@ def _attrs_to_init_script(
             else:
                 lines.append(fmt_setter(attr_name, arg_name))
         elif has_factory:
-            arg = "{arg_name}=NOTHING".format(arg_name=arg_name)
+            arg = f"{arg_name}=NOTHING"
             if a.kw_only:
                 kw_only_args.append(arg)
             else:
                 args.append(arg)
-            lines.append("if {arg_name} is not NOTHING:".format(arg_name=arg_name))
+            lines.append(f"if {arg_name} is not NOTHING:")
             init_factory_name = _init_factory_pat.format(a.name)
             if a.converter is not None:
                 lines.append("    " + fmt_setter_with_converter(attr_name, arg_name))
@@ -1591,7 +1585,7 @@ def _attrs_to_init_script(
                 lines.append(
                     "    "
                     + fmt_setter_with_converter(
-                        attr_name, init_factory_name + "({})".format(maybe_self),
+                        attr_name, init_factory_name + f"({maybe_self})",
                     )
                 )
                 names_for_globals[_init_converter_pat.format(a.name)] = a.converter
@@ -1600,9 +1594,7 @@ def _attrs_to_init_script(
                 lines.append("else:")
                 lines.append(
                     "    "
-                    + fmt_setter(
-                        attr_name, init_factory_name + "({})".format(maybe_self),
-                    )
+                    + fmt_setter(attr_name, init_factory_name + f"({maybe_self})",)
                 )
             names_for_globals[init_factory_name] = a.default.factory
         else:
@@ -1623,11 +1615,9 @@ def _attrs_to_init_script(
         names_for_globals["_config"] = _config
         lines.append("if _config._run_validators is True:")
         for a in attrs_to_validate:
-            val_name = "__attr_validator_{}".format(a.name)
-            attr_name = "__attr_{}".format(a.name)
-            lines.append(
-                "    {}(self, {}, self.{})".format(val_name, attr_name, a.name)
-            )
+            val_name = f"__attr_validator_{a.name}"
+            attr_name = f"__attr_{a.name}"
+            lines.append(f"    {val_name}(self, {attr_name}, self.{a.name})")
             names_for_globals[val_name] = a.validator
             names_for_globals[attr_name] = a
     if post_init:
@@ -1655,7 +1645,7 @@ def _attrs_to_init_script(
     if is_exc:
         vals = ",".join("self." + a.name for a in attrs if a.init)
 
-        lines.append("BaseException.__init__(self, {})".format(vals))
+        lines.append(f"BaseException.__init__(self, {vals})")
 
     args = ", ".join(args)
     if kw_only_args:

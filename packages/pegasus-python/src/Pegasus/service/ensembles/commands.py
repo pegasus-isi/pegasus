@@ -321,7 +321,7 @@ class StatusCommand(EnsembleClientCommand):
 
         ensemble, workflow = self.splitew(self.args[0])
 
-        response = self.get("/ensembles/{}/workflows/{}".format(ensemble, workflow))
+        response = self.get(f"/ensembles/{ensemble}/workflows/{workflow}")
 
         result = response.json()
 
@@ -350,9 +350,7 @@ class AnalyzeCommand(EnsembleClientCommand):
 
         ensemble, workflow = self.splitew(self.args[0])
 
-        response = self.get(
-            "/ensembles/{}/workflows/{}/analyze".format(ensemble, workflow)
-        )
+        response = self.get(f"/ensembles/{ensemble}/workflows/{workflow}/analyze")
 
         sys.stdout.write(response.text)
 
@@ -453,7 +451,7 @@ class WorkflowStateChangeCommand(EnsembleClientCommand):
         request = {"state": self.newstate}
 
         response = self.post(
-            "/ensembles/{}/workflows/{}".format(ensemble, workflow), data=request
+            f"/ensembles/{ensemble}/workflows/{workflow}", data=request
         )
 
         result = response.json()
@@ -508,7 +506,7 @@ class PriorityCommand(EnsembleClientCommand):
         request = {"priority": self.options.priority}
 
         response = self.post(
-            "/ensembles/{}/workflows/{}".format(ensemble, workflow), data=request
+            f"/ensembles/{ensemble}/workflows/{workflow}", data=request
         )
 
         result = response.json()
@@ -577,7 +575,7 @@ class CronTriggerCommand(EnsembleClientCommand):
         }
 
         response = self.post(
-            "/ensembles/{e}/triggers/cron".format(e=self.args.ensemble), data=request,
+            f"/ensembles/{self.args.ensemble}/triggers/cron", data=request,
         )
 
         print(response.json()["message"])
@@ -650,8 +648,7 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
         }
 
         response = self.post(
-            "/ensembles/{e}/triggers/file_pattern".format(e=self.args.ensemble),
-            data=request,
+            f"/ensembles/{self.args.ensemble}/triggers/file_pattern", data=request,
         )
 
         print(response.json()["message"])

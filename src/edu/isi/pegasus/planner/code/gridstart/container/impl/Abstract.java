@@ -35,6 +35,7 @@ import edu.isi.pegasus.planner.code.gridstart.Integrity;
 import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
@@ -314,7 +315,7 @@ public abstract class Abstract implements ContainerShellWrapper {
                 appendStderrFragment(sb, "", "Staging in input data and executables");
                 sb.append("# stage in data and executables").append('\n');
                 sb.append(sls.invocationString(job, null));
-                if (mUseSymLinks) {
+                if (this.symlinkingEnabled(job, mUseSymLinks)) {
                     // PM-1135 allow the transfer executable to symlink input file urls
                     // PM-1197 we have to disable symlink if a job is set to
                     // be launched via a container
@@ -346,12 +347,12 @@ public abstract class Abstract implements ContainerShellWrapper {
             for (Iterator it = job.getInputFiles().iterator(); it.hasNext(); ) {
                 PegasusFile pf = (PegasusFile) it.next();
                 if (pf.getType() == PegasusFile.EXECUTABLE_FILE) {
-                    sb.append("if [ ! -x " + pf.getLFN() + " ]; then\n");
-                    sb.append("    ");
+                    // in some docker containers running on mac the -x bash operator
+                    // does not evaluate correctly. so we always do a chmod on the
+                    // executable without checking whether x bit is already set or not
                     sb.append(getPathToChmodExecutable(job.getSiteHandle()));
                     sb.append(" +x ");
                     sb.append(pf.getLFN()).append("\n");
-                    sb.append("fi\n");
                 }
             }
             sb.append('\n');
@@ -665,5 +666,22 @@ public abstract class Abstract implements ContainerShellWrapper {
             NameValue<String, String> dest = ft.getDestURL();
             job.addCredentialType(dest.getKey(), dest.getValue());
         }
+    }
+
+    /**
+     * A convenience method that indicates whether to enable symlinking for a job or not
+     *
+     * @param job the job for which symlinking needs to be enabled
+     * @param workflowSymlinking whether the user has turned on symlinking for workflow or not
+     * @return
+     */
+    protected boolean symlinkingEnabled(Job job, boolean workflowSymlinking) {
+        if (!workflowSymlinking) {
+            // user does not have symlinking enabled for the workflow
+            return false;
+        }
+
+        // the profile value can turn symlinking off
+        return !job.vdsNS.getBooleanValue(Pegasus.NO_SYMLINK_KEY);
     }
 }

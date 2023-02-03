@@ -672,7 +672,7 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
 
         # Remember the run-site
         if my_site is not None:
-            logger.debug("job {} is planned for site {}".format(jobid, my_site))
+            logger.debug(f"job {jobid} is planned for site {my_site}")
             wf._job_site[jobid] = my_site
         else:
             logger.debug("job %s does not have a site information!" % (jobid))
@@ -704,7 +704,7 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
 
         # Remember the run-site
         if my_site is not None:
-            logger.debug("job {} is planned for site {}".format(jobid, my_site))
+            logger.debug(f"job {jobid} is planned for site {my_site}")
             wf._job_site[jobid] = my_site
         else:
             logger.debug("job %s does not have a site information!" % (jobid))
@@ -1007,15 +1007,13 @@ def process_dagman_out(wf, log_line):
                         try:
                             os.rename(my_log, "%s.bak" % (my_log))
                         except OSError:
-                            logger.warning(
-                                "error renaming {} to {}.bak".format(my_log, my_log)
-                            )
+                            logger.warning(f"error renaming {my_log} to {my_log}.bak")
                     try:
                         os.symlink(wf._condorlog, my_log)
                     except OSError:
                         logger.info("unable to symlink %s" % (wf._condorlog))
                     else:
-                        logger.info("symlink {} -> {}".format(wf._condorlog, my_log))
+                        logger.info(f"symlink {wf._condorlog} -> {my_log}")
                 else:
                     logger.info("%s exists but is not readable!" % (wf._condorlog))
             # We only expect one of such files

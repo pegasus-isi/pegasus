@@ -34,11 +34,17 @@ public class PegasusURL {
     /** The scheme name for S3 url. */
     public static final String S3_URL_SCHEME = "s3:";
 
+    /** Docker hub protocol scheme */
+    public static String MOVETO_PROTOCOL_SCHEME = "moveto:";
+
     /** The default protocol if none is determined from the PegasusURL or path */
     public static final String DEFAULT_PROTOCOL = "file";
 
     /** The default protocol if none is determined from the PegasusURL or path */
     public static final String FILE_PROTOCOL = "file";
+
+    /** Docker hub protocol scheme */
+    public static String MOVETO_PROTOCOL = "moveto";
 
     /** singularity hub protocol scheme */
     public static String SINGULARITY_PROTOCOL_SCHEME = "shub";

@@ -11,7 +11,7 @@ if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     exit 1
 fi 
 
-export REMOTE_PEGASUS_HOME=/lizard/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
+export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
 
 # build the dax generator
 export PYTHONPATH=`pegasus-config --python`
@@ -34,23 +34,21 @@ cat >sites.xml <<EOF
         <directory type="local-storage" path="$TOP_DIR/outputs">
             <file-server operation="all" url="file://$TOP_DIR/outputs"/>
         </directory>
-        <profile namespace="env" key="PATH">$PEGASUS_BIN_DIR:/ccg/software/gsutil:/usr/bin:/bin</profile>
     </site>
     <site  handle="condor_pool" arch="x86_64" os="LINUX">
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PATH">/ccg/software/gsutil:/usr/bin:/bin</profile>
         <profile namespace="env" key="PEGASUS_HOME">$REMOTE_PEGASUS_HOME</profile>
     </site>
     <site  handle="staging_site" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/pegasus-wms-test001/scratch">
-            <file-server operation="all" url="gs://pegasus-wms-test001/scratch"/>
+        <directory type="shared-scratch" path="/pegasus-wms-test-030/scratch">
+            <file-server operation="all" url="gs://pegasus-wms-test-030/scratch"/>
         </directory>
         <directory type="local-storage" path="/pegasus-wms/outputs">
             <file-server operation="all" url="gs://pegasus-wms/outputs"/>
         </directory>
-        <profile namespace="pegasus" key="BOTO_CONFIG" >/localhome/bamboo/.boto.service</profile>
-        <profile namespace="pegasus" key="GOOGLE_PKCS12" >/localhome/bamboo/.google-service-account.p12</profile>
+        <profile namespace="pegasus" key="BOTO_CONFIG" >$HOME/.boto.service</profile>
+        <profile namespace="pegasus" key="GOOGLE_PKCS12" >$HOME/gstorage/pegasus-wms-b4bcec935cba.json</profile>
     </site>
 </sitecatalog>
 EOF

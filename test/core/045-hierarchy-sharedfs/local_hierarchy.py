@@ -45,23 +45,23 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch/{run_id}"
+      url: "scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch/{run_id}"
    -
     type: "localStorage"
     path: "/nfs/bamboo/scratch-90-days/CCG/outputs"
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/outputs/{run_id}"
+      url: "scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/outputs/{run_id}"
   grids:
    -
     type: "batch"
-    contact: "corbusier.isi.edu"
+    contact: "slurm-pegasus.isi.edu"
     scheduler: "slurm"
     jobtype: "compute"
    -
     type: "batch"
-    contact: "corbusier.isi.edu"
+    contact: "slurm-pegasus.isi.edu"
     scheduler: "slurm"
     jobtype: "compute"
   profiles:
@@ -74,7 +74,7 @@ sites:
       # set the remote directory
       change.dir: 'true'
       # the key to use for scp transfers
-      SSH_PRIVATE_KEY: /scitech/home/bamboo/.ssh/workflow_id_rsa
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
  -
   name: "local"
   arch: "x86_64"

@@ -112,44 +112,51 @@ public class StageInTest {
     }
 
     @Test
+    /**
+     * After PM-1885 this should be true, as in CondorIO mode we let pegasus-transfer handle bypass
+     * files in the PegasusLite script
+     */
     public void testBypassForCondorIOWithNonFileURL() {
         testBypass(
                 new ReplicaCatalogEntry("http://example.isi.edu/input/f.in", "compute"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
-                false);
+                true);
     }
 
     /**
-     * Test to ensure there is no bypass in condor io mode , if the replica catalog location is a
-     * file url on compute site
+     * Test to ensure there is bypass in condor io mode , if the replica catalog location is a file
+     * url on compute site. After PM-1885 this should be true, as in CondorIO mode we let
+     * pegasus-transfer handle bypass files in the PegasusLite script
      */
     @Test
     public void testBypassForCondorIOWithFileURLOnComputeSite() {
         testBypass(
                 new ReplicaCatalogEntry("file:///input/f.a", "compute"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
-                false);
-    }
-
-    /**
-     * Test to ensure there is bypass in condor io mode , if the replica catalog location is a file
-     * URL on the local site
-     */
-    @Test
-    public void testBypassForCondorIOWithFileURLOnLocalSiteA() {
-        testBypass(
-                new ReplicaCatalogEntry("file:///input/f.in", "local"),
-                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
                 true);
     }
 
     /**
-     * Test to ensure there is no bypass in condor io mode , if the replica catalog location is a
-     * file URL on the local site, but the PFN does not end in the basename of the LFN
+     * Test to ensure there is bypass in condor io mode , if the replica catalog location is a file
+     * URL on the local site. After PM-1885 this should be false, as in CondorIO mode we let
+     * pegasus-transfer handle bypass files in the PegasusLite script
+     */
+    @Test
+    public void testBypassForCondorIOWithFileURLOnLocalSite() {
+        testBypass(
+                new ReplicaCatalogEntry("file:///input/f.in", "local"),
+                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
+                false);
+    }
+
+    /**
+     * PM-1875, PM-1885 Test to ensure there is bypass in condor io mode , if the replica catalog
+     * location is a file URL on the local site, but the PFN does not end in the basename of the LFN
+     * After PM-1885 this should be false, as in CondorIO mode we let pegasus-transfer handle bypass
+     * files in the PegasusLite script
      */
     @Test
     public void testBypassForCondorIOWithFileURLOnLocalSiteWithRandomBasename() {
-
         testBypass(
                 new ReplicaCatalogEntry("file:///input/f.random", "local"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
@@ -157,8 +164,43 @@ public class StageInTest {
     }
 
     /**
+     * PM-1875, PM-1885 Test to ensure there is bypass in condor io mode , if the replica catalog
+     * location is a file URL on the compute site, but the PFN does not end in the basename of the
+     * LFN
+     */
+    @Test
+    public void testBypassForCondorIOWithFileURLOnComputeSiteWithDeepLFN() {
+        // update the test workflow for this first
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
+        inputFile.setLFN("deep/f.in");
+        testBypass(
+                new ReplicaCatalogEntry("file:///input/deep/f.in", "compute"),
+                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
+                true);
+    }
+
+    /**
      * Test to ensure there is bypass in condorio mode for file URL's on compute site, when compute
      * site has auxillary.local set to true PM-1783
+     */
+    @Test
+    public void testBypassForCondorIOWithFileURLOnComputeWithAuxillaryLocal() {
+        SiteStore s = mBag.getHandleToSiteStore();
+        SiteCatalogEntry computeSite = s.lookup("compute");
+
+        // add the profile
+        computeSite.addProfile(new Profile("pegasus", Pegasus.LOCAL_VISIBLE_KEY, "true"));
+
+        testBypass(
+                new ReplicaCatalogEntry("file:///input/f.in", "compute"),
+                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
+                true);
+    }
+
+    /**
+     * Test to ensure there is bypass in condorio mode for file URL's on compute site, when compute
+     * site has auxillary.local set to true PM-1783, PM-1855
      */
     @Test
     public void testBypassForCondorIOWithFileURLOnLocalWithAuxillaryLocal() {
@@ -169,7 +211,7 @@ public class StageInTest {
         computeSite.addProfile(new Profile("pegasus", Pegasus.LOCAL_VISIBLE_KEY, "true"));
 
         testBypass(
-                new ReplicaCatalogEntry("file:///input/f.in", "compute"),
+                new ReplicaCatalogEntry("file:///input/f.in", "local"),
                 PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
                 true);
     }
@@ -243,6 +285,58 @@ public class StageInTest {
                 new ReplicaCatalogEntry("http://example.isi.edu/input/f.in", "local"),
                 PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
                 true);
+    }
+
+    /**
+     * Test to test when nothing is set in properties for workflow symlinking or profiles for job
+     */
+    @Test
+    public void testSymlinkingEnabledWithNothingSet() {
+        this.testSymlinkingEnabled(false, false, null);
+    }
+
+    /** Test to test for default symlinking, when symlinking turned on for workflow */
+    @Test
+    public void testDefaultSymlinkingEnabled() {
+        this.testSymlinkingEnabled(true, true, null);
+    }
+
+    /** Test to test for symlinking when symlinking turned on for workflow but off for job */
+    @Test
+    public void testSymlinkingEnabledWhenProfileSetTrue() {
+        this.testSymlinkingEnabled(false, true, true);
+    }
+
+    /** Test to test for symlinking when symlinking turned on for workflow but also for job */
+    @Test
+    public void testSymlinkingEnabledWhenProfileSetFalse() {
+        this.testSymlinkingEnabled(true, true, false);
+    }
+
+    /** Test to test for symlinking when symlinking turned off for workflow and also for job */
+    @Test
+    public void testSymlinkingEnabledWhenWorkflowOffAndProfileSetFalse() {
+        this.testSymlinkingEnabled(false, false, false);
+    }
+
+    /** Test to test for symlinking when symlinking turned off for workflow and also for job */
+    @Test
+    public void testSymlinkingEnabledWhenWorkflowOffAndProfileSetTrue() {
+        this.testSymlinkingEnabled(false, false, true);
+    }
+
+    private void testSymlinkingEnabled(
+            boolean expected, boolean workflowSymlinking, Boolean noSymlinkProfileValue) {
+        mLogger.logEventStart(
+                "test.transfer.generator.stagein", "set", Integer.toString(mTestNumber++));
+        StageIn si = new StageIn();
+        Job j = new Job();
+        if (noSymlinkProfileValue != null) {
+            j.vdsNS.construct(Pegasus.NO_SYMLINK_KEY, noSymlinkProfileValue.toString());
+        }
+        assertEquals(
+                "Symlinking for job was ", expected, si.symlinkingEnabled(j, workflowSymlinking));
+        mLogger.logEventCompletion();
     }
 
     /**

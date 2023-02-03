@@ -321,7 +321,7 @@ def write_braindump(filename, items):
     "This simply writes a dict to the file specified in braindump format"
     f = open(filename, "w")
     for k in items:
-        f.write("{} {}\n".format(k, items[k]))
+        f.write(f"{k} {items[k]}\n")
     f.close()
 
 
@@ -455,7 +455,7 @@ def parse_exit(ec):
         my_core = ""
         if (ec & 128) == 128:
             my_core = " (core)"
-        my_result = "died on signal {}{}".format(my_signo, my_core)
+        my_result = f"died on signal {my_signo}{my_core}"
     elif (ec >> 8) > 0:
         my_result = "exit code %d" % (ec >> 8)
     else:
@@ -669,7 +669,7 @@ def rotate_log_file(source_file):
     try:
         os.rename(source_file, dest_file)
     except OSError:
-        logger.error("cannot rename {} to {}".format(source_file, dest_file))
+        logger.error(f"cannot rename {source_file} to {dest_file}")
         sys.exit(1)
 
     # Done!

@@ -19,7 +19,6 @@ install_requires = [
     "requests>2.23",
     "sqlalchemy>1.3,<1.4",
     "pegasus-wms.api",
-    "pegasus-wms.dax",
     "pegasus-wms.common",
     "pegasus-wms.worker",
 ]
@@ -31,7 +30,7 @@ def setup_installer_dependencies():
     global install_requires
 
     if subprocess.call(["which", "mysql_config"]) == 0:
-        install_requires.append("mysqlclient")
+        install_requires.append("mysqlclient<2.0.0")
 
 
 #
@@ -102,7 +101,7 @@ setup(
         "Source Code": "https://github.com/pegasus-isi/pegasus",
         "Issue Tracker": "https://jira.isi.edu/projects/PM/issues",
     },
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     keywords=["scientific workflows"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -112,12 +111,12 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Scientific/Engineering",
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",

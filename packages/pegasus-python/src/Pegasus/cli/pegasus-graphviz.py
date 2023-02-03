@@ -44,7 +44,7 @@ COLORS = [
 
 
 def rgb2hex(r, g, b):
-    return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
+    return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
 
 
 # Generate some colors to add to the list
@@ -79,7 +79,7 @@ class Node:
         renderer.renderEdge(parent.id, self.id)
 
     def __repr__(self):
-        return "({}, {})".format(self.id, self.label)
+        return f"({self.id}, {self.label})"
 
     def __eq__(self, other):
         return self.id == other.id
@@ -99,15 +99,15 @@ class Job(Node):
         elif renderer.label_type == "id":
             label = "%s" % self.id
         elif renderer.label_type == "xform-id":
-            label = "{}\\n{}".format(self.xform, self.id)
+            label = f"{self.xform}\\n{self.id}"
         elif renderer.label_type == "label-xform":
             if len(self.label) > 0:
-                label = "{}\\n{}".format(self.label, self.xform)
+                label = f"{self.label}\\n{self.xform}"
             else:
                 label = self.xform
         elif renderer.label_type == "label-id":
             if len(self.label) > 0:
-                label = "{}\\n{}".format(self.label, self.id)
+                label = f"{self.label}\\n{self.id}"
             else:
                 label = self.id
         else:
@@ -393,7 +393,7 @@ def parse_yamlfile(fname, include_files):
                 elif link_type == "none":
                     pass
                 else:
-                    raise Exception("Unrecognized link value: {}".format(link_type))
+                    raise Exception(f"Unrecognized link value: {link_type}")
 
     for dep in wf["jobDependencies"]:
         for child in dep["children"]:
@@ -496,7 +496,7 @@ def transitivereduction(dag):
                 # If w is a Job, v is a Job, and w is in the closure, then it is not needed.
                 # The above condition prevents us from removing edges from file -> job as those
                 # edges should always be visible.
-                sys.stderr.write("Removing {} -> {}\n".format(v.label, w.label))
+                sys.stderr.write(f"Removing {v.label} -> {w.label}\n")
             else:
                 v.closure = v.closure.union(w.closure)
                 reduced.append(w)
@@ -538,7 +538,7 @@ class emit_dot:
         # Render the header
         self.out.write("digraph dag {\n")
         if width and height:
-            self.out.write('    size="{:0.1f},{:0.1f}"\n'.format(width, height))
+            self.out.write(f'    size="{width:0.1f},{height:0.1f}"\n')
         self.out.write("    ratio=fill\n")
         self.out.write('    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n')
         self.out.write("    edge [arrowhead=normal,arrowsize=1.0]\n\n")
@@ -552,7 +552,8 @@ class emit_dot:
 
         # Render edges
         for p in nodes:
-            for c in p.children:
+            children = sorted(p.children, key=lambda n: n.id)
+            for c in children:
                 c.renderEdge(self, p)
 
         self.out.write("}\n")
@@ -573,9 +574,7 @@ class emit_dot:
         )
 
     def renderEdge(self, parentid, childid, color="#000000"):
-        self.out.write(
-            '    "{}" -> "{}" [color="{}"]\n'.format(parentid, childid, color)
-        )
+        self.out.write(f'    "{parentid}" -> "{childid}" [color="{color}"]\n')
 
 
 def invoke_dot(dot_file, fmt, output):
@@ -583,7 +582,7 @@ def invoke_dot(dot_file, fmt, output):
     if dot:
         cmd = [dot]
         # output format
-        cmd.append("-T{}".format(fmt))
+        cmd.append(f"-T{fmt}")
 
         # output file
         cmd.extend(["-o", output])
@@ -716,7 +715,7 @@ dot representation is output.""",
             try:
                 invoke_dot(f.name, output_extension, options.outfile)
             except RuntimeError as e:
-                print("ERROR: {}".format(e))
+                print(f"ERROR: {e}")
                 sys.exit(1)
     else:
         emit_dot(dag, options.label, options.outfile, options.width, options.height)

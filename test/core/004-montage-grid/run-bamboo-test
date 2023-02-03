@@ -4,7 +4,7 @@ set -e
 
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/current/bin:$PATH
+export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 export PYTHONPATH=`pegasus-config --python`
 
 rm -rf montage-workflow-v3
@@ -37,16 +37,16 @@ sites:
     fileServers: 
      - 
       operation: "all" 
-      url: "scp://bamboo@corbusier.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch/ptesting" 
+      url: "scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch/ptesting" 
   grids: 
    - 
     type: "batch" 
-    contact: "corbusier.isi.edu" 
+    contact: "slurm-pegasus.isi.edu" 
     scheduler: "slurm" 
     jobtype: "compute" 
    - 
     type: "batch" 
-    contact: "corbusier.isi.edu" 
+    contact: "slurm-pegasus.isi.edu" 
     scheduler: "slurm" 
     jobtype: "compute" 
   profiles: 
@@ -61,7 +61,7 @@ sites:
       # set the remote directory 
       change.dir: 'true' 
       # the key to use for scp transfers 
-      SSH_PRIVATE_KEY: /scitech/home/bamboo/.ssh/workflow_id_rsa 
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa 
 
  -
   name: "local"
