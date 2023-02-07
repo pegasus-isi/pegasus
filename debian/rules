@@ -8,6 +8,12 @@ JAVA_HOME := $(firstword $(wildcard /usr/lib/jvm/java-11-openjdk-$(DEB_HOST_ARCH
 PATH := ${JAVA_HOME}/bin:${PATH}
 
 
+# make sure packages are compatible with out repo tools
+# https://stackoverflow.com/questions/71196872/how-do-i-build-a-deb-without-zstd-compression-in-ubuntu-21-10
+override_dh_builddeb:
+	dh_builddeb -- -Zgzip
+
+
 build: build-stamp
 
 
