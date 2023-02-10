@@ -92,22 +92,22 @@ derived from RHEL: CentOS, SL)
 
       curl --output /etc/yum.repos.d/pegasus.repo \
             https://download.pegasus.isi.edu/pegasus/rhel/7/pegasus.repo
-
+      yum install epel-release
       yum install pegasus
 
    .. code-tab:: bash CentOS 8
 
       curl --output /etc/yum.repos.d/pegasus.repo \
             https://download.pegasus.isi.edu/pegasus/rhel/8/pegasus.repo
-
-      yum install pegasus
+      dnf install epel-release
+      dnf install --enablerepo powertools pegasus
 
    .. code-tab:: bash CentOS 9
 
       curl --output /etc/yum.repos.d/pegasus.repo \
             https://download.pegasus.isi.edu/pegasus/rhel/9/pegasus.repo
-
-      yum install pegasus
+      dnf install epel-release
+      dnf install --enablerepo devel pegasus
 
 Ubuntu
 ======
@@ -117,31 +117,22 @@ Ubuntu
    .. code-tab:: bash 18.04 LTS (Bionic Beaver)
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-
       echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu bionic main' >/etc/apt/sources.list.d/pegasus.list
-
       apt-get update
-
       apt-get install pegasus
 
    .. code-tab:: bash 20.04 LTS (Focal Fossa)
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-
       echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu focal main' >/etc/apt/sources.list.d/pegasus.list
-
       apt-get update
-
       apt-get install pegasus
 
    .. code-tab:: bash 22.04 LTS (Jammy Jellyfish)
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-
       echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu jammy main' >/etc/apt/sources.list.d/pegasus.list
-
       apt-get update
-
       apt-get install pegasus
 
 
