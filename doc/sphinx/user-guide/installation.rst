@@ -116,17 +116,17 @@ Ubuntu
 
 .. tabs::
 
-   .. code-tab:: bash 20.04 LTS (Focal Fossa)
-
-      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu focal main' >/etc/apt/sources.list.d/pegasus.list
-      apt-get update
-      apt-get install pegasus
-
    .. code-tab:: bash 22.04 LTS (Jammy Jellyfish)
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
       echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu jammy main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
+      apt-get install pegasus
+
+   .. code-tab:: bash 20.04 LTS (Focal Fossa)
+
+      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu focal main' >/etc/apt/sources.list.d/pegasus.list
       apt-get update
       apt-get install pegasus
 
