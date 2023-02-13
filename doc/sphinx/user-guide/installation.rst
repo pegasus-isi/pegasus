@@ -87,12 +87,14 @@ derived from RHEL: CentOS, Rocky, AlmaLinux, SL)
 
 .. tabs::
 
-   .. code-tab:: bash CentOS 7
+   .. code-tab:: bash CentOS 9
 
       curl --output /etc/yum.repos.d/pegasus.repo \
-            https://download.pegasus.isi.edu/pegasus/rhel/7/pegasus.repo
-      yum install epel-release
-      yum install pegasus
+            https://download.pegasus.isi.edu/pegasus/rhel/9/pegasus.repo
+      dnf install epel-release
+      dnf install 'dnf-command(copr)'
+      dnf copr enable @copr/PyPI
+      dnf install --enablerepo devel pegasus
 
    .. code-tab:: bash CentOS 8
 
@@ -101,28 +103,18 @@ derived from RHEL: CentOS, Rocky, AlmaLinux, SL)
       dnf install epel-release
       dnf install --enablerepo powertools pegasus
 
-   .. code-tab:: bash CentOS 9
+   .. code-tab:: bash CentOS 7
 
       curl --output /etc/yum.repos.d/pegasus.repo \
-            https://download.pegasus.isi.edu/pegasus/rhel/9/pegasus.repo
-      dnf install epel-release
-      dnf install 'dnf-command(copr)'
-      dnf copr enable @copr/PyPI epel-9-x86_64
-      dnf install python3-pika
-      dnf install --enablerepo devel pegasus
+            https://download.pegasus.isi.edu/pegasus/rhel/7/pegasus.repo
+      yum install epel-release
+      yum install pegasus
 
 
 Ubuntu
 ======
 
 .. tabs::
-
-   .. code-tab:: bash 18.04 LTS (Bionic Beaver)
-
-      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu bionic main' >/etc/apt/sources.list.d/pegasus.list
-      apt-get update
-      apt-get install pegasus
 
    .. code-tab:: bash 20.04 LTS (Focal Fossa)
 
@@ -138,11 +130,25 @@ Ubuntu
       apt-get update
       apt-get install pegasus
 
+   .. code-tab:: bash 18.04 LTS (Bionic Beaver)
+
+      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu bionic main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
+      apt-get install pegasus
+
 
 Debian
 ======
 
 .. tabs::
+
+   .. code-tab:: bash Debian 11 (Bullseye)
+
+      wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/debian bullseye main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
+      apt-get install pegasus
 
    .. code-tab:: bash Debian 10 (Buster)
 
@@ -151,12 +157,6 @@ Debian
       apt-get update
       apt-get install pegasus
 
-   .. code-tab:: bash Debian 11 (Bullseye)
-
-      wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-      echo 'deb https://download.pegasus.isi.edu/pegasus/debian bullseye main' >/etc/apt/sources.list.d/pegasus.list
-      apt-get update
-      apt-get install pegasus
 
 .. _macosx:
 
