@@ -1,0 +1,44 @@
+######################################################################
+# PEGASUS WMS GENERATED SUBMIT FILE
+# DAG : process, Index = 0, Count = null
+# SUBMIT FILE NAME : ls_ID0000001.sub
+######################################################################
+stream_error  = false
+stream_output = false
+environment = "LANG=en_US.UTF-8 CONDOR_JOBID=$(cluster).$(process) PEGASUS_WF_UUID=432031f4-af13-40a9-aef2-cc1760f3e5f1 PEGASUS_WF_LABEL=process PEGASUS_DAG_JOB_ID=ls_ID0000001 PEGASUS_SITE=condorpool"
++WantIOProxy = True
+error = /home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001//00/00/ls_ID0000001.err
+executable = /home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001/00/00/ls_ID0000001.sh
+initialdir = /home/mzalam/pro/process-workflow/scratch/mzalam/pegasus/process/run0001
+log = /home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001/process-0.log
+notification = NEVER
+output = /home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001//00/00/ls_ID0000001.out
+periodic_release = False
+periodic_remove = (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800)
+priority = 10
+should_transfer_files = YES
+submit_event_user_notes = pool:condorpool
+transfer_executable = true
+transfer_input_files = /home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001/pegasus-worker-5.1.0dev-x86_64_rhel_8.tar.gz,/home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001/pegasus-lite-common.sh
+transfer_output_files = listing.txt
+universe = vanilla
+when_to_transfer_output = ON_EXIT
++pegasus_generator = "Pegasus"
++pegasus_root_wf_uuid = "432031f4-af13-40a9-aef2-cc1760f3e5f1"
++pegasus_wf_uuid = "432031f4-af13-40a9-aef2-cc1760f3e5f1"
++pegasus_version = "5.1.0dev"
++pegasus_wf_name = "process-0"
++pegasus_wf_time = "20230214T163957-0800"
++pegasus_wf_xformation = "ls"
++pegasus_wf_dax_job_id = "ID0000001"
++pegasus_wf_dag_job_id = "ls_ID0000001"
++pegasus_job_class = 1
++pegasus_site = "condorpool"
++pegasus_job_runtime = 0
++pegasus_cores = 1
++pegasus_gpus = 1
++pegasus_cluster_size = 1
+queue
+######################################################################
+# END OF SUBMIT FILE
+######################################################################

@@ -774,7 +774,9 @@ def invoke_monitord(dagman_out_file, output_dir):
     logger.info("running: %s" % (monitord_cmd))
 
     try:
-        status, output = commands.getstatusoutput(monitord_cmd)
+        #status, output = commands.getstatusoutput(monitord_cmd)
+        #commenting it out, couldn't find .getstatusoutput in commands module
+        backticks(monitord_cmd)
     except Exception:
         raise AnalyzerError("could not invoke monitord, exiting...")
 

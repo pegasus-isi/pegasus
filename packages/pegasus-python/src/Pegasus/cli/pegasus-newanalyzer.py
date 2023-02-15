@@ -2,6 +2,7 @@ import os
 import sys
 import click
 import logging
+import traceback
 from Pegasus import analyzer
 
 root_logger = logging.getLogger()
@@ -242,7 +243,6 @@ def pegasus_analyzer(ctx,
     #    print(k,'\t',v)
 
     
-    #TO DO : test the context exit under debug mode
     if analyzer.debug_mode == 1:
         # Enter debug mode if job name given
         # This function does not return
@@ -268,7 +268,7 @@ def pegasus_analyzer(ctx,
     except analyzer.WorkflowFailureError as err:
             analyzer.logger.error(err)
             ctx.exit(2)
-    except analyzer.Exception:
+    except Exception:
             analyzer.logger.error(traceback.format_exc())
             ctx.exit(1)
     

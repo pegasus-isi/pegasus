@@ -1,0 +1,119 @@
+######################################################################
+# PEGASUS WMS GENERATED DAG FILE
+# DAG hierarchical-workflow
+# Index = 0, Count = null
+######################################################################
+MAXJOBS registration 1
+MAXJOBS stagein 10
+MAXJOBS cleanup 4
+MAXJOBS stageout 10
+
+JOB create_dir_hierarchical-workflow_0_local 00/00/create_dir_hierarchical-workflow_0_local.sub
+SCRIPT POST create_dir_hierarchical-workflow_0_local /usr/bin/pegasus-exitcode  -r $RETURN -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/create_dir_hierarchical-workflow_0_local.out
+PRIORITY create_dir_hierarchical-workflow_0_local 800
+RETRY create_dir_hierarchical-workflow_0_local 1
+VARS create_dir_hierarchical-workflow_0_local +DAGNodeRetry="$(RETRY)"
+
+JOB stage_worker_local_hierarchical-workflow_0_local 00/00/stage_worker_local_hierarchical-workflow_0_local.sub
+SCRIPT POST stage_worker_local_hierarchical-workflow_0_local /usr/bin/pegasus-exitcode  -r $RETURN -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/stage_worker_local_hierarchical-workflow_0_local.out
+PRIORITY stage_worker_local_hierarchical-workflow_0_local 700
+RETRY stage_worker_local_hierarchical-workflow_0_local 1
+CATEGORY stage_worker_local_hierarchical-workflow_0_local stagein
+VARS stage_worker_local_hierarchical-workflow_0_local +DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_remote_local_0_0 00/00/stage_in_remote_local_0_0.sub
+SCRIPT POST stage_in_remote_local_0_0 /usr/bin/pegasus-exitcode  -r $RETURN -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/stage_in_remote_local_0_0.out
+PRIORITY stage_in_remote_local_0_0 700
+RETRY stage_in_remote_local_0_0 1
+CATEGORY stage_in_remote_local_0_0 stagein
+VARS stage_in_remote_local_0_0 +DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_local_1_0 00/00/stage_in_local_local_1_0.sub
+SCRIPT POST stage_in_local_local_1_0 /usr/bin/pegasus-exitcode  -r $RETURN -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/stage_in_local_local_1_0.out
+PRIORITY stage_in_local_local_1_0 700
+RETRY stage_in_local_local_1_0 1
+CATEGORY stage_in_local_local_1_0 stagein
+VARS stage_in_local_local_1_0 +DAGNodeRetry="$(RETRY)"
+
+JOB generate_inner_diamond_workflow_py_diamond_workflow_gen 00/00/generate_inner_diamond_workflow_py_diamond_workflow_gen.sub
+SCRIPT POST generate_inner_diamond_workflow_py_diamond_workflow_gen /usr/bin/pegasus-exitcode  -r $RETURN -s PegasusLite:+exitcode+0 -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/generate_inner_diamond_workflow_py_diamond_workflow_gen.out
+PRIORITY generate_inner_diamond_workflow_py_diamond_workflow_gen 20
+RETRY generate_inner_diamond_workflow_py_diamond_workflow_gen 1
+VARS generate_inner_diamond_workflow_py_diamond_workflow_gen +DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_local_level_3_0 00/00/clean_up_local_level_3_0.sub
+SCRIPT POST clean_up_local_level_3_0 /usr/bin/pegasus-exitcode  -r $RETURN -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/clean_up_local_level_3_0.out
+PRIORITY clean_up_local_level_3_0 1000
+RETRY clean_up_local_level_3_0 1
+CATEGORY clean_up_local_level_3_0 cleanup
+VARS clean_up_local_level_3_0 +DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_local_0_0 00/00/stage_out_local_local_0_0.sub
+SCRIPT POST stage_out_local_local_0_0 /usr/bin/pegasus-exitcode  -r $RETURN -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/stage_out_local_local_0_0.out
+PRIORITY stage_out_local_local_0_0 900
+RETRY stage_out_local_local_0_0 1
+CATEGORY stage_out_local_local_0_0 stageout
+VARS stage_out_local_local_0_0 +DAGNodeRetry="$(RETRY)"
+
+JOB pegasus-plan_diamond_subworkflow 00/00/pegasus-plan_diamond_subworkflow.sub
+SCRIPT PRE pegasus-plan_diamond_subworkflow 00/00/pegasus-plan_diamond_subworkflow.pre.sh  -Dpegasus.log.*=/home/mzalam/028-dynamic-hierarchy/work/mzalam/pegasus/hierarchical-workflow/run0001/pegasus-plan_diamond_subworkflow.pre.log -Dpegasus.workflow.root.uuid=b5147be6-1f71-4f5c-9861-a92bd1299745 --conf inner_diamond_workflow.pegasus.properties --dir /home/mzalam/028-dynamic-hierarchy/work --relative-dir mzalam/pegasus/hierarchical-workflow/run0001/00/00/./inner --relative-submit-dir mzalam/pegasus/hierarchical-workflow/run0001/00/00/./inner --basename inner --sites CCG,local --cache /home/mzalam/028-dynamic-hierarchy/work/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.cache --output-sites local --cleanup none --verbose  --verbose  --verbose  --deferred  inner_diamond_workflow.yml
+PRIORITY pegasus-plan_diamond_subworkflow 30
+RETRY pegasus-plan_diamond_subworkflow 1
+CATEGORY pegasus-plan_diamond_subworkflow subwf
+VARS pegasus-plan_diamond_subworkflow +DAGNodeRetry="$(RETRY)"
+
+JOB register_local_0_0 00/00/register_local_0_0.sub
+SCRIPT POST register_local_0_0 /usr/bin/pegasus-exitcode  -r $RETURN -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/register_local_0_0.out
+PRIORITY register_local_0_0 40
+RETRY register_local_0_0 1
+CATEGORY register_local_0_0 registration
+VARS register_local_0_0 +DAGNodeRetry="$(RETRY)"
+
+JOB pegasus-plan_sleep_subworkflow 00/00/pegasus-plan_sleep_subworkflow.sub
+SCRIPT PRE pegasus-plan_sleep_subworkflow 00/00/pegasus-plan_sleep_subworkflow.pre.sh  -Dpegasus.log.*=/home/mzalam/028-dynamic-hierarchy/work/mzalam/pegasus/hierarchical-workflow/run0001/pegasus-plan_sleep_subworkflow.pre.log -Dpegasus.workflow.root.uuid=b5147be6-1f71-4f5c-9861-a92bd1299745 --conf /home/mzalam/028-dynamic-hierarchy/work/mzalam/pegasus/hierarchical-workflow/run0001/pegasus.449742853295603410.properties --dir /home/mzalam/028-dynamic-hierarchy/work --relative-dir mzalam/pegasus/hierarchical-workflow/run0001/00/00/./sleep-wf_sleep_subworkflow --relative-submit-dir mzalam/pegasus/hierarchical-workflow/run0001/00/00/./sleep-wf_sleep_subworkflow --sites CCG,local --cache /home/mzalam/028-dynamic-hierarchy/work/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./inner/inner.cache,/home/mzalam/028-dynamic-hierarchy/work/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_sleep_subworkflow.cache --output-sites local --cleanup none --verbose  --verbose  --verbose  --deferred  /home/mzalam/028-dynamic-hierarchy/inner_sleep_workflow.yml
+PRIORITY pegasus-plan_sleep_subworkflow 40
+RETRY pegasus-plan_sleep_subworkflow 1
+CATEGORY pegasus-plan_sleep_subworkflow subwf
+VARS pegasus-plan_sleep_subworkflow +DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_local_level_4_0 00/00/clean_up_local_level_4_0.sub
+SCRIPT POST clean_up_local_level_4_0 /usr/bin/pegasus-exitcode  -r $RETURN -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/clean_up_local_level_4_0.out
+PRIORITY clean_up_local_level_4_0 1000
+RETRY clean_up_local_level_4_0 1
+CATEGORY clean_up_local_level_4_0 cleanup
+VARS clean_up_local_level_4_0 +DAGNodeRetry="$(RETRY)"
+
+JOB sleep_sleep_job 00/00/sleep_sleep_job.sub
+SCRIPT POST sleep_sleep_job /usr/bin/pegasus-exitcode  -r $RETURN -s PegasusLite:+exitcode+0 -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/sleep_sleep_job.out
+PRIORITY sleep_sleep_job 50
+RETRY sleep_sleep_job 1
+VARS sleep_sleep_job +DAGNodeRetry="$(RETRY)"
+
+JOB cleanup_hierarchical-workflow_0_local 00/00/cleanup_hierarchical-workflow_0_local.sub
+SCRIPT POST cleanup_hierarchical-workflow_0_local /usr/bin/pegasus-exitcode  -r $RETURN -l hierarchical-workflow-0.exitcode.log -M hierarchical-workflow-0.cache.meta   .//00/00/cleanup_hierarchical-workflow_0_local.out
+PRIORITY cleanup_hierarchical-workflow_0_local 1000
+RETRY cleanup_hierarchical-workflow_0_local 1
+VARS cleanup_hierarchical-workflow_0_local +DAGNodeRetry="$(RETRY)"
+
+PARENT  stage_in_remote_local_0_0 CHILD generate_inner_diamond_workflow_py_diamond_workflow_gen
+PARENT  create_dir_hierarchical-workflow_0_local CHILD stage_in_remote_local_0_0
+PARENT  create_dir_hierarchical-workflow_0_local CHILD stage_in_local_local_1_0
+PARENT  clean_up_local_level_3_0 CHILD cleanup_hierarchical-workflow_0_local
+PARENT  stage_out_local_local_0_0 CHILD register_local_0_0
+PARENT  stage_out_local_local_0_0 CHILD clean_up_local_level_4_0
+PARENT  clean_up_local_level_4_0 CHILD cleanup_hierarchical-workflow_0_local
+PARENT  generate_inner_diamond_workflow_py_diamond_workflow_gen CHILD clean_up_local_level_3_0
+PARENT  generate_inner_diamond_workflow_py_diamond_workflow_gen CHILD stage_out_local_local_0_0
+PARENT  generate_inner_diamond_workflow_py_diamond_workflow_gen CHILD pegasus-plan_diamond_subworkflow
+PARENT  stage_worker_local_hierarchical-workflow_0_local CHILD stage_in_remote_local_0_0
+PARENT  stage_worker_local_hierarchical-workflow_0_local CHILD stage_in_local_local_1_0
+PARENT  stage_in_local_local_1_0 CHILD pegasus-plan_diamond_subworkflow
+PARENT  pegasus-plan_sleep_subworkflow CHILD sleep_sleep_job
+PARENT  pegasus-plan_sleep_subworkflow CHILD cleanup_hierarchical-workflow_0_local
+PARENT  sleep_sleep_job CHILD cleanup_hierarchical-workflow_0_local
+PARENT  pegasus-plan_diamond_subworkflow CHILD pegasus-plan_sleep_subworkflow
+PARENT  pegasus-plan_diamond_subworkflow CHILD clean_up_local_level_4_0
+PARENT  pegasus-plan_diamond_subworkflow CHILD cleanup_hierarchical-workflow_0_local
+######################################################################
+# End of DAG
+######################################################################
