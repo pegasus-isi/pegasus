@@ -36,15 +36,12 @@ NOTE: Do not copy and paste the commands below without double checking.
 
 7.  Build with Bamboo
 
-8.  Build APT repo. First copy the debs into their final place in
-    the apt trees (Debian and Ubuntu). Then run
-    update-pegasus-apt-repo on a Debian machine. Do this on
-    download.pegasus.isi.edu (/opt/release-tools)
+8.  Build dnf/apt repos. First copy the debs and rpms into
+    their final place in the debian/rhel/ubuntu top level
+    trees, and then run pegasus-update-prod-repos as the
+    bamboo user on download.pegasus.isi.edu
 
-9.  Build Yum repo. Similar to Apt repo, but the step has to be
-    done on a RHEL machine. Do this on workflow.
-
-10. Publish Python packages to PypI
+9.  Publish Python packages to PypI
 
 ```bash
 # Install Twine (Once)
@@ -65,16 +62,11 @@ $ cat ~/.pypirc
 $ twine upload <python-package>
 ```
 
-11. Build and push the tutorial container image:
-    ant tutorial-image-build
-    docker push pegasus/tutorial:N.M.O
+10. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
 
-12. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
-
-13. Change the symbolic link for the latest documentation to point
+11. Change the symbolic link for the latest documentation to point
     to latest stable release
     https://pegasus.isi.edu/documentation/
 
-14. Send annouce email to pegasus-announce@mailman.isi.edu
-    (Karan has to do this step)
+12. Send annouce email to pegasus-announce@mailman.isi.edu
 
