@@ -1,4 +1,28 @@
 ===============================
+Release Notes for Pegasus 5.0.5
+===============================
+
+We are happy to announce the release of Pegasus 5.0.5, which is a minor bug
+fix release for Pegasus 5.0 branch. This release corrects a build/packaging
+problem in 5.0.4, resulting in the planner not finding all classes.
+
+We invite our users to give it a try.
+
+The release can be downloaded from:
+https://pegasus.isi.edu/downloads
+
+JIRA items
+----------------------------
+Exhaustive list of features, improvements and bug fixes can be found below.
+Pegasus JIRA is accessible at https://jira.isi.edu/
+
+Bugs Fixed
+----------
+
+  [PM-1904]  Incomplete clean between ant targets
+
+
+===============================
 Release Notes for Pegasus 5.0.4
 ===============================
 
