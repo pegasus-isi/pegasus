@@ -243,10 +243,14 @@ def pegasus_analyzer(ctx,
     #    print(k,'\t',v)
 
     
+    #TO DO : test the context exit under debug mode
     if analyzer.debug_mode == 1:
         # Enter debug mode if job name given
         # This function does not return
-        analyzer.debug_workflow()
+        # TO DO : catch error if exists
+        debug = analyzer.DebugWF()
+        debug.debug_workflow()
+        ctx.exit(0)
 
     # sanity check
     if recurse_mode and traverse_all:
@@ -259,9 +263,11 @@ def pegasus_analyzer(ctx,
     # Run the analyzer
     try:
         if use_files:
-            analyzer.analyze_files()
+            analyze = analyzer.AnalyzeFiles()
+            analyze.analyze_files()
         else:
-            analyzer.analyze_db(config_properties)
+            analyze = analyzer.AnalyzeDB()
+            analyze.analyze_db(config_properties)
     except analyzer.AnalyzerError as err:
             analyzer.logger.error(err)
             ctx.exit(1)
