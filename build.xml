@@ -318,7 +318,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
-           includes="edu/isi/pegasus/planner/**/*.java"
+           includes="edu/isi/pegasus/planner/**/*.java,edu/isi/ikcap/**/*.java"
            excludes="edu/isi/pegasus/planner/**/*Test.java,org/griphyn/**/*.java"
            classpathref="build.classpath"
            includeantruntime="false">
@@ -672,7 +672,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="dist-deb" depends="dist-source,setup" description="Build Debian package">
+  <target name="dist-deb" depends="clean-scratch,dist-source,setup" description="Build Debian package">
     <exec executable="release-tools/build-deb" failonerror="true">
       <arg line="${pegasus.version} ${dist.osid}"/>
     </exec>
@@ -872,6 +872,10 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <delete dir="doc/sphinx/python/"/>
     <delete dir="doc/sphinx/java/"/>
     <delete dir="doc/sphinx/_build/"/>
+  </target>
+
+  <target name="clean-scratch">
+    <delete dir="${dist.dir}"/>
   </target>
 
   <!-- really clean everything -->

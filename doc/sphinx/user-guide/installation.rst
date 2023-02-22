@@ -34,7 +34,7 @@ Pegasus has a few dependencies:
    Python3 package ``yaml`` is also required, but it
    will be installed automatically if you use the RPM/DEB packages.
 
--  **HTCondor (formerly Condor) 8.6 or higher**. See
+-  **HTCondor (formerly Condor) 9.0 or higher**. See
    http://www.cs.wisc.edu/htcondor/ for more information. You should be
    able to run ``condor_q`` and ``condor_status``.
 
@@ -47,7 +47,6 @@ Optional Software
    want to store the runtime database in MySQL (default is SQLite).
    On server side, MySQL server 5.7 or higher is required, as Pegasus
    creates databases encoded in *utf8mb4* charset.
-   
 
 -  **psycopg2**. Python module for PostgreSQL access. Only needed if you
    want to store the runtime database in PostgreSQL (default is SQLite)
@@ -66,7 +65,7 @@ Example for bourne shells:
 
 ::
 
-   $ export PATH=/some/install/pegasus-5.0.0/bin:$PATH
+   $ export PATH=/some/install/pegasus-5.0.X/bin:$PATH
 
 ..
 
@@ -80,26 +79,35 @@ If you want to use the API to generate workflows (:ref:`api-reference`), you mig
 
 .. _rhel:
 
-RHEL / CentOS / SL
-==================
+RHEL / CentOS / Rocky / Alma / SL
+=================================
 
 Binary packages provided for: RHEL 7 x86_64 and RHEL 8 x86_64 (including OSes
-derived from RHEL: CentOS, SL)
+derived from RHEL: CentOS, Rocky, AlmaLinux, SL)
 
 .. tabs::
 
-   .. code-tab:: bash CentOS 7
+   .. code-tab:: bash CentOS 9
 
       curl --output /etc/yum.repos.d/pegasus.repo \
-            https://download.pegasus.isi.edu/wms/download/rhel/7/pegasus.repo
-
-      yum install pegasus
+            https://download.pegasus.isi.edu/pegasus/rhel/9/pegasus.repo
+      dnf install epel-release
+      dnf install 'dnf-command(copr)'
+      dnf copr enable @copr/PyPI
+      dnf install --enablerepo devel pegasus
 
    .. code-tab:: bash CentOS 8
 
       curl --output /etc/yum.repos.d/pegasus.repo \
-            https://download.pegasus.isi.edu/wms/download/rhel/8/pegasus.repo
+            https://download.pegasus.isi.edu/pegasus/rhel/8/pegasus.repo
+      dnf install epel-release
+      dnf install --enablerepo powertools pegasus
 
+   .. code-tab:: bash CentOS 7
+
+      curl --output /etc/yum.repos.d/pegasus.repo \
+            https://download.pegasus.isi.edu/pegasus/rhel/7/pegasus.repo
+      yum install epel-release
       yum install pegasus
 
 
@@ -108,24 +116,25 @@ Ubuntu
 
 .. tabs::
 
-   .. code-tab:: bash 18.04 LTS (Bionic Beaver)
+   .. code-tab:: bash 22.04 LTS (Jammy Jellyfish)
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-
-      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu bionic main' >/etc/apt/sources.list.d/pegasus.list
-
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu jammy main' >/etc/apt/sources.list.d/pegasus.list
       apt-get update
-
       apt-get install pegasus
 
    .. code-tab:: bash 20.04 LTS (Focal Fossa)
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-
       echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu focal main' >/etc/apt/sources.list.d/pegasus.list
-
       apt-get update
+      apt-get install pegasus
 
+   .. code-tab:: bash 18.04 LTS (Bionic Beaver)
+
+      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu bionic main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
       apt-get install pegasus
 
 
@@ -134,10 +143,10 @@ Debian
 
 .. tabs::
 
-   .. code-tab:: bash Debian 9 (Stretch)
+   .. code-tab:: bash Debian 11 (Bullseye)
 
       wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-      echo 'deb https://download.pegasus.isi.edu/pegasus/debian stretch main' >/etc/apt/sources.list.d/pegasus.list
+      echo 'deb https://download.pegasus.isi.edu/pegasus/debian bullseye main' >/etc/apt/sources.list.d/pegasus.list
       apt-get update
       apt-get install pegasus
 
@@ -147,6 +156,7 @@ Debian
       echo 'deb https://download.pegasus.isi.edu/pegasus/debian buster main' >/etc/apt/sources.list.d/pegasus.list
       apt-get update
       apt-get install pegasus
+
 
 .. _macosx:
 

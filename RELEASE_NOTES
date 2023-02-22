@@ -1,4 +1,81 @@
 ===============================
+Release Notes for Pegasus 5.0.5
+===============================
+
+We are happy to announce the release of Pegasus 5.0.5, which is a minor bug
+fix release for Pegasus 5.0 branch. This release corrects a build/packaging
+problem in 5.0.4, resulting in the planner not finding all classes.
+
+We invite our users to give it a try.
+
+The release can be downloaded from:
+https://pegasus.isi.edu/downloads
+
+JIRA items
+----------------------------
+Exhaustive list of features, improvements and bug fixes can be found below.
+Pegasus JIRA is accessible at https://jira.isi.edu/
+
+Bugs Fixed
+----------
+
+  [PM-1904]  Incomplete clean between ant targets
+
+
+===============================
+Release Notes for Pegasus 5.0.4
+===============================
+
+We are happy to announce the release of Pegasus 5.0.4, which is a minor bug
+fix release for Pegasus 5.0 branch.  This release has some importan
+ updates namely
+
+- Support for HTCondor 10.2 series
+- Improved sub workflow file handling
+
+We invite our users to give it a try.
+
+The release can be downloaded from:
+https://pegasus.isi.edu/downloads
+
+
+JIRA items
+----------------------------
+Exhaustive list of features, improvements and bug fixes can be found below.
+Pegasus JIRA is accessible at https://jira.isi.edu/
+
+New Features and Improvements
+-----------------------------
+
+  [PM-1890]  pegasus-analyzer should show failing jobs
+
+  [PM-1891]  pegasus-analyzer should traverse all sub workflows
+
+  [PM-1898]  File dependencies for sub workflow jobs - differentiate
+             inputs for planner use and those for sub workflow
+
+  [PM-1899]  update python api and json schema to expose forPlanning
+             boolean attribute with files in uses section
+
+  [PM-1900]  update java wf api to support forPlanner attribute for files
+
+Bugs Fixed
+----------
+
+  [PM-1895]  handle condor_submit updated way of specifying environment
+             in the .dag.condor.sub file
+
+  [PM-1893]  need to explicitly mount sharedfilesystem dir into container
+             when using shared filesystem as staging site for nonsharedfs
+
+  [PM-1894]  worker package transfer into application containers
+
+  [PM-1896]  In pegasus lite scripts worker package strict check is
+             turned off
+
+  [PM-1897]  update pegasus-configure-glite to use BLAHPD_LOCATION
+
+===============================
 Release Notes for Pegasus 5.0.3
 ===============================
 

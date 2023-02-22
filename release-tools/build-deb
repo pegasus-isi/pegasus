@@ -50,7 +50,8 @@ else
 fi
 cd ..
 
-dpkg-buildpackage -b -uc
+# use bzip2 as that will be fairly generic across distros/versions
+dpkg-buildpackage -b -uc --compression=bzip2
 
 (cd .. && lintian pegasus_${PACKAGE_VERSION}*.changes) || true
 
