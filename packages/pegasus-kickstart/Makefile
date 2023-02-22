@@ -69,7 +69,8 @@ ifneq ($(NVIDIA_DRIVER_BRANCH),)
 				CUDA_CFLAGS += -DHAS_CUDA
         CUDA_OBJS += nvidia/nvml_wrapper.o
         CUDA_OBJS += nvidia_monitoring.o
-        CUDA_LDLIBS += -lnvidia-ml -L /usr/lib/nvidia-440
+        CUDA_LDLIBS += -lnvidia-ml
+#-L /usr/lib/nvidia-440
 endif
 endif
 
