@@ -8,6 +8,7 @@ home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 
 install_requires = [
     "PyYAML>5.3",
+    "dataclasses;python_version=='3.6'",
 ]
 
 

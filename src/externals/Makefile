@@ -44,6 +44,10 @@ else
     $(warning WARNING: globus_sdk does not work with Python 2.x: skipping globus_sdk library)
 endif
 
+ifneq ($(shell python --version 2>&1 | grep " 3.6"),)
+    PACKAGES+=dataclasses
+endif
+
 PYOPENSSL_ARGS=
 ifeq ($(OSID),macos10)
     OPENSSL:=$(shell brew --prefix openssl)
@@ -93,6 +97,7 @@ $(LIBDIR)/requests: requests-2.23.0.tar.gz
 $(LIBDIR)/s3transfer: s3transfer-0.3.3.tar.gz
 $(LIBDIR)/six: six-1.14.0.tar.gz
 $(LIBDIR)/urllib3: urllib3-1.25.8.tar.gz
+$(LIBDIR)/dataclasses: dataclasses-0.8.tar.gz
 
 clean:
 	rm -rf $(EXTDIR)
