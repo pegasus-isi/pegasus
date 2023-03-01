@@ -147,6 +147,16 @@ public class ContainerTest {
     }
 
     @Test
+    /** PM-1906 */
+    public void testSimpleMountPointWithDotInName() {
+        this.testMountPoint(
+                "/shared/pegasus-5.0.6dev/:/shared/pegasus-5.0.6dev/",
+                "/shared/pegasus-5.0.6dev/",
+                "/shared/pegasus-5.0.6dev/",
+                null);
+    }
+
+    @Test
     public void testSimpleMountPointWithOptions() {
         this.testMountPoint(
                 "/scitech/shared/scratch-90-days/:/existing/data:ro",

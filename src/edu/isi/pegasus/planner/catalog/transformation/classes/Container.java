@@ -586,7 +586,7 @@ public class Container implements Cloneable {
          * directory
          */
         private static final String mRegexExpression =
-                "([\\w-/]+(?:\\$\\{[\\w-]+\\})*):([\\w-/]+(?:\\$\\{[\\w-]+\\})*)(:([\\S]+))*";
+                "([\\w-/\\.]+(?:\\$\\{[\\w-]+\\})*):([\\w-/\\.]+(?:\\$\\{[\\w-]+\\})*)(:([\\S]+))*";
 
         /** Stores compiled patterns at first use, quasi-Singleton. */
         private static Pattern mPattern = null;
