@@ -1,5 +1,34 @@
+#!/usr/bin/env python3
+
+"""
+Pegasus utility for reporting successful and failed jobs
+
+Usage: pegasus-analyzer [options]
+
+"""
+
+##
+#  Copyright 2007-2012 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+# Revision : $Revision: 2023 $
+
+
 import os
 import sys
+import json
 import click
 import logging
 import traceback
@@ -162,6 +191,13 @@ class HelpCmd(click.Command):
     metavar="WORKFLOW_TYPE",
     help="Specifies what type of workflow we are debugging (available types: condor)",
 )
+@click.option(
+    "-j",
+    "--json",
+    "json_mode",
+    is_flag=True,
+    help="Returns job info in a structured format",
+)
 @click.argument(
     "submit-dir",
     required=False,
@@ -187,7 +223,8 @@ def pegasus_analyzer(ctx,
                      debug_job_local_executable,
                      debug_dir,
                      workflow_type,
-                     submit_dir):
+                     submit_dir,
+                     json_mode):
 
     
     if vb == 0:
@@ -204,6 +241,7 @@ def pegasus_analyzer(ctx,
     analyzer.quiet_mode = quiet_mode
     analyzer.recurse_mode = recurse_mode
     analyzer.traverse_all = traverse_all
+    analyzer.json_mode = json_mode
     analyzer.indent_length += indent_length
     if print_options is not None:
         my_options = print_options.split(",")
@@ -239,15 +277,8 @@ def pegasus_analyzer(ctx,
         else:
             analyzer.input_dir = os.getcwd()
         
-    #for k,v in locals().items():
-    #    print(k,'\t',v)
-
-    
-    #TO DO : test the context exit under debug mode
     if analyzer.debug_mode == 1:
         # Enter debug mode if job name given
-        # This function does not return
-        # TO DO : catch error if exists
         debug = analyzer.DebugWF()
         debug.debug_workflow()
         ctx.exit(0)
@@ -259,15 +290,22 @@ def pegasus_analyzer(ctx,
         )
         ctx.exit(1)
     
-    
     # Run the analyzer
     try:
         if use_files:
             analyze = analyzer.AnalyzeFiles()
-            analyze.analyze_files()
+            if json_mode:
+                output = analyze.analyze_files()
+                print(json.dumps(output.as_dict(), indent=2))
+            else:
+                analyze.analyze_files()
         else:
             analyze = analyzer.AnalyzeDB()
-            analyze.analyze_db(config_properties)
+            if json_mode:
+                output = analyze.analyze_db(config_properties)
+                print(json.dumps(output.as_dict(), indent=2))
+            else:
+                analyze.analyze_db(config_properties)
     except analyzer.AnalyzerError as err:
             analyzer.logger.error(err)
             ctx.exit(1)
@@ -279,10 +317,11 @@ def pegasus_analyzer(ctx,
             ctx.exit(1)
     
     # Done!
-    print("Done".center(80, "*"))
-    print()
-    print("%s: end of status report" % (analyzer.prog_base))
-    print()
+    if not json_mode:
+        print("Done".center(80, "*"))
+        print()
+        print("%s: end of status report" % (analyzer.prog_base))
+        print()
     
 
 if __name__ == "__main__":
