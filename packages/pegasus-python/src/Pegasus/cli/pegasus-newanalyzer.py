@@ -234,54 +234,62 @@ def pegasus_analyzer(ctx,
     else:
         lvl = logging.DEBUG
     root_logger.setLevel(lvl)
-    
-    analyzer.run_monitord = run_monitord
-    analyzer.strict_mode = strict_mode
-    analyzer.summary_mode = summary_mode
-    analyzer.quiet_mode = quiet_mode
-    analyzer.recurse_mode = recurse_mode
-    analyzer.traverse_all = traverse_all
-    analyzer.json_mode = json_mode
-    analyzer.indent_length += indent_length
+
+    # Initializes user options data class used to run analyzer
+    options = analyzer.Options(
+    debug_dir = debug_dir,
+    debug_job_local_executable = debug_job_local_executable,
+    workflow_type = workflow_type,
+    run_monitord = run_monitord,
+    strict_mode = strict_mode,
+    summary_mode = summary_mode,
+    quiet_mode = quiet_mode,
+    recurse_mode = recurse_mode,
+    traverse_all = traverse_all,
+    json_mode = json_mode,
+    indent_length = indent_length
+    )
+
     if print_options is not None:
         my_options = print_options.split(",")
         if "pre" in my_options or "all" in my_options:
-            analyzer.print_pre_script = 1
+            options.print_pre_script = True
         if "invocation" in my_options or "all" in my_options:
-            analyzer.print_invocation = 1
-    analyzer.output_dir = output_dir
+            options.print_invocation = True
+            
     if top_dir is not None:
-        analyzer.top_dir = os.path.abspath(top_dir)
+        options.top_dir = os.path.abspath(top_dir)
+        
     if debug_job is not None:
-        analyzer.debug_job = debug_job
+        options.debug_job = debug_job
         # Enables the debugging mode
-        analyzer.debug_mode = 1
-    analyzer.debug_dir = debug_dir
-    analyzer.debug_job_local_executable = debug_job_local_executable
-    analyzer.workflow_type = workflow_type
-    
-    for num in range(0, analyzer.indent_length):
+        options.debug_mode = True
+
+    for num in range(0, options.indent_length):
         analyzer.indent += "\t"
     
     if dag_filename :
-        analyzer.input_dir = os.path.abspath(os.path.split(dag_filename)[0])
+        options.input_dir = os.path.abspath(os.path.split(dag_filename)[0])
         # Assume current directory if input dir is empty
         if input_dir == None:
-            analyzer.input_dir = os.getcwd()
+            options.input_dir = os.getcwd()
     else:
         # Select directory where jobstate.log is located
         if input_dir :
-            analyzer.input_dir = os.path.abspath(input_dir)
+            options.input_dir = os.path.abspath(input_dir)
         elif submit_dir :
-            analyzer.input_dir = submit_dir
+            options.input_dir = submit_dir
         else:
-            analyzer.input_dir = os.getcwd()
-        
-    if analyzer.debug_mode == 1:
+            options.input_dir = os.getcwd()
+
+    if options.debug_mode == 1:
         # Enter debug mode if job name given
-        debug = analyzer.DebugWF()
-        debug.debug_workflow()
-        ctx.exit(0)
+        try:
+            debug = analyzer.DebugWF(options)
+            debug.debug_workflow()
+            ctx.exit(0)
+        except:
+            ctx.exit(1)
 
     # sanity check
     if recurse_mode and traverse_all:
@@ -292,15 +300,18 @@ def pegasus_analyzer(ctx,
     
     # Run the analyzer
     try:
+        # Run via the files option (using jobstate.log, dag file etc)
         if use_files:
-            analyze = analyzer.AnalyzeFiles()
+            analyze = analyzer.AnalyzeFiles(options)
             if json_mode:
                 output = analyze.analyze_files()
                 print(json.dumps(output.as_dict(), indent=2))
             else:
                 analyze.analyze_files()
+    
+        # Run via quering the stampede database        
         else:
-            analyze = analyzer.AnalyzeDB()
+            analyze = analyzer.AnalyzeDB(options)
             if json_mode:
                 output = analyze.analyze_db(config_properties)
                 print(json.dumps(output.as_dict(), indent=2))
