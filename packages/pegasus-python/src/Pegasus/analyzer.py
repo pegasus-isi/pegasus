@@ -163,50 +163,50 @@ class Options:
 
 @dataclass
 class Task:
-    site : str = None  # type: str
-    hostname : str = None  # type: str
-    executable : str = None  # type: str
-    arguments : str = None # type: str
-    exitcode : int = None # type: int
-    working_dir : str = None # type: str
+    site: str = None  
+    hostname : str = None  
+    executable : str = None  
+    arguments : str = None 
+    exitcode : int = None 
+    working_dir : str = None 
     
     
 @dataclass
 class JobInstance:
-    job_name : str = None # type: str
-    state : str = None # type: str
-    site : str = None # type: str
-    submit_file : str = None # type: str
-    stdout_file : str = None # type: str
-    stderr_file : str = None # type: str
-    executable : str = None # type: str
-    argv : str = None # type: str
-    tasks : Dict[str, Task] = field(default_factory=lambda: ({})) # type: Dict[str : JobInstance]
+    job_name : str = None 
+    state : str = None 
+    site : str = None 
+    submit_file : str = None 
+    stdout_file : str = None 
+    stderr_file : str = None 
+    executable : str = None 
+    argv : str = None 
+    tasks : Dict[str, Task] = field(default_factory=lambda: ({})) 
 
 
 @dataclass
 class Jobs:
-    total : int = 0  # type: int
-    success : int = 0  # type: int
-    failed : int = 0  # type: int
-    held : int = 0  # type: int
-    unsubmitted : int = 0 # type: int
-    job_details : Dict[str, Dict] = field(default_factory=lambda: ({})) # type: Dict[str : Dict]
+    total : int = 0  
+    success : int = 0  
+    failed : int = 0  
+    held : int = 0  
+    unsubmitted : int = 0 
+    job_details : Dict[str, Dict] = field(default_factory=lambda: ({})) 
 
 
 @dataclass
 class Workflow:
-    wf_uuid : str = None # type: str
-    dag_file_name : str = None # type: str
-    submit_hostname : str = None # type: str
-    submit_dir : str = None # type: str
-    user : str = None # type: str
-    planner_version : str = None # type: str
-    wf_name : str = None # type: str
-    wf_status : str = None # type: str
-    parent_wf_name : str = None # type: str
-    parent_wf_uuid : str = None # type: str
-    jobs : Jobs = None # type: Jobs
+    wf_uuid : str = None 
+    dag_file_name : str = None 
+    submit_hostname : str = None 
+    submit_dir : str = None 
+    user : str = None 
+    planner_version : str = None 
+    wf_name : str = None 
+    wf_status : str = None 
+    parent_wf_name : str = None 
+    parent_wf_uuid : str = None 
+    jobs : Jobs = None
 
 
 # --- AnalyzerOutput class to store analyzer output ------------------------------------
