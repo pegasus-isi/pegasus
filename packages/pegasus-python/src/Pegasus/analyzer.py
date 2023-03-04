@@ -36,13 +36,6 @@ logger = logging.getLogger("pegasus-newanalyzer")
 
 utils.configureLogging(level=logging.WARNING)
 
-# --- regular expressions -------------------------------------------------------------
-re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
-re_parse_script_pre = re.compile(r"^SCRIPT PRE (\S+) (.*)")
-re_parse_condor_subs = re.compile(r'(\S+)="([^"]+)"')
-re_collapse_condor_subs = re.compile(r"\$\([^\)]*\)")
-re_ks_invocation = re.compile(r"^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b.*")
-
 
 # --- classes -------------------------------------------------------------------------
 class WORKFLOW_STATUS(Enum):
@@ -116,11 +109,6 @@ class WorkflowFailureError(Exception):
         if self.submit_dir:
             message += " submit dir: " + self.submit_dir
         return message
-
-
-# --- constants -----------------------------------------------------------------------
-MAXLOGFILE = 1000  # For log file rotation, check files .000 to .999
-debug_level = logging.WARNING  # For now
 
 
 # --- global variables ----------------------------------------------------------------
@@ -253,7 +241,14 @@ class AnalyzerOutput:
 
 # --- Analyze classes to run analyzer --------------------------------------------------
 class BaseAnalyze:
-    
+    # --- regular expressions -------------------------------------------------------------
+    re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
+    re_parse_script_pre = re.compile(r"^SCRIPT PRE (\S+) (.*)")
+    re_parse_condor_subs = re.compile(r'(\S+)="([^"]+)"')
+    re_collapse_condor_subs = re.compile(r"\$\([^\)]*\)")
+    re_ks_invocation = re.compile(r"^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b.*")
+    MAXLOGFILE = 1000  # For log file rotation, check files .000 to .999
+
     def check_for_wf_start(options):
         """
         This function checks if workflow did start.
@@ -446,7 +441,7 @@ class BaseAnalyze:
                 if len(line) == 0:
                     # Skip empty lines
                     continue
-                prop = re_parse_property.search(line)
+                prop = BaseAnalyze.re_parse_property.search(line)
                 if prop:
                     # Parse successful
                     k = prop.group(1)
@@ -467,7 +462,7 @@ class BaseAnalyze:
                             sub_prop_line = sub_prop_line.strip()  # Remove any spaces
                             if len(sub_prop_line) == 0:
                                 continue
-                            sub_prop = re_parse_property.search(sub_prop_line)
+                            sub_prop = BaseAnalyze.re_parse_property.search(sub_prop_line)
                             if sub_prop:
                                 if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
                                     my_job.dagman_out = sub_prop.group(2)
@@ -537,7 +532,7 @@ class BaseAnalyze:
                                 )
 
                             # Now, we collapse any remaining substitutions (not found in the VAR line)
-                            v = re_collapse_condor_subs.sub("", v)
+                            v = BaseAnalyze.re_collapse_condor_subs.sub("", v)
 
                             # Make sure we have an absolute path
                             if not os.path.isabs(v):
@@ -842,7 +837,7 @@ class AnalyzeFiles(BaseAnalyze):
                     logger.warn("job appears twice in dag file: %s" % (my_job[2]))
             if line.startswith("SCRIPT PRE"):
                 # This is a SCRIPT PRE line, parse it to get the script for the job
-                my_script = re_parse_script_pre.search(line)
+                my_script = BaseAnalyze.re_parse_script_pre.search(line)
                 if my_script is None:
                     # Couldn't parse line
                     logger.warn("confused parsing dag line: %s" % (line))
@@ -869,7 +864,7 @@ class AnalyzeFiles(BaseAnalyze):
                         )
                         continue
                     # Good, parse the condor substitutions, and create substitution dictionary
-                    for my_key, my_val in re_parse_condor_subs.findall(line):
+                    for my_key, my_val in BaseAnalyze.re_parse_condor_subs.findall(line):
                         self.jobs[my_job].condor_subs[my_key] = my_val
 
                 
@@ -1114,7 +1109,7 @@ class AnalyzeFiles(BaseAnalyze):
         # Starts from .000
         sf = 0
 
-        while sf < MAXLOGFILE:
+        while sf < BaseAnalyze.MAXLOGFILE:
             curr_log = log_file_base + ".%03d" % (sf)
             if os.access(curr_log, os.F_OK):
                 last_log = curr_log
@@ -2095,7 +2090,7 @@ class DebugWF(BaseAnalyze):
                 # line = line.strip(" \t") # Remove leading and trailing spaces
                 if self.options.debug_job_local_executable is not None:
                     # enable matching to replace the kickstart invocation with local path
-                    ks_invocation = re_ks_invocation.search(line)
+                    ks_invocation = BaseAnalyze.re_ks_invocation.search(line)
 
                     if ks_invocation and ks_invocation.groups() > 0:
                         logger.debug(
@@ -2128,4 +2123,3 @@ class DebugWF(BaseAnalyze):
         os.chmod(debug_wrapper, 0o755)
 
         return debug_wrapper
-    
