@@ -116,14 +116,6 @@ prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this pro
 dag_path = None  # Path of the dag fi
 indent = ""  # the corresponding indent string
 workflow_base_dir = ""  # Workflow submit_dir or dirname(jsd) from braindump file
-total = 0  # Number of total jobs
-success = 0  # Number of successful jobs
-failed = 0  # Number of failed jobs
-unsubmitted = 0  # Number of unsubmitted jobs
-unknown = 0  # Number of jobs in an unknown state
-held = 0  # number of held jobs
-failed_jobs = []  # List of jobs that failed
-unknown_jobs = []  # List of jobs that neither succeeded nor failed
 
 
 # ----- Data classes ------------------------------------------------------------------
@@ -239,6 +231,18 @@ class AnalyzerOutput:
         return failed_wfs
         
 
+@dataclass
+class Counts:
+    total : int = 0  # Number of total jobs
+    success : int = 0  # Number of successful jobs
+    failed : int = 0  # Number of failed jobs
+    unsubmitted : int = 0  # Number of unsubmitted jobs
+    unknown : int = 0  # Number of jobs in an unknown state
+    held : int = 0  # number of held jobs
+    failed_jobs : list = field(default_factory=[])  # List of jobs that failed
+    unknown_jobs : list = field(default_factory=[])  # List of jobs that neither succeeded nor failed
+    
+
 # --- Analyze classes to run analyzer --------------------------------------------------
 class BaseAnalyze:
     # --- regular expressions -------------------------------------------------------------
@@ -249,15 +253,14 @@ class BaseAnalyze:
     re_ks_invocation = re.compile(r"^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b.*")
     MAXLOGFILE = 1000  # For log file rotation, check files .000 to .999
 
-    def check_for_wf_start(options):
+    def check_for_wf_start(options, counts):
         """
         This function checks if workflow did start.
         If not then print helpful message
         :return:
         """
-        global total, success, failed, unsubmitted, unknown
 
-        if unsubmitted == total:
+        if counts.unsubmitted == counts.total:
             # PM-1039 either the workflow did not start or other errors
             # check the dagman.out file
             BaseAnalyze.print_console(" Looks like workflow did not start".center(80, "*"))
@@ -307,7 +310,7 @@ class BaseAnalyze:
                         BaseAnalyze.print_console(" " + dagman_lib_err_contents)
 
 
-    def print_top_summary(workflow_status=None, submit_dir=None, options=None):
+    def print_top_summary(workflow_status=None, submit_dir=None, options=None, counts=None):
         """
         This function prints the summary for the analyzer report,
         which is the same for the long and short output versions
@@ -323,28 +326,28 @@ class BaseAnalyze:
 
         BaseAnalyze.print_console(
             " Total jobs         : % 6d (%3.2f%%)"
-            % (total, 100 * (1.0 * total / (total or 1)))
+            % (counts.total, 100 * (1.0 * counts.total / (counts.total or 1)))
         )
         BaseAnalyze.print_console(
             " # jobs succeeded   : % 6d (%3.2f%%)"
-            % (success, 100 * (1.0 * success / (total or 1)))
+            % (counts.success, 100 * (1.0 * counts.success / (counts.total or 1)))
         )
         BaseAnalyze.print_console(
             " # jobs failed      : % 6d (%3.2f%%)"
-            % (failed, 100 * (1.0 * failed / (total or 1)))
+            % (counts.failed, 100 * (1.0 * counts.failed / (counts.total or 1)))
         )
         BaseAnalyze.print_console(
             " # jobs held        : % 6d (%3.2f%%)"
-            % (held, 100 * (1.0 * held / (total or 1)))
+            % (counts.held, 100 * (1.0 * counts.held / (counts.total or 1)))
         )
         BaseAnalyze.print_console(
             " # jobs unsubmitted : % 6d (%3.2f%%)"
-            % (unsubmitted, 100 * (1.0 * unsubmitted / (total or 1)))
+            % (counts.unsubmitted, 100 * (1.0 * counts.unsubmitted / (counts.total or 1)))
         )
-        if unknown > 0:
+        if counts.unknown > 0:
             BaseAnalyze.print_console(
                 " # jobs unknown     : % 6d (%3.2f%%)"
-                % (unknown, 100 * (1.0 * unknown / (total or 1)))
+                % (counts.unknown, 100 * (1.0 * counts.unknown / (counts.total or 1)))
             )
         print()
         
@@ -571,7 +574,8 @@ class AnalyzeFiles(BaseAnalyze):
         self.jobs = {}  # List of jobs found in the jobstate.log file
         self.analyzer_output = AnalyzerOutput()
         self.options = options
-        
+        self.counts = Counts(0,0,0,0,0,0,[],[])
+
 
     def analyze_files(self):
         """
@@ -666,7 +670,7 @@ class AnalyzeFiles(BaseAnalyze):
                 self.print_summary()
 
         # PM-1039
-        BaseAnalyze.check_for_wf_start(self.options)
+        BaseAnalyze.check_for_wf_start(self.options, self.counts)
         
         if self.options.json_mode:
             self.analyzer_output.root_wf_uuid = wfparams["root_wf_uuid"]
@@ -676,7 +680,7 @@ class AnalyzeFiles(BaseAnalyze):
             self.analyzer_output.workflows["root"]=self.get_wf_details(wfparams)
             return self.analyzer_output
             
-        if failed > 0 and not self.options.json_mode:
+        if self.counts.failed > 0 and not self.options.json_mode:
             # Workflow has failures, exit with exitcode 2
             raise WorkflowFailureError("One or more workflows failed")
         
@@ -692,13 +696,13 @@ class AnalyzeFiles(BaseAnalyze):
         :type: Dict
         :return: returns a :class:`Pegasus.analyzer.Workflow` object
         """
-        wf_jobs = Jobs(total,success,failed,held,unsubmitted)
-        if total == success:
+        wf_jobs = Jobs(self.counts.total,self.counts.success,self.counts.failed,self.counts.held,self.counts.unsubmitted)
+        if self.counts.total == self.counts.success:
             status = 'success'
-        elif failed > 0:
+        elif self.counts.failed > 0:
             status = 'failure'
             wf_jobs.job_details["failed_job_details"]={}
-            for job in failed_jobs:
+            for job in self.counts.failed_jobs:
                 wf_jobs.job_details["failed_job_details"][job]=JobInstance(
                                                                 job_name = self.jobs[job].name,
                                                                 state = self.jobs[job].state,
@@ -980,27 +984,26 @@ class AnalyzeFiles(BaseAnalyze):
         """
         This function processes all currently known jobs, generating some statistics
         """
-        global total, success, failed, unsubmitted, unknown
 
         for my_job in self.jobs:
-            total = total + 1
+            self.counts.total += 1
             if (
                 self.jobs[my_job].state == "POST_SCRIPT_SUCCESS"
                 or self.jobs[my_job].state == "JOB_SUCCESS"
             ):
-                success = success + 1
+                self.counts.success = self.counts.success + 1
             elif (
                 self.jobs[my_job].state == "POST_SCRIPT_FAILURE"
                 or self.jobs[my_job].state == "JOB_FAILURE"
             ):
-                failed_jobs.append(my_job)
-                failed = failed + 1
+                self.counts.failed_jobs.append(my_job)
+                self.counts.failed += 1
             elif self.jobs[my_job].state == "UNSUBMITTED":
-                unsubmitted = unsubmitted + 1
+                self.counts.unsubmitted = self.counts.unsubmitted + 1
             else:
                 # It seems we don't have a final result for this job
-                unknown_jobs.append(my_job)
-                unknown = unknown + 1
+                self.counts.unknown_jobs.append(my_job)
+                self.counts.unknown += 1
                 
 
     def print_summary(self):
@@ -1009,18 +1012,18 @@ class AnalyzeFiles(BaseAnalyze):
         """
 
         # First print the summary section
-        BaseAnalyze.print_top_summary(options=self.options)
+        BaseAnalyze.print_top_summary(options=self.options, counts=self.counts)
 
         # Print information about failed jobs
-        if len(failed_jobs):
+        if len(self.counts.failed_jobs):
             BaseAnalyze.print_console("Failed jobs' details".center(80, "*"))
-            for job in failed_jobs:
+            for job in self.counts.failed_jobs:
                 self.print_job_info(job)
 
         # Print information about unknown jobs
-        if len(unknown_jobs):
+        if len(self.counts.unknown_jobs):
             BaseAnalyze.print_console("Unknown jobs' details".center(80, "*"))
-            for job in unknown_jobs:
+            for job in self.counts.unknown_jobs:
                 self.print_job_info(job)
 
         
@@ -1237,21 +1240,20 @@ class AnalyzeFiles(BaseAnalyze):
 
                 OUT.close()
                 BaseAnalyze.print_console()
-            
+    
 
-
+    
 class AnalyzeDB(BaseAnalyze):
     
     def __init__(self, options):
         self.analyzer_output = AnalyzerOutput()
         self.options = options
-        
+        self.counts = Counts(0,0,0,0,0,0,[],[])
 
     def analyze_db(self, config_properties):
         """
         This function runs the analyzer using data from the database.
         """
-        global total, success, failed, unsubmitted, unknown, held
 
         # Get the database URL
         try:
@@ -1330,7 +1332,7 @@ class AnalyzeDB(BaseAnalyze):
                 )
             )
 
-            failed = 0
+            self.counts.failed = 0
             workflow_stats = None
             try:
                 # for each wf initialize a new workflow stats object
@@ -1345,7 +1347,7 @@ class AnalyzeDB(BaseAnalyze):
                 raise AnalyzerError("Failed to load the database - " + output_db_url, e)
             except WorkflowFailureError as e:
                 logger.error(e)
-                failed += 1
+                self.counts.failed += 1
             finally:
                 if workflow_stats:
                     workflow_stats.close()
@@ -1355,7 +1357,7 @@ class AnalyzeDB(BaseAnalyze):
             
         
         # TODO: throw exceptions. catch them and determine exitcode
-        if failed > 0 and not self.options.json_mode:
+        if self.counts.failed > 0 and not self.options.json_mode:
             raise WorkflowFailureError("One or more workflows failed")
 
 
@@ -1395,15 +1397,14 @@ class AnalyzeDB(BaseAnalyze):
         :param submit_dir: the submit dir for the workflow
         :return:
         """
-        global total, success, failed, unsubmitted, unknown, held
 
-        total = workflow_stats.get_total_jobs_status()
+        self.counts.total = workflow_stats.get_total_jobs_status()
         total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
-        success = total_success_failed.succeeded
-        failed = total_success_failed.failed
+        self.counts.success = total_success_failed.succeeded
+        self.counts.failed = total_success_failed.failed
 
         held_jobs = workflow_stats.get_total_held_jobs()
-        held = len(held_jobs)
+        self.counts.held = len(held_jobs)
 
         # jobs failing
         failing, filtered_count, failing_jobs = workflow_stats.get_failing_jobs()
@@ -1423,18 +1424,18 @@ class AnalyzeDB(BaseAnalyze):
         )
 
         # PM-1039
-        if success is None:
-            success = 0
-        if failed is None:
-            failed = 0
+        if self.counts.success is None:
+            self.counts.success = 0
+        if self.counts.failed is None:
+            self.counts.failed = 0
 
-        unsubmitted = total - success - failed
+        self.counts.unsubmitted = self.counts.total - self.counts.success - self.counts.failed
         
         wf.wf_status = workflow_status.value
-        wf.jobs = Jobs(total,success,failed,held,unsubmitted)
+        wf.jobs = Jobs(self.counts.total,self.counts.success,self.counts.failed,self.counts.held,self.counts.unsubmitted)
         
         # PM-1762 add a helpful message in case failed jobs are zero and workflow failed
-        if workflow_status is WORKFLOW_STATUS.FAILURE and failed == 0 :
+        if workflow_status is WORKFLOW_STATUS.FAILURE and self.counts.failed == 0 :
             BaseAnalyze.print_console(
                 "It seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in %s"
                 % (self.options.input_dir or self.options.top_dir)
@@ -1442,12 +1443,12 @@ class AnalyzeDB(BaseAnalyze):
 
         # Let's print the results
         if not self.options.json_mode:
-            BaseAnalyze.print_top_summary(workflow_status, submit_dir, self.options)
-            BaseAnalyze.check_for_wf_start(self.options)
+            BaseAnalyze.print_top_summary(workflow_status, submit_dir, self.options, self.counts)
+            BaseAnalyze.check_for_wf_start(self.options, self.counts)
 
         # Exit if summary mode is on
         if self.options.summary_mode and not self.options.json_mode:
-            if workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0:
+            if workflow_status is WORKFLOW_STATUS.FAILURE or self.counts.failed > 0:
                 # Workflow has failures, exit with exitcode 2
                 raise WorkflowFailureError(
                     "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
@@ -1456,7 +1457,7 @@ class AnalyzeDB(BaseAnalyze):
             return
 
         # PM-1126 print information about held jobs
-        if held > 0:
+        if self.counts.held > 0:
             wf.jobs.job_details["held_jobs_details"] = {}
             
             if not self.options.json_mode:
@@ -1502,17 +1503,17 @@ class AnalyzeDB(BaseAnalyze):
                             )
 
         # Now, print information about jobs that failed...
-        if failed > 0:
+        if self.counts.failed > 0:
             wf.jobs.job_details["failed_jobs_details"] = {}
             # Get list of failed jobs from database
-            failed_jobs = workflow_stats.get_failed_job_instances()
+            self.counts.failed_jobs = workflow_stats.get_failed_job_instances()
             
             if not self.options.json_mode:
                 # Print header
                 BaseAnalyze.print_console("Failed jobs' details".center(80, "*"))
 
             # Now process one by one...
-            for my_job in failed_jobs:
+            for my_job in self.counts.failed_jobs:
                 job_instance_info = workflow_stats.get_job_instance_info(my_job[0])[0]
                 job_tasks = workflow_stats.get_invocation_info(my_job[0])
                 
@@ -1534,7 +1535,7 @@ class AnalyzeDB(BaseAnalyze):
                     subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
                     BaseAnalyze.print_console(("").center(80, "="))
 
-        if (workflow_status is WORKFLOW_STATUS.FAILURE or failed > 0) and not self.options.json_mode:
+        if (workflow_status is WORKFLOW_STATUS.FAILURE or self.counts.failed > 0) and not self.options.json_mode:
             # Workflow has failures, exit with exitcode 2
             raise WorkflowFailureError(
                 "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
