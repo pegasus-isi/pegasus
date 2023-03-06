@@ -1,0 +1,212 @@
+- invocation: True
+  version: 3.0
+  start: 2023-03-04T01:03:33.740-08:00
+  duration: 20.106
+  transformation: "findrange"
+  derivation: "ID0000003"
+  resource: "condorpool"
+  wf-label: "inner"
+  wf-stamp: "2023-03-04T01:00:54-08:00"
+  interface: enp129s0
+  hostaddr: 128.9.46.53
+  hostname: workflow.isi.edu
+  pid: 188863
+  uid: 8073
+  user: mzalam
+  gid: 1018
+  group: div23
+  umask: 0o0022
+  mainjob:
+    start: 2023-03-04T01:03:33.840-08:00
+    duration: 20.005
+    pid: 188864
+    usage:
+      utime: 19.958
+      stime: 0.001
+      maxrss: 3512
+      minflt: 166
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 16
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 2
+      nivcsw: 20
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /home/mzalam/wf/condor/local/execute/dir_188705/findrange
+      mode: 0o100755
+      size: 27880
+      inode: 68031044
+      nlink: 1
+      blksize: 4096
+      blocks: 56
+      mtime: 2023-03-04T01:03:32-08:00
+      atime: 2023-03-04T01:03:33-08:00
+      ctime: 2023-03-04T01:03:33-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    argument_vector:
+      - "-a"
+      - "findrange"
+      - "-T"
+      - "20"
+      - "-i"
+      - "f.b2"
+      - "-o"
+      - "f.c2"
+    procs:
+  jobids:
+    condor: 55.0
+  cwd: /home/mzalam/wf/condor/local/execute/dir_188705
+  usage:
+    utime: 0.022
+    stime: 0.067
+    maxrss: 2608
+    minflt: 133
+    majflt: 0
+    nswap: 0
+    inblock: 0
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 2
+    nivcsw: 6
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: workflow.isi.edu
+    uname_release: 4.18.0-425.10.1.el8_7.x86_64
+    uname_machine: x86_64
+    ram_total: 65653728
+    ram_free: 20616692
+    ram_shared: 230276
+    ram_buffer: 10616
+    swap_total: 20971516
+    swap_free: 18878896
+    cpu_count: 24
+    cpu_speed: 2500
+    cpu_vendor: GenuineIntel
+    cpu_model: Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz
+    load_min1: 0.61
+    load_min5: 0.47
+    load_min15: 0.37
+    procs_total: 475
+    procs_running: 1
+    procs_sleeping: 295
+    procs_other: 179
+    procs_vmsize: 87364404
+    procs_rss: 9394152
+    task_total: 1442
+    task_running: 4
+    task_sleeping: 1259
+    task_other: 179
+  files:
+    f.c2:
+      lfn: "f.c2"
+      file_name: /home/mzalam/wf/condor/local/execute/dir_188705/f.c2
+      mode: 0o100644
+      size: 519
+      inode: 77337480
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-03-04T01:03:33-08:00
+      atime: 2023-03-04T01:03:34-08:00
+      ctime: 2023-03-04T01:03:33-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+      output: True
+      sha256: b8d305d433b738f69c66e50d20a2ecd9e480826c0ce005b3ffa4a5f65413f0e3
+      checksum_timing: 0.00
+    stdin:
+      file_name: /dev/null
+      mode: 0o20666
+      size: 0
+      inode: 3075
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-01-25T15:24:15-08:00
+      atime: 2023-01-25T15:24:15-08:00
+      ctime: 2023-01-25T15:24:15-08:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    stdout:
+      temporary_name: /home/mzalam/wf/condor/local/execute/dir_188705/ks.out.Gk2RBo
+      descriptor: 3
+      mode: 0o100600
+      size: 36
+      inode: 77337476
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-03-04T01:03:53-08:00
+      atime: 2023-03-04T01:03:33-08:00
+      ctime: 2023-03-04T01:03:53-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+      data_truncated: false
+      data: |
+        output file to be generated is f.c2
+        
+    stderr:
+      temporary_name: /home/mzalam/wf/condor/local/execute/dir_188705/ks.err.LJvIc7
+      descriptor: 4
+      mode: 0o100600
+      size: 0
+      inode: 77337477
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T01:03:33-08:00
+      atime: 2023-03-04T01:03:33-08:00
+      ctime: 2023-03-04T01:03:33-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    metadata:
+      temporary_name: /home/mzalam/wf/condor/local/execute/dir_188705/ks.meta.1CHwcc
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 77337478
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T01:03:33-08:00
+      atime: 2023-03-04T01:03:33-08:00
+      ctime: 2023-03-04T01:03:33-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+
+---------------pegasus-multipart
+- integrity_verification_attempts:
+  - lfn: "findrange"
+    pfn: "findrange"
+    sha256: c3be63a37e067612da05a9e3bd57501c02b122d9188dd0270f95c4942653c861
+    success: True
+  - lfn: "f.b2"
+    pfn: "f.b2"
+    sha256: 3c76a04871e2c0490a0f9f25ee7fdf460c3819f0f9454024f394012f6374236a
+    success: True
+- integrity_summary:
+    succeeded: 2
+    failed: 0
+    duration: 0.042

@@ -115,8 +115,6 @@ class WorkflowFailureError(Exception):
 prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this program
 dag_path = None  # Path of the dag fi
 indent = ""  # the corresponding indent string
-workflow_base_dir = ""  # Workflow submit_dir or dirname(jsd) from braindump file
-
 
 # ----- Data classes ------------------------------------------------------------------
 @dataclass
@@ -139,7 +137,9 @@ class Options:
     indent_length : int = 0  # the number of tabs to print before printing to console
     print_invocation : bool = False  # Prints invocation command for failed jobs
     print_pre_script : bool = False  # Prints the SCRIPT PRE line for failed jobs, if present
-    
+    workflow_base_dir : str = None  # Workflow submit_dir or dirname(jsd) from braindump file
+    use_files : bool = False   #mode to use AnalyzeFiles
+
 
 @dataclass
 class Task:
@@ -189,7 +189,7 @@ class Workflow:
     jobs : Jobs = None
 
 
-# --- AnalyzerOutput class to store analyzer output ------------------------------------
+# --- classes to store analyzer output ------------------------------------------------
 class AnalyzerOutput:
     
     def __init__(self):
@@ -470,11 +470,11 @@ class BaseAnalyze:
                                 if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
                                     my_job.dagman_out = sub_prop.group(2)
                                     my_job.dagman_out = os.path.normpath(my_job.dagman_out)
-                                    if my_job.dagman_out.find(workflow_base_dir) >= 0:
+                                    if my_job.dagman_out.find(options.workflow_base_dir) >= 0:
                                         # Path to dagman_out file includes original submit_dir, let's try to change it
                                         my_job.dagman_out = os.path.normpath(
                                             my_job.dagman_out.replace(
-                                                (workflow_base_dir + os.sep), "", 1
+                                                (options.workflow_base_dir + os.sep), "", 1
                                             )
                                         )
                                         # Join with current options.input_dir
@@ -494,7 +494,6 @@ class BaseAnalyze:
                                                 "sub-workflow retry counter not initialized... continuing..."
                                             )
                                             continue
-
                                         # Compose directory... assuming replanning mode
                                         my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)
                                         # If directory doesn't exist, let's change to rescue mode
@@ -567,6 +566,584 @@ class BaseAnalyze:
 
 
 
+class AnalyzeDB(BaseAnalyze):
+    
+    def __init__(self, options):
+        self.analyzer_output = AnalyzerOutput()
+        self.options = options
+        self.counts = Counts(0,0,0,0,0,0,[],[])
+
+    def analyze_db(self, config_properties):
+        """
+        This function runs the analyzer using data from the database.
+        """
+
+        # Get the database URL
+        try:
+            output_db_url = connection.url_by_submitdir(
+                self.options.input_dir, connection.DBType.WORKFLOW, config_properties, self.options.top_dir
+            )
+            wf_uuid = connection.get_wf_uuid(self.options.input_dir)
+            self.analyzer_output.root_wf_uuid = wf_uuid
+            self.analyzer_output.root_submit_dir = self.options.input_dir
+            self.analyzer_output.structure_output["root_wf_uuid"] = wf_uuid
+            self.analyzer_output.structure_output["submit_directory"] = self.options.input_dir
+                
+        except connection.ConnectionError as e:
+            raise AnalyzerError(
+                "Unable to connect to database for workflow in %s", self.options.input_dir, e
+            )
+
+        # Nothing to do if we cannot resolve the database URL
+        if output_db_url is None:
+            raise ValueError("Database URL is required")
+
+        # Now, let's try to access the database
+        workflow_stats = None
+        try:
+            workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
+            workflow_stats.initialize(wf_uuid)
+            descendant_wfs_ids = workflow_stats.get_descendants(wf_uuid)
+        except DBAdminError as e:
+            raise AnalyzerError("Failed to load the database - " + output_db_url, e)
+        finally:
+            if workflow_stats:
+                # Done with the database
+                workflow_stats.close()
+
+        logger.debug(
+            "Descendant Workflows database ids for %s are %s"
+            % (wf_uuid, descendant_wfs_ids)
+        )
+
+        wf_id = None
+        wf_details = {}  # stores all wf details indexed by database id of a wf
+        for wf_detail in workflow_stats.get_workflow_details(descendant_wfs_ids):
+            wf_details[wf_detail.wf_id] = wf_detail
+            if wf_detail.wf_uuid == wf_uuid:
+                wf_id = wf_detail.wf_id
+        
+        #for k in wf_details:
+        #    print(k,wf_details[k])
+        
+            
+        if wf_id is None:
+            logger.error(
+                "Unable to determine the database id for workflow with uuid %s" % wf_uuid
+            )
+
+        wf_ids = []
+        if self.options.traverse_all:
+            wf_ids.extend(descendant_wfs_ids)
+        else:
+            # we only do the workflow on which submit directory analyzer is called
+            wf_ids.append(wf_id)
+        
+        for wf_id in wf_ids:
+            wf_detail = wf_details[wf_id]
+            
+            if wf_detail.wf_uuid == wf_uuid:
+                wf_key = "root"
+            else:
+                wf_key = wf_detail.wf_uuid
+            self.analyzer_output.workflows[wf_key] = self.get_wf_details(wf_detail, wf_details)
+            wf = self.analyzer_output.workflows[wf_key]
+            
+            logger.debug(
+                "Running analyzer on workflow with database id {} in submit dir {}".format(
+                    wf_id, wf_detail.submit_dir
+                )
+            )
+
+            self.counts.failed = 0
+            workflow_stats = None
+            try:
+                # for each wf initialize a new workflow stats object
+                workflow_stats = stampede_statistics.StampedeStatistics(
+                    output_db_url, False
+                )
+                workflow_stats.initialize(root_wf_id=wf_id)
+                self.analyze_db_for_wf(
+                    workflow_stats, wf_detail.wf_uuid, wf_detail.submit_dir, wf
+                )
+            except DBAdminError as e:
+                raise AnalyzerError("Failed to load the database - " + output_db_url, e)
+            except WorkflowFailureError as e:
+                logger.error(e)
+                self.counts.failed += 1
+            finally:
+                if workflow_stats:
+                    workflow_stats.close()
+        
+        if self.options.json_mode:
+            return self.analyzer_output
+            
+        
+        # TODO: throw exceptions. catch them and determine exitcode
+        if self.counts.failed > 0 and not self.options.json_mode:
+            raise WorkflowFailureError("One or more workflows failed")
+
+
+    def get_wf_details(self, wf_detail, wf_details):
+        """
+        Filters out workflow details to be used in the workflow structure
+        
+        :param wf_detail: details regarding a workflow (wf_uuid, submit_dir, host etc.)
+        :param wf_details: a dict of all workflows' details
+        :return: returns a :class:`Pegasus.analyzer.Workflow` object
+        """
+        
+        wf = Workflow(
+            wf_detail.wf_uuid,
+            wf_detail.dag_file_name,
+            wf_detail.submit_hostname,
+            wf_detail.submit_dir,
+            wf_detail.user,
+            wf_detail.planner_version,
+            wf_detail.dax_label
+        )
+        if wf_detail.parent_wf_id:
+            wf.parent_wf_name = wf_details[wf_detail.parent_wf_id].dax_label
+            wf.parent_wf_uuid = wf_details[wf_detail.parent_wf_id].wf_uuid
+        else:
+            wf.parent_wf_name = '-'
+            wf.parent_wf_uuid = '-'
+            
+        return wf
+        
+        
+    def analyze_db_for_wf(self, workflow_stats, wf_uuid, submit_dir, wf):
+        """
+        This function runs the analyzer using data from the database.
+        :param workflow_stats: the stampede statistics object initialized with the workflow, we want to analyze
+        :param wf_uuid:  the uuid of the workflow we are analyzing
+        :param submit_dir: the submit dir for the workflow
+        :return:
+        """
+
+        self.counts.total = workflow_stats.get_total_jobs_status()
+        total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
+        self.counts.success = total_success_failed.succeeded
+        self.counts.failed = total_success_failed.failed
+
+        held_jobs = workflow_stats.get_total_held_jobs()
+        self.counts.held = len(held_jobs)
+
+        # jobs failing
+        failing, filtered_count, failing_jobs = workflow_stats.get_failing_jobs()
+
+        # PM-1762 need to retrieve workflow states also, as you can
+        # have workflow with zero failed jobs, but still the workflow failed
+        # for example trying to run a workflow again from the same directory
+        # where an already existing workflow is running
+        workflow_states = workflow_stats.get_workflow_states()
+        workflow_status = WORKFLOW_STATUS.UNKNOWN
+        if workflow_states:
+            # workflow states are returned in ascending order. we need the last state
+            workflow_status = self.get_workflow_status(workflow_states[-1])
+
+        logger.debug(
+            "Workflow state determined from workflow database is %s" % workflow_status.value
+        )
+
+        # PM-1039
+        if self.counts.success is None:
+            self.counts.success = 0
+        if self.counts.failed is None:
+            self.counts.failed = 0
+
+        self.counts.unsubmitted = self.counts.total - self.counts.success - self.counts.failed
+        
+        wf.wf_status = workflow_status.value
+        wf.jobs = Jobs(self.counts.total,self.counts.success,self.counts.failed,self.counts.held,self.counts.unsubmitted)
+        
+        # PM-1762 add a helpful message in case failed jobs are zero and workflow failed
+        if workflow_status is WORKFLOW_STATUS.FAILURE and self.counts.failed == 0 :
+            BaseAnalyze.print_console(
+                "It seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in %s"
+                % (self.options.input_dir or self.options.top_dir)
+            )
+
+        # Let's print the results
+        if not self.options.json_mode:
+            BaseAnalyze.print_top_summary(workflow_status, submit_dir, self.options, self.counts)
+            BaseAnalyze.check_for_wf_start(self.options, self.counts)
+
+        # Exit if summary mode is on
+        if self.options.summary_mode and not self.options.json_mode:
+            if workflow_status is WORKFLOW_STATUS.FAILURE or self.counts.failed > 0:
+                # Workflow has failures, exit with exitcode 2
+                raise WorkflowFailureError(
+                    "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
+                )
+            # Workflow has no failures, exit with exitcode 0
+            return
+
+        # PM-1126 print information about held jobs
+        if self.counts.held > 0:
+            wf.jobs.job_details["held_jobs_details"] = {}
+            
+            if not self.options.json_mode:
+                # Print header
+                BaseAnalyze.print_console("Held jobs' details".center(80, "*"))
+                BaseAnalyze.print_console()
+
+            for held_job in held_jobs:
+                wf.jobs.job_details["held_jobs_details"][held_job.jobid] = {
+                                        'submit_file' : held_job.jobname+".sub" or "-",
+                                        'last_job_instance_id' : held_job[0] or "-",
+                                        'reason' : held_job.reason or "-"
+                }
+                if not self.options.json_mode:
+                    # each tuple is max_ji_id, jobid, jobname, reason
+                    # first two are database id's for debugging
+                    BaseAnalyze.print_console(held_job.jobname.center(80, "="))
+                    BaseAnalyze.print_console()
+                    BaseAnalyze.print_console(
+                        "submit file            : %s" % (held_job.jobname + ".sub" or "-")
+                    )
+                    BaseAnalyze.print_console("last_job_instance_id   : %s" % (held_job[0] or "-"))
+                    BaseAnalyze.print_console("reason                 : %s" % (held_job.reason or "-"))
+                    BaseAnalyze.print_console()
+
+        # PM-1890 print failing jobs before failed jobs
+        if len(failing_jobs) > 0:
+            wf.jobs.job_details["failing_jobs_details"] = {}
+            BaseAnalyze.print_console("Failing jobs' details".center(80, "*"))
+            for i in range(len(failing_jobs)):
+                failing_jobs[i] = failing_jobs[i]._asdict()
+                failing_job_id = failing_jobs[i]["job_instance_id"]
+                job_tasks = workflow_stats.get_invocation_info(failing_job_id)
+                if not self.options.json_mode:
+                    self.print_job_instance(
+                        failing_job_id,
+                        workflow_stats.get_job_instance_info(failing_job_id)[0],
+                        job_tasks,
+                    )
+                wf.jobs.job_details["failing_jobs_details"][failing_job_id] = self.get_job_details(
+                                workflow_stats.get_job_instance_info(failing_job_id)[0],
+                                job_tasks
+                            )
+
+        # Now, print information about jobs that failed...
+        if self.counts.failed > 0:
+            wf.jobs.job_details["failed_jobs_details"] = {}
+            # Get list of failed jobs from database
+            self.counts.failed_jobs = workflow_stats.get_failed_job_instances()
+            
+            if not self.options.json_mode:
+                # Print header
+                BaseAnalyze.print_console("Failed jobs' details".center(80, "*"))
+
+            # Now process one by one...
+            for my_job in self.counts.failed_jobs:
+                job_instance_info = workflow_stats.get_job_instance_info(my_job[0])[0]
+                job_tasks = workflow_stats.get_invocation_info(my_job[0])
+                
+                if not self.options.json_mode:
+                    sub_wf_cmd = self.print_job_instance(
+                        job_instance_info.job_instance_id,
+                        workflow_stats.get_job_instance_info(job_instance_info.job_instance_id)[
+                            0
+                        ],
+                        job_tasks,
+                    )
+                wf.jobs.job_details["failed_jobs_details"][job_instance_info.job_name] = self.get_job_details(
+                                workflow_stats.get_job_instance_info(job_instance_info.job_instance_id)[0],
+                                job_tasks
+                            )
+                # recurse for sub workflow
+                if not self.options.json_mode and sub_wf_cmd is not None and self.options.recurse_mode :
+                    BaseAnalyze.print_console(("Failed Sub Workflow").center(80, "="))
+                    subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
+                    BaseAnalyze.print_console(("").center(80, "="))
+
+        if (workflow_status is WORKFLOW_STATUS.FAILURE or self.counts.failed > 0) and not self.options.json_mode:
+            # Workflow has failures, exit with exitcode 2
+            raise WorkflowFailureError(
+                "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
+            )
+
+        # Workflow has no failures, exit with exitcode 0
+        return
+
+     
+    def get_job_details(self, job_instance_info, job_tasks):
+        """
+        Filters out workflow details to be used in the workflow structure
+        
+        :param job_instance_info: information regarding a job (job_name, state, site etc.)
+        :param job_tasks: information regarding all tasks in a job (hostname, exitcode, etc.)
+        :return: returns a :class:`Pegasus.analyzer.JobInstance` object
+        """
+        
+        job_instance = JobInstance(
+                                job_instance_info.job_name ,
+                                job_instance_info.state ,
+                                job_instance_info.site ,
+                                job_instance_info.submit_file ,
+                                job_instance_info.stdout_file ,
+                                job_instance_info.stderr_file ,
+                                job_instance_info.executable ,
+                                job_instance_info.argv or '-',
+                            )
+        
+        for task in job_tasks:
+            job_instance.tasks[task[0]] = Task(
+                                job_instance_info.site,
+                                job_instance_info.hostname,
+                                task[2],
+                                task[3] or '-',
+                                utils.raw_to_regular(task[1]),
+                                job_instance_info.work_dir
+                            )
+        return job_instance
+        
+
+    def get_workflow_status(self, last_wf_state_record):
+        """
+        Determines the workflow status from the last workflow state record for the workflow from the workflow database
+        :param last_wf_state_record: of form  (wf_id, state, timestamp, restart_count, status)
+        :return: the workflow status as value of type enum WORKFLOW_STATUS
+        """
+
+        workflow_status = WORKFLOW_STATUS.UNKNOWN
+        if last_wf_state_record is None:
+            return workflow_status
+
+        # (wf_id, state, timestamp, restart_count, status)
+        # (1, 'WORKFLOW_TERMINATED', Decimal('1619144694.000000'), 2, 1)
+        last_wf_state = last_wf_state_record[1]
+        last_wf_status = last_wf_state_record[4]
+
+        if last_wf_state == "WORKFLOW_STARTED":
+            workflow_status = WORKFLOW_STATUS.RUNNING
+        elif last_wf_state == "WORKFLOW_TERMINATED":
+            workflow_status = (
+                WORKFLOW_STATUS.SUCCESS if last_wf_status == 0 else WORKFLOW_STATUS.FAILURE
+            )
+        else:
+            raise ValueError("Invalid worklfow state %s" % last_wf_state)
+
+        return workflow_status
+
+
+    def print_job_instance(self, job_instance_id, job_instance_info, job_tasks):
+        """
+        The function prints information related to one job instance retried from the
+        stampede database
+        :param job_instance_id the job_instance_id from the job_instance table
+        :param job_instance_info: the job instance with which the tasks are associated
+        :param job_tasks: all the tasks (invocation records) for a particular condor job/job instance
+        :return subwf_cmd: if the job is a sub workflow job, then returns the command that is
+                           required to invoke pegasus-analyzer on the sub workflow.
+        """
+
+        sub_wf_cmd = None
+        BaseAnalyze.print_console()
+        BaseAnalyze.print_console(job_instance_info.job_name.center(80, "="))
+        BaseAnalyze.print_console()
+        BaseAnalyze.print_console(" last state: %s" % (job_instance_info.state or "-"))
+
+        BaseAnalyze.print_console("       site: %s" % (job_instance_info.site or "-"))
+        BaseAnalyze.print_console("submit file: %s" % (job_instance_info.submit_file or "-"))
+        BaseAnalyze.print_console("output file: %s" % (job_instance_info.stdout_file or "-"))
+        BaseAnalyze.print_console(" error file: %s" % (job_instance_info.stderr_file or "-"))
+        if self.options.print_invocation:
+            BaseAnalyze.print_console()
+            BaseAnalyze.print_console(
+                "To re-run this job, use: %s %s"
+                % ((job_instance_info.executable or "-"), (job_instance_info.argv or "-"))
+            )
+            BaseAnalyze.print_console()
+        if self.options.print_pre_script and len(job_instance_info.pre_executable or "") > 0:
+            BaseAnalyze.print_console()
+            BaseAnalyze.print_console("SCRIPT PRE:")
+            BaseAnalyze.print_console(
+                "%s %s"
+                % (
+                    (job_instance_info.pre_executable or ""),
+                    (job_instance_info.pre_argv or ""),
+                )
+            )
+            BaseAnalyze.print_console()
+        if job_instance_info.subwf_dir is not None:
+            # This job has a sub workflow
+            user_cmd = " %s" % (prog_base)
+            my_wfdir = os.path.normpath(job_instance_info.subwf_dir)
+            if my_wfdir.find(job_instance_info.submit_dir) >= 0:
+                # Path to dagman_out file includes original submit_dir, let's try to change it...
+                my_wfdir = os.path.normpath(
+                    my_wfdir.replace((job_instance_info.submit_dir + os.sep), "", 1)
+                )
+                my_wfdir = os.path.join(self.options.input_dir, my_wfdir)
+
+            # get any options that need to be invoked for the sub workflow
+            extraOptions = BaseAnalyze.addon(self.options)
+            sub_wf_cmd = "{} {} -d {} --top-dir {}".format(
+                user_cmd, extraOptions, my_wfdir, (self.options.top_dir or self.options.input_dir),
+            )
+            if not self.options.recurse_mode:
+                # we print only if recurse mode is disabled
+                BaseAnalyze.print_console(" This job contains sub workflows!")
+                BaseAnalyze.print_console(" Please run the command below for more information:")
+                BaseAnalyze.print_console(sub_wf_cmd)
+                # print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (self.options.top_dir or self.options.input_dir))
+            print()
+        print()
+
+        # print all the tasks associated with the job
+        self.print_tasks_info(job_instance_id, job_instance_info, job_tasks)
+        return sub_wf_cmd
+
+
+    def print_tasks_info(self, job_instance_id, job_instance_info, job_tasks):
+        """
+           The function prints information related to one job instance retried from the
+           stampede database
+           :param job_instance_id: the job_instance_id from the job_instance table
+           :param job_instance_info: the job instance with which the tasks are associated
+           :param job_tasks: all the tasks (invocation records) for a particular condor job/job instance
+           :return:
+           """
+
+        # Unquote stdout and stderr
+        ji_stdout_text = utils.unquote(job_instance_info.stdout_text or "").decode("UTF-8")
+        ji_stderr_text = utils.unquote(job_instance_info.stderr_text or "").decode("UTF-8")
+        ji_stdout_text = ji_stdout_text.strip(" \n\r\t")
+        ji_stderr_text = ji_stderr_text.strip(" \n\r\t")
+
+        some_tasks_failed = False
+        for my_task in job_tasks:
+            # PM-798 we want to detect if some tasks failed or not
+            if my_task[0] < -1:
+                # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
+                continue
+            some_tasks_failed = some_tasks_failed or (my_task[1] != 0)
+
+        # PM-798 track whether we need to actually print the condor job stderr or not
+        # we only print if there is no information in the kickstart record
+        my_print_job_stderr = True
+
+        # Now, print task information
+        for my_task in job_tasks:
+            if my_task[0] < -1:
+                # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
+                continue
+
+            if my_task[1] == 0 and some_tasks_failed:
+                # Skip tasks that succeeded only if we know some tasks did fail
+                continue
+
+            # Got a task with a non-zero exitcode
+            my_exitcode = utils.raw_to_regular(my_task[1])
+
+            # Print task summary
+            BaseAnalyze.print_console(("Task #" + str(my_task[0]) + " - Summary").center(80, "-"))
+            BaseAnalyze.print_console()
+            BaseAnalyze.print_console("site        : %s" % (job_instance_info.site or "-"))
+            BaseAnalyze.print_console("hostname    : %s" % (job_instance_info.hostname or "-"))
+            BaseAnalyze.print_console("executable  : %s" % (str(my_task[2] or "-")))
+            BaseAnalyze.print_console("arguments   : %s" % (str(my_task[3] or "-")))
+            BaseAnalyze.print_console("exitcode    : %s" % (str(my_exitcode)))
+            BaseAnalyze.print_console("working dir : %s" % (job_instance_info.work_dir or "-"))
+            BaseAnalyze.print_console()
+
+            if not self.options.quiet_mode:
+                # Now, print task stdout and stderr, if anything is there
+                my_stdout_str = "#@ %d stdout" % (my_task[0])
+                my_stderr_str = "#@ %d stderr" % (my_task[0])
+
+                # Start with stdout
+                my_stdout_start = ji_stdout_text.find(my_stdout_str)
+                if my_stdout_start >= 0:
+                    my_stdout_start = my_stdout_start + len(my_stdout_str) + 1
+                    my_stdout_end = ji_stdout_text.find("#@", my_stdout_start)
+                    if my_stdout_end < 0:
+                        # Next comment not found, possibly the last entry
+                        my_stdout_end = len(ji_stdout_text)
+                    else:
+                        my_stdout_end = my_stdout_end - 1
+
+                    if my_stdout_end - my_stdout_start > 0:
+                        # Something to display
+                        my_print_job_stderr = False
+                        BaseAnalyze.print_console(
+                            (
+                                "Task #"
+                                + str(my_task[0])
+                                + " - "
+                                + str(my_task[4])
+                                + " - "
+                                + str(my_task[5])
+                                + " - stdout"
+                            ).center(80, "-")
+                        )
+                        BaseAnalyze.print_console()
+                        BaseAnalyze.print_console(ji_stdout_text[my_stdout_start:my_stdout_end])
+                        BaseAnalyze.print_console()
+
+                # Now print stderr (from the kickstart output file)
+                my_stderr_start = ji_stdout_text.find(my_stderr_str)
+                if my_stderr_start >= 0:
+                    my_stderr_start = my_stderr_start + len(my_stderr_str) + 1
+                    my_stderr_end = ji_stdout_text.find("#@", my_stderr_start)
+                    if my_stderr_end < 0:
+                        # Next comment not found, possibly the last entry
+                        my_stderr_end = len(ji_stdout_text)
+                    else:
+                        my_stderr_end = my_stderr_end - 1
+
+                    if my_stderr_end - my_stderr_start > 0:
+                        # Something to display
+                        my_print_job_stderr = False
+                        BaseAnalyze.print_console(
+                            (
+                                "Task #"
+                                + str(my_task[0])
+                                + " - "
+                                + str(my_task[4])
+                                + " - "
+                                + str(my_task[5])
+                                + " - Kickstart stderr"
+                            ).center(80, "-")
+                        )
+                        BaseAnalyze.print_console()
+                        BaseAnalyze.print_console(ji_stdout_text[my_stderr_start:my_stderr_end])
+                        BaseAnalyze.print_console()
+
+                # PM-808 print jobinstance stdout for prescript failures only.
+                if my_task[0] == -1 and ji_stdout_text is not None:
+                    BaseAnalyze.print_console(
+                        (
+                            "Task #"
+                            + str(my_task[0])
+                            + " - "
+                            + str(my_task[4])
+                            + " - "
+                            + str(my_task[5])
+                            + " - stdout"
+                        ).center(80, "-")
+                    )
+                    BaseAnalyze.print_console()
+                    BaseAnalyze.print_console(ji_stdout_text)
+                    BaseAnalyze.print_console()
+
+        # Now print the stderr output from the .err file
+        if ji_stderr_text.strip("\n\t \r") != "" and my_print_job_stderr:
+            # Something to display
+            # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
+            BaseAnalyze.print_console(
+                ("Job stderr file - %s" % (job_instance_info.stderr_file or "-")).center(
+                    80, "-"
+                )
+            )
+            BaseAnalyze.print_console()
+            BaseAnalyze.print_console(ji_stderr_text)
+            BaseAnalyze.print_console()
+            
+            
+
 class AnalyzeFiles(BaseAnalyze):
     
     def __init__(self, options):
@@ -588,7 +1165,7 @@ class AnalyzeFiles(BaseAnalyze):
         )
         dagman_out_path = None  # Path to the dagman.out file
 
-        global workflow_base_dir, dag_path
+        global dag_path
 
         # Get the dag file if it was not specified by the user
         if dag_path is None:
@@ -647,9 +1224,9 @@ class AnalyzeFiles(BaseAnalyze):
         # Try to parse workflow parameters from braindump.txt file
         wfparams = utils.slurp_braindb(self.options.input_dir)
         if "submit_dir" in wfparams:
-            workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
+            self.options.workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
         elif "jsd" in wfparams:
-            workflow_base_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
+            self.options.workflow_base_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
 
         # First we learn about jobs by going through the dag file
         self.parse_dag_file(dag_path)
@@ -1240,584 +1817,6 @@ class AnalyzeFiles(BaseAnalyze):
 
                 OUT.close()
                 BaseAnalyze.print_console()
-    
-
-    
-class AnalyzeDB(BaseAnalyze):
-    
-    def __init__(self, options):
-        self.analyzer_output = AnalyzerOutput()
-        self.options = options
-        self.counts = Counts(0,0,0,0,0,0,[],[])
-
-    def analyze_db(self, config_properties):
-        """
-        This function runs the analyzer using data from the database.
-        """
-
-        # Get the database URL
-        try:
-            output_db_url = connection.url_by_submitdir(
-                self.options.input_dir, connection.DBType.WORKFLOW, config_properties, self.options.top_dir
-            )
-            wf_uuid = connection.get_wf_uuid(self.options.input_dir)
-            self.analyzer_output.root_wf_uuid = wf_uuid
-            self.analyzer_output.root_submit_dir = self.options.input_dir
-            self.analyzer_output.structure_output["root_wf_uuid"] = wf_uuid
-            self.analyzer_output.structure_output["submit_directory"] = self.options.input_dir
-                
-        except connection.ConnectionError as e:
-            raise AnalyzerError(
-                "Unable to connect to database for workflow in %s", self.options.input_dir, e
-            )
-
-        # Nothing to do if we cannot resolve the database URL
-        if output_db_url is None:
-            raise ValueError("Database URL is required")
-
-        # Now, let's try to access the database
-        workflow_stats = None
-        try:
-            workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
-            workflow_stats.initialize(wf_uuid)
-            descendant_wfs_ids = workflow_stats.get_descendants(wf_uuid)
-        except DBAdminError as e:
-            raise AnalyzerError("Failed to load the database - " + output_db_url, e)
-        finally:
-            if workflow_stats:
-                # Done with the database
-                workflow_stats.close()
-
-        logger.debug(
-            "Descendant Workflows database ids for %s are %s"
-            % (wf_uuid, descendant_wfs_ids)
-        )
-
-        wf_id = None
-        wf_details = {}  # stores all wf details indexed by database id of a wf
-        for wf_detail in workflow_stats.get_workflow_details(descendant_wfs_ids):
-            wf_details[wf_detail.wf_id] = wf_detail
-            if wf_detail.wf_uuid == wf_uuid:
-                wf_id = wf_detail.wf_id
-        
-        #for k in wf_details:
-        #    print(k,wf_details[k])
-        
-            
-        if wf_id is None:
-            logger.error(
-                "Unable to determine the database id for workflow with uuid %s" % wf_uuid
-            )
-
-        wf_ids = []
-        if self.options.traverse_all:
-            wf_ids.extend(descendant_wfs_ids)
-        else:
-            # we only do the workflow on which submit directory analyzer is called
-            wf_ids.append(wf_id)
-        
-        for wf_id in wf_ids:
-            wf_detail = wf_details[wf_id]
-            
-            if wf_detail.wf_uuid == wf_uuid:
-                wf_key = "root"
-            else:
-                wf_key = wf_detail.wf_uuid
-            self.analyzer_output.workflows[wf_key] = self.get_wf_details(wf_detail, wf_details)
-            wf = self.analyzer_output.workflows[wf_key]
-            
-            logger.debug(
-                "Running analyzer on workflow with database id {} in submit dir {}".format(
-                    wf_id, wf_detail.submit_dir
-                )
-            )
-
-            self.counts.failed = 0
-            workflow_stats = None
-            try:
-                # for each wf initialize a new workflow stats object
-                workflow_stats = stampede_statistics.StampedeStatistics(
-                    output_db_url, False
-                )
-                workflow_stats.initialize(root_wf_id=wf_id)
-                self.analyze_db_for_wf(
-                    workflow_stats, wf_detail.wf_uuid, wf_detail.submit_dir, wf
-                )
-            except DBAdminError as e:
-                raise AnalyzerError("Failed to load the database - " + output_db_url, e)
-            except WorkflowFailureError as e:
-                logger.error(e)
-                self.counts.failed += 1
-            finally:
-                if workflow_stats:
-                    workflow_stats.close()
-        
-        if self.options.json_mode:
-            return self.analyzer_output
-            
-        
-        # TODO: throw exceptions. catch them and determine exitcode
-        if self.counts.failed > 0 and not self.options.json_mode:
-            raise WorkflowFailureError("One or more workflows failed")
-
-
-    def get_wf_details(self, wf_detail, wf_details):
-        """
-        Filters out workflow details to be used in the workflow structure
-        
-        :param wf_detail: details regarding a workflow (wf_uuid, submit_dir, host etc.)
-        :param wf_details: a dict of all workflows' details
-        :return: returns a :class:`Pegasus.analyzer.Workflow` object
-        """
-        
-        wf = Workflow(
-            wf_detail.wf_uuid,
-            wf_detail.dag_file_name,
-            wf_detail.submit_hostname,
-            wf_detail.submit_dir,
-            wf_detail.user,
-            wf_detail.planner_version,
-            wf_detail.dax_label
-        )
-        if wf_detail.parent_wf_id:
-            wf.parent_wf_name = wf_details[wf_detail.parent_wf_id].dax_label
-            wf.parent_wf_uuid = wf_details[wf_detail.parent_wf_id].wf_uuid
-        else:
-            wf.parent_wf_name = '-'
-            wf.parent_wf_uuid = '-'
-            
-        return wf
-        
-        
-    def analyze_db_for_wf(self, workflow_stats, wf_uuid, submit_dir, wf):
-        """
-        This function runs the analyzer using data from the database.
-        :param workflow_stats: the stampede statistics object initialized with the workflow, we want to analyze
-        :param wf_uuid:  the uuid of the workflow we are analyzing
-        :param submit_dir: the submit dir for the workflow
-        :return:
-        """
-
-        self.counts.total = workflow_stats.get_total_jobs_status()
-        total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
-        self.counts.success = total_success_failed.succeeded
-        self.counts.failed = total_success_failed.failed
-
-        held_jobs = workflow_stats.get_total_held_jobs()
-        self.counts.held = len(held_jobs)
-
-        # jobs failing
-        failing, filtered_count, failing_jobs = workflow_stats.get_failing_jobs()
-
-        # PM-1762 need to retrieve workflow states also, as you can
-        # have workflow with zero failed jobs, but still the workflow failed
-        # for example trying to run a workflow again from the same directory
-        # where an already existing workflow is running
-        workflow_states = workflow_stats.get_workflow_states()
-        workflow_status = WORKFLOW_STATUS.UNKNOWN
-        if workflow_states:
-            # workflow states are returned in ascending order. we need the last state
-            workflow_status = self.get_workflow_status(workflow_states[-1])
-
-        logger.debug(
-            "Workflow state determined from workflow database is %s" % workflow_status.value
-        )
-
-        # PM-1039
-        if self.counts.success is None:
-            self.counts.success = 0
-        if self.counts.failed is None:
-            self.counts.failed = 0
-
-        self.counts.unsubmitted = self.counts.total - self.counts.success - self.counts.failed
-        
-        wf.wf_status = workflow_status.value
-        wf.jobs = Jobs(self.counts.total,self.counts.success,self.counts.failed,self.counts.held,self.counts.unsubmitted)
-        
-        # PM-1762 add a helpful message in case failed jobs are zero and workflow failed
-        if workflow_status is WORKFLOW_STATUS.FAILURE and self.counts.failed == 0 :
-            BaseAnalyze.print_console(
-                "It seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in %s"
-                % (self.options.input_dir or self.options.top_dir)
-            )
-
-        # Let's print the results
-        if not self.options.json_mode:
-            BaseAnalyze.print_top_summary(workflow_status, submit_dir, self.options, self.counts)
-            BaseAnalyze.check_for_wf_start(self.options, self.counts)
-
-        # Exit if summary mode is on
-        if self.options.summary_mode and not self.options.json_mode:
-            if workflow_status is WORKFLOW_STATUS.FAILURE or self.counts.failed > 0:
-                # Workflow has failures, exit with exitcode 2
-                raise WorkflowFailureError(
-                    "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
-                )
-            # Workflow has no failures, exit with exitcode 0
-            return
-
-        # PM-1126 print information about held jobs
-        if self.counts.held > 0:
-            wf.jobs.job_details["held_jobs_details"] = {}
-            
-            if not self.options.json_mode:
-                # Print header
-                BaseAnalyze.print_console("Held jobs' details".center(80, "*"))
-                BaseAnalyze.print_console()
-
-            for held_job in held_jobs:
-                wf.jobs.job_details["held_jobs_details"][held_job.jobid] = {
-                                        'submit_file' : held_job.jobname+".sub" or "-",
-                                        'last_job_instance_id' : held_job[0] or "-",
-                                        'reason' : held_job.reason or "-"
-                }
-                if not self.options.json_mode:
-                    # each tuple is max_ji_id, jobid, jobname, reason
-                    # first two are database id's for debugging
-                    BaseAnalyze.print_console(held_job.jobname.center(80, "="))
-                    BaseAnalyze.print_console()
-                    BaseAnalyze.print_console(
-                        "submit file            : %s" % (held_job.jobname + ".sub" or "-")
-                    )
-                    BaseAnalyze.print_console("last_job_instance_id   : %s" % (held_job[0] or "-"))
-                    BaseAnalyze.print_console("reason                 : %s" % (held_job.reason or "-"))
-                    BaseAnalyze.print_console()
-
-        # PM-1890 print failing jobs before failed jobs
-        if len(failing_jobs) > 0:
-            wf.jobs.job_details["failing_jobs_details"] = {}
-            BaseAnalyze.print_console("Failing jobs' details".center(80, "*"))
-            for i in range(len(failing_jobs)):
-                failing_jobs[i] = failing_jobs[i]._asdict()
-                failing_job_id = failing_jobs[i]["job_instance_id"]
-                job_tasks = workflow_stats.get_invocation_info(failing_job_id)
-                if not self.options.json_mode:
-                    self.print_job_instance(
-                        failing_job_id,
-                        workflow_stats.get_job_instance_info(failing_job_id)[0],
-                        job_tasks,
-                    )
-                wf.jobs.job_details["failing_jobs_details"][failing_job_id] = self.get_job_details(
-                                workflow_stats.get_job_instance_info(failing_job_id)[0],
-                                job_tasks
-                            )
-
-        # Now, print information about jobs that failed...
-        if self.counts.failed > 0:
-            wf.jobs.job_details["failed_jobs_details"] = {}
-            # Get list of failed jobs from database
-            self.counts.failed_jobs = workflow_stats.get_failed_job_instances()
-            
-            if not self.options.json_mode:
-                # Print header
-                BaseAnalyze.print_console("Failed jobs' details".center(80, "*"))
-
-            # Now process one by one...
-            for my_job in self.counts.failed_jobs:
-                job_instance_info = workflow_stats.get_job_instance_info(my_job[0])[0]
-                job_tasks = workflow_stats.get_invocation_info(my_job[0])
-                
-                if not self.options.json_mode:
-                    sub_wf_cmd = self.print_job_instance(
-                        job_instance_info.job_instance_id,
-                        workflow_stats.get_job_instance_info(job_instance_info.job_instance_id)[
-                            0
-                        ],
-                        job_tasks,
-                    )
-                wf.jobs.job_details["failed_jobs_details"][job_instance_info.job_name] = self.get_job_details(
-                                workflow_stats.get_job_instance_info(job_instance_info.job_instance_id)[0],
-                                job_tasks
-                            )
-                # recurse for sub workflow
-                if not self.options.json_mode and sub_wf_cmd is not None and self.options.recurse_mode :
-                    BaseAnalyze.print_console(("Failed Sub Workflow").center(80, "="))
-                    subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
-                    BaseAnalyze.print_console(("").center(80, "="))
-
-        if (workflow_status is WORKFLOW_STATUS.FAILURE or self.counts.failed > 0) and not self.options.json_mode:
-            # Workflow has failures, exit with exitcode 2
-            raise WorkflowFailureError(
-                "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
-            )
-
-        # Workflow has no failures, exit with exitcode 0
-        return
-
-     
-    def get_job_details(self, job_instance_info, job_tasks):
-        """
-        Filters out workflow details to be used in the workflow structure
-        
-        :param job_instance_info: information regarding a job (job_name, state, site etc.)
-        :param job_tasks: information regarding all tasks in a job (hostname, exitcode, etc.)
-        :return: returns a :class:`Pegasus.analyzer.JobInstance` object
-        """
-        
-        job_instance = JobInstance(
-                                job_instance_info.job_name ,
-                                job_instance_info.state ,
-                                job_instance_info.site ,
-                                job_instance_info.submit_file ,
-                                job_instance_info.stdout_file ,
-                                job_instance_info.stderr_file ,
-                                job_instance_info.executable ,
-                                job_instance_info.argv or '-',
-                            )
-        
-        for task in job_tasks:
-            job_instance.tasks[task[0]] = Task(
-                                job_instance_info.site,
-                                job_instance_info.hostname,
-                                task[2],
-                                task[3] or '-',
-                                utils.raw_to_regular(task[1]),
-                                job_instance_info.work_dir
-                            )
-        return job_instance
-        
-
-    def get_workflow_status(self, last_wf_state_record):
-        """
-        Determines the workflow status from the last workflow state record for the workflow from the workflow database
-        :param last_wf_state_record: of form  (wf_id, state, timestamp, restart_count, status)
-        :return: the workflow status as value of type enum WORKFLOW_STATUS
-        """
-
-        workflow_status = WORKFLOW_STATUS.UNKNOWN
-        if last_wf_state_record is None:
-            return workflow_status
-
-        # (wf_id, state, timestamp, restart_count, status)
-        # (1, 'WORKFLOW_TERMINATED', Decimal('1619144694.000000'), 2, 1)
-        last_wf_state = last_wf_state_record[1]
-        last_wf_status = last_wf_state_record[4]
-
-        if last_wf_state == "WORKFLOW_STARTED":
-            workflow_status = WORKFLOW_STATUS.RUNNING
-        elif last_wf_state == "WORKFLOW_TERMINATED":
-            workflow_status = (
-                WORKFLOW_STATUS.SUCCESS if last_wf_status == 0 else WORKFLOW_STATUS.FAILURE
-            )
-        else:
-            raise ValueError("Invalid worklfow state %s" % last_wf_state)
-
-        return workflow_status
-
-
-    def print_job_instance(self, job_instance_id, job_instance_info, job_tasks):
-        """
-        The function prints information related to one job instance retried from the
-        stampede database
-        :param job_instance_id the job_instance_id from the job_instance table
-        :param job_instance_info: the job instance with which the tasks are associated
-        :param job_tasks: all the tasks (invocation records) for a particular condor job/job instance
-        :return subwf_cmd: if the job is a sub workflow job, then returns the command that is
-                           required to invoke pegasus-analyzer on the sub workflow.
-        """
-
-        sub_wf_cmd = None
-        BaseAnalyze.print_console()
-        BaseAnalyze.print_console(job_instance_info.job_name.center(80, "="))
-        BaseAnalyze.print_console()
-        BaseAnalyze.print_console(" last state: %s" % (job_instance_info.state or "-"))
-
-        BaseAnalyze.print_console("       site: %s" % (job_instance_info.site or "-"))
-        BaseAnalyze.print_console("submit file: %s" % (job_instance_info.submit_file or "-"))
-        BaseAnalyze.print_console("output file: %s" % (job_instance_info.stdout_file or "-"))
-        BaseAnalyze.print_console(" error file: %s" % (job_instance_info.stderr_file or "-"))
-        if self.options.print_invocation:
-            BaseAnalyze.print_console()
-            BaseAnalyze.print_console(
-                "To re-run this job, use: %s %s"
-                % ((job_instance_info.executable or "-"), (job_instance_info.argv or "-"))
-            )
-            BaseAnalyze.print_console()
-        if self.options.print_pre_script and len(job_instance_info.pre_executable or "") > 0:
-            BaseAnalyze.print_console()
-            BaseAnalyze.print_console("SCRIPT PRE:")
-            BaseAnalyze.print_console(
-                "%s %s"
-                % (
-                    (job_instance_info.pre_executable or ""),
-                    (job_instance_info.pre_argv or ""),
-                )
-            )
-            BaseAnalyze.print_console()
-        if job_instance_info.subwf_dir is not None:
-            # This job has a sub workflow
-            user_cmd = " %s" % (prog_base)
-            my_wfdir = os.path.normpath(job_instance_info.subwf_dir)
-            if my_wfdir.find(job_instance_info.submit_dir) >= 0:
-                # Path to dagman_out file includes original submit_dir, let's try to change it...
-                my_wfdir = os.path.normpath(
-                    my_wfdir.replace((job_instance_info.submit_dir + os.sep), "", 1)
-                )
-                my_wfdir = os.path.join(self.options.input_dir, my_wfdir)
-
-            # get any options that need to be invoked for the sub workflow
-            extraOptions = BaseAnalyze.addon(options)
-            sub_wf_cmd = "{} {} -d {} --top-dir {}".format(
-                user_cmd, extraOptions, my_wfdir, (self.options.top_dir or self.options.input_dir),
-            )
-            if not self.options.recurse_mode:
-                # we print only if recurse mode is disabled
-                BaseAnalyze.print_console(" This job contains sub workflows!")
-                BaseAnalyze.print_console(" Please run the command below for more information:")
-                BaseAnalyze.print_console(sub_wf_cmd)
-                # print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (self.options.top_dir or self.options.input_dir))
-            print()
-        print()
-
-        # print all the tasks associated with the job
-        self.print_tasks_info(job_instance_id, job_instance_info, job_tasks)
-        return sub_wf_cmd
-
-
-    def print_tasks_info(self, job_instance_id, job_instance_info, job_tasks):
-        """
-           The function prints information related to one job instance retried from the
-           stampede database
-           :param job_instance_id: the job_instance_id from the job_instance table
-           :param job_instance_info: the job instance with which the tasks are associated
-           :param job_tasks: all the tasks (invocation records) for a particular condor job/job instance
-           :return:
-           """
-
-        # Unquote stdout and stderr
-        ji_stdout_text = utils.unquote(job_instance_info.stdout_text or "").decode("UTF-8")
-        ji_stderr_text = utils.unquote(job_instance_info.stderr_text or "").decode("UTF-8")
-        ji_stdout_text = ji_stdout_text.strip(" \n\r\t")
-        ji_stderr_text = ji_stderr_text.strip(" \n\r\t")
-
-        some_tasks_failed = False
-        for my_task in job_tasks:
-            # PM-798 we want to detect if some tasks failed or not
-            if my_task[0] < -1:
-                # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
-                continue
-            some_tasks_failed = some_tasks_failed or (my_task[1] != 0)
-
-        # PM-798 track whether we need to actually print the condor job stderr or not
-        # we only print if there is no information in the kickstart record
-        my_print_job_stderr = True
-
-        # Now, print task information
-        for my_task in job_tasks:
-            if my_task[0] < -1:
-                # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
-                continue
-
-            if my_task[1] == 0 and some_tasks_failed:
-                # Skip tasks that succeeded only if we know some tasks did fail
-                continue
-
-            # Got a task with a non-zero exitcode
-            my_exitcode = utils.raw_to_regular(my_task[1])
-
-            # Print task summary
-            BaseAnalyze.print_console(("Task #" + str(my_task[0]) + " - Summary").center(80, "-"))
-            BaseAnalyze.print_console()
-            BaseAnalyze.print_console("site        : %s" % (job_instance_info.site or "-"))
-            BaseAnalyze.print_console("hostname    : %s" % (job_instance_info.hostname or "-"))
-            BaseAnalyze.print_console("executable  : %s" % (str(my_task[2] or "-")))
-            BaseAnalyze.print_console("arguments   : %s" % (str(my_task[3] or "-")))
-            BaseAnalyze.print_console("exitcode    : %s" % (str(my_exitcode)))
-            BaseAnalyze.print_console("working dir : %s" % (job_instance_info.work_dir or "-"))
-            BaseAnalyze.print_console()
-
-            if not self.options.quiet_mode:
-                # Now, print task stdout and stderr, if anything is there
-                my_stdout_str = "#@ %d stdout" % (my_task[0])
-                my_stderr_str = "#@ %d stderr" % (my_task[0])
-
-                # Start with stdout
-                my_stdout_start = ji_stdout_text.find(my_stdout_str)
-                if my_stdout_start >= 0:
-                    my_stdout_start = my_stdout_start + len(my_stdout_str) + 1
-                    my_stdout_end = ji_stdout_text.find("#@", my_stdout_start)
-                    if my_stdout_end < 0:
-                        # Next comment not found, possibly the last entry
-                        my_stdout_end = len(ji_stdout_text)
-                    else:
-                        my_stdout_end = my_stdout_end - 1
-
-                    if my_stdout_end - my_stdout_start > 0:
-                        # Something to display
-                        my_print_job_stderr = False
-                        BaseAnalyze.print_console(
-                            (
-                                "Task #"
-                                + str(my_task[0])
-                                + " - "
-                                + str(my_task[4])
-                                + " - "
-                                + str(my_task[5])
-                                + " - stdout"
-                            ).center(80, "-")
-                        )
-                        BaseAnalyze.print_console()
-                        BaseAnalyze.print_console(ji_stdout_text[my_stdout_start:my_stdout_end])
-                        BaseAnalyze.print_console()
-
-                # Now print stderr (from the kickstart output file)
-                my_stderr_start = ji_stdout_text.find(my_stderr_str)
-                if my_stderr_start >= 0:
-                    my_stderr_start = my_stderr_start + len(my_stderr_str) + 1
-                    my_stderr_end = ji_stdout_text.find("#@", my_stderr_start)
-                    if my_stderr_end < 0:
-                        # Next comment not found, possibly the last entry
-                        my_stderr_end = len(ji_stdout_text)
-                    else:
-                        my_stderr_end = my_stderr_end - 1
-
-                    if my_stderr_end - my_stderr_start > 0:
-                        # Something to display
-                        my_print_job_stderr = False
-                        BaseAnalyze.print_console(
-                            (
-                                "Task #"
-                                + str(my_task[0])
-                                + " - "
-                                + str(my_task[4])
-                                + " - "
-                                + str(my_task[5])
-                                + " - Kickstart stderr"
-                            ).center(80, "-")
-                        )
-                        BaseAnalyze.print_console()
-                        BaseAnalyze.print_console(ji_stdout_text[my_stderr_start:my_stderr_end])
-                        BaseAnalyze.print_console()
-
-                # PM-808 print jobinstance stdout for prescript failures only.
-                if my_task[0] == -1 and ji_stdout_text is not None:
-                    BaseAnalyze.print_console(
-                        (
-                            "Task #"
-                            + str(my_task[0])
-                            + " - "
-                            + str(my_task[4])
-                            + " - "
-                            + str(my_task[5])
-                            + " - stdout"
-                        ).center(80, "-")
-                    )
-                    BaseAnalyze.print_console()
-                    BaseAnalyze.print_console(ji_stdout_text)
-                    BaseAnalyze.print_console()
-
-        # Now print the stderr output from the .err file
-        if ji_stderr_text.strip("\n\t \r") != "" and my_print_job_stderr:
-            # Something to display
-            # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
-            BaseAnalyze.print_console(
-                ("Job stderr file - %s" % (job_instance_info.stderr_file or "-")).center(
-                    80, "-"
-                )
-            )
-            BaseAnalyze.print_console()
-            self.print_console(ji_stderr_text)
-            BaseAnalyze.self.print_console()
 
     
 

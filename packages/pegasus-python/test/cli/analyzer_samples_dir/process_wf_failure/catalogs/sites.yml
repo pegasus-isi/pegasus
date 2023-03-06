@@ -1,0 +1,28 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-03-23T23:09:21Z
+pegasus: 5.0.4
+sites:
+- name: local
+  directories:
+  - type: sharedScratch
+    path: /home/mzalam/processwf/process-workflow/scratch
+    sharedFileSystem: false
+    fileServers:
+    - url: file:///home/mzalam/processwf/process-workflow/scratch
+      operation: all
+  - type: localStorage
+    path: /home/mzalam/processwf/process-workflow/output
+    sharedFileSystem: false
+    fileServers:
+    - url: file:///home/mzalam/processwf/process-workflow/output
+      operation: all
+- name: condorpool
+  directories: []
+  profiles:
+    condor:
+      universe: vanilla
+    pegasus:
+      style: condor
+      data.configuration: condorio

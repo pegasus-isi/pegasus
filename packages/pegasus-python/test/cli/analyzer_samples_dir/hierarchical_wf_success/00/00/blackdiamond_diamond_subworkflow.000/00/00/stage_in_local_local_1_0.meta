@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "findrange",
+    "_type": "file",
+    "_attributes": {
+      "user": "root",
+      "size": "27880",
+      "ctime": "2023-02-09T22:13:39.937341",
+      "checksum.type": "sha256",
+      "checksum.value": "c3be63a37e067612da05a9e3bd57501c02b122d9188dd0270f95c4942653c861",
+      "checksum.timing": "0.029"
+    }
+  }
+]

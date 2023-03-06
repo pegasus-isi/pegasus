@@ -1,0 +1,39 @@
+######################################################################
+# PEGASUS WMS GENERATED SUBMIT FILE
+# DAG : hierarchical-workflow, Index = 0, Count = null
+# SUBMIT FILE NAME : register_local_2_0.sub
+######################################################################
+stream_error  = false
+stream_output = false
+environment = "LANG=en_US.UTF-8 PATH=/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/wf/condor/bin:/home/mzalam/wf/condor/sbin:/home/mzalam/wf/bin:/home/mzalam/.local/bin:/home/mzalam/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin PYTHONPATH=/home/mzalam/pegasus-5.0.5/lib64/python3.6/site-packages CONDOR_JOBID=$(cluster).$(process) PEGASUS_WF_UUID=06031cb1-d2e1-41d8-9e8b-45c9a77e3eb8 PEGASUS_WF_LABEL=hierarchical-workflow PEGASUS_DAG_JOB_ID=register_local_2_0 PEGASUS_SITE=local PEGASUS_BIN_DIR=/home/mzalam/pegasus-5.0.5/bin"
+arguments = "pegasus-kickstart  -n pegasus::rc-client -N null -R local  -L hierarchical-workflow -T 2023-03-04T11:55:58-08:00 /home/mzalam/pegasus-5.0.5/bin/pegasus-rc-client --prefix pegasus.catalog.replica.output --conf /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/pegasus.7544248989847911836.properties -v --meta /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/wc_ID0000002.meta --insert /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/register_local_2_0.in"
+error = /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003//00/00/register_local_2_0.err
+executable = /home/mzalam/pegasus-5.0.5/share/pegasus/sh/pegasus-lite-local.sh
+log = /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/hierarchical-workflow-0.log
+notification = NEVER
+output = /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003//00/00/register_local_2_0.out
+periodic_release = False
+periodic_remove = (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800)
+priority = 50
+submit_event_user_notes = pool:local
+transfer_executable = false
+universe = local
++pegasus_generator = "Pegasus"
++pegasus_root_wf_uuid = "06031cb1-d2e1-41d8-9e8b-45c9a77e3eb8"
++pegasus_wf_uuid = "06031cb1-d2e1-41d8-9e8b-45c9a77e3eb8"
++pegasus_version = "5.0.5"
++pegasus_wf_name = "hierarchical-workflow-0"
++pegasus_wf_time = "20230304T115603-0800"
++pegasus_wf_xformation = "pegasus::rc-client"
++pegasus_wf_dax_job_id = "null"
++pegasus_wf_dag_job_id = "register_local_2_0"
++pegasus_job_class = 4
++pegasus_site = "local"
++pegasus_job_runtime = 0
++pegasus_cores = 1
++pegasus_gpus = 1
++pegasus_cluster_size = 1
+queue
+######################################################################
+# END OF SUBMIT FILE
+######################################################################

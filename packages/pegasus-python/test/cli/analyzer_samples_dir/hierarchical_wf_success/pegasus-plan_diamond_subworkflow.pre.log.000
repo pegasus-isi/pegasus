@@ -1,0 +1,600 @@
+2023.03.04 01:02:15.312 PST: [INFO]  Planner launched in the following directory /tmp/pegasus.EReATmFz3 
+2023.03.04 01:02:15.316 PST: [INFO]  Planner invoked with following arguments --conf inner_diamond_workflow.pegasus.properties --dir /home/mzalam/hierar/hierarichal-sample-wf/submit --relative-dir mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow --relative-submit-dir mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow --basename inner --sites condorpool --cache /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.cache --output-map /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.output.map --output-sites local --cleanup none --verbose --verbose --verbose --deferred /home/mzalam/hierar/hierarichal-sample-wf/inner_diamond_workflow.yml  
+2023.03.04 01:02:15.318 PST: [CONFIG]  Pegasus Properties set by the user 
+2023.03.04 01:02:15.318 PST: [CONFIG]  pegasus.catalog.replica.file=inner_diamond_workflow_rc.yml 
+2023.03.04 01:02:15.318 PST: [CONFIG]  pegasus.catalog.transformation.file=inner_diamond_workflow_tc.yml 
+2023.03.04 01:02:15.318 PST: [CONFIG]  pegasus.home.bindir=/home/mzalam/pegasus-5.0.5/bin 
+2023.03.04 01:02:15.318 PST: [CONFIG]  pegasus.home.schemadir=/home/mzalam/pegasus-5.0.5/share/pegasus/schema 
+2023.03.04 01:02:15.318 PST: [CONFIG]  pegasus.home.sharedstatedir=/home/mzalam/pegasus-5.0.5/share/pegasus 
+2023.03.04 01:02:15.319 PST: [CONFIG]  pegasus.home.sysconfdir=/home/mzalam/pegasus-5.0.5/etc 
+2023.03.04 01:02:15.319 PST: [CONFIG]  pegasus.log.*=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/pegasus-plan_diamond_subworkflow.pre.log 
+2023.03.04 01:02:15.319 PST: [CONFIG]  pegasus.transfer.worker.package=true 
+2023.03.04 01:02:15.319 PST: [CONFIG]  pegasus.workflow.root.uuid=48f759a4-165f-47d6-8c32-571649ce311b 
+2023.03.04 01:02:16.165 PST: [INFO] event.pegasus.add.data-dependencies dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.166 PST: [DEBUG]  Adding Data Dependency edge findrange_ID0000003 -> analyze_ID0000004 
+2023.03.04 01:02:16.166 PST: [DEBUG]  Adding Data Dependency edge findrange_ID0000002 -> analyze_ID0000004 
+2023.03.04 01:02:16.166 PST: [DEBUG]  Adding Data Dependency edge preprocess_ID0000001 -> findrange_ID0000003 
+2023.03.04 01:02:16.166 PST: [DEBUG]  Adding Data Dependency edge preprocess_ID0000001 -> findrange_ID0000002 
+2023.03.04 01:02:16.166 PST: [INFO] event.pegasus.add.data-dependencies dax.id blackdiamond-0  (0.001 seconds) - FINISHED 
+2023.03.04 01:02:16.214 PST: [DEBUG]  Parsed DAX with following metrics {"compute_tasks":4,"dax_tasks":0,"dag_tasks":0,"total_tasks":4,"deleted_tasks":0,"dax_input_files":1,"dax_inter_files":4,"dax_output_files":1,"dax_total_files":6,"compute_jobs":4,"clustered_jobs":0,"si_tx_jobs":0,"so_tx_jobs":0,"inter_tx_jobs":0,"reg_jobs":0,"cleanup_jobs":0,"create_dir_jobs":0,"dax_jobs":0,"dag_jobs":0,"chmod_jobs":0,"total_jobs":4,"mDAXLabel":"blackdiamond"} 
+2023.03.04 01:02:16.216 PST: [CONFIG]  Loading site catalog file /tmp/pegasus.EReATmFz3/sites.yml 
+2023.03.04 01:02:16.216 PST: [DEBUG]  All sites will be loaded from the site catalog 
+2023.03.04 01:02:16.217 PST: [DEBUG] event.pegasus.parse.site-catalog site-catalog.id /tmp/pegasus.EReATmFz3/sites.yml  - STARTED 
+2023.03.04 01:02:16.327 PST: [DEBUG] event.pegasus.parse.site-catalog site-catalog.id /tmp/pegasus.EReATmFz3/sites.yml  (0.11 seconds) - FINISHED 
+2023.03.04 01:02:16.327 PST: [DEBUG]  Sites loaded are [condorpool, local] 
+2023.03.04 01:02:16.328 PST: [CONFIG]  Set environment profile for local site PATH=/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/wf/condor/bin:/home/mzalam/wf/condor/sbin:/home/mzalam/wf/bin:/home/mzalam/.local/bin:/home/mzalam/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin 
+2023.03.04 01:02:16.328 PST: [CONFIG]  Set environment profile for local site PYTHONPATH=/home/mzalam/pegasus-5.0.5/lib64/python3.6/site-packages 
+2023.03.04 01:02:16.388 PST: [DEBUG]  Mount Under Scratch Directories [/tmp, /var/tmp] 
+2023.03.04 01:02:16.388 PST: [DEBUG]  Style  detected for site condorpool is class edu.isi.pegasus.planner.code.generator.condor.style.Condor 
+2023.03.04 01:02:16.389 PST: [DEBUG]  Style  detected for site local is class edu.isi.pegasus.planner.code.generator.condor.style.Condor 
+2023.03.04 01:02:16.389 PST: [DEBUG]  Execution sites are [condorpool] 
+2023.03.04 01:02:16.393 PST: [CONFIG]  Transformation Catalog Type used YAML TC 
+2023.03.04 01:02:16.393 PST: [CONFIG]  Transformation Catalog File used inner_diamond_workflow_tc.yml 
+2023.03.04 01:02:16.430 PST: [DEBUG]  Transformation Catalog Entry parsed is - 
+ 
+ Logical Namespace : null
+ Logical Name      : analyze
+ Version           : null
+ Resource Id       : condorpool
+ Physical Name     : file:///usr/bin/pegasus-keg
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : STAGEABLE
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.431 PST: [DEBUG]  Transformation Catalog Entry parsed is - 
+ 
+ Logical Namespace : null
+ Logical Name      : findrange
+ Version           : null
+ Resource Id       : condorpool
+ Physical Name     : file:///usr/bin/pegasus-keg
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : STAGEABLE
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.431 PST: [DEBUG]  Transformation Catalog Entry parsed is - 
+ 
+ Logical Namespace : null
+ Logical Name      : preprocess
+ Version           : null
+ Resource Id       : condorpool
+ Physical Name     : file:///usr/bin/pegasus-keg
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : STAGEABLE
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.431 PST: [CONFIG]  Data Configuration used for the workflow condorio 
+2023.03.04 01:02:16.432 PST: [DEBUG]  Directory to be created is /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/blackdiamond/run0001 
+2023.03.04 01:02:16.432 PST: [CONFIG]  The directory in which the planner was launched /tmp/pegasus.EReATmFz3 
+2023.03.04 01:02:16.432 PST: [DEBUG]  Determining existence of dag file /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow/inner.dag 
+2023.03.04 01:02:16.433 PST: [DEBUG]  Creating symlink between blackdiamond_diamond_subworkflow.000 blackdiamond_diamond_subworkflow 
+2023.03.04 01:02:16.436 PST: [DEBUG]  Setting relative submit dir to mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000 
+2023.03.04 01:02:16.437 PST: [CONFIG]  Metrics file will be written out to /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/inner.metrics 
+2023.03.04 01:02:16.437 PST: [CONFIG]  The base submit directory for the workflow        /home/mzalam/hierar/hierarichal-sample-wf/submit 
+2023.03.04 01:02:16.438 PST: [CONFIG]  The relative submit directory for the workflow    mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000 
+2023.03.04 01:02:16.438 PST: [CONFIG]  The relative execution directory for the workflow mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow 
+2023.03.04 01:02:16.441 PST: [INFO] event.pegasus.stampede.events dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.446 PST: [DEBUG]  Written out stampede events for the abstract workflow to /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/inner.static.bp 
+2023.03.04 01:02:16.446 PST: [INFO] event.pegasus.stampede.events dax.id blackdiamond-0  (0.005 seconds) - FINISHED 
+2023.03.04 01:02:16.447 PST: [INFO] event.pegasus.refinement dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.453 PST: [CONFIG]  Proxy used for Replica Catalog is /tmp/x509up_u8073 
+2023.03.04 01:02:16.456 PST: [DEBUG]  [Replica Factory] Connect properties detected {file=inner_diamond_workflow_rc.yml, proxy=/tmp/x509up_u8073, read.only=true} 
+2023.03.04 01:02:16.457 PST: [DEBUG]  Problem while connecting with the Replica Catalog: File does not exist or with read bit set to false /tmp/pegasus.EReATmFz3/inner_diamond_workflow_rc.yml 
+2023.03.04 01:02:16.457 PST: [DEBUG]  Setting property dagman.registration.maxjobs to 1 to set max jobs for registrations jobs category 
+2023.03.04 01:02:16.457 PST: [DEBUG]  Loading cache files: [/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.cache] 
+2023.03.04 01:02:16.457 PST: [INFO] event.pegasus.load.cache dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.458 PST: [DEBUG]  Loading  file: /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.cache 
+2023.03.04 01:02:16.458 PST: [DEBUG]  [Replica Factory] Connect properties detected for implementor SimpleFile -> {file=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.cache, read.only=true} 
+2023.03.04 01:02:16.462 PST: [DEBUG]  Loaded 1 entry from file /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.cache 
+2023.03.04 01:02:16.462 PST: [INFO] event.pegasus.load.cache dax.id blackdiamond-0  (0.005 seconds) - FINISHED 
+2023.03.04 01:02:16.464 PST: [DEBUG]  Copied /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.cache to directory /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/catalogs 
+2023.03.04 01:02:16.464 PST: [DEBUG]  Copied inner_diamond_workflow_tc.yml to directory /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/catalogs 
+2023.03.04 01:02:16.465 PST: [DEBUG]  Copied /tmp/pegasus.EReATmFz3/sites.yml to directory /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/catalogs 
+2023.03.04 01:02:16.465 PST: [DEBUG]  Set Default output replica catalog properties to {pegasus.catalog.replica.output.db.url=jdbc:sqlite:/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/blackdiamond-0.replicas.db, pegasus.catalog.replica.output=JDBCRC, pegasus.catalog.replica.output.db.driver=sqlite} 
+2023.03.04 01:02:16.465 PST: [INFO] event.pegasus.check.cyclic-dependencies dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.465 PST: [INFO] event.pegasus.check.cyclic-dependencies dax.id blackdiamond-0  (0.0 seconds) - FINISHED 
+2023.03.04 01:02:16.467 PST: [DEBUG]  1 entries found in cache of total 6 
+2023.03.04 01:02:16.467 PST: [DEBUG]  0 entries found in previous submit dirs of total 6 
+2023.03.04 01:02:16.467 PST: [DEBUG]  0 entries found in input directories of total 6 
+2023.03.04 01:02:16.467 PST: [WARNING]  Replica Catalog is either down or connection to it was never opened  
+2023.03.04 01:02:16.467 PST: [CONFIG]  Data Reuse Scope for the workflow: full 
+2023.03.04 01:02:16.468 PST: [DEBUG]  Reducing the workflow 
+2023.03.04 01:02:16.468 PST: [INFO] event.pegasus.reduce dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.468 PST: [DEBUG]  Jobs whose o/p files already exist 
+2023.03.04 01:02:16.468 PST: [DEBUG]  Jobs whose o/p files already exist - DONE 
+2023.03.04 01:02:16.469 PST: [DEBUG]  findrange_ID0000003  will not be deleted as not as child analyze_ID0000004 is not marked for deletion  
+2023.03.04 01:02:16.469 PST: [DEBUG]  findrange_ID0000002  will not be deleted as not as child analyze_ID0000004 is not marked for deletion  
+2023.03.04 01:02:16.469 PST: [DEBUG]  preprocess_ID0000001  will not be deleted as not as child findrange_ID0000003 is not marked for deletion  
+2023.03.04 01:02:16.469 PST: [INFO]  Nodes/Jobs Deleted from the Workflow during reduction  
+2023.03.04 01:02:16.469 PST: [INFO]  Nodes/Jobs Deleted from the Workflow during reduction  - DONE 
+2023.03.04 01:02:16.470 PST: [INFO] event.pegasus.reduce dax.id blackdiamond-0  (0.002 seconds) - FINISHED 
+2023.03.04 01:02:16.470 PST: [INFO] event.pegasus.siteselection dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.474 PST: [DEBUG]  List of executions sites is [condorpool] 
+2023.03.04 01:02:16.478 PST: [DEBUG]  Trying to get TCEntries for preprocess on resource ALL of type ALL 
+2023.03.04 01:02:16.478 PST: [DEBUG]  [Random Selector] Mapped preprocess_ID0000001 to condorpool 
+2023.03.04 01:02:16.479 PST: [DEBUG]  Trying to get TCEntries for findrange on resource ALL of type ALL 
+2023.03.04 01:02:16.479 PST: [DEBUG]  [Random Selector] Mapped findrange_ID0000003 to condorpool 
+2023.03.04 01:02:16.479 PST: [DEBUG]  [Random Selector] Mapped findrange_ID0000002 to condorpool 
+2023.03.04 01:02:16.479 PST: [DEBUG]  Trying to get TCEntries for analyze on resource ALL of type ALL 
+2023.03.04 01:02:16.479 PST: [DEBUG]  [Random Selector] Mapped analyze_ID0000004 to condorpool 
+2023.03.04 01:02:16.479 PST: [DEBUG]  Setting up site mapping for job preprocess_ID0000001 
+2023.03.04 01:02:16.479 PST: [DEBUG]  Job was mapped to preprocess_ID0000001 to site condorpool 
+2023.03.04 01:02:16.482 PST: [DEBUG]  Setting up site mapping for job analyze_ID0000004 
+2023.03.04 01:02:16.482 PST: [DEBUG]  Job was mapped to analyze_ID0000004 to site condorpool 
+2023.03.04 01:02:16.482 PST: [DEBUG]  Setting up site mapping for job findrange_ID0000003 
+2023.03.04 01:02:16.482 PST: [DEBUG]  Job was mapped to findrange_ID0000003 to site condorpool 
+2023.03.04 01:02:16.483 PST: [DEBUG]  Setting up site mapping for job findrange_ID0000002 
+2023.03.04 01:02:16.483 PST: [DEBUG]  Job was mapped to findrange_ID0000002 to site condorpool 
+2023.03.04 01:02:16.483 PST: [INFO] event.pegasus.stampede.events dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.484 PST: [DEBUG]  Written out stampede metadata events for the mapped workflow to /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/inner.static.bp 
+2023.03.04 01:02:16.484 PST: [INFO] event.pegasus.stampede.events dax.id blackdiamond-0  (0.001 seconds) - FINISHED 
+2023.03.04 01:02:16.484 PST: [INFO] event.pegasus.siteselection dax.id blackdiamond-0  (0.014 seconds) - FINISHED 
+2023.03.04 01:02:16.489 PST: [DEBUG]  User set mapper is not a stageable mapper. Loading a stageable mapper  
+2023.03.04 01:02:16.490 PST: [DEBUG]  Deployment of Worker Package needed 
+2023.03.04 01:02:16.507 PST: [CONFIG]  Transfer Implementation loaded for Stage-In   [Python based Transfer Script] 
+2023.03.04 01:02:16.507 PST: [CONFIG]  Transfer Implementation loaded for symbolic linking Stage-In  [Python based Transfer Script] 
+2023.03.04 01:02:16.507 PST: [CONFIG]  Transfer Implementation loaded for Inter Site [Python based Transfer Script] 
+2023.03.04 01:02:16.507 PST: [CONFIG]  Transfer Implementation loaded for Stage-Out  [Python based Transfer Script] 
+2023.03.04 01:02:16.507 PST: [DEBUG]  Trying to get TCEntries for pegasus::worker on resource ALL of type STAGEABLE 
+2023.03.04 01:02:16.508 PST: [DEBUG]  System information for pegasus-worker-5.0.5-x86_64_rhel_8.tar.gz is {arch=x86_64 os=linux osrelease=rhel osversion=8} 
+2023.03.04 01:02:16.508 PST: [DEBUG]  Compute site sysinfo condorpool {arch=x86_64 os=linux} 
+2023.03.04 01:02:16.508 PST: [DEBUG]  Worker Package Entry used for site condorpool 
+ 
+ Logical Namespace : pegasus
+ Logical Name      : worker
+ Version           : null
+ Resource Id       : local
+ Physical Name     : file:///home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus-worker-5.0.5-x86_64_rhel_8.tar.gz
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : STAGEABLE
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.508 PST: [DEBUG]  Trying to get TCEntries for pegasus::worker on resource local of type STAGEABLE 
+2023.03.04 01:02:16.508 PST: [DEBUG]  Staging site for site condorpool for worker package deployment - local 
+2023.03.04 01:02:16.509 PST: [DEBUG]  Trying to get TCEntries for pegasus::worker on resource ALL of type STAGEABLE 
+2023.03.04 01:02:16.509 PST: [DEBUG]  Selected entry 
+ 
+ Logical Namespace : pegasus
+ Logical Name      : worker
+ Version           : null
+ Resource Id       : local
+ Physical Name     : file:///home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus-worker-5.0.5-x86_64_rhel_8.tar.gz
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : STAGEABLE
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.509 PST: [DEBUG]  Creating a default TC entry for pegasus::transfer at site condorpool 
+2023.03.04 01:02:16.509 PST: [DEBUG]  Remote Path set is pegasus-transfer 
+2023.03.04 01:02:16.510 PST: [DEBUG]  Trying to get TCEntries for pegasus::transfer on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.510 PST: [DEBUG]  Entry constructed 
+ 
+ Logical Namespace : pegasus
+ Logical Name      : transfer
+ Version           : null
+ Resource Id       : condorpool
+ Physical Name     : pegasus-transfer
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : INSTALLED
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.510 PST: [DEBUG]  Creating a default TC entry for pegasus::kickstart at site condorpool 
+2023.03.04 01:02:16.510 PST: [DEBUG]  Remote Path set is pegasus-kickstart 
+2023.03.04 01:02:16.510 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.510 PST: [DEBUG]  Entry constructed 
+ 
+ Logical Namespace : pegasus
+ Logical Name      : kickstart
+ Version           : null
+ Resource Id       : condorpool
+ Physical Name     : pegasus-kickstart
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : INSTALLED
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.510 PST: [DEBUG]  Creating a default TC entry for pegasus::cleanup at site condorpool 
+2023.03.04 01:02:16.510 PST: [DEBUG]  Remote Path set is pegasus-transfer 
+2023.03.04 01:02:16.511 PST: [DEBUG]  Trying to get TCEntries for pegasus::cleanup on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.511 PST: [DEBUG]  Entry constructed 
+ 
+ Logical Namespace : pegasus
+ Logical Name      : cleanup
+ Version           : null
+ Resource Id       : condorpool
+ Physical Name     : pegasus-transfer
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : INSTALLED
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.511 PST: [DEBUG]  Creating a default TC entry for pegasus::seqexec at site condorpool 
+2023.03.04 01:02:16.511 PST: [DEBUG]  Remote Path set is pegasus-cluster 
+2023.03.04 01:02:16.511 PST: [DEBUG]  Trying to get TCEntries for pegasus::seqexec on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.511 PST: [DEBUG]  Entry constructed 
+ 
+ Logical Namespace : pegasus
+ Logical Name      : seqexec
+ Version           : null
+ Resource Id       : condorpool
+ Physical Name     : pegasus-cluster
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : INSTALLED
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.512 PST: [DEBUG]  Creating a default TC entry for pegasus::dirmanager at site condorpool 
+2023.03.04 01:02:16.512 PST: [DEBUG]  Remote Path set is pegasus-transfer 
+2023.03.04 01:02:16.512 PST: [DEBUG]  Trying to get TCEntries for pegasus::dirmanager on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.512 PST: [DEBUG]  Entry constructed 
+ 
+ Logical Namespace : pegasus
+ Logical Name      : dirmanager
+ Version           : null
+ Resource Id       : condorpool
+ Physical Name     : pegasus-transfer
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : INSTALLED
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.512 PST: [DEBUG]  Creating a default TC entry for pegasus::keg at site condorpool 
+2023.03.04 01:02:16.512 PST: [DEBUG]  Remote Path set is pegasus-keg 
+2023.03.04 01:02:16.512 PST: [DEBUG]  Trying to get TCEntries for pegasus::keg on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.513 PST: [DEBUG]  Entry constructed 
+ 
+ Logical Namespace : pegasus
+ Logical Name      : keg
+ Version           : null
+ Resource Id       : condorpool
+ Physical Name     : pegasus-keg
+ SysInfo           : {arch=x86_64 os=linux}
+ TYPE              : INSTALLED
+ BYPASS              : false
+ Notifications: 
+ Container    : null
+ Compound Tx  : null 
+2023.03.04 01:02:16.513 PST: [DEBUG]  Initialising  Replica Catalog for Planner Cache 
+2023.03.04 01:02:16.514 PST: [DEBUG]  [Replica Factory] Connect properties detected for implementor SimpleFile -> {output=JDBCRC, output.db.create=true, file=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/inner.getcache, output.db.driver=sqlite, read.only=true, output.db.url=jdbc:sqlite:/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/blackdiamond-0.replicas.db} 
+2023.03.04 01:02:16.514 PST: [DEBUG]  Initialising  Replica Catalog for Planner Cache 
+2023.03.04 01:02:16.515 PST: [DEBUG]  [Replica Factory] Connect properties detected for implementor SimpleFile -> {output=JDBCRC, output.db.create=true, file=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/inner.putcache, output.db.driver=sqlite, read.only=true, output.db.url=jdbc:sqlite:/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/blackdiamond-0.replicas.db} 
+2023.03.04 01:02:16.515 PST: [INFO]  Grafting transfer nodes in the workflow 
+2023.03.04 01:02:16.515 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.517 PST: [DEBUG]  Date Reuse Engine no longer tracks deleted leaf jobs. Returning empty list  
+2023.03.04 01:02:16.525 PST: [DEBUG]  Number of transfer jobs for -1 are 0 
+2023.03.04 01:02:16.525 PST: [DEBUG]  Number of transfer jobs for 0 are 1 
+2023.03.04 01:02:16.525 PST: [DEBUG]  Number of transfer jobs for 1 are 1 
+2023.03.04 01:02:16.525 PST: [DEBUG]  Number of transfer jobs for 2 are 1 
+2023.03.04 01:02:16.526 PST: [CONFIG]  Transfer Implementation loaded for Stage-In   [Python based Transfer Script] 
+2023.03.04 01:02:16.526 PST: [CONFIG]  Transfer Implementation loaded for symbolic linking Stage-In  [Python based Transfer Script] 
+2023.03.04 01:02:16.527 PST: [CONFIG]  Transfer Implementation loaded for Inter Site [Python based Transfer Script] 
+2023.03.04 01:02:16.527 PST: [CONFIG]  Transfer Implementation loaded for Stage-Out  [Python based Transfer Script] 
+2023.03.04 01:02:16.534 PST: [DEBUG]  [Replica Factory] Connect properties detected for implementor File -> {file=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.output.map, read.only=true, disable.exceptions=true} 
+2023.03.04 01:02:16.535 PST: [CONFIG]  Output Mapper loaded is              [Flat Directory Mapper] 
+2023.03.04 01:02:16.535 PST: [CONFIG]  Output Scratch Mapper loaded is      [Replica Catalog Mapper] 
+2023.03.04 01:02:16.535 PST: [DEBUG]  Initialising Workflow Cache File in the Submit Directory 
+2023.03.04 01:02:16.535 PST: [DEBUG]  [Replica Factory] Connect properties detected for implementor FlushedCache -> {output=JDBCRC, output.db.create=true, file=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/inner.cache, output.db.driver=sqlite, output.db.url=jdbc:sqlite:/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/blackdiamond-0.replicas.db} 
+2023.03.04 01:02:16.536 PST: [CONFIG]  Transfer Refiner loaded is           [Balanced Cluster Transfer Refiner( round robin distribution at file level)] 
+2023.03.04 01:02:16.536 PST: [CONFIG]  ReplicaSelector loaded is            [Default] 
+2023.03.04 01:02:16.537 PST: [CONFIG]  Submit Directory Mapper loaded is    [Hashed Directory Mapper with multiplier as 5 and levels 2] 
+2023.03.04 01:02:16.537 PST: [CONFIG]  Staging Mapper loaded is             [Flat Directory Staging Mapper] 
+2023.03.04 01:02:16.539 PST: [DEBUG]  SRM Server map is {} 
+2023.03.04 01:02:16.539 PST: [DEBUG]  SRM Server map is {} 
+2023.03.04 01:02:16.539 PST: [DEBUG]  Directory for job preprocess_ID0000001 is 00/00 
+2023.03.04 01:02:16.539 PST: [DEBUG]   
+2023.03.04 01:02:16.540 PST: [DEBUG]  Job being traversed is preprocess_ID0000001 
+2023.03.04 01:02:16.540 PST: [DEBUG]  To be run at condorpool 
+2023.03.04 01:02:16.540 PST: [DEBUG]  Parents of job:{} 
+2023.03.04 01:02:16.543 PST: [DEBUG]  Entered preprocess:local->chmod_preprocess_ID0000001_0 
+2023.03.04 01:02:16.544 PST: [DEBUG]  Adding relation preprocess_ID0000001 -> stage_out_local_local_0_0 
+2023.03.04 01:02:16.544 PST: [DEBUG]  Adding relation preprocess_ID0000001 -> stage_out_local_local_0_0 
+2023.03.04 01:02:16.544 PST: [DEBUG]  Directory for job findrange_ID0000003 is 00/00 
+2023.03.04 01:02:16.545 PST: [DEBUG]   
+2023.03.04 01:02:16.545 PST: [DEBUG]  Job being traversed is findrange_ID0000003 
+2023.03.04 01:02:16.545 PST: [DEBUG]  To be run at condorpool 
+2023.03.04 01:02:16.545 PST: [DEBUG]  Parents of job:{preprocess_ID0000001,} 
+2023.03.04 01:02:16.545 PST: [DEBUG]  Adding stage in transfer nodes for site local 
+2023.03.04 01:02:16.545 PST: [DEBUG]  Adding stagein transfer node stage_in_local_local_0_0 
+2023.03.04 01:02:16.545 PST: [DEBUG]  Non Third Party Transfer site for transfer job stage_in_local_local_0_0 is local 
+2023.03.04 01:02:16.546 PST: [DEBUG]  Trying to get TCEntries for pegasus::transfer on resource local of type INSTALLED 
+2023.03.04 01:02:16.546 PST: [DEBUG]  Creating a default TC entry for pegasus::transfer at site local 
+2023.03.04 01:02:16.546 PST: [DEBUG]  Trying to get TCEntries for pegasus::transfer on resource local of type INSTALLED 
+2023.03.04 01:02:16.546 PST: [DEBUG]  Created entry with path /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer 
+2023.03.04 01:02:16.547 PST: [DEBUG]  Adding stage in transfer nodes for site local 
+2023.03.04 01:02:16.547 PST: [DEBUG]  Adding stagein transfer node stage_in_remote_local_0_0 
+2023.03.04 01:02:16.547 PST: [DEBUG]  Non Third Party Transfer site for transfer job stage_in_remote_local_0_0 is local 
+2023.03.04 01:02:16.548 PST: [DEBUG]  Trying to get TCEntries for pegasus::transfer on resource local of type INSTALLED 
+2023.03.04 01:02:16.548 PST: [DEBUG]  Adding relations for job preprocess_ID0000001 
+2023.03.04 01:02:16.548 PST: [DEBUG]  Adding Edge stage_in_remote_local_0_0 -> preprocess_ID0000001 
+2023.03.04 01:02:16.548 PST: [DEBUG]  Adding Edge stage_in_local_local_0_0 -> preprocess_ID0000001 
+2023.03.04 01:02:16.548 PST: [DEBUG]  Assigned priority adjustment of -1 to transfer job stage_in_local_local_0_0 with children - 1 
+2023.03.04 01:02:16.549 PST: [DEBUG]  Assigned priority adjustment of -1 to transfer job stage_in_remote_local_0_0 with children - 1 
+2023.03.04 01:02:16.549 PST: [DEBUG]  Entered findrange:local->chmod_findrange_ID0000003_0 
+2023.03.04 01:02:16.549 PST: [DEBUG]  Adding jobs for staging out data from site local 
+2023.03.04 01:02:16.549 PST: [DEBUG]  Adding stage-out job stage_out_local_local_0_0 
+2023.03.04 01:02:16.549 PST: [DEBUG]  Non Third Party Transfer site for transfer job stage_out_local_local_0_0 is local 
+2023.03.04 01:02:16.549 PST: [DEBUG]  Trying to get TCEntries for pegasus::transfer on resource local of type INSTALLED 
+2023.03.04 01:02:16.550 PST: [DEBUG]  Adding relation stage_out_local_local_0_0 -> register_local_0_0 
+2023.03.04 01:02:16.550 PST: [DEBUG]  Adding relation stage_out_local_local_0_0 -> register_local_0_0 
+2023.03.04 01:02:16.550 PST: [DEBUG]  Adding registration job register_local_0_0 
+2023.03.04 01:02:16.550 PST: [DEBUG]  Trying to get TCEntries for pegasus::rc-client on resource local of type INSTALLED 
+2023.03.04 01:02:16.550 PST: [DEBUG]  Unable to find in entry for pegasus::rc-client in transformation catalog on site local 
+2023.03.04 01:02:16.551 PST: [DEBUG]  Constructing a default entry for it  
+2023.03.04 01:02:16.551 PST: [DEBUG]  Adding relation findrange_ID0000003 -> stage_out_local_local_1_0 
+2023.03.04 01:02:16.551 PST: [DEBUG]  Adding relation findrange_ID0000003 -> stage_out_local_local_1_0 
+2023.03.04 01:02:16.552 PST: [DEBUG]  Directory for job findrange_ID0000002 is 00/00 
+2023.03.04 01:02:16.552 PST: [DEBUG]   
+2023.03.04 01:02:16.552 PST: [DEBUG]  Job being traversed is findrange_ID0000002 
+2023.03.04 01:02:16.552 PST: [DEBUG]  To be run at condorpool 
+2023.03.04 01:02:16.552 PST: [DEBUG]  Parents of job:{preprocess_ID0000001,} 
+2023.03.04 01:02:16.553 PST: [DEBUG]  Adding relation findrange_ID0000002 -> stage_out_local_local_1_0 
+2023.03.04 01:02:16.553 PST: [DEBUG]  Adding relation findrange_ID0000002 -> stage_out_local_local_1_0 
+2023.03.04 01:02:16.553 PST: [DEBUG]  Directory for job analyze_ID0000004 is 00/00 
+2023.03.04 01:02:16.553 PST: [DEBUG]   
+2023.03.04 01:02:16.553 PST: [DEBUG]  Job being traversed is analyze_ID0000004 
+2023.03.04 01:02:16.553 PST: [DEBUG]  To be run at condorpool 
+2023.03.04 01:02:16.553 PST: [DEBUG]  Parents of job:{findrange_ID0000003,findrange_ID0000002,} 
+2023.03.04 01:02:16.554 PST: [DEBUG]  Adding stage in transfer nodes for site local 
+2023.03.04 01:02:16.554 PST: [DEBUG]  Adding stagein transfer node stage_in_local_local_1_0 
+2023.03.04 01:02:16.554 PST: [DEBUG]  Non Third Party Transfer site for transfer job stage_in_local_local_1_0 is local 
+2023.03.04 01:02:16.554 PST: [DEBUG]  Trying to get TCEntries for pegasus::transfer on resource local of type INSTALLED 
+2023.03.04 01:02:16.555 PST: [DEBUG]  Adding relations for job findrange_ID0000003 
+2023.03.04 01:02:16.555 PST: [DEBUG]  Adding Edge stage_in_local_local_1_0 -> findrange_ID0000003 
+2023.03.04 01:02:16.555 PST: [DEBUG]  Adding relations for job findrange_ID0000002 
+2023.03.04 01:02:16.555 PST: [DEBUG]  Adding Edge stage_in_local_local_1_0 -> findrange_ID0000002 
+2023.03.04 01:02:16.555 PST: [DEBUG]  Assigned priority adjustment of -1 to transfer job stage_in_local_local_1_0 with children - 2 
+2023.03.04 01:02:16.555 PST: [DEBUG]  Entered analyze:local->chmod_analyze_ID0000004_0 
+2023.03.04 01:02:16.556 PST: [DEBUG]  Adding jobs for staging out data from site local 
+2023.03.04 01:02:16.556 PST: [DEBUG]  Adding stage-out job stage_out_local_local_1_0 
+2023.03.04 01:02:16.556 PST: [DEBUG]  Non Third Party Transfer site for transfer job stage_out_local_local_1_0 is local 
+2023.03.04 01:02:16.556 PST: [DEBUG]  Trying to get TCEntries for pegasus::transfer on resource local of type INSTALLED 
+2023.03.04 01:02:16.556 PST: [DEBUG]  Adding relation stage_out_local_local_1_0 -> register_local_1_0 
+2023.03.04 01:02:16.557 PST: [DEBUG]  Adding relation stage_out_local_local_1_0 -> register_local_1_0 
+2023.03.04 01:02:16.557 PST: [DEBUG]  Adding registration job register_local_1_0 
+2023.03.04 01:02:16.557 PST: [DEBUG]  Trying to get TCEntries for pegasus::rc-client on resource local of type INSTALLED 
+2023.03.04 01:02:16.557 PST: [DEBUG]  Unable to find in entry for pegasus::rc-client in transformation catalog on site local 
+2023.03.04 01:02:16.557 PST: [DEBUG]  Constructing a default entry for it  
+2023.03.04 01:02:16.557 PST: [DEBUG]  Adding relation analyze_ID0000004 -> stage_out_local_local_2_0 
+2023.03.04 01:02:16.558 PST: [DEBUG]  Adding relation analyze_ID0000004 -> stage_out_local_local_2_0 
+2023.03.04 01:02:16.558 PST: [DEBUG]  Adding stage in transfer nodes for site local 
+2023.03.04 01:02:16.558 PST: [DEBUG]  Adding stagein transfer node stage_in_local_local_2_0 
+2023.03.04 01:02:16.558 PST: [DEBUG]  Non Third Party Transfer site for transfer job stage_in_local_local_2_0 is local 
+2023.03.04 01:02:16.558 PST: [DEBUG]  Trying to get TCEntries for pegasus::transfer on resource local of type INSTALLED 
+2023.03.04 01:02:16.559 PST: [DEBUG]  Adding relations for job analyze_ID0000004 
+2023.03.04 01:02:16.559 PST: [DEBUG]  Adding Edge stage_in_local_local_2_0 -> analyze_ID0000004 
+2023.03.04 01:02:16.559 PST: [DEBUG]  Assigned priority adjustment of -1 to transfer job stage_in_local_local_2_0 with children - 1 
+2023.03.04 01:02:16.559 PST: [DEBUG]  Adding jobs for staging out data from site local 
+2023.03.04 01:02:16.559 PST: [DEBUG]  Adding stage-out job stage_out_local_local_2_0 
+2023.03.04 01:02:16.559 PST: [DEBUG]  Non Third Party Transfer site for transfer job stage_out_local_local_2_0 is local 
+2023.03.04 01:02:16.560 PST: [DEBUG]  Trying to get TCEntries for pegasus::transfer on resource local of type INSTALLED 
+2023.03.04 01:02:16.560 PST: [DEBUG]  Adding relation stage_out_local_local_2_0 -> register_local_2_0 
+2023.03.04 01:02:16.560 PST: [DEBUG]  Adding relation stage_out_local_local_2_0 -> register_local_2_0 
+2023.03.04 01:02:16.560 PST: [DEBUG]  Adding registration job register_local_2_0 
+2023.03.04 01:02:16.560 PST: [DEBUG]  Trying to get TCEntries for pegasus::rc-client on resource local of type INSTALLED 
+2023.03.04 01:02:16.561 PST: [DEBUG]  Unable to find in entry for pegasus::rc-client in transformation catalog on site local 
+2023.03.04 01:02:16.561 PST: [DEBUG]  Constructing a default entry for it  
+2023.03.04 01:02:16.561 PST: [DEBUG]  Adding relations for job preprocess_ID0000001 
+2023.03.04 01:02:16.561 PST: [DEBUG]  Adding Edge preprocess_ID0000001 -> stage_out_local_local_0_0 
+2023.03.04 01:02:16.561 PST: [DEBUG]  Adding relations for job analyze_ID0000004 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding Edge analyze_ID0000004 -> stage_out_local_local_2_0 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding relations for job stage_out_local_local_2_0 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding Edge stage_out_local_local_2_0 -> register_local_2_0 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding relations for job stage_out_local_local_1_0 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding Edge stage_out_local_local_1_0 -> register_local_1_0 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding relations for job stage_out_local_local_0_0 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding Edge stage_out_local_local_0_0 -> register_local_0_0 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding relations for job findrange_ID0000003 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding Edge findrange_ID0000003 -> stage_out_local_local_1_0 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding relations for job findrange_ID0000002 
+2023.03.04 01:02:16.562 PST: [DEBUG]  Adding Edge findrange_ID0000002 -> stage_out_local_local_1_0 
+2023.03.04 01:02:16.563 PST: [INFO]  Pegasus now has a strategy for scaling transfer jobs based on size of workflow. Consider removing the pegasus profile stagein.clusters from site local in site catalog 
+2023.03.04 01:02:16.563 PST: [INFO]  Pegasus now has a strategy for scaling transfer jobs based on size of workflow. Consider removing the pegasus profile stageout.clusters from site local in site catalog 
+2023.03.04 01:02:16.563 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id blackdiamond-0  (0.048 seconds) - FINISHED 
+2023.03.04 01:02:16.564 PST: [DEBUG]  Adding worker package deployment node for condorpool 
+2023.03.04 01:02:16.564 PST: [DEBUG]  Skipping stage worker job for site condorpool as worker package already in submit directory file:///home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus-worker-5.0.5-x86_64_rhel_8.tar.gz 
+2023.03.04 01:02:16.564 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.567 PST: [DEBUG]  Trying to get TCEntries for pegasus::dirmanager on resource local of type INSTALLED 
+2023.03.04 01:02:16.568 PST: [DEBUG]  Creating a default TC entry for pegasus::dirmanager at site local 
+2023.03.04 01:02:16.568 PST: [DEBUG]  Trying to get TCEntries for pegasus::dirmanager on resource local of type INSTALLED 
+2023.03.04 01:02:16.568 PST: [DEBUG]  Creating create dir node create_dir_blackdiamond_0_local 
+2023.03.04 01:02:16.569 PST: [DEBUG]  Need to add edge create_dir_blackdiamond_0_local -> stage_in_remote_local_0_0 
+2023.03.04 01:02:16.569 PST: [DEBUG]  Need to add edge create_dir_blackdiamond_0_local -> stage_in_local_local_0_0 
+2023.03.04 01:02:16.569 PST: [DEBUG]  Need to add edge create_dir_blackdiamond_0_local -> stage_in_local_local_1_0 
+2023.03.04 01:02:16.569 PST: [DEBUG]  Need to add edge create_dir_blackdiamond_0_local -> stage_in_local_local_2_0 
+2023.03.04 01:02:16.569 PST: [DEBUG]  Not adding edge to create dir job for job register_local_0_0 
+2023.03.04 01:02:16.569 PST: [DEBUG]  Not adding edge to create dir job for job register_local_1_0 
+2023.03.04 01:02:16.569 PST: [DEBUG]  Not adding edge to create dir job for job register_local_2_0 
+2023.03.04 01:02:16.569 PST: [DEBUG]  Adding node to the worfklow create_dir_blackdiamond_0_local 
+2023.03.04 01:02:16.569 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id blackdiamond-0  (0.005 seconds) - FINISHED 
+2023.03.04 01:02:16.571 PST: [INFO] event.pegasus.refinement dax.id blackdiamond-0  (0.124 seconds) - FINISHED 
+2023.03.04 01:02:16.601 PST: [DEBUG]  Condor Version as string 10.2.5 
+2023.03.04 01:02:16.602 PST: [DEBUG]  Condor Version detected is 100205 
+2023.03.04 01:02:16.602 PST: [INFO]  Generating codes for the executable workflow 
+2023.03.04 01:02:16.602 PST: [INFO] event.pegasus.code.generation dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.606 PST: [CONFIG]  Kickstart Stating Disabled Completely - false 
+2023.03.04 01:02:16.606 PST: [DEBUG] event.pegasus.code.generation dax.id blackdiamond-0  - STARTED 
+2023.03.04 01:02:16.628 PST: [DEBUG]  Condor Version as string 10.2.5 
+2023.03.04 01:02:16.628 PST: [DEBUG]  Condor Version detected is 100205 
+2023.03.04 01:02:16.629 PST: [CONFIG]  Kickstart Stating Disabled Completely - false 
+2023.03.04 01:02:16.630 PST: [DEBUG]  Applying priority of 800 to create_dir_blackdiamond_0_local 
+2023.03.04 01:02:16.662 PST: [DEBUG]  Mount Under Scratch Directories [/tmp, /var/tmp] 
+2023.03.04 01:02:16.665 PST: [CONFIG]  Enforce strict checks for worker package in PegasusLite: true 
+2023.03.04 01:02:16.665 PST: [CONFIG]  Allow download of worker package in PegasusLite from Pegasus Website: true 
+2023.03.04 01:02:16.669 PST: [CONFIG]  Kickstart Stating Disabled Completely - false 
+2023.03.04 01:02:16.675 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.676 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.677 PST: [DEBUG]  Unquoted arguments are pegasus-kickstart  -n pegasus::dirmanager -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 pegasus-transfer  
+2023.03.04 01:02:16.678 PST: [DEBUG]  Quoted arguments are "pegasus-kickstart  -n pegasus::dirmanager -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 pegasus-transfer " 
+2023.03.04 01:02:16.679 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/create_dir_blackdiamond_0_local.sub 
+2023.03.04 01:02:16.679 PST: [DEBUG]  Applying priority of 700 to stage_in_remote_local_0_0 
+2023.03.04 01:02:16.679 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.679 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.680 PST: [DEBUG]  Unquoted arguments are  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2  
+2023.03.04 01:02:16.680 PST: [DEBUG]  Quoted arguments are " -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2 " 
+2023.03.04 01:02:16.680 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/stage_in_remote_local_0_0.sub 
+2023.03.04 01:02:16.680 PST: [DEBUG]  Applying priority of 700 to stage_in_local_local_0_0 
+2023.03.04 01:02:16.681 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.681 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.681 PST: [DEBUG]  Unquoted arguments are  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2  
+2023.03.04 01:02:16.681 PST: [DEBUG]  Quoted arguments are " -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2 " 
+2023.03.04 01:02:16.681 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/stage_in_local_local_0_0.sub 
+2023.03.04 01:02:16.681 PST: [DEBUG]  Applying priority of 700 to stage_in_local_local_1_0 
+2023.03.04 01:02:16.682 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.682 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.682 PST: [DEBUG]  Unquoted arguments are  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2  
+2023.03.04 01:02:16.682 PST: [DEBUG]  Quoted arguments are " -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2 " 
+2023.03.04 01:02:16.682 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/stage_in_local_local_1_0.sub 
+2023.03.04 01:02:16.683 PST: [DEBUG]  Applying priority of 700 to stage_in_local_local_2_0 
+2023.03.04 01:02:16.683 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.683 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.683 PST: [DEBUG]  Unquoted arguments are  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2  
+2023.03.04 01:02:16.683 PST: [DEBUG]  Quoted arguments are " -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2 " 
+2023.03.04 01:02:16.684 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/stage_in_local_local_2_0.sub 
+2023.03.04 01:02:16.684 PST: [DEBUG]  Applying priority of 20 to preprocess_ID0000001 
+2023.03.04 01:02:16.685 PST: [DEBUG]  Setting job preprocess_ID0000001 to run via No container wrapping 
+2023.03.04 01:02:16.685 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.685 PST: [DEBUG]  Trying to get TCEntries for system::chmod on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.686 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.686 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/preprocess_ID0000001.sub 
+2023.03.04 01:02:16.687 PST: [DEBUG]  Applying priority of 900 to stage_out_local_local_0_0 
+2023.03.04 01:02:16.687 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.687 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.687 PST: [DEBUG]  Unquoted arguments are /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-kickstart  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2  
+2023.03.04 01:02:16.688 PST: [DEBUG]  Quoted arguments are "/home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-kickstart  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2 " 
+2023.03.04 01:02:16.688 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/stage_out_local_local_0_0.sub 
+2023.03.04 01:02:16.688 PST: [DEBUG]  Applying priority of 30 to findrange_ID0000003 
+2023.03.04 01:02:16.689 PST: [DEBUG]  Setting job findrange_ID0000003 to run via No container wrapping 
+2023.03.04 01:02:16.689 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.689 PST: [DEBUG]  Trying to get TCEntries for system::chmod on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.689 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.690 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/findrange_ID0000003.sub 
+2023.03.04 01:02:16.690 PST: [DEBUG]  Applying priority of 30 to findrange_ID0000002 
+2023.03.04 01:02:16.691 PST: [DEBUG]  Setting job findrange_ID0000002 to run via No container wrapping 
+2023.03.04 01:02:16.691 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.691 PST: [DEBUG]  Trying to get TCEntries for system::chmod on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.692 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.692 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/findrange_ID0000002.sub 
+2023.03.04 01:02:16.692 PST: [DEBUG]  Applying priority of 40 to register_local_0_0 
+2023.03.04 01:02:16.692 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.693 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.693 PST: [DEBUG]  Unquoted arguments are  -n pegasus::rc-client -N null -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/pegasus-rc-client --prefix pegasus.catalog.replica.output --conf /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus.8509652495109392096.properties -v --meta /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/preprocess_ID0000001.meta --insert /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/register_local_0_0.in 
+2023.03.04 01:02:16.693 PST: [DEBUG]  Quoted arguments are " -n pegasus::rc-client -N null -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/pegasus-rc-client --prefix pegasus.catalog.replica.output --conf /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus.8509652495109392096.properties -v --meta /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/preprocess_ID0000001.meta --insert /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/register_local_0_0.in" 
+2023.03.04 01:02:16.693 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/register_local_0_0.sub 
+2023.03.04 01:02:16.693 PST: [DEBUG]  Applying priority of 40 to analyze_ID0000004 
+2023.03.04 01:02:16.694 PST: [DEBUG]  Setting job analyze_ID0000004 to run via No container wrapping 
+2023.03.04 01:02:16.694 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.694 PST: [DEBUG]  Trying to get TCEntries for system::chmod on resource condorpool of type INSTALLED 
+2023.03.04 01:02:16.695 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.696 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/analyze_ID0000004.sub 
+2023.03.04 01:02:16.696 PST: [DEBUG]  Applying priority of 900 to stage_out_local_local_1_0 
+2023.03.04 01:02:16.696 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.696 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.697 PST: [DEBUG]  Unquoted arguments are /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-kickstart  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2  
+2023.03.04 01:02:16.697 PST: [DEBUG]  Quoted arguments are "/home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-kickstart  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2 " 
+2023.03.04 01:02:16.697 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/stage_out_local_local_1_0.sub 
+2023.03.04 01:02:16.697 PST: [DEBUG]  Applying priority of 900 to stage_out_local_local_2_0 
+2023.03.04 01:02:16.697 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.698 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.698 PST: [DEBUG]  Unquoted arguments are /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-kickstart  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2  
+2023.03.04 01:02:16.698 PST: [DEBUG]  Quoted arguments are "/home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-kickstart  -n pegasus::transfer -N null -i - -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/../bin/pegasus-transfer  --threads 2 " 
+2023.03.04 01:02:16.698 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/stage_out_local_local_2_0.sub 
+2023.03.04 01:02:16.699 PST: [DEBUG]  Applying priority of 50 to register_local_1_0 
+2023.03.04 01:02:16.699 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.699 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.699 PST: [DEBUG]  Unquoted arguments are  -n pegasus::rc-client -N null -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/pegasus-rc-client --prefix pegasus.catalog.replica.output --conf /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus.8509652495109392096.properties -v --meta /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/findrange_ID0000003.meta,/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/findrange_ID0000002.meta --insert /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/register_local_1_0.in 
+2023.03.04 01:02:16.700 PST: [DEBUG]  Quoted arguments are " -n pegasus::rc-client -N null -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/pegasus-rc-client --prefix pegasus.catalog.replica.output --conf /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus.8509652495109392096.properties -v --meta /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/findrange_ID0000003.meta,/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/findrange_ID0000002.meta --insert /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/register_local_1_0.in" 
+2023.03.04 01:02:16.700 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/register_local_1_0.sub 
+2023.03.04 01:02:16.700 PST: [DEBUG]  Applying priority of 60 to register_local_2_0 
+2023.03.04 01:02:16.700 PST: [DEBUG]  Trying to get TCEntries for pegasus::kickstart on resource local of type INSTALLED 
+2023.03.04 01:02:16.701 PST: [DEBUG]  Postscript constructed is /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode 
+2023.03.04 01:02:16.701 PST: [DEBUG]  Unquoted arguments are  -n pegasus::rc-client -N null -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/pegasus-rc-client --prefix pegasus.catalog.replica.output --conf /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus.8509652495109392096.properties -v --meta /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/analyze_ID0000004.meta --insert /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/register_local_2_0.in 
+2023.03.04 01:02:16.701 PST: [DEBUG]  Quoted arguments are " -n pegasus::rc-client -N null -R local  -L inner -T 2023-03-04T01:00:54-08:00 /home/mzalam/pegasus-5.0.5/bin/pegasus-rc-client --prefix pegasus.catalog.replica.output --conf /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus.8509652495109392096.properties -v --meta /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/analyze_ID0000004.meta --insert /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/register_local_2_0.in" 
+2023.03.04 01:02:16.701 PST: [DEBUG]  Written Submit file : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/register_local_2_0.sub 
+2023.03.04 01:02:16.702 PST: [DEBUG] event.pegasus.code.generation dax.id blackdiamond-0  (0.095 seconds) - FINISHED 
+2023.03.04 01:02:16.702 PST: [DEBUG]  Written Dag File : inner.dag.tmp 
+2023.03.04 01:02:16.702 PST: [DEBUG]  Writing out the DOT file  
+2023.03.04 01:02:16.712 PST: [DEBUG]  Written out notifications to inner.notify 
+2023.03.04 01:02:16.718 PST: [DEBUG]  Written out stampede events for the executable workflow to /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/inner.static.bp 
+2023.03.04 01:02:16.723 PST: [DEBUG]  Proxy whose DN will be logged in the braindump file /tmp/x509up_u8073 
+2023.03.04 01:02:16.756 PST: [DEBUG]  Unable to determine GRID DN class org.globus.gsi.gssapi.GlobusGSSException: Defective credential detected [Caused by: proxy not found] 
+2023.03.04 01:02:16.839 PST: [DEBUG]  Written out braindump to /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/braindump.yml 
+2023.03.04 01:02:16.839 PST: [DEBUG]  Renamed temporary dag file to : /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/inner.dag 
+2023.03.04 01:02:16.841 PST: [DEBUG]  Executing  /home/mzalam/wf/condor/bin/condor_submit_dag -append executable=/home/mzalam/pegasus-5.0.5/bin/pegasus-dagman -no_submit  -MaxPost 20 -append +pegasus_wf_uuid="160be601-bda4-45fb-86cd-9cf7a269bb22" -append +pegasus_root_wf_uuid="48f759a4-165f-47d6-8c32-571649ce311b" -append +pegasus_wf_name="blackdiamond-0" -append +pegasus_wf_time="20230304T010215-0800" -append +pegasus_version="5.0.5" -append +pegasus_job_class=11 -append +pegasus_cluster_size=1 -append +pegasus_site="local" -append +pegasus_execution_sites="condorpool" -append +pegasus_wf_xformation="pegasus::dagman" inner.dag with environment = PATH=/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/wf/condor/bin:/home/mzalam/wf/condor/sbin:/home/mzalam/wf/bin:/home/mzalam/.local/bin:/home/mzalam/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin;CONDOR_ID=40.0;CONDOR_PARENT_ID=workflow:186804:1677920470;HISTCONTROL=ignoredups;XDG_DATA_DIRS=/home/mzalam/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share;_CONDOR_JOB_AD=/home/mzalam/wf/condor/local/spool/local_univ_execute/dir_40_0/.job.ad;MODULEPATH=/etc/modulefiles:/usr/share/modulefiles:/usr/share/modulefiles/Linux:/usr/share/modulefiles/Core:/usr/share/lmod/lmod/modulefiles/Core;PEGASUS_PERL_DIR=/home/mzalam/pegasus-5.0.5/lib64/pegasus/perl;LMOD_SETTARG_FULL_SUPPORT=no;DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/8073/bus;_CONDOR_ANCESTOR_131430=186799:1677920470:298940547;MODULEPATH_ROOT=/usr/share/modulefiles;MAIL=/var/spool/mail/mzalam;LMOD_DIR=/usr/share/lmod/lmod/libexec;_CONDOR_SCHEDD_ADDRESS_FILE=/home/mzalam/wf/condor/local/spool/.schedd_address;LOGNAME=mzalam;PWD=/tmp/pegasus.EReATmFz3;pegasus_lite_work_dir=/tmp/pegasus.EReATmFz3;PYTHONPATH=/home/mzalam/pegasus-5.0.5/lib64/python3.6/site-packages;LMOD_VERSION=8.7.19;LESSOPEN=||/usr/bin/lesspipe.sh %s;LMOD_CMD=/usr/share/lmod/lmod/libexec/lmod;SHELL=/bin/bash;BASH_ENV=/usr/share/lmod/lmod/init/bash;OLDPWD=/tmp;SSH_ASKPASS=/usr/libexec/openssh/gnome-ssh-askpass;VIRTUAL_ENV=/home/mzalam/wf;PEGASUS_PYTHON_DIR=/home/mzalam/pegasus-5.0.5/lib64/python3.6/site-packages;DEBUGINFOD_URLS=https://debuginfod.centos.org/ ;_CONDOR_ANCESTOR_131424=131430:1677910959:1464735406;KICKSTART_INTEGRITY_DATA=/tmp/ks.integrity.liwaAI;SHLVL=3;MANPATH=/usr/share/lmod/lmod/share/man:;pegasus_lite_work_dir_created=1;HISTSIZE=1000;PEGASUS_SCHEMA_DIR=/home/mzalam/pegasus-5.0.5/share/pegasus/schema;JAVA_HOME=/usr/lib/jvm/java-openjdk;TERM=xterm-256color;LANG=en_US.UTF-8;XDG_SESSION_ID=16499;LMOD_PKG=/usr/share/lmod/lmod;_CONDOR_ANCESTOR_186804=187459:1677920531:2511636557;BASH_FUNC_module%%=() {  if [ -z "${LMOD_SH_DBG_ON+x}" ]; then
+ case "$-" in 
+ *v*x*)
+ __lmod_sh_dbg='vx'
+ ;;
+ *v*)
+ __lmod_sh_dbg='v'
+ ;;
+ *x*)
+ __lmod_sh_dbg='x'
+ ;;
+ esac;
+ fi;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ set +$__lmod_sh_dbg;
+ echo "Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for Lmod's output" 1>&2;
+ fi;
+ eval "$($LMOD_CMD shell "$@")" && eval "$(${LMOD_SETTARG_CMD:-:} -s sh)";
+ __lmod_my_status=$?;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ echo "Shell debugging restarted" 1>&2;
+ set -$__lmod_sh_dbg;
+ fi;
+ unset __lmod_sh_dbg;
+ return $__lmod_my_status
+};which_declare=declare -f;PEGASUS_PYTHON_EXTERNALS_DIR=/home/mzalam/pegasus-5.0.5/lib64/pegasus/externals/python;_CONDOR_SCHEDD_DAEMON_AD_FILE=/home/mzalam/wf/condor/local/spool/.schedd_classad;_=/usr/bin/nice;PEGASUS_MULTIPART_DIR=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/.pegasus.mulitpart.d;KICKSTART_METADATA=/tmp/ks.meta.rHmRT6;PEGASUS_JAVA_DIR=/home/mzalam/pegasus-5.0.5/share/pegasus/java;SSH_TTY=/dev/pts/1;SSH_CLIENT=10.255.250.173 57629 22;LMOD_ROOT=/usr/share/lmod;_condor_SCHEDD_ADDRESS_FILE=/home/mzalam/wf/condor/local/spool/.schedd_address;USER=mzalam;CLASSPATH=/home/mzalam/pegasus-5.0.5/share/pegasus/java/accessors.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/bcprov-jdk15on-150.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/btf-1.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-lang3-3.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-logging.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-pool.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/exist-optional.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/exist.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gram-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gridftp-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gson-2.2.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gss-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/guava-16.0.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/hamcrest-core-1.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/io-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-annotations-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-core-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-coreutils-1.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-databind-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-dataformat-yaml-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jakarta-oro.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/java-getopt-1.0.9.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/javax.json-1.0.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jcodings-1.0.46.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/joda-time-2.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/joni-2.1.31.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/json-schema-validator-1.0.41.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jsse-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/libphonenumber-6.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-1.2-api-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-api-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-core-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/mailapi-1.4.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/msg-simple-1.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/myproxy-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/mysql-connector-java-5.1.47.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/pegasus-aws-batch.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/pegasus.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/postgresql-8.1dev-400.jdbc3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/resolver.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/rhino-1.7R4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/snakeyaml-1.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/sqlite-jdbc-3.8.11.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/ssl-proxies-2.1.0-patched.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/super-csv-2.4.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/uri-template-0.9.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/vdl.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xercesImpl.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xml-apis-1.4.01.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmlParserAPIs.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmldb.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmlrpc.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/accessors.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/bcprov-jdk15on-150.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/btf-1.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-lang3-3.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-logging.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-pool.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/exist-optional.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/exist.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gram-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gridftp-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gson-2.2.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gss-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/guava-16.0.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/hamcrest-core-1.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/io-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-annotations-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-core-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-coreutils-1.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-databind-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-dataformat-yaml-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jakarta-oro.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/java-getopt-1.0.9.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/javax.json-1.0.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jcodings-1.0.46.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/joda-time-2.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/joni-2.1.31.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/json-schema-validator-1.0.41.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jsse-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/libphonenumber-6.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-1.2-api-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-api-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-core-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/mailapi-1.4.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/msg-simple-1.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/myproxy-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/mysql-connector-java-5.1.47.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/pegasus-aws-batch.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/pegasus.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/postgresql-8.1dev-400.jdbc3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/resolver.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/rhino-1.7R4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/snakeyaml-1.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/sqlite-jdbc-3.8.11.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/ssl-proxies-2.1.0-patched.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/super-csv-2.4.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/uri-template-0.9.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/vdl.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xercesImpl.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xml-apis-1.4.01.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmlParserAPIs.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmldb.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmlrpc.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/apache-client-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/batch-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/commons-logging-api-1.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/core-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/http-client-spi-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/httpclient-4.5.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/httpcore-4.4.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-annotations-2.8.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-databind-2.8.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-jr-objects-2.9.0.pr4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/joda-time-2.8.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jopt-simple-5.0.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/logs-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/metrics-spi-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/netty-nio-client-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/s3-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/slf4j-api-1.7.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/slf4j-log4j12-1.7.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/thirdparty-logging.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/thirdparty.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/utils-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/apache-client-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/batch-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/commons-logging-api-1.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/core-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/http-client-spi-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/httpclient-4.5.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/httpcore-4.4.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-annotations-2.8.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-databind-2.8.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-jr-objects-2.9.0.pr4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/joda-time-2.8.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jopt-simple-5.0.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/logs-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/metrics-spi-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/netty-nio-client-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/s3-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/slf4j-api-1.7.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/slf4j-log4j12-1.7.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/thirdparty-logging.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/thirdparty.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/utils-2.0.0-preview-2.jar;BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
+};PEGASUS_BIN_DIR=/home/mzalam/pegasus-5.0.5/bin;_condor_SCHEDD_DAEMON_AD_FILE=/home/mzalam/wf/condor/local/spool/.schedd_classad;CONDOR_CONFIG=/home/mzalam/wf/condor/etc/condor_config;SSH_CONNECTION=10.255.250.173 57629 128.9.46.53 22;HOSTNAME=workflow.isi.edu;MODULESHOME=/usr/share/lmod/lmod;CONDOR_INHERIT=186804  0 0;PEGASUS_CONF_DIR=/home/mzalam/pegasus-5.0.5/etc;LMOD_sys=Linux;PEGASUS_ORIG_CLASSPATH=/home/mzalam/pegasus-5.0.5/share/pegasus/java/accessors.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/bcprov-jdk15on-150.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/btf-1.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-lang3-3.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-logging.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-pool.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/exist-optional.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/exist.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gram-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gridftp-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gson-2.2.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gss-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/guava-16.0.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/hamcrest-core-1.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/io-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-annotations-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-core-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-coreutils-1.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-databind-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-dataformat-yaml-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jakarta-oro.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/java-getopt-1.0.9.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/javax.json-1.0.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jcodings-1.0.46.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/joda-time-2.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/joni-2.1.31.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/json-schema-validator-1.0.41.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jsse-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/libphonenumber-6.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-1.2-api-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-api-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-core-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/mailapi-1.4.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/msg-simple-1.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/myproxy-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/mysql-connector-java-5.1.47.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/pegasus-aws-batch.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/pegasus.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/postgresql-8.1dev-400.jdbc3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/resolver.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/rhino-1.7R4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/snakeyaml-1.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/sqlite-jdbc-3.8.11.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/ssl-proxies-2.1.0-patched.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/super-csv-2.4.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/uri-template-0.9.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/vdl.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xercesImpl.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xml-apis-1.4.01.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmlParserAPIs.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmldb.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmlrpc.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/apache-client-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/batch-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/commons-logging-api-1.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/core-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/http-client-spi-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/httpclient-4.5.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/httpcore-4.4.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-annotations-2.8.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-databind-2.8.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-jr-objects-2.9.0.pr4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/joda-time-2.8.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jopt-simple-5.0.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/logs-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/metrics-spi-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/netty-nio-client-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/s3-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/slf4j-api-1.7.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/slf4j-log4j12-1.7.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/thirdparty-logging.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/thirdparty.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/utils-2.0.0-preview-2.jar;_CONDOR_DAGMAN_LOG=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/hierarchical-workflow-0.dag.dagman.out;XDG_RUNTIME_DIR=/run/user/8073;_CONDOR_MAX_DAGMAN_LOG=0;HOME=/home/mzalam;PEGASUS_SHARE_DIR=/home/mzalam/pegasus-5.0.5/share/pegasus;
+ 
+2023.03.04 01:02:16.869 PST:    
+2023.03.04 01:02:16.874 PST:   ----------------------------------------------------------------------- 
+2023.03.04 01:02:16.880 PST:   File for submitting this DAG to HTCondor           : inner.dag.condor.sub 
+2023.03.04 01:02:16.885 PST:   Log of DAGMan debugging messages                 : inner.dag.dagman.out 
+2023.03.04 01:02:16.890 PST:   Log of HTCondor library output                     : inner.dag.lib.out 
+2023.03.04 01:02:16.895 PST:   Log of HTCondor library error messages             : inner.dag.lib.err 
+2023.03.04 01:02:16.900 PST:   Log of the life of condor_dagman itself          : inner.dag.dagman.log 
+2023.03.04 01:02:16.906 PST:    
+2023.03.04 01:02:16.911 PST:   -no_submit given, not submitting DAG to HTCondor.  You can do this with: 
+2023.03.04 01:02:16.921 PST:   ----------------------------------------------------------------------- 
+2023.03.04 01:02:16.927 PST: [DEBUG]  condor_submit_dag exited with status 0 
+2023.03.04 01:02:16.934 PST: [DEBUG]  Updated environment for dagman is environment	= "_CONDOR_SCHEDD_ADDRESS_FILE=/home/mzalam/wf/condor/local/spool/.schedd_address _CONDOR_MAX_DAGMAN_LOG=0 _CONDOR_SCHEDD_DAEMON_AD_FILE=/home/mzalam/wf/condor/local/spool/.schedd_classad _CONDOR_DAGMAN_LOG=inner.dag.dagman.out PEGASUS_METRICS=true " 
+2023.03.04 01:02:16.934 PST: [INFO] event.pegasus.code.generation dax.id blackdiamond-0  (0.332 seconds) - FINISHED 
+2023.03.04 01:02:16.936 PST: [DEBUG]  Executing  /home/mzalam/pegasus-5.0.5/bin/pegasus-db-admin update -t master -c /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus.8509652495109392096.properties 
+2023.03.04 01:02:18.142 PST:   Database version: '5.0.5' (sqlite:////home/mzalam/.pegasus/workflow.db) 
+2023.03.04 01:02:18.205 PST: [DEBUG]  pegasus-db-admin exited with status 0 
+2023.03.04 01:02:18.207 PST: [DEBUG]  Executing  /home/mzalam/pegasus-5.0.5/bin/pegasus-db-admin create -Dpegasus.catalog.replica=JDBCRC -Dpegasus.catalog.replica.db.driver=sqlite -Dpegasus.catalog.replica.db.url=jdbc:sqlite:/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/blackdiamond-0.replicas.db -t jdbcrc -c /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus.8509652495109392096.properties 
+2023.03.04 01:02:19.444 PST:   Pegasus database was successfully created. 
+2023.03.04 01:02:19.449 PST:   Database version: '5.0.5' (sqlite:////home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/blackdiamond-0.replicas.db) 
+2023.03.04 01:02:19.512 PST: [DEBUG]  pegasus-db-admin exited with status 0 
+2023.03.04 01:02:19.512 PST:   Output replica catalog set to jdbc:sqlite:/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/blackdiamond-0.replicas.db 
+2023.03.04 01:02:19.513 PST:   
+
+
+I have concretized your abstract workflow. The workflow has been entered 
+into the workflow database with a state of "planned". The next step is 
+to start or execute your workflow. The invocation required is
+
+
+pegasus-run  /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000
+
+ 
+2023.03.04 01:02:19.518 PST: [DEBUG]  Sending Planner Metrics to [1 of 1] http://metrics.pegasus.isi.edu/metrics 
+2023.03.04 01:02:19.731 PST: [DEBUG]  Metrics succesfully sent to the server 
+2023.03.04 01:02:19.732 PST:   Time taken to execute is 4.295 seconds 
+2023.03.04 01:02:19.733 PST: [INFO] event.pegasus.planner planner.version 5.0.5  (4.435 seconds) - FINISHED 

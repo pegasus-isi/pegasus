@@ -1,0 +1,23 @@
+[
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "chebi.obo",
+   "id": 1,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/mzalam/covid/data/obofiles/chebi.obo", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013/./chebi.obo" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "chebi_drug_loader",
+   "id": 2,
+   "src_urls": [
+     { "site_label": "condorpool", "url": "file:///home/mzalam/covid/bin/chebi_drug_loader.py", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013/./chebi_drug_loader" }
+   ] }
+]

@@ -1,0 +1,16 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-04-23T01:00:54Z
+pegasus: 5.0.4
+transformations:
+- name: wc
+  sites:
+  - name: condorpool
+    pfn: /usr/bin/wc
+    type: installed
+- name: curl
+  sites:
+  - name: condorpool
+    pfn: /usr/bin/curl
+    type: installed
