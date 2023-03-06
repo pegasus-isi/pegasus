@@ -1,0 +1,185 @@
+- invocation: True
+  version: 3.0
+  start: 2023-03-04T01:06:16.231-08:00
+  duration: 2.459
+  transformation: "pegasus::transfer"
+  derivation: "null"
+  resource: "local"
+  wf-label: "hierarchical-workflow"
+  wf-stamp: "2023-03-04T01:00:54-08:00"
+  interface: enp129s0
+  hostaddr: 128.9.46.53
+  hostname: workflow.isi.edu
+  pid: 190824
+  uid: 8073
+  user: mzalam
+  gid: 1018
+  group: div23
+  umask: 0o0022
+  mainjob:
+    start: 2023-03-04T01:06:16.315-08:00
+    duration: 2.375
+    pid: 190825
+    usage:
+      utime: 0.271
+      stime: 0.105
+      maxrss: 19512
+      minflt: 18660
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 40
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 92
+      nivcsw: 7
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /home/mzalam/pegasus-5.0.5/bin/pegasus-transfer
+      mode: 0o100755
+      size: 2998
+      inode: 209458954
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-02-17T12:35:27-08:00
+      atime: 2023-03-03T22:10:15-08:00
+      ctime: 2023-03-03T22:10:08-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    argument_vector:
+      - "--threads"
+      - "2"
+    procs:
+  jobids:
+    condor: 66.0
+  cwd: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_190820
+  usage:
+    utime: 0.014
+    stime: 0.060
+    maxrss: 2616
+    minflt: 145
+    majflt: 0
+    nswap: 0
+    inblock: 0
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 2
+    nivcsw: 6
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: workflow.isi.edu
+    uname_release: 4.18.0-425.10.1.el8_7.x86_64
+    uname_machine: x86_64
+    ram_total: 65653728
+    ram_free: 20701804
+    ram_shared: 230276
+    ram_buffer: 10616
+    swap_total: 20971516
+    swap_free: 18878896
+    cpu_count: 24
+    cpu_speed: 1575
+    cpu_vendor: GenuineIntel
+    cpu_model: Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz
+    load_min1: 0.59
+    load_min5: 0.56
+    load_min15: 0.42
+    procs_total: 466
+    procs_running: 1
+    procs_sleeping: 289
+    procs_other: 176
+    procs_vmsize: 86858852
+    procs_rss: 9308788
+    task_total: 1429
+    task_running: 1
+    task_sleeping: 1252
+    task_other: 176
+  files:
+    stdin:
+      descriptor_number: 0
+      mode: 0o10600
+      size: 0
+      inode: 430132963
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T01:06:16-08:00
+      atime: 2023-03-04T01:06:16-08:00
+      ctime: 2023-03-04T01:06:16-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    stdout:
+      temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_190820/ks.out.37BHC6
+      descriptor: 3
+      mode: 0o100600
+      size: 1917
+      inode: 204836036
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-03-04T01:06:18-08:00
+      atime: 2023-03-04T01:06:16-08:00
+      ctime: 2023-03-04T01:06:18-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+      data_truncated: false
+      data: |
+        2023-03-04 01:06:16,465    INFO:  Reading URL pairs from stdin
+        2023-03-04 01:06:16,466    INFO:  1 transfers loaded
+        2023-03-04 01:06:16,466    INFO:  PATH=/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/wf/condor/bin:/home/mzalam/wf/condor/sbin:/home/mzalam/wf/bin:/home/mzalam/.local/bin:/home/mzalam/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/opt/local/bin
+        2023-03-04 01:06:16,466    INFO:  LD_LIBRARY_PATH=
+        2023-03-04 01:06:16,517    INFO:  --------------------------------------------------------------------------------
+        2023-03-04 01:06:16,517    INFO:  Starting transfers - attempt 1
+        2023-03-04 01:06:18,520    INFO:  /bin/cp -f -R -L '/home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./count.txt' '/home/mzalam/hierar/hierarichal-sample-wf/outputs/local-site/count.txt'
+        2023-03-04 01:06:18,531    INFO:  Tool found: pegasus-integrity   Version: N/A   Path: /home/mzalam/pegasus-5.0.5/bin/pegasus-integrity
+        2023-03-04 01:06:18,531    INFO:  /home/mzalam/pegasus-5.0.5/bin/pegasus-integrity --verify="count.txt=/home/mzalam/hierar/hierarichal-sample-wf/outputs/local-site/count.txt"
+        2023-03-04 01:06:18,676    INFO:  --------------------------------------------------------------------------------
+        2023-03-04 01:06:18,677    INFO:  @@@MONITORING_PAYLOAD - START@@@{"ts": 1677920778, "monitoring_event": "int.metric", "payload": [{"event": "check", "file_type": "output", "succeeded": 1, "failed": 0, "duration": "0.144"}]}@@@MONITORING_PAYLOAD - END@@@
+        2023-03-04 01:06:18,677    INFO:  Stats: Total 1 transfers, 7.0 B transferred in 2 seconds. Rate: 3.2 B/s (25.3 b/s)
+        2023-03-04 01:06:18,677    INFO:         Between sites local->local : 1 transfers, 7.0 B transferred in 2 seconds. Rate: 3.2 B/s (25.3 b/s)
+        2023-03-04 01:06:18,677    INFO:  All transfers completed successfully.
+        
+    stderr:
+      temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_190820/ks.err.N6Oooc
+      descriptor: 4
+      mode: 0o100600
+      size: 0
+      inode: 204836037
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T01:06:16-08:00
+      atime: 2023-03-04T01:06:16-08:00
+      ctime: 2023-03-04T01:06:16-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    metadata:
+      temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_190820/ks.meta.AS84eB
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 204836038
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T01:06:16-08:00
+      atime: 2023-03-04T01:06:16-08:00
+      ctime: 2023-03-04T01:06:16-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23

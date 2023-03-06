@@ -1,0 +1,6 @@
+[
+  {
+    "id": 1,
+    "type": "mkdir",
+    "target": { "site_label": "local", "url": "file:///home/mzalam/processwf/process-workflow/scratch/mzalam/pegasus/process/run0001" } }
+]

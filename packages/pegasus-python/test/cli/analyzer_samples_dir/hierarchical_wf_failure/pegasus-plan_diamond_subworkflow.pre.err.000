@@ -1,0 +1,328 @@
+2023-03-04 11:57:13: PegasusLite: version 5.0.5
+2023-03-04 11:57:13: Executing on host workflow.isi.edu IP=128.9.46.53
+
+########################[Pegasus Lite] Setting up workdir ########################
+2023-03-04 11:57:13: Checking /tmp for potential use as work space... 
+2023-03-04 11:57:13:   Workdir is /tmp/pegasus.rEvgVexx6 - 35G available
+2023-03-04 11:57:13: Changing cwd to /tmp/pegasus.rEvgVexx6
+Can't open ./.chirp.config file
+cannot chirp_connect to condor_starter
+	Error: 2 (No such file or directory)
+2023-03-04 11:57:13: condor_chirp test failed - disabling chirping
+
+######################[Pegasus Lite] Executing the user task ######################
+- invocation: True
+  version: 3.0
+  start: 2023-03-04T11:57:13.293-08:00
+  duration: 1.884
+  transformation: "pegasus-plan_diamond_subworkflow.pre.sh"
+  derivation: "diamond_subworkflow"
+  resource: "local"
+  wf-label: "hierarchical-workflow"
+  wf-stamp: "2023-03-04T11:55:58-08:00"
+  interface: enp129s0
+  hostaddr: 128.9.46.53
+  hostname: workflow.isi.edu
+  pid: 382294
+  uid: 8073
+  user: mzalam
+  gid: 1018
+  group: div23
+  umask: 0o0022
+  mainjob:
+    start: 2023-03-04T11:57:13.383-08:00
+    duration: 1.794
+    pid: 382295
+    usage:
+      utime: 2.394
+      stime: 0.450
+      maxrss: 177616
+      minflt: 43837
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 80
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 7629
+      nivcsw: 27
+    status:
+      raw: 512
+      regular_exitcode: 2
+    executable:
+      file_name: /home/mzalam/pegasus-5.0.5/bin/pegasus-plan
+      mode: 0o100755
+      size: 897
+      inode: 209458959
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-02-17T10:23:44-08:00
+      atime: 2023-03-03T22:10:15-08:00
+      ctime: 2023-03-03T22:10:08-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    argument_vector:
+      - "-Dpegasus.log.*=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/pegasus-plan_diamond_subworkflow.pre.log"
+      - "-Dpegasus.workflow.root.uuid=06031cb1-d2e1-41d8-9e8b-45c9a77e3eb8"
+      - "--conf"
+      - "inner_diamond_workflow.pegasus.properties"
+      - "--dir"
+      - "/home/mzalam/hierar/hierarichal-sample-wf/submit"
+      - "--relative-dir"
+      - "mzalam/pegasus/hierarchical-workflow/run0003/00/00/./blackdiamond_diamond_subworkflow"
+      - "--relative-submit-dir"
+      - "mzalam/pegasus/hierarchical-workflow/run0003/00/00/./blackdiamond_diamond_subworkflow"
+      - "--basename"
+      - "inner"
+      - "--sites"
+      - "condorpool"
+      - "--cache"
+      - "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/pegasus-plan_diamond_subworkflow.cache"
+      - "--output-map"
+      - "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/pegasus-plan_diamond_subworkflow.output.map"
+      - "--output-sites"
+      - "local"
+      - "--cleanup"
+      - "none"
+      - "--verbose"
+      - "--verbose"
+      - "--verbose"
+      - "--deferred"
+      - "/home/mzalam/hierar/hierarichal-sample-wf/inner_diamond_workflow.yml"
+    procs:
+  jobids:
+  cwd: /tmp/pegasus.rEvgVexx6
+  usage:
+    utime: 0.016
+    stime: 0.062
+    maxrss: 2616
+    minflt: 133
+    majflt: 0
+    nswap: 0
+    inblock: 0
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 2
+    nivcsw: 5
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: workflow.isi.edu
+    uname_release: 4.18.0-425.10.1.el8_7.x86_64
+    uname_machine: x86_64
+    ram_total: 65653728
+    ram_free: 19257448
+    ram_shared: 230408
+    ram_buffer: 10616
+    swap_total: 20971516
+    swap_free: 18894768
+    cpu_count: 24
+    cpu_speed: 2500
+    cpu_vendor: GenuineIntel
+    cpu_model: Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz
+    load_min1: 0.55
+    load_min5: 0.43
+    load_min15: 0.39
+    procs_total: 462
+    procs_running: 1
+    procs_sleeping: 287
+    procs_other: 174
+    procs_vmsize: 86449152
+    procs_rss: 9256992
+    task_total: 1425
+    task_running: 1
+    task_sleeping: 1250
+    task_other: 174
+  files:
+    f.d:
+      error: 2
+      lfn: "f.d"
+      file_name: f.d
+    stdin:
+      file_name: /dev/null
+      mode: 0o20666
+      size: 0
+      inode: 3075
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-01-25T15:24:15-08:00
+      atime: 2023-01-25T15:24:15-08:00
+      ctime: 2023-01-25T15:24:15-08:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    stdout:
+      temporary_name: /tmp/ks.out.lTZUK6
+      descriptor: 3
+      mode: 0o100600
+      size: 0
+      inode: 2499
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T11:57:13-08:00
+      atime: 2023-03-04T11:57:13-08:00
+      ctime: 2023-03-04T11:57:13-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    stderr:
+      temporary_name: /tmp/ks.err.ba4pRT
+      descriptor: 4
+      mode: 0o100600
+      size: 0
+      inode: 2500
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T11:57:13-08:00
+      atime: 2023-03-04T11:57:13-08:00
+      ctime: 2023-03-04T11:57:13-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    metadata:
+      temporary_name: /tmp/ks.meta.yEQv9r
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 2501
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T11:57:13-08:00
+      atime: 2023-03-04T11:57:13-08:00
+      ctime: 2023-03-04T11:57:13-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    kickstart:
+      error: 2
+      note: ignore error - it is just a warning
+      file_name: pegasus-kickstart
+    logfile:
+      descriptor_number: 1
+      mode: 0o100644
+      size: 4764
+      inode: 147524577
+      nlink: 1
+      blksize: 4096
+      blocks: 16
+      mtime: 2023-03-04T11:57:15-08:00
+      atime: 2023-03-04T11:57:13-08:00
+      ctime: 2023-03-04T11:57:15-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+  environment:
+    "BASH_ENV": "/usr/share/lmod/lmod/init/bash"
+    "BASH_FUNC_ml%%": "() {  eval \"$($LMOD_DIR/ml_cmd \"$@\")\"\n}"
+    "BASH_FUNC_module%%": "() {  if [ -z \"${LMOD_SH_DBG_ON+x}\" ]; then\n case \"$-\" in \n *v*x*)\n __lmod_sh_dbg='vx'\n ;;\n *v*)\n __lmod_sh_dbg='v'\n ;;\n *x*)\n __lmod_sh_dbg='x'\n ;;\n esac;\n fi;\n if [ -n \"${__lmod_sh_dbg:-}\" ]; then\n set +$__lmod_sh_dbg;\n echo \"Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for Lmod's output\" 1>&2;\n fi;\n eval \"$($LMOD_CMD shell \"$@\")\" && eval \"$(${LMOD_SETTARG_CMD:-:} -s sh)\";\n __lmod_my_status=$?;\n if [ -n \"${__lmod_sh_dbg:-}\" ]; then\n echo \"Shell debugging restarted\" 1>&2;\n set -$__lmod_sh_dbg;\n fi;\n unset __lmod_sh_dbg;\n return $__lmod_my_status\n}"
+    "CLASSPATH": "/home/mzalam/pegasus-5.0.5/share/pegasus/java/accessors.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/bcprov-jdk15on-150.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/btf-1.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-lang3-3.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-logging.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/commons-pool.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/exist-optional.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/exist.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gram-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gridftp-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gson-2.2.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/gss-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/guava-16.0.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/hamcrest-core-1.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/io-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-annotations-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-core-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-coreutils-1.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-databind-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jackson-dataformat-yaml-2.9.10.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jakarta-oro.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/java-getopt-1.0.9.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/javax.json-1.0.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jcodings-1.0.46.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/joda-time-2.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/joni-2.1.31.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/json-schema-validator-1.0.41.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/jsse-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/libphonenumber-6.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-1.2-api-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-api-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/log4j-core-2.17.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/mailapi-1.4.3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/msg-simple-1.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/myproxy-2.1.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/mysql-connector-java-5.1.47.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/pegasus-aws-batch.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/pegasus.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/postgresql-8.1dev-400.jdbc3.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/resolver.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/rhino-1.7R4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/snakeyaml-1.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/sqlite-jdbc-3.8.11.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/ssl-proxies-2.1.0-patched.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/super-csv-2.4.0.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/uri-template-0.9.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/vdl.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xercesImpl.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xml-apis-1.4.01.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmlParserAPIs.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmldb.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/xmlrpc.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/apache-client-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/batch-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/commons-logging-api-1.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/core-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/http-client-spi-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/httpclient-4.5.2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/httpcore-4.4.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-annotations-2.8.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-databind-2.8.8.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jackson-jr-objects-2.9.0.pr4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/joda-time-2.8.1.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/jopt-simple-5.0.4.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/logs-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/metrics-spi-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/netty-nio-client-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/s3-2.0.0-preview-2.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/slf4j-api-1.7.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/slf4j-log4j12-1.7.25.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/thirdparty-logging.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/thirdparty.jar:/home/mzalam/pegasus-5.0.5/share/pegasus/java/aws/utils-2.0.0-preview-2.jar"
+    "CONDOR_CONFIG": "/home/mzalam/wf/condor/etc/condor_config"
+    "CONDOR_ID": "96.0"
+    "CONDOR_INHERIT": "381534  0 0"
+    "CONDOR_PARENT_ID": "workflow:381534:1677959772"
+    "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/8073/bus"
+    "DEBUGINFOD_URLS": "https://debuginfod.centos.org/ "
+    "HISTCONTROL": "ignoredups"
+    "HISTSIZE": "1000"
+    "HOME": "/home/mzalam"
+    "HOSTNAME": "workflow.isi.edu"
+    "KICKSTART_INTEGRITY_DATA": "/tmp/ks.integrity.XBNnY2"
+    "KICKSTART_METADATA": "/tmp/ks.meta.yEQv9r"
+    "LANG": "en_US.UTF-8"
+    "LESSOPEN": "||/usr/bin/lesspipe.sh %s"
+    "LMOD_CMD": "/usr/share/lmod/lmod/libexec/lmod"
+    "LMOD_DIR": "/usr/share/lmod/lmod/libexec"
+    "LMOD_PKG": "/usr/share/lmod/lmod"
+    "LMOD_ROOT": "/usr/share/lmod"
+    "LMOD_SETTARG_FULL_SUPPORT": "no"
+    "LMOD_VERSION": "8.7.19"
+    "LMOD_sys": "Linux"
+    "LOGNAME": "mzalam"
+    "MAIL": "/var/spool/mail/mzalam"
+    "MANPATH": "/usr/share/lmod/lmod/share/man:"
+    "MODULEPATH": "/etc/modulefiles:/usr/share/modulefiles:/usr/share/modulefiles/Linux:/usr/share/modulefiles/Core:/usr/share/lmod/lmod/modulefiles/Core"
+    "MODULEPATH_ROOT": "/usr/share/modulefiles"
+    "MODULESHOME": "/usr/share/lmod/lmod"
+    "OLDPWD": "/tmp"
+    "PATH": "/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/wf/condor/bin:/home/mzalam/wf/condor/sbin:/home/mzalam/wf/bin:/home/mzalam/.local/bin:/home/mzalam/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
+    "PEGASUS_HOME": "/home/mzalam/pegasus-5.0.5"
+    "PEGASUS_MULTIPART_DIR": "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/.pegasus.mulitpart.d"
+    "PWD": "/tmp/pegasus.rEvgVexx6"
+    "PYTHONPATH": "/home/mzalam/pegasus-5.0.5/lib64/python3.6/site-packages"
+    "SHELL": "/bin/bash"
+    "SHLVL": "2"
+    "SSH_ASKPASS": "/usr/libexec/openssh/gnome-ssh-askpass"
+    "SSH_CLIENT": "10.255.250.173 58411 22"
+    "SSH_CONNECTION": "10.255.250.173 58411 128.9.46.53 22"
+    "SSH_TTY": "/dev/pts/1"
+    "TERM": "xterm-256color"
+    "USER": "mzalam"
+    "VIRTUAL_ENV": "/home/mzalam/wf"
+    "XDG_DATA_DIRS": "/home/mzalam/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share"
+    "XDG_RUNTIME_DIR": "/run/user/8073"
+    "XDG_SESSION_ID": "16523"
+    "_": "/home/mzalam/pegasus-5.0.5/bin/pegasus-kickstart"
+    "_CONDOR_ANCESTOR_131424": "131430:1677910959:1464735406"
+    "_CONDOR_ANCESTOR_131430": "381529:1677959772:298940601"
+    "_CONDOR_ANCESTOR_381534": "382207:1677959833:720864383"
+    "_CONDOR_DAGMAN_LOG": "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/hierarchical-workflow-0.dag.dagman.out"
+    "_CONDOR_JOB_AD": "/home/mzalam/wf/condor/local/spool/local_univ_execute/dir_96_0/.job.ad"
+    "_CONDOR_MAX_DAGMAN_LOG": "0"
+    "_CONDOR_SCHEDD_ADDRESS_FILE": "/home/mzalam/wf/condor/local/spool/.schedd_address"
+    "_CONDOR_SCHEDD_DAEMON_AD_FILE": "/home/mzalam/wf/condor/local/spool/.schedd_classad"
+    "_condor_SCHEDD_ADDRESS_FILE": "/home/mzalam/wf/condor/local/spool/.schedd_address"
+    "_condor_SCHEDD_DAEMON_AD_FILE": "/home/mzalam/wf/condor/local/spool/.schedd_classad"
+    "pegasus_lite_work_dir": "/tmp/pegasus.rEvgVexx6"
+    "pegasus_lite_work_dir_created": "1"
+    "which_declare": "declare -f"
+  limits:
+    RLIMIT_CPU_soft: unlimited
+    RLIMIT_CPU_hard: unlimited
+    RLIMIT_FSIZE_soft: unlimited
+    RLIMIT_FSIZE_hard: unlimited
+    RLIMIT_DATA_soft: unlimited
+    RLIMIT_DATA_hard: unlimited
+    RLIMIT_STACK_soft: 8388608
+    RLIMIT_STACK_hard: unlimited
+    RLIMIT_CORE_soft: 0
+    RLIMIT_CORE_hard: 0
+    RESOURCE_5_soft: unlimited
+    RESOURCE_5_hard: unlimited
+    RLIMIT_NPROC_soft: 256324
+    RLIMIT_NPROC_hard: 256324
+    RLIMIT_NOFILE_soft: 4096
+    RLIMIT_NOFILE_hard: 4096
+    RLIMIT_MEMLOCK_soft: 65536
+    RLIMIT_MEMLOCK_hard: 65536
+    RLIMIT_AS_soft: unlimited
+    RLIMIT_AS_hard: unlimited
+    RLIMIT_LOCKS_soft: unlimited
+    RLIMIT_LOCKS_hard: unlimited
+    RLIMIT_SIGPENDING_soft: 256324
+    RLIMIT_SIGPENDING_hard: 256324
+    RLIMIT_MSGQUEUE_soft: 819200
+    RLIMIT_MSGQUEUE_hard: 819200
+    RLIMIT_NICE_soft: 0
+    RLIMIT_NICE_hard: 0
+    RLIMIT_RTPRIO_soft: 0
+    RLIMIT_RTPRIO_hard: 0
+    RESOURCE_15_soft: unlimited
+    RESOURCE_15_hard: unlimited
+2023-03-04 11:57:15: User task failed with exitcode 2
+2023-03-04 11:57:15: /tmp/pegasus.rEvgVexx6 cleaned up
+PegasusLite: exitcode 2

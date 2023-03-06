@@ -1,0 +1,23 @@
+digraph E {
+size="8.0,10.0"
+ratio=fill
+node [shape=ellipse]
+edge [arrowhead=normal, arrowsize=1.0]
+	"chebi_drug_loader_ID0000001" [color=blueviolet,style=filled,label="chebi_drug_loader_ID0000001"]
+	"register_local_0_0" [color=orange,style=filled,label="register_local_0_0"]
+	"clean_up_local_level_3_0" [color=deepskyblue,style=filled,label="clean_up_local_level_3_0"]
+	"stage_out_local_local_0_0" [color=goldenrod,style=filled,label="stage_out_local_local_0_0"]
+	"clean_up_local_level_4_0" [color=deepskyblue,style=filled,label="clean_up_local_level_4_0"]
+	"cleanup_Drug-Combination-Therapy_0_local" [color=deepskyblue,style=filled,label="cleanup_Drug-Combination-Therapy_0_local"]
+	"create_dir_Drug-Combination-Therapy_0_local" [color=darkturquoise,style=filled,label="create_dir_Drug-Combination-Therapy_0_local"]
+	"stage_in_local_local_0_0" [color=gold,style=filled,label="stage_in_local_local_0_0"]
+
+	"chebi_drug_loader_ID0000001" -> "clean_up_local_level_3_0"
+	"chebi_drug_loader_ID0000001" -> "stage_out_local_local_0_0"
+	"clean_up_local_level_3_0" -> "cleanup_Drug-Combination-Therapy_0_local"
+	"stage_out_local_local_0_0" -> "register_local_0_0"
+	"stage_out_local_local_0_0" -> "clean_up_local_level_4_0"
+	"clean_up_local_level_4_0" -> "cleanup_Drug-Combination-Therapy_0_local"
+	"create_dir_Drug-Combination-Therapy_0_local" -> "stage_in_local_local_0_0"
+	"stage_in_local_local_0_0" -> "chebi_drug_loader_ID0000001"
+}
