@@ -1652,7 +1652,7 @@ class AnalyzeFiles(BaseAnalyze):
                 user_cmd = user_cmd + " --output-dir %s" % (self.options.output_dir)
 
             # get any options that need to be invoked for the sub workflow
-            extraOptions = BaseAnalyze.addon(options)
+            extraOptions = BaseAnalyze.addon(self.options)
             sub_wf_cmd = "{} {} -d {}".format(
                 user_cmd, extraOptions, os.path.split(self.jobs[job].dagman_out)[0],
             )
