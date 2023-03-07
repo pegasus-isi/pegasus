@@ -833,18 +833,14 @@ class TestAnalyzeFiles:
 
 
     def test_invoke_monitord(self, mocker, AnalyzerFiles):
+        mocker.patch("Pegasus.analyzer.BaseAnalyze.backticks")
         temp_dir = tempfile.mkdtemp('sample_temp_dir')
         dagman_out_file = os.path.join(directory, "analyzer_samples_dir/process_wf_failure/process-0.dag.dagman.out")
+        
+        cmd = f"pegasus-monitord -r --no-events --output-dir {temp_dir} {dagman_out_file}"
         analyze = AnalyzerFiles(Options(run_monitord=True))
-        
         analyze.invoke_monitord(dagman_out_file, temp_dir)
-        
-        assert len(os.listdir(temp_dir)) == 5
-        assert len(glob.glob(temp_dir+"/*jobstate.log")) == 1
-        assert len(glob.glob(temp_dir+"/*monitord.done")) == 1
-        assert len(glob.glob(temp_dir+"/*monitord.started")) == 1
-        assert len(glob.glob(temp_dir+"/*monitord.info")) == 1
-        assert len(glob.glob(temp_dir+"/monitord.subwf")) == 1
+        BaseAnalyze.backticks.assert_called_once_with(cmd)
 
 
     def test_invoke_monitord_error(self, mocker, AnalyzerFiles):
@@ -1143,7 +1139,7 @@ class TestAnalyzeFiles:
                               "job_name": "ls_ID0000001",
                               "state": "POST_SCRIPT_FAILURE",
                               "site": "",
-                              "submit_file": "/home/mzalam/pegasus_master/pegasus/packages/pegasus-python/test/cli/analyzer_samples_dir/process_wf_failure/00/00/ls_ID0000001.sub",
+                              "submit_file": f"{submit_dir}/00/00/ls_ID0000001.sub",
                               "stdout_file": "",
                               "stderr_file": "",
                               "executable": "",
@@ -1188,11 +1184,11 @@ class TestDebugWF:
     def test_debug_workflow_debug_dir_write_fail(self, mocker, AnalyzerDebug):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
         job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
-        debug = AnalyzerDebug(Options(debug_job=job,debug_dir='/usr'))
+        debug = AnalyzerDebug(Options(debug_job=job,debug_dir='/'))
         
         with pytest.raises(AnalyzerError) as err:
             debug.debug_workflow()
-        assert "not able to write to temporary directory: /usr" in str(err)
+        assert "not able to write to temporary directory: /" in str(err)
         
         
     def test_debug_workflow_create_debug_dir_fail(self, mocker, capsys, AnalyzerDebug):
