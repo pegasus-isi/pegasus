@@ -160,10 +160,10 @@ diamond_wf_job = SubWorkflow(file=diamond_wf_file, is_planned=False, _id="diamon
                         "inner"
                     )\
                     .add_inputs(
-                        File("inner_diamond_workflow.pegasus.properties"),
-                        File("inner_diamond_workflow_rc.yml"),
-                        File("inner_diamond_workflow_tc.yml"),
-                        File("sites.yml"),
+                        File("inner_diamond_workflow.pegasus.properties", for_planning=True),
+                        File("inner_diamond_workflow_rc.yml", for_planning=True),
+                        File("inner_diamond_workflow_tc.yml", for_planning=True),
+                        File("sites.yml", for_planning=True),
                     )
 
 sleep_wf_file = File("inner_sleep_workflow.yml")
