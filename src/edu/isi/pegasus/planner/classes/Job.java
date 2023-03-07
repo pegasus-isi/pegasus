@@ -2409,6 +2409,15 @@ public class Job extends Data implements GraphNodeContent {
                                 "pegasusWorkflow job has to have file specified" + node);
                     }
                     ((DAXJob) j).setDAXLFN(file);
+                    
+                    //PM-1905 traverse through all the input files and make sure
+                    //if there is an input file with dax lfn, then set
+                    //the for planning attribute set to true
+                    for(PegasusFile pf: j.getInputFiles()){
+                        if(pf.getLFN().equalsIgnoreCase(file)){
+                            pf.setUseForPlanning();
+                        }
+                    }
 
                     // the job should be tagged type pegasus
                     j.setTypeRecursive();

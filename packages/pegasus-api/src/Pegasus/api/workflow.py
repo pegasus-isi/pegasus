@@ -554,7 +554,7 @@ class SubWorkflow(AbstractJob):
         self._planner_args_already_set = False
 
         if not isinstance(self.file, Workflow):
-            self.add_inputs(self.file)
+            self.add_inputs(File(self.file, for_planning=True))
 
     @_chained
     def add_planner_args(

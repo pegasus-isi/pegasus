@@ -10,7 +10,7 @@ from Pegasus.api import *
 logging.basicConfig(level=logging.DEBUG)
 
 # we need to use keg from the binary checkout for the test
-PEGASUS_LOCATION = "${PEGASUS_LOCAL_BIN_DIR}/pegasus-keg"
+PEGASUS_LOCATION = "${PEGASUS_SHARED_BIN_DIR}/pegasus-keg"
 
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-integrity-checking-condorio-5.0api-" + datetime.now().strftime(
@@ -88,7 +88,7 @@ tools_container = Container(
     Container.SINGULARITY,
     image="scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
     checksum={"sha256": readable_hash},
-    mounts=["${PEGASUS_LOCAL_BIN_DIR}:${PEGASUS_LOCAL_BIN_DIR}"],
+    mounts=["${PEGASUS_SHARED_BIN_DIR}:${PEGASUS_SHARED_BIN_DIR}"],
     bypass_staging=True
 )
 
