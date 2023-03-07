@@ -1,0 +1,39 @@
+1677911025 INTERNAL *** MONITORD_STARTED ***
+1677911023 INTERNAL *** DAGMAN_STARTED 1.0 ***
+1677911024 create_dir_process_0_local SUBMIT 2.0 local - 1
+1677911028 create_dir_process_0_local EXECUTE 2.0 local - 1
+1677911031 create_dir_process_0_local JOB_TERMINATED 2.0 local - 1
+1677911034 create_dir_process_0_local JOB_SUCCESS 0 local - 1
+1677911034 create_dir_process_0_local POST_SCRIPT_STARTED 2.0 local - 1
+1677911035 create_dir_process_0_local POST_SCRIPT_TERMINATED 2.0 local - 1
+1677911039 create_dir_process_0_local POST_SCRIPT_SUCCESS 0 local - 1
+1677911044 ls_ID0000001 SUBMIT 3.0 condorpool - 2
+1677911059 ls_ID0000001 EXECUTE 3.0 condorpool - 2
+1677911060 ls_ID0000001 JOB_TERMINATED 3.0 condorpool - 2
+1677911064 ls_ID0000001 JOB_SUCCESS 0 condorpool - 2
+1677911064 ls_ID0000001 POST_SCRIPT_STARTED 3.0 condorpool - 2
+1677911064 ls_ID0000001 POST_SCRIPT_TERMINATED 3.0 condorpool - 2
+1677911069 ls_ID0000001 POST_SCRIPT_SUCCESS 0 condorpool - 2
+1677911074 stage_out_local_local_0_0 SUBMIT 4.0 local - 3
+1677911074 stage_out_local_local_0_0 EXECUTE 4.0 local - 3
+1677911077 stage_out_local_local_0_0 JOB_TERMINATED 4.0 local - 3
+1677911079 stage_out_local_local_0_0 JOB_SUCCESS 0 local - 3
+1677911079 stage_out_local_local_0_0 POST_SCRIPT_STARTED 4.0 local - 3
+1677911079 stage_out_local_local_0_0 POST_SCRIPT_TERMINATED 4.0 local - 3
+1677911084 stage_out_local_local_0_0 POST_SCRIPT_SUCCESS 0 local - 3
+1677911089 cleanup_process_0_local SUBMIT 5.0 local - 4
+1677911089 register_local_0_0 SUBMIT 6.0 local - 5
+1677911090 cleanup_process_0_local EXECUTE 5.0 local - 4
+1677911090 register_local_0_0 EXECUTE 6.0 local - 5
+1677911092 cleanup_process_0_local JOB_TERMINATED 5.0 local - 4
+1677911094 cleanup_process_0_local JOB_SUCCESS 0 local - 4
+1677911094 cleanup_process_0_local POST_SCRIPT_STARTED 5.0 local - 4
+1677911092 register_local_0_0 JOB_TERMINATED 6.0 local - 5
+1677911094 register_local_0_0 JOB_SUCCESS 0 local - 5
+1677911094 register_local_0_0 POST_SCRIPT_STARTED 6.0 local - 5
+1677911095 register_local_0_0 POST_SCRIPT_TERMINATED 6.0 local - 5
+1677911100 register_local_0_0 POST_SCRIPT_SUCCESS 0 local - 5
+1677911095 cleanup_process_0_local POST_SCRIPT_TERMINATED 5.0 local - 4
+1677911100 cleanup_process_0_local POST_SCRIPT_SUCCESS 0 local - 4
+1677911100 INTERNAL *** DAGMAN_FINISHED 0 ***
+1677911101 INTERNAL *** MONITORD_FINISHED 0 ***
