@@ -2,14 +2,16 @@ import os
 import glob
 import tempfile
 from textwrap import dedent
-
+import subprocess
 import pytest
+
+from Pegasus.db import connection
 from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
 from Pegasus.analyzer import *
 
 directory = os.path.dirname(__file__)
-pegasus_version = '5.0.1' #os.popen("pegasus-version").read()
-
+pegasus_version = '5.0.1'
+prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")
 
 @pytest.fixture(scope="function")
 def AnalyzerDatabase():
@@ -54,7 +56,8 @@ class TestBaseAnalyze:
         captured_output = captured.out.lstrip()
         expected_output = "HTCondor DAGMan expects submit directories to be NOT NFS mounted\n Set your submit directory to a directory on the local filesystem OR \n    Set HTCondor configuration CREATE_LOCKS_ON_LOCAL_DISK and ENABLE_USERLOG_LOCKING to True. Check HTCondor documentation for further details."
         assert expected_output in captured_output
-        
+
+
     def test_addon(self, mocker, BaseAnalyzer):
         opts = Options(
                 recurse_mode=True,
@@ -66,6 +69,7 @@ class TestBaseAnalyze:
         
         assert BaseAnalyzer.addon(opts) == "--recurse --quiet --summary --files --indent 3 "   
 
+        
     def test_parse_submit_file(self, mocker, capsys, BaseAnalyzer):
         submit_file = os.path.join(
                         directory,"analyzer_samples_dir/sample_wf_held/Drug-Combination-Therapy-0.dag.condor.sub"
@@ -80,6 +84,54 @@ class TestBaseAnalyze:
             )
         BaseAnalyze.parse_submit_file(job, opts)
         assert job.transfer_input_files == 'rrr'
+        
+        
+    def test_parse_submit_file_open_error(self, mocker, capsys, BaseAnalyzer):
+        submit_file = os.path.join(
+                        directory,"analyzer_samples_dir/sample_wf_held/Drug-Combination-Therapy-0.dag.condor.sub"
+                    )
+        job = Job('job-0','running')
+        job.sub_file = submit_file
+        mocker.patch("builtins.open",side_effect=Exception('mocked error'))
+        opts = Options(debug_mode=True,
+            input_dir="pegasus/hierarchical-workflow/run0005",
+            workflow_base_dir="/home/mzalam/028-dynamic-hierarchy"
+            )
+        with pytest.raises(Exception) as err:
+            BaseAnalyze.parse_submit_file(job, opts)
+        assert f"error opening submit file: {submit_file}" in str(err)
+            
+
+    def test_parse_submit_file_subdag_job(self, mocker, capsys, BaseAnalyzer):
+        job = Job('job-0','running')
+        job.is_subdag = True
+        opts = Options(debug_mode=True,
+            input_dir="pegasus/hierarchical-workflow/run0005",
+            workflow_base_dir="/home/mzalam/028-dynamic-hierarchy"
+            )
+        
+        assert BaseAnalyze.parse_submit_file(job, opts) == None
+
+
+    def test_parse_submit_file_no_retries(self, mocker, capsys, BaseAnalyzer):
+        submit_file = os.path.join(
+                        directory,"analyzer_samples_dir/sample_wf_held/Drug-Combination-Therapy-0.dag.condor.sub"
+                    )
+        job = Job('job-0','running')
+        job.is_subdax = True
+        job.sub_file = submit_file
+        job.retries = None
+        opts = Options(debug_mode=True,
+            input_dir="pegasus/hierarchical-workflow/run0005",
+            workflow_base_dir="/home/mzalam/028-dynamic-hierarchy"
+            )
+        
+        BaseAnalyze.parse_submit_file(job, opts)
+        captured = capsys.readouterr()
+        captured_output = captured.out.lstrip()
+        expected_output = "sub-workflow retry counter not initialized... continuing..."
+        assert expected_output in captured_output
+        
         
 
 class TestAnalyzerOutput:
@@ -99,7 +151,40 @@ class TestAnalyzeDB:
     def test_should_create_AnalyzeDB(self, AnalyzerDatabase):
         assert AnalyzerDatabase is not None
 
+
+    def test_analyze_db_error(self, mocker, capsys, AnalyzerDatabase):
+        mocker.patch("Pegasus.db.connection.url_by_submitdir",side_effect=AnalyzerError)
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
+        analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
         
+        with pytest.raises(AnalyzerError) as err:
+            analyze.analyze_db(None)
+            assert "Unable to connect to database for workflow" in str(err.value)
+
+
+    def test_analyze_db_no_url(self, mocker, capsys, AnalyzerDatabase):
+        mocker.patch("Pegasus.db.connection.url_by_submitdir",return_value=None)
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
+        analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
+        
+        with pytest.raises(ValueError) as err:
+            analyze.analyze_db(None)
+        assert "Database URL is required" in str(err)
+        
+        
+    def test_analyze_db_no_wf_id(self, mocker, capsys, AnalyzerDatabase):
+        mocker.patch("Pegasus.db.workflow.stampede_statistics.StampedeStatistics.get_workflow_details")
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
+        
+        analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
+        with pytest.raises(KeyError) as err:
+            analyze.analyze_db(None)
+        captured = capsys.readouterr()
+        captured_error = captured.err.lstrip()
+        expected_error = "Unable to determine the database id for workflow with uuid f00c0056-abd4-4e8e-b793-24eb760dda1f"
+        assert expected_error in captured_error
+
+
     def test_simple_wf_success(self, mocker, capsys, AnalyzerDatabase):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
@@ -332,7 +417,7 @@ class TestAnalyzeDB:
     def test_traverse_all_subworkflows(self, mocker, capsys, AnalyzerDatabase):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/hierarchical_wf_success")
         db_version = pegasus_version
-        db_url = 'sqlite:////home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/hierarchical-workflow-0.stampede.db'
+        db_url = 'sqlite:///'+submit_dir+'/hierarchical-workflow-0.stampede.db'
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir, traverse_all=True))
         analyze.analyze_db(None)
         captured = capsys.readouterr()
@@ -367,7 +452,7 @@ class TestAnalyzeDB:
         assert captured_output[captured_output.find("*") :] == expected_output.lstrip()
         
         
-    def test_analyze_db_workflow_error(self, mocker, capsys, AnalyzerDatabase):
+    def test_analyze_db_for_wf_workflow_error(self, mocker, capsys, AnalyzerDatabase):
         mocker.patch("Pegasus.analyzer.AnalyzeDB.get_workflow_status",return_value=WORKFLOW_STATUS.FAILURE)
         mock_wf = mocker.MagicMock()
         mock_wf_stats = mocker.MagicMock()
@@ -382,9 +467,64 @@ class TestAnalyzeDB:
             analyze.analyze_db_for_wf(mock_wf_stats,'uuid-0','submit_dir-0', mock_wf)
             assert "Workflow failed" in str(err)
             assert 'uuid-0' in str(err) and 'submit_dir-0' in str(err)
+            
+    def test_analyze_db_for_wf_failed_wf_zero_failed_jobs(self, mocker, capsys, AnalyzerDatabase):
+        mocker.patch("Pegasus.analyzer.AnalyzeDB.get_workflow_status",return_value=WORKFLOW_STATUS.FAILURE)
+        mock_wf = mocker.MagicMock()
+        class count:
+            succeeded = 0
+            failed = 0
+        mock_wf_stats = mocker.MagicMock()
+        mock_wf_stats.configure_mock(
+            **{
+                "get_failing_jobs.return_value": (1,2,3),
+                "get_total_succeeded_failed_jobs_status": count
+            }
+        )
+        
+        analyze = AnalyzerDatabase(Options(summary_mode=True,input_dir='/temp/dir'))
+        with pytest.raises(Exception) as err:
+            analyze.analyze_db_for_wf(mock_wf_stats,'uuid-0','submit_dir-0', mock_wf)
+        
+        captured = capsys.readouterr()
+        captured_output = captured.out.lstrip()
+        expected_output = "It seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in /temp/dir"
+        assert expected_output in captured_output
+            
+
+    def test_analyze_db_for_failed_subwf(self, mocker, capsys, AnalyzerDatabase):
+        mocker.patch("Pegasus.analyzer.AnalyzeDB.get_workflow_status",return_value=WORKFLOW_STATUS.FAILURE)
+        mocker.patch("Pegasus.analyzer.AnalyzeDB.print_job_instance")
+        mocker.patch("Pegasus.analyzer.AnalyzeDB.get_job_details")
+        mock_wf = mocker.MagicMock()
+        class count:
+            succeeded = 0
+            failed = 1
+        class job:
+            job_instance_id = 'id-0'
+            job_name = 'name-0'
+        mock_wf_stats = mocker.MagicMock()
+        mock_wf_stats.configure_mock(
+            **{
+                "get_failing_jobs.return_value": (1,2,[]),
+                "get_total_succeeded_failed_jobs_status.return_value": count,
+                "get_failed_job_instances.return_value": ['a'],
+                "get_job_instance_info.return_value": [job],
+                "get_invocation_info.return_value": ['j1']
+            }
+        )
+        
+        analyze = AnalyzerDatabase(Options(recurse_mode=True,input_dir='/temp/dir'))
+        with pytest.raises(Exception) as err:
+            analyze.analyze_db_for_wf(mock_wf_stats,'uuid-0','submit_dir-0', mock_wf)
+        
+        captured = capsys.readouterr()
+        captured_output = captured.out.lstrip()
+        
+        assert "Failed Sub Workflow" in captured_output
 
 
-    def test_analyze_db_failing_jobs(self, mocker, capsys, AnalyzerDatabase):
+    def test_analyze_db_for_wf_failing_jobs(self, mocker, capsys, AnalyzerDatabase):
         mocker.patch("Pegasus.analyzer.AnalyzeDB.get_job_details")
         mocker.patch("Pegasus.analyzer.AnalyzeDB.print_job_instance")
         mock_wf = mocker.MagicMock()
@@ -417,7 +557,7 @@ class TestAnalyzeDB:
         analyze.analyze_db_for_wf(wf_stats,'uuid-0','submit_dir-0', mock_wf)
         
         AnalyzeDB.print_job_instance.assert_called_once_with('job-id-0','job-instance-0',None)
-
+        
 
     def test_json_mode(self, mocker, capsys, AnalyzerDatabase):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/hierarchical_wf_success")
@@ -537,7 +677,7 @@ class TestAnalyzeDB:
                  error file: temp.err
                  This job contains sub workflows!
                  Please run the command below for more information:
-                 __main__ --indent 1  -d some/random/dir/some/random/dir/subwf --top-dir some/random/dir
+                 {prog_base} --indent 1  -d some/random/dir/some/random/dir/subwf --top-dir some/random/dir
  
 
                 """
@@ -642,6 +782,43 @@ class TestAnalyzeFiles:
         )
         assert captured_output[captured_output.find("*") :] == expected_output.lstrip()
 
+
+    def test_analyze_files_monitord(self, mocker, capsys, AnalyzerFiles):
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        mocker.patch("Pegasus.analyzer.AnalyzeFiles.invoke_monitord")
+        mocker.patch("Pegasus.analyzer.AnalyzeFiles.get_jsdl_filename")
+        mocker.patch("os.access")
+        analyze = AnalyzerFiles(Options(run_monitord = True,
+                                       input_dir=submit_dir))
+        with pytest.raises(Exception) as err:
+            analyze.analyze_files()
+        assert "One or more workflows failed" in str(err)
+        
+        
+        
+    @pytest.mark.parametrize(
+        "out_dir, expected_output",
+        [
+            (os.path.join(directory,"analyzer_samples_dir/process_wf_failure"),
+             "One or more workflows failed"),
+            (None,"User must specify directory for new monitord logs with the --output-dir option, exiting...")
+        ]
+    )
+    def test_analyze_files_monitord_errors(self, mocker, capsys, AnalyzerFiles, out_dir, expected_output):
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        mocker.patch("Pegasus.analyzer.AnalyzeFiles.invoke_monitord")
+        mocker.patch("Pegasus.analyzer.AnalyzeFiles.get_jsdl_filename", return_value='jobstate.log')
+        mocker.patch("os.access", return_value = False)
+        
+        analyze = AnalyzerFiles(Options(run_monitord = True,
+                                       input_dir=submit_dir,
+                                       output_dir=out_dir
+                                       ))
+        with pytest.raises(Exception) as err:
+            analyze.analyze_files()
+        assert expected_output in str(err)
+
+    
         
     def test_wf_prescript_failure(self, mocker, capsys, AnalyzerFiles):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/hierarchical_wf_failure")
@@ -659,8 +836,9 @@ class TestAnalyzeFiles:
         temp_dir = tempfile.mkdtemp('sample_temp_dir')
         dagman_out_file = os.path.join(directory, "analyzer_samples_dir/process_wf_failure/process-0.dag.dagman.out")
         analyze = AnalyzerFiles(Options(run_monitord=True))
+        
         analyze.invoke_monitord(dagman_out_file, temp_dir)
-    
+        
         assert len(os.listdir(temp_dir)) == 5
         assert len(glob.glob(temp_dir+"/*jobstate.log")) == 1
         assert len(glob.glob(temp_dir+"/*monitord.done")) == 1
@@ -668,8 +846,263 @@ class TestAnalyzeFiles:
         assert len(glob.glob(temp_dir+"/*monitord.info")) == 1
         assert len(glob.glob(temp_dir+"/monitord.subwf")) == 1
 
+
+    def test_invoke_monitord_error(self, mocker, AnalyzerFiles):
+        analyze = AnalyzerFiles(Options(run_monitord=True))
+        mocker.patch("Pegasus.analyzer.BaseAnalyze.backticks",side_effect=AnalyzerError)
+        with pytest.raises(Exception) as err:
+            analyze.invoke_monitord('', None)
+        assert "could not invoke monitord, exiting..." == str(err.value)
+        assert AnalyzerError == err.type
         
-    def test_dump_file(mocker, capsys, AnalyzerFiles):
+
+    def test_find_file_error(self, mocker, AnalyzerFiles):
+        analyze = AnalyzerFiles(Options())
+        with pytest.raises(Exception) as err:
+            analyze.find_file('/random/dir','.txt')
+        assert "cannot read directory: /random/dir" == str(err.value)
+        assert AnalyzerError == err.type
+        
+        
+    def test_find_file_not_found(self, mocker, AnalyzerFiles):
+        analyze = AnalyzerFiles(Options())
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        with pytest.raises(Exception) as err:
+            analyze.find_file(submit_dir,'.pkl')
+        assert f"could not find any .pkl file in {submit_dir}" == str(err.value)
+        assert AnalyzerError == err.type
+
+
+    def test_get_jsdl_filename(self, mocker, AnalyzerFiles):
+        input_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        analyze = AnalyzerFiles(Options())
+        assert "jobstate.log" in analyze.get_jsdl_filename(input_dir)
+        
+        
+    def test_get_jsdl_filename_no_braindump(self, mocker, AnalyzerFiles):
+        input_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        mocker.patch("Pegasus.tools.utils.slurp_braindb",side_effect=AnalyzerError)
+        analyze = AnalyzerFiles(Options())
+        
+        with pytest.raises(Exception) as err:
+            analyze.get_jsdl_filename(input_dir)
+            
+        assert "cannot read braindump.txt file... exiting..." == str(err.value)
+        assert AnalyzerError == err.type
+        
+        
+    def test_get_jsdl_filename_no_wf_uuid(self, mocker, AnalyzerFiles):
+        input_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        mocker.patch("Pegasus.tools.utils.slurp_braindb",return_value={'job':'a'})
+        analyze = AnalyzerFiles(Options())
+        
+        with pytest.raises(Exception) as err:
+            analyze.get_jsdl_filename(input_dir)
+            
+        assert "braindump.txt does not contain wf_uuid... exiting..." == str(err.value)
+        assert AnalyzerError == err.type    
+        
+
+    def test_parse_dag_file(self, mocker, capsys, AnalyzerFiles):
+        dag_file = os.path.join(directory, 'analyzer_samples_dir/sample.dag')
+        analyze = AnalyzerFiles(Options(input_dir='/random/dir'))
+        analyze.parse_dag_file(dag_file)
+        captured = capsys.readouterr()
+        captured_output = captured.out.lstrip()
+        expected_output = [
+            "confused parsing dag line: SUBDAG EXTERNAL job1 x y",
+            "job appears twice in dag file: job0",
+            "confused parsing dag line: JOB job3",
+            "job appears twice in dag file: job2",
+            "couldn't find job: job4 for PRE SCRIPT line in dag file",
+            "confused parsing dag line: SCRIPT PRE",
+            "couldn't find job: job5 for VARS line in dag file"
+        ]
+        for each_line in expected_output:
+            assert each_line in captured_output
+        
+        jobs = ["job0","job2","pegasus-plan-job"]
+        for each_job in jobs:
+            assert each_job in analyze.jobs
+            
+            
+    def test_parse_dag_file_error(self, mocker, capsys, AnalyzerFiles):
+        analyze = AnalyzerFiles(Options(input_dir='/random/dir'))
+        with pytest.raises(AnalyzerError) as err:
+            analyze.parse_dag_file('dag_file')
+        assert "could not open dag file dag_file: exiting..." in str(err)
+        
+        
+    def test_parse_jobstate_log(self, mocker, capsys, AnalyzerFiles):
+        analyze = AnalyzerFiles(Options(input_dir='/random/dir'))
+        with pytest.raises(AnalyzerError) as err:
+            analyze.parse_jobstate_log('jobstate_file')
+        assert "could not open file jobstate_file: exiting..." in str(err)
+        
+        
+    def test_print_job_info_subdag_job(self, mocker, capsys, AnalyzerFiles):
+        job = Job("job0","running")
+        job.is_subdag = True
+        job.pre_script = "script-0"
+        job.dagman_out = "dagman-0"
+        
+        analyze = AnalyzerFiles(Options(output_dir='/random/dir',
+                                       print_pre_script=True))
+        analyze.jobs["job0"]=job
+        
+        expected_output = dedent(
+                f"""\
+                   ======================================job0======================================
+
+                    last state: running
+                    This is a SUBDAG job:
+                    For more information, please run the following command:
+                    {prog_base} -s  --output-dir /random/dir -f 
+    
+                """
+            )
+        
+        assert analyze.print_job_info("job0") == None
+        
+        captured = capsys.readouterr()
+        captured_output = captured.out.lstrip()
+        assert expected_output == captured_output
+        
+        
+    @pytest.mark.parametrize(
+        "recurse_mode, expected_output",
+        [
+            (
+                False,
+                dedent(
+                f"""\
+                   ======================================job0======================================
+
+                    last state: running
+                          site: submit file not available
+                   submit file: 
+                   output file: 
+                    error file: 
+
+                   SCRIPT PRE:
+                   script-0
+
+                    This job contains sub workflows!
+                    Please run the command below for more information:
+                    {prog_base} --output-dir /random/dir --indent 1  -d 
+                    
+                    
+                """
+                )
+            ),
+            (
+                True,
+                dedent(
+                f"""\
+                   ======================================job0======================================
+
+                    last state: running
+                          site: submit file not available
+                   submit file: 
+                   output file: 
+                    error file: 
+
+                   SCRIPT PRE:
+                   script-0
+
+                    
+                    
+                   ==============================Failed Sub Workflow===============================
+                   ================================================================================
+                """
+                )
+            )
+        ]
+    )
+    def test_print_job_info_subdag_job2(self, mocker, capsys, AnalyzerFiles, recurse_mode, expected_output):
+        mocker.patch("Pegasus.analyzer.BaseAnalyze.parse_submit_file")
+        mocker.patch("subprocess.Popen")
+        job = Job("job0","running")
+        job.pre_script = "script-0"
+        job.dagman_out = "dagman-0"
+        
+        analyze = AnalyzerFiles(Options(output_dir='/random/dir',
+                                       print_pre_script=True,
+                                       recurse_mode = recurse_mode))
+        analyze.jobs["job0"]=job
+        analyze.print_job_info("job0")
+    
+        captured = capsys.readouterr()
+        captured_output = captured.out.lstrip()
+        assert expected_output == captured_output
+        
+        
+    def test_print_output_error(mocker, capsys, AnalyzerFiles):
+        job = Job("ls_ID0000001","failure")
+        job.out_file = os.path.join(directory,"analyzer_samples_dir/process_wf_failure/00/00/ls_ID0000001.out.001")
+        job.err_file = os.path.join(directory,"analyzer_samples_dir/process_wf_failure/00/00/ls_ID0000001.err.001")
+        
+        expected_output = dedent(
+                f"""\
+                    -------------------------------Task #1 - Summary--------------------------------
+
+                    site        : condorpool
+                    hostname    : workflow.isi.edu
+                    executable  : /usr/bin/ls
+                    exitcode    : 2
+                    working dir : /home/mzalam/wf/condor/local/execute/dir_148537
+
+                    -----------------------Task #1 - ls - ID0000001 - stderr------------------------
+
+                    /bin/ls: invalid option -- 'z'
+                    Try '/bin/ls --help' for more information.
+
+
+                """
+        )
+        
+        analyze = AnalyzerFiles(Options())
+        analyze.print_output_error(job)
+        captured = capsys.readouterr()
+        captured_output = captured.out.lstrip()
+        assert captured_output == expected_output
+        
+
+    def test_add_job(self, mocker, AnalyzerFiles):
+        analyze = AnalyzerFiles(Options())
+        analyze.jobs = {'job-0':Job("job-0","running")}
+        
+        assert analyze.add_job("job-0") == None
+        
+        
+    def test_update_job_state_error(self, mocker, capsys, AnalyzerFiles):
+        analyze = AnalyzerFiles(Options())
+        analyze.jobs = {'job-0':Job("job-0","running")}
+        analyze.update_job_state("job-1")
+        
+        captured = capsys.readouterr()
+        captured_error = captured.err.lstrip()
+        assert "could not find job job-1" in captured_error
+        
+        
+    def test_update_job_condor_info(self, mocker, capsys, AnalyzerFiles):
+        analyze = AnalyzerFiles(Options())
+        analyze.jobs = {'job-0':Job("job-0","running")}
+        
+        assert analyze.update_job_condor_info("job-0") == None
+        
+
+    def test_update_job_condor_info_error(self, mocker, capsys, AnalyzerFiles):
+        analyze = AnalyzerFiles(Options())
+        analyze.jobs = {'job-0':Job("job-0","running")}
+        analyze.update_job_condor_info("job-1")
+        
+        captured = capsys.readouterr()
+        captured_error = captured.err.lstrip()
+        assert "could not find job job-1" in captured_error
+        
+
+    def test_dump_file(self, mocker, capsys, AnalyzerFiles):
         file_path = os.path.join(directory,"analyzer_samples_dir/process_wf_success/braindump.yml")
         analyze = AnalyzerFiles(Options())
         analyze.dump_file(file_path)
@@ -731,24 +1164,78 @@ class TestDebugWF:
     
     def test_should_create_AnalyzeDB(self, AnalyzerDebug):
         assert AnalyzerDebug is not None
+
+
+    def test_debug_workflow_no_access(self, mocker, AnalyzerDebug):
+        debug = AnalyzerDebug(Options(debug_job='job-0'))
         
+        with pytest.raises(AnalyzerError) as err:
+            debug.debug_workflow()
+        assert "cannot access job submit file: job-0.sub" in str(err)
+        
+        
+    def test_debug_workflow_no_tempdir(self, mocker, AnalyzerDebug):
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
+        debug = AnalyzerDebug(Options(debug_job=job))
+        mocker.patch("tempfile.mkdtemp", side_effect = AnalyzerError)
+        
+        with pytest.raises(AnalyzerError) as err:
+            debug.debug_workflow()
+        assert "could not create temporary directory!" in str(err)
+        
+        
+    def test_debug_workflow_debug_dir_write_fail(self, mocker, AnalyzerDebug):
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
+        debug = AnalyzerDebug(Options(debug_job=job,debug_dir='/usr'))
+        
+        with pytest.raises(AnalyzerError) as err:
+            debug.debug_workflow()
+        assert "not able to write to temporary directory: /usr" in str(err)
+        
+        
+    def test_debug_workflow_create_debug_dir_fail(self, mocker, capsys, AnalyzerDebug):
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
+        debug = AnalyzerDebug(Options(debug_job=job,debug_dir='a.txt'))
+        mocker.patch("os.mkdir", side_effect = AnalyzerError)
+        
+        with pytest.raises(AnalyzerError) as err:
+            debug.debug_workflow()
+        captured = capsys.readouterr()
+        captured_error = captured.err.lstrip()
+        assert "cannot create debug directory:" in captured_error
+        
+
+    def test_debug_workflow_wf_type(mocker, capsys, AnalyzerDebug):
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
+        debug = AnalyzerDebug(Options(debug_job=job, workflow_type = "OTHER", input_dir=submit_dir))
+        
+        with pytest.raises(AnalyzerError) as err:
+            debug.debug_workflow()
+        assert "workflow type OTHER not supported!" in str(err)
+        
+
     def test_debug_mode_no_debug_dir(mocker, capsys, AnalyzerDebug):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
         job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
-        debug = AnalyzerDebug(Options(debug_job=job, input_dir=submit_dir))
+        debug = AnalyzerDebug(Options(debug_job=job, workflow_type = "CONDOR", input_dir=submit_dir))
         debug.debug_workflow()
+        
         captured = capsys.readouterr()
         captured_output = captured.out.lstrip()
         assert "finished generating job debug script!" in captured_output
 
+        
     def test_debug_mode_with_debug_dir(mocker, capsys, AnalyzerDebug):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
         job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
         temp_dir = tempfile.mkdtemp('sample_temp_dir')
         debug = AnalyzerDebug(Options(debug_job=job, input_dir=submit_dir, debug_dir=temp_dir))
         debug.debug_workflow()
+        
         captured = capsys.readouterr()
         captured_output = captured.out.lstrip()
         assert "finished generating job debug script!" in captured_output
-
-        

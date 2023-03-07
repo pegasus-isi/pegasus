@@ -1,0 +1,27 @@
+1678036213 INTERNAL *** MONITORD_STARTED ***
+1678036211 INTERNAL *** DAGMAN_STARTED 103.0 ***
+1678036212 create_dir_Drug-Combination-Therapy_0_local SUBMIT 104.0 local - 1
+1678036216 create_dir_Drug-Combination-Therapy_0_local EXECUTE 104.0 local - 1
+1678036219 create_dir_Drug-Combination-Therapy_0_local JOB_TERMINATED 104.0 local - 1
+1678036222 create_dir_Drug-Combination-Therapy_0_local JOB_SUCCESS 0 local - 1
+1678036222 create_dir_Drug-Combination-Therapy_0_local POST_SCRIPT_STARTED 104.0 local - 1
+1678036223 create_dir_Drug-Combination-Therapy_0_local POST_SCRIPT_TERMINATED 104.0 local - 1
+1678036227 create_dir_Drug-Combination-Therapy_0_local POST_SCRIPT_SUCCESS 0 local - 1
+1678036232 stage_in_local_local_0_0 SUBMIT 105.0 local - 2
+1678036232 stage_in_local_local_0_0 EXECUTE 105.0 local - 2
+1678036236 stage_in_local_local_0_0 JOB_TERMINATED 105.0 local - 2
+1678036237 stage_in_local_local_0_0 JOB_SUCCESS 0 local - 2
+1678036237 stage_in_local_local_0_0 POST_SCRIPT_STARTED 105.0 local - 2
+1678036237 stage_in_local_local_0_0 POST_SCRIPT_TERMINATED 105.0 local - 2
+1678036242 stage_in_local_local_0_0 POST_SCRIPT_SUCCESS 0 local - 2
+1678036247 chebi_drug_loader_ID0000001 SUBMIT 106.0 condorpool - 3
+1678036280 chebi_drug_loader_ID0000001 EXECUTE 106.0 condorpool - 3
+1678036282 chebi_drug_loader_ID0000001 SHADOW_EXCEPTION 106.0 condorpool - 3
+1678036282 chebi_drug_loader_ID0000001 JOB_HELD 106.0 condorpool - 3
+1678036282 chebi_drug_loader_ID0000001 JOB_HELD_REASON 106.0 condorpool - 3
+1678036326 chebi_drug_loader_ID0000001 JOB_ABORTED 106.0 condorpool - 3
+1678036327 chebi_drug_loader_ID0000001 POST_SCRIPT_STARTED 106.0 condorpool - 3
+1678036327 chebi_drug_loader_ID0000001 POST_SCRIPT_TERMINATED 106.0 condorpool - 3
+1678036332 chebi_drug_loader_ID0000001 POST_SCRIPT_FAILURE 1 condorpool - 3
+1678036332 INTERNAL *** DAGMAN_FINISHED 1 ***
+1678036334 INTERNAL *** MONITORD_FINISHED 0 ***
