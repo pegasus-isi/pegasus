@@ -20,17 +20,17 @@ Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, perl-Getopt-L
 # byte compile errors
 %global __python %{python3}
 
-BuildRequires:  ant-apache-regexp, java-devel = 1:1.8.0, python36-pyOpenSSL, python36-PyYAML, python36-GitPython, python3-devel, python3-setuptools
+BuildRequires:  ant-apache-regexp, java-devel = 1:1.8.0, python36-pyOpenSSL, python36-PyYAML, python3-devel, python3-setuptools
 Requires:       java >= 1:1.8.0, python3, condor >= 8.8, graphviz, python36-pika, python36-PyYAML, python36-GitPython, perl-Getopt-Long
 %endif
 
 %if 0%{?rhel} == 8
-BuildRequires:  java-11-openjdk-devel, python3-pyOpenSSL, python3-PyYAML, python3-GitPython, python3-devel, python3-setuptools
+BuildRequires:  java-11-openjdk-devel, python3-pyOpenSSL, python3-PyYAML, python3-devel, python3-setuptools
 Requires:       jre-11-openjdk-headless, python3, condor >= 8.8, graphviz, python3-pyOpenSSL, python3-pika, python3-PyYAML, python3-GitPython, perl-Getopt-Long
 %endif
 
 %if 0%{?rhel} >= 9
-BuildRequires:  ant-apache-regexp, java-11-openjdk-devel, python3-pyOpenSSL, python3-PyYAML, python3-GitPython, python3-devel, python3-setuptools
+BuildRequires:  ant-apache-regexp, java-11-openjdk-devel, python3-pyOpenSSL, python3-PyYAML, python3-devel, python3-setuptools
 Requires:       jre-11-openjdk-headless, python3, condor >= 8.8, graphviz, python3-pyOpenSSL, python3-pika, python3-PyYAML, python3-GitPython, perl-Getopt-Long
 %endif
 
