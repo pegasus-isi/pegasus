@@ -4,17 +4,23 @@ set -e
 
 VERSION=$1
 
-TOP_DIR=`pwd`
-
 # make sure we are in a source dir
 if [ ! -e build.xml ]; then
     echo "This does not look a like a source directory. Exiting..."
     exit 1
 fi
 
-mkdir -p build/rpm/BUILD build/rpm/RPMS build/rpm/SOURCES build/rpm/SPECS build/rpm/SRPMS
+TOP_DIR=`mktemp -d`
+echo "RPM Dir: $TOP_DIR"
 
-cp dist/pegasus-$VERSION.tar.gz build/rpm/SOURCES/
+function cleanup() {
+    rm -rf $TOP_DIR
+}
+trap cleanup EXIT
+
+mkdir -p $TOP_DIR/build/rpm/BUILD $TOP_DIR/build/rpm/RPMS $TOP_DIR/build/rpm/SOURCES $TOP_DIR/build/rpm/SPECS $TOP_DIR/build/rpm/SRPMS
+
+cp dist/pegasus-$VERSION.tar.gz $TOP_DIR/build/rpm/SOURCES/
 
 # create a new spec file with the custom version
 BASEVER=`echo "$VERSION" | perl -p -e 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
@@ -32,17 +38,15 @@ perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$VERSION/g" pegasus.spec
 perl -p -i -e "s/\\@DATE\\@/$DATE_RPM/g" pegasus.spec
 perl -p -i -e "s/^Release:.*/Release:        $RELEASE_VERSION/g" pegasus.spec
 
-cp pegasus.spec build/rpm/SPECS/
+cp pegasus.spec $TOP_DIR/build/rpm/SPECS/
 
 DIST=`./release-tools/getosid | perl -pe 's/rhel/.el/'`
 
 rpmbuild -ba --define "_topdir $TOP_DIR/build/rpm" --define "dist $DIST" pegasus.spec
 
-find build/rpm -name \*.rpm -exec cp {} dist/ \;
+find $TOP_DIR/build/rpm -name \*.rpm -exec cp {} dist/ \;
 rm -f dist/*debug*
 mv dist/pegasus-*.src.rpm dist/pegasus-$VERSION.src.rpm
 cd dist
 echo "Generated RPMs:"
 ls -l *.rpm
-
-
