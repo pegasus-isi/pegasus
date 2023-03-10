@@ -12,6 +12,8 @@ Source:         pegasus-%{version}.tar.gz
 BuildRequires:  gcc, gcc-c++, jpackage-utils, make, openssl-devel, ant, R-devel
 Requires:       python3, condor >= 8.8, graphviz, perl-Getopt-Long
 
+%global debug_package %{nil}
+
 %if 0%{?rhel} <= 7
 # Jinja2 v2.11 has async code, which uses py36 syntax, and is never imported in < py36, but
 # byte compiling in RPM fails as py27 interpreter tries to compile all files.
