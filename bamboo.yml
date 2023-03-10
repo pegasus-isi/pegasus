@@ -1678,6 +1678,9 @@ project:
                       ls -l
 
                       scp -i ~/.ssh/deployment -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
+                      
+                      # new download site - do this in parallel for now
+                      scp -i ~/.ssh/deployment -r $DOWNLOADS scitech-web.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
 
                       # new wordpress site
                       ssh -i ~/.ssh/deployment pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
