@@ -33,7 +33,7 @@ Requires:       jre-11-openjdk-headless, python3-cryptography, python3-pika, pyt
 
 %if 0%{?rhel} >= 9
 BuildRequires:  ant-apache-regexp, java-11-openjdk-devel, python3-devel, python3-setuptools
-Requires:       jre-11-openjdk-headless, python3-cryptography,  python3-PyYAML, python3-GitPython
+Requires:       jre-11-openjdk-headless, python3-cryptography, python3-pika, python3-PyYAML, python3-GitPython
 %endif
 
 %define sourcedir %{name}-%{version}
