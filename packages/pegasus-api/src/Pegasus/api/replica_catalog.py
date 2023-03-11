@@ -46,7 +46,9 @@ class File(MetadataMixin):
 
     """
 
-    def __init__(self, lfn: str, size: Optional[int] = None, for_planning: Optional[bool] = False):
+    def __init__(
+        self, lfn: str, size: Optional[int] = None, for_planning: Optional[bool] = False
+    ):
         """
         :param lfn: a unique logical filename
         :type lfn: str
@@ -89,7 +91,7 @@ class File(MetadataMixin):
                     ("lfn", self.lfn),
                     ("metadata", self.metadata if len(self.metadata) > 0 else None),
                     ("size", self.size),
-                    ("forPlanning", self.for_planning)
+                    ("forPlanning", self.for_planning),
                 ]
             )
         )

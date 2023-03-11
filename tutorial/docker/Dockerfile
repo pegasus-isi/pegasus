@@ -24,7 +24,7 @@ RUN dnf -y install --allowerasing --nobest \
      python3-GitPython \
      python3-pika \
      python3-pip \
-     python3-pyOpenSSL \
+     python3-cryptography \
      python3-PyYAML \
      sudo \
      supervisor \

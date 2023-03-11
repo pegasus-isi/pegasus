@@ -811,7 +811,7 @@ class TestSubWorkflow:
                     "id": "test-subworkflow",
                     "nodeLabel": "label",
                     "arguments": ["--sites", "condorpool"],
-                    "uses": [{"lfn": "file", "type": "input"}],
+                    "uses": [{"forPlanning": True, "lfn": "file", "type": "input"}],
                 },
             ),
             (
@@ -822,7 +822,7 @@ class TestSubWorkflow:
                     "id": "test-subworkflow",
                     "nodeLabel": "label",
                     "arguments": [],
-                    "uses": [{"lfn": "file", "type": "input"}],
+                    "uses": [{"forPlanning": True, "lfn": "file", "type": "input"}],
                 },
             ),
         ],
@@ -930,14 +930,18 @@ def expected_json():
                 "file": "subworkflow.dag",
                 "id": "c",
                 "arguments": ["--sites", "condorpool"],
-                "uses": [{"lfn": "subworkflow.dag", "type": "input"}],
+                "uses": [
+                    {"forPlanning": True, "lfn": "subworkflow.dag", "type": "input"}
+                ],
             },
             {
                 "type": "pegasusWorkflow",
                 "file": "subworkflow.dax",
                 "id": "d",
                 "arguments": [],
-                "uses": [{"lfn": "subworkflow.dax", "type": "input"}],
+                "uses": [
+                    {"forPlanning": True, "lfn": "subworkflow.dax", "type": "input"}
+                ],
             },
         ],
         "jobDependencies": [{"id": "a", "children": ["b"]}],

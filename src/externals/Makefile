@@ -44,18 +44,6 @@ else
     $(warning WARNING: globus_sdk does not work with Python 2.x: skipping globus_sdk library)
 endif
 
-ifneq ($(shell python --version 2>&1 | grep " 3.6"),)
-    PACKAGES+=dataclasses
-endif
-
-PYOPENSSL_ARGS=
-ifeq ($(OSID),macos10)
-    OPENSSL:=$(shell brew --prefix openssl)
-    ifneq ($(OPENSSL),)
-        PYOPENSSL_ARGS=-I $(OPENSSL)/include -L $(OPENSSL)/lib
-    endif
-endif
-
 all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
 $(LIBDIR)/%:
