@@ -1,10 +1,8 @@
 import logging
 import os
-import random
 
 import click
 import flask
-from OpenSSL import crypto
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.serving import run_simple
 
@@ -18,45 +16,6 @@ log = logging.getLogger(__name__)
 
 # Services
 services = ["dashboard", "monitoring"]
-
-
-def generate_self_signed_certificate(certfile, pkeyfile):
-    """
-    SSL.
-    :param certfile:
-    :param pkeyfile:
-    :return:
-    If certfile and pkeyfile don't exist, create a self-signed certificate
-    """
-
-    if os.path.isfile(certfile) and os.path.isfile(pkeyfile):
-        return
-
-    logging.info("Generating self-signed certificate")
-
-    pkey = crypto.PKey()
-    pkey.generate_key(crypto.TYPE_RSA, 2048)
-
-    cert = crypto.X509()
-
-    sub = cert.get_subject()
-    sub.C = "US"
-    sub.ST = "California"
-    sub.L = "Marina Del Rey"
-    sub.O = "University of Southern California"
-    sub.OU = "Information Sciences Institute"
-    sub.CN = "Pegasus Service"
-
-    cert.set_version(1)
-    cert.set_serial_number(random.randint(0, 2 ** 32))
-    cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)  # 10 years
-    cert.set_issuer(sub)
-    cert.set_pubkey(pkey)
-    cert.sign(pkey, "sha1")
-
-    open(certfile, "wb").write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    open(pkeyfile, "wb").write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey))
 
 
 def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs):
@@ -81,12 +40,10 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
 
     cert = app.config.get("CERTIFICATE", None)
     pkey = app.config.get("PRIVATE_KEY", None)
-    if cert is None or pkey is None:
-        log.warning("SSL is not configured: Using self-signed certificate")
-        cert = os.path.expanduser("~/.pegasus/selfcert.pem")
-        pkey = os.path.expanduser("~/.pegasus/selfkey.pem")
-        generate_self_signed_certificate(cert, pkey)
-    ssl_context = (cert, pkey)
+    if cert and pkey:
+        ssl_context = (cert, pkey)
+    else:
+        ssl_context = "adhoc"
 
     if os.getuid() != 0:
         log.warning("Service not running as root: Will not be able to switch users")
