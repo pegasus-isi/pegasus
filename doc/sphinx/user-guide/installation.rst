@@ -92,8 +92,6 @@ derived from RHEL: CentOS, Rocky, AlmaLinux, SL)
       curl --output /etc/yum.repos.d/pegasus.repo \
             https://download.pegasus.isi.edu/pegasus/rhel/9/pegasus.repo
       dnf install epel-release
-      dnf install 'dnf-command(copr)'
-      dnf copr enable @copr/PyPI
       dnf install --enablerepo devel pegasus
 
    .. code-tab:: bash CentOS 8
