@@ -3361,7 +3361,7 @@ class StashHandler(TransferHandlerBase):
 
     _name = "StashHandler"
     _mkdir_cleanup_protocols = ["stash"]
-    _protocol_map = ["stash->file", "file->stash"]
+    _protocol_map = ["osdf->file", "stash->file", "file->osdf", "file->stash"]
 
     def do_mkdirs(self, transfers):
 
@@ -3412,7 +3412,7 @@ class StashHandler(TransferHandlerBase):
             t_start = time.time()
 
             if t.get_dst_proto() == "stash":
-                # write file:// to stash://
+                # write file:// to osdf:// or stash://
 
                 # src has to exist and be readable
                 if not verify_local_file(t.get_src_path()):
@@ -3437,7 +3437,7 @@ class StashHandler(TransferHandlerBase):
                 # read
                 # stashcp wants just the path with a single leading slash
                 src_path = t.src_url()
-                src_path = re.sub("^stash:", "", src_path)
+                src_path = re.sub("^(osdf|stash):", "", src_path)
                 src_path = re.sub("^/+", "", src_path)
                 src_path = "/" + src_path
 

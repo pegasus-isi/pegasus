@@ -571,14 +571,14 @@ information on how to set up an irodsEnv file to be used by Pegasus.
 
 .. _transfer-stashcp:
 
-OSG Stash / stashcp (stash://)
-------------------------------
+OSG Stash / stashcp (osdf:// stash://)
+--------------------------------------
 
 Open Science Grid provides a data service called Stash, and the command
 line tool *stashcp* for interacting with the Stash data. An example on
 how to set up the site catalog and URLs can be found in the `OSG User
 Support Pegasus
-tutorial <https://support.opensciencegrid.org/support/solutions/articles/5000639789-pegasus>`__
+tutorial <https://portal.osg-htc.org/documentation/htc_workloads/automated_workflows/tutorial-pegasus/>`__
 
 
 .. _transfer-scp:
