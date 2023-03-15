@@ -1062,6 +1062,7 @@ project:
                     matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+
         - name: Build
           description: Build Pegasus
           jobs:
@@ -1226,6 +1227,48 @@ project:
                     matchValue: true
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXR8A
+              name: Build RHEL 8 (Arm)
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      docker run -i --rm rockylinux:8 -v `pwd`:/srv -w /srv bash -s <<EOT
+                      yum install -y epel-release rpm-build
+                      yum install -y --enablerepo=powertools git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel java-11-openjdk-devel python3-devel python3-setuptools
+                      ant clean dist-rpm dist-worker dist-release
+                      EOT
+              artifactDefinitions:
+                - name: pegasus-binary-aarch64_rhel_8
+                  copyPattern: "pegasus-binary-*-aarch64_rhel_8.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-rpm-aarch64_rhel_8
+                  copyPattern: "*aarch64.rpm"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-aarch64_rhel_8
+                  copyPattern: "pegasus-worker-*-aarch64_rhel_8.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: arch
+                  matchType: !matches
+                    regex: ^(aarch|arm)64$
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXR9
               name: Build RHEL 9
               tasks:
@@ -1265,6 +1308,48 @@ project:
                 - capabilityKey: apptainer
                   matchType: !equals
                     matchValue: true
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXR9A
+              name: Build RHEL 9 (Arm)
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      docker run -i --rm rockylinux:9 -v `pwd`:/srv -w /srv bash -s <<EOT
+                      yum install -y epel-release rpm-build
+                      yum install -y --enablerepo=devel git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel ant-apache-regexp java-11-openjdk-devel python3-devel python3-setuptools
+                      ant clean dist-rpm dist-worker dist-release
+                      EOT
+              artifactDefinitions:
+                - name: pegasus-binary-aarch64_rhel_9
+                  copyPattern: "pegasus-binary-*-aarch64_rhel_9.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-rpm-aarch64_rhel_9
+                  copyPattern: "*aarch64.rpm"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-aarch64_rhel_9
+                  copyPattern: "pegasus-worker-*-aarch64_rhel_9.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: arch
+                  matchType: !matches
+                    regex: ^(aarch|arm)64$
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
@@ -1678,7 +1763,7 @@ project:
                       ls -l
 
                       scp -i ~/.ssh/deployment -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
-                      
+
                       # new download site - do this in parallel for now
                       scp -i ~/.ssh/deployment -r $DOWNLOADS scitech-web.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
 
@@ -1694,7 +1779,9 @@ project:
                 - name: pegasus-binary-arm64_macos_13
                 - name: pegasus-binary-x86_64_rhel_7
                 - name: pegasus-binary-x86_64_rhel_8
+                - name: pegasus-binary-aarch64_rhel_8
                 - name: pegasus-binary-x86_64_rhel_9
+                - name: pegasus-binary-aarch64_rhel_9
                 - name: pegasus-binary-x86_64_ubuntu_18
                 - name: pegasus-binary-x86_64_ubuntu_20
                 - name: pegasus-binary-x86_64_ubuntu_22
@@ -1708,7 +1795,9 @@ project:
                 - name: pegasus-r-pegasus
                 - name: pegasus-rpm-x86_64_rhel_7
                 - name: pegasus-rpm-x86_64_rhel_8
+                - name: pegasus-rpm-aarch64_rhel_8
                 - name: pegasus-rpm-x86_64_rhel_9
+                - name: pegasus-rpm-aarch64_rhel_9
                 - name: pegasus-source
                 - name: pegasus-source-versioned
                 - name: pegasus-srcrpm
@@ -1720,7 +1809,9 @@ project:
                 - name: pegasus-worker-arm64_macos_13
                 - name: pegasus-worker-x86_64_rhel_7
                 - name: pegasus-worker-x86_64_rhel_8
+                - name: pegasus-worker-aarch64_rhel_8
                 - name: pegasus-worker-x86_64_rhel_9
+                - name: pegasus-worker-aarch64_rhel_9
                 - name: pegasus-worker-x86_64_ubuntu_18
                 - name: pegasus-worker-x86_64_ubuntu_20
                 - name: pegasus-worker-x86_64_ubuntu_22
