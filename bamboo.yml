@@ -1714,8 +1714,12 @@ project:
                       cp $DOWNLOADS/pegasus-*el7.x86_64.rpm $DOWNLOADS/rhel/7/x86_64/
                       mkdir -p $DOWNLOADS/rhel/8/x86_64
                       cp $DOWNLOADS/pegasus-*el8.x86_64.rpm $DOWNLOADS/rhel/8/x86_64/
+                      mkdir -p $DOWNLOADS/rhel/8/aarch64
+                      cp $DOWNLOADS/pegasus-*el8.aarch64.rpm $DOWNLOADS/rhel/8/aarch64/
                       mkdir -p $DOWNLOADS/rhel/9/x86_64
                       cp $DOWNLOADS/pegasus-*el9.x86_64.rpm $DOWNLOADS/rhel/9/x86_64/
+                      mkdir -p $DOWNLOADS/rhel/9/aarch64
+                      cp $DOWNLOADS/pegasus-*el9.aarch64.rpm $DOWNLOADS/rhel/9/aarch64/
 
                       # standard filenames for RPMs - used by tutorial VM
                       cd pegasus/$VERSION
