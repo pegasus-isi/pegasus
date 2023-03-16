@@ -1245,7 +1245,7 @@ project:
                       set -ex
                       yum install -y epel-release rpm-build
                       yum install -y --enablerepo=powertools git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel python3-devel python3-setuptools java-11-openjdk-devel python3-setuptools_scm
-                      ant clean dist-rpm
+                      ant clean dist-rpm dist-worker dist-release
                       EOT
               artifactDefinitions:
                 - name: pegasus-binary-aarch64_rhel_8
