@@ -1244,7 +1244,7 @@ project:
                       docker run -i --rm -v `pwd`:/srv -w /srv rockylinux:8 bash -s <<EOT
                       set -ex
                       yum install -y epel-release rpm-build
-                      yum install -y --enablerepo=powertools git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel java-11-openjdk-devel python3-devel python3-setuptools
+                      yum install -y --enablerepo=powertools git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel python3-devel python3-setuptools java-11-openjdk-devel python3-setuptools_scm
                       ant clean dist-rpm
                       EOT
               artifactDefinitions:
@@ -1328,7 +1328,7 @@ project:
                       docker run -i --rm -v `pwd`:/srv -w /srv rockylinux:9 bash -s <<EOT
                       set -ex
                       yum install -y epel-release rpm-build
-                      yum install -y --enablerepo=devel git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel ant-apache-regexp java-11-openjdk-devel python3-devel python3-setuptools
+                      yum install -y --enablerepo=devel git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel python3-devel python3-setuptools ant-apache-regexp java-11-openjdk-devel
                       ant clean dist-rpm dist-worker dist-release
                       EOT
               artifactDefinitions:
