@@ -1241,11 +1241,11 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      docker run -i --rm rockylinux:8 -v `pwd`:/srv -w /srv bash -s <<EOT
-                      yum install -y epel-release rpm-build
-                      yum install -y --enablerepo=powertools git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel java-11-openjdk-devel python3-devel python3-setuptools
-                      ant clean dist-rpm dist-worker dist-release
-                      EOT
+                      docker run -it --rm -v `pwd`:/srv -w /srv rockylinux:8 bash -c 'set -ex; \
+                      yum install -y epel-release rpm-build; \
+                      yum install -y --enablerepo=powertools git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel java-11-openjdk-devel python3-devel python3-setuptools; \
+                      ant clean dist-rpm dist-worker dist-release'
+
               artifactDefinitions:
                 - name: pegasus-binary-aarch64_rhel_8
                   copyPattern: "pegasus-binary-*-aarch64_rhel_8.tar.gz"
@@ -1324,11 +1324,10 @@ project:
                     interpreter: !scriptInterpreter LEGACY_SH_BAT
                     scriptBody: |
                       cd pegasus-source
-                      docker run -i --rm rockylinux:9 -v `pwd`:/srv -w /srv bash -s <<EOT
-                      yum install -y epel-release rpm-build
-                      yum install -y --enablerepo=devel git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel ant-apache-regexp java-11-openjdk-devel python3-devel python3-setuptools
-                      ant clean dist-rpm dist-worker dist-release
-                      EOT
+                      docker run -it --rm -v `pwd`:/srv -w /srv rockylinux:9 bash -c 'set -ex; \
+                      yum install -y epel-release rpm-build; \
+                      yum install -y --enablerepo=powertools git gcc gcc-c++ jpackage-utils make openssl-devel ant R-devel java-11-openjdk-devel python3-devel python3-setuptools; \
+                      ant clean dist-rpm dist-worker dist-release'
               artifactDefinitions:
                 - name: pegasus-binary-aarch64_rhel_9
                   copyPattern: "pegasus-binary-*-aarch64_rhel_9.tar.gz"
