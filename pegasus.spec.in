@@ -9,7 +9,7 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 
 Source:         pegasus-%{version}.tar.gz
 
-BuildRequires:  gcc, gcc-c++, jpackage-utils, make, openssl-devel, ant, R-devel
+BuildRequires:  gcc, gcc-c++, jpackage-utils, make, openssl-devel, ant, R-devel, python3-devel, python3-setuptools
 Requires:       python3, condor >= 8.8, graphviz, perl-Getopt-Long
 
 %global debug_package %{nil}
@@ -22,17 +22,17 @@ Requires:       python3, condor >= 8.8, graphviz, perl-Getopt-Long
 # byte compile errors
 %global __python %{python3}
 
-BuildRequires:  ant-apache-regexp, java-devel = 1:1.8.0, python3-devel, python3-setuptools
+BuildRequires:  ant-apache-regexp, java-devel = 1:1.8.0
 Requires:       java >= 1:1.8.0, python36-cryptography, python36-PyYAML, python36-GitPython
 %endif
 
 %if 0%{?rhel} == 8
-BuildRequires:  java-11-openjdk-devel, python3-devel, python3-setuptools
+BuildRequires:  java-11-openjdk-devel, python3-setuptools_scm
 Requires:       jre-11-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
 %endif
 
 %if 0%{?rhel} >= 9
-BuildRequires:  ant-apache-regexp, java-11-openjdk-devel, python3-devel, python3-setuptools
+BuildRequires:  ant-apache-regexp, java-11-openjdk-devel
 Requires:       jre-11-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
 %endif
 
