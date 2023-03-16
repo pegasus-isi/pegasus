@@ -1356,7 +1356,6 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10
               name: Build Debian 10
-              enabled: true
               tasks:
                 - !script
                   description: Untar source
@@ -1395,9 +1394,52 @@ project:
                     matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: BDEB10A
+              name: Build Debian 10 (Arm)
+              enabled: false
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      docker run -i --rm -v `pwd`:/srv -w /srv debian:10 bash -s <<EOT
+                      set -ex
+                      apt update -y
+                      apt install -y debhelper lintian git ant default-jdk libpq-dev libssl-dev perl python3 python3-dev python3-setuptools python3-setuptools-scm r-base-dev zlib1g-dev
+                      ant dist-worker dist-release dist-deb
+                      EOT
+              artifactDefinitions:
+                - name: pegasus-binary-arm64_deb_10
+                  copyPattern: "pegasus-binary-*-arm64_deb_10.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-deb-arm64_deb_10
+                  copyPattern: "*.deb"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-arm64_deb_10
+                  copyPattern: "pegasus-worker-*-arm64_deb_10.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: arch
+                  matchType: !matches
+                    regex: ^(aarch|arm)64$
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB11
               name: Build Debian 11
-              enabled: true
               tasks:
                 - !script
                   description: Untar source
@@ -1434,6 +1476,50 @@ project:
                 - capabilityKey: hostname
                   matchType: !equals
                     matchValue: build-1.pegasus.isi.edu
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: BDEB11A
+              name: Build Debian 11 (Arm)
+              enabled: false
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      docker run -i --rm -v `pwd`:/srv -w /srv debian:11 bash -s <<EOT
+                      set -ex
+                      apt update -y
+                      apt install -y debhelper lintian git ant default-jdk libpq-dev libssl-dev perl python3 python3-dev python3-setuptools python3-setuptools-scm r-base-dev zlib1g-dev
+                      ant dist-worker dist-release dist-deb
+                      EOT
+              artifactDefinitions:
+                - name: pegasus-binary-arm64_deb_11
+                  copyPattern: "pegasus-binary-*-arm64_deb_11.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-deb-arm64_deb_11
+                  copyPattern: "*.deb"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-arm64_deb_11
+                  copyPattern: "pegasus-worker-*-arm64_deb_11.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: arch
+                  matchType: !matches
+                    regex: ^(aarch|arm)64$
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXOSXI12
@@ -1636,6 +1722,50 @@ project:
                     matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXUFA
+              name: Build Ubuntu 20.04 LTS (Arm)
+              enabled: false
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      docker run -i --rm -v `pwd`:/srv -w /srv ubuntu:20.04 bash -s <<EOT
+                      set -ex
+                      apt update -y
+                      apt install -y debhelper lintian git ant default-jdk libpq-dev libssl-dev perl python3 python3-dev python3-setuptools python3-setuptools-scm r-base-dev zlib1g-dev
+                      ant dist-worker dist-release dist-deb
+                      EOT
+              artifactDefinitions:
+                - name: pegasus-binary-arm64_ubuntu_20
+                  copyPattern: "pegasus-binary-*-arm64_ubuntu_20.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-deb-arm64_ubuntu_20
+                  copyPattern: "*.deb"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-arm64_ubuntu_20
+                  copyPattern: "pegasus-worker-*-arm64_ubuntu_20.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: arch
+                  matchType: !matches
+                    regex: ^(aarch|arm)64$
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
             - key: BXJF
               name: Build Ubuntu 22.04 LTS
               tasks:
@@ -1674,6 +1804,50 @@ project:
                 - capabilityKey: hostname
                   matchType: !equals
                     matchValue: build-1.pegasus.isi.edu
+              miscellaneous:
+                cleanWorkingDirectoryAfterEachBuild: true
+            - key: BXJFA
+              name: Build Ubuntu 22.04 LTS (Arm)
+              enabled: false
+              tasks:
+                - !script
+                  description: Untar source
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: "tar xzf pegasus-source.tar.gz"
+                - !script
+                  description: Binary Packages
+                  inlineScript:
+                    interpreter: !scriptInterpreter LEGACY_SH_BAT
+                    scriptBody: |
+                      cd pegasus-source
+                      docker run -i --rm -v `pwd`:/srv -w /srv ubuntu:22.04 bash -s <<EOT
+                      set -ex
+                      apt update -y
+                      apt install -y debhelper lintian git ant default-jdk libpq-dev libssl-dev perl python3 python3-dev python3-setuptools python3-setuptools-scm r-base-dev zlib1g-dev
+                      ant dist-worker dist-release dist-deb
+                      EOT
+              artifactDefinitions:
+                - name: pegasus-binary-arm64_ubuntu_22
+                  copyPattern: "pegasus-binary-*-arm64_ubuntu_22.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-deb-arm64_ubuntu_22
+                  copyPattern: "*.deb"
+                  location: pegasus-source/dist
+                  isShared: true
+                - name: pegasus-worker-arm64_ubuntu_22
+                  copyPattern: "pegasus-worker-*-arm64_ubuntu_22.tar.gz"
+                  location: pegasus-source/dist
+                  isShared: true
+              artifactDependencies:
+                - name: pegasus-source
+              requirements:
+                - capabilityKey: arch
+                  matchType: !matches
+                    regex: ^(aarch|arm)64$
+                - capabilityKey: system.docker.executable
+                  matchType: !exists exists
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
 
@@ -1720,16 +1894,24 @@ project:
                       # debian
                       mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb10_amd64.deb $DOWNLOADS/debian/dists/buster/main/binary-amd64/
+                      #mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-arm64
+                      #cp $DOWNLOADS/pegasus_*deb10_arm64.deb $DOWNLOADS/debian/dists/buster/main/binary-arm64/
                       mkdir -p $DOWNLOADS/debian/dists/bullseye/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb11_amd64.deb $DOWNLOADS/debian/dists/bullseye/main/binary-amd64/
+                      #mkdir -p $DOWNLOADS/debian/dists/bullseye/main/binary-arm64
+                      #cp $DOWNLOADS/pegasus_*deb11_arm64.deb $DOWNLOADS/debian/dists/bullseye/main/binary-arm64/
 
                       # ubuntu
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/focal/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu20_amd64.deb $DOWNLOADS/ubuntu/dists/focal/main/binary-amd64/
+                      #mkdir -p $DOWNLOADS/ubuntu/dists/focal/main/binary-arm64
+                      #cp $DOWNLOADS/pegasus_*ubuntu20_arm64.deb $DOWNLOADS/ubuntu/dists/focal/main/binary-arm64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/jammy/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu22_amd64.deb $DOWNLOADS/ubuntu/dists/jammy/main/binary-amd64/
+                      #mkdir -p $DOWNLOADS/ubuntu/dists/jammy/main/binary-arm64
+                      #cp $DOWNLOADS/pegasus_*ubuntu22_arm64.deb $DOWNLOADS/ubuntu/dists/jammy/main/binary-arm64/
 
                       # rhel
                       mkdir -p $DOWNLOADS/rhel/src
@@ -1777,9 +1959,14 @@ project:
                       ssh -i ~/.ssh/deployment pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
                       scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
               artifactDependencies:
+                - name: pegasus-doc
+                - name: pegasus-python-source-versioned
+                - name: pegasus-r-pegasus
+                - name: pegasus-source
+                - name: pegasus-source-versioned
+                - name: pegasus-srcrpm
+
                 - name: pegasus-binary-x86_64_alpine_3
-                - name: pegasus-binary-x86_64_deb_10
-                - name: pegasus-binary-x86_64_deb_11
                 - name: pegasus-binary-x86_64_macos_12
                 - name: pegasus-binary-arm64_macos_12
                 - name: pegasus-binary-arm64_macos_13
@@ -1788,28 +1975,32 @@ project:
                 - name: pegasus-binary-aarch64_rhel_8
                 - name: pegasus-binary-x86_64_rhel_9
                 - name: pegasus-binary-aarch64_rhel_9
+                - name: pegasus-binary-x86_64_deb_10
+                #- name: pegasus-binary-arm64_deb_10
+                - name: pegasus-binary-x86_64_deb_11
+                #- name: pegasus-binary-arm64_deb_11
                 - name: pegasus-binary-x86_64_ubuntu_18
                 - name: pegasus-binary-x86_64_ubuntu_20
+                #- name: pegasus-binary-arm64_ubuntu_20
                 - name: pegasus-binary-x86_64_ubuntu_22
-                - name: pegasus-deb-x86_64_deb_10
-                - name: pegasus-deb-x86_64_deb_11
-                - name: pegasus-deb-x86_64_ubuntu_18
-                - name: pegasus-deb-x86_64_ubuntu_20
-                - name: pegasus-deb-x86_64_ubuntu_22
-                - name: pegasus-doc
-                - name: pegasus-python-source-versioned
-                - name: pegasus-r-pegasus
+                #- name: pegasus-binary-arm64_ubuntu_22
+
                 - name: pegasus-rpm-x86_64_rhel_7
                 - name: pegasus-rpm-x86_64_rhel_8
                 - name: pegasus-rpm-aarch64_rhel_8
                 - name: pegasus-rpm-x86_64_rhel_9
                 - name: pegasus-rpm-aarch64_rhel_9
-                - name: pegasus-source
-                - name: pegasus-source-versioned
-                - name: pegasus-srcrpm
+                - name: pegasus-deb-x86_64_deb_10
+                #- name: pegasus-deb-arm64_deb_10
+                - name: pegasus-deb-x86_64_deb_11
+                #- name: pegasus-deb-arm64_deb_11
+                - name: pegasus-deb-x86_64_ubuntu_18
+                - name: pegasus-deb-x86_64_ubuntu_20
+                #- name: pegasus-deb-arm64_ubuntu_20
+                - name: pegasus-deb-x86_64_ubuntu_22
+                #- name: pegasus-deb-arm64_ubuntu_22
+
                 - name: pegasus-worker-x86_64_alpine_3
-                - name: pegasus-worker-x86_64_deb_10
-                - name: pegasus-worker-x86_64_deb_11
                 - name: pegasus-worker-x86_64_macos_12
                 - name: pegasus-worker-arm64_macos_12
                 - name: pegasus-worker-arm64_macos_13
@@ -1818,15 +2009,22 @@ project:
                 - name: pegasus-worker-aarch64_rhel_8
                 - name: pegasus-worker-x86_64_rhel_9
                 - name: pegasus-worker-aarch64_rhel_9
+                - name: pegasus-worker-x86_64_deb_10
+                #- name: pegasus-worker-arm64_deb_10
+                - name: pegasus-worker-x86_64_deb_11
+                #- name: pegasus-worker-arm64_deb_11
                 - name: pegasus-worker-x86_64_ubuntu_18
                 - name: pegasus-worker-x86_64_ubuntu_20
+                #- name: pegasus-worker-arm64_ubuntu_20
                 - name: pegasus-worker-x86_64_ubuntu_22
+                #- name: pegasus-worker-arm64_ubuntu_22
               requirements:
                 - capabilityKey: hostname
                   matchType: !equals
                     matchValue: build-1.pegasus.isi.edu
               miscellaneous:
                 cleanWorkingDirectoryAfterEachBuild: true
+
         - name: Container Images
           description: Build and upload container images
           jobs:
