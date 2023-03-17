@@ -1418,16 +1418,16 @@ project:
                       ant dist-worker dist-release dist-deb
                       EOT
               artifactDefinitions:
-                - name: pegasus-binary-arm64_deb_10
-                  copyPattern: "pegasus-binary-*-arm64_deb_10.tar.gz"
+                - name: pegasus-binary-aarch64_deb_10
+                  copyPattern: "pegasus-binary-*-aarch64_deb_10.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-deb-arm64_deb_10
+                - name: pegasus-deb-aarch64_deb_10
                   copyPattern: "*.deb"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-worker-arm64_deb_10
-                  copyPattern: "pegasus-worker-*-arm64_deb_10.tar.gz"
+                - name: pegasus-worker-aarch64_deb_10
+                  copyPattern: "pegasus-worker-*-aarch64_deb_10.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1504,16 +1504,16 @@ project:
                       ant dist-worker dist-release dist-deb
                       EOT
               artifactDefinitions:
-                - name: pegasus-binary-arm64_deb_11
-                  copyPattern: "pegasus-binary-*-arm64_deb_11.tar.gz"
+                - name: pegasus-binary-aarch64_deb_11
+                  copyPattern: "pegasus-binary-*-aarch64_deb_11.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-deb-arm64_deb_11
+                - name: pegasus-deb-aarch64_deb_11
                   copyPattern: "*.deb"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-worker-arm64_deb_11
-                  copyPattern: "pegasus-worker-*-arm64_deb_11.tar.gz"
+                - name: pegasus-worker-aarch64_deb_11
+                  copyPattern: "pegasus-worker-*-aarch64_deb_11.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1750,16 +1750,16 @@ project:
                       ant dist-worker dist-release dist-deb
                       EOT
               artifactDefinitions:
-                - name: pegasus-binary-arm64_ubuntu_20
-                  copyPattern: "pegasus-binary-*-arm64_ubuntu_20.tar.gz"
+                - name: pegasus-binary-aarch64_ubuntu_20
+                  copyPattern: "pegasus-binary-*-aarch64_ubuntu_20.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-deb-arm64_ubuntu_20
+                - name: pegasus-deb-aarch64_ubuntu_20
                   copyPattern: "*.deb"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-worker-arm64_ubuntu_20
-                  copyPattern: "pegasus-worker-*-arm64_ubuntu_20.tar.gz"
+                - name: pegasus-worker-aarch64_ubuntu_20
+                  copyPattern: "pegasus-worker-*-aarch64_ubuntu_20.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1836,16 +1836,16 @@ project:
                       ant dist-worker dist-release dist-deb
                       EOT
               artifactDefinitions:
-                - name: pegasus-binary-arm64_ubuntu_22
-                  copyPattern: "pegasus-binary-*-arm64_ubuntu_22.tar.gz"
+                - name: pegasus-binary-aarch64_ubuntu_22
+                  copyPattern: "pegasus-binary-*-aarch64_ubuntu_22.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-deb-arm64_ubuntu_22
+                - name: pegasus-deb-aarch64_ubuntu_22
                   copyPattern: "*.deb"
                   location: pegasus-source/dist
                   isShared: true
-                - name: pegasus-worker-arm64_ubuntu_22
-                  copyPattern: "pegasus-worker-*-arm64_ubuntu_22.tar.gz"
+                - name: pegasus-worker-aarch64_ubuntu_22
+                  copyPattern: "pegasus-worker-*-aarch64_ubuntu_22.tar.gz"
                   location: pegasus-source/dist
                   isShared: true
               artifactDependencies:
@@ -1902,24 +1902,24 @@ project:
                       # debian
                       mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb10_amd64.deb $DOWNLOADS/debian/dists/buster/main/binary-amd64/
-                      #mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-arm64
-                      #cp $DOWNLOADS/pegasus_*deb10_arm64.deb $DOWNLOADS/debian/dists/buster/main/binary-arm64/
+                      mkdir -p $DOWNLOADS/debian/dists/buster/main/binary-arm64
+                      cp $DOWNLOADS/pegasus_*deb10_arm64.deb $DOWNLOADS/debian/dists/buster/main/binary-arm64/
                       mkdir -p $DOWNLOADS/debian/dists/bullseye/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*deb11_amd64.deb $DOWNLOADS/debian/dists/bullseye/main/binary-amd64/
-                      #mkdir -p $DOWNLOADS/debian/dists/bullseye/main/binary-arm64
-                      #cp $DOWNLOADS/pegasus_*deb11_arm64.deb $DOWNLOADS/debian/dists/bullseye/main/binary-arm64/
+                      mkdir -p $DOWNLOADS/debian/dists/bullseye/main/binary-arm64
+                      cp $DOWNLOADS/pegasus_*deb11_arm64.deb $DOWNLOADS/debian/dists/bullseye/main/binary-arm64/
 
                       # ubuntu
                       mkdir -p $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu18_amd64.deb $DOWNLOADS/ubuntu/dists/bionic/main/binary-amd64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/focal/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu20_amd64.deb $DOWNLOADS/ubuntu/dists/focal/main/binary-amd64/
-                      #mkdir -p $DOWNLOADS/ubuntu/dists/focal/main/binary-arm64
-                      #cp $DOWNLOADS/pegasus_*ubuntu20_arm64.deb $DOWNLOADS/ubuntu/dists/focal/main/binary-arm64/
+                      mkdir -p $DOWNLOADS/ubuntu/dists/focal/main/binary-arm64
+                      cp $DOWNLOADS/pegasus_*ubuntu20_arm64.deb $DOWNLOADS/ubuntu/dists/focal/main/binary-arm64/
                       mkdir -p $DOWNLOADS/ubuntu/dists/jammy/main/binary-amd64
                       cp $DOWNLOADS/pegasus_*ubuntu22_amd64.deb $DOWNLOADS/ubuntu/dists/jammy/main/binary-amd64/
-                      #mkdir -p $DOWNLOADS/ubuntu/dists/jammy/main/binary-arm64
-                      #cp $DOWNLOADS/pegasus_*ubuntu22_arm64.deb $DOWNLOADS/ubuntu/dists/jammy/main/binary-arm64/
+                      mkdir -p $DOWNLOADS/ubuntu/dists/jammy/main/binary-arm64
+                      cp $DOWNLOADS/pegasus_*ubuntu22_arm64.deb $DOWNLOADS/ubuntu/dists/jammy/main/binary-arm64/
 
                       # rhel
                       mkdir -p $DOWNLOADS/rhel/src
@@ -1984,14 +1984,14 @@ project:
                 - name: pegasus-binary-x86_64_rhel_9
                 - name: pegasus-binary-aarch64_rhel_9
                 - name: pegasus-binary-x86_64_deb_10
-                #- name: pegasus-binary-arm64_deb_10
+                #- name: pegasus-binary-aarch64_deb_10
                 - name: pegasus-binary-x86_64_deb_11
-                #- name: pegasus-binary-arm64_deb_11
+                #- name: pegasus-binary-aarch64_deb_11
                 - name: pegasus-binary-x86_64_ubuntu_18
                 - name: pegasus-binary-x86_64_ubuntu_20
-                #- name: pegasus-binary-arm64_ubuntu_20
+                #- name: pegasus-binary-aarch64_ubuntu_20
                 - name: pegasus-binary-x86_64_ubuntu_22
-                #- name: pegasus-binary-arm64_ubuntu_22
+                #- name: pegasus-binary-aarch64_ubuntu_22
 
                 - name: pegasus-rpm-x86_64_rhel_7
                 - name: pegasus-rpm-x86_64_rhel_8
@@ -1999,14 +1999,14 @@ project:
                 - name: pegasus-rpm-x86_64_rhel_9
                 - name: pegasus-rpm-aarch64_rhel_9
                 - name: pegasus-deb-x86_64_deb_10
-                #- name: pegasus-deb-arm64_deb_10
+                #- name: pegasus-deb-aarch64_deb_10
                 - name: pegasus-deb-x86_64_deb_11
-                #- name: pegasus-deb-arm64_deb_11
+                #- name: pegasus-deb-aarch64_deb_11
                 - name: pegasus-deb-x86_64_ubuntu_18
                 - name: pegasus-deb-x86_64_ubuntu_20
-                #- name: pegasus-deb-arm64_ubuntu_20
+                #- name: pegasus-deb-aarch64_ubuntu_20
                 - name: pegasus-deb-x86_64_ubuntu_22
-                #- name: pegasus-deb-arm64_ubuntu_22
+                #- name: pegasus-deb-aarch64_ubuntu_22
 
                 - name: pegasus-worker-x86_64_alpine_3
                 - name: pegasus-worker-x86_64_macos_12
@@ -2018,14 +2018,14 @@ project:
                 - name: pegasus-worker-x86_64_rhel_9
                 - name: pegasus-worker-aarch64_rhel_9
                 - name: pegasus-worker-x86_64_deb_10
-                #- name: pegasus-worker-arm64_deb_10
+                #- name: pegasus-worker-aarch64_deb_10
                 - name: pegasus-worker-x86_64_deb_11
-                #- name: pegasus-worker-arm64_deb_11
+                #- name: pegasus-worker-aarch64_deb_11
                 - name: pegasus-worker-x86_64_ubuntu_18
                 - name: pegasus-worker-x86_64_ubuntu_20
-                #- name: pegasus-worker-arm64_ubuntu_20
+                #- name: pegasus-worker-aarch64_ubuntu_20
                 - name: pegasus-worker-x86_64_ubuntu_22
-                #- name: pegasus-worker-arm64_ubuntu_22
+                #- name: pegasus-worker-aarch64_ubuntu_22
               requirements:
                 - capabilityKey: hostname
                   matchType: !equals
