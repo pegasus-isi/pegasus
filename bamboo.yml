@@ -1396,7 +1396,6 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB10A
               name: Build Debian 10 (Arm)
-              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -1482,7 +1481,6 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BDEB11A
               name: Build Debian 11 (Arm)
-              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -1728,7 +1726,6 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXUFA
               name: Build Ubuntu 20.04 LTS (Arm)
-              enabled: false
               tasks:
                 - !script
                   description: Untar source
@@ -1814,7 +1811,6 @@ project:
                 cleanWorkingDirectoryAfterEachBuild: true
             - key: BXJFA
               name: Build Ubuntu 22.04 LTS (Arm)
-              enabled: false
               tasks:
                 - !script
                   description: Untar source
