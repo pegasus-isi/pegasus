@@ -669,6 +669,16 @@ pegasus_lite_get_system()
                 "sles") osname="suse" ;;
                 *) osname="$osname" ;;
             esac
+
+            # sometimes VERSION_CODENAME is set, but not VERSION_ID
+            if [ "X$osversion" = "X" ]; then
+                oscodename=$(grep -w VERSION_CODENAME /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2)
+                case $oscodename in
+                    "bullseye")  osversion="11" ;;
+                    "bookworm")  osversion="12" ;;
+                    "trixie")    osversion="13" ;;
+                esac
+            fi
         elif [ -e /etc/issue ]; then
             osname=`cat /etc/issue | head -n1 | awk '{print $1;}' | tr '[:upper:]' '[:lower:]'`
 
