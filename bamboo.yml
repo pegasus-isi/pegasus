@@ -1980,14 +1980,14 @@ project:
                 - name: pegasus-binary-x86_64_rhel_9
                 - name: pegasus-binary-aarch64_rhel_9
                 - name: pegasus-binary-x86_64_deb_10
-                #- name: pegasus-binary-aarch64_deb_10
+                - name: pegasus-binary-aarch64_deb_10
                 - name: pegasus-binary-x86_64_deb_11
-                #- name: pegasus-binary-aarch64_deb_11
+                - name: pegasus-binary-aarch64_deb_11
                 - name: pegasus-binary-x86_64_ubuntu_18
                 - name: pegasus-binary-x86_64_ubuntu_20
-                #- name: pegasus-binary-aarch64_ubuntu_20
+                - name: pegasus-binary-aarch64_ubuntu_20
                 - name: pegasus-binary-x86_64_ubuntu_22
-                #- name: pegasus-binary-aarch64_ubuntu_22
+                - name: pegasus-binary-aarch64_ubuntu_22
 
                 - name: pegasus-rpm-x86_64_rhel_7
                 - name: pegasus-rpm-x86_64_rhel_8
@@ -1995,14 +1995,14 @@ project:
                 - name: pegasus-rpm-x86_64_rhel_9
                 - name: pegasus-rpm-aarch64_rhel_9
                 - name: pegasus-deb-x86_64_deb_10
-                #- name: pegasus-deb-aarch64_deb_10
+                - name: pegasus-deb-aarch64_deb_10
                 - name: pegasus-deb-x86_64_deb_11
-                #- name: pegasus-deb-aarch64_deb_11
+                - name: pegasus-deb-aarch64_deb_11
                 - name: pegasus-deb-x86_64_ubuntu_18
                 - name: pegasus-deb-x86_64_ubuntu_20
-                #- name: pegasus-deb-aarch64_ubuntu_20
+                - name: pegasus-deb-aarch64_ubuntu_20
                 - name: pegasus-deb-x86_64_ubuntu_22
-                #- name: pegasus-deb-aarch64_ubuntu_22
+                - name: pegasus-deb-aarch64_ubuntu_22
 
                 - name: pegasus-worker-x86_64_alpine_3
                 - name: pegasus-worker-x86_64_macos_12
@@ -2014,14 +2014,14 @@ project:
                 - name: pegasus-worker-x86_64_rhel_9
                 - name: pegasus-worker-aarch64_rhel_9
                 - name: pegasus-worker-x86_64_deb_10
-                #- name: pegasus-worker-aarch64_deb_10
+                - name: pegasus-worker-aarch64_deb_10
                 - name: pegasus-worker-x86_64_deb_11
-                #- name: pegasus-worker-aarch64_deb_11
+                - name: pegasus-worker-aarch64_deb_11
                 - name: pegasus-worker-x86_64_ubuntu_18
                 - name: pegasus-worker-x86_64_ubuntu_20
-                #- name: pegasus-worker-aarch64_ubuntu_20
+                - name: pegasus-worker-aarch64_ubuntu_20
                 - name: pegasus-worker-x86_64_ubuntu_22
-                #- name: pegasus-worker-aarch64_ubuntu_22
+                - name: pegasus-worker-aarch64_ubuntu_22
               requirements:
                 - capabilityKey: hostname
                   matchType: !equals
