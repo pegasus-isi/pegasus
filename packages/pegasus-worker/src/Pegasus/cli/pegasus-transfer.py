@@ -3420,8 +3420,9 @@ class StashHandler(TransferHandlerBase):
                     failed_l.append(t)
                     continue
 
-                if os.path.exists("/mnt/ceph/osg/public"):
-                    # hack for now - local cp
+                if os.path.exists("/mnt/ceph/osg"):
+                    # hack for now (we don't have a scitoken locally)
+                    # local cp
                     src_path = t.get_src_path()
                     dst_path = re.sub("^/osgconnect", "", t.get_dst_path())
 
@@ -3431,30 +3432,32 @@ class StashHandler(TransferHandlerBase):
                     cmd = "%s '%s' '%s'" % (
                         tools.full_path("stashcp"),
                         t.get_src_path(),
-                        t.dst_url(),
+                        t.dst_url()
                     )
             else:
                 # read
-                # stashcp wants just the path with a single leading slash
-                src_path = t.src_url()
-                src_path = re.sub("^(osdf|stash):", "", src_path)
-                src_path = re.sub("^/+", "", src_path)
-                src_path = "/" + src_path
 
-                local_dir = os.path.dirname(t.get_dst_path())
-                prepare_local_dir(local_dir)
-                # use --methods as we want to exclude cvmfs - it can take a
-                # long time to update, and we have seen partial files being
-                # published there in the past
-                cmd = "%s '%s' '%s'" % (
-                    tools.full_path("stashcp"),
-                    src_path,
-                    local_dir,
-                )
-                remote_fname = os.path.basename(t.get_src_path())
-                local_fname = os.path.basename(t.get_dst_path())
-                if remote_fname != local_fname:
-                    cmd += " && mv '%s' '%s'" % (remote_fname, local_fname)
+                if os.path.exists("/mnt/ceph/osg"):
+                    # hack for now (we don't have a scitoken locally)
+                    # local cp
+                    src_path = re.sub("^/osgconnect", "", t.get_src_path())
+                    dst_path = t.get_dst_path()
+
+                    prepare_local_dir(os.path.dirname(dst_path))
+                    cmd = "/bin/cp '%s' '%s'" % (src_path, dst_path)
+                else:
+                    # stashcp wants just the path with a single leading slash
+                    src_path = t.src_url()
+                    src_path = re.sub("^(osdf|stash):", "", src_path)
+                    src_path = re.sub("^/+", "/", src_path)
+
+                    local_dir = os.path.dirname(t.get_dst_path())
+                    prepare_local_dir(local_dir)
+                    cmd = "%s '%s' '%s'" % (
+                        tools.full_path("stashcp"),
+                        src_path,
+                        t.get_dst_path()
+                    )
 
             try:
                 tc = utils.TimedCommand(cmd)
