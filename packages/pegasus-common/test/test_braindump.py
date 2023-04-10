@@ -1,9 +1,9 @@
 import io
 from typing import Dict
 
-import attr
 import pytest
 
+import Pegasus.vendor.attr as attr
 from Pegasus.braindump import Braindump, dump, dumps, load, loads
 
 fields = attr.fields_dict(Braindump)
