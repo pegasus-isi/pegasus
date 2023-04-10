@@ -3418,7 +3418,7 @@ class StashHandler(TransferHandlerBase):
                     dst_path = t.get_dst_path()
 
                     prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = "/bin/cp '%s' '%s'" % (src_path, dst_path)
+                    cmd = "/bin/cp '{}' '{}'".format(src_path, dst_path)
                 else:
                     # stashcp wants just the path with a single leading slash
                     src_path = t.src_url()
@@ -3427,10 +3427,8 @@ class StashHandler(TransferHandlerBase):
 
                     local_dir = os.path.dirname(t.get_dst_path())
                     prepare_local_dir(local_dir)
-                    cmd = "%s '%s' '%s'" % (
-                        tools.full_path("stashcp"),
-                        src_path,
-                        t.get_dst_path()
+                    cmd = "{} '{}' '{}'".format(
+                        tools.full_path("stashcp"), src_path, t.get_dst_path()
                     )
 
             try:

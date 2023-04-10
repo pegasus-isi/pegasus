@@ -12,25 +12,20 @@ Basic Usage::
     >>> print(analyze.analyzer_output.as_dict())
 """
 
+import logging
 import os
 import re
-import sys
-import json
-import logging
-import optparse
-import tempfile
-import traceback
 import subprocess
+import sys
+import tempfile
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Dict
-from pathlib import Path
-from dataclasses import dataclass, field, asdict
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.workflow import stampede_statistics
 from Pegasus.tools import kickstart_parser, utils
-from Pegasus.vendor import attr
 
 logger = logging.getLogger("pegasus-newanalyzer")
 
@@ -119,92 +114,91 @@ indent = ""  # the corresponding indent string
 # ----- Data classes ------------------------------------------------------------------
 @dataclass
 class Options:
-    input_dir : str = None  # Directory given in -i command line option
-    debug_job : str = None  # Path of a submit file to debug
-    debug_dir : str = None  # Temp directory to use while debugging a job
-    debug_job_local_executable : str = None  # the local path to user executable for debugging job
-    workflow_type : str = None  # Type of the workflow being debugged
-    run_monitord : bool = False  # Run monitord before trying to analyze the output
-    output_dir : str = None  # output_dir for all files written by monitord
-    top_dir : str = None  # top_dir of the main workflow, for obtaining the db location
-    quiet_mode : bool = False  # Prints out/err filenames instead of dumping their contents
-    strict_mode : bool = False  # Gets out/err filenames from submit file
-    summary_mode : bool = False  # Print just the summary output
-    debug_mode : bool = False  # Mode that enables debugging a single job
-    json_mode : bool = False  # Mode that returns all info in a structured format like JSON
-    recurse_mode : bool = False  # Mode that automatically recurses into failed sub workflows.
-    traverse_all : bool = False  # Mode that automatically traverses all descendant sub workflows.
-    indent_length : int = 0  # the number of tabs to print before printing to console
-    print_invocation : bool = False  # Prints invocation command for failed jobs
-    print_pre_script : bool = False  # Prints the SCRIPT PRE line for failed jobs, if present
-    workflow_base_dir : str = None  # Workflow submit_dir or dirname(jsd) from braindump file
-    use_files : bool = False   #mode to use AnalyzeFiles
+    input_dir: str = None  # Directory given in -i command line option
+    debug_job: str = None  # Path of a submit file to debug
+    debug_dir: str = None  # Temp directory to use while debugging a job
+    debug_job_local_executable: str = None  # the local path to user executable for debugging job
+    workflow_type: str = None  # Type of the workflow being debugged
+    run_monitord: bool = False  # Run monitord before trying to analyze the output
+    output_dir: str = None  # output_dir for all files written by monitord
+    top_dir: str = None  # top_dir of the main workflow, for obtaining the db location
+    quiet_mode: bool = False  # Prints out/err filenames instead of dumping their contents
+    strict_mode: bool = False  # Gets out/err filenames from submit file
+    summary_mode: bool = False  # Print just the summary output
+    debug_mode: bool = False  # Mode that enables debugging a single job
+    json_mode: bool = False  # Mode that returns all info in a structured format like JSON
+    recurse_mode: bool = False  # Mode that automatically recurses into failed sub workflows.
+    traverse_all: bool = False  # Mode that automatically traverses all descendant sub workflows.
+    indent_length: int = 0  # the number of tabs to print before printing to console
+    print_invocation: bool = False  # Prints invocation command for failed jobs
+    print_pre_script: bool = False  # Prints the SCRIPT PRE line for failed jobs, if present
+    workflow_base_dir: str = None  # Workflow submit_dir or dirname(jsd) from braindump file
+    use_files: bool = False  # mode to use AnalyzeFiles
 
 
 @dataclass
 class Task:
-    site: str = None  
-    hostname : str = None  
-    executable : str = None  
-    arguments : str = None 
-    exitcode : int = None 
-    working_dir : str = None 
-    
-    
+    site: str = None
+    hostname: str = None
+    executable: str = None
+    arguments: str = None
+    exitcode: int = None
+    working_dir: str = None
+
+
 @dataclass
 class JobInstance:
-    job_name : str = None 
-    state : str = None 
-    site : str = None 
-    submit_file : str = None 
-    stdout_file : str = None 
-    stderr_file : str = None 
-    executable : str = None 
-    argv : str = None 
-    tasks : Dict[str, Task] = field(default_factory=lambda: ({})) 
+    job_name: str = None
+    state: str = None
+    site: str = None
+    submit_file: str = None
+    stdout_file: str = None
+    stderr_file: str = None
+    executable: str = None
+    argv: str = None
+    tasks: Dict[str, Task] = field(default_factory=lambda: ({}))
 
 
 @dataclass
 class Jobs:
-    total : int = 0  
-    success : int = 0  
-    failed : int = 0  
-    held : int = 0  
-    unsubmitted : int = 0 
-    job_details : Dict[str, Dict] = field(default_factory=lambda: ({})) 
+    total: int = 0
+    success: int = 0
+    failed: int = 0
+    held: int = 0
+    unsubmitted: int = 0
+    job_details: Dict[str, Dict] = field(default_factory=lambda: ({}))
 
 
 @dataclass
 class Workflow:
-    wf_uuid : str = None 
-    dag_file_name : str = None 
-    submit_hostname : str = None 
-    submit_dir : str = None 
-    user : str = None 
-    planner_version : str = None 
-    wf_name : str = None 
-    wf_status : str = None 
-    parent_wf_name : str = None 
-    parent_wf_uuid : str = None 
-    jobs : Jobs = None
+    wf_uuid: str = None
+    dag_file_name: str = None
+    submit_hostname: str = None
+    submit_dir: str = None
+    user: str = None
+    planner_version: str = None
+    wf_name: str = None
+    wf_status: str = None
+    parent_wf_name: str = None
+    parent_wf_uuid: str = None
+    jobs: Jobs = None
 
 
 # --- classes to store analyzer output ------------------------------------------------
 class AnalyzerOutput:
-    
     def __init__(self):
         """
         Initializes the Analyzer output class
         """
         self.root_wf_uuid = None  # root workflow uuid
-        self.root_submit_dir = None # root workflow submit directory
-        self.workflows: Dict[Str: Workflow] = {}
+        self.root_submit_dir = None  # root workflow submit directory
+        self.workflows: Dict[Str:Workflow] = {}
         self.structure_output = {
-            "root_wf_uuid" : None,
-            "submit_directory" : None,
-            "workflows": {}
+            "root_wf_uuid": None,
+            "submit_directory": None,
+            "workflows": {},
         }
-        
+
     def as_dict(self):
         """
         Converts all data classes and returns the analyzer output as a dictionary
@@ -212,11 +206,11 @@ class AnalyzerOutput:
         :return: A dict containing all workflow details
         :rtype: Dict[str,Dict]
         """
-        
+
         for wf in self.workflows:
             self.structure_output["workflows"][wf] = asdict(self.workflows[wf])
         return self.structure_output
-    
+
     def get_failed_workflows(self):
         """
         Returns a dictionary of failed workflows
@@ -226,22 +220,24 @@ class AnalyzerOutput:
         """
         failed_wfs = {}
         for wf in self.workflows:
-            if self.workflows[wf].wf_status == 'failure':
+            if self.workflows[wf].wf_status == "failure":
                 failed_wfs[wf] = self.workflows[wf]
         return failed_wfs
-        
+
 
 @dataclass
 class Counts:
-    total : int = 0  # Number of total jobs
-    success : int = 0  # Number of successful jobs
-    failed : int = 0  # Number of failed jobs
-    unsubmitted : int = 0  # Number of unsubmitted jobs
-    unknown : int = 0  # Number of jobs in an unknown state
-    held : int = 0  # number of held jobs
-    failed_jobs : list = field(default_factory=[])  # List of jobs that failed
-    unknown_jobs : list = field(default_factory=[])  # List of jobs that neither succeeded nor failed
-    
+    total: int = 0  # Number of total jobs
+    success: int = 0  # Number of successful jobs
+    failed: int = 0  # Number of failed jobs
+    unsubmitted: int = 0  # Number of unsubmitted jobs
+    unknown: int = 0  # Number of jobs in an unknown state
+    held: int = 0  # number of held jobs
+    failed_jobs: list = field(default_factory=[])  # List of jobs that failed
+    unknown_jobs: list = field(
+        default_factory=[]
+    )  # List of jobs that neither succeeded nor failed
+
 
 # --- Analyze classes to run analyzer --------------------------------------------------
 class BaseAnalyze:
@@ -263,7 +259,9 @@ class BaseAnalyze:
         if counts.unsubmitted == counts.total:
             # PM-1039 either the workflow did not start or other errors
             # check the dagman.out file
-            BaseAnalyze.print_console(" Looks like workflow did not start".center(80, "*"))
+            BaseAnalyze.print_console(
+                " Looks like workflow did not start".center(80, "*")
+            )
             BaseAnalyze.print_console()
             if options.input_dir is not None:
                 dagman_out = BaseAnalyze.backticks(
@@ -278,7 +276,8 @@ class BaseAnalyze:
                         header = " Error detected in *.dag.dagman.out "
                         BaseAnalyze.print_console(header.center(80, "="))
                         BaseAnalyze.print_console(
-                            " HTCondor DAGMan NFS ERROR condition detected in " + dagman_out
+                            " HTCondor DAGMan NFS ERROR condition detected in "
+                            + dagman_out
                         )
                         BaseAnalyze.print_console(" " + nfs_error_string)
                         BaseAnalyze.print_console(
@@ -309,20 +308,23 @@ class BaseAnalyze:
                         BaseAnalyze.print_console(" Contents of " + dagman_lib_err)
                         BaseAnalyze.print_console(" " + dagman_lib_err_contents)
 
-
-    def print_top_summary(workflow_status=None, submit_dir=None, options=None, counts=None):
+    def print_top_summary(
+        workflow_status=None, submit_dir=None, options=None, counts=None
+    ):
         """
         This function prints the summary for the analyzer report,
         which is the same for the long and short output versions
         """
-        submit_dir=options.input_dir
+        submit_dir = options.input_dir
         BaseAnalyze.print_console()
         summary = "Summary".center(80, "*")
         BaseAnalyze.print_console(summary)
         BaseAnalyze.print_console()
         BaseAnalyze.print_console(" Submit Directory   : %s" % (submit_dir))
         if workflow_status:
-            BaseAnalyze.print_console(" Workflow Status    : %s" % (workflow_status.value))
+            BaseAnalyze.print_console(
+                " Workflow Status    : %s" % (workflow_status.value)
+            )
 
         BaseAnalyze.print_console(
             " Total jobs         : % 6d (%3.2f%%)"
@@ -342,7 +344,10 @@ class BaseAnalyze:
         )
         BaseAnalyze.print_console(
             " # jobs unsubmitted : % 6d (%3.2f%%)"
-            % (counts.unsubmitted, 100 * (1.0 * counts.unsubmitted / (counts.total or 1)))
+            % (
+                counts.unsubmitted,
+                100 * (1.0 * counts.unsubmitted / (counts.total or 1)),
+            )
         )
         if counts.unknown > 0:
             BaseAnalyze.print_console(
@@ -350,23 +355,22 @@ class BaseAnalyze:
                 % (counts.unknown, 100 * (1.0 * counts.unknown / (counts.total or 1)))
             )
         print()
-        
-        
+
     def print_console(stmt=""):
         """
         A utilty function to print to console with the correct indentation
         """
         print(indent + stmt)
-        
 
     def backticks(cmd_line):
         """
         what would a python program be without some perl love?
         """
-        o = subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[0]
+        o = subprocess.Popen(
+            cmd_line, shell=True, stdout=subprocess.PIPE
+        ).communicate()[0]
         if o:
             o = o.decode()
-            
 
     def addon(options):
         """
@@ -394,7 +398,6 @@ class BaseAnalyze:
         cmd_line_args += "--indent " + str(new_indent) + " "
 
         return cmd_line_args
-
 
     def parse_submit_file(my_job, options):
         """
@@ -465,16 +468,27 @@ class BaseAnalyze:
                             sub_prop_line = sub_prop_line.strip()  # Remove any spaces
                             if len(sub_prop_line) == 0:
                                 continue
-                            sub_prop = BaseAnalyze.re_parse_property.search(sub_prop_line)
+                            sub_prop = BaseAnalyze.re_parse_property.search(
+                                sub_prop_line
+                            )
                             if sub_prop:
                                 if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
                                     my_job.dagman_out = sub_prop.group(2)
-                                    my_job.dagman_out = os.path.normpath(my_job.dagman_out)
-                                    if my_job.dagman_out.find(options.workflow_base_dir) >= 0:
+                                    my_job.dagman_out = os.path.normpath(
+                                        my_job.dagman_out
+                                    )
+                                    if (
+                                        my_job.dagman_out.find(
+                                            options.workflow_base_dir
+                                        )
+                                        >= 0
+                                    ):
                                         # Path to dagman_out file includes original submit_dir, let's try to change it
                                         my_job.dagman_out = os.path.normpath(
                                             my_job.dagman_out.replace(
-                                                (options.workflow_base_dir + os.sep), "", 1
+                                                (options.workflow_base_dir + os.sep),
+                                                "",
+                                                1,
                                             )
                                         )
                                         # Join with current options.input_dir
@@ -486,8 +500,12 @@ class BaseAnalyze:
                                         # replanning and rescue modes
 
                                         # Split filename into dir and base names
-                                        my_dagman_dir = os.path.dirname(my_job.dagman_out)
-                                        my_dagman_file = os.path.basename(my_job.dagman_out)
+                                        my_dagman_dir = os.path.dirname(
+                                            my_job.dagman_out
+                                        )
+                                        my_dagman_file = os.path.basename(
+                                            my_job.dagman_out
+                                        )
                                         my_retry = my_job.retries
                                         if my_retry is None:
                                             logger.warning(
@@ -495,7 +513,9 @@ class BaseAnalyze:
                                             )
                                             continue
                                         # Compose directory... assuming replanning mode
-                                        my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)
+                                        my_retry_dir = my_dagman_dir + ".%03d" % (
+                                            my_retry
+                                        )
                                         # If directory doesn't exist, let's change to rescue mode
                                         if not os.path.isdir(my_retry_dir):
                                             logger.debug(
@@ -565,13 +585,11 @@ class BaseAnalyze:
             pass
 
 
-
 class AnalyzeDB(BaseAnalyze):
-    
     def __init__(self, options):
         self.analyzer_output = AnalyzerOutput()
         self.options = options
-        self.counts = Counts(0,0,0,0,0,0,[],[])
+        self.counts = Counts(0, 0, 0, 0, 0, 0, [], [])
 
     def analyze_db(self, config_properties):
         """
@@ -581,17 +599,24 @@ class AnalyzeDB(BaseAnalyze):
         # Get the database URL
         try:
             output_db_url = connection.url_by_submitdir(
-                self.options.input_dir, connection.DBType.WORKFLOW, config_properties, self.options.top_dir
+                self.options.input_dir,
+                connection.DBType.WORKFLOW,
+                config_properties,
+                self.options.top_dir,
             )
             wf_uuid = connection.get_wf_uuid(self.options.input_dir)
             self.analyzer_output.root_wf_uuid = wf_uuid
             self.analyzer_output.root_submit_dir = self.options.input_dir
             self.analyzer_output.structure_output["root_wf_uuid"] = wf_uuid
-            self.analyzer_output.structure_output["submit_directory"] = self.options.input_dir
-                
+            self.analyzer_output.structure_output[
+                "submit_directory"
+            ] = self.options.input_dir
+
         except connection.ConnectionError as e:
             raise AnalyzerError(
-                "Unable to connect to database for workflow in %s", self.options.input_dir, e
+                "Unable to connect to database for workflow in %s",
+                self.options.input_dir,
+                e,
             )
 
         # Nothing to do if we cannot resolve the database URL
@@ -601,7 +626,9 @@ class AnalyzeDB(BaseAnalyze):
         # Now, let's try to access the database
         workflow_stats = None
         try:
-            workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
+            workflow_stats = stampede_statistics.StampedeStatistics(
+                output_db_url, False
+            )
             workflow_stats.initialize(wf_uuid)
             descendant_wfs_ids = workflow_stats.get_descendants(wf_uuid)
         except DBAdminError as e:
@@ -622,14 +649,14 @@ class AnalyzeDB(BaseAnalyze):
             wf_details[wf_detail.wf_id] = wf_detail
             if wf_detail.wf_uuid == wf_uuid:
                 wf_id = wf_detail.wf_id
-        
-        #for k in wf_details:
+
+        # for k in wf_details:
         #    print(k,wf_details[k])
-        
-            
+
         if wf_id is None:
             logger.error(
-                "Unable to determine the database id for workflow with uuid %s" % wf_uuid
+                "Unable to determine the database id for workflow with uuid %s"
+                % wf_uuid
             )
 
         wf_ids = []
@@ -638,17 +665,19 @@ class AnalyzeDB(BaseAnalyze):
         else:
             # we only do the workflow on which submit directory analyzer is called
             wf_ids.append(wf_id)
-        
+
         for wf_id in wf_ids:
             wf_detail = wf_details[wf_id]
-            
+
             if wf_detail.wf_uuid == wf_uuid:
                 wf_key = "root"
             else:
                 wf_key = wf_detail.wf_uuid
-            self.analyzer_output.workflows[wf_key] = self.get_wf_details(wf_detail, wf_details)
+            self.analyzer_output.workflows[wf_key] = self.get_wf_details(
+                wf_detail, wf_details
+            )
             wf = self.analyzer_output.workflows[wf_key]
-            
+
             logger.debug(
                 "Running analyzer on workflow with database id {} in submit dir {}".format(
                     wf_id, wf_detail.submit_dir
@@ -674,15 +703,13 @@ class AnalyzeDB(BaseAnalyze):
             finally:
                 if workflow_stats:
                     workflow_stats.close()
-        
+
         if self.options.json_mode:
             return self.analyzer_output
-            
-        
+
         # TODO: throw exceptions. catch them and determine exitcode
         if self.counts.failed > 0 and not self.options.json_mode:
             raise WorkflowFailureError("One or more workflows failed")
-
 
     def get_wf_details(self, wf_detail, wf_details):
         """
@@ -692,7 +719,7 @@ class AnalyzeDB(BaseAnalyze):
         :param wf_details: a dict of all workflows' details
         :return: returns a :class:`Pegasus.analyzer.Workflow` object
         """
-        
+
         wf = Workflow(
             wf_detail.wf_uuid,
             wf_detail.dag_file_name,
@@ -700,18 +727,17 @@ class AnalyzeDB(BaseAnalyze):
             wf_detail.submit_dir,
             wf_detail.user,
             wf_detail.planner_version,
-            wf_detail.dax_label
+            wf_detail.dax_label,
         )
         if wf_detail.parent_wf_id:
             wf.parent_wf_name = wf_details[wf_detail.parent_wf_id].dax_label
             wf.parent_wf_uuid = wf_details[wf_detail.parent_wf_id].wf_uuid
         else:
-            wf.parent_wf_name = '-'
-            wf.parent_wf_uuid = '-'
-            
+            wf.parent_wf_name = "-"
+            wf.parent_wf_uuid = "-"
+
         return wf
-        
-        
+
     def analyze_db_for_wf(self, workflow_stats, wf_uuid, submit_dir, wf):
         """
         This function runs the analyzer using data from the database.
@@ -743,7 +769,8 @@ class AnalyzeDB(BaseAnalyze):
             workflow_status = self.get_workflow_status(workflow_states[-1])
 
         logger.debug(
-            "Workflow state determined from workflow database is %s" % workflow_status.value
+            "Workflow state determined from workflow database is %s"
+            % workflow_status.value
         )
 
         # PM-1039
@@ -752,13 +779,21 @@ class AnalyzeDB(BaseAnalyze):
         if self.counts.failed is None:
             self.counts.failed = 0
 
-        self.counts.unsubmitted = self.counts.total - self.counts.success - self.counts.failed
-        
+        self.counts.unsubmitted = (
+            self.counts.total - self.counts.success - self.counts.failed
+        )
+
         wf.wf_status = workflow_status.value
-        wf.jobs = Jobs(self.counts.total,self.counts.success,self.counts.failed,self.counts.held,self.counts.unsubmitted)
-        
+        wf.jobs = Jobs(
+            self.counts.total,
+            self.counts.success,
+            self.counts.failed,
+            self.counts.held,
+            self.counts.unsubmitted,
+        )
+
         # PM-1762 add a helpful message in case failed jobs are zero and workflow failed
-        if workflow_status is WORKFLOW_STATUS.FAILURE and self.counts.failed == 0 :
+        if workflow_status is WORKFLOW_STATUS.FAILURE and self.counts.failed == 0:
             BaseAnalyze.print_console(
                 "It seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in %s"
                 % (self.options.input_dir or self.options.top_dir)
@@ -766,7 +801,9 @@ class AnalyzeDB(BaseAnalyze):
 
         # Let's print the results
         if not self.options.json_mode:
-            BaseAnalyze.print_top_summary(workflow_status, submit_dir, self.options, self.counts)
+            BaseAnalyze.print_top_summary(
+                workflow_status, submit_dir, self.options, self.counts
+            )
             BaseAnalyze.check_for_wf_start(self.options, self.counts)
 
         # Exit if summary mode is on
@@ -782,7 +819,7 @@ class AnalyzeDB(BaseAnalyze):
         # PM-1126 print information about held jobs
         if self.counts.held > 0:
             wf.jobs.job_details["held_jobs_details"] = {}
-            
+
             if not self.options.json_mode:
                 # Print header
                 BaseAnalyze.print_console("Held jobs' details".center(80, "*"))
@@ -790,9 +827,9 @@ class AnalyzeDB(BaseAnalyze):
 
             for held_job in held_jobs:
                 wf.jobs.job_details["held_jobs_details"][held_job.jobid] = {
-                                        'submit_file' : held_job.jobname+".sub" or "-",
-                                        'last_job_instance_id' : held_job[0] or "-",
-                                        'reason' : held_job.reason or "-"
+                    "submit_file": held_job.jobname + ".sub" or "-",
+                    "last_job_instance_id": held_job[0] or "-",
+                    "reason": held_job.reason or "-",
                 }
                 if not self.options.json_mode:
                     # each tuple is max_ji_id, jobid, jobname, reason
@@ -800,10 +837,15 @@ class AnalyzeDB(BaseAnalyze):
                     BaseAnalyze.print_console(held_job.jobname.center(80, "="))
                     BaseAnalyze.print_console()
                     BaseAnalyze.print_console(
-                        "submit file            : %s" % (held_job.jobname + ".sub" or "-")
+                        "submit file            : %s"
+                        % (held_job.jobname + ".sub" or "-")
                     )
-                    BaseAnalyze.print_console("last_job_instance_id   : %s" % (held_job[0] or "-"))
-                    BaseAnalyze.print_console("reason                 : %s" % (held_job.reason or "-"))
+                    BaseAnalyze.print_console(
+                        "last_job_instance_id   : %s" % (held_job[0] or "-")
+                    )
+                    BaseAnalyze.print_console(
+                        "reason                 : %s" % (held_job.reason or "-")
+                    )
                     BaseAnalyze.print_console()
 
         # PM-1890 print failing jobs before failed jobs
@@ -820,17 +862,18 @@ class AnalyzeDB(BaseAnalyze):
                         workflow_stats.get_job_instance_info(failing_job_id)[0],
                         job_tasks,
                     )
-                wf.jobs.job_details["failing_jobs_details"][failing_job_id] = self.get_job_details(
-                                workflow_stats.get_job_instance_info(failing_job_id)[0],
-                                job_tasks
-                            )
+                wf.jobs.job_details["failing_jobs_details"][
+                    failing_job_id
+                ] = self.get_job_details(
+                    workflow_stats.get_job_instance_info(failing_job_id)[0], job_tasks
+                )
 
         # Now, print information about jobs that failed...
         if self.counts.failed > 0:
             wf.jobs.job_details["failed_jobs_details"] = {}
             # Get list of failed jobs from database
             self.counts.failed_jobs = workflow_stats.get_failed_job_instances()
-            
+
             if not self.options.json_mode:
                 # Print header
                 BaseAnalyze.print_console("Failed jobs' details".center(80, "*"))
@@ -839,26 +882,36 @@ class AnalyzeDB(BaseAnalyze):
             for my_job in self.counts.failed_jobs:
                 job_instance_info = workflow_stats.get_job_instance_info(my_job[0])[0]
                 job_tasks = workflow_stats.get_invocation_info(my_job[0])
-                
+
                 if not self.options.json_mode:
                     sub_wf_cmd = self.print_job_instance(
                         job_instance_info.job_instance_id,
-                        workflow_stats.get_job_instance_info(job_instance_info.job_instance_id)[
-                            0
-                        ],
+                        workflow_stats.get_job_instance_info(
+                            job_instance_info.job_instance_id
+                        )[0],
                         job_tasks,
                     )
-                wf.jobs.job_details["failed_jobs_details"][job_instance_info.job_name] = self.get_job_details(
-                                workflow_stats.get_job_instance_info(job_instance_info.job_instance_id)[0],
-                                job_tasks
-                            )
+                wf.jobs.job_details["failed_jobs_details"][
+                    job_instance_info.job_name
+                ] = self.get_job_details(
+                    workflow_stats.get_job_instance_info(
+                        job_instance_info.job_instance_id
+                    )[0],
+                    job_tasks,
+                )
                 # recurse for sub workflow
-                if not self.options.json_mode and sub_wf_cmd is not None and self.options.recurse_mode :
+                if (
+                    not self.options.json_mode
+                    and sub_wf_cmd is not None
+                    and self.options.recurse_mode
+                ):
                     BaseAnalyze.print_console(("Failed Sub Workflow").center(80, "="))
                     subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
                     BaseAnalyze.print_console(("").center(80, "="))
 
-        if (workflow_status is WORKFLOW_STATUS.FAILURE or self.counts.failed > 0) and not self.options.json_mode:
+        if (
+            workflow_status is WORKFLOW_STATUS.FAILURE or self.counts.failed > 0
+        ) and not self.options.json_mode:
             # Workflow has failures, exit with exitcode 2
             raise WorkflowFailureError(
                 "Workflow Failed ", wf_uuid=wf_uuid, submit_dir=submit_dir
@@ -867,7 +920,6 @@ class AnalyzeDB(BaseAnalyze):
         # Workflow has no failures, exit with exitcode 0
         return
 
-     
     def get_job_details(self, job_instance_info, job_tasks):
         """
         Filters out workflow details to be used in the workflow structure
@@ -876,29 +928,28 @@ class AnalyzeDB(BaseAnalyze):
         :param job_tasks: information regarding all tasks in a job (hostname, exitcode, etc.)
         :return: returns a :class:`Pegasus.analyzer.JobInstance` object
         """
-        
+
         job_instance = JobInstance(
-                                job_instance_info.job_name ,
-                                job_instance_info.state ,
-                                job_instance_info.site ,
-                                job_instance_info.submit_file ,
-                                job_instance_info.stdout_file ,
-                                job_instance_info.stderr_file ,
-                                job_instance_info.executable ,
-                                job_instance_info.argv or '-',
-                            )
-        
+            job_instance_info.job_name,
+            job_instance_info.state,
+            job_instance_info.site,
+            job_instance_info.submit_file,
+            job_instance_info.stdout_file,
+            job_instance_info.stderr_file,
+            job_instance_info.executable,
+            job_instance_info.argv or "-",
+        )
+
         for task in job_tasks:
             job_instance.tasks[task[0]] = Task(
-                                job_instance_info.site,
-                                job_instance_info.hostname,
-                                task[2],
-                                task[3] or '-',
-                                utils.raw_to_regular(task[1]),
-                                job_instance_info.work_dir
-                            )
+                job_instance_info.site,
+                job_instance_info.hostname,
+                task[2],
+                task[3] or "-",
+                utils.raw_to_regular(task[1]),
+                job_instance_info.work_dir,
+            )
         return job_instance
-        
 
     def get_workflow_status(self, last_wf_state_record):
         """
@@ -920,13 +971,14 @@ class AnalyzeDB(BaseAnalyze):
             workflow_status = WORKFLOW_STATUS.RUNNING
         elif last_wf_state == "WORKFLOW_TERMINATED":
             workflow_status = (
-                WORKFLOW_STATUS.SUCCESS if last_wf_status == 0 else WORKFLOW_STATUS.FAILURE
+                WORKFLOW_STATUS.SUCCESS
+                if last_wf_status == 0
+                else WORKFLOW_STATUS.FAILURE
             )
         else:
             raise ValueError("Invalid worklfow state %s" % last_wf_state)
 
         return workflow_status
-
 
     def print_job_instance(self, job_instance_id, job_instance_info, job_tasks):
         """
@@ -946,17 +998,29 @@ class AnalyzeDB(BaseAnalyze):
         BaseAnalyze.print_console(" last state: %s" % (job_instance_info.state or "-"))
 
         BaseAnalyze.print_console("       site: %s" % (job_instance_info.site or "-"))
-        BaseAnalyze.print_console("submit file: %s" % (job_instance_info.submit_file or "-"))
-        BaseAnalyze.print_console("output file: %s" % (job_instance_info.stdout_file or "-"))
-        BaseAnalyze.print_console(" error file: %s" % (job_instance_info.stderr_file or "-"))
+        BaseAnalyze.print_console(
+            "submit file: %s" % (job_instance_info.submit_file or "-")
+        )
+        BaseAnalyze.print_console(
+            "output file: %s" % (job_instance_info.stdout_file or "-")
+        )
+        BaseAnalyze.print_console(
+            " error file: %s" % (job_instance_info.stderr_file or "-")
+        )
         if self.options.print_invocation:
             BaseAnalyze.print_console()
             BaseAnalyze.print_console(
                 "To re-run this job, use: %s %s"
-                % ((job_instance_info.executable or "-"), (job_instance_info.argv or "-"))
+                % (
+                    (job_instance_info.executable or "-"),
+                    (job_instance_info.argv or "-"),
+                )
             )
             BaseAnalyze.print_console()
-        if self.options.print_pre_script and len(job_instance_info.pre_executable or "") > 0:
+        if (
+            self.options.print_pre_script
+            and len(job_instance_info.pre_executable or "") > 0
+        ):
             BaseAnalyze.print_console()
             BaseAnalyze.print_console("SCRIPT PRE:")
             BaseAnalyze.print_console(
@@ -981,12 +1045,17 @@ class AnalyzeDB(BaseAnalyze):
             # get any options that need to be invoked for the sub workflow
             extraOptions = BaseAnalyze.addon(self.options)
             sub_wf_cmd = "{} {} -d {} --top-dir {}".format(
-                user_cmd, extraOptions, my_wfdir, (self.options.top_dir or self.options.input_dir),
+                user_cmd,
+                extraOptions,
+                my_wfdir,
+                (self.options.top_dir or self.options.input_dir),
             )
             if not self.options.recurse_mode:
                 # we print only if recurse mode is disabled
                 BaseAnalyze.print_console(" This job contains sub workflows!")
-                BaseAnalyze.print_console(" Please run the command below for more information:")
+                BaseAnalyze.print_console(
+                    " Please run the command below for more information:"
+                )
                 BaseAnalyze.print_console(sub_wf_cmd)
                 # print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (self.options.top_dir or self.options.input_dir))
             print()
@@ -995,7 +1064,6 @@ class AnalyzeDB(BaseAnalyze):
         # print all the tasks associated with the job
         self.print_tasks_info(job_instance_id, job_instance_info, job_tasks)
         return sub_wf_cmd
-
 
     def print_tasks_info(self, job_instance_id, job_instance_info, job_tasks):
         """
@@ -1008,8 +1076,12 @@ class AnalyzeDB(BaseAnalyze):
            """
 
         # Unquote stdout and stderr
-        ji_stdout_text = utils.unquote(job_instance_info.stdout_text or "").decode("UTF-8")
-        ji_stderr_text = utils.unquote(job_instance_info.stderr_text or "").decode("UTF-8")
+        ji_stdout_text = utils.unquote(job_instance_info.stdout_text or "").decode(
+            "UTF-8"
+        )
+        ji_stderr_text = utils.unquote(job_instance_info.stderr_text or "").decode(
+            "UTF-8"
+        )
         ji_stdout_text = ji_stdout_text.strip(" \n\r\t")
         ji_stderr_text = ji_stderr_text.strip(" \n\r\t")
 
@@ -1039,14 +1111,22 @@ class AnalyzeDB(BaseAnalyze):
             my_exitcode = utils.raw_to_regular(my_task[1])
 
             # Print task summary
-            BaseAnalyze.print_console(("Task #" + str(my_task[0]) + " - Summary").center(80, "-"))
+            BaseAnalyze.print_console(
+                ("Task #" + str(my_task[0]) + " - Summary").center(80, "-")
+            )
             BaseAnalyze.print_console()
-            BaseAnalyze.print_console("site        : %s" % (job_instance_info.site or "-"))
-            BaseAnalyze.print_console("hostname    : %s" % (job_instance_info.hostname or "-"))
+            BaseAnalyze.print_console(
+                "site        : %s" % (job_instance_info.site or "-")
+            )
+            BaseAnalyze.print_console(
+                "hostname    : %s" % (job_instance_info.hostname or "-")
+            )
             BaseAnalyze.print_console("executable  : %s" % (str(my_task[2] or "-")))
             BaseAnalyze.print_console("arguments   : %s" % (str(my_task[3] or "-")))
             BaseAnalyze.print_console("exitcode    : %s" % (str(my_exitcode)))
-            BaseAnalyze.print_console("working dir : %s" % (job_instance_info.work_dir or "-"))
+            BaseAnalyze.print_console(
+                "working dir : %s" % (job_instance_info.work_dir or "-")
+            )
             BaseAnalyze.print_console()
 
             if not self.options.quiet_mode:
@@ -1080,7 +1160,9 @@ class AnalyzeDB(BaseAnalyze):
                             ).center(80, "-")
                         )
                         BaseAnalyze.print_console()
-                        BaseAnalyze.print_console(ji_stdout_text[my_stdout_start:my_stdout_end])
+                        BaseAnalyze.print_console(
+                            ji_stdout_text[my_stdout_start:my_stdout_end]
+                        )
                         BaseAnalyze.print_console()
 
                 # Now print stderr (from the kickstart output file)
@@ -1109,7 +1191,9 @@ class AnalyzeDB(BaseAnalyze):
                             ).center(80, "-")
                         )
                         BaseAnalyze.print_console()
-                        BaseAnalyze.print_console(ji_stdout_text[my_stderr_start:my_stderr_end])
+                        BaseAnalyze.print_console(
+                            ji_stdout_text[my_stderr_start:my_stderr_end]
+                        )
                         BaseAnalyze.print_console()
 
                 # PM-808 print jobinstance stdout for prescript failures only.
@@ -1134,25 +1218,22 @@ class AnalyzeDB(BaseAnalyze):
             # Something to display
             # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
             BaseAnalyze.print_console(
-                ("Job stderr file - %s" % (job_instance_info.stderr_file or "-")).center(
-                    80, "-"
-                )
+                (
+                    "Job stderr file - %s" % (job_instance_info.stderr_file or "-")
+                ).center(80, "-")
             )
             BaseAnalyze.print_console()
             BaseAnalyze.print_console(ji_stderr_text)
             BaseAnalyze.print_console()
-            
-            
+
 
 class AnalyzeFiles(BaseAnalyze):
-    
     def __init__(self, options):
         self.jsdl_filename = "jobstate.log"  # Default name of the log file to use
         self.jobs = {}  # List of jobs found in the jobstate.log file
         self.analyzer_output = AnalyzerOutput()
         self.options = options
-        self.counts = Counts(0,0,0,0,0,0,[],[])
-
+        self.counts = Counts(0, 0, 0, 0, 0, 0, [], [])
 
     def analyze_files(self):
         """
@@ -1182,9 +1263,14 @@ class AnalyzeFiles(BaseAnalyze):
         if self.options.run_monitord:
             if self.options.output_dir is not None:
                 # If self.options.output_dir is specified, invoke monitord with that path
-                self.invoke_monitord("%s.dagman.out" % (dag_path), self.options.output_dir)
+                self.invoke_monitord(
+                    "%s.dagman.out" % (dag_path), self.options.output_dir
+                )
                 # jobstate.log file uses wf_uuid as prefix
-                jsdl_path = os.path.join(self.options.output_dir, self.get_jsdl_filename(self.options.input_dir))
+                jsdl_path = os.path.join(
+                    self.options.output_dir,
+                    self.get_jsdl_filename(self.options.input_dir),
+                )
             else:
                 if run_directory_writable:
                     # Run directory is writable, write monitord output to jobstate.log file
@@ -1193,14 +1279,19 @@ class AnalyzeFiles(BaseAnalyze):
                     self.invoke_monitord("%s.dagman.out" % (dag_path), None)
                 else:
                     # User must provide the --output-dir option
-                    raise AnalyzerError(self.options.input_dir 
-                                        + " is not writable. "
-                                        + "User must specify directory for new monitord logs with the --output-dir option,"
-                                        + " exiting...")                             
+                    raise AnalyzerError(
+                        self.options.input_dir
+                        + " is not writable. "
+                        + "User must specify directory for new monitord logs with the --output-dir option,"
+                        + " exiting..."
+                    )
         else:
             if self.options.output_dir is not None:
                 # jobstate.log file uses wf_uuid as prefix and is inside self.options.output_dir
-                jsdl_path = os.path.join(self.options.output_dir, self.get_jsdl_filename(self.options.input_dir))
+                jsdl_path = os.path.join(
+                    self.options.output_dir,
+                    self.get_jsdl_filename(self.options.input_dir),
+                )
             else:
                 jsdl_path = os.path.join(self.options.input_dir, self.jsdl_filename)
 
@@ -1226,7 +1317,9 @@ class AnalyzeFiles(BaseAnalyze):
         if "submit_dir" in wfparams:
             self.options.workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
         elif "jsd" in wfparams:
-            self.options.workflow_base_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
+            self.options.workflow_base_dir = os.path.dirname(
+                os.path.normpath(wfparams["jsd"])
+            )
 
         # First we learn about jobs by going through the dag file
         self.parse_dag_file(dag_path)
@@ -1236,35 +1329,40 @@ class AnalyzeFiles(BaseAnalyze):
 
         # Process our jobs
         self.analyze()
-        
+
         if not self.options.json_mode:
             # Print summary of our analysis
             if self.options.summary_mode:
                 # PM-1762 in the files mode we don't determine workflow status
-                BaseAnalyze.print_top_summary(workflow_status=None, options=self.options)
+                BaseAnalyze.print_top_summary(
+                    workflow_status=None, options=self.options
+                )
             else:
                 # This is non summary mode despite of the name (go figure)
                 self.print_summary()
 
         # PM-1039
         BaseAnalyze.check_for_wf_start(self.options, self.counts)
-        
+
         if self.options.json_mode:
             self.analyzer_output.root_wf_uuid = wfparams["root_wf_uuid"]
             self.analyzer_output.root_submit_dir = wfparams["submit_dir"]
-            self.analyzer_output.structure_output["root_wf_uuid"] = wfparams["root_wf_uuid"]
-            self.analyzer_output.structure_output["submit_directory"] = wfparams["submit_dir"]
-            self.analyzer_output.workflows["root"]=self.get_wf_details(wfparams)
+            self.analyzer_output.structure_output["root_wf_uuid"] = wfparams[
+                "root_wf_uuid"
+            ]
+            self.analyzer_output.structure_output["submit_directory"] = wfparams[
+                "submit_dir"
+            ]
+            self.analyzer_output.workflows["root"] = self.get_wf_details(wfparams)
             return self.analyzer_output
-            
+
         if self.counts.failed > 0 and not self.options.json_mode:
             # Workflow has failures, exit with exitcode 2
             raise WorkflowFailureError("One or more workflows failed")
-        
+
         # Workflow has no failures, exit with exitcode 0
         return
-    
-    
+
     def get_wf_details(self, wfparams):
         """
         Gets workflow details to be used in Analyzer Output
@@ -1273,41 +1371,46 @@ class AnalyzeFiles(BaseAnalyze):
         :type: Dict
         :return: returns a :class:`Pegasus.analyzer.Workflow` object
         """
-        wf_jobs = Jobs(self.counts.total,self.counts.success,self.counts.failed,self.counts.held,self.counts.unsubmitted)
+        wf_jobs = Jobs(
+            self.counts.total,
+            self.counts.success,
+            self.counts.failed,
+            self.counts.held,
+            self.counts.unsubmitted,
+        )
         if self.counts.total == self.counts.success:
-            status = 'success'
+            status = "success"
         elif self.counts.failed > 0:
-            status = 'failure'
-            wf_jobs.job_details["failed_job_details"]={}
+            status = "failure"
+            wf_jobs.job_details["failed_job_details"] = {}
             for job in self.counts.failed_jobs:
-                wf_jobs.job_details["failed_job_details"][job]=JobInstance(
-                                                                job_name = self.jobs[job].name,
-                                                                state = self.jobs[job].state,
-                                                                site = self.jobs[job].site,
-                                                                submit_file = self.jobs[job].sub_file,
-                                                                stdout_file = self.jobs[job].out_file,
-                                                                stderr_file = self.jobs[job].err_file,
-                                                                executable = self.jobs[job].executable,
-                                                                argv = self.jobs[job].arguments,
-                                                            )
+                wf_jobs.job_details["failed_job_details"][job] = JobInstance(
+                    job_name=self.jobs[job].name,
+                    state=self.jobs[job].state,
+                    site=self.jobs[job].site,
+                    submit_file=self.jobs[job].sub_file,
+                    stdout_file=self.jobs[job].out_file,
+                    stderr_file=self.jobs[job].err_file,
+                    executable=self.jobs[job].executable,
+                    argv=self.jobs[job].arguments,
+                )
         else:
-            status = 'running'
-        
-        return Workflow(
-                        wf_uuid = wfparams["wf_uuid"],
-                        dag_file_name = wfparams["dag"],
-                        submit_hostname = wfparams["submit_hostname"],
-                        submit_dir = wfparams["submit_dir"],
-                        user = wfparams["user"],
-                        planner_version = wfparams["planner_version"],
-                        wf_name = wfparams["dax_label"],
-                        wf_status = status,
-                        parent_wf_name = '-',
-                        parent_wf_uuid = '-',
-                        jobs = wf_jobs
-                    )
+            status = "running"
 
-    
+        return Workflow(
+            wf_uuid=wfparams["wf_uuid"],
+            dag_file_name=wfparams["dag"],
+            submit_hostname=wfparams["submit_hostname"],
+            submit_dir=wfparams["submit_dir"],
+            user=wfparams["user"],
+            planner_version=wfparams["planner_version"],
+            wf_name=wfparams["dax_label"],
+            wf_status=status,
+            parent_wf_name="-",
+            parent_wf_uuid="-",
+            jobs=wf_jobs,
+        )
+
     def find_file(self, input_dir, file_type):
         """
         This function finds a file with the suffix file_type
@@ -1323,10 +1426,9 @@ class AnalyzeFiles(BaseAnalyze):
         for file in file_list:
             if file.endswith(file_type):
                 return os.path.join(input_dir, file)
-                
+
         raise AnalyzerError(f"could not find any {file_type} file in {input_dir}")
 
-       
     def invoke_monitord(self, dagman_out_file, output_dir):
         """
         This function runs monitord on the given dagman_out_file.
@@ -1339,13 +1441,12 @@ class AnalyzeFiles(BaseAnalyze):
         logger.info("running: %s" % (monitord_cmd))
 
         try:
-            #status, output = commands.getstatusoutput(monitord_cmd)
-            #commenting it out, couldn't find .getstatusoutput in commands module
+            # status, output = commands.getstatusoutput(monitord_cmd)
+            # commenting it out, couldn't find .getstatusoutput in commands module
             BaseAnalyze.backticks(monitord_cmd)
         except Exception:
-            raise AnalyzerError("could not invoke monitord, exiting...")    
-            
-            
+            raise AnalyzerError("could not invoke monitord, exiting...")
+
     def get_jsdl_filename(self, input_dir):
         """
         This function parses the braindump file in the self.options.input_dir,
@@ -1361,7 +1462,6 @@ class AnalyzeFiles(BaseAnalyze):
             return my_wf_params["wf_uuid"] + "-" + self.jsdl_filename
 
         raise AnalyzerError("braindump.txt does not contain wf_uuid... exiting...")
-        
 
     def parse_dag_file(self, dag_fn):
         """
@@ -1395,7 +1495,9 @@ class AnalyzeFiles(BaseAnalyze):
                 if not self.has_seen(my_job[1]):
                     self.add_job(my_job[1], "UNSUBMITTED")
                     # Get submit file information from dag file
-                    self.jobs[my_job[1]].sub_file = os.path.join(self.options.input_dir, my_job[2])
+                    self.jobs[my_job[1]].sub_file = os.path.join(
+                        self.options.input_dir, my_job[2]
+                    )
                     if my_job[1].startswith("pegasus-plan") or my_job[1].startswith(
                         "subdax_"
                     ):
@@ -1428,7 +1530,8 @@ class AnalyzeFiles(BaseAnalyze):
                 if not self.has_seen(my_job):
                     # Cannot find this job, ignore this line
                     logger.warn(
-                        "couldn't find job: %s for PRE SCRIPT line in dag file" % (my_job)
+                        "couldn't find job: %s for PRE SCRIPT line in dag file"
+                        % (my_job)
                     )
                     continue
                 # Good, copy PRE script line to our job structure
@@ -1445,10 +1548,11 @@ class AnalyzeFiles(BaseAnalyze):
                         )
                         continue
                     # Good, parse the condor substitutions, and create substitution dictionary
-                    for my_key, my_val in BaseAnalyze.re_parse_condor_subs.findall(line):
+                    for my_key, my_val in BaseAnalyze.re_parse_condor_subs.findall(
+                        line
+                    ):
                         self.jobs[my_job].condor_subs[my_key] = my_val
 
-                
     def parse_jobstate_log(self, jobstate_fn):
         """
         This function parses the jobstate.log file, loading all job information
@@ -1496,7 +1600,6 @@ class AnalyzeFiles(BaseAnalyze):
 
         # Close log file
         JSDL.close()
-        
 
     def has_seen(self, job_name):
         """
@@ -1505,7 +1608,6 @@ class AnalyzeFiles(BaseAnalyze):
         if job_name in self.jobs:
             return True
         return False
-
 
     def add_job(self, job_name, job_state=""):
         """
@@ -1518,7 +1620,6 @@ class AnalyzeFiles(BaseAnalyze):
         newjob = Job(job_name, job_state)
         self.jobs[job_name] = newjob
 
-
     def update_job_state(self, job_name, job_state=""):
         """
         This function updates the job state of a given job
@@ -1530,7 +1631,6 @@ class AnalyzeFiles(BaseAnalyze):
             return
 
         self.jobs[job_name].set_state(job_state)
-
 
     def update_job_condor_info(self, job_name, condor_id="-"):
         """
@@ -1556,7 +1656,6 @@ class AnalyzeFiles(BaseAnalyze):
         if len(my_split) >= 2:
             self.jobs[job_name].process = my_split[1]
 
-
     def analyze(self):
         """
         This function processes all currently known jobs, generating some statistics
@@ -1581,7 +1680,6 @@ class AnalyzeFiles(BaseAnalyze):
                 # It seems we don't have a final result for this job
                 self.counts.unknown_jobs.append(my_job)
                 self.counts.unknown += 1
-                
 
     def print_summary(self):
         """
@@ -1603,7 +1701,6 @@ class AnalyzeFiles(BaseAnalyze):
             for job in self.counts.unknown_jobs:
                 self.print_job_info(job)
 
-        
     def print_job_info(self, job):
         """
         This function prints the information about a particular job
@@ -1617,7 +1714,9 @@ class AnalyzeFiles(BaseAnalyze):
         # Handle subdag jobs from the dag file
         if self.jobs[job].is_subdag is True:
             BaseAnalyze.print_console(" This is a SUBDAG job:")
-            BaseAnalyze.print_console(" For more information, please run the following command:")
+            BaseAnalyze.print_console(
+                " For more information, please run the following command:"
+            )
             user_cmd = " %s -s " % (prog_base)
             if self.options.output_dir is not None:
                 user_cmd = user_cmd + " --output-dir %s" % (self.options.output_dir)
@@ -1659,7 +1758,9 @@ class AnalyzeFiles(BaseAnalyze):
 
             if not self.options.recurse_mode:
                 BaseAnalyze.print_console(" This job contains sub workflows!")
-                BaseAnalyze.print_console(" Please run the command below for more information:")
+                BaseAnalyze.print_console(
+                    " Please run the command below for more information:"
+                )
                 BaseAnalyze.print_console(sub_wf_cmd)
 
             BaseAnalyze.print_console()
@@ -1674,8 +1775,7 @@ class AnalyzeFiles(BaseAnalyze):
             BaseAnalyze.print_console(("Failed Sub Workflow").center(80, "="))
             subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
             BaseAnalyze.print_console(("").center(80, "="))
-            
-            
+
     def find_latest_log(self, log_file_base):
         """
         This function tries to locate the latest log file
@@ -1698,7 +1798,6 @@ class AnalyzeFiles(BaseAnalyze):
                 break
 
         return last_log
-            
 
     def print_output_error(self, job):
         """
@@ -1732,7 +1831,9 @@ class AnalyzeFiles(BaseAnalyze):
                     # We must have "error" in entry
                     pass
                 # Got a task with a non-zero exitcode
-                BaseAnalyze.print_console(("Task #" + str(my_task_id) + " - Summary").center(80, "-"))
+                BaseAnalyze.print_console(
+                    ("Task #" + str(my_task_id) + " - Summary").center(80, "-")
+                )
                 BaseAnalyze.print_console()
                 if "resource" in entry:
                     BaseAnalyze.print_console("site        : %s" % (entry["resource"]))
@@ -1741,7 +1842,9 @@ class AnalyzeFiles(BaseAnalyze):
                 if "name" in entry:
                     BaseAnalyze.print_console("executable  : %s" % (entry["name"]))
                 if "argument-vector" in entry:
-                    BaseAnalyze.print_console("arguments   : %s" % (entry["argument-vector"]))
+                    BaseAnalyze.print_console(
+                        "arguments   : %s" % (entry["argument-vector"])
+                    )
                 if "exitcode" in entry:
                     BaseAnalyze.print_console("exitcode    : %s" % (entry["exitcode"]))
                 else:
@@ -1794,7 +1897,6 @@ class AnalyzeFiles(BaseAnalyze):
             # Print errfile to screen
             self.dump_file(err_file)
 
-        
     def dump_file(self, file):
         """
         This function dumps a file to our stdout
@@ -1818,13 +1920,11 @@ class AnalyzeFiles(BaseAnalyze):
                 OUT.close()
                 BaseAnalyze.print_console()
 
-    
 
 class DebugWF(BaseAnalyze):
-
     def __init__(self, options):
         self.options = options
-        
+
     def debug_workflow(self):
         """
         This function handles the mode where the analyzer
@@ -1842,7 +1942,9 @@ class DebugWF(BaseAnalyze):
         my_job.sub_file = self.options.debug_job
 
         if not os.access(self.options.debug_job, os.R_OK):
-            raise AnalyzerError(f"cannot access job submit file: {self.options.debug_job}")
+            raise AnalyzerError(
+                f"cannot access job submit file: {self.options.debug_job}"
+            )
 
         # Handle the temporary directory option
         if self.options.debug_dir is None:
@@ -1860,11 +1962,15 @@ class DebugWF(BaseAnalyze):
                 try:
                     os.mkdir(self.options.debug_dir)
                 except Exception:
-                    logger.error("cannot create debug directory: %s" % (self.options.debug_dir))
+                    logger.error(
+                        "cannot create debug directory: %s" % (self.options.debug_dir)
+                    )
 
             # Check if we can write to the debug directory
             if not os.access(self.options.debug_dir, os.W_OK):
-                raise AnalyzerError(f"not able to write to temporary directory: {self.options.debug_dir}")
+                raise AnalyzerError(
+                    f"not able to write to temporary directory: {self.options.debug_dir}"
+                )
 
         # Handle workflow type
         if self.options.workflow_type is not None:
@@ -1872,14 +1978,15 @@ class DebugWF(BaseAnalyze):
                 logger.info("debugging condor type workflow")
                 self.debug_condor(my_job)
             else:
-                raise AnalyzerError(f"workflow type {self.options.workflow_type} not supported!")
+                raise AnalyzerError(
+                    f"workflow type {self.options.workflow_type} not supported!"
+                )
         else:
             logger.info("debugging condor type workflow")
             self.debug_condor(my_job)
 
         # All done, in case we are back here!
         return
-
 
     def debug_condor(self, my_job):
         """
@@ -1926,7 +2033,9 @@ class DebugWF(BaseAnalyze):
             )
             debug_script.write("\n")
 
-            debug_script.write("export pegasus_lite_work_dir=%s" % self.options.debug_dir)
+            debug_script.write(
+                "export pegasus_lite_work_dir=%s" % self.options.debug_dir
+            )
             debug_script.write("\n")
             debug_script.write("# Copy any files that are needed\n")
 
@@ -1952,7 +2061,8 @@ class DebugWF(BaseAnalyze):
                 # older non pegasus lite mode /sipht case?
                 debug_script.write("# Set the execute bit on the executable\n")
                 debug_script.write(
-                    "chmod +x %s\n" % (os.path.join(self.options.debug_dir, my_job.executable))
+                    "chmod +x %s\n"
+                    % (os.path.join(self.options.debug_dir, my_job.executable))
                 )
                 debug_script.write("\n")
             else:
@@ -1962,7 +2072,9 @@ class DebugWF(BaseAnalyze):
                 )
                 job_executable = debug_wrapper
 
-            job_executable = os.path.join(self.options.debug_dir, job_executable) + my_job.arguments
+            job_executable = (
+                os.path.join(self.options.debug_dir, job_executable) + my_job.arguments
+            )
 
             debug_script.write('echo "executing job: %s"\n' % (job_executable))
             debug_script.write("\n")
@@ -1974,7 +2086,8 @@ class DebugWF(BaseAnalyze):
             # redirect stderr for pegasus lite jobs to separate err file
             if job_pegasus_lite_wrapper is not None:
                 debug_script.write(
-                    " 2> " + os.path.join(self.options.debug_dir, debug_script_err_basename)
+                    " 2> "
+                    + os.path.join(self.options.debug_dir, debug_script_err_basename)
                 )
 
             debug_script.write("\n\n")
@@ -2022,7 +2135,9 @@ class DebugWF(BaseAnalyze):
             # Make our debug script executable
             os.chmod(debug_script_name, 0o755)
         except Exception:
-            raise AnalyzerError(f"cannot change permissions for the debug script {debug_script}")
+            raise AnalyzerError(
+                f"cannot change permissions for the debug script {debug_script}"
+            )
 
         # Print next step
         print()
@@ -2032,7 +2147,6 @@ class DebugWF(BaseAnalyze):
         print("   $ cd %s" % (self.options.debug_dir))
         print("   $ ./%s" % (debug_script_basename))
         print()
-
 
     def get_pegasus_lite_wrapper(self, my_job):
         """
@@ -2061,13 +2175,12 @@ class DebugWF(BaseAnalyze):
             except Exception:
                 # print "error opening submit file: %s" % (my_job.sub_file)
                 raise AnalyzerError("error opening submit file: " + my_job.sub_file)
-                
+
             else:
                 SUB.close()
 
         return pegasus_lite_wrapper
 
-    
     def generate_pegasus_lite_debug_wrapper(self, pegasus_lite_wrapper):
         """
         This generates a debug wrapper for the pegasus lite job
@@ -2077,7 +2190,8 @@ class DebugWF(BaseAnalyze):
             return None
 
         debug_wrapper = os.path.join(
-            self.options.debug_dir, "stripped_pl_" + os.path.basename(pegasus_lite_wrapper)
+            self.options.debug_dir,
+            "stripped_pl_" + os.path.basename(pegasus_lite_wrapper),
         )
         try:
             DEBUG_WRAPPER = open(debug_wrapper, "w")
