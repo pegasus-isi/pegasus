@@ -3432,7 +3432,7 @@ class StashHandler(TransferHandlerBase):
                     cmd = "%s '%s' '%s'" % (
                         tools.full_path("stashcp"),
                         t.get_src_path(),
-                        t.dst_url()
+                        t.dst_url(),
                     )
             else:
                 # read
@@ -3456,7 +3456,7 @@ class StashHandler(TransferHandlerBase):
                     cmd = "%s '%s' '%s'" % (
                         tools.full_path("stashcp"),
                         src_path,
-                        t.get_dst_path()
+                        t.get_dst_path(),
                     )
 
             try:
