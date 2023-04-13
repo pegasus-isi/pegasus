@@ -201,7 +201,72 @@ class AnalyzerOutput:
             if self.workflows[wf].wf_status == "failure":
                 failed_wfs[wf] = self.workflows[wf]
         return failed_wfs
-
+        
+    def get_all_jobs(self):
+        """
+        Returns a dictionary of all jobs' details for the root workflow
+        
+        :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
+        :rtype: Dict[str,JobInstance]
+        """
+        return self.workflows["root"].jobs.job_details
+    
+    def get_jobs_counts(self):
+        """
+        Returns a dataclass of jobs counts
+        
+        :return: A dataclass :class:`Pegasus.analyzer.Counts` object
+        """
+        jobs = self.workflows["root"].jobs
+        counts = Counts(
+            jobs.total,
+            jobs.success,
+            jobs.failed,
+            jobs.unsubmitted,
+            0,
+            jobs.held,
+            [],
+            []
+        )
+        return counts
+    
+    def get_failed_jobs(self):
+        """
+        Returns a dictionary of all failed jobs details
+        
+        :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
+        :rtype: Dict[str,JobInstance]
+        """
+        return self.workflows["root"].jobs.job_details.get("failed_jobs_details",None)
+    
+    def get_failing_jobs(self):
+        """
+        Returns a dictionary of all failing jobs details
+        
+        :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
+        :rtype: Dict[str,JobInstance]
+        """
+        return self.workflows["root"].jobs.job_details.get("failing_jobs_details",None)
+    
+    def get_held_jobs(self):
+        """
+        Returns a dictionary of all held jobs details
+        
+        :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
+        :rtype: Dict[str,JobInstance]
+        """
+        return self.workflows["root"].jobs.job_details.get("held_jobs_details",None)
+    
+    def get_unknown_jobs(self):
+        """
+        Returns a dictionary of all unknown jobs details, for AnalyzeFiles only
+        
+        :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
+        :rtype: Dict[str,JobInstance]
+        """
+        return self.workflows["root"].jobs.job_details.get("unknown_jobs_details",None)
+        
+        
 @dataclass
 class Counts:
     total: int = 0  # Number of total jobs
