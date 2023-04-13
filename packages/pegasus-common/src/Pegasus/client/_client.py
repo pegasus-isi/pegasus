@@ -10,7 +10,7 @@ from os import path
 from pathlib import Path
 from typing import BinaryIO, Dict, List, Union
 
-from Pegasus import braindump, yaml
+from Pegasus import analyzer, braindump, yaml
 from Pegasus.client import status
 
 # Set log formatting s.t. only messages are shown. Output from pegasus
@@ -543,19 +543,27 @@ class Client:
         self._log.info("\n##################\n# pegasus-remove #\n##################")
         self._exec(cmd)
 
-    def analyzer(self, submit_dir: str, verbose: int = 0):
-        cmd = [self._analyzer]
-
-        if verbose:
-            cmd.append("-" + "v" * verbose)
-
-        cmd.append(submit_dir)
-
-        self._log.info(
-            "\n####################\n# pegasus-analyzer #\n####################"
-        )
-
-        self._exec(cmd)
+    def analyzer(
+        self,
+        submit_dir: str,
+        verbose: int = 0,
+        json_mode: bool = False,
+        traverse_all: bool = False,
+    ):
+        if json_mode:
+            options = analyzer.Options(traverse_all=traverse_all)
+            analyze = analyzer.AnalyzeDB(options)
+            output = analyze.analyze_db(config_properties)
+            return output.as_dict()
+        else:
+            cmd = [self._analyzer]
+            if verbose:
+                cmd.append("-" + "v" * verbose)
+            cmd.append(submit_dir)
+            self._log.info(
+                "\n####################\n# pegasus-analyzer #\n####################"
+            )
+            self._exec(cmd)
 
     def statistics(self, submit_dir: str, verbose: int = 0):
         cmd = [self._statistics]
