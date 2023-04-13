@@ -138,6 +138,15 @@ class TestBaseAnalyze:
 
 
 class TestAnalyzerOutput:
+    @pytest.fixture
+    def get_output(self):
+        submit_dir=os.path.join(
+            directory, "analyzer_samples_dir/hierarchical_wf_failure"
+        )
+        az = AnalyzeDB(Options(input_dir=submit_dir, traverse_all=True))
+        out = az.analyze_db(None)
+        return out.workflows
+
     def test_should_create_BaseAnalyze(self, Output):
         assert Output is not None
 
@@ -146,6 +155,45 @@ class TestAnalyzerOutput:
         analyzer_output.workflows = {"wf-0": Workflow(wf_status="failure")}
         expected = {"wf-0": Workflow(wf_status="failure")}
         assert analyzer_output.get_failed_workflows()["wf-0"].wf_status == "failure"
+        
+    def test_get_all_jobs(self, Output):
+        submit_dir=os.path.join(
+            directory, "analyzer_samples_dir/sample_wf_held"
+        )
+        az = AnalyzeDB(Options(input_dir=submit_dir))
+        out = az.analyze_db(None)
+        analyzer_output = Output()
+        analyzer_output.workflows = out.workflows
+        
+        assert "failed_jobs_details" in analyzer_output.get_all_jobs()
+        assert "held_jobs_details" in analyzer_output.get_all_jobs()
+        assert len(analyzer_output.get_all_jobs()) == 2
+        
+    def test_get_jobs_counts(self, Output, get_output):
+        analyzer_output = Output()
+        analyzer_output.workflows = get_output
+        output_counts = analyzer_output.get_jobs_counts()
+        
+        assert output_counts.unsubmitted == 6
+
+    def test_get_failed_jobs(self, Output, get_output):
+        analyzer_output = Output()
+        analyzer_output.workflows = get_output
+        failed_jobs = analyzer_output.get_failed_jobs()
+        
+        assert "pegasus-plan_diamond_subworkflow" in failed_jobs
+        
+    def test_get_held_jobs(self, Output):
+        submit_dir=os.path.join(
+            directory, "analyzer_samples_dir/sample_wf_held"
+        )
+        az = AnalyzeDB(Options(input_dir=submit_dir))
+        out = az.analyze_db(None)
+        analyzer_output = Output()
+        analyzer_output.workflows = out.workflows
+        held_jobs = analyzer_output.get_held_jobs()
+        
+        assert "chebi_drug_loader_ID0000001" in held_jobs
 
 
 class TestAnalyzeDB:
@@ -609,9 +657,9 @@ class TestAnalyzeFiles:
                       "site": "condorpool",
                       "hostname": "workflow.isi.edu",
                       "work_dir": "/home/mzalam/wf/condor/local/execute/dir_148537",
-                      "submit_file": "/home/mzalam/pegasus_master/pegasus/packages/pegasus-python/test/cli/analyzer_samples_dir/process_wf_failure/00/00/ls_ID0000001.sub",
-                      "stdout_file": "/home/mzalam/pegasus_master/pegasus/packages/pegasus-python/test/cli/analyzer_samples_dir/process_wf_failure/00/00/ls_ID0000001.out",
-                      "stderr_file": "/home/mzalam/pegasus_master/pegasus/packages/pegasus-python/test/cli/analyzer_samples_dir/process_wf_failure/00/00/ls_ID0000001.err",
+                      "submit_file": submit_dir+"/00/00/ls_ID0000001.sub",
+                      "stdout_file": submit_dir+"/00/00/ls_ID0000001.out",
+                      "stderr_file": submit_dir+"/00/00/ls_ID0000001.err",
                       "executable": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/00/00/ls_ID0000001.sh",
                       "argv": "",
                       "pre_executable": "",
