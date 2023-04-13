@@ -1,7 +1,6 @@
 import os
 import sys
 import tempfile
-from textwrap import dedent
 
 import pytest
 
@@ -140,7 +139,7 @@ class TestBaseAnalyze:
 class TestAnalyzerOutput:
     @pytest.fixture
     def get_output(self):
-        submit_dir=os.path.join(
+        submit_dir = os.path.join(
             directory, "analyzer_samples_dir/hierarchical_wf_failure"
         )
         az = AnalyzeDB(Options(input_dir=submit_dir, traverse_all=True))
@@ -155,44 +154,40 @@ class TestAnalyzerOutput:
         analyzer_output.workflows = {"wf-0": Workflow(wf_status="failure")}
         expected = {"wf-0": Workflow(wf_status="failure")}
         assert analyzer_output.get_failed_workflows()["wf-0"].wf_status == "failure"
-        
+
     def test_get_all_jobs(self, Output):
-        submit_dir=os.path.join(
-            directory, "analyzer_samples_dir/sample_wf_held"
-        )
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/sample_wf_held")
         az = AnalyzeDB(Options(input_dir=submit_dir))
         out = az.analyze_db(None)
         analyzer_output = Output()
         analyzer_output.workflows = out.workflows
-        
+
         assert "failed_jobs_details" in analyzer_output.get_all_jobs()
         assert "held_jobs_details" in analyzer_output.get_all_jobs()
         assert len(analyzer_output.get_all_jobs()) == 2
-        
+
     def test_get_jobs_counts(self, Output, get_output):
         analyzer_output = Output()
         analyzer_output.workflows = get_output
         output_counts = analyzer_output.get_jobs_counts()
-        
+
         assert output_counts.unsubmitted == 6
 
     def test_get_failed_jobs(self, Output, get_output):
         analyzer_output = Output()
         analyzer_output.workflows = get_output
         failed_jobs = analyzer_output.get_failed_jobs()
-        
+
         assert "pegasus-plan_diamond_subworkflow" in failed_jobs
-        
+
     def test_get_held_jobs(self, Output):
-        submit_dir=os.path.join(
-            directory, "analyzer_samples_dir/sample_wf_held"
-        )
+        submit_dir = os.path.join(directory, "analyzer_samples_dir/sample_wf_held")
         az = AnalyzeDB(Options(input_dir=submit_dir))
         out = az.analyze_db(None)
         analyzer_output = Output()
         analyzer_output.workflows = out.workflows
         held_jobs = analyzer_output.get_held_jobs()
-        
+
         assert "chebi_drug_loader_ID0000001" in held_jobs
 
 
@@ -240,30 +235,30 @@ class TestAnalyzeDB:
         analyzer_ouput = analyze.analyze_db(None)
 
         expected_output = {
-          "root_wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
-          "submit_directory": submit_dir,
-          "workflows": {
-            "root": {
-              "wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
-              "dag_file_name": "process-0.dag",
-              "submit_hostname": "workflow.isi.edu",
-              "submit_dir": "/home/mzalam/processwf/submit/mzalam/pegasus/process/run0001",
-              "user": "mzalam",
-              "planner_version": "5.0.5",
-              "wf_name": "process",
-              "wf_status": "success",
-              "parent_wf_name": "-",
-              "parent_wf_uuid": "-",
-              "jobs": {
-                "total": 5,
-                "success": 5,
-                "failed": 0,
-                "held": 0,
-                "unsubmitted": 0,
-                "job_details": {}
-              }
-            }
-          }
+            "root_wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
+            "submit_directory": submit_dir,
+            "workflows": {
+                "root": {
+                    "wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
+                    "dag_file_name": "process-0.dag",
+                    "submit_hostname": "workflow.isi.edu",
+                    "submit_dir": "/home/mzalam/processwf/submit/mzalam/pegasus/process/run0001",
+                    "user": "mzalam",
+                    "planner_version": "5.0.5",
+                    "wf_name": "process",
+                    "wf_status": "success",
+                    "parent_wf_name": "-",
+                    "parent_wf_uuid": "-",
+                    "jobs": {
+                        "total": 5,
+                        "success": 5,
+                        "failed": 0,
+                        "held": 0,
+                        "unsubmitted": 0,
+                        "job_details": {},
+                    },
+                }
+            },
         }
 
         assert analyzer_ouput.as_dict() == expected_output
@@ -274,61 +269,61 @@ class TestAnalyzeDB:
         analyzer_ouput = analyze.analyze_db(None)
 
         expected_output = {
-          "root_wf_uuid": "f84f05fc-a8d0-42b5-bac5-52d6f41a77e3",
-          "submit_directory": submit_dir,
-          "workflows": {
-            "root": {
-              "wf_uuid": "f84f05fc-a8d0-42b5-bac5-52d6f41a77e3",
-              "dag_file_name": "process-0.dag",
-              "submit_hostname": "workflow.isi.edu",
-              "submit_dir": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001",
-              "user": "mzalam",
-              "planner_version": "5.0.5",
-              "wf_name": "process",
-              "wf_status": "failure",
-              "parent_wf_name": "-",
-              "parent_wf_uuid": "-",
-              "jobs": {
-                "total": 5,
-                "success": 1,
-                "failed": 1,
-                "held": 0,
-                "unsubmitted": 3,
-                "job_details": {
-                  "failed_jobs_details": {
-                    "ls_ID0000001": {
-                      "job_name": "ls_ID0000001",
-                      "state": "POST_SCRIPT_FAILED",
-                      "site": "condorpool",
-                      "hostname": "workflow.isi.edu",
-                      "work_dir": "/home/mzalam/wf/condor/local/execute/dir_148537",
-                      "submit_file": "00/00/ls_ID0000001.sub",
-                      "stdout_file": "00/00/ls_ID0000001.out.001",
-                      "stderr_file": "00/00/ls_ID0000001.err.001",
-                      "executable": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/00/00/ls_ID0000001.sh",
-                      "argv": "-",
-                      "pre_executable": "-",
-                      "pre_argv": "-",
-                      "submit_dir": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001",
-                      "subwf_dir": "-",
-                      "stdout_text": "#@ 1 stderr\n /bin/ls: invalid option -- 'z'\nTry '/bin/ls --help' for more information.",
-                      "stderr_text": "2023-03-03 23:11:14: PegasusLite: version 5.0.5\n2023-03-03 23:11:14: Executing on host workflow.isi.edu IP=128.9.46.53\n\n########################[Pegasus Lite] Setting up workdir ########################\n2023-03-03 23:11:14: Not creating a new work directory as it is already set to /home/mzalam/wf/condor/local/execute/dir_148537\n\n##############[Pegasus Lite] Figuring out the worker package to use ##############\n2023-03-03 23:11:14: The job contained a Pegasus worker package\ntar: write error\n\n##################### Checking file integrity for input files #####################\n\n######################[Pegasus Lite] Executing the user task ######################\n2023-03-03 23:11:15: User task failed with exitcode 2\nPegasusLite: exitcode 2",
-                      "tasks": {
-                        "ID0000001": {
-                          "task_submit_seq": 1,
-                          "exitcode": 2,
-                          "executable": "/usr/bin/ls",
-                          "arguments": "-",
-                          "transformation": "ls",
-                          "abs_task_id": "ID0000001"
-                        }
-                      }
-                    }
-                  }
+            "root_wf_uuid": "f84f05fc-a8d0-42b5-bac5-52d6f41a77e3",
+            "submit_directory": submit_dir,
+            "workflows": {
+                "root": {
+                    "wf_uuid": "f84f05fc-a8d0-42b5-bac5-52d6f41a77e3",
+                    "dag_file_name": "process-0.dag",
+                    "submit_hostname": "workflow.isi.edu",
+                    "submit_dir": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001",
+                    "user": "mzalam",
+                    "planner_version": "5.0.5",
+                    "wf_name": "process",
+                    "wf_status": "failure",
+                    "parent_wf_name": "-",
+                    "parent_wf_uuid": "-",
+                    "jobs": {
+                        "total": 5,
+                        "success": 1,
+                        "failed": 1,
+                        "held": 0,
+                        "unsubmitted": 3,
+                        "job_details": {
+                            "failed_jobs_details": {
+                                "ls_ID0000001": {
+                                    "job_name": "ls_ID0000001",
+                                    "state": "POST_SCRIPT_FAILED",
+                                    "site": "condorpool",
+                                    "hostname": "workflow.isi.edu",
+                                    "work_dir": "/home/mzalam/wf/condor/local/execute/dir_148537",
+                                    "submit_file": "00/00/ls_ID0000001.sub",
+                                    "stdout_file": "00/00/ls_ID0000001.out.001",
+                                    "stderr_file": "00/00/ls_ID0000001.err.001",
+                                    "executable": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/00/00/ls_ID0000001.sh",
+                                    "argv": "-",
+                                    "pre_executable": "-",
+                                    "pre_argv": "-",
+                                    "submit_dir": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001",
+                                    "subwf_dir": "-",
+                                    "stdout_text": "#@ 1 stderr\n /bin/ls: invalid option -- 'z'\nTry '/bin/ls --help' for more information.",
+                                    "stderr_text": "2023-03-03 23:11:14: PegasusLite: version 5.0.5\n2023-03-03 23:11:14: Executing on host workflow.isi.edu IP=128.9.46.53\n\n########################[Pegasus Lite] Setting up workdir ########################\n2023-03-03 23:11:14: Not creating a new work directory as it is already set to /home/mzalam/wf/condor/local/execute/dir_148537\n\n##############[Pegasus Lite] Figuring out the worker package to use ##############\n2023-03-03 23:11:14: The job contained a Pegasus worker package\ntar: write error\n\n##################### Checking file integrity for input files #####################\n\n######################[Pegasus Lite] Executing the user task ######################\n2023-03-03 23:11:15: User task failed with exitcode 2\nPegasusLite: exitcode 2",
+                                    "tasks": {
+                                        "ID0000001": {
+                                            "task_submit_seq": 1,
+                                            "exitcode": 2,
+                                            "executable": "/usr/bin/ls",
+                                            "arguments": "-",
+                                            "transformation": "ls",
+                                            "abs_task_id": "ID0000001",
+                                        }
+                                    },
+                                }
+                            }
+                        },
+                    },
                 }
-              }
-            }
-          }
+            },
         }
 
         assert analyzer_ouput.as_dict() == expected_output
@@ -341,13 +336,18 @@ class TestAnalyzeDB:
 
         expected_output = {
             "chebi_drug_loader_ID0000001": {
-               "submit_file": "chebi_drug_loader_ID0000001.sub",
-               "last_job_instance_id": 3,
-               "reason": " Transfer output files failure at execution point slot1@workflow.isi.edu while sending files to access point workflow. Details: reading from file /home/mzalam/wf/condor/local/execute/dir_761020/chebi_dict.pickle: (errno 2) No such file or directory"
+                "submit_file": "chebi_drug_loader_ID0000001.sub",
+                "last_job_instance_id": 3,
+                "reason": " Transfer output files failure at execution point slot1@workflow.isi.edu while sending files to access point workflow. Details: reading from file /home/mzalam/wf/condor/local/execute/dir_761020/chebi_dict.pickle: (errno 2) No such file or directory",
             }
-          }
+        }
 
-        assert analyzer_ouput.as_dict()["workflows"]["root"]["jobs"]["job_details"]["held_jobs_details"] == expected_output
+        assert (
+            analyzer_ouput.as_dict()["workflows"]["root"]["jobs"]["job_details"][
+                "held_jobs_details"
+            ]
+            == expected_output
+        )
 
     def test_hierarchical_wf_traverse_all(self, mocker, capsys, AnalyzerDatabase):
         submit_dir = os.path.join(
@@ -358,52 +358,52 @@ class TestAnalyzeDB:
         analyzer_ouput = analyze.analyze_db(None)
 
         expected_output = {
-          "root_wf_uuid": "48f759a4-165f-47d6-8c32-571649ce311b",
-          "submit_directory": submit_dir,
-          "workflows": {
-            "root": {
-              "wf_uuid": "48f759a4-165f-47d6-8c32-571649ce311b",
-              "dag_file_name": "hierarchical-workflow-0.dag",
-              "submit_hostname": "workflow.isi.edu",
-              "submit_dir": "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001",
-              "user": "mzalam",
-              "planner_version": "5.0.5",
-              "wf_name": "hierarchical-workflow",
-              "wf_status": "running",
-              "parent_wf_name": "-",
-              "parent_wf_uuid": "-",
-              "jobs": {
-                "total": 13,
-                "success": 9,
-                "failed": 0,
-                "held": 0,
-                "unsubmitted": 4,
-                "job_details": {}
-              }
+            "root_wf_uuid": "48f759a4-165f-47d6-8c32-571649ce311b",
+            "submit_directory": submit_dir,
+            "workflows": {
+                "root": {
+                    "wf_uuid": "48f759a4-165f-47d6-8c32-571649ce311b",
+                    "dag_file_name": "hierarchical-workflow-0.dag",
+                    "submit_hostname": "workflow.isi.edu",
+                    "submit_dir": "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001",
+                    "user": "mzalam",
+                    "planner_version": "5.0.5",
+                    "wf_name": "hierarchical-workflow",
+                    "wf_status": "running",
+                    "parent_wf_name": "-",
+                    "parent_wf_uuid": "-",
+                    "jobs": {
+                        "total": 13,
+                        "success": 9,
+                        "failed": 0,
+                        "held": 0,
+                        "unsubmitted": 4,
+                        "job_details": {},
+                    },
+                },
+                "160be601-bda4-45fb-86cd-9cf7a269bb22": {
+                    "wf_uuid": "160be601-bda4-45fb-86cd-9cf7a269bb22",
+                    "dag_file_name": "inner.dag",
+                    "submit_hostname": "workflow.isi.edu",
+                    "submit_dir": "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/blackdiamond_diamond_subworkflow.000",
+                    "user": "mzalam",
+                    "planner_version": "5.0.5",
+                    "wf_name": "blackdiamond",
+                    "wf_status": "success",
+                    "parent_wf_name": "hierarchical-workflow",
+                    "parent_wf_uuid": "48f759a4-165f-47d6-8c32-571649ce311b",
+                    "jobs": {
+                        "total": 15,
+                        "success": 15,
+                        "failed": 0,
+                        "held": 0,
+                        "unsubmitted": 0,
+                        "job_details": {},
+                    },
+                },
             },
-            "160be601-bda4-45fb-86cd-9cf7a269bb22": {
-              "wf_uuid": "160be601-bda4-45fb-86cd-9cf7a269bb22",
-              "dag_file_name": "inner.dag",
-              "submit_hostname": "workflow.isi.edu",
-              "submit_dir": "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/blackdiamond_diamond_subworkflow.000",
-              "user": "mzalam",
-              "planner_version": "5.0.5",
-              "wf_name": "blackdiamond",
-              "wf_status": "success",
-              "parent_wf_name": "hierarchical-workflow",
-              "parent_wf_uuid": "48f759a4-165f-47d6-8c32-571649ce311b",
-              "jobs": {
-                "total": 15,
-                "success": 15,
-                "failed": 0,
-                "held": 0,
-                "unsubmitted": 0,
-                "job_details": {}
-              }
-            }
-          }
         }
-        
+
         assert analyzer_ouput.as_dict() == expected_output
 
     def test_hierarchical_wf_failure(self, mocker, capsys, AnalyzerDatabase):
@@ -412,13 +412,23 @@ class TestAnalyzeDB:
         )
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_db(None)
-        analyzer_ouput_failed_jobs = analyzer_ouput.as_dict()["workflows"]["root"]["jobs"]["job_details"]["failed_jobs_details"]
-        
+        analyzer_ouput_failed_jobs = analyzer_ouput.as_dict()["workflows"]["root"][
+            "jobs"
+        ]["job_details"]["failed_jobs_details"]
+
         expected_argv = " -p 0  -f -l . -Notification never -Debug 3 -Lockfile inner.dag.lock -Dag inner.dag -AllowVersionMismatch  -AutoRescue 1 -DoRescueFrom 0 "
         expected_pre_executable = "00/00/pegasus-plan_diamond_subworkflow.pre.sh"
-        
-        assert analyzer_ouput_failed_jobs["pegasus-plan_diamond_subworkflow"]["argv"] == expected_argv
-        assert analyzer_ouput_failed_jobs["pegasus-plan_diamond_subworkflow"]["pre_executable"] == expected_pre_executable
+
+        assert (
+            analyzer_ouput_failed_jobs["pegasus-plan_diamond_subworkflow"]["argv"]
+            == expected_argv
+        )
+        assert (
+            analyzer_ouput_failed_jobs["pegasus-plan_diamond_subworkflow"][
+                "pre_executable"
+            ]
+            == expected_pre_executable
+        )
 
     def test_analyze_db_for_wf_workflow_error(self, mocker, capsys, AnalyzerDatabase):
         mocker.patch(
@@ -474,9 +484,7 @@ class TestAnalyzeDB:
         analyze = AnalyzerDatabase(Options(input_dir="random/submit"))
         analyze.analyze_db_for_wf(wf_stats, "uuid-0", "submit_dir-0", mock_wf)
 
-        AnalyzeDB.get_job_details.assert_called_once_with(
-            "job-instance-0", None
-        )
+        AnalyzeDB.get_job_details.assert_called_once_with("job-instance-0", None)
 
     def test_json_mode(self, mocker, capsys, AnalyzerDatabase):
         submit_dir = os.path.join(
@@ -583,30 +591,30 @@ class TestAnalyzeFiles:
         analyzer_ouput = analyze.analyze_files()
 
         expected_output = {
-          "root_wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
-          "submit_directory": "/home/mzalam/processwf/submit/mzalam/pegasus/process/run0001",
-          "workflows": {
-            "root": {
-              "wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
-              "dag_file_name": "process-0.dag",
-              "submit_hostname": "workflow.isi.edu",
-              "submit_dir": "/home/mzalam/processwf/submit/mzalam/pegasus/process/run0001",
-              "user": "mzalam",
-              "planner_version": "5.0.5",
-              "wf_name": "process",
-              "wf_status": "success",
-              "parent_wf_name": "-",
-              "parent_wf_uuid": "-",
-              "jobs": {
-                "total": 5,
-                "success": 5,
-                "failed": 0,
-                "held": 0,
-                "unsubmitted": 0,
-                "job_details": {}
-              }
-            }
-          }
+            "root_wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
+            "submit_directory": "/home/mzalam/processwf/submit/mzalam/pegasus/process/run0001",
+            "workflows": {
+                "root": {
+                    "wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
+                    "dag_file_name": "process-0.dag",
+                    "submit_hostname": "workflow.isi.edu",
+                    "submit_dir": "/home/mzalam/processwf/submit/mzalam/pegasus/process/run0001",
+                    "user": "mzalam",
+                    "planner_version": "5.0.5",
+                    "wf_name": "process",
+                    "wf_status": "success",
+                    "parent_wf_name": "-",
+                    "parent_wf_uuid": "-",
+                    "jobs": {
+                        "total": 5,
+                        "success": 5,
+                        "failed": 0,
+                        "held": 0,
+                        "unsubmitted": 0,
+                        "job_details": {},
+                    },
+                }
+            },
         }
 
         assert analyzer_ouput.as_dict() == expected_output
@@ -618,8 +626,12 @@ class TestAnalyzeFiles:
         analyze = AnalyzerFiles(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_files()
         expected_state = "POST_SCRIPT_STARTED"
-        out_job_details = analyzer_ouput.as_dict()["workflows"]["root"]["jobs"]["job_details"]
-        output_state = out_job_details["unknown_jobs_details"]["stage_out_local_local_2_0"]["state"]
+        out_job_details = analyzer_ouput.as_dict()["workflows"]["root"]["jobs"][
+            "job_details"
+        ]
+        output_state = out_job_details["unknown_jobs_details"][
+            "stage_out_local_local_2_0"
+        ]["state"]
 
         assert output_state == expected_state
 
@@ -629,61 +641,64 @@ class TestAnalyzeFiles:
         analyzer_ouput = analyze.analyze_files()
 
         expected_output = {
-          "root_wf_uuid": "f84f05fc-a8d0-42b5-bac5-52d6f41a77e3",
-          "submit_directory": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001",
-          "workflows": {
-            "root": {
-              "wf_uuid": "f84f05fc-a8d0-42b5-bac5-52d6f41a77e3",
-              "dag_file_name": "process-0.dag",
-              "submit_hostname": "workflow.isi.edu",
-              "submit_dir": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001",
-              "user": "mzalam",
-              "planner_version": "5.0.5",
-              "wf_name": "process",
-              "wf_status": "failure",
-              "parent_wf_name": "-",
-              "parent_wf_uuid": "-",
-              "jobs": {
-                "total": 5,
-                "success": 1,
-                "failed": 1,
-                "held": 0,
-                "unsubmitted": 3,
-                "job_details": {
-                  "failed_jobs_details": {
-                    "ls_ID0000001": {
-                      "job_name": "ls_ID0000001",
-                      "state": "POST_SCRIPT_FAILURE",
-                      "site": "condorpool",
-                      "hostname": "workflow.isi.edu",
-                      "work_dir": "/home/mzalam/wf/condor/local/execute/dir_148537",
-                      "submit_file": submit_dir+"/00/00/ls_ID0000001.sub",
-                      "stdout_file": submit_dir+"/00/00/ls_ID0000001.out",
-                      "stderr_file": submit_dir+"/00/00/ls_ID0000001.err",
-                      "executable": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/00/00/ls_ID0000001.sh",
-                      "argv": "",
-                      "pre_executable": "",
-                      "pre_argv": None,
-                      "submit_dir": None,
-                      "subwf_dir": "-",
-                      "stdout_text": "-",
-                      "stderr_text": "/bin/ls: invalid option -- 'z'\nTry '/bin/ls --help' for more information.\n",
-                      "tasks": {
-                        1: {
-                          "task_submit_seq": 1,
-                          "exitcode": 2,
-                          "executable": "/usr/bin/ls",
-                          "arguments": "-",
-                          "transformation": "ls",
-                          "abs_task_id": "ID0000001"
-                        }
-                      }
-                    }
-                  }
+            "root_wf_uuid": "f84f05fc-a8d0-42b5-bac5-52d6f41a77e3",
+            "submit_directory": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001",
+            "workflows": {
+                "root": {
+                    "wf_uuid": "f84f05fc-a8d0-42b5-bac5-52d6f41a77e3",
+                    "dag_file_name": "process-0.dag",
+                    "submit_hostname": "workflow.isi.edu",
+                    "submit_dir": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001",
+                    "user": "mzalam",
+                    "planner_version": "5.0.5",
+                    "wf_name": "process",
+                    "wf_status": "failure",
+                    "parent_wf_name": "-",
+                    "parent_wf_uuid": "-",
+                    "jobs": {
+                        "total": 5,
+                        "success": 1,
+                        "failed": 1,
+                        "held": 0,
+                        "unsubmitted": 3,
+                        "job_details": {
+                            "failed_jobs_details": {
+                                "ls_ID0000001": {
+                                    "job_name": "ls_ID0000001",
+                                    "state": "POST_SCRIPT_FAILURE",
+                                    "site": "condorpool",
+                                    "hostname": "workflow.isi.edu",
+                                    "work_dir": "/home/mzalam/wf/condor/local/execute/dir_148537",
+                                    "submit_file": submit_dir
+                                    + "/00/00/ls_ID0000001.sub",
+                                    "stdout_file": submit_dir
+                                    + "/00/00/ls_ID0000001.out",
+                                    "stderr_file": submit_dir
+                                    + "/00/00/ls_ID0000001.err",
+                                    "executable": "/home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/00/00/ls_ID0000001.sh",
+                                    "argv": "",
+                                    "pre_executable": "",
+                                    "pre_argv": None,
+                                    "submit_dir": None,
+                                    "subwf_dir": "-",
+                                    "stdout_text": "-",
+                                    "stderr_text": "/bin/ls: invalid option -- 'z'\nTry '/bin/ls --help' for more information.\n",
+                                    "tasks": {
+                                        1: {
+                                            "task_submit_seq": 1,
+                                            "exitcode": 2,
+                                            "executable": "/usr/bin/ls",
+                                            "arguments": "-",
+                                            "transformation": "ls",
+                                            "abs_task_id": "ID0000001",
+                                        }
+                                    },
+                                }
+                            }
+                        },
+                    },
                 }
-              }
-            }
-          }
+            },
         }
         assert analyzer_ouput.as_dict() == expected_output
 
@@ -721,8 +736,12 @@ class TestAnalyzeFiles:
         analyze = AnalyzerFiles(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_files()
         expected_state = "PRE_SCRIPT_FAILURE"
-        out_job_details = analyzer_ouput.as_dict()["workflows"]["root"]["jobs"]["job_details"]
-        output_state = out_job_details["unknown_jobs_details"]["pegasus-plan_diamond_subworkflow"]["state"]
+        out_job_details = analyzer_ouput.as_dict()["workflows"]["root"]["jobs"][
+            "job_details"
+        ]
+        output_state = out_job_details["unknown_jobs_details"][
+            "pegasus-plan_diamond_subworkflow"
+        ]["state"]
 
         assert output_state == expected_state
 
