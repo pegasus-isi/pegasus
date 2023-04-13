@@ -40,6 +40,7 @@ class WORKFLOW_STATUS(Enum):
     SUCCESS = "success"
     FAILURE = "failure"
 
+
 class Job:
     def __init__(self, job_name, job_state=""):
         """
@@ -77,9 +78,11 @@ class Job:
         """
         self.state = new_state
 
+
 # --- exceptions ----------------------------------------------------------------------
 class AnalyzerError(Exception):
     pass
+
 
 # --- global variables ----------------------------------------------------------------
 prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this program
@@ -110,6 +113,7 @@ class Options:
     workflow_base_dir: str = None  # Workflow submit_dir or dirname(jsd) from braindump file
     use_files: bool = False  # mode to use AnalyzeFiles
 
+
 @dataclass
 class Task:
     task_submit_seq: int = None
@@ -119,25 +123,27 @@ class Task:
     transformation: str = None
     abs_task_id: str = None
 
+
 @dataclass
 class JobInstance:
-    job_name : str = None 
-    state : str = None 
-    site : str = None 
-    hostname : str = None
-    work_dir : str = None
-    submit_file : str = None 
-    stdout_file : str = None 
-    stderr_file : str = None 
-    executable : str = None 
-    argv : str = None 
-    pre_executable : str = None
-    pre_argv : str = None
-    submit_dir : str = None
-    subwf_dir : str = None
-    stdout_text : str = None
-    stderr_text : str = None
-    tasks : Dict[str, Task] = field(default_factory=lambda: ({}))
+    job_name: str = None
+    state: str = None
+    site: str = None
+    hostname: str = None
+    work_dir: str = None
+    submit_file: str = None
+    stdout_file: str = None
+    stderr_file: str = None
+    executable: str = None
+    argv: str = None
+    pre_executable: str = None
+    pre_argv: str = None
+    submit_dir: str = None
+    subwf_dir: str = None
+    stdout_text: str = None
+    stderr_text: str = None
+    tasks: Dict[str, Task] = field(default_factory=lambda: ({}))
+
 
 @dataclass
 class Jobs:
@@ -147,6 +153,7 @@ class Jobs:
     held: int = 0
     unsubmitted: int = 0
     job_details: Dict[str, Dict] = field(default_factory=lambda: ({}))
+
 
 @dataclass
 class Workflow:
@@ -161,6 +168,7 @@ class Workflow:
     parent_wf_name: str = None
     parent_wf_uuid: str = None
     jobs: Jobs = None
+
 
 # --- classes to store analyzer output ------------------------------------------------
 class AnalyzerOutput:
@@ -201,7 +209,7 @@ class AnalyzerOutput:
             if self.workflows[wf].wf_status == "failure":
                 failed_wfs[wf] = self.workflows[wf]
         return failed_wfs
-        
+
     def get_all_jobs(self):
         """
         Returns a dictionary of all jobs' details for the root workflow
@@ -210,7 +218,7 @@ class AnalyzerOutput:
         :rtype: Dict[str,JobInstance]
         """
         return self.workflows["root"].jobs.job_details
-    
+
     def get_jobs_counts(self):
         """
         Returns a dataclass of jobs counts
@@ -226,10 +234,10 @@ class AnalyzerOutput:
             0,
             jobs.held,
             [],
-            []
+            [],
         )
         return counts
-    
+
     def get_failed_jobs(self):
         """
         Returns a dictionary of all failed jobs details
@@ -237,8 +245,8 @@ class AnalyzerOutput:
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
         """
-        return self.workflows["root"].jobs.job_details.get("failed_jobs_details",None)
-    
+        return self.workflows["root"].jobs.job_details.get("failed_jobs_details", None)
+
     def get_failing_jobs(self):
         """
         Returns a dictionary of all failing jobs details
@@ -246,8 +254,8 @@ class AnalyzerOutput:
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
         """
-        return self.workflows["root"].jobs.job_details.get("failing_jobs_details",None)
-    
+        return self.workflows["root"].jobs.job_details.get("failing_jobs_details", None)
+
     def get_held_jobs(self):
         """
         Returns a dictionary of all held jobs details
@@ -255,8 +263,8 @@ class AnalyzerOutput:
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
         """
-        return self.workflows["root"].jobs.job_details.get("held_jobs_details",None)
-    
+        return self.workflows["root"].jobs.job_details.get("held_jobs_details", None)
+
     def get_unknown_jobs(self):
         """
         Returns a dictionary of all unknown jobs details, for AnalyzeFiles only
@@ -264,9 +272,9 @@ class AnalyzerOutput:
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
         """
-        return self.workflows["root"].jobs.job_details.get("unknown_jobs_details",None)
-        
-        
+        return self.workflows["root"].jobs.job_details.get("unknown_jobs_details", None)
+
+
 @dataclass
 class Counts:
     total: int = 0  # Number of total jobs
@@ -279,6 +287,7 @@ class Counts:
     unknown_jobs: list = field(
         default_factory=[]
     )  # List of jobs that neither succeeded nor failed
+
 
 # --- Analyze classes to run analyzer --------------------------------------------------
 class BaseAnalyze:
@@ -646,7 +655,6 @@ class AnalyzeDB(BaseAnalyze):
             if wf_detail.wf_uuid == wf_uuid:
                 wf_id = wf_detail.wf_id
 
-
         if wf_id is None:
             logger.error(
                 "Unable to determine the database id for workflow with uuid %s"
@@ -835,47 +843,51 @@ class AnalyzeDB(BaseAnalyze):
         """
 
         job_instance = JobInstance(
-            job_instance_info.job_name ,
-            job_instance_info.state ,
-            job_instance_info.site ,
-            job_instance_info.hostname or '-',
+            job_instance_info.job_name,
+            job_instance_info.state,
+            job_instance_info.site,
+            job_instance_info.hostname or "-",
             job_instance_info.work_dir,
-            job_instance_info.submit_file ,
-            job_instance_info.stdout_file ,
-            job_instance_info.stderr_file ,
-            job_instance_info.executable ,
-            job_instance_info.argv or '-',
-            job_instance_info.pre_executable or '-',
-            job_instance_info.pre_argv or '-',
-            job_instance_info.submit_dir or '-',
-            job_instance_info.subwf_dir or '-'
+            job_instance_info.submit_file,
+            job_instance_info.stdout_file,
+            job_instance_info.stderr_file,
+            job_instance_info.executable,
+            job_instance_info.argv or "-",
+            job_instance_info.pre_executable or "-",
+            job_instance_info.pre_argv or "-",
+            job_instance_info.submit_dir or "-",
+            job_instance_info.subwf_dir or "-",
         )
 
-        job_stdout_text = utils.unquote(job_instance_info.stdout_text or "").decode("UTF-8")
-        job_stderr_text = utils.unquote(job_instance_info.stderr_text or "").decode("UTF-8")
+        job_stdout_text = utils.unquote(job_instance_info.stdout_text or "").decode(
+            "UTF-8"
+        )
+        job_stderr_text = utils.unquote(job_instance_info.stderr_text or "").decode(
+            "UTF-8"
+        )
         job_stdout_text = job_stdout_text.strip(" \n\r\t")
         job_stderr_text = job_stderr_text.strip(" \n\r\t")
         job_instance.stdout_text = job_stdout_text
         job_instance.stderr_text = job_stderr_text
-        
-        i=0
+
+        i = 0
         for task in job_tasks:
             # PM-798 we want to detect if some tasks failed or not
             # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
-            if task[0] < -1 :
+            if task[0] < -1:
                 continue
             if not task[5]:
-                i+=1
-                id='id'+str(i)
+                i += 1
+                id = "id" + str(i)
             job_instance.tasks[task[5] or id] = Task(
                 task[0],
                 utils.raw_to_regular(task[1]),
                 task[2],
-                task[3] or '-',
+                task[3] or "-",
                 task[4],
-                task[5] or '-'
+                task[5] or "-",
             )
-            
+
         return job_instance
 
     def get_workflow_status(self, last_wf_state_record):
@@ -1010,20 +1022,18 @@ class AnalyzeFiles(BaseAnalyze):
 
         # Process our jobs
         self.analyze()
-                
+
         self.analyzer_output.root_wf_uuid = wfparams["root_wf_uuid"]
         self.analyzer_output.root_submit_dir = wfparams["submit_dir"]
-        self.analyzer_output.structure_output["root_wf_uuid"] = wfparams[
-            "root_wf_uuid"
-        ]
+        self.analyzer_output.structure_output["root_wf_uuid"] = wfparams["root_wf_uuid"]
         self.analyzer_output.structure_output["submit_directory"] = wfparams[
             "submit_dir"
         ]
         self.analyzer_output.workflows["root"] = self.get_wf_details(wfparams)
-        
+
         # PM-1039
         BaseAnalyze.check_for_wf_start(self.options, self.counts)
-        
+
         return self.analyzer_output
 
     def get_wf_details(self, wfparams):
@@ -1056,7 +1066,7 @@ class AnalyzeFiles(BaseAnalyze):
             jobs_list = self.counts.unknown_jobs
         else:
             status = "running"
-        
+
         if key:
             for job in jobs_list:
                 BaseAnalyze.parse_submit_file(self.jobs[job], self.options)
@@ -1064,16 +1074,16 @@ class AnalyzeFiles(BaseAnalyze):
                     job_name=self.jobs[job].name,
                     state=self.jobs[job].state,
                     site=self.jobs[job].site,
-                    submit_file=self.jobs[job].sub_file or '-',
-                    stdout_file=self.jobs[job].out_file or '-',
-                    stderr_file=self.jobs[job].err_file or '-',
+                    submit_file=self.jobs[job].sub_file or "-",
+                    stdout_file=self.jobs[job].out_file or "-",
+                    stderr_file=self.jobs[job].err_file or "-",
                     executable=self.jobs[job].executable,
                     argv=self.jobs[job].arguments,
                     pre_executable=self.jobs[job].pre_script,
-                    subwf_dir=self.jobs[job].dagman_out or '-',
+                    subwf_dir=self.jobs[job].dagman_out or "-",
                 )
                 self.get_output_error(wf_jobs.job_details[key][job])
-        
+
         return Workflow(
             wf_uuid=wfparams["wf_uuid"],
             dag_file_name=wfparams["dag"],
@@ -1390,17 +1400,17 @@ class AnalyzeFiles(BaseAnalyze):
                 else:
                     # We must have "error" in entry
                     pass
-                
-                job.site = entry.get("resource",'-')
-                job.hostname = entry.get("hostname",'-')
-                job.stdout_text = entry.get("stdout",'-')
-                job.stderr_text = entry.get("stderr",'-')
-                job.work_dir = entry.get("cwd",'-')
-                tasks[my_task_id].executable = entry.get("name",'-')
-                tasks[my_task_id].arguments = entry.get("argument-vector",'-')
-                tasks[my_task_id].exitcode = entry.get("exitcode",'-')
-                tasks[my_task_id].transformation = entry.get("transformation",'-')
-                tasks[my_task_id].abs_task_id = entry.get("derivation",'-')
+
+                job.site = entry.get("resource", "-")
+                job.hostname = entry.get("hostname", "-")
+                job.stdout_text = entry.get("stdout", "-")
+                job.stderr_text = entry.get("stderr", "-")
+                job.work_dir = entry.get("cwd", "-")
+                tasks[my_task_id].executable = entry.get("name", "-")
+                tasks[my_task_id].arguments = entry.get("argument-vector", "-")
+                tasks[my_task_id].exitcode = entry.get("exitcode", "-")
+                tasks[my_task_id].transformation = entry.get("transformation", "-")
+                tasks[my_task_id].abs_task_id = entry.get("derivation", "-")
 
         else:
             # Not able to parse the kickstart output file, let's just dump the out and err files
@@ -1439,7 +1449,7 @@ class AnalyzeFiles(BaseAnalyze):
         data = ""
         if file is not None:
             try:
-                with open(file, 'r') as file:
+                with open(file) as file:
                     data = file.read().rstrip()
             except Exception:
                 logger.warn("*** Cannot access: %s" % (file))
