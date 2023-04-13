@@ -2022,7 +2022,7 @@ class TestWorkflow:
         wf.analyze()
 
         Pegasus.client._client.Client.analyzer.assert_called_once_with(
-            wf._submit_dir, verbose=0
+            wf._submit_dir, json_mode=False, traverse_all=False, verbose=0
         )
 
     def test_statistics(self, wf, mocker):
