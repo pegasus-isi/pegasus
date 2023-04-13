@@ -1499,17 +1499,108 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     @_needs_submit_dir
     @_needs_client
-    def analyze(self, *, verbose: int = 0):
+    def analyze(
+        self, *, verbose: int = 0, json_mode: bool = False, traverse_all: bool = False
+    ):
         """
-        analyze(self, verbose: int = 0)
+        analyze(self, verbose: int = 0, json_mode: bool = False, traverse_all: bool = False)
         Debug a workflow.
+        
+        Also returns all info from AnalyzerOutput as a json strucuture in the
+        following format:
+
+        .. code-block:: python
+
+            {
+              "root_wf_uuid": <str>,
+              "submit_directory": <str>,
+              "workflows": {
+                "root": {
+                  "wf_uuid": <str>,
+                  "dag_file_name": <str>,
+                  "submit_hostname": <str>,
+                  "submit_dir": <str>,
+                  "user": <str>,
+                  "planner_version": <str>,
+                  "wf_name": <str>,
+                  "wf_status": <str>,
+                  "parent_wf_name": <str>,
+                  "parent_wf_uuid": <str>,
+                  "jobs": {
+                    "total": <int>,
+                    "success": <int>,
+                    "failed": <int>,
+                    "held": <int>,
+                    "unsubmitted": <int>,
+                    "job_details": {
+                      "job_type": {
+                        "job": {
+                          "job_name": <str>,
+                          "state": <str>,
+                          "site": <str>,
+                          "hostname": <str>,
+                          "work_dir": <str>,
+                          "submit_file": <str>,
+                          "stdout_file": <str>,
+                          "stderr_file": <str>,
+                          "executable": <str>,
+                          "argv": <str>,
+                          "pre_executable": <str>,
+                          "pre_argv": <str>,
+                          "submit_dir": <str>,
+                          "subwf_dir": <str>,
+                          "stdout_text": <str>,
+                          "stderr_text": <str>,
+                          "tasks": {
+                            "task_id": {
+                              "task_submit_seq": <int>,
+                              "exitcode": <str>,
+                              "executable": <str>,
+                              "arguments": <str>,
+                              "transformation": <str>,
+                              "abs_task_id": <str>
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+        Main keys are defined as follows
+            * :code:`root_wf_uuid`: uuid of the root workflow
+            * :code:`submit_directory`: submit directory of the root workflow
+            * :code:`workflows`: a dict containing Workflow objects
+            * :code:`root`: key used for root workflow
+            * :code:`jobs`: a dict containing Jobs objects
+            * :code:`total`: total number of jobs
+            * :code:`success`: number of jobs completed
+            * :code:`failed`: number of jobs failed
+            * :code:`held`: number of jobs held
+            * :code:`unsubmitted`: number of jobs unsubmitted
+            * :code:`job_details`: a dict containing details of all jobs
+            * :code:`job_type`: failed_jobs or unknown_jobs or failing_jobs or held_jobs
+            * :code:`job`: name of a specific job, contains JobInstance objects
+            * :code:`tasks`: a dict containing Task objects
 
         :param verbose: verbosity, defaults to 0
         :type verbose: int, optional
+        :param json_mode: returns analyzer output as a JSON serializable dictionary, defaults to False
+        :type json_mode: bool, optional
+        :param traverse_all: returns information of all subworkflows too, defaults to False
+        :type traverse_all: bool, optional
         :raises PegasusClientError: pegasus-analyzer encountered an error
         :return: self
+        :rtype: Union[Dict,None]
         """
-        self._client.analyzer(self._submit_dir, verbose=verbose)
+        self._client.analyzer(
+            self._submit_dir,
+            verbose=verbose,
+            json_mode=json_mode,
+            traverse_all=traverse_all,
+        )
 
     # should wait until wf is done or else we will just get msg:
     # pegasus-monitord still running. Please wait for it to complete.

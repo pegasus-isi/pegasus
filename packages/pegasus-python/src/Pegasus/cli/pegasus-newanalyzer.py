@@ -36,7 +36,6 @@ import traceback
 import click
 
 from Pegasus import analyzer
-from Pegasus.tools import kickstart_parser, utils
 
 root_logger = logging.getLogger()
 prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this program
@@ -252,7 +251,7 @@ def pegasus_analyzer(
         traverse_all=traverse_all,
         json_mode=json_mode,
         indent_length=indent_length,
-        use_files=use_files
+        use_files=use_files,
     )
 
     if print_options is not None:
@@ -309,54 +308,56 @@ def pegasus_analyzer(
         if use_files:
             analyze = analyzer.AnalyzeFiles(options)
             output = analyze.analyze_files()
-        # Run via quering the stampede database        
+        # Run via quering the stampede database
         else:
             analyze = analyzer.AnalyzeDB(options)
             output = analyze.analyze_db(config_properties)
     except analyzer.AnalyzerError as err:
-            analyzer.logger.error(err)
-            ctx.exit(1)
+        analyzer.logger.error(err)
+        ctx.exit(1)
     except Exception:
-            analyzer.logger.error(traceback.format_exc())
-            ctx.exit(1)
-            
+        analyzer.logger.error(traceback.format_exc())
+        ctx.exit(1)
+
     if json_mode:
         print(json.dumps(output.as_dict(), indent=2))
     else:
         print_analyzer_output(ctx, options, output)
 
+
 def print_analyzer_output(ctx, options, output):
-    
+
     for wf in output.workflows:
         print_output(ctx, options, output.workflows[wf])
-    
+
     if len(output.get_failed_workflows()) > 0:
         click.secho(
             "{}".format(
                 click.style("One or more workflows failed!", fg="red", bold=True)
             )
         )
-    else:    
+    else:
         print("Done".center(80, "*"))
         print()
         print("%s: end of status report" % (analyzer.prog_base))
-        print()            
+        print()
+
 
 def print_output(ctx, options, wf):
     """
     This function prints the summary for the analyzer report,
     which is the same for the long and short output versions
     """
-    submit_dir=options.input_dir
-    counts=wf.jobs
-    
+    options.input_dir
+    counts = wf.jobs
+
     # PM-1762 add a helpful message in case failed jobs are zero and workflow failed
     if wf.wf_status == "failure" and counts.failed == 0 and not options.use_files:
         print_console(
-                "\nIt seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in %s"
-                % (options.input_dir or options.top_dir)
-            )
-    
+            "\nIt seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in %s"
+            % (options.input_dir or options.top_dir)
+        )
+
     # Let's print the results
     print_console()
     summary = "Summary".center(80, "*")
@@ -395,29 +396,30 @@ def print_output(ctx, options, wf):
             % (unknown, 100 * (1.0 * unknown / (counts.total or 1)))
         )
     print()
-    
+
     if not options.summary_mode:
         if counts.held > 0:
             print_held_jobs(options, wf.jobs.job_details["held_jobs_details"])
-        
+
         if "failing_jobs_details" in wf.jobs.job_details:
             print_failing_jobs(options, wf.jobs.job_details["failing_jobs_details"])
-        
+
         if counts.failed > 0:
             print_failed_jobs(options, wf.jobs.job_details["failed_jobs_details"])
-            
+
         if "unknown_jobs_details" in wf.jobs.job_details:
             print_unknown_jobs(options, wf.jobs.job_details["unknown_jobs_details"])
-            
+
     if counts.failed > 0:
         click.secho(
             "{} wf_uuid:{} submit dir:{}".format(
                 click.style("Workflow failed :", fg="red", bold=True),
                 wf.wf_uuid,
-                wf.submit_dir
+                wf.submit_dir,
             )
-        )    
-        
+        )
+
+
 def print_held_jobs(options, held_jobs):
     print_console("Held jobs' details".center(80, "*"))
     print_console()
@@ -428,41 +430,46 @@ def print_held_jobs(options, held_jobs):
         # first two are database id's for debugging
         print_console(job.center(80, "="))
         print_console()
+        print_console("submit file            : %s" % (held_job["submit_file"]))
         print_console(
-            "submit file            : %s" % (held_job["submit_file"])
+            "last_job_instance_id   : %s" % (held_job["last_job_instance_id"])
         )
-        print_console("last_job_instance_id   : %s" % (held_job["last_job_instance_id"]))
         print_console("reason                 : %s" % (held_job["reason"]))
         print_console()
+
 
 def print_failing_jobs(options, failing_jobs):
     print_console("failing jobs' details".center(80, "*"))
     for my_job in failing_jobs:
         print_job_instance(options, failing[my_job])
-        
+
+
 def print_failed_jobs(options, failed_jobs):
     print_console("Failed jobs' details".center(80, "*"))
-    
+
     for my_job in failed_jobs:
         sub_wf_cmd = print_job_instance(options, failed_jobs[my_job])
 
         # recurse for sub workflow
-        if sub_wf_cmd is not None and options.recurse_mode :
+        if sub_wf_cmd is not None and options.recurse_mode:
             print_console(("Failed Sub Workflow").center(80, "="))
             subprocess.Popen(sub_wf_cmd, shell=True).communicate()[0]
             print_console(("").center(80, "="))
-            
+
+
 def print_unknown_jobs(options, unknown_jobs):
     print_console("Unknown jobs' details".center(80, "*"))
-    
+
     for my_job in unknown_jobs:
         print_job_instance(options, unknown_jobs[my_job])
-    
+
+
 def print_console(stmt=""):
     """
     A utilty function to print to console with the correct indentation
     """
     print(indent + stmt)
+
 
 def print_job_instance(options, job_instance_info):
     """
@@ -498,23 +505,23 @@ def print_job_instance(options, job_instance_info):
         )
         print_console()
 
-    if job_instance_info.subwf_dir is not '-':
+    if job_instance_info.subwf_dir != "-":
         # This job has a sub workflow
         user_cmd = " %s" % (prog_base)
-        
+
         # get any options that need to be invoked for the sub workflow
-        #extraOptions = addon(options)
+        # extraOptions = addon(options)
         extraOptions = ""
-        
+
         if options.use_files:
             if self.options.output_dir is not None:
                 user_cmd = user_cmd + " --output-dir %s" % (self.options.output_dir)
 
             # get any options that need to be invoked for the sub workflow
-            
+
             sub_wf_cmd = "{} {} -d {}".format(
                 user_cmd, extraOptions, os.path.split(job_instance_info.subwf_dir)[0],
-            )        
+            )
 
         else:
             my_wfdir = os.path.normpath(job_instance_info.subwf_dir)
@@ -526,7 +533,10 @@ def print_job_instance(options, job_instance_info):
                 my_wfdir = os.path.join(options.input_dir, my_wfdir)
 
             sub_wf_cmd = "{} {} -d {} --top-dir {}".format(
-                user_cmd, extraOptions, my_wfdir, (options.top_dir or options.input_dir),
+                user_cmd,
+                extraOptions,
+                my_wfdir,
+                (options.top_dir or options.input_dir),
             )
         if not options.recurse_mode:
             # we print only if recurse mode is disabled
@@ -540,6 +550,7 @@ def print_job_instance(options, job_instance_info):
     print_tasks_info(options, job_instance_info)
     return sub_wf_cmd
 
+
 def print_tasks_info(options, job_instance_info):
     """
     The function prints information related tasks relevant to one job instance
@@ -549,7 +560,7 @@ def print_tasks_info(options, job_instance_info):
     ji_stdout_text = job_instance_info.stdout_text
     ji_stderr_text = job_instance_info.stderr_text
     job_tasks = job_instance_info.tasks
-    
+
     some_tasks_failed = False
     for task in job_tasks:
         my_task = job_tasks[task]
@@ -568,7 +579,9 @@ def print_tasks_info(options, job_instance_info):
             continue
 
         # Print task summary
-        print_console(("Task #" + str(my_task.task_submit_seq) + " - Summary").center(80, "-"))
+        print_console(
+            ("Task #" + str(my_task.task_submit_seq) + " - Summary").center(80, "-")
+        )
         print_console()
         print_console("site        : %s" % (job_instance_info.site))
         print_console("hostname    : %s" % (job_instance_info.hostname))
@@ -579,17 +592,17 @@ def print_tasks_info(options, job_instance_info):
         print_console()
 
         if not options.quiet_mode:
-            stdout_output=(
-                    "Task #"
-                    + str(my_task.task_submit_seq)
-                    + " - "
-                    + str(my_task.transformation)
-                    + " - "
-                    + str(my_task.abs_task_id)
-                    + " - stdout"
+            stdout_output = (
+                "Task #"
+                + str(my_task.task_submit_seq)
+                + " - "
+                + str(my_task.transformation)
+                + " - "
+                + str(my_task.abs_task_id)
+                + " - stdout"
             ).center(80, "-")
-            
-            if options.use_files and ji_stdout_text != '-':
+
+            if options.use_files and ji_stdout_text != "-":
                 if ji_stdout_text:
                     my_print_job_stderr = False
                     print_console(stdout_output)
@@ -664,19 +677,17 @@ def print_tasks_info(options, job_instance_info):
                     print_console(ji_stdout_text)
                     print_console()
 
-
     # Now print the stderr output from the .err file
     if ji_stderr_text and ji_stderr_text.strip("\n\t \r") != "" and my_print_job_stderr:
         # Something to display
         # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
         print_console(
-            ("Job stderr - %s" % (job_instance_info.job_name or "-")).center(
-                80, "-"
-            )
+            ("Job stderr - %s" % (job_instance_info.job_name or "-")).center(80, "-")
         )
         print_console()
         print_console(ji_stderr_text)
-        print_console()      
+        print_console()
+
 
 if __name__ == "__main__":
     pegasus_analyzer()
