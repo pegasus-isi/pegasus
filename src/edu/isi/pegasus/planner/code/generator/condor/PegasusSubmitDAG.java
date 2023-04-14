@@ -59,6 +59,10 @@ public class PegasusSubmitDAG {
         {Dagman.MAXIDLE_KEY.toLowerCase(), " -MaxIdle "},
     };
 
+    public static final String[] ENV_VARIABLES_PICKED_FROM_USER_ENV = {
+        "USER", "HOME", "PATH", "PYTHONPATH", "LANG", "LC_ALL", "TZ"
+    };
+
     /** Default number of max postscripts run by dagman at a time. */
     public static final int DEFAULT_MAX_POST_SCRIPTS = 20;
 
@@ -70,9 +74,6 @@ public class PegasusSubmitDAG {
     private PegasusProperties mProps;
     private PlannerOptions mPOptions;
 
-    /** The local environment as picked up from the environment, properties and the site catalog */
-    private Namespace mLocalEnv;
-
     public PegasusSubmitDAG() {}
 
     public void intialize(PegasusBag bag) {
@@ -80,23 +81,6 @@ public class PegasusSubmitDAG {
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();
         mPOptions = bag.getPlannerOptions();
-
-        mLocalEnv = new ENV();
-        Map<String, String> systemEnv = System.getenv();
-        for (Map.Entry<String, String> entry : systemEnv.entrySet()) {
-            mLocalEnv.construct(entry.getKey(), entry.getValue());
-        }
-        mLocalEnv.assimilate(mProps, Profiles.NAMESPACES.env);
-        // override them from the local site catalog entry
-        SiteStore store = bag.getHandleToSiteStore();
-        if (store != null && store.contains("local")) {
-            SiteCatalogEntry site = store.lookup("local");
-            Namespace localSiteEnv = site.getProfiles().get(Profiles.NAMESPACES.env);
-            for (Iterator<String> it = localSiteEnv.getProfileKeyIterator(); it.hasNext(); ) {
-                String key = it.next();
-                mLocalEnv.checkKeyInNS(key, (String) localSiteEnv.get(key));
-            }
-        }
     }
 
     /**
@@ -122,18 +106,7 @@ public class PegasusSubmitDAG {
             Runtime r = Runtime.getRuntime();
             String invocation = condorSubmitDAG.getAbsolutePath() + " " + args;
 
-            // PM-921 all the local env profiles get rendered as String[]
-            String[] env = new String[mLocalEnv.size()];
-            int i = 0;
-            for (Iterator<String> it = mLocalEnv.getProfileKeyIterator(); it.hasNext(); i++) {
-                String key = it.next();
-                StringBuilder sb = new StringBuilder();
-                sb.append(key).append("=").append((String) mLocalEnv.get(key));
-                env[i] = sb.toString();
-            }
-            mLogger.log(
-                    "Executing  " + invocation + " with " + mLocalEnv,
-                    LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log("Executing  " + invocation, LogManager.DEBUG_MESSAGE_LEVEL);
 
             Process p = r.exec(invocation, null, dagFile.getParentFile());
 
@@ -183,28 +156,108 @@ public class PegasusSubmitDAG {
                     "Unable to read the dagman condor submit file " + dagSubmitFile);
         }
 
-        if (!modifyDAGManSubmitFileForMetrics(dagSubmitFile)) {
+        // PM-1910 any additional env that needs to be associated in the dagman
+        // condor submit file
+        ENV additionalENV = getDAGManEnv();
+        mLogger.log(
+                "Additional Environment that will be associated with the DAGMan condor sub file "
+                        + additionalENV,
+                LogManager.DEBUG_MESSAGE_LEVEL);
+        if (!modifyEnvironmentInDAGManSubmitFile(dagSubmitFile, additionalENV)) {
             mLogger.log(
-                    "DAGMan metrics reporting not enabled for dag " + dagFile,
-                    LogManager.DEBUG_MESSAGE_LEVEL);
+                    "Unable to add additional environment into DAGMan condor sub file for dag "
+                            + dagFile,
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
 
         return result;
     }
 
     /**
-     * Modifies the dagman condor submit file for metrics reporting.
+     * Returns environment variables that are picked from user environment and used for setting the
+     * environment for the dagman job.
+     *
+     * @return environment variables as ENV profiles
+     */
+    public ENV getDAGManEnv() {
+        ENV env = new ENV();
+        env.merge(this.getDAGManMetricsEnv());
+        if (env.isEmpty()) {
+            mLogger.log(
+                    "DAGMan metrics reporting not enabled for dag ",
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        }
+
+        env.merge(this.getDAGManUserEnv());
+
+        // add env variables from properties or local site entry
+        env.assimilate(mProps, Profiles.NAMESPACES.env);
+
+        // override them from the local site catalog entry
+        SiteStore store = mBag.getHandleToSiteStore();
+        if (store != null && store.contains("local")) {
+            SiteCatalogEntry site = store.lookup("local");
+            Namespace localSiteEnv = site.getProfiles().get(Profiles.NAMESPACES.env);
+            for (Iterator<String> it = localSiteEnv.getProfileKeyIterator(); it.hasNext(); ) {
+                String key = it.next();
+                env.checkKeyInNS(key, (String) localSiteEnv.get(key));
+            }
+        }
+        return env;
+    }
+
+    /**
+     * Returns environment variables that are picked from user environment and used for setting the
+     * environment for the dagman job.
+     *
+     * @return environment variables as ENV profiles
+     */
+    public ENV getDAGManUserEnv() {
+        ENV env = new ENV();
+        Map<String, String> systemEnv = System.getenv();
+        for (String key : ENV_VARIABLES_PICKED_FROM_USER_ENV) {
+            if (systemEnv.containsKey(key)) {
+                env.construct(key, systemEnv.get(key));
+            }
+        }
+
+        // pick any PERL related env variables
+        String prefix = "PERL";
+        for (Map.Entry<String, String> entry : systemEnv.entrySet()) {
+            String key = entry.getKey();
+            if (key.startsWith(prefix)) {
+                env.construct(key, entry.getValue());
+            }
+        }
+
+        return env;
+    }
+
+    /**
+     * Returns environment variables that are required for Pegasus metrics collection.
+     *
+     * @return environment variables as ENV profiles
+     */
+    public ENV getDAGManMetricsEnv() {
+        Metrics metricsReporter = new Metrics();
+        metricsReporter.initialize(mBag);
+        return metricsReporter.getDAGManMetricsEnv();
+    }
+
+    /**
+     * Modifies the dagman condor submit file to include environments that are required for Pegasus
+     * workflows to run.
      *
      * @param file
+     * @param env the environment variables represented as ENV profiles that should be set.
      * @return true if file is modified, else false
      * @throws CodeGeneratorException
      */
-    protected boolean modifyDAGManSubmitFileForMetrics(File file) throws CodeGeneratorException {
+    protected boolean modifyEnvironmentInDAGManSubmitFile(File file, ENV env)
+            throws CodeGeneratorException {
         // modify the environment string to add the environment for
         // enabling DAGMan metrics if so required.
-        Metrics metricsReporter = new Metrics();
-        metricsReporter.initialize(mBag);
-        ENV env = metricsReporter.getDAGManMetricsEnv();
+
         if (env.isEmpty()) {
             return false;
         } else {
