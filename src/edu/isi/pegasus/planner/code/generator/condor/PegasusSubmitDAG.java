@@ -255,45 +255,43 @@ public class PegasusSubmitDAG {
      */
     protected boolean modifyEnvironmentInDAGManSubmitFile(File file, ENV env)
             throws CodeGeneratorException {
-        // modify the environment string to add the environment for
-        // enabling DAGMan metrics if so required.
-
         if (env.isEmpty()) {
-            return false;
-        } else {
-            // we read the DAGMan submit file in and grab the environment from it
-            // and add the environment key to the second last line with the
-            // Pegasus metrics environment variables added.
-            try {
-                RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                String dagmanEnvString = "";
-                String line = null;
-                long previous = raf.getFilePointer();
-                while ((line = raf.readLine()) != null) {
-                    if (line.startsWith("environment")) {
-                        dagmanEnvString = line;
-                    }
-                    if (line.startsWith("queue")) {
-                        // backtrack to previous file position i.e just before queue
-                        raf.seek(previous);
-                        String updatedDagmanEnv = getUpdatedDAGManEnv(dagmanEnvString, env);
-                        mLogger.log(
-                                "Updated environment for dagman is " + updatedDagmanEnv,
-                                LogManager.DEBUG_MESSAGE_LEVEL);
-                        raf.writeBytes(updatedDagmanEnv);
-                        raf.writeBytes(System.getProperty("line.separator", "\r\n"));
-                        raf.writeBytes("queue");
-                        break;
-                    }
-                    previous = raf.getFilePointer();
-                }
-
-                raf.close();
-            } catch (IOException e) {
-                throw new CodeGeneratorException(
-                        "Error while reading dagman .condor.sub file " + file, e);
-            }
+            // nothing to modify
+            return true;
         }
+        // we read the DAGMan submit file in and grab the environment from it
+        // and add the environment key to the second last line with the
+        // Pegasus metrics environment variables added.
+        try {
+            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            String dagmanEnvString = "";
+            String line = null;
+            long previous = raf.getFilePointer();
+            while ((line = raf.readLine()) != null) {
+                if (line.startsWith("environment")) {
+                    dagmanEnvString = line;
+                }
+                if (line.startsWith("queue")) {
+                    // backtrack to previous file position i.e just before queue
+                    raf.seek(previous);
+                    String updatedDagmanEnv = getUpdatedDAGManEnv(dagmanEnvString, env);
+                    mLogger.log(
+                            "Updated environment for dagman is " + updatedDagmanEnv,
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    raf.writeBytes(updatedDagmanEnv);
+                    raf.writeBytes(System.getProperty("line.separator", "\r\n"));
+                    raf.writeBytes("queue");
+                    break;
+                }
+                previous = raf.getFilePointer();
+            }
+
+            raf.close();
+        } catch (IOException e) {
+            throw new CodeGeneratorException(
+                    "Error while reading dagman .condor.sub file " + file, e);
+        }
+
         return true;
     }
 
