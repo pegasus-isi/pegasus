@@ -3424,8 +3424,7 @@ class StashHandler(TransferHandlerBase):
                     # uw.osg-htc.org hack for now (we don't have a scitoken
                     # locally) local cp
                     src_path = t.get_src_path()
-                    dst_path = re.sub("^/ospool", "/mnt/stash/ospool",
-                                      t.get_dst_path())
+                    dst_path = re.sub("^/ospool", "/mnt/stash/ospool", t.get_dst_path())
 
                     prepare_local_dir(os.path.dirname(dst_path))
                     cmd = "/bin/cp '%s' '%s'" % (src_path, dst_path)
@@ -3449,8 +3448,7 @@ class StashHandler(TransferHandlerBase):
                 if os.path.exists("/mnt/stash/ospool"):
                     # uw.osg-htc.org hack for now (we don't have a scitoken
                     # locally) local cp
-                    src_path = re.sub("^/ospool", "/mnt/stash/ospool",
-                                      t.get_src_path())
+                    src_path = re.sub("^/ospool", "/mnt/stash/ospool", t.get_src_path())
                     dst_path = t.get_dst_path()
 
                     prepare_local_dir(os.path.dirname(dst_path))
