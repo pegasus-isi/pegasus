@@ -3360,7 +3360,7 @@ class StashHandler(TransferHandlerBase):
     """
 
     _name = "StashHandler"
-    _mkdir_cleanup_protocols = ["stash"]
+    _mkdir_cleanup_protocols = ["osdf", "stash"]
     _protocol_map = ["osdf->file", "stash->file", "file->osdf", "file->stash"]
 
     def do_mkdirs(self, transfers):
@@ -3411,7 +3411,7 @@ class StashHandler(TransferHandlerBase):
             self._pre_transfer_attempt(t)
             t_start = time.time()
 
-            if t.get_dst_proto() == "stash":
+            if t.get_dst_proto() in ["osdf", "stash"]:
                 # write file:// to osdf:// or stash://
 
                 # src has to exist and be readable
@@ -3420,9 +3420,18 @@ class StashHandler(TransferHandlerBase):
                     failed_l.append(t)
                     continue
 
-                if os.path.exists("/mnt/ceph/osg"):
-                    # hack for now (we don't have a scitoken locally)
-                    # local cp
+                if os.path.exists("/mnt/stash/ospool"):
+                    # uw.osg-htc.org hack for now (we don't have a scitoken
+                    # locally) local cp
+                    src_path = t.get_src_path()
+                    dst_path = re.sub("^/ospool", "/mnt/stash/ospool",
+                                      t.get_dst_path())
+
+                    prepare_local_dir(os.path.dirname(dst_path))
+                    cmd = "/bin/cp '%s' '%s'" % (src_path, dst_path)
+                elif os.path.exists("/mnt/ceph/osg"):
+                    # OSG Connect hack for now (we don't have a scitoken
+                    # locally) local cp
                     src_path = t.get_src_path()
                     dst_path = re.sub("^/osgconnect", "", t.get_dst_path())
 
@@ -3437,9 +3446,18 @@ class StashHandler(TransferHandlerBase):
             else:
                 # read
 
-                if os.path.exists("/mnt/ceph/osg"):
-                    # hack for now (we don't have a scitoken locally)
-                    # local cp
+                if os.path.exists("/mnt/stash/ospool"):
+                    # uw.osg-htc.org hack for now (we don't have a scitoken
+                    # locally) local cp
+                    src_path = re.sub("^/ospool", "/mnt/stash/ospool",
+                                      t.get_src_path())
+                    dst_path = t.get_dst_path()
+
+                    prepare_local_dir(os.path.dirname(dst_path))
+                    cmd = "/bin/cp '%s' '%s'" % (src_path, dst_path)
+                elif os.path.exists("/mnt/ceph/osg"):
+                    # OSG Connect hack for now (we don't have a scitoken
+                    # locally) local cp
                     src_path = re.sub("^/osgconnect", "", t.get_src_path())
                     dst_path = t.get_dst_path()
 
