@@ -60,7 +60,7 @@ public class PegasusSubmitDAG {
     };
 
     public static final String[] ENV_VARIABLES_PICKED_FROM_USER_ENV = {
-        "USER", "HOME", "PATH", "PYTHONPATH", "LANG", "LC_ALL", "TZ"
+        "USER", "HOME", "LANG", "LC_ALL", "TZ"
     };
 
     /** Default number of max postscripts run by dagman at a time. */
