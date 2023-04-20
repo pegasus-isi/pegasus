@@ -203,6 +203,13 @@ public class PegasusSubmitDAG {
                 env.checkKeyInNS(key, (String) localSiteEnv.get(key));
             }
         }
+
+        // PM-1910 planner to never insert PYTHONPATH and PATH in the environment
+        // classad of the *condor.sub file. .
+        // Instead it should always set PEGASUS_PYTHON to empty string
+        env.removeKey("PATH");
+        env.removeKey("PYTHONPATH");
+        env.construct("PEGASUS_PYTHON", "");
         return env;
     }
 
