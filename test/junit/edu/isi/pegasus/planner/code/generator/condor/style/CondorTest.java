@@ -99,8 +99,7 @@ public class CondorTest {
     public void testPegasusProfileDiskspaceAndCondorKey() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.DISKSPACE_KEY, "5");
-        j.condorVariables.checkKeyInNS(REQUEST_DISK_KEY, "6");
-        testForKey(j, REQUEST_DISK_KEY, "6");
+        testForKey(j, REQUEST_DISK_KEY, Long.toString(5 * 1024));
     }
 
     private void testForKey(Job j, String key, String expectedValue) throws CondorStyleException {

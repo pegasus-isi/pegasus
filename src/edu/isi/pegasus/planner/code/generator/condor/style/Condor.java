@@ -300,8 +300,22 @@ public class Condor extends Abstract {
             String pegasusKey = entry.getValue();
 
             if (!classAdKeys.containsKey(classAdKey) && profiles.containsKey(pegasusKey)) {
+                String pegasusProfileValue = profiles.getStringValue(pegasusKey);
+                if (classAdKey.equals(edu.isi.pegasus.planner.namespace.Condor.REQUEST_DISK_KEY)) {
+                    // PM-1912 the pegasus profile value is in MB while
+                    // request_disk condor classad value is specified in KB
+                    long disk = profiles.getLongValue(pegasusKey, -1);
+                    if (disk == -1) {
+                        throw new RuntimeException(
+                                "For job "
+                                        + job.getLogicalID()
+                                        + " invalid value for request_disk "
+                                        + pegasusProfileValue);
+                    }
+                    pegasusProfileValue = Long.toString(disk * 1024);
+                }
                 // one to one mapping
-                classAdKeys.construct(classAdKey, profiles.getStringValue(pegasusKey));
+                classAdKeys.construct(classAdKey, pegasusProfileValue);
             }
         }
         if (universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE)
