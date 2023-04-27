@@ -246,7 +246,7 @@ class Client:
         self._log.info("\n################\n# pegasus-plan #\n################")
 
         # don't stream stdout from planner, as this will be json output
-        rv = self._exec(cmd, stream_stdout=False, stream_stderr=True)
+        rv = self._exec(cmd, stream_stdout=True, stream_stderr=True)
 
         json_output = rv.json
         submit_dir = json_output["submit_dir"]
