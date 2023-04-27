@@ -60,7 +60,7 @@ public class PegasusSubmitDAG {
     };
 
     public static final String[] ENV_VARIABLES_PICKED_FROM_USER_ENV = {
-        "USER", "HOME", "PATH", "PYTHONPATH", "LANG", "LC_ALL", "TZ"
+        "USER", "HOME", "LANG", "LC_ALL", "TZ"
     };
 
     /** Default number of max postscripts run by dagman at a time. */
@@ -203,6 +203,13 @@ public class PegasusSubmitDAG {
                 env.checkKeyInNS(key, (String) localSiteEnv.get(key));
             }
         }
+
+        // PM-1910 planner to never insert PYTHONPATH and PATH in the environment
+        // classad of the *condor.sub file. .
+        // Instead it should always set PEGASUS_PYTHON to empty string
+        env.removeKey("PATH");
+        env.removeKey("PYTHONPATH");
+        env.construct("PEGASUS_PYTHON", "");
         return env;
     }
 
