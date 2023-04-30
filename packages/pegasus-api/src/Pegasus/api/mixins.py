@@ -231,6 +231,16 @@ def to_mb(value: str) -> int:
             )
         )
 
+def to_kb(value: str) -> int:
+    """Convert the given value to KB
+
+    :param value: str formatted as str formatted as :code:`'<int> [MB | GB | TB | PB | EB | ZB | YB]'`
+    :type value: str
+    :raises ValueError: invalid format
+    :return: value in KB
+    :rtype: int
+    """
+    return to_mb(value)*1024
 
 class ProfileMixin:
     @_chained
@@ -360,7 +370,7 @@ class ProfileMixin:
         request_cpus="request_cpus",
         request_gpus="request_gpus",
         request_memory=("request_memory", to_mb),
-        request_disk=("request_disk", to_mb),
+        request_disk=("request_disk", to_kb),
         requirements="requirements",
         should_transfer_files="should_transfer_files",
         when_to_transfer_output="when_to_transfer_output",

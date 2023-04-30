@@ -300,7 +300,7 @@ class TestProfileMixin:
                 "request_cpus": "rc",
                 "request_gpus": "rg",
                 "request_memory": 100,
-                "request_disk": 200,
+                "request_disk": 204800,
                 "requirements": "(CUDACapability >= 1.2) && $(requirements:True)",
                 "should_transfer_files": "YES",
                 "when_to_transfer_output": "ON_EXIT",
