@@ -563,7 +563,8 @@ public class Dagman extends Namespace {
         }
 
         // PM-1049 always add VARS dagnode retry
-        append(sb, Dagman.VARS_KEY, name, "+DAGNodeRetry=\"$(RETRY)\"");
+        // PM-1913 use My. prefix to designate the classad instead of +
+        append(sb, Dagman.VARS_KEY, name, "My.DAGNodeRetry=\"$(RETRY)\"");
 
         return sb.toString();
     }
