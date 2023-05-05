@@ -58,7 +58,8 @@ public class SysInfo implements Cloneable {
         sparcv7,
         sparcv9,
         amd64,
-        ppc64le
+        ppc64le,
+        aarch64
     }
 
     /**
@@ -137,7 +138,7 @@ public class SysInfo implements Cloneable {
                     mArchitecture = Architecture.valueOf(s1[0].trim());
                 } else {
                     throw new IllegalStateException(
-                            "Error: Illegal Architecture defined. Please specify one of the predefined types \n [x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64]");
+                            "Error: Illegal Architecture defined. Please specify one of the predefined types \n [x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64, ppc64le, aarch64]");
                 }
                 String s2[] = s1[1].split(":", 3);
                 if (isValidOS(s2[0].trim())) {
