@@ -49,7 +49,8 @@ public class Executable extends CatalogType {
         sparcv7,
         SPARCV9,
         sparcv9,
-        ppc64le
+        ppc64le,
+        aarch64
     }
 
     /** OS Types */

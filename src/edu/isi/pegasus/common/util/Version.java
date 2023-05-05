@@ -37,7 +37,7 @@ public class Version {
     public static final String STAMP_FILENAME = "stamp";
 
     private static final String mPlatformRegex =
-            "(x86|x86_64|ia64|ppc|ppc64le)_([a-zA-Z0-9]*)_([0-9]*)";
+            "(x86|x86_64|ia64|ppc|ppc64le|aarch64)_([a-zA-Z0-9]*)_([0-9]*)";
 
     /** Stores compiled patterns at first use, quasi-Singleton. */
     private static Pattern mPlatformPattern = null;
