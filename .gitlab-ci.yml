@@ -332,10 +332,10 @@ Tutorial Container:
   - \[ ${ARCH} = 'arm64' ] && RPM_ARCH='aarch64' || RPM_ARCH=${ARCH}
   - cp dist/pegasus-*-*.${RPM_ARCH}.rpm tutorial/docker
   - cd tutorial/docker
-  - docker build --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} -t pegasus/tutorial:v1000 .
+  - docker build --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} -t pegasus/tutorial:${PEGASUS_VERSION} .
   - echo "${DOCKERHUB_TOKEN}" | docker login --username "${DOCKERHUB_USER}" --password-stdin
-  - docker push pegasus/tutorial:v1000
-  - docker rmi --force pegasus/tutorial:v1000
+  - docker push pegasus/tutorial:${PEGASUS_VERSION}
+  - docker rmi --force pegasus/tutorial:${PEGASUS_VERSION}
   dependencies:
   - pre-job
   # Depending on both ARCHs as variable substitution doesn't work in dependencies:
