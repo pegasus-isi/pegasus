@@ -98,7 +98,7 @@ public class TransformationTest {
         expected.setSysInfo(sys);
         assertEquals(expected.toString(), actual.toString());
     }
-    
+
     @Test
     public void testBaseTransformationWithAARCH64() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());

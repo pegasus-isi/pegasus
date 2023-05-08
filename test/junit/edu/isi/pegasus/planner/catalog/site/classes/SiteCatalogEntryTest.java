@@ -187,17 +187,14 @@ public class SiteCatalogEntryTest {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
-        String test =
-                "name: chameleon\n"
-                        + "arch: aarch64\n"
-                        + "os.type: linux\n";
+        String test = "name: chameleon\n" + "arch: aarch64\n" + "os.type: linux\n";
         SiteCatalogEntry entry = mapper.readValue(test, SiteCatalogEntry.class);
         assertNotNull(entry);
         assertEquals("chameleon", entry.getSiteHandle());
         assertEquals(Architecture.aarch64, entry.getArchitecture());
         assertEquals(OS.linux, entry.getSysInfo().getOS());
     }
-    
+
     private void testGridGateway(
             SiteCatalogEntry entry,
             GridGateway.JOB_TYPE jobType,
