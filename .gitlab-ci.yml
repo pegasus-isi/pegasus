@@ -19,7 +19,6 @@ stages:
 - test
 - build
 - deploy
-- images
 - e2e-tests
 - performance-tests
 
@@ -65,12 +64,12 @@ Python:
       - arm64
       PYTHON_VERSION:
       - '3.5'
-      # - '3.6'
-      # - '3.7'
-      # - '3.8'
-      # - '3.9'
-      # - '3.10'
-      # - '3.11'
+      - '3.6'
+      - '3.7'
+      - '3.8'
+      - '3.9'
+      - '3.10'
+      - '3.11'
       PACKAGE:
       - common
       - api
@@ -106,7 +105,7 @@ Java:
     matrix:
     - ARCH:
       - x86_64
-      #- arm64
+      - arm64
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:rhel_9
   script:
   - ant test-java
@@ -158,7 +157,7 @@ Alpine:
     matrix:
     - ARCH:
       - x86_64
-      #- arm64
+      - arm64
       OS:
       - alpine_3
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:${OS}
@@ -180,7 +179,7 @@ RHEL:
     matrix:
     - ARCH:
       - x86_64
-      #- arm64
+      - arm64
       OS:
       - rhel_7
       - rhel_8
@@ -210,7 +209,7 @@ Debian:
     matrix:
     - ARCH:
       - x86_64
-      #- arm64
+      - arm64
       OS:
       - deb_10
       - deb_11
@@ -234,7 +233,7 @@ Ubuntu:
     matrix:
     - ARCH:
       - x86_64
-      #- arm64
+      - arm64
       OS:
       - ubuntu_18
       - ubuntu_20
@@ -327,7 +326,7 @@ Tutorial Container:
     matrix:
     - ARCH:
       - x86_64
-      #- arm64
+      - arm64
   script:
   - if [ "X${PEGASUS_VERSION}" = "X" ]; then echo "Unable to determine Pegasus version! Exiting..."; exit 1; fi
   - \[ ${ARCH} = 'arm64' ] && RPM_ARCH='aarch64' || RPM_ARCH=${ARCH}
@@ -341,7 +340,7 @@ Tutorial Container:
   - pre-job
   # Depending on both ARCHs as variable substitution doesn't work in dependencies:
   - "RHEL: [x86_64, rhel_8]"
-  #- "RHEL: [arm64, rhel_8]"
+  - "RHEL: [arm64, rhel_8]"
   tags:
   # Later on change tags to run the job on a shell executor which has Docker CLI installed.
   - ${ARCH}
