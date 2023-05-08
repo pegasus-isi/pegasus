@@ -62,7 +62,8 @@ ADD ./config/10-dynamic-slots /etc/condor/config.d/10-dynamic-slots
 #            http://dev.im-bot.com/docker-select-caching/
 ARG CACHEBUST=1
 ARG PEGASUS_VERSION=1
-RUN dnf -y install https://download.pegasus.isi.edu/pegasus/$PEGASUS_VERSION/pegasus-$PEGASUS_VERSION-1.el8.x86_64.rpm
+COPY pegasus-*-*.rpm /tmp/
+RUN dnf -y install /tmp/pegasus-*-*.rpm
 
 ADD ./notebooks /home/scitech/notebooks
 RUN chown -R scitech /home/scitech/
