@@ -14,7 +14,7 @@ install_requires = [
     "GitPython>1.0",
     "pamela>=1.0",
     "pika>=1.1.0",
-    "Flask>1.1",
+    "Flask>1.1,<2.3",
     "Flask-Caching>1.8",
     "requests>2.23",
     "sqlalchemy>1.3,<1.4",
@@ -31,7 +31,7 @@ def setup_installer_dependencies():
     global install_requires
 
     if subprocess.call(["which", "mysql_config"]) == 0:
-        install_requires.append("mysqlclient<2.0.0")
+        install_requires.append("pymysql<=0.10.1")
 
 
 #
@@ -131,7 +131,7 @@ setup(
     convert_2to3_doctests=[],
     extras_require={
         "postgresql": ["psycopg2"],
-        "mysql": ["mysqlclient"],
+        "mysql": ["pymysql<=0.10.1"],
         "cwl": ["cwl-utils==0.11", "jsonschema==3.2.0"],
     },
 )
