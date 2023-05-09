@@ -63,7 +63,7 @@ ADD ./config/10-dynamic-slots /etc/condor/config.d/10-dynamic-slots
 ARG CACHEBUST=1
 ARG PEGASUS_VERSION=1
 COPY pegasus-*-*.rpm /tmp/
-RUN dnf -y install /tmp/pegasus-*-*.rpm
+RUN dnf -y install /tmp/pegasus-*-*.`arch`.rpm
 
 ADD ./notebooks /home/scitech/notebooks
 RUN chown -R scitech /home/scitech/

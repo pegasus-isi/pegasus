@@ -322,19 +322,12 @@ Binaries:
 Tutorial Container:
   <<: *retry-and-timeout
   stage: deploy
-  parallel:
-    matrix:
-    - ARCH:
-      - x86_64
-      - arm64
   script:
   - if [ "X${PEGASUS_VERSION}" = "X" ]; then echo "Unable to determine Pegasus version! Exiting..."; exit 1; fi
-  - \[ ${ARCH} = 'arm64' ] && RPM_ARCH='aarch64' || RPM_ARCH=${ARCH}
-  - cp dist/pegasus-*-*.${RPM_ARCH}.rpm tutorial/docker
+  - cp dist/pegasus-*-*.rpm tutorial/docker
   - cd tutorial/docker
-  - docker build --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} -t pegasus/tutorial:${PEGASUS_VERSION} .
   - echo "${DOCKERHUB_TOKEN}" | docker login --username "${DOCKERHUB_USER}" --password-stdin
-  - docker push pegasus/tutorial:${PEGASUS_VERSION}
+  - docker buildx build --builder multiarch-builder --platform linux/arm64,linux/amd64 --push --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} --tag pegasus/tutorial:${PEGASUS_VERSION} --progress plain .
   - docker rmi --force pegasus/tutorial:${PEGASUS_VERSION}
   dependencies:
   - pre-job
@@ -342,9 +335,8 @@ Tutorial Container:
   - "RHEL: [x86_64, rhel_8]"
   - "RHEL: [arm64, rhel_8]"
   tags:
-  # Later on change tags to run the job on a shell executor which has Docker CLI installed.
-  - ${ARCH}
   - docker-cli
+  - docker-multiarch
 
 # End-to-End tests
 
