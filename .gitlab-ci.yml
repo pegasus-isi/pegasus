@@ -121,7 +121,6 @@ Java:
 
 C:
   <<: *retry-and-timeout
-  timeout: 20 minutes
   stage: test
   parallel:
     matrix:
