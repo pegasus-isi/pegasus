@@ -299,7 +299,9 @@ Docs and R Package:
     - dist/pegasus-r-pegasus*.tar.gz
   dependencies: []
   tags:
+  # rdocs only work on x86_64
   - docker
+  - x86_64
 
 # Deploy packages
 
