@@ -129,7 +129,7 @@ public class Job extends Data implements GraphNodeContent {
     public static String makeDAGManCompliant(String name) {
         // PM-1262 and PM-1222
         if (name != null) {
-            name = name.replaceAll("[\\.\\+]", "_");
+            name = name.replaceAll("[\\.\\+\\=]", "_");
         }
 
         return name;

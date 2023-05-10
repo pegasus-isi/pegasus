@@ -40,6 +40,26 @@ public class JobTest {
     public void tearDown() {}
 
     @Test
+    public void testDAGManCompliantJobNameNoSub() throws IOException {
+        assertEquals("preprocess", Job.makeDAGManCompliant("preprocess"));
+    }
+
+    @Test
+    public void testDAGManCompliantJobNameWithDots() throws IOException {
+        assertEquals("pre_proc_ess", Job.makeDAGManCompliant("pre.proc.ess"));
+    }
+
+    @Test
+    public void testDAGManCompliantJobNameWithPlus() throws IOException {
+        assertEquals("pre_proc_ess", Job.makeDAGManCompliant("pre+proc+ess"));
+    }
+
+    @Test
+    public void testDAGManCompliantJobNameWithEquals() throws IOException {
+        assertEquals("pre_proc_ess", Job.makeDAGManCompliant("pre=proc+ess"));
+    }
+
+    @Test
     public void testSimpleJobCreation() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
