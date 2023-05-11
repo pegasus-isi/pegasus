@@ -76,12 +76,12 @@ for OSARCH in aarch64 x86_64; do
         if ls $DOWNLOADS/pegasus-*el$OSVER.$OSARCH.rpm >/dev/null 2>&1; then
             mkdir -p $DOWNLOADS/rhel/$OSVER/$OSARCH
             cp $DOWNLOADS/pegasus-*el$OSVER.$OSARCH.rpm $DOWNLOADS/rhel/$OSVER/$OSARCH/
-        fi
 
-        # standard filenames for RPMs - used by tutorial VM
-        cd pegasus/$VERSION
-        if [ ! -e pegasus-$VERSION-1.el$OSVER.$OSARCH.rpm ]; then
-            cp pegasus-*el$OSVER.$OSARCH.rpm pegasus-$VERSION-1.el$OSVER.$OSARCH.rpm
+            # standard filenames for RPMs - used by tutorial VM
+            cd pegasus/$VERSION
+            if [ ! -e pegasus-$VERSION-1.el$OSVER.$OSARCH.rpm ]; then
+                cp pegasus-*el$OSVER.$OSARCH.rpm pegasus-$VERSION-1.el$OSVER.$OSARCH.rpm
+            fi
         fi
 
     done
