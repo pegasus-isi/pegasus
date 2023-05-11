@@ -1,3 +1,7 @@
+variables:
+  # we depend on a sane umask when creating tarballs
+  FF_DISABLE_UMASK_FOR_DOCKER_EXECUTOR: true
+
 default:
   before_script:
     - env
