@@ -18,7 +18,7 @@ default:
     - runner_system_failure
     - script_failure
     - unknown_failure
-  timeout: 10 minutes
+  timeout: 15 minutes
 
 stages:
 - lint
