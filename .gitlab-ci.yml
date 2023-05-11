@@ -17,6 +17,7 @@ default:
     - api_failure
     - runner_system_failure
     - script_failure
+    - data_integrity_failure
     - unknown_failure
   timeout: 15 minutes
 
