@@ -284,7 +284,7 @@ macOS:
 Docs and R Package:
   <<: *retry-and-timeout
   stage: build
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:rhel_7
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:rhel_9
   before_script:
   - env
   #- set -ex
@@ -299,9 +299,9 @@ Docs and R Package:
     - dist/pegasus-r-pegasus*.tar.gz
   dependencies: []
   tags:
-  # rdocs only work on x86_64
-  - docker
+  # Ant target doc-r on EL9 only works on x86_64
   - x86_64
+  - docker
 
 # Deploy packages
 
