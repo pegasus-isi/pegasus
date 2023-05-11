@@ -336,6 +336,7 @@ Tutorial Container:
   tags:
   - docker-cli
   - docker-multiarch
+  timeout: 20 minutes
 
 # End-to-End tests
 
