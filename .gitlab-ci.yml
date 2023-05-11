@@ -284,7 +284,7 @@ macOS:
 Docs and R Package:
   <<: *retry-and-timeout
   stage: build
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:rhel_9
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:rhel_7
   before_script:
   - env
   #- set -ex
