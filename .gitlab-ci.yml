@@ -1,4 +1,6 @@
 variables:
+  # clean checkout for each job
+  GIT_STRATEGY: clone
   # we depend on a sane umask when creating tarballs
   FF_DISABLE_UMASK_FOR_DOCKER_EXECUTOR: 1
 
