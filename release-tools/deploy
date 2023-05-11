@@ -93,10 +93,10 @@ cd $TOPDIR/dist
 ls -l
 
 # download site
-scp -i ~/.ssh/deployment -r $DOWNLOADS download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
+scp -i ~/.ssh/deployment -r $DOWNLOADS bamboo@download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
 
 # wordpress site
-ssh -i ~/.ssh/deployment pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
-scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
+ssh -i ~/.ssh/deployment bamboo@pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
+scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* bamboo@pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
 
 

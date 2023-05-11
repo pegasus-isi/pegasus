@@ -316,7 +316,8 @@ Binaries:
   script:
   - ./release-tools/deploy
   tags:
-  - bamboo
+  - shell
+  - scitech-gitlab
 
 Tutorial Container:
   <<: *retry-and-timeout
