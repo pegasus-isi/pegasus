@@ -325,7 +325,8 @@ Tutorial Container:
   - cp dist/pegasus-*-*.rpm tutorial/docker
   - cd tutorial/docker
   - echo "${DOCKERHUB_TOKEN}" | docker login --username "${DOCKERHUB_USER}" --password-stdin
-  - docker build --push --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} --tag pegasus/tutorial:${PEGASUS_VERSION} --progress plain .
+  - docker build --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} --tag pegasus/tutorial:${PEGASUS_VERSION} --progress plain .
+  - docker push pegasus/tutorial:${PEGASUS_VERSION}
   - docker rmi --force pegasus/tutorial:${PEGASUS_VERSION}
   dependencies:
   - pre-job
