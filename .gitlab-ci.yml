@@ -38,7 +38,7 @@ Lint:
     - LANGUAGE:
       - python
       - java
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.6
+  image: python:3.6
   before_script:
   - env
   - \[ "${LANGUAGE}" = 'python' ] && pip3 install tox
@@ -74,7 +74,7 @@ Python:
       - python
       - worker
       - dax-python
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:${PYTHON_VERSION}
+  image: python:${PYTHON_VERSION}
   before_script:
   - env
   - export USER=nobody
@@ -104,7 +104,7 @@ Java:
     - ARCH:
       - x86_64
       - arm64
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:rhel_9
+  image: pegasus/buildenv:rhel_9
   script:
   - ant test-java
   artifacts:
@@ -125,7 +125,7 @@ C:
     - ARCH:
       - x86_64
       - arm64
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:rhel_9
+  image: pegasus/buildenv:rhel_9
   script:
   - ant test-kickstart test-transfer
   tags:
@@ -137,7 +137,7 @@ C:
 Source:
   <<: *retry-and-timeout
   stage: build
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:rhel_9
+  image: pegasus/buildenv:rhel_9
   script:
   - ant clean dist-source
   artifacts:
@@ -157,7 +157,7 @@ Alpine:
       - arm64
       OS:
       - alpine_3
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:${OS}
+  image: pegasus/buildenv:${OS}
   script:
   - ant dist-worker dist-release
   artifacts:
@@ -181,7 +181,7 @@ RHEL:
       - rhel_7
       - rhel_8
       - rhel_9
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:${OS}
+  image: pegasus/buildenv:${OS}
   script:
   - ant dist-rpm dist-worker dist-release
   artifacts:
@@ -210,7 +210,7 @@ Debian:
       OS:
       - deb_10
       - deb_11
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:${OS}
+  image: pegasus/buildenv:${OS}
   script:
   - ant dist-worker dist-release dist-deb
   artifacts:
@@ -235,7 +235,7 @@ Ubuntu:
       - ubuntu_18
       - ubuntu_20
       - ubuntu_22
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:${OS}
+  image: pegasus/buildenv:${OS}
   script:
   - ant dist-worker dist-release dist-deb
   artifacts:
@@ -282,7 +282,7 @@ macOS:
 Docs and R Package:
   <<: *retry-and-timeout
   stage: build
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/pegasus/buildenv:rhel_7
+  image: pegasus/buildenv:rhel_7
   before_script:
   - env
   #- set -ex
@@ -303,7 +303,7 @@ Docs and R Package:
 
 Deploy Python:
   stage: deploy
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/centos:7
+  image: centos:7
   dependencies:
   - 'Python'
   script:
