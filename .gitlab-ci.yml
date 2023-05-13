@@ -28,33 +28,6 @@ pre-job:
     reports:
       dotenv: .env
 
-timeout-build:
-  stage: .pre
-  script:
-  - echo "Start sleep"
-  - sleep 300
-  tags:
-  - bamboo
-  retry: 0
-  timeout: 1 mins
-  after_script:
-  - echo A > /tmp/timeout-build
-
-cancelled-build:
-  stage: .pre
-  script:
-  - |
-    trap "echo Trap called" EXIT
-    echo "Start Sleep"
-    sleep 300
-  after_script:
-  - echo $?
-  - echo A > /tmp/timeout-build
-  tags:
-  - bamboo
-  retry: 0
-  timeout: 5 mins
-
 # Code quality
 
 Lint:
