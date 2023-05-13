@@ -9,16 +9,7 @@ default:
     - env
 
 .retry-and-timeout: &retry-and-timeout
-  retry:
-    max: 2
-    when:
-    - job_execution_timeout
-    - stuck_or_timeout_failure
-    - api_failure
-    - runner_system_failure
-    - script_failure
-    - data_integrity_failure
-    - unknown_failure
+  retry: 1
   timeout: 15 minutes
 
 stages:
@@ -469,12 +460,16 @@ Workflow Tests:
       - blackdiamond sharedfs-worker-staging-cleanup
       - blackdiamond vanilla-condor
   script:
-  #- (cd dist && tar xzf pegasus-binary-*-x86_64_rhel_7.tar.gz)
-  #- ls -l dist/
-  - export PATH=$PWD/dist/pegasus/bin:$PATH
+  - cd dist
+  - tar xzf pegasus-binary-*-x86_64*.tar.gz
+  - which pegasus-config
+  - export PATH=$PWD/pegasus/bin:$PATH
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
+  dependencies:
+  - pre-job
+  - "RHEL: [x86_64, rhel_8]"
   tags:
   - bamboo
   retry: 0
@@ -499,12 +494,16 @@ Performance Tests:
       - 014-planner-performance-ahope
       - 014-planner-performance-hcc
   script:
-  #- (cd dist && tar xzf pegasus-binary-*-x86_64_rhel_7.tar.gz)
-  #- ls -l dist/
-  - export PATH=$PWD/dist/pegasus/bin:$PATH
+  - cd dist
+  - tar xzf pegasus-binary-*-x86_64*.tar.gz
+  - which pegasus-config
+  - export PATH=$PWD/pegasus/bin:$PATH
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
+  dependencies:
+  - pre-job
+  - "RHEL: [x86_64, rhel_8]"
   tags:
   - bamboo
   retry: 0
