@@ -38,8 +38,7 @@ timeout-build:
   retry: 0
   timeout: 1 mins
   after_script:
-  - echo $?
-  - echo "After script called"
+  - echo A > /Users/gitlab/timeout-build
 
 cancelled-build:
   stage: .pre
@@ -50,11 +49,11 @@ cancelled-build:
     sleep 300
   after_script:
   - echo $?
-  - echo "After script called"
+  - echo A > /Users/gitlab/timeout-build
   tags:
   - bamboo
   retry: 0
-  timeout: 3 mins
+  timeout: 5 mins
 
 # Code quality
 
