@@ -330,9 +330,7 @@ Tutorial Container:
   - docker rmi --force pegasus/tutorial:${PEGASUS_VERSION}
   dependencies:
   - pre-job
-  # Depending on both ARCHs as variable substitution doesn't work in dependencies:
   - "RHEL: [x86_64, rhel_8]"
-  - "RHEL: [arm64, rhel_8]"
   tags:
   - x86_64
   - docker-cli
