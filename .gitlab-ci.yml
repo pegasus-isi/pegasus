@@ -343,30 +343,28 @@ Workflow Tests:
   stage: e2e-tests
   parallel:
     matrix:
-    - EXEC:
-      - launch-bamboo-test-no-jobs
-      TESTNAME:
+    - TESTNAME:
       - 000-check-env
       - 016-pegasus-transfer
       - 029-black-quiet
       - 038-halt-continue
       - 043-integrity-bypass-staging
+      EXEC:
+      - launch-bamboo-test-no-jobs
 
-    - EXEC:
-      - launch-bamboo-test-no-status
-      TESTNAME:
+    - TESTNAME:
       - 006-black-diamond-shell-code-generator
       - 015-shell-hierarchic-workflow
       - 020-pmc-only
+      EXEC:
+      - launch-bamboo-test-no-status
 
-    - EXEC:
-      - launch-bamboo-test-planner-only
-      TESTNAME:
+    - TESTNAME:
       - 022-data-reuse-regexrc
+      EXEC:
+      - launch-bamboo-test-planner-only
 
-    - EXEC:
-      - launch-bamboo-test
-      TESTNAME:
+    - TESTNAME:
       - 001-black-diamond-vanilla-condor
       - 001-black-diamond-vanilla-condor-5.0API
       - 002-hello-world
@@ -460,6 +458,8 @@ Workflow Tests:
       - blackdiamond sharedfs-symlink-nogridstart
       - blackdiamond sharedfs-worker-staging-cleanup
       - blackdiamond vanilla-condor
+      EXEC:
+      - launch-bamboo-test
   script:
   - cd dist
   - tar xzf pegasus-binary-*-x86_64*.tar.gz
@@ -482,18 +482,18 @@ Performance Tests:
   stage: performance-tests
   parallel:
     matrix:
-    - EXEC:
-      - launch-bamboo-test-no-jobs
-      TESTNAME:
+    - TESTNAME:
       - 041-jdbcrc-performance
+      EXEC:
+      - launch-bamboo-test-no-jobs
 
-    - EXEC:
-      - launch-bamboo-test-planner-only
-      TESTNAME:
+    - TESTNAME:
       - 014-planner-performance
       - 014-planner-performance-100k
       - 014-planner-performance-ahope
       - 014-planner-performance-hcc
+      EXEC:
+      - launch-bamboo-test-planner-only
   script:
   - cd dist
   - tar xzf pegasus-binary-*-x86_64*.tar.gz
