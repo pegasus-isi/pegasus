@@ -35,7 +35,7 @@ import math
 import time
 import socket
 import string
-import ConfigParser
+import configparser 
 
 # set PEGASUS_HOME - transition from Pegasus 2.4
 pegasus_home = None
@@ -57,7 +57,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 
 monitord_output = None
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read(sys.argv[1])
 
 mode                     = config.get('main', 'mode')
