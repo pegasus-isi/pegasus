@@ -181,7 +181,7 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-rpm dist-worker dist-release
+  - ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
   artifacts:
     paths:
     - dist/pegasus-binary*.tar.gz
