@@ -1,6 +1,4 @@
 variables:
-  # clean checkout for each job
-  GIT_STRATEGY: clone
   # we depend on a sane umask when creating tarballs
   FF_DISABLE_UMASK_FOR_DOCKER_EXECUTOR: 1
 
@@ -472,7 +470,7 @@ Workflow Tests:
   tags:
   - bamboo
   retry: 0
-  timeout: 1 hour
+  timeout: 1 hour 5 minutes
 
 # Performance tests
 
@@ -506,4 +504,4 @@ Performance Tests:
   tags:
   - bamboo
   retry: 0
-  timeout: 1 hour
+  timeout: 30 minutes
