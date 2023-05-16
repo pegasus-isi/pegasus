@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# this test has to run in a shared fs
+TOP_DIR=$(pwd)
+WORK_DIR=/scitech/shared/scratch-90-days/bamboo/020-pmc-only
+
+rm -rf $WORK_DIR
+mkdir -p $WORK_DIR
+cp -r * $WORK_DIR/
+cd $WORK_DIR/
+
 # Figure out where Pegasus is installed
 export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then

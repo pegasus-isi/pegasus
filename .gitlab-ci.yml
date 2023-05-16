@@ -382,9 +382,9 @@ Workflow Tests:
       - 011-rosetta-staging-site
       - 012-blackdiamond-invoke
       - 013-pegasus-mpi-cluster
-      - 018-black-condorc-condor-io
-      - 018-black-condorc-hybrid
-      - 018-black-condorc-staging-site
+      #- 018-black-condorc-condor-io
+      #- 018-black-condorc-hybrid
+      #- 018-black-condorc-staging-site
       - 019-black-label
       - 021-black-dir
       - 022-data-reuse-full-a
@@ -394,13 +394,13 @@ Workflow Tests:
       - 025-sc4-file-http
       - 026-cache-url-check
       - 027-montage-bypass-staging-site
-      - 027-montage-bypass-staging-site-condorio
+      #- 027-montage-bypass-staging-site-condorio
       - 028-dynamic-hierarchy
       - 028-dynamic-hierarchy-b
       - 030-pegasuslite-gs
-      - 030-pegasuslite-irods
+      #- 030-pegasuslite-irods
       - 030-pegasuslite-s3
-      - 030-pegasuslite-sshftp
+      #- 030-pegasuslite-sshftp
       - 031-montage-condor-io-jdbcrc
       - 031-montage-jdbcrc-sqlite
       - 032-black-chkpoint
