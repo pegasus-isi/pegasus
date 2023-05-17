@@ -39,7 +39,7 @@ import configparser
 
 # set PEGASUS_HOME - transition from Pegasus 2.4
 pegasus_home = None
-paths = string.split(os.environ["PATH"], ":")
+paths = os.environ["PATH"].split(":")
 for path in paths:
     if os.path.isfile(os.path.join(path, "pegasus-plan")):
         pegasus_home = os.path.normpath(os.path.join(path, ".."))
