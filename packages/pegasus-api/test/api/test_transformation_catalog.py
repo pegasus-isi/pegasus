@@ -91,6 +91,22 @@ class TestTransformationSite:
                     ),
                 },
             ),
+            (
+                "local",
+                "/pfn",
+                True,
+                {
+                    "arch": Arch.AARCH64,
+                    "os_type": OS.LINUX,
+                    "os_release": "release",
+                    "os_version": "1.1.1",
+                    "container": Container(
+                        "centos-pegasus",
+                        Container.DOCKER,
+                        "docker:///zaiyan/random-container:latest",
+                    ),
+                },
+            ),
         ],
     )
     def test_valid_transformation_site(
@@ -135,6 +151,18 @@ class TestTransformationSite:
                     "os_release": None,
                     "os_version": None,
                     "container": 123,
+                },
+            ),
+            (
+                "local",
+                "/pfn",
+                True,
+                {
+                    "arch": Arch.AARCH64,
+                    "os_type": "random os name",
+                    "os_release": None,
+                    "os_version": None,
+                    "container": None,
                 },
             ),
         ],
@@ -284,7 +312,7 @@ class TestTransformation:
         with pytest.raises(ValueError) as e:
             Transformation(name, namespace=namespace, version=version)
 
-        assert "invalid {bad_field}: ".format(bad_field=bad_field) in str(e)
+        assert f"invalid {bad_field}: " in str(e)
 
     def test_invalid_checksum(self):
         with pytest.raises(ValueError) as e:
@@ -418,7 +446,7 @@ class TestTransformation:
         with pytest.raises(ValueError) as e:
             t.add_requirement(name, namespace, version)
 
-        assert "invalid {bad_field}".format(bad_field=bad_field) in str(e)
+        assert f"invalid {bad_field}" in str(e)
 
     @pytest.mark.parametrize(
         "transformation, expected",
@@ -442,7 +470,7 @@ class TestTransformation:
         with pytest.raises(TypeError) as e:
             t.add_requirement(1)
 
-        assert "invalid required_transformation: {tr}".format(tr=1) in str(e)
+        assert f"invalid required_transformation: {1}" in str(e)
 
     @pytest.mark.parametrize(
         "transformation", [("required"), (Transformation("required"))]
@@ -545,7 +573,7 @@ class TestTransformation:
         try:
             expected_file.unlink()
         except FileNotFoundError:
-            pytest.fail("could not find {}".format(expected_file))
+            pytest.fail(f"could not find {expected_file}")
 
 
 class TestContainer:
