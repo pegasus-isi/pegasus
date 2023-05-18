@@ -36,6 +36,7 @@ class Arch(Enum):
     SPARCV7 = "sparcv7"
     SPARCV9 = "sparcv9"
     AMD64 = "amd64"
+    AARCH64 = "aarch64"
 
 
 class OS(Enum):
