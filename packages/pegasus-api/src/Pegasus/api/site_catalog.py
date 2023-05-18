@@ -38,6 +38,7 @@ class Arch(Enum):
     AMD64 = "amd64"
     AARCH64 = "aarch64"
 
+
 class OS(Enum):
     """Operating system types"""
 
