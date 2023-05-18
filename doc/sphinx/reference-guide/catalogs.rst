@@ -511,6 +511,7 @@ Described below are some of the entries in the site catalog.
     * sparcv7
     * sparcv9
     * amd64
+    * aarch64
 
    OS can have one of the following values
 
