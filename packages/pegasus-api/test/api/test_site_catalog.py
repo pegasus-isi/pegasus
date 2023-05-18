@@ -172,10 +172,13 @@ class TestGrid:
 
 
 class TestSite:
-    def test_valid_site(self):
+    @pytest.mark.parametrize(
+        "arch", [(Arch.AARCH64), (Arch.X86_64),],
+    )
+    def test_valid_site(self, arch):
         assert Site(
             "site",
-            arch=Arch.X86_64,
+            arch=arch,
             os_type=OS.LINUX,
             os_release="release",
             os_version="1.1.1",
@@ -186,6 +189,7 @@ class TestSite:
         [
             ("site", "badarch", OS.LINUX, "arch"),
             ("site", Arch.X86_64, "badostype", "os_type"),
+            ("site", Arch.AARCH64, "randomos", "os_type"),
         ],
     )
     def test_invalid_site(self, name, arch, os_type, invalid_var):
@@ -255,7 +259,7 @@ class TestSite:
     def test_tojson_with_profiles(self):
         site = Site(
             "s",
-            arch=Arch.X86_64,
+            arch=Arch.AARCH64,
             os_type=OS.LINUX,
             os_release="release",
             os_version="1.2.3",
@@ -279,7 +283,7 @@ class TestSite:
 
         expected = {
             "name": "s",
-            "arch": "x86_64",
+            "arch": "aarch64",
             "os.type": "linux",
             "os.release": "release",
             "os.version": "1.2.3",
@@ -579,7 +583,7 @@ class TestSiteCatalog:
         try:
             expected_file.unlink()
         except FileNotFoundError:
-            pytest.fail("could not find {}".format(expected_file))
+            pytest.fail(f"could not find {expected_file}")
 
     def test_site_catalog_key_ordering_on_yml_write(self):
         SiteCatalog().write()
