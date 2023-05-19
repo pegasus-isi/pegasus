@@ -231,6 +231,7 @@ def to_mb(value: str) -> int:
             )
         )
 
+
 def to_kb(value: str) -> int:
     """Convert the given value to KB
 
@@ -240,7 +241,8 @@ def to_kb(value: str) -> int:
     :return: value in KB
     :rtype: int
     """
-    return to_mb(value)*1024
+    return to_mb(value) * 1024
+
 
 class ProfileMixin:
     @_chained
