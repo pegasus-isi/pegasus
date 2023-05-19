@@ -1,0 +1,505 @@
+variables:
+  # we depend on a sane umask when creating tarballs
+  FF_DISABLE_UMASK_FOR_DOCKER_EXECUTOR: 1
+
+default:
+  before_script:
+    - env
+
+.retry-and-timeout: &retry-and-timeout
+  retry: 1
+  timeout: 15 minutes
+
+stages:
+- lint
+- test
+- build
+- deploy
+- e2e-tests
+- performance-tests
+
+pre-job:
+  stage: .pre
+  script:
+  - echo "PEGASUS_VERSION=`release-tools/getversion`" > .env
+  artifacts:
+    reports:
+      dotenv: .env
+
+# Code quality
+
+Lint:
+  <<: *retry-and-timeout
+  stage: lint
+  parallel:
+    matrix:
+    - LANGUAGE:
+      - python
+      - java
+  image: python:3.6
+  before_script:
+  - env
+  - \[ "${LANGUAGE}" = 'python' ] && pip3 install tox
+  - apt update
+  - DEBIAN_FRONTEND=noninteractive apt install -y ant
+  script:
+  - export bamboo_buildKey='value-irrelevant'
+  - ant code-format-${LANGUAGE}
+  tags:
+  - docker
+
+# Unit tests
+
+Python:
+  <<: *retry-and-timeout
+  stage: test
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+      PYTHON_VERSION:
+      - '3.6'
+      - '3.7'
+      - '3.8'
+      - '3.9'
+      - '3.10'
+      - '3.11'
+      PACKAGE:
+      - common
+      - api
+      - python
+      - worker
+  image: python:${PYTHON_VERSION}
+  before_script:
+  - env
+  - export USER=nobody
+  - pip3 install --upgrade pip setuptools
+  - pip3 install tox
+  script:
+  - cd packages/pegasus-${PACKAGE}; tox -e py${PYTHON_VERSION/./}
+  coverage: '/Total coverage: \d+\.\d+%/'
+  artifacts:
+    when: always
+    reports:
+      junit: packages/pegasus-${PACKAGE}/test-reports/pyunit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: packages/pegasus-${PACKAGE}/test-reports/coverage.xml
+    paths:
+    - packages/pegasus-${PACKAGE}/test-reports/htmlcov
+  tags:
+  - ${ARCH}
+  - docker
+
+Java:
+  <<: *retry-and-timeout
+  stage: test
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+  image: pegasus/buildenv:rhel_9
+  script:
+  - ant test-java
+  artifacts:
+    when: always
+    reports:
+      junit: build/tests/classes/junitreport/*.xml
+    paths:
+    - build/tests/classes/junitreport/*.xml
+  tags:
+  - ${ARCH}
+  - docker
+
+C:
+  <<: *retry-and-timeout
+  stage: test
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+  image: pegasus/buildenv:rhel_9
+  script:
+  - ant test-kickstart test-transfer
+  tags:
+  - ${ARCH}
+  - docker
+
+# Build packages
+
+Source:
+  <<: *retry-and-timeout
+  stage: build
+  image: pegasus/buildenv:rhel_9
+  script:
+  - ant clean dist-source
+  artifacts:
+    paths:
+    - dist/pegasus-*.tar.gz
+  dependencies: []
+  tags:
+  - docker
+
+Alpine:
+  <<: *retry-and-timeout
+  stage: build
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+      OS:
+      - alpine_3
+  image: pegasus/buildenv:${OS}
+  script:
+  - ant dist-worker dist-release
+  artifacts:
+    paths:
+    - dist/pegasus-binary*.tar.gz
+    - dist/pegasus-worker*.tar.gz
+  dependencies: []
+  tags:
+  - ${ARCH}
+  - docker
+
+RHEL:
+  <<: *retry-and-timeout
+  stage: build
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+      OS:
+      - rhel_7
+      - rhel_8
+      - rhel_9
+  image: pegasus/buildenv:${OS}
+  script:
+  - ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
+  artifacts:
+    paths:
+    - dist/pegasus-binary*.tar.gz
+    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus-*.rpm
+  dependencies: []
+  rules:
+  # Do not build arm64 packages for EL7. Order of the 2 if statements is important
+  - if: $ARCH == 'arm64' && $OS == 'rhel_7'
+    when: never
+  - if: $ARCH == $ARCH
+  tags:
+  - ${ARCH}
+  - docker
+
+Debian:
+  <<: *retry-and-timeout
+  stage: build
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+      OS:
+      - deb_10
+      - deb_11
+  image: pegasus/buildenv:${OS}
+  script:
+  - ant dist-worker dist-release dist-deb
+  artifacts:
+    paths:
+    - dist/pegasus-binary*.tar.gz
+    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus*.deb
+  dependencies: []
+  tags:
+  - ${ARCH}
+  - docker
+
+Ubuntu:
+  <<: *retry-and-timeout
+  stage: build
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+      OS:
+      - ubuntu_18
+      - ubuntu_20
+      - ubuntu_22
+  image: pegasus/buildenv:${OS}
+  script:
+  - ant dist-worker dist-release dist-deb
+  artifacts:
+    paths:
+    - dist/pegasus-binary*.tar.gz
+    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus*.deb
+  dependencies: []
+  rules:
+  # Do not build arm64 packages for Ubuntu 18. Order of the 2 if statements is important
+  - if: $ARCH == 'arm64' && $OS == 'ubuntu_18'
+    when: never
+  - if: $ARCH == $ARCH
+  tags:
+  - ${ARCH}
+  - docker
+
+macOS:
+  <<: *retry-and-timeout
+  stage: build
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+      VERSION:
+      - 12
+      - 13
+  before_script:
+  - env
+  - \[ "${ARCH}" = 'arm64' ]  && eval "$(/opt/homebrew/bin/brew shellenv)"
+  script:
+  - ant dist-worker dist-release
+  artifacts:
+    paths:
+    - dist/pegasus-binary*.tar.gz
+    - dist/pegasus-worker*.tar.gz
+  dependencies: []
+  tags:
+  - ${ARCH}
+  - macOS-${VERSION}
+  - shell
+
+Docs and R Package:
+  <<: *retry-and-timeout
+  stage: build
+  image: pegasus/buildenv:rhel_7
+  before_script:
+  - env
+  #- set -ex
+  #- yum install -y epel-release
+  #- yum install -y --enablerepo=devel git ant perl python3 python3-pip R-devel
+  #- pip3 install tox
+  script:
+  - ant dist-doc dist-r
+  artifacts:
+    paths:
+    - dist/pegasus-doc-*.tar.gz
+    - dist/pegasus-r-pegasus*.tar.gz
+  dependencies: []
+  tags:
+  - docker
+
+# Deploy packages
+
+Deploy Python:
+  stage: deploy
+  image: centos:7
+  dependencies:
+  - 'Python'
+  script:
+  - find packages -type d
+
+Binaries:
+  stage: deploy
+  script:
+  - ./release-tools/deploy
+  tags:
+  - shell
+  - scitech-gitlab
+
+Tutorial Container:
+  <<: *retry-and-timeout
+  stage: deploy
+  script:
+  - if [ "X${PEGASUS_VERSION}" = "X" ]; then echo "Unable to determine Pegasus version! Exiting..."; exit 1; fi
+  - cp dist/pegasus-*-*.rpm tutorial/docker
+  - cd tutorial/docker
+  - echo "${DOCKERHUB_TOKEN}" | docker login --username "${DOCKERHUB_USER}" --password-stdin
+  - docker build --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} --tag pegasus/tutorial:${PEGASUS_VERSION} --progress plain .
+  - docker push pegasus/tutorial:${PEGASUS_VERSION}
+  - docker rmi --force pegasus/tutorial:${PEGASUS_VERSION}
+  dependencies:
+  - pre-job
+  - "RHEL: [x86_64, rhel_8]"
+  tags:
+  - x86_64
+  - docker-cli
+
+# End-to-End tests
+
+Workflow Tests:
+  stage: e2e-tests
+  parallel:
+    matrix:
+    - TESTNAME:
+      - 000-check-env
+      - 016-pegasus-transfer
+      - 029-black-quiet
+      - 038-halt-continue
+      - 043-integrity-bypass-staging
+      EXEC:
+      - launch-bamboo-test-no-jobs
+
+    - TESTNAME:
+      - 006-black-diamond-shell-code-generator
+      - 015-shell-hierarchic-workflow
+      - 020-pmc-only
+      EXEC:
+      - launch-bamboo-test-no-status
+
+    - TESTNAME:
+      - 022-data-reuse-regexrc
+      EXEC:
+      - launch-bamboo-test-planner-only
+
+    - TESTNAME:
+      - 001-black-diamond-vanilla-condor
+      - 001-black-diamond-vanilla-condor-5.0API
+      - 002-hello-world
+      - 004-montage-condor-io
+      - 004-montage-shared-fs
+      - 004-montage-shared-fs-sc
+      - 004-montage-staging-site
+      - 004-montage-universe-local
+      - 004-montage-apptainer
+      - 005-galactic-plane
+      - 007-black-diamond-pegasuslite-local
+      - 008-black-diamond-pegasuslite-condorio
+      - 009-black-diamond-pegasuslite-pegasustransfer
+      - 009-black-diamond-pegasuslite-pegasustransfer-a
+      - 010-runtime-clustering runtime-condorio
+      - 010-runtime-clustering runtime-nonsharedfs
+      - 010-runtime-clustering runtime-sharedfs
+      - 010-runtime-clustering runtime-sharedfs-all-staging-nogridstart
+      - 011-rosetta-staging-site
+      - 012-blackdiamond-invoke
+      - 013-pegasus-mpi-cluster
+      #- 018-black-condorc-condor-io
+      #- 018-black-condorc-hybrid
+      #- 018-black-condorc-staging-site
+      - 019-black-label
+      - 021-black-dir
+      - 022-data-reuse-full-a
+      - 022-data-reuse-full-b
+      - 023-sc4-ssh-http
+      - 024-sc4-gridftp-http
+      - 025-sc4-file-http
+      - 026-cache-url-check
+      - 027-montage-bypass-staging-site
+      #- 027-montage-bypass-staging-site-condorio
+      - 028-dynamic-hierarchy
+      - 028-dynamic-hierarchy-b
+      - 030-pegasuslite-gs
+      #- 030-pegasuslite-irods
+      - 030-pegasuslite-s3
+      #- 030-pegasuslite-sshftp
+      - 031-montage-condor-io-jdbcrc
+      - 031-montage-jdbcrc-sqlite
+      - 032-black-chkpoint
+      - 032-kickstart-chkpoint-signal-condorio
+      - 032-kickstart-chkpoint-signal-nonsharedfs
+      - 033-pegasuslite-multi
+      - 033-pegasuslite-multi-wp-a
+      - 033-pegasuslite-multi-wp-b
+      - 033-pegasuslite-multi-wp-c
+      - 034-recursive-cluster-condorio
+      - 034-recursive-cluster-nonsharedfs
+      - 034-recursive-cluster-sharedfs
+      - 035-black-transfer
+      - 036-condorio-no-outputs
+      - 037-black-hints
+      - 039-black-metadata
+      - 040-multiple-input-sources-nonsharedfs
+      - 040-multiple-input-sources-sharedfs
+      - 042-kswrapper-nonsharedfs
+      - 042-kswrapper-sharedfs
+      - 043-integrity-condorio
+      - 043-integrity-nonsharedfs
+      - 043-integrity-nonsharedfs-nosymlink
+      - 043-integrity-condorio-nogs
+      - 043-integrity-synthetic-with-errors
+      - 043-integrity-condorio-5.0API
+      - 043-integrity-condorio-singularity
+      - 043-integrity-bypass-staging-b
+      - 044-docker-nonsharedfs
+      - 044-docker-nonsharedfs-shared
+      - 044-singularity-nonsharedfs
+      - 044-singularity-nonsharedfs-shared
+      - 044-docker-nonsharedfs-symlink
+      - 044-singularity-nonsharedfs-symlink
+      - 044-singularity-nonsharedfs-symlink-cvmfs
+      - 044-singularity-nonsharedfs-minimal
+      - 045-hierarchy-sharedfs
+      - 045-hierarchy-sharedfs-b
+      - 045-hierarchy-sharedfs-c
+      - 045-hierarchy-sharedfs-d
+      - 046-aws-batch-black
+      - 047-cwl
+      - 047-cwl-docker-black-diamond
+      - 048-black-deep-condorio
+      - 048-black-deep-condorio-local
+      - 048-ligo-getenv
+      - blackdiamond pl-condorio
+      - blackdiamond pl-condorio-local
+      - blackdiamond pl-pt
+      - blackdiamond pl-pt-local
+      - blackdiamond sharedfs-symlink-nogridstart
+      - blackdiamond sharedfs-worker-staging-cleanup
+      - blackdiamond vanilla-condor
+      EXEC:
+      - launch-bamboo-test
+  script:
+  - cd dist
+  - tar xzf pegasus-binary-*-x86_64*.tar.gz
+  - cd ..
+  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - ./test/scripts/${EXEC} ${TESTNAME}
+  rules:
+  - if: $CI_PIPELINE_NAME == 'workflow'
+  dependencies:
+  - pre-job
+  - "RHEL: [x86_64, rhel_8]"
+  tags:
+  - bamboo
+  retry: 0
+  timeout: 1 hour 5 minutes
+
+# Performance tests
+
+Performance Tests:
+  stage: performance-tests
+  parallel:
+    matrix:
+    - TESTNAME:
+      - 041-jdbcrc-performance
+      EXEC:
+      - launch-bamboo-test-no-jobs
+
+    - TESTNAME:
+      - 014-planner-performance
+      - 014-planner-performance-100k
+      - 014-planner-performance-ahope
+      - 014-planner-performance-hcc
+      EXEC:
+      - launch-bamboo-test-planner-only
+  script:
+  - cd dist
+  - tar xzf pegasus-binary-*-x86_64*.tar.gz
+  - cd ..
+  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - ./test/scripts/${EXEC} ${TESTNAME}
+  rules:
+  - if: $CI_PIPELINE_NAME == 'workflow'
+  dependencies:
+  - pre-job
+  - "RHEL: [x86_64, rhel_8]"
+  tags:
+  - bamboo
+  retry: 0
+  timeout: 30 minutes
