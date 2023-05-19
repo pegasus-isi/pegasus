@@ -1,0 +1,103 @@
+#!/bin/bash
+
+set -e
+
+TOPDIR=$(pwd)
+
+echo
+echo "Available artifacts are:"
+ls -lh dist/
+echo
+
+VERSION=`./release-tools/getversion`
+if [ "X$VERSION" = "X" ]; then
+    echo "Unable to determine Pegasus version! Exiting..."
+    exit 1
+fi
+
+cd dist/
+
+mkdir -p docs
+tar xzf pegasus-doc-*.tar.gz -C docs
+
+DOWNLOADS=pegasus/$VERSION
+mkdir -p $DOWNLOADS
+mv pegasus-5*.tar.gz $DOWNLOADS/
+mv pegasus-binary-*.tar.gz $DOWNLOADS/
+mv pegasus-worker-*.tar.gz $DOWNLOADS/
+mv pegasus-doc-*.tar.gz $DOWNLOADS/
+mv *.deb $DOWNLOADS/
+mv *.rpm $DOWNLOADS/
+mv pegasus-r-pegasus*.tar.gz $DOWNLOADS/
+
+# debian / ubuntu
+for TARGET in \
+    "deb10::buster" \
+    "deb11::bullseye" \
+    "ubuntu18::bionic" \
+    "ubuntu20::focal" \
+    "ubuntu22::jammy" \
+; do
+    PLATFORM=$(echo $TARGET | sed 's/::.*//')
+    CODENAME=$(echo $TARGET | sed 's/.*:://')
+    if (echo $PLATFORM | grep deb) >/dev/null 2>&1; then
+        OS=debian
+    else
+        OS=ubuntu
+    fi
+
+    cd $TOPDIR/dist
+    for ARCH in amd64 arm64; do
+        if ls $DOWNLOADS/pegasus_*${PLATFORM}_$ARCH.deb >/dev/null 2>&1; then
+            mkdir -p $DOWNLOADS/$OS/dists/$CODENAME/main/binary-$ARCH
+            cp $DOWNLOADS/pegasus_*${PLATFORM}_$ARCH.deb $DOWNLOADS/$OS/dists/$CODENAME/main/binary-$ARCH/
+        fi
+    done
+done
+
+# standard filesnames for DEBs
+cd $TOPDIR/dist/$DOWNLOADS
+for TIMESTAMPED in $(ls *dev20*.deb >/dev/null 2>&1); do
+    SIMPLE=`echo $TIMESTAMPED | sed -E 's/dev20[0-9]+/dev/'`
+    if [ ! -e $SIMPLE ]; then
+        cp $TIMESTAMPED $SIMPLE
+    fi
+done
+
+# rhel
+cd $TOPDIR/dist
+mkdir -p $DOWNLOADS/rhel/src
+cp $DOWNLOADS/pegasus-*.src.rpm $DOWNLOADS/rhel/src/
+
+for OSARCH in aarch64 x86_64; do
+    for OSVER in $(seq 7 9); do
+
+        cd $TOPDIR/dist
+
+        if ls $DOWNLOADS/pegasus-*el$OSVER.$OSARCH.rpm >/dev/null 2>&1; then
+            mkdir -p $DOWNLOADS/rhel/$OSVER/$OSARCH
+            cp $DOWNLOADS/pegasus-*el$OSVER.$OSARCH.rpm $DOWNLOADS/rhel/$OSVER/$OSARCH/
+
+            # standard filenames for RPMs - used by tutorial VM
+            cd pegasus/$VERSION
+            if [ ! -e pegasus-$VERSION-1.el$OSVER.$OSARCH.rpm ]; then
+                cp pegasus-*el$OSVER.$OSARCH.rpm pegasus-$VERSION-1.el$OSVER.$OSARCH.rpm
+            fi
+        fi
+
+    done
+done
+
+cd $TOPDIR/dist
+
+# no files should be left behind
+ls -l
+
+# download site
+scp -i ~/.ssh/deployment -r $DOWNLOADS bamboo@download.pegasus.isi.edu:/srv/download.pegasus.isi.edu/public_html/pegasus/
+
+# wordpress site
+ssh -i ~/.ssh/deployment bamboo@pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
+scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* bamboo@pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
+
+

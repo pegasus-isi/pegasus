@@ -35,11 +35,11 @@ import math
 import time
 import socket
 import string
-import ConfigParser
+import configparser 
 
 # set PEGASUS_HOME - transition from Pegasus 2.4
 pegasus_home = None
-paths = string.split(os.environ["PATH"], ":")
+paths = os.environ["PATH"].split(":")
 for path in paths:
     if os.path.isfile(os.path.join(path, "pegasus-plan")):
         pegasus_home = os.path.normpath(os.path.join(path, ".."))
@@ -57,7 +57,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 
 monitord_output = None
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read(sys.argv[1])
 
 mode                     = config.get('main', 'mode')
@@ -132,7 +132,7 @@ def create_work_dir():
     lt = time.localtime(time.time())
     run_id = "galactic-plane-%04d%02d%02d-%02d%02d%02d" % (lt[0], lt[1], lt[2], lt[3], lt[4], lt[5])
     work_dir = "%s/%s" % (local_work_dir, run_id)
-    print "Work dir is: " + work_dir
+    print("Work dir is: " + work_dir)
     os.makedirs(work_dir)
 
 
@@ -323,18 +323,18 @@ def main():
     # this is so that we tiles will overshoot equally much on each boundry
     clon = (max_lon + min_lon) / 2.0
     clat = (max_lat + min_lat) / 2.0
-    print "Center of the tiled area is: %f, %f" % (clon, clat)
+    print("Center of the tiled area is: %f, %f" % (clon, clat))
 
     # spacing between tiles
     spacing = (float)(tile_size - tile_overlap)
-    print "Spacing between the tiles will be %f" % (spacing)
+    print("Spacing between the tiles will be %f" % (spacing))
 
     # tiles needed
     tiles_hori = int(math.ceil((max_lon - min_lon) / spacing))
     tiles_vert = int(math.ceil((max_lat - min_lat) / spacing))
-    print "%d tiles needed horizontally" %(tiles_hori)
-    print "%d tiles needed vertically" %(tiles_vert)
-    print "Total number of tiles: %d" % (tiles_vert * tiles_hori)
+    print("%d tiles needed horizontally" %(tiles_hori))
+    print("%d tiles needed vertically" %(tiles_vert))
+    print("Total number of tiles: %d" % (tiles_vert * tiles_hori))
 
     # uber dax
     uberdax = ADAG("gp")
@@ -360,7 +360,7 @@ def main():
     uberdax.writeXML(daxfile)
     daxfile.close()
 
-    print "Planning and submitting the uberdax..."
+    print("Planning and submitting the uberdax...")
     os.chdir(work_dir)
     os.environ["JAVA_HEAPMAX"] = "512"
     cmd = "pegasus-plan --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output-sites local --dax gp.dax --cleanup leaf --submit 2>&1 | tee pegasus-plan.out"
