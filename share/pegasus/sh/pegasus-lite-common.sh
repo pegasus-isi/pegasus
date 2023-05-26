@@ -666,7 +666,7 @@ pegasus_lite_get_system()
                 "debian") osname="deb" ;;
                 "centos"|"rocky"|"scientific") osname="rhel" ;;
                 "fedora") osname="fc" ;;
-                "sles") osname="suse" ;;
+                "sles"|"opensuse-leap") osname="suse" ;;
                 *) osname="$osname" ;;
             esac
 

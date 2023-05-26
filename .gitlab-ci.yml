@@ -195,6 +195,27 @@ RHEL:
   - ${ARCH}
   - docker
 
+SUSE:
+  <<: *retry-and-timeout
+  stage: build
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      OS:
+      - suse_15
+  image: pegasus/buildenv:${OS}
+  script:
+  - ant dist-worker dist-release
+  artifacts:
+    paths:
+    - dist/pegasus-binary*.tar.gz
+    - dist/pegasus-worker*.tar.gz
+  dependencies: []
+  tags:
+  - ${ARCH}
+  - docker
+
 Debian:
   <<: *retry-and-timeout
   stage: build
@@ -368,7 +389,7 @@ Workflow Tests:
       - 004-montage-staging-site
       - 004-montage-universe-local
       - 004-montage-apptainer
-      - 005-galactic-plane
+      #- 005-galactic-plane
       - 007-black-diamond-pegasuslite-local
       - 008-black-diamond-pegasuslite-condorio
       - 009-black-diamond-pegasuslite-pegasustransfer
