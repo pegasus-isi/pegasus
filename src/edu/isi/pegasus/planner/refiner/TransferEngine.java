@@ -913,7 +913,8 @@ public class TransferEngine extends Engine {
                 .append(File.separator)
                 .append(job.getID())
                 .append(".input.cache");
-
+        
+        // PM-1916 set the path to input cache file for sub workflow explicilty
         job.setInputWorkflowCacheFile(file.toString());
 
         // set the appropriate property to designate path to file
