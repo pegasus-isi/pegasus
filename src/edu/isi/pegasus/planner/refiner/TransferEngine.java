@@ -914,6 +914,8 @@ public class TransferEngine extends Engine {
                 .append(job.getID())
                 .append(".input.cache");
 
+        job.setInputWorkflowCacheFile(file.toString());
+
         // set the appropriate property to designate path to file
         cacheProps.setProperty(WORKFLOW_CACHE_REPLICA_CATALOG_KEY, file.toString());
 

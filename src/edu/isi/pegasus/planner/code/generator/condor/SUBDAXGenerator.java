@@ -430,11 +430,10 @@ public class SUBDAXGenerator {
         // PM-1766 instead of the workflow cache file, we now pass the cache
         // file created specifically for the sub workflow job to ensure only
         // those files that have a depedency are passed to the sub workflow
-        String jobCacheFile =
-                job.getFileFullPath(
-                        this.mPegasusPlanOptions.getSubmitDirectory(),
-                        SUBDAXGenerator.CACHE_FILE_SUFFIX);
-        cacheFiles.add(jobCacheFile);
+        String wfCacheFile = ((DAXJob) job).getInputWorkflowCacheFile();
+        if (wfCacheFile != null) {
+            cacheFiles.add(wfCacheFile);
+        }
 
         // do some sanitization of the path to the dax file.
         // if it is a relative path, then ???
