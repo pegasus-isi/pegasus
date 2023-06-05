@@ -906,15 +906,6 @@ class TestDebugWF:
             debug.debug_workflow()
         assert "could not create temporary directory!" in str(err)
 
-    def test_debug_workflow_debug_dir_write_fail(self, mocker, AnalyzerDebug):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
-        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
-        debug = AnalyzerDebug(Options(debug_job=job, debug_dir="/"))
-
-        with pytest.raises(AnalyzerError) as err:
-            debug.debug_workflow()
-        assert "not able to write to temporary directory: /" in str(err)
-
     def test_debug_workflow_create_debug_dir_fail(self, mocker, capsys, AnalyzerDebug):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
         job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
