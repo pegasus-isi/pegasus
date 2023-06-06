@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -148,30 +147,30 @@ public class CommonPropertiesTest {
     @Test
     // PM-1917
     public void testHostWideProps() throws Exception {
-        
+
         mLogger.logEventStart(
                 "test.common.util.CommonProperties", "set", Integer.toString(mTestNumber++));
         String etcPropKey = "pegasus.home.sysconfdir";
         String existingEtc = System.getProperty(etcPropKey);
-        
+
         File newEtc = Files.createTempDirectory("pegasus-etc").toFile();
         System.setProperty(etcPropKey, newEtc.getAbsolutePath());
         // write out a pegasus.properties file in the test etc dir
-        File propsFile = new File(newEtc,"pegasus.properties");
+        File propsFile = new File(newEtc, "pegasus.properties");
         PrintWriter pw = new PrintWriter(new FileWriter(propsFile));
-        String testKey="from";
-        String testValue="hostwide";
-        pw.println( testKey + "="+ testValue);
+        String testKey = "from";
+        String testValue = "hostwide";
+        pw.println(testKey + "=" + testValue);
         pw.close();
-        
+
         CommonProperties p = new CommonProperties(null);
         try {
             assertEquals(testValue, p.getProperty(testKey));
         } finally {
             // important, as we are setting the property in the JVM
             // if not clear other unit tests get affected!
-            if(existingEtc != null){
-                System.setProperty(etcPropKey,existingEtc);
+            if (existingEtc != null) {
+                System.setProperty(etcPropKey, existingEtc);
             }
             propsFile.delete();
             newEtc.delete();
@@ -179,8 +178,6 @@ public class CommonPropertiesTest {
         mLogger.logEventCompletion();
     }
 
-    
-    
     /**
      * A hack to set environment variables, that java does not support directly. Copied from
      *
