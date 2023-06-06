@@ -12,7 +12,7 @@ install_requires = [
     "PyYAML>5.3",
     # pegasus-init
     "GitPython>1.0",
-    "pamela>=1.0",
+    "pamela>=1.0,<1.1.0",
     "pika>=1.1.0",
     "Flask>1.1,<2.3",
     "Flask-Caching>1.8",
@@ -23,6 +23,7 @@ install_requires = [
     "pegasus-wms.common",
     "pegasus-wms.worker",
 ]
+
 
 #
 # Install conditional dependencies
