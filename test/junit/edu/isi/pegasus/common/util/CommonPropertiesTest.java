@@ -146,6 +146,90 @@ public class CommonPropertiesTest {
 
     @Test
     // PM-1917
+    public void testOrderPropsFileandHostWideProps() throws Exception {
+
+        mLogger.logEventStart(
+                "test.common.util.CommonProperties", "set", Integer.toString(mTestNumber++));
+        String etcPropKey = "pegasus.home.sysconfdir";
+        String existingEtc = System.getProperty(etcPropKey);
+
+        File newEtc = Files.createTempDirectory("pegasus-etc").toFile();
+        System.setProperty(etcPropKey, newEtc.getAbsolutePath());
+        // write out a pegasus.properties file in the test etc dir
+        File etcFile = new File(newEtc, "pegasus.properties");
+        PrintWriter pw = new PrintWriter(new FileWriter(etcFile));
+        String testKey = "from";
+        String testValue = "hostwide";
+        pw.println(testKey + "=" + testValue);
+        pw.close();
+
+        // write out a temp props file
+        String propValue = "confFile";
+        File propsFile = File.createTempFile("pegasus", ".properties");
+        pw = new PrintWriter(new BufferedWriter(new FileWriter(propsFile)));
+        pw.println(testKey + "=" + propValue);
+        pw.close();
+        CommonProperties p = new CommonProperties(propsFile.getAbsolutePath());
+        try {
+            assertEquals(testValue, p.getProperty(testKey));
+        } finally {
+            // important, as we are setting the property in the JVM
+            // if not clear other unit tests get affected!
+            if (existingEtc != null) {
+                System.setProperty(etcPropKey, existingEtc);
+            }
+            etcFile.delete();
+            newEtc.delete();
+            propsFile.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    // PM-1917
+    public void testUnionPropsFileandHostWideProps() throws Exception {
+
+        mLogger.logEventStart(
+                "test.common.util.CommonProperties", "set", Integer.toString(mTestNumber++));
+        String etcPropKey = "pegasus.home.sysconfdir";
+        String existingEtc = System.getProperty(etcPropKey);
+
+        File newEtc = Files.createTempDirectory("pegasus-etc").toFile();
+        System.setProperty(etcPropKey, newEtc.getAbsolutePath());
+        // write out a pegasus.properties file in the test etc dir
+        File etcFile = new File(newEtc, "pegasus.properties");
+        PrintWriter pw = new PrintWriter(new FileWriter(etcFile));
+        String etcKey = "etcKey";
+        String etcValue = "etcValue";
+        pw.println(etcKey + "=" + etcValue);
+        pw.close();
+
+        // write out a temp props file
+        String propKey = "propKey";
+        String propValue = "propValue";
+        File propsFile = File.createTempFile("pegasus", ".properties");
+        pw = new PrintWriter(new BufferedWriter(new FileWriter(propsFile)));
+        pw.println(propKey + "=" + propValue);
+        pw.close();
+        CommonProperties p = new CommonProperties(propsFile.getAbsolutePath());
+        try {
+            assertEquals(etcValue, p.getProperty(etcKey));
+            assertEquals(propValue, p.getProperty(propKey));
+        } finally {
+            // important, as we are setting the property in the JVM
+            // if not clear other unit tests get affected!
+            if (existingEtc != null) {
+                System.setProperty(etcPropKey, existingEtc);
+            }
+            etcFile.delete();
+            newEtc.delete();
+            propsFile.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    // PM-1917
     public void testHostWideProps() throws Exception {
 
         mLogger.logEventStart(

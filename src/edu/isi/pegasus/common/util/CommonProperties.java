@@ -94,7 +94,17 @@ public class CommonProperties implements Cloneable {
      */
     protected static Properties addProperties(Properties a, Properties b) {
         // initial
-        Properties result = new Properties(a);
+        // PM-1917 doing it via constructor Properties(defaults) is incorrect, as
+        // in the native Java Properties class the clone method does not
+        // clone defaults member variable. So we iterate through and add values
+        // to result explicitly.
+        // Properties result = new Properties(a);
+        Properties result = new Properties();
+        for (Enumeration e = a.propertyNames(); e.hasMoreElements(); ) {
+            String key = (String) e.nextElement();
+            String value = a.getProperty(key);
+            result.setProperty(key, value);
+        }
         Properties sys = System.getProperties();
         Pattern pattern = Pattern.compile("\\$\\{[-a-zA-Z0-9._]+\\}");
 
