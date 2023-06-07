@@ -621,7 +621,8 @@ public class TransferEngine extends Engine {
                                     mSiteStore.getExternalWorkDirectory(
                                             server, pJob.getSiteHandle());
 
-                            sourceURL = sourceURI + File.separator + outFile;
+                            sourceURL =
+                                    sourceURI + File.separator + addOn + File.separator + outFile;
 
                             if (job instanceof DAXJob) {
                                 // Case 3 PM-1766 DAX job has some input files that are produced by
