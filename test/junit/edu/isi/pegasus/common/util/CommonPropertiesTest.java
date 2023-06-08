@@ -159,8 +159,8 @@ public class CommonPropertiesTest {
         File etcFile = new File(newEtc, "pegasus.properties");
         PrintWriter pw = new PrintWriter(new FileWriter(etcFile));
         String testKey = "from";
-        String testValue = "hostwide";
-        pw.println(testKey + "=" + testValue);
+        String etcValue = "hostwide";
+        pw.println(testKey + "=" + etcValue);
         pw.close();
 
         // write out a temp props file
@@ -171,7 +171,9 @@ public class CommonPropertiesTest {
         pw.close();
         CommonProperties p = new CommonProperties(propsFile.getAbsolutePath());
         try {
-            assertEquals(testValue, p.getProperty(testKey));
+            // the value from the conf properties file overrides the hostwide
+            // props in the pegasus install etc dir
+            assertEquals(propValue, p.getProperty(testKey));
         } finally {
             // important, as we are setting the property in the JVM
             // if not clear other unit tests get affected!
