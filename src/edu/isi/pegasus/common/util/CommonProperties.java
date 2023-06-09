@@ -205,7 +205,7 @@ public class CommonProperties implements Cloneable {
 
         // PM-1917 check for an alternative property file spec in the etc dir
         this.m_sysConfDir = pickPath(null, System.getProperty("pegasus.home.sysconfdir"));
-        if (this.m_sysConfDir.exists()) {
+        if (this.m_sysConfDir != null && this.m_sysConfDir.exists()) {
             loadProperties(new File(m_sysConfDir, CommonProperties.PROPERTY_FILENAME));
         }
 
