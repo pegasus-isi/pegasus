@@ -219,7 +219,8 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
 
             // only for compute jobs and sub workflow jobs we proceed ahead
             if (!(_SI.getJobType() == _SI.COMPUTE_JOB /*|| _SI.getJobType() == _SI.DAX_JOB*/)) {
-                System.err.println(" Skipping job" + _SI.getID() + " of type " + _SI.getJobType());
+                // System.err.println(" Skipping job" + _SI.getID() + " of type " +
+                // _SI.getJobType());
                 continue;
             }
 
