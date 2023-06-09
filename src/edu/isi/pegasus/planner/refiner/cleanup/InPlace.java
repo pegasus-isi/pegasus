@@ -146,7 +146,15 @@ public class InPlace extends AbstractCleanupStrategy {
                     // site is set)
                     if (isSubWorkflow) {
                         String sourceCleanupSite = pf.getMetadata(this.CLEANUP_SOURCE_SITE_KEY);
-                        if (!sourceCleanupSite.equals(site)) {
+
+                        // an input file in a sub workflow can be assocaited with exactly
+                        // one cleanup source site. so after considering it once we can
+                        // remove the metadata key from file object to avoid pollution
+                        if (sourceCleanupSite != null && sourceCleanupSite.equals(site)) {
+                            pf.getAllMetadata().removeKey(this.CLEANUP_SOURCE_SITE_KEY);
+                        } else {
+                            // the cleanup site does not match. do not consider this file
+                            // for the site in this invocation
                             it.remove();
                             continue;
                         }
