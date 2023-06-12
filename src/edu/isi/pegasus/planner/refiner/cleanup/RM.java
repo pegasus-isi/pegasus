@@ -68,7 +68,7 @@ public class RM implements CleanupImplementation {
     }
 
     /**
-     * Creates a cleanup job that removes the files from remote working directory. This will
+     * Creates a cleanup job that removes the files from remote working directory.This will
      * eventually make way to it's own interface.
      *
      * @param id the identifier to be assigned to the job.
@@ -77,6 +77,20 @@ public class RM implements CleanupImplementation {
      * @return the cleanup job.
      */
     public Job createCleanupJob(String id, List files, Job job) {
+        return this.createCleanupJob(id, files, job, job.getStagingSiteHandle());
+    }
+    /**
+     * Creates a cleanup job that removes the files from remote working directory.This will
+     * eventually make way to it's own interface.
+     *
+     * @param id the identifier to be assigned to the job.
+     * @param files the list of <code>PegasusFile</code> that need to be cleaned up.
+     * @param job the primary compute job with which this cleanup job is associated.
+     * @param stagingSiteHandle the staging site handle (site where the files that are to be deleted
+     *     reside) to be used creating the cleanup job
+     * @return the cleanup job.
+     */
+    public Job createCleanupJob(String id, List files, Job job, String stagingSiteHandle) {
 
         // we want to run the clnjob in the same directory
         // as the compute job. We cannot clone as then the
