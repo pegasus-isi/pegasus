@@ -460,6 +460,7 @@ Workflow Tests:
       - 045-hierarchy-sharedfs-b
       - 045-hierarchy-sharedfs-c
       - 045-hierarchy-sharedfs-d
+      - 045-hierarchy-sharedfs-e
       - 046-aws-batch-black
       - 047-cwl
       - 047-cwl-docker-black-diamond

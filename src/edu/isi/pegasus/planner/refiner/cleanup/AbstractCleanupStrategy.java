@@ -13,7 +13,13 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup;
 
+import static edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge.CACHE_REPLICA_CATALOG_IMPLEMENTER;
+
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
@@ -22,12 +28,15 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -52,6 +61,12 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
     public static final String SCALING_MESSAGE =
             "Pegasus now has a strategy for scaling cleanup jobs based on size of workflow. "
                     + "Consider removing the property pegasus.file.cleanup.clusters.num";
+
+    /**
+     * A metadata key indicating the source site from which an input file is being retrieved. Only
+     * associated for a DAXJob/SubWorkflow job
+     */
+    protected static final String CLEANUP_SOURCE_SITE_KEY = "cleanup_source_site";
 
     /**
      * The mapping to siteHandle to all the jobs that are mapped to it mapping to siteHandle(String)
@@ -98,6 +113,8 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
     /** A boolean indicating whether we prefer use the size factor or the num factor */
     protected boolean mUseSizeFactor;
 
+    protected PegasusBag mBag;
+
     /**
      * Intializes the class.
      *
@@ -106,6 +123,7 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
      */
     @Override
     public void initialize(PegasusBag bag, CleanupImplementation impl) {
+        mBag = bag;
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
 
@@ -199,9 +217,10 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
             GraphNode _GN = (GraphNode) it.next();
             Job _SI = (Job) _GN.getContent();
 
-            // only for compute jobs
-            if (!(_SI.getJobType()
-                    == _SI.COMPUTE_JOB /*|| _SI.getJobType() == _SI.STAGED_COMPUTE_JOB*/)) {
+            // only for compute jobs and sub workflow jobs we proceed ahead
+            if (!(_SI.getJobType() == _SI.COMPUTE_JOB /*|| _SI.getJobType() == _SI.DAX_JOB*/)) {
+                // System.err.println(" Skipping job" + _SI.getID() + " of type " +
+                // _SI.getJobType());
                 continue;
             }
 
@@ -234,7 +253,6 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
         //                     LogManager.DEBUG_MESSAGE_LEVEL );
         // set the depth and ResMap values iteratively
         setDepth_ResMap(workflow.getRoots());
-
         mLogger.log("Number of sites " + mResMap.size(), LogManager.DEBUG_MESSAGE_LEVEL);
 
         // output for debug
@@ -295,11 +313,13 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
             // populate mResMap ,mResMapLeaves,mResMapRoots
             Job si = (Job) curGN.getContent();
 
-            String site = getSiteForCleanup(si);
-            if (!mResMap.containsKey(site)) {
-                mResMap.put(site, new HashSet());
+            Set<String> sites = getSitesForCleanup(si);
+            for (String site : sites) {
+                if (!mResMap.containsKey(site)) {
+                    mResMap.put(site, new HashSet());
+                }
+                ((Set) mResMap.get(site)).add(curGN);
             }
-            ((Set) mResMap.get(site)).add(curGN);
 
             // System.out.println( "  site count="+((Set)mResMap.get( si.getSiteHandle() )).size()
             // );
@@ -330,34 +350,118 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
     }
 
     /**
-     * Returns site to be used for the cleanup algorithm. For compute jobs the staging site is used,
-     * while for stageout jobs is used.
+     * Returns sites to be used for the cleanup algorithm. For compute jobs the staging site is
+     * used, while for stageout jobs non third party sites is used. For sub workflow jobs, more than
+     * one site can be associated.
      *
      * <p>For all other jobs the execution site is used.
      *
      * @param job the job
      * @return the site to be used
      */
-    protected String getSiteForCleanup(Job job) {
+    protected Set<String> getSitesForCleanup(Job job) {
         /*
         String site =  typeStageOut( job.getJobType() )?
                              ((TransferJob)job).getNonThirdPartySite():
                              job.getStagingSiteHandle();
          */
-
-        String site = null;
+        Set<String> sites = new HashSet();
 
         if (typeStageOut(job.getJobType())) {
             // for stage out jobs we prefer the non third party site
-            site = ((TransferJob) job).getNonThirdPartySite();
+            sites.add(((TransferJob) job).getNonThirdPartySite());
         } else if (job.getJobType() == Job.COMPUTE_JOB) {
             // for compute jobs we refer to the staging site
-            site = job.getStagingSiteHandle();
+            sites.add(job.getStagingSiteHandle());
+        } else if (job.getJobType() == Job.DAX_JOB) {
+            return this.getSitesForCleanup((DAXJob) job);
         } else {
             // for all other jobs we use the execution site
-            site = job.getSiteHandle();
+            sites.add(job.getSiteHandle());
         }
-        return site;
+        return sites;
+    }
+
+    /**
+     * Returns sites to be used in the cleanup algorithm for a sub workflow job
+     *
+     * @param job the sub workflow job
+     * @return the site to be used
+     */
+    protected Set<String> getSitesForCleanup(DAXJob job) {
+        /*
+        String site =  typeStageOut( job.getJobType() )?
+                             ((TransferJob)job).getNonThirdPartySite():
+                             job.getStagingSiteHandle();
+         */
+        Set<String> sites = new HashSet();
+        String cacheFile = job.getInputWorkflowCacheFile();
+        // for DAX jobs we look at the site based on if any
+        // inputs of DAX job are being retreived from a parent
+        // job. For this look into the sub workflow input cache file
+        if (cacheFile == null) {
+            // PM-1918 just return the execution set for the job. that
+            // is what it was for pegasus releases <= 5.0.5
+            sites.add(job.getSiteHandle());
+            return sites;
+        }
+
+        Properties cacheProps =
+                mProps.getVDSProperties().matchingSubset(ReplicaCatalog.c_prefix, false);
+        // all cache files are loaded in readonly mode
+        cacheProps.setProperty(ReplicaCatalogBridge.CACHE_READ_ONLY_KEY, "true");
+        // set the appropriate property to designate path to file
+        cacheProps.setProperty(ReplicaCatalogBridge.CACHE_REPLICA_CATALOG_KEY, cacheFile);
+        mLogger.log(
+                "Loading sub workflow input cache file: " + cacheFile,
+                LogManager.DEBUG_MESSAGE_LEVEL);
+        ReplicaCatalog simpleFile = null;
+        try {
+            simpleFile =
+                    ReplicaFactory.loadInstance(
+                            CACHE_REPLICA_CATALOG_IMPLEMENTER, this.mBag, cacheProps);
+            Map<String, Collection<ReplicaCatalogEntry>> m = simpleFile.lookup(new HashMap());
+
+            for (PegasusFile pf : job.getInputFiles()) {
+                String lfn = pf.getLFN();
+                Collection<ReplicaCatalogEntry> rces = simpleFile.lookup(lfn);
+                // PM-1918 source site is the site from where an input file is being retrieved.
+                // DAXJob/Sub workflow jobs can be associated with multiple sites
+                // that it needs to be mapped. one is the execution site. other is
+                // where the parents job have placed their outputs that sub workflow
+                // requries as input on their data staging site. we retrieve these
+                // locations from parsing the sub workflow input cache file
+                String sourceSite = job.getSiteHandle();
+                for (ReplicaCatalogEntry rce : rces) {
+                    sourceSite = rce.getResourceHandle();
+                    mLogger.log(
+                            "For sub workflow "
+                                    + job.getID()
+                                    + " "
+                                    + lfn
+                                    + " retrieved from site "
+                                    + sourceSite,
+                            LogManager.TRACE_MESSAGE_LEVEL);
+                    sites.add(sourceSite);
+                }
+                pf.addMetadata(CLEANUP_SOURCE_SITE_KEY, sourceSite);
+            }
+        } catch (Exception e) {
+            mLogger.log(
+                    "Unable to load cache file " + cacheFile, e, LogManager.ERROR_MESSAGE_LEVEL);
+        } finally {
+            if (simpleFile != null) {
+                simpleFile.close();
+            }
+        }
+
+        // if sites is empty then we default to previous behavior where
+        // we just take the execution site (for dax jobs it is local)
+        if (sites.isEmpty()) {
+            sites.add(job.getSiteHandle());
+        }
+
+        return sites;
     }
 
     /**
