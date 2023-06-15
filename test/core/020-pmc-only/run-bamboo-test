@@ -1,15 +1,7 @@
 #!/bin/bash
 
-# this test has to run in a shared fs
-TOP_DIR=$(pwd)
-WORK_DIR=/scitech/shared/scratch-90-days/bamboo/020-pmc-only
-
-rm -rf $WORK_DIR
-mkdir -p $WORK_DIR
-cp -r * $WORK_DIR/
-cd $WORK_DIR/
-
 # Figure out where Pegasus is installed
+export PATH=$WORK_DIR/pegasus-install/bin:$PATH
 export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     echo "Please make sure pegasus-plan is in your path"
@@ -28,7 +20,7 @@ RUN_DIR=$(cd $RUN_DIR && pwd)
 echo "RUN_DIR is $RUN_DIR"
 
 echo "Running PMC..."
-mpiexec -n 4 $PEGASUS_BIN_DIR/pegasus-mpi-cluster --monitord-hack --max-wall-time 5 $RUN_DIR/pmc-only-0.dag
+/usr/lib64/mpich/bin/mpiexec -n 4 $PEGASUS_BIN_DIR/pegasus-mpi-cluster --monitord-hack --max-wall-time 5 $RUN_DIR/pmc-only-0.dag
 RC=$?
 if [ $RC -ne 0 ]; then
     exit 1
