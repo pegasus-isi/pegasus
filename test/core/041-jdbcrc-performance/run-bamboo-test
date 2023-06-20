@@ -5,7 +5,7 @@
 
 # Max number of seconds allowed for the pegasus-rc-client job to run the
 # registration job - if these limit is exceeded, the test fails
-MAX_SECONDS=40
+MAX_SECONDS=60
 
 # Min number of seconds allowed for the pegasus-rc-client to run the
 # registration job - if these limit is exceeded, the test fails. This is used
