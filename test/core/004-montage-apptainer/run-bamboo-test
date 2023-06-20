@@ -19,7 +19,7 @@ apptainer exec \
                 --work-dir $PWD \
                 --tc-target container \
                 --center "275.196290 -16.171530" \
-                --degrees 0.5 \
+                --degrees 0.3 \
                 --band 2mass:j:green \
                 --band 2mass:h:blue \
                 --band 2mass:k:red
