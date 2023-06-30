@@ -137,7 +137,7 @@ Source:
   stage: build
   image: pegasus/buildenv:rhel_9
   script:
-  - ant clean dist-source
+  - ant clean dist-source dist-python-source
   artifacts:
     paths:
     - dist/pegasus-*.tar.gz
