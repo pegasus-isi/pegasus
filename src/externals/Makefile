@@ -72,7 +72,7 @@ $(LIBDIR)/botocore: botocore-1.15.37.tar.gz
 $(LIBDIR)/certifi: certifi-2019.11.28.tar.gz
 $(LIBDIR)/chardet: chardet-3.0.4.tar.gz
 $(LIBDIR)/click: click-7.1.1.tar.gz
-$(LIBDIR)/docutils: docutils-0.15.2.tar.gz
+$(LIBDIR)/docutils: docutils-0.18.1.tar.gz
 $(LIBDIR)/globus_sdk: globus-sdk-3.5.0.tar.gz
 $(LIBDIR)/idna: idna-2.9.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-1.1.0.tar.gz
