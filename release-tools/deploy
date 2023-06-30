@@ -34,6 +34,7 @@ mv pegasus-r-pegasus*.tar.gz $DOWNLOADS/
 for TARGET in \
     "deb10::buster" \
     "deb11::bullseye" \
+    "deb12::bookworm" \
     "ubuntu18::bionic" \
     "ubuntu20::focal" \
     "ubuntu22::jammy" \
