@@ -141,6 +141,12 @@ public class CondorGenerator extends Abstract {
     /** default value for CONDOR_JOBID env variable */
     public static final String DEFAULT_CONDOR_JOB_ID_ENV_VALUE = "$(cluster).$(process)";
 
+    /** default prefix for user classads in .dag file * */
+    public static final String DEFAULT_PREFIX_FOR_USER_CLASSADS_IN_DAG = "My.";
+
+    /** the old prefix to use for user classads in .dag file * */
+    public static final String OLD_PREFIX_FOR_USER_CLASSADS_IN_DAG = "+";
+
     /** Map that maps job type to corresponding Condor Concurrency limit */
     private static Map<Integer, String> mJobTypeToCondorConcurrencyLimits = null;
 
@@ -431,6 +437,14 @@ public class CondorGenerator extends Abstract {
                 }
             }
 
+            String prefixForUserClassadsinDAGFile = DEFAULT_PREFIX_FOR_USER_CLASSADS_IN_DAG;
+            ;
+            if (mCondorVersion < CondorVersion.v_8_9_4) {
+                // PM-1913 before condor 8.9.4 the only way to designate
+                // the classads was using the + as a prefix
+                prefixForUserClassadsinDAGFile = OLD_PREFIX_FOR_USER_CLASSADS_IN_DAG;
+            }
+
             if (job instanceof DAGJob) {
                 // SUBDAG EXTERNAL  B  inner.dag
                 DAGJob djob = (DAGJob) job;
@@ -458,7 +472,9 @@ public class CondorGenerator extends Abstract {
 
                 printDagString(sb.toString());
 
-                printDagString(job.dagmanVariables.toString(job.getName()));
+                printDagString(
+                        job.dagmanVariables.toString(
+                                job.getName(), prefixForUserClassadsinDAGFile));
             } else { // normal jobs and subdax jobs
 
                 if (job.typeRecursive()) {
@@ -480,7 +496,9 @@ public class CondorGenerator extends Abstract {
 
                 // write out all the dagman profile variables associated
                 // with the job to the .dag file.
-                printDagString(job.dagmanVariables.toString(job.getName()));
+                printDagString(
+                        job.dagmanVariables.toString(
+                                job.getName(), prefixForUserClassadsinDAGFile));
             }
 
             mLogger.log(
