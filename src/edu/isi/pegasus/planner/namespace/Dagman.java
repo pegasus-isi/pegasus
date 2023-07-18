@@ -512,7 +512,7 @@ public class Dagman extends Namespace {
      * @return the the textual description.
      */
     public String toCondor() {
-        return toString(mJobName);
+        return toString(mJobName, null);
     }
 
     /**
@@ -520,15 +520,22 @@ public class Dagman extends Namespace {
      * printing.
      *
      * @param name the name of the condor job that contains these variables.
+     * @param prefixForUserClassads the prefix to use for user classads
      * @return the textual description.
      */
-    public String toString(String name) {
+    public String toString(String name, String prefixForUserClassads) {
         StringBuffer sb = new StringBuffer();
 
         if (mProfileMap == null) {
             // no profile keys were stored in here
             return sb.toString();
         }
+
+        if (prefixForUserClassads == null) {
+            // PM-1913 use the My. as default
+            prefixForUserClassads = "My.";
+        }
+
         String key = null;
         for (Iterator it = mProfileMap.keySet().iterator(); it.hasNext(); ) {
             key = (String) it.next();
@@ -564,7 +571,7 @@ public class Dagman extends Namespace {
 
         // PM-1049 always add VARS dagnode retry
         // PM-1913 use My. prefix to designate the classad instead of +
-        append(sb, Dagman.VARS_KEY, name, "My.DAGNodeRetry=\"$(RETRY)\"");
+        append(sb, Dagman.VARS_KEY, name, prefixForUserClassads + "DAGNodeRetry=\"$(RETRY)\"");
 
         return sb.toString();
     }
