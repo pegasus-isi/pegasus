@@ -33,13 +33,13 @@ import org.junit.Test;
  *
  * @author vahi
  */
-public class GliteTest {
+public class GLiteTest {
 
     public static final String DEFAULT_GRID_RESOURCE = GLite.PBS_GRID_RESOURCE;
 
     private GLite gs = null;
 
-    public GliteTest() {}
+    public GLiteTest() {}
 
     @Before
     public void setUp() throws CondorStyleException {

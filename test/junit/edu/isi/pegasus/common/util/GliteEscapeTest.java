@@ -22,11 +22,11 @@ import org.junit.*;
  *
  * @author Rajiv Mayani
  */
-public class GLiteEscapeTest {
+public class GliteEscapeTest {
 
     private GliteEscape ge = null;
 
-    public GLiteEscapeTest() {}
+    public GliteEscapeTest() {}
 
     @Before
     public void setUp() {
