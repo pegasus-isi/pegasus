@@ -13,33 +13,59 @@
  */
 package edu.isi.pegasus.common.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.*;
 
-// import org.junit.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Test class to test the GLiteEscape class
+ *
+ * @author Rajiv Mayani
+ */
 public class GliteEscapeTest {
-    @BeforeClass
-    public static void setUpClass() {}
 
-    @AfterClass
-    public static void tearDownClass() {}
+    private GliteEscape ge = null;
+
+    public GliteEscapeTest() {}
 
     @Before
-    public void setUp() {}
-
-    @After
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        ge = new GliteEscape();
     }
-    */
+
+    @Test
+    public void testBasic() {
+        String value = "AB";
+        assertEquals(value, ge.escape(value));
+    }
+
+    @Test
+    public void testValWithSpaces() {
+        String value = "A B";
+        assertEquals("A\\ B", ge.escape(value));
+    }
+
+    @Test
+    public void testValWithDoubleQuotes() {
+        String value = "A\"B";
+        assertEquals("A\\\\\"B", ge.escape(value));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testValWithSingleQuotes() {
+        String value = "A'B";
+        ge.escape(value);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testValWithNewLine() {
+        String value = "A\nB";
+        ge.escape(value);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testValWithTab() {
+        String value = "A\tB";
+        ge.escape(value);
+    }
 }
