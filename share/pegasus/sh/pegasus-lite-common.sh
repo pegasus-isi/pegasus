@@ -655,6 +655,11 @@ pegasus_lite_get_system()
         arch="x86" 
     fi
 
+    # align macos arm arch with linux (->aarch64)
+    if [ "X$arch" = "Xarm64" ]; then
+        arch="aarch64"
+    fi
+
     if [ "$osname" = "Linux" ]; then
 
         # /etc/issue and /etc/os-release works most of the time, but there are exceptions
