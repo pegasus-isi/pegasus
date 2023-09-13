@@ -18,12 +18,14 @@ import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
@@ -125,6 +127,9 @@ public class Directory extends Abstract implements TransformationCatalog {
     /** The site handle to use. */
     protected String mSiteHandle;
 
+    /** the system information to be assigned to created tranformation catalog entries */
+    private SysInfo mSysInfo;
+
     /** Default constructor. */
     public Directory() {}
 
@@ -138,6 +143,7 @@ public class Directory extends Abstract implements TransformationCatalog {
         mBag = bag;
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
+        mSysInfo = createSysInfo(bag);
         mFlushOnClose = false;
         modifyFileURL = true;
         // empty TCStore
@@ -260,14 +266,12 @@ public class Directory extends Abstract implements TransformationCatalog {
                                     + pfn,
                             LogManager.WARNING_MESSAGE_LEVEL);
                 }
-                SysInfo sysinfo = new SysInfo();
-                sysinfo.setArchitecture(SysInfo.Architecture.x86_64);
-                sysinfo.setOS(SysInfo.OS.linux);
+
                 TransformationCatalogEntry entry =
                         new TransformationCatalogEntry(null, lfn.toString(), null);
                 entry.setResourceId(this.mSiteHandle);
                 entry.setPhysicalTransformation(pfn);
-                entry.setSysInfo(sysinfo);
+                entry.setSysInfo(mSysInfo);
                 entry.setType(TCType.STAGEABLE);
                 mLogger.log(
                         "Created transformation catalog entry " + entry,
@@ -1040,5 +1044,64 @@ public class Directory extends Abstract implements TransformationCatalog {
 
     protected void logMessage(String msg) {
         // mLogger.logMessage("[Shishir] Transformation Catalog : " + msg);
+    }
+
+    /**
+     * Creates a system information object from the compute sites to which the workflow is planned
+     * against.
+     *
+     * @param bag the bag of Planner objects
+     * @return SysInfo to use for creating transformations
+     * @throws RuntimeException if site store or planner options are null, OR multiple computes
+     *     sites with different architectures is specified
+     */
+    protected SysInfo createSysInfo(PegasusBag bag) {
+        SiteStore siteStore = bag.getHandleToSiteStore();
+        PlannerOptions options = bag.getPlannerOptions();
+
+        if (siteStore == null) {
+            throw new RuntimeException(
+                    "Site Store is not populated. Is required to assign the system information for generated transformations out of Directory backend");
+        }
+        if (options == null) {
+            throw new RuntimeException(
+                    "Planner Options is not populated. Is required to assign the system information for generated transformations out of Directory backend");
+        }
+
+        SysInfo result = null;
+        String computeSite = null;
+        for (String s : options.getExecutionSites()) {
+            SysInfo sysInfo = siteStore.getSysInfo(s);
+            if (sysInfo == null) {
+                // still null . complain
+                throw new RuntimeException("Unable to retrieve system information for site " + s);
+            }
+            if (result == null) {
+                // assign the first time around
+                computeSite = s;
+                result = sysInfo;
+            }
+
+            // if multiple sites, just compare and make sure they match
+            if (!result.equals(sysInfo)) {
+                throw new RuntimeException(
+                        "System information for compute site "
+                                + computeSite
+                                + "->"
+                                + result
+                                + " does not match for site "
+                                + s
+                                + "->"
+                                + sysInfo);
+            }
+        }
+
+        // last sanity check
+        if (result == null) {
+            // probably no compute sites set in the planner options
+            throw new RuntimeException(
+                    "Unable to create system information to associate with the transformations");
+        }
+        return result;
     }
 }
