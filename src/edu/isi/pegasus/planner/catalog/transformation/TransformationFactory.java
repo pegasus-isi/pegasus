@@ -47,6 +47,11 @@ public class TransformationFactory {
     /** The default basename of the yaml transformation catalog file. */
     public static final String DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME = "transformations.yml";
 
+    /**
+     * The default directory from which transformations are picked up if using directory backend.
+     */
+    public static final String DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY = "transformations";
+
     /** The default basename of the transformation catalog file. */
     public static final String DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME = "tc.txt";
 

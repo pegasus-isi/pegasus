@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
@@ -45,6 +46,9 @@ import java.util.Set;
  * <p>To connect to this implementation, in Pegasus Properties set
  *
  * <p>pegasus.catalog.transformation Directory
+ *
+ * <p>pegasus.catalog.transformation.directory directory from which transformations are picked up.
+ * Defaults to directory named transformations
  *
  * <p>The site attribute defaults to local unless specified in Pegasus Properties by specifying the
  * property
@@ -162,16 +166,6 @@ public class Directory extends Abstract implements TransformationCatalog {
      * @return
      */
     public boolean connect(Properties props) {
-        String dir = props.getProperty("directory");
-        if (dir == null) {
-            throw new RuntimeException(
-                    "The directory to be used as TC should be "
-                            + "defined with the property pegasus.catalog.transformation.directory");
-        }
-        mLogger.log(
-                "Directory from where transformations will be picked up " + dir,
-                LogManager.CONFIG_MESSAGE_LEVEL);
-
         // update the m_writeable flag if specified
         if (props.containsKey(Directory.FLAT_LFN_PROPERTY_KEY)) {
             mConstructFlatLFN =
@@ -188,10 +182,7 @@ public class Directory extends Abstract implements TransformationCatalog {
             this.mURLPrefix = value;
         }
 
-        if (props.containsKey(Directory.DIRECTORY_PROPERTY_KEY)) {
-            return connect(props.getProperty("directory"));
-        }
-        return false;
+        return connect(props.getProperty("directory"));
     }
 
     /**
@@ -203,22 +194,23 @@ public class Directory extends Abstract implements TransformationCatalog {
     public boolean connect(String directory) {
         // sanity check
         if (directory == null) {
-            mLogger.log(
-                    "The directory to be used as TC should be "
-                            + "defined with the property pegasus.catalog.transformation.directory",
-                    LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
+            directory = TransformationFactory.DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY;
         }
 
-        mLogger.log(
-                "Directory from where transformations will be picked up " + directory,
-                LogManager.CONFIG_MESSAGE_LEVEL);
         mDirectory = new File(directory);
-
+        mLogger.log(
+                "Directory from where transformations will be picked up "
+                        + mDirectory.getAbsolutePath(),
+                LogManager.CONFIG_MESSAGE_LEVEL);
         try {
             if (mDirectory.exists() && mDirectory.isDirectory()) {
                 traverse(mDirectory, null);
             } else {
+
+                mLogger.log(
+                        "Unable to load transformations from directory "
+                                + mDirectory.getAbsolutePath(),
+                        LogManager.DEBUG_MESSAGE_LEVEL);
                 return false;
             }
         } catch (Exception ioe) {
