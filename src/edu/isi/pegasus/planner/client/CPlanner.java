@@ -769,7 +769,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSzVJr::D:d:s:o:O:m:c:C:b:2:j:3:F:X:4:5:6:78:9:1:R:",
+                        "vqhfSzVJr::D:d:s:o:O:m:c:C:b:2:j:3:F:X:4:5:6:78:9:1:R:t:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -911,6 +911,10 @@ public class CPlanner extends Executable {
 
                 case 's': // sites
                     options.setExecutionSites(g.getOptarg());
+                    break;
+
+                case 't': // transformations dir
+                    options.setTransformationsDirectory(g.getOptarg());
                     break;
 
                 case '9': // staging-site
@@ -1083,7 +1087,7 @@ public class CPlanner extends Executable {
      * @return array of <code>LongOpt</code> objects , corresponding to the valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[32];
+        LongOpt[] longopts = new LongOpt[33];
 
         longopts[0] = new LongOpt("dir", LongOpt.REQUIRED_ARGUMENT, null, '8');
         longopts[1] = new LongOpt("dax", LongOpt.REQUIRED_ARGUMENT, null, 'd');
@@ -1119,6 +1123,7 @@ public class CPlanner extends Executable {
         longopts[29] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
         longopts[30] = new LongOpt("reuse", LongOpt.REQUIRED_ARGUMENT, null, 'R');
         longopts[31] = new LongOpt("json", LongOpt.NO_ARGUMENT, null, 'J');
+        longopts[32] = new LongOpt("transformations-dir", LongOpt.REQUIRED_ARGUMENT, null, 't');
         return longopts;
     }
 
@@ -1133,9 +1138,9 @@ public class CPlanner extends Executable {
                         + "                     [-C style[,style…]] [--dir dir] [--force] [--force-replan]\n"
                         + "                     [--inherited-rc-files file1[,file2…]] [-j prefix] [--json] [-n]\n"
                         + "                     [-I input-dir1[,input-dir2…]] [-O output-dir] [-o site1[,site2…]]\n"
-                        + "                     [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]][--randomdir[=dirname]]\n"
-                        + "                     [--relative-dir dir] [--relative-submit-dir dir] [-X[non standard jvm option]]\n"
-                        + "                     abstract-workflow]";
+                        + "                     [-t transformations-dir] [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]]\n"
+                        + "                     [--randomdir[=dirname]][--relative-dir dir] [--relative-submit-dir dir] \n"
+                        + "                     [-X[non standard jvm option]] abstract-workflow]";
 
         System.out.println(text);
     }
@@ -1232,7 +1237,8 @@ public class CPlanner extends Executable {
                 .append("\n -S |--submit          submit the executable workflow generated")
                 .append(
                         "\n --staging-site        comma separated list of key=value pairs, where key is the execution site and value is the")
-                .append("\n                       staging site")
+                .append(
+                        "\n --transformations-dir directory where users transformations are picked up, defaults to transformations")
                 .append(
                         "\n -v |--verbose         increases the verbosity of messages about what is going on")
                 .append(
