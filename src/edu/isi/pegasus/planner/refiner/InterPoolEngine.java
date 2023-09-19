@@ -337,7 +337,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         // overriding the one from pool catalog.
         job.updateProfiles(tcEntry);
 
-        // the profile information from the properties file
+        // the profile information from the Properties file
         // is assimilated overidding the one from transformation
         // catalog.
         job.updateProfiles(mProps);
@@ -839,20 +839,21 @@ public class InterPoolEngine extends Engine implements Refiner {
      * @param bag the bag of Pegasus initialization objects
      */
     private TransformationStore getTransformationStoreFromDirectories(PegasusBag bag) {
-        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
-        properties.setProperty(
+        PegasusProperties properties = bag.getPegasusProperties();
+        PegasusProperties connectProperties = PegasusProperties.nonSingletonInstance();
+        connectProperties.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
                 TransformationFactory.DIRECTORY_CATALOG_IMPLEMENTOR);
         for (String key :
-                bag.getPegasusProperties()
+                properties
                         .getVDSProperties()
                         .matchingSubset(TransformationCatalog.c_prefix, false)
                         .stringPropertyNames()) {
-            properties.setProperty(key, mProps.getProperty(key));
+            connectProperties.setProperty(key, properties.getProperty(key));
         }
         PegasusBag b = new PegasusBag();
         b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
-        b.add(PegasusBag.PEGASUS_PROPERTIES, properties);
+        b.add(PegasusBag.PEGASUS_PROPERTIES, connectProperties);
         b.add(PegasusBag.PLANNER_OPTIONS, bag.getPlannerOptions());
         b.add(PegasusBag.SITE_STORE, bag.getHandleToSiteStore());
 
