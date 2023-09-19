@@ -181,7 +181,9 @@ public class Directory extends Abstract implements TransformationCatalog {
         if (value != null) {
             this.mURLPrefix = value;
         }
-
+        mLogger.log(
+                "Loading transformations from directory backend with properties " + props,
+                LogManager.CONFIG_MESSAGE_LEVEL);
         return connect(props.getProperty("directory"));
     }
 

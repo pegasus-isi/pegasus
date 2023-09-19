@@ -44,6 +44,9 @@ public class TransformationFactory {
     public static final String TEXT_CATALOG_IMPLEMENTOR =
             edu.isi.pegasus.planner.catalog.transformation.impl.Text.class.getCanonicalName();
 
+    public static final String DIRECTORY_CATALOG_IMPLEMENTOR =
+            edu.isi.pegasus.planner.catalog.transformation.impl.Directory.class.getCanonicalName();
+
     /** The default basename of the yaml transformation catalog file. */
     public static final String DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME = "transformations.yml";
 

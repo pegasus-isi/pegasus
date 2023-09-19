@@ -16,12 +16,15 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.catalog.transformation.impl.Directory;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
@@ -34,6 +37,7 @@ import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.generator.Stampede;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.estimate.Estimator;
 import edu.isi.pegasus.planner.estimate.EstimatorFactory;
 import edu.isi.pegasus.planner.namespace.Globus;
@@ -47,6 +51,7 @@ import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +106,12 @@ public class InterPoolEngine extends Engine implements Refiner {
     private Estimator mEstimator;
 
     /**
+     * Handle to the transformation store that stores the transformation catalog entries picked up
+     * from the transformations directory.
+     */
+    private TransformationStore mDirectoriesTransformationStore;
+
+    /**
      * Default constructor.
      *
      * @param bag the bag of initialization objects.
@@ -131,6 +142,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         mLogger.log("List of executions sites is " + mExecPools, LogManager.DEBUG_MESSAGE_LEVEL);
 
         this.mDAXTransformationStore = dag.getTransformationStore();
+        this.mDirectoriesTransformationStore = this.getTransformationStoreFromDirectories(bag);
         this.mEstimator = EstimatorFactory.loadEstimator(dag, bag);
     }
 
@@ -832,6 +844,85 @@ public class InterPoolEngine extends Engine implements Refiner {
         }
 
         mLogger.logEventCompletion();
+    }
+
+    /**
+     * Loads the mappings from the input directory
+     *
+     * @param bag the bag of Pegasus initialization objects
+     */
+    private TransformationStore getTransformationStoreFromDirectories(PegasusBag bag) {
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        properties.setProperty(
+                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
+                TransformationFactory.DIRECTORY_CATALOG_IMPLEMENTOR);
+        for (String key :
+                bag.getPegasusProperties()
+                        .getVDSProperties()
+                        .matchingSubset(TransformationCatalog.c_prefix, false)
+                        .stringPropertyNames()) {
+            properties.setProperty(key, mProps.getProperty(key));
+        }
+        PegasusBag b = new PegasusBag();
+        b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
+        b.add(PegasusBag.PEGASUS_PROPERTIES, properties);
+        b.add(PegasusBag.PLANNER_OPTIONS, bag.getPlannerOptions());
+        b.add(PegasusBag.SITE_STORE, bag.getHandleToSiteStore());
+
+        Collection<String> directories = new HashSet();
+        // null is fine, as the transformation factory will default to
+        // the default directory transformations to pick up the
+        // excutables from
+        directories.add(bag.getPlannerOptions().getTransformationsDirectory());
+
+        return this.getTransformationStoreFromDirectories(b, directories);
+    }
+
+    /**
+     * Loads the mappings from the input directory
+     *
+     * @param directories set of directories to load from
+     */
+    private TransformationStore getTransformationStoreFromDirectories(
+            PegasusBag bag, Collection<String> directories) {
+        TransformationStore store = new TransformationStore();
+
+        PegasusProperties properties = bag.getPegasusProperties();
+
+        for (String directory : directories) {
+            mLogger.logEventStart(
+                    LoggingKeys.EVENT_PEGASUS_LOAD_DIRECTORY_CACHE,
+                    LoggingKeys.DAX_ID,
+                    mDag.getAbstractWorkflowName());
+
+            TransformationCatalog catalog = null;
+
+            // set the appropriate property to designate path to directory.
+            // if directory is null dont set and let transformation factory
+            // do the right thing
+            if (directory != null) {
+                properties.setProperty(Directory.DIRECTORY_PROPERTY_KEY, directory);
+            }
+
+            try {
+                catalog = TransformationFactory.loadInstance(bag);
+                for (TransformationCatalogEntry entry : catalog.getContents()) {
+                    store.addEntry(entry);
+                }
+
+            } catch (Exception e) {
+                mLogger.log(
+                        "Unable to load from directory  " + directory,
+                        e,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            } finally {
+                if (catalog != null) {
+                    catalog.close();
+                }
+            }
+            mLogger.logEventCompletion();
+        }
+        return store;
     }
 
     /**
