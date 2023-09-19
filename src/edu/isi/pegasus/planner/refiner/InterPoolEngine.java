@@ -16,15 +16,12 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
-import edu.isi.pegasus.planner.catalog.transformation.impl.Directory;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
@@ -37,7 +34,6 @@ import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.generator.Stampede;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.estimate.Estimator;
 import edu.isi.pegasus.planner.estimate.EstimatorFactory;
 import edu.isi.pegasus.planner.namespace.Globus;
@@ -51,7 +47,6 @@ import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -96,12 +91,6 @@ public class InterPoolEngine extends Engine implements Refiner {
     /** handle to PegasusConfiguration */
     private PegasusConfiguration mPegasusConfiguration;
 
-    /**
-     * Handle to the transformation store that stores the transformation catalog user specifies in
-     * the DAX
-     */
-    protected TransformationStore mDAXTransformationStore;
-
     /** Handle to the estimator. */
     private Estimator mEstimator;
 
@@ -140,9 +129,6 @@ public class InterPoolEngine extends Engine implements Refiner {
         mDag = dag;
         mExecPools = (Set) mPOptions.getExecutionSites();
         mLogger.log("List of executions sites is " + mExecPools, LogManager.DEBUG_MESSAGE_LEVEL);
-
-        this.mDAXTransformationStore = dag.getTransformationStore();
-        this.mDirectoriesTransformationStore = this.getTransformationStoreFromDirectories(bag);
         this.mEstimator = EstimatorFactory.loadEstimator(dag, bag);
     }
 
@@ -186,15 +172,6 @@ public class InterPoolEngine extends Engine implements Refiner {
      * @param sites the list of execution sites, specified by the user.
      */
     public void scheduleJobs(ADag dag, List sites) {
-
-        // we iterate through the DAX Transformation Store and update
-        // the transformation catalog with any transformation specified.
-        loadTransformationStoreIntoTransformationCatalog(this.mDAXTransformationStore);
-
-        // PM-1926 the transformations loaded from directories via command line have highest
-        // precedence
-        loadTransformationStoreIntoTransformationCatalog(this.mDirectoriesTransformationStore);
-
         mSiteSelector = SiteSelectorFactory.loadInstance(mBag);
         mSiteSelector.mapWorkflow(dag, sites);
 
@@ -834,86 +811,6 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
-     * Loads the mappings from the input directory
-     *
-     * @param bag the bag of Pegasus initialization objects
-     */
-    private TransformationStore getTransformationStoreFromDirectories(PegasusBag bag) {
-        PegasusProperties properties = bag.getPegasusProperties();
-        PegasusProperties connectProperties = PegasusProperties.nonSingletonInstance();
-        connectProperties.setProperty(
-                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
-                TransformationFactory.DIRECTORY_CATALOG_IMPLEMENTOR);
-        for (String key :
-                properties
-                        .getVDSProperties()
-                        .matchingSubset(TransformationCatalog.c_prefix, false)
-                        .stringPropertyNames()) {
-            connectProperties.setProperty(key, properties.getProperty(key));
-        }
-        PegasusBag b = new PegasusBag();
-        b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
-        b.add(PegasusBag.PEGASUS_PROPERTIES, connectProperties);
-        b.add(PegasusBag.PLANNER_OPTIONS, bag.getPlannerOptions());
-        b.add(PegasusBag.SITE_STORE, bag.getHandleToSiteStore());
-
-        Collection<String> directories = new HashSet();
-        // null is fine, as the transformation factory will default to
-        // the default directory transformations to pick up the
-        // excutables from
-        directories.add(bag.getPlannerOptions().getTransformationsDirectory());
-
-        return this.getTransformationStoreFromDirectories(b, directories);
-    }
-
-    /**
-     * Loads the mappings from the input directory
-     *
-     * @param directories set of directories to load from
-     */
-    private TransformationStore getTransformationStoreFromDirectories(
-            PegasusBag bag, Collection<String> directories) {
-        TransformationStore store = new TransformationStore();
-
-        PegasusProperties properties = bag.getPegasusProperties();
-
-        for (String directory : directories) {
-            mLogger.logEventStart(
-                    LoggingKeys.EVENT_PEGASUS_LOAD_DIRECTORY_CACHE,
-                    LoggingKeys.DAX_ID,
-                    mDag.getAbstractWorkflowName());
-
-            TransformationCatalog catalog = null;
-
-            // set the appropriate property to designate path to directory.
-            // if directory is null dont set and let transformation factory
-            // do the right thing
-            if (directory != null) {
-                properties.setProperty(Directory.DIRECTORY_PROPERTY_KEY, directory);
-            }
-
-            try {
-                catalog = TransformationFactory.loadInstance(bag);
-                for (TransformationCatalogEntry entry : catalog.getContents()) {
-                    store.addEntry(entry);
-                }
-
-            } catch (Exception e) {
-                mLogger.log(
-                        "Unable to load from directory  " + directory,
-                        e,
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            } finally {
-                if (catalog != null) {
-                    catalog.close();
-                }
-            }
-            mLogger.logEventCompletion();
-        }
-        return store;
-    }
-
-    /**
      * Complain with an informative error for the user in site selector fails.
      *
      * @param job
@@ -961,32 +858,5 @@ public class InterPoolEngine extends Engine implements Refiner {
             // ignore
         }
         throw new RuntimeException(error.toString());
-    }
-
-    /**
-     * Loads entries from a transformation store into the transformation catalog memory backend to
-     * be used for site selection
-     *
-     * @param store the transformation store
-     */
-    private void loadTransformationStoreIntoTransformationCatalog(TransformationStore store) {
-        for (TransformationCatalogEntry entry : store.getAllEntries()) {
-            try {
-                // insert an entry into the transformation catalog
-                // for the mapper to pick up later on
-                mLogger.log(
-                        "Addding entry into transformation catalog " + entry,
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-
-                if (mTCHandle.insert(entry, false) != 1) {
-                    mLogger.log(
-                            "Unable to add entry to transformation catalog " + entry,
-                            LogManager.WARNING_MESSAGE_LEVEL);
-                }
-            } catch (Exception ex) {
-                throw new RuntimeException(
-                        "Exception while inserting into TC in Interpool Engine " + ex);
-            }
-        }
     }
 }

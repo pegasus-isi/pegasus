@@ -22,7 +22,6 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
@@ -30,8 +29,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryException;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
@@ -439,7 +436,9 @@ public class CPlanner extends Executable {
         }
 
         mBag.add(PegasusBag.SITE_STORE, s);
-        mBag.add(PegasusBag.TRANSFORMATION_CATALOG, loadTransformationCatalog(mBag, orgDag));
+        mBag.add(
+                PegasusBag.TRANSFORMATION_CATALOG,
+                TransformationFactory.loadTransformationCatalog(mBag, orgDag));
 
         // populate planner metrics
         mPMetrics.setVOGroup(mPOptions.getVOGroup());
@@ -1971,62 +1970,6 @@ public class CPlanner extends Executable {
                         LogManager.CONSOLE_MESSAGE_LEVEL);
             }
         }
-    }
-
-    /**
-     * Loads the transformation catalog. Throws an exception encountered while loading only if the
-     * daxStore is null or empty
-     *
-     * @param bag
-     * @param daxStore
-     * @return
-     */
-    private TransformationCatalog loadTransformationCatalog(PegasusBag bag, ADag dag) {
-
-        TransformationCatalog store = null;
-        TransformationStore daxStore = dag.getTransformationStore();
-        try {
-            store = TransformationFactory.loadInstance(bag);
-        } catch (TransformationFactoryException e) {
-            if ((daxStore == null || daxStore.isEmpty())
-                    && dag.getWorkflowMetrics().getTaskCount(Job.COMPUTE_JOB)
-                            != 0) { // pure hierarchal workflows with no compute jobs should not
-                // throw error
-                throw e;
-            }
-            // log the error nevertheless
-            bag.getLogger()
-                    .log(
-                            "Ignoring error encountered while loading Transformation Catalog "
-                                    + e.convertException(),
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-        }
-        // create a temp file as a TC backend for planning purposes
-        if (store == null) {
-            File f = null;
-            try {
-                f = File.createTempFile("tc.", ".txt");
-                bag.getLogger()
-                        .log(
-                                "Created a temporary transformation catalog backend " + f,
-                                LogManager.DEBUG_MESSAGE_LEVEL);
-            } catch (IOException ex) {
-                throw new RuntimeException(
-                        "Unable to create a temporary transformation catalog backend " + f, ex);
-            }
-            PegasusBag b = new PegasusBag();
-            b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
-            PegasusProperties props = PegasusProperties.nonSingletonInstance();
-            props.setProperty(
-                    PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
-                    TransformationFactory.TEXT_CATALOG_IMPLEMENTOR);
-            props.setProperty(
-                    PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
-                    f.getAbsolutePath());
-            b.add(PegasusBag.PEGASUS_PROPERTIES, props);
-            return loadTransformationCatalog(b, dag);
-        }
-        return store;
     }
 }
 /**
