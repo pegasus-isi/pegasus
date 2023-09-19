@@ -438,7 +438,7 @@ public class CPlanner extends Executable {
         mBag.add(PegasusBag.SITE_STORE, s);
         mBag.add(
                 PegasusBag.TRANSFORMATION_CATALOG,
-                TransformationFactory.loadTransformationCatalog(mBag, orgDag));
+                TransformationFactory.loadInstanceWithStores(mBag, orgDag));
 
         // populate planner metrics
         mPMetrics.setVOGroup(mPOptions.getVOGroup());

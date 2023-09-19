@@ -87,7 +87,9 @@ public class TransformationFactory {
     }
 
     /**
-     * Loads the transformation catalog.
+     * Loads the transformation catalog, and also merges in entries from the workflow transformation
+     * catalog section and any transformations specified in the directory either passed on the
+     * command line or the default transformations directory, into the catalog instance.
      *
      * @param bag bag of initalization objects
      * @param dag the workflow
@@ -95,11 +97,11 @@ public class TransformationFactory {
      * @throws RuntimeException encountered while loading TC only if the daxStore is null or empty,
      *     or no transformations are loaded from the default directory from which the planner is run
      */
-    public static final TransformationCatalog loadTransformationCatalog(PegasusBag bag, ADag dag) {
+    public static final TransformationCatalog loadInstanceWithStores(PegasusBag bag, ADag dag) {
         TransformationStore directoriesTransformationStore =
-                TransformationFactory.getTransformationStoreFromDirectories(bag, dag);
+                TransformationFactory.loadTransformationStoreFromDirectories(bag, dag);
         TransformationCatalog catalog =
-                TransformationFactory.loadTransformationCatalog(
+                TransformationFactory.loadInstanceWithStores(
                         bag, dag, directoriesTransformationStore);
         LogManager logger = bag.getLogger();
 
@@ -147,7 +149,7 @@ public class TransformationFactory {
      * @throws RuntimeException encountered while loading TC only if the daxStore is null or empty,
      *     or no transformations are loaded from the default directory from which the planner is run
      */
-    private static final TransformationCatalog loadTransformationCatalog(
+    private static final TransformationCatalog loadInstanceWithStores(
             PegasusBag bag, ADag dag, TransformationStore directoriesTXStore) {
 
         TransformationCatalog catalog = null;
@@ -195,7 +197,7 @@ public class TransformationFactory {
                     PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                     f.getAbsolutePath());
             b.add(PegasusBag.PEGASUS_PROPERTIES, props);
-            return loadTransformationCatalog(b, dag, directoriesTXStore);
+            return loadInstanceWithStores(b, dag, directoriesTXStore);
         }
         return catalog;
     }
@@ -319,7 +321,7 @@ public class TransformationFactory {
      * @param bag the bag of Pegasus initialization objects
      * @param workflow the workflow
      */
-    private static final TransformationStore getTransformationStoreFromDirectories(
+    private static TransformationStore loadTransformationStoreFromDirectories(
             PegasusBag bag, ADag workflow) {
         PegasusProperties properties = bag.getPegasusProperties();
         PegasusProperties connectProperties = PegasusProperties.nonSingletonInstance();
@@ -345,7 +347,7 @@ public class TransformationFactory {
         // excutables from
         directories.add(bag.getPlannerOptions().getTransformationsDirectory());
 
-        return TransformationFactory.getTransformationStoreFromDirectories(
+        return TransformationFactory.loadTransformationStoreFromDirectories(
                 b, workflow, directories);
     }
 
@@ -356,7 +358,7 @@ public class TransformationFactory {
      * @param workflow the workflow
      * @param directories set of directories to load from
      */
-    private static final TransformationStore getTransformationStoreFromDirectories(
+    private static TransformationStore loadTransformationStoreFromDirectories(
             PegasusBag bag, ADag workflow, Collection<String> directories) {
         TransformationStore store = new TransformationStore();
 
