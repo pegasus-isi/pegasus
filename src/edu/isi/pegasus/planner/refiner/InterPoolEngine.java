@@ -189,24 +189,11 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         // we iterate through the DAX Transformation Store and update
         // the transformation catalog with any transformation specified.
-        for (TransformationCatalogEntry entry : this.mDAXTransformationStore.getAllEntries()) {
-            try {
-                // insert an entry into the transformation catalog
-                // for the mapper to pick up later on
-                mLogger.log(
-                        "Addding entry into transformation catalog " + entry,
-                        LogManager.DEBUG_MESSAGE_LEVEL);
+        loadTransformationStoreIntoTransformationCatalog(this.mDAXTransformationStore);
 
-                if (mTCHandle.insert(entry, false) != 1) {
-                    mLogger.log(
-                            "Unable to add entry to transformation catalog " + entry,
-                            LogManager.WARNING_MESSAGE_LEVEL);
-                }
-            } catch (Exception ex) {
-                throw new RuntimeException(
-                        "Exception while inserting into TC in Interpool Engine " + ex);
-            }
-        }
+        // PM-1926 the transformations loaded from directories via command line have highest
+        // precedence
+        loadTransformationStoreIntoTransformationCatalog(this.mDirectoriesTransformationStore);
 
         mSiteSelector = SiteSelectorFactory.loadInstance(mBag);
         mSiteSelector.mapWorkflow(dag, sites);
@@ -973,5 +960,32 @@ public class InterPoolEngine extends Engine implements Refiner {
             // ignore
         }
         throw new RuntimeException(error.toString());
+    }
+
+    /**
+     * Loads entries from a transformation store into the transformation catalog memory backend to
+     * be used for site selection
+     *
+     * @param store the transformation store
+     */
+    private void loadTransformationStoreIntoTransformationCatalog(TransformationStore store) {
+        for (TransformationCatalogEntry entry : store.getAllEntries()) {
+            try {
+                // insert an entry into the transformation catalog
+                // for the mapper to pick up later on
+                mLogger.log(
+                        "Addding entry into transformation catalog " + entry,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+
+                if (mTCHandle.insert(entry, false) != 1) {
+                    mLogger.log(
+                            "Unable to add entry to transformation catalog " + entry,
+                            LogManager.WARNING_MESSAGE_LEVEL);
+                }
+            } catch (Exception ex) {
+                throw new RuntimeException(
+                        "Exception while inserting into TC in Interpool Engine " + ex);
+            }
+        }
     }
 }
