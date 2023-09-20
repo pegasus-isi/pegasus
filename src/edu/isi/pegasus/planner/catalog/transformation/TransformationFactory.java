@@ -373,11 +373,13 @@ public class TransformationFactory {
             TransformationCatalog catalog = null;
 
             // set the appropriate property to designate path to directory.
-            // if directory is null dont set and let transformation factory
-            // do the right thing
-            if (directory != null) {
-                properties.setProperty(Directory.DIRECTORY_PROPERTY_KEY, directory);
+            boolean defaultDirectoryUsed = false;
+            if (directory == null) {
+                defaultDirectoryUsed = true;
+                directory = TransformationFactory.DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY;
             }
+            directory = new File(directory).getAbsolutePath();
+            properties.setProperty(Directory.DIRECTORY_PROPERTY_KEY, directory);
 
             try {
                 catalog = TransformationFactory.loadInstance(bag);
@@ -386,10 +388,12 @@ public class TransformationFactory {
                 }
 
             } catch (Exception e) {
+                int logLevel =
+                        defaultDirectoryUsed
+                                ? LogManager.DEBUG_MESSAGE_LEVEL
+                                : LogManager.ERROR_MESSAGE_LEVEL;
                 logger.log(
-                        "Unable to load from directory  " + directory,
-                        e,
-                        LogManager.ERROR_MESSAGE_LEVEL);
+                        "Unable to load transformations from directory  " + directory, e, logLevel);
             } finally {
                 if (catalog != null) {
                     catalog.close();
