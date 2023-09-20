@@ -331,7 +331,7 @@ public class TransformationFactory {
         for (String key :
                 properties
                         .getVDSProperties()
-                        .matchingSubset(TransformationCatalog.c_prefix, false)
+                        .matchingSubset(TransformationCatalog.c_prefix, true)
                         .stringPropertyNames()) {
             connectProperties.setProperty(key, properties.getProperty(key));
         }
