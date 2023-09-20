@@ -208,7 +208,6 @@ public class Directory extends Abstract implements TransformationCatalog {
             if (mDirectory.exists() && mDirectory.isDirectory()) {
                 traverse(mDirectory, null);
             } else {
-
                 mLogger.log(
                         "Unable to load transformations from directory "
                                 + mDirectory.getAbsolutePath(),
