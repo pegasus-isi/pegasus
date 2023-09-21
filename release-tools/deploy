@@ -102,4 +102,9 @@ scp -i ~/.ssh/deployment -r $DOWNLOADS bamboo@download.pegasus.isi.edu:/srv/down
 ssh -i ~/.ssh/deployment bamboo@pegasus.isi.edu "mkdir -p /srv/pegasus.isi.edu/public_html/docs/$VERSION"
 scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* bamboo@pegasus.isi.edu:/srv/pegasus.isi.edu/public_html/docs/$VERSION/
 
+# also update shared install on our cluster for workflow tests
+mkdir -p /scitech/shared/scratch-90-days/bamboo/installs
+cd /scitech/shared/scratch-90-days/bamboo/installs
+rm -rf pegasus-${VERSION}
+tar xzf $TOPDIR/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
 
