@@ -106,5 +106,5 @@ scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* bamboo@
 mkdir -p /scitech/shared/scratch-90-days/bamboo/installs
 cd /scitech/shared/scratch-90-days/bamboo/installs
 rm -rf pegasus-${VERSION}
-tar xzf $TOPDIR/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
+tar xzf $TOPDIR/dist/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
 
