@@ -54,7 +54,7 @@ int yamlprintable(wint_t c)
 {
     /* see https://yaml.org/spec/1.2/spec.html#id2770814 */
     if (c == 0x9 || c == 0xA || c == 0xD || (c >= 0x20 && c <= 0x7E) ||
-        c == 0x85 || (c >= 0xA0 && c <= 0xD7FF) || (c <= 0xE000 && c >= 0xFFFD) ||
+        c == 0x85 || (c >= 0xA0 && c <= 0xD7FF) || (c >= 0xE000 && c <= 0xFFFD) ||
         (c >= 0x10000 && c <= 0x10FFFF)) {
         return 1;
     }
