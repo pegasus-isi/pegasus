@@ -172,7 +172,7 @@ class Client:
 
         if transformations_dir:
             cmd.extend(("--transformations-dir", transformations_dir))
-            
+
         if dir:
             cmd.extend(("--dir", dir))
 
