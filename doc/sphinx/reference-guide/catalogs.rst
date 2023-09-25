@@ -873,6 +873,64 @@ The entries in this catalog have the following meaning
    transformation for all sites or to a transformation on a particular
    site.
 
+.. _tc-directory:
+
+
+Directory
+---------
+
+In this mode, Pegasus does a directory listing on an input directory containing
+user executables to create the transformation catalog entries. The directory listing
+is performed recursively, resulting in deep LFN mappings. For example, if an input
+directory $executables is specified with the following structure
+
+::
+
+   $pegasus-keg
+   $samtools/sam
+
+By default, entries are created for site **local** with type set to **stageable**.
+The architecture and os for the entries is determined from system information
+associated with the compute sites against which the workflow is being planned.
+
+Pegasus will create the mappings the transformation catalog entries with the
+following values internally
+
+:: yaml
+
+        x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '07-23-20T16:43:51Z'}
+        pegasus: '5.0'
+        transformations:
+        - name: pegasus-keg
+          sites:
+          - {name: local, pfn: $input/keg, type: stageable}
+
+
+
+Users can optionally specify additional properties to configure the
+behavior of this implementation.
+
+1. **pegasus.catalog.transformation.directory** to specify the path to the
+   directory where the files exist.
+
+2. **pegasus.catalog.transformation.directory.site** to specify a site
+   attribute other than local to associate with the mappings.
+
+3. **pegasus.catalog.transformation.directory.flat.lfn** to specify whether you
+   want deep LFN's to be constructed or not. If not specified, value
+   defaults to false i.e. deep lfn's are constructed for the mappings.
+
+4. **pegasus.catalog.transformation.directory.url.prefix** to associate a URL
+   prefix for the PFN's constructed. If not specified, the URL defaults
+   to file://
+
+.. tip::
+
+   pegasus-plan has -**-transformations-dir** option that can be used to specify
+   an executable directory on the command line. The planner by default, will try
+   to pick up executables from a directory named **transformations** in the
+   directory from which the planner is launched.
+
 .. _tc-Text:
 
 MultiLine Text based TC (Text)
