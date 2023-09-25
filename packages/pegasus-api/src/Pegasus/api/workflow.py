@@ -569,6 +569,7 @@ class SubWorkflow(AbstractJob):
         cache: Optional[List[Union[str, Path]]] = None,
         input_dirs: Optional[List[Union[str, Path]]] = None,
         output_dir: Optional[Union[str, Path]] = None,
+        transformations_dir: Optional[Union[str, Path]] = None,
         dir: Optional[Union[str, Path]] = None,
         relative_dir: Optional[Union[str, Path]] = None,
         random_dir: Union[bool, str, Path] = False,
@@ -611,6 +612,8 @@ class SubWorkflow(AbstractJob):
         :type input_dirs: Optional[List[Union[str, Path]]]
         :param output_dir: an optional output directory where the output files should be transferred to on submit host, defaults to None
         :type output_dir: Optional[Union[str, Path]]
+        :param transformations_dir: an optional directory containing executables used by the workflow, from where to construct transformation catalog entries
+        :type transformations_dir: Optional[Union[str, Path]]
         :param dir: the directory where to generate the executable workflow, defaults to None
         :type dir: Optional[Union[str, Path]]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
@@ -732,6 +735,9 @@ class SubWorkflow(AbstractJob):
 
         if output_dir:
             self.add_args("--output-dir", str(output_dir))
+
+        if transformations_dir:
+            self.add_args("--transformations-dir", str(transformations_dir))
 
         if dir:
             self.add_args("--dir", str(dir))
@@ -1174,6 +1180,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         cache: Optional[List[Union[str, Path]]] = None,
         input_dirs: Optional[List[Union[str, Path]]] = None,
         output_dir: Optional[Union[str, Path]] = None,
+        transformations_dir: Optional[Union[str, Path]] = None,
         dir: Optional[Union[str, Path]] = None,
         relative_dir: Optional[Union[str, Path]] = None,
         random_dir: Union[bool, str, Path] = False,
@@ -1224,6 +1231,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type input_dirs: Optional[List[Union[str, Path]]]
         :param output_dir: an optional output directory where the output files should be transferred to on submit host, defaults to None
         :type output_dir: Optional[Union[str, Path]]
+        :param transformations_dir: an optional directory containing executables used by the workflow, from where to construct transformation catalog entries
+        :type transformations_dir: Optional[Union[str, Path]]
         :param dir: the directory where to generate the executable workflow, defaults to None
         :type dir: Optional[Union[str, Path]]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
@@ -1274,6 +1283,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             staging_sites=staging_sites,
             input_dirs=[str(_dir) for _dir in input_dirs] if input_dirs else None,
             output_dir=str(output_dir) if output_dir else None,
+            transformations_dir=str(transformations_dir) if transformations_dir else None,
             dir=str(dir) if dir else None,
             relative_dir=str(relative_dir) if relative_dir else None,
             relative_submit_dir=str(relative_submit_dir)
