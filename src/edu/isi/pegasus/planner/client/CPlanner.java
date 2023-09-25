@@ -1237,7 +1237,7 @@ public class CPlanner extends Executable {
                 .append(
                         "\n --staging-site        comma separated list of key=value pairs, where key is the execution site and value is the")
                 .append(
-                        "\n --transformations-dir directory where users transformations are picked up, defaults to transformations")
+                        "\n -t |--transformations-dir directory where users transformations are picked up, defaults to transformations")
                 .append(
                         "\n -v |--verbose         increases the verbosity of messages about what is going on")
                 .append(
