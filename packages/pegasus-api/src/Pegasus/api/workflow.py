@@ -1283,7 +1283,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             staging_sites=staging_sites,
             input_dirs=[str(_dir) for _dir in input_dirs] if input_dirs else None,
             output_dir=str(output_dir) if output_dir else None,
-            transformations_dir=str(transformations_dir) if transformations_dir else None,
+            transformations_dir=str(transformations_dir)
+            if transformations_dir
+            else None,
             dir=str(dir) if dir else None,
             relative_dir=str(relative_dir) if relative_dir else None,
             relative_submit_dir=str(relative_submit_dir)
