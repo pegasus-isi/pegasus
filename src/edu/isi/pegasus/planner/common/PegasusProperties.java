@@ -101,6 +101,9 @@ public class PegasusProperties implements Cloneable {
     public static final String PEGASUS_TRANSFER_BYPASS_INPUT_STAGING_PROPERTY_KEY =
             "pegasus.transfer.bypass.input.staging";
 
+    /** the prefix to use when retrieving site catalog profiles from the properties object */
+    public static final String PEGASUS_SITE_CATALOG_PROFILES_PREFIX = "pegasus.catalog.site.sites";
+
     public static final String PEGASUS_TRANSFER_LINKS_PROPERTY_KEY = "pegasus.transfer.links";
 
     // Replica Catalog Constants
@@ -386,6 +389,36 @@ public class PegasusProperties implements Cloneable {
      */
     public File getSharedDir() {
         return mProps.getSharedStateDir();
+    }
+
+    /**
+     * Returns site catalog profiles specified in the properties file for a site
+     *
+     * @param site the site for which we need the profiles
+     * @return the profiles object containing the profiles.
+     */
+    public Profiles getSiteProfiles(String site) {
+        // construct the prefix key first
+        Profiles profiles = new Profiles();
+        for (Profiles.NAMESPACES ns : Profiles.NAMESPACES.values()) {
+
+            StringBuilder prefix = new StringBuilder();
+            // PM-1929 construct prefix of the format
+            // pegasus.catalog.site.sites.[sitename].profiles.[namespace].key
+            prefix.append(PegasusProperties.PEGASUS_SITE_CATALOG_PROFILES_PREFIX)
+                    .append(".")
+                    .append(site)
+                    .append(".")
+                    .append("profiles")
+                    .append(".")
+                    .append(namespaceToPropertiesPrefix().get(ns));
+
+            Properties p = this.mProps.matchingSubset(prefix.toString(), false);
+            for (Map.Entry<Object, Object> entry : p.entrySet()) {
+                profiles.addProfile(ns, (String) entry.getKey(), (String) entry.getValue());
+            }
+        }
+        return profiles;
     }
 
     /**
