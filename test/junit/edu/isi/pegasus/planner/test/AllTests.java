@@ -29,6 +29,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.common.util.VariableExpanderTest.class,
     edu.isi.pegasus.planner.namespace.PegasusTest.class,
     edu.isi.pegasus.planner.namespace.MetadataTest.class,
+    edu.isi.pegasus.planner.common.PegasusProperties.class,
     edu.isi.pegasus.planner.catalog.replica.ReplicaFactoryTest.class,
     edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStoreTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.RegexRCTest.class,

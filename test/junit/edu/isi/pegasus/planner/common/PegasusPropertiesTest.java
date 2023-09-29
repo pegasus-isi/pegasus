@@ -20,26 +20,76 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-// import org.junit.Test;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.*;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.namespace.Namespace;
+import edu.isi.pegasus.planner.test.DefaultTestSetup;
+import edu.isi.pegasus.planner.test.TestSetup;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Map;
+import org.junit.*;
 
-/** @author Rajiv Mayani */
+/**
+ * Test class to test the Pegasus Properties class
+ *
+ * @author Karan Vahi
+ */
 public class PegasusPropertiesTest {
-    @BeforeClass
-    public static void setUpClass() {}
 
-    @AfterClass
-    public static void tearDownClass() {}
+    private static int mTestNumber = 1;
+
+    private TestSetup mTestSetup;
+    private LogManager mLogger;
+
+    private Map<String, String> mOriginalEnv;
+
+    public PegasusPropertiesTest() {}
 
     @Before
-    public void setUp() {}
+    public void setUp() {
+        mTestSetup = new DefaultTestSetup();
+        mOriginalEnv = System.getenv();
+        mTestSetup.setInputDirectory(this.getClass());
+        System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
+
+        mLogger =
+                mTestSetup.loadLogger(
+                        mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
+        mLogger.logEventStart("test.pegasus.url", "setup", "0");
+    }
 
     @After
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void tearDown() throws Exception {
+        mLogger = null;
+        mTestSetup = null;
     }
-    */
+
+    @Test
+    public void testSiteProfilesInProps() throws IOException, Exception {
+        mLogger.logEventStart(
+                "test.planner.common.PegasusProperties", "set", Integer.toString(mTestNumber++));
+
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        String key = "+testKey";
+        String value = "true";
+        String site = "CCG";
+        properties.setProperty(
+                "pegasus.catalog.site.sites." + site + ".profiles.condor." + key, value);
+
+        Profiles p = properties.getSiteProfiles(site);
+        assertNotNull(p);
+        for (Profiles.NAMESPACES ns : Profiles.NAMESPACES.values()) {
+            Namespace n = p.get(ns);
+            if (ns.toString().equals("condor")) {
+                assertEquals("Namspace should be of size", 1, n.size());
+                assertEquals("Value of key " + key, value, n.get(key));
+            } else {
+                assertTrue("Namepsace " + n.namespaceName() + " should be empty", n.isEmpty());
+            }
+        }
+        mLogger.logEventCompletion();
+    }
+
 }
