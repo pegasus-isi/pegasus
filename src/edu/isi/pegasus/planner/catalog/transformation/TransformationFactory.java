@@ -295,6 +295,7 @@ public class TransformationFactory {
                         catalogImplementor);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new TransformationFactoryException(
                     " Unable to instantiate Transformation Catalog ", catalogImplementor, e);
         }
@@ -379,7 +380,11 @@ public class TransformationFactory {
                 directory = TransformationFactory.DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY;
             }
             directory = new File(directory).getAbsolutePath();
-            properties.setProperty(Directory.DIRECTORY_PROPERTY_KEY, directory);
+            // need to set with the complete prefix as we are passing
+            // Pegasus properties not java properties
+            properties.setProperty(
+                    TransformationCatalog.c_prefix + "." + Directory.DIRECTORY_PROPERTY_KEY,
+                    directory);
 
             try {
                 catalog = TransformationFactory.loadInstance(bag);

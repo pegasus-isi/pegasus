@@ -1977,23 +1977,23 @@ Catalog Related Properties
 
 .. table:: Transformation Catalog Properties
 
-    +--------------------------------------------------+------------------------------------------------------------+
-    | Key Attributes                                   | Description                                                |
-    +==================================================+============================================================+
-    | | Property Key: pegasus.catalog.transformation   | | Pegasus supports two different types of site catalogs in |
-    | | Profile Key: N/A                               | | :ref:`YAML <tc-YAML>` or :ref:`Text <tc-Text>` formats   |
-    | | Scope : Properties                             | | Pegasus is able to auto-detect what schema a user site   |
-    | | Since : 2.0                                    | | catalog refers to. Hence, this property may no longer be |
-    | | Type : Enumeration                             | | set.                                                     |
-    | | Values : YAML|Text                             |                                                            |
-    | | Default : YAML                                 |                                                            |
-    +--------------------------------------------------+------------------------------------------------------------+
-    | | Property Key: pegasus.catalog.transformation   | | The path to the transformation catalog file, that        |
-    | | Profile Key : N/A                              | | describes the locations of the executables.              |
-    | | Scope : Properties                             |                                                            |
-    | | Since : 2.0                                    |                                                            |
-    | | Default : $PWD/transformations.yml|$PWD/tc.txt |                                                            |
-    +--------------------------------------------------+------------------------------------------------------------+
+    +-----------------------------------------------------+------------------------------------------------------------+
+    | Key Attributes                                      | Description                                                |
+    +=====================================================+============================================================+
+    | | Property Key: pegasus.catalog.transformation      | | Pegasus supports two different types of site catalogs in |
+    | | Profile Key: N/A                                  | | :ref:`YAML <tc-YAML>` or :ref:`Text <tc-Text>` formats   |
+    | | Scope : Properties                                | | Pegasus is able to auto-detect what schema a user site   |
+    | | Since : 2.0                                       | | catalog refers to. Hence, this property may no longer be |
+    | | Type : Enumeration                                | | set.                                                     |
+    | | Values : YAML|Directory|Text                      | | For **Directory** type, refer to the catalogs chapter    |
+    | | Default : YAML                                    | | in the ref:`reference guide <tc-directory>`.             |
+    +-----------------------------------------------------+------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.transformation.file | | The path to the transformation catalog file, that        |
+    | | Profile Key : N/A                                 | | describes the locations of the executables.              |
+    | | Scope : Properties                                |                                                            |
+    | | Since : 2.0                                       |                                                            |
+    | | Default : $PWD/transformations.yml|$PWD/tc.txt    |                                                            |
+    +-----------------------------------------------------+------------------------------------------------------------+
 
 .. _replica-sel-props:
 

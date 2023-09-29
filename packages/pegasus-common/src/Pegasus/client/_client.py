@@ -80,6 +80,7 @@ class Client:
         cache: List[str] = None,
         input_dirs: List[str] = None,
         output_dir: str = None,
+        transformations_dir: str = None,
         dir: str = None,
         relative_dir: str = None,
         relative_submit_dir: str = None,
@@ -166,6 +167,9 @@ class Client:
 
         if output_dir:
             cmd.extend(("--output-dir", output_dir))
+
+        if transformations_dir:
+            cmd.extend(("--transformations-dir", transformations_dir))
 
         if dir:
             cmd.extend(("--dir", dir))

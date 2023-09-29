@@ -209,11 +209,20 @@ public class CPlanner extends Executable {
             cPlanner.log(fe.convertException(), LogManager.FATAL_MESSAGE_LEVEL);
             result = 2;
         } catch (OutOfMemoryError error) {
-            cPlanner.log(
-                    "Out of Memory Error " + error.getMessage(), LogManager.FATAL_MESSAGE_LEVEL);
+            if (cPlanner.mLogger == null) {
+                // if you are out of memory or have wrong memory settings
+                // account for logger to be uninitialized
+                System.err.println("Out of memory error and logger is uninitialized");
+            } else {
+                cPlanner.log(
+                        "Out of Memory Error " + error.getMessage(),
+                        LogManager.FATAL_MESSAGE_LEVEL);
+            }
             error.printStackTrace();
-            // lets print out some GC stats
-            cPlanner.logMemoryUsage();
+            if (cPlanner.mLogger != null) {
+                // lets print out some GC stats
+                cPlanner.logMemoryUsage();
+            }
             result = 4;
         } catch (RuntimeException rte) {
             plannerException = rte;
@@ -1237,7 +1246,7 @@ public class CPlanner extends Executable {
                 .append(
                         "\n --staging-site        comma separated list of key=value pairs, where key is the execution site and value is the")
                 .append(
-                        "\n --transformations-dir directory where users transformations are picked up, defaults to transformations")
+                        "\n -t |--transformations-dir directory where users transformations are picked up, defaults to transformations")
                 .append(
                         "\n -v |--verbose         increases the verbosity of messages about what is going on")
                 .append(
