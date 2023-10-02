@@ -37,6 +37,7 @@ class Properties:
         "pegasus.catalog.replica.output.*",
         "pegasus.catalog.*.timeout",
         "pegasus.catalog.replica.db.*",
+        "pegasus.catalog.site.sites.*.profiles.*.*",
         "env.*",
         "dagman.*",
         "condor.*",
@@ -295,6 +296,34 @@ class Properties:
             return v
         else:
             return str(v)
+
+    @staticmethod
+    def _get_site_profile_key(site, namespace, key):
+        return "pegasus.catalog.site.sites.{site}.profiles.{namespace}.{key}".format(
+            site=site, namespace=namespace, key=key
+        )
+
+    def add_site_profile(self, site, namespace, key, value):
+        """
+        Maps a site profile to a property that can be picked up by the planner, to
+        override site catalog entries loaded from the Site Catalog.
+
+        :param site:  the site
+        :param namespace: the namespace for which profile has to be added
+        :param key:   the profile key
+        :param value: the profile value
+        :return:
+        """
+        if site is None:
+            raise ValueError("Site cannot be none")
+
+        if namespace is None:
+            raise ValueError("Namespace cannot be none")
+
+        if key is None:
+            raise ValueError("Key cannot be none")
+
+        self.__setitem__(self._get_site_profile_key(site, namespace, key), value)
 
     def write(self, file: Optional[Union[str, TextIO]] = None):
         """Write these properties to a file. If :code:`file` is not given, these

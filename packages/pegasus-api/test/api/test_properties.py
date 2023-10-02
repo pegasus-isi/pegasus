@@ -43,6 +43,7 @@ pegasus.pmc_task_arguments
         ("pegasus.ppn", 100),
         ("pegasus.catalog.site.file", Path("dir/regular.txt")),
         ("pegasus.catalog.site.file", Path("dir/with space.txt")),
+        ("pegasus.catalog.site.sites.condorpool.profiles.condor.+testKey", "value"),
     ],
 )
 def test_set_item(k, v, props):
@@ -119,6 +120,25 @@ def test_del_item(k, v, props):
     del props[k]
 
     assert k not in props._conf[DEFAULTSECT]
+
+
+@pytest.mark.parametrize(
+    "site, namespace, k, v", [("condorpool", "condor", "+testKey", "value")],
+)
+def test_add_site_profile(site, namespace, k, v, props):
+    key = Properties._get_site_profile_key(site, namespace, k)
+    props[key] = v
+    assert props[key] == str(v)
+
+
+@pytest.mark.parametrize(
+    "site, namespace, k", [("condorpool", "condor", "+testKey")],
+)
+def test_get_site_profile_key(site, namespace, k):
+    key = Properties._get_site_profile_key(site, namespace, k)
+    assert (
+        key == "pegasus.catalog.site.sites." + site + ".profiles." + namespace + "." + k
+    )
 
 
 def test_write_str_filename(props):
