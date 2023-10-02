@@ -127,7 +127,7 @@ def test_del_item(k, v, props):
 )
 def test_add_site_profile(site, namespace, k, v, props):
     key = Properties._get_site_profile_key(site, namespace, k)
-    props[key] = v
+    props.add_site_profile(site, namespace, k, v)
     assert props[key] == str(v)
 
 
