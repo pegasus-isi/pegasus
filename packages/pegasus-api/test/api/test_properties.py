@@ -132,6 +132,21 @@ def test_add_site_profile(site, namespace, k, v, props):
 
 
 @pytest.mark.parametrize(
+    "site, namespace, k, v",
+    [
+        (None, "condor", "+testKey", "value"),
+        ("condorpool", None, "+testKey", "value"),
+        ("condorpool", "condor", None, "value"),
+    ],
+)
+def test_add_invalid_site_profile(site, namespace, k, v, props):
+    with pytest.raises(ValueError) as e:
+        props.add_site_profile(site, namespace, k, v)
+
+    assert "cannot be none" in str(e)
+
+
+@pytest.mark.parametrize(
     "site, namespace, k", [("condorpool", "condor", "+testKey")],
 )
 def test_get_site_profile_key(site, namespace, k):
