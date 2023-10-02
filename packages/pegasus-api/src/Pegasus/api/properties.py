@@ -299,6 +299,15 @@ class Properties:
 
     @staticmethod
     def _get_site_profile_key(site, namespace, key):
+        if site is None:
+            raise ValueError("Site cannot be none")
+
+        if namespace is None:
+            raise ValueError("Namespace cannot be none")
+
+        if key is None:
+            raise ValueError("Key cannot be none")
+
         return "pegasus.catalog.site.sites.{site}.profiles.{namespace}.{key}".format(
             site=site, namespace=namespace, key=key
         )
@@ -314,14 +323,6 @@ class Properties:
         :param value: the profile value
         :return:
         """
-        if site is None:
-            raise ValueError("Site cannot be none")
-
-        if namespace is None:
-            raise ValueError("Namespace cannot be none")
-
-        if key is None:
-            raise ValueError("Key cannot be none")
 
         self.__setitem__(self._get_site_profile_key(site, namespace, key), value)
 

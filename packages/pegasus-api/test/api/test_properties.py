@@ -151,8 +151,8 @@ def test_add_invalid_site_profile(site, namespace, k, v, props):
 )
 def test_get_site_profile_key(site, namespace, k):
     key = Properties._get_site_profile_key(site, namespace, k)
-    assert (
-        key == "pegasus.catalog.site.sites." + site + ".profiles." + namespace + "." + k
+    assert key == "pegasus.catalog.site.sites.{site}.profiles.{namespace}.{key}".format(
+        site=site, namespace=namespace, key=k
     )
 
 
