@@ -15,11 +15,6 @@ package edu.isi.pegasus.planner.common;
 
 import static org.junit.Assert.*;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.*;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
@@ -30,6 +25,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
 import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * Test class to test the Pegasus Properties class
@@ -91,5 +88,4 @@ public class PegasusPropertiesTest {
         }
         mLogger.logEventCompletion();
     }
-
 }
