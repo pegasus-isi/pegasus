@@ -22,7 +22,6 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
-import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
@@ -36,7 +35,6 @@ import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerMetrics;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.GridStartFactory;
@@ -425,7 +423,7 @@ public class CPlanner extends Executable {
         s.setForPlannerUse(mProps, mPOptions);
 
         // update the local/output site entry if required
-        configurator.updateSiteStoreAndOptions(s, mPOptions);
+        configurator.updateSiteStoreAndOptions(s, mPOptions, mProps);
 
         if (eSites.contains("*")) {
             // set execution sites to all sites that are loaded into site store
@@ -1733,21 +1731,6 @@ public class CPlanner extends Executable {
 
         /* query for the sites, and print them out */
         mLogger.log("Sites loaded are " + result.list(), LogManager.DEBUG_MESSAGE_LEVEL);
-
-        // PM-1929 see if any site profiles need to be merged from the properties
-        for (String site : result.list()) {
-            SiteCatalogEntry s = result.lookup(site);
-            Profiles profiles = mProps.getSiteProfiles(site);
-            for (Profiles.NAMESPACES ns : Profiles.NAMESPACES.values()) {
-                for (Profile profile : profiles.getProfiles(ns)) {
-                    mLogger.log(
-                            "Adding profile to site " + site + " from properties " + profile,
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-                    s.addProfile(profile);
-                }
-            }
-        }
-
         return result;
     }
 

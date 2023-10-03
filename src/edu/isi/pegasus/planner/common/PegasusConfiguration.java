@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.ShellCommand;
 import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -213,8 +214,10 @@ public class PegasusConfiguration {
      *
      * @param store the outputSite store
      * @param options the planner options.
+     * @param properties the properties passed to the planner
      */
-    public void updateSiteStoreAndOptions(SiteStore store, PlannerOptions options) {
+    public void updateSiteStoreAndOptions(
+            SiteStore store, PlannerOptions options, PegasusProperties properties) {
 
         File pegasusBinDir = FindExecutable.findExec("pegasus-version").getParentFile();
         String pegasusHome = pegasusBinDir.getParent();
@@ -254,6 +257,20 @@ public class PegasusConfiguration {
                     "Constructed default site catalog entry for condorpool site "
                             + store.lookup("condorpool"),
                     LogManager.CONFIG_MESSAGE_LEVEL);
+        }
+
+        // PM-1929 see if any site profiles need to be merged from the properties
+        for (String site : store.list()) {
+            SiteCatalogEntry s = store.lookup(site);
+            Profiles profiles = properties.getSiteProfiles(site);
+            for (Profiles.NAMESPACES ns : Profiles.NAMESPACES.values()) {
+                for (Profile profile : profiles.getProfiles(ns)) {
+                    mLogger.log(
+                            "Adding profile to site " + site + " from properties " + profile,
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    s.addProfile(profile);
+                }
+            }
         }
 
         for (String outputSite : outputSites) {
