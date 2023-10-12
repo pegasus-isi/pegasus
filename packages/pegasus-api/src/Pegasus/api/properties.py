@@ -1,4 +1,5 @@
 import logging
+import re
 from configparser import DEFAULTSECT, ConfigParser
 from io import StringIO
 from typing import Optional, TextIO, Union
@@ -283,9 +284,15 @@ class Properties:
         else:
             for p in cls._pattern_props:
                 _ = p.split("*")
-                if k.startswith(_[0]) and k.endswith(_[1]) and len(k) >= len(p):
-                    rv = True
-                    break
+                if len(_) > 2:
+                    # do pure regex match , as there are more than 1 *
+                    if re.search(p, k) is not None:
+                        rv = True
+                        break
+                else:
+                    if k.startswith(_[0]) and k.endswith(_[1]) and len(k) >= len(p):
+                        rv = True
+                        break
 
         return rv
 
