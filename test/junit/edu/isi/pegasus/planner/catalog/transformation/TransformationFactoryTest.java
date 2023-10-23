@@ -18,10 +18,17 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Text;
 import edu.isi.pegasus.planner.catalog.transformation.impl.YAML;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
@@ -30,6 +37,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -268,6 +276,78 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(YAML.class));
+        } finally {
+            dir.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testFromDirectory() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.transformation.factory",
+                "default-transformations-dir",
+                Integer.toString(mTestNumber++));
+
+        SysInfo sysInfo = new SysInfo();
+        sysInfo.setArchitecture(SysInfo.Architecture.aarch64);
+        sysInfo.setOS(SysInfo.OS.linux);
+
+        TransformationCatalogEntry expected =
+                new TransformationCatalogEntry(null, "pegasus-keg", null);
+
+        // directory based tc entries are on site local
+        expected.setResourceId("local");
+        expected.setSysInfo(sysInfo);
+        expected.setType(TCType.STAGEABLE);
+        expected.setPhysicalTransformation(
+                new PegasusURL(
+                                new File(
+                                                TransformationFactory
+                                                        .DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY,
+                                                expected.getLogicalName())
+                                        .getAbsolutePath())
+                        .getURL());
+
+        this.testFromDirectory(expected, "compute-site");
+    }
+
+    private void testFromDirectory(TransformationCatalogEntry expected, String computeSite)
+            throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.transformation.factory",
+                "default-transformations-dir",
+                Integer.toString(mTestNumber++));
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+
+        // directory backend tc requires planner options set and also site store
+        // populated for an execution site
+        PlannerOptions options = new PlannerOptions();
+        options.setExecutionSites(computeSite);
+        bag.add(PegasusBag.PLANNER_OPTIONS, options);
+
+        SiteCatalogEntry entry = new SiteCatalogEntry(computeSite);
+        entry.setSysInfo(expected.getSysInfo());
+        SiteStore s = new SiteStore();
+        s.addEntry(entry);
+        bag.add(PegasusBag.SITE_STORE, s);
+
+        File dir = new File(TransformationFactory.DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY);
+        dir.mkdir();
+        File keg = new File(dir, expected.getLogicalName());
+        keg.createNewFile();
+        keg.setExecutable(true);
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+        try {
+            TransformationCatalog c = TransformationFactory.loadInstanceWithStores(bag, new ADag());
+            List<TransformationCatalogEntry> entries =
+                    c.lookup(
+                            null, expected.getLogicalName(), null, (String) null, TCType.STAGEABLE);
+            assertEquals(1, entries.size());
+            assertEquals("Expected transformation from directory as ", expected, entries.get(0));
         } finally {
             dir.delete();
         }
