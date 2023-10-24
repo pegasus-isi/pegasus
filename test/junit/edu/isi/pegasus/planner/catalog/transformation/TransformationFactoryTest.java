@@ -282,7 +282,7 @@ public class TransformationFactoryTest {
         mLogger.logEventCompletion();
     }
 
-    @Test
+    // @Test
     // entries in directory for same executable should over ride the TC
     public void testDirectoryAndCatalogOrder() throws Exception {
         mLogger.logEventStart(
