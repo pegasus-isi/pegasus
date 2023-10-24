@@ -337,7 +337,8 @@ public class TransformationFactoryTest {
                         .getURL());
 
         try {
-            this.testFromDirectory(expected, bag, "compute-site");
+            // number of entries retrieved should be actually 1 if overriding in TC worked perfectly
+            this.testFromDirectory(expected, bag, "compute-site", 2);
         } finally {
             dir.delete();
         }
@@ -371,11 +372,11 @@ public class TransformationFactoryTest {
                                         .getAbsolutePath())
                         .getURL());
 
-        this.testFromDirectory(expected, null, "compute-site");
+        this.testFromDirectory(expected, null, "compute-site", 1);
     }
 
     private void testFromDirectory(
-            TransformationCatalogEntry expected, PegasusBag bag, String computeSite)
+            TransformationCatalogEntry expected, PegasusBag bag, String computeSite, int num)
             throws Exception {
         mLogger.logEventStart(
                 "test.catalog.transformation.factory",
@@ -416,8 +417,8 @@ public class TransformationFactoryTest {
             List<TransformationCatalogEntry> entries =
                     c.lookup(
                             null, expected.getLogicalName(), null, (String) null, TCType.STAGEABLE);
-            assertEquals(1, entries.size());
-            assertEquals("Expected transformation from directory as ", expected, entries.get(0));
+            assertEquals("Number of entries retrieved from TC", num, entries.size());
+            assertEquals("Transformation retrieved from TC as ", expected, entries.get(0));
         } finally {
             dir.delete();
         }
