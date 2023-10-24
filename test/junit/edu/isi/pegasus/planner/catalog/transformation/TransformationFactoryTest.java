@@ -283,6 +283,68 @@ public class TransformationFactoryTest {
     }
 
     @Test
+    // entries in directory for same executable should over ride the TC
+    public void testDirectoryAndCatalogOrder() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.transformation.factory",
+                "default-directory-yaml-catalog-test",
+                Integer.toString(mTestNumber++));
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        Path p = Files.createTempDirectory("pegasus");
+        File dir = p.toFile();
+        File yaml =
+                new File(dir, TransformationFactory.DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
+        SysInfo sysInfo = new SysInfo();
+        sysInfo.setArchitecture(SysInfo.Architecture.aarch64);
+        sysInfo.setOS(SysInfo.OS.linux);
+
+        writer.write(
+                "pegasus: \"5.0\"\n"
+                        + "transformations:\n"
+                        + "  - name: pegasus-keg\n"
+                        + "    requires:\n"
+                        + "      - bar\n"
+                        + "    sites:\n"
+                        + "      - name: local\n"
+                        + "        pfn: /catalog/pegasus-keg\n"
+                        + "        type: stageable\n"
+                        + "        arch: "
+                        + sysInfo.getArchitecture().name()
+                        + "\n"
+                        + "        os.type: "
+                        + sysInfo.getOS().name());
+        writer.close();
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+
+        TransformationCatalogEntry expected =
+                new TransformationCatalogEntry(null, "pegasus-keg", null);
+
+        // directory based tc entries are on site local
+        expected.setResourceId("local");
+        expected.setSysInfo(sysInfo);
+        expected.setType(TCType.STAGEABLE);
+        expected.setPhysicalTransformation(
+                new PegasusURL(
+                                new File(
+                                                TransformationFactory
+                                                        .DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY,
+                                                expected.getLogicalName())
+                                        .getAbsolutePath())
+                        .getURL());
+
+        try {
+            this.testFromDirectory(expected, bag, "compute-site");
+        } finally {
+            dir.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
+    @Test
     public void testFromDirectory() throws Exception {
         mLogger.logEventStart(
                 "test.catalog.transformation.factory",
@@ -309,38 +371,46 @@ public class TransformationFactoryTest {
                                         .getAbsolutePath())
                         .getURL());
 
-        this.testFromDirectory(expected, "compute-site");
+        this.testFromDirectory(expected, null, "compute-site");
     }
 
-    private void testFromDirectory(TransformationCatalogEntry expected, String computeSite)
+    private void testFromDirectory(
+            TransformationCatalogEntry expected, PegasusBag bag, String computeSite)
             throws Exception {
         mLogger.logEventStart(
                 "test.catalog.transformation.factory",
                 "default-transformations-dir",
                 Integer.toString(mTestNumber++));
-        PegasusProperties props = PegasusProperties.nonSingletonInstance();
-        PegasusBag bag = new PegasusBag();
-        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
-        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
 
+        bag = bag == null ? new PegasusBag() : bag;
+
+        if (bag.getPegasusProperties() == null) {
+            PegasusProperties props = PegasusProperties.nonSingletonInstance();
+            bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        }
+        if (bag.getLogger() == null) {
+            bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        }
         // directory backend tc requires planner options set and also site store
         // populated for an execution site
-        PlannerOptions options = new PlannerOptions();
-        options.setExecutionSites(computeSite);
-        bag.add(PegasusBag.PLANNER_OPTIONS, options);
-
+        if (bag.getPlannerOptions() == null) {
+            PlannerOptions options = new PlannerOptions();
+            options.setExecutionSites(computeSite);
+            bag.add(PegasusBag.PLANNER_OPTIONS, options);
+        }
         SiteCatalogEntry entry = new SiteCatalogEntry(computeSite);
         entry.setSysInfo(expected.getSysInfo());
         SiteStore s = new SiteStore();
         s.addEntry(entry);
         bag.add(PegasusBag.SITE_STORE, s);
 
-        File dir = new File(TransformationFactory.DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY);
+        File parent = bag.getPlannerDirectory();
+        parent = parent == null ? new File(".") : parent;
+        File dir = new File(parent, TransformationFactory.DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY);
         dir.mkdir();
         File keg = new File(dir, expected.getLogicalName());
         keg.createNewFile();
         keg.setExecutable(true);
-        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
         try {
             TransformationCatalog c = TransformationFactory.loadInstanceWithStores(bag, new ADag());
             List<TransformationCatalogEntry> entries =
