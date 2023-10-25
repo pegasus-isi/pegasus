@@ -295,7 +295,7 @@ public class TransformationFactory {
                         catalogImplementor);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
             throw new TransformationFactoryException(
                     " Unable to instantiate Transformation Catalog ", catalogImplementor, e);
         }
