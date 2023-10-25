@@ -2626,7 +2626,14 @@ class GFALHandler(TransferHandlerBase):
 
     _name = "GFALHandler"
     _mkdir_cleanup_protocols = ["root", "srm", "gsidavs"]
-    _protocol_map = ["root->file", "file->root", "srm->file", "file->srm", "gsidavs->file", "file->gsidavs"]
+    _protocol_map = [
+        "root->file",
+        "file->root",
+        "srm->file",
+        "file->srm",
+        "gsidavs->file",
+        "file->gsidavs",
+    ]
 
     def do_mkdirs(self, mkdir_list):
 
@@ -2692,7 +2699,10 @@ class GFALHandler(TransferHandlerBase):
             cmd = "gfal-copy -f -p -t 7200 -T 7200"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
-            cmd = cmd + " '{}' '{}'".format(self._gfal_url(t.src_url()), self._gfal_url(t.dst_url()))
+            cmd = cmd + " '{}' '{}'".format(
+                self._gfal_url(t.src_url()),
+                self._gfal_url(t.dst_url()),
+            )
 
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=self._gfal_creds(t))
