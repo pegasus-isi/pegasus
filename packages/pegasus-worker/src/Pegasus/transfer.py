@@ -2625,8 +2625,8 @@ class GSHandler(TransferHandlerBase):
 class GFALHandler(TransferHandlerBase):
 
     _name = "GFALHandler"
-    _mkdir_cleanup_protocols = ["gfal"]
-    _protocol_map = ["root->file", "file->root", "srm->file", "file->srm"]
+    _mkdir_cleanup_protocols = ["root", "srm", "gsidavs"]
+    _protocol_map = ["root->file", "file->root", "srm->file", "file->srm", "gsidavs->file", "file->gsidavs"]
 
     def do_mkdirs(self, mkdir_list):
 
@@ -2644,7 +2644,7 @@ class GFALHandler(TransferHandlerBase):
             cmd = "gfal-mkdir -p"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
-            cmd = cmd + " '%s'" % (t.get_url())
+            cmd = cmd + " '%s'" % (self._gfal_url(t.get_url()))
 
             env_overrides = self._gfal_creds(t)
 
@@ -2692,7 +2692,7 @@ class GFALHandler(TransferHandlerBase):
             cmd = "gfal-copy -f -p -t 7200 -T 7200"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
-            cmd = cmd + " '{}' '{}'".format(t.src_url(), t.dst_url())
+            cmd = cmd + " '{}' '{}'".format(self._gfal_url(t.src_url()), self._gfal_url(t.dst_url()))
 
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=self._gfal_creds(t))
@@ -2726,7 +2726,7 @@ class GFALHandler(TransferHandlerBase):
                 cmd = cmd + " -v"
             if t.get_recursive():
                 cmd += " -r"
-            cmd = cmd + " '%s'" % (t.get_url())
+            cmd = cmd + " '%s'" % (self._gfal_url(t.get_url()))
 
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=self._gfal_creds(t))
@@ -2776,6 +2776,11 @@ class GFALHandler(TransferHandlerBase):
                 env_override["X509_USER_PROXY"] = os.environ[key]
 
         return env_override
+
+    def _gfal_url(self, url):
+        # modify urls to fit the gfal expectations
+        url = re.sub("^gsidavs", "davs", url)
+        return url
 
 
 class ScpHandler(TransferHandlerBase):

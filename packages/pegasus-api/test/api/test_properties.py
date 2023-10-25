@@ -75,6 +75,7 @@ def test__check_key(property_list, expected_result):
         ("invalid", "development"),
         ("Pegasus.mode", "development"),
         ("pegasus.catalog.replica.db.", "alpha"),
+        ("pegasus.catalog.site.sites.condorpool.profileS.condor.+testKey", "value"),
     ],
 )
 def test_set_item_fail(caplog, k, v, props):
@@ -123,7 +124,7 @@ def test_del_item(k, v, props):
 
 
 @pytest.mark.parametrize(
-    "site, namespace, k, v", [("condorpool", "condor", "+testKey", "value")],
+    "site, namespace, k, v", [("condorpool", "condor", "+testKey", "value"),],
 )
 def test_add_site_profile(site, namespace, k, v, props):
     key = Properties._get_site_profile_key(site, namespace, k)
