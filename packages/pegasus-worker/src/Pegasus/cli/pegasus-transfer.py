@@ -2655,7 +2655,7 @@ class GFALHandler(TransferHandlerBase):
         "srm->file",
         "file->srm",
         "gsidavs->file",
-        "file->gsidavs"
+        "file->gsidavs",
     ]
 
     def do_mkdirs(self, mkdir_list):
@@ -2724,7 +2724,7 @@ class GFALHandler(TransferHandlerBase):
                 cmd = cmd + " -v"
             cmd = cmd + " '%s' '%s'" % (
                 self._gfal_url(t.src_url()),
-                self._gfal_url(t.dst_url())
+                self._gfal_url(t.dst_url()),
             )
 
             try:
