@@ -1094,7 +1094,7 @@ the application.
 
           # optional site attribute to tell pegasus which site tar file
           # exists. useful for handling file URL's correctly
-          image_site "optional site"
+          image.site: "optional site"
 
           # the checksum of the container when it is exported as a file
           checksum: {sha256: dd78aaa88e1c6a8bf31c052eacfa03fba616ebfd903d7b2eb1b0ed6853b48713}
@@ -1124,10 +1124,10 @@ transformations can refer to the same container.
    that the image is available in the local shifter repository on the
    compute site. For example shifter:///papajim/namd_image:latest .
 
-#. **image_site** - The site identifier for the site where the container
+#. **image.site** - The site identifier for the site where the container
    is available
 
-#. **mount** - mount information to mount host directories into container of
+#. **mounts** - mount information to mount host directories into container of
    format src-dir:dest-dir[:options] . Consult Docker and Singularity
    documentation for options supported for -v and -B options
    respectively.
