@@ -124,7 +124,11 @@ def test_del_item(k, v, props):
 
 
 @pytest.mark.parametrize(
-    "site, namespace, k, v", [("condorpool", "condor", "+testKey", "value"),],
+    "site, namespace, k, v",
+    [
+        ("condorpool", "condor", "+testKey", "value"),
+        ("condorpool", "condor", "+run_on_test_cluster", "true"),
+    ],
 )
 def test_add_site_profile(site, namespace, k, v, props):
     key = Properties._get_site_profile_key(site, namespace, k)
