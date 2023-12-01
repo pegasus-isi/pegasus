@@ -2700,8 +2700,7 @@ class GFALHandler(TransferHandlerBase):
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
             cmd = cmd + " '{}' '{}'".format(
-                self._gfal_url(t.src_url()),
-                self._gfal_url(t.dst_url()),
+                self._gfal_url(t.src_url()), self._gfal_url(t.dst_url()),
             )
 
             try:
