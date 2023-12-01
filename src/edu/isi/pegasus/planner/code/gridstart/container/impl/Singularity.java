@@ -96,8 +96,8 @@ public class Singularity extends Abstract {
         sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
         ;
 
-        // PM-1888 the pegasus-lite-common.sh determines what 
-        // is the singularity executable to use. We prefer apptainer if 
+        // PM-1888 the pegasus-lite-common.sh determines what
+        // is the singularity executable to use. We prefer apptainer if
         // it exists
         sb.append("$singularity_exec exec").append(" ");
 
