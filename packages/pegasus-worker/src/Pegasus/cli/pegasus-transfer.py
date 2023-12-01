@@ -3711,11 +3711,15 @@ class SingularityHandler(TransferHandlerBase):
     def do_transfers(self, transfers_l):
 
         tools = utils.Tools()
-        if tools.find("singularity", "--version", "^([0-9]+\.[0-9]+)") is None:
+        singularity_exec = tools.find(
+            "apptainer", "--version", "^([0-9]+\.[0-9]+)"
+        ) or tools.find("singularity", "--version", "^([0-9]+\.[0-9]+)")
+        if singularity_exec is None:
             logger.error(
-                "Unable to do pull Singularity images as singularity command could not be found"
+                "Unable to do pull Singularity images as unable to find either apptainer or singularity commands"
             )
             return [[], transfers_l]
+        logger.info("Using Singularity executable: '%s'" % (singularity_exec))
 
         successful_l = []
         failed_l = []
@@ -3731,7 +3735,7 @@ class SingularityHandler(TransferHandlerBase):
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
 
             cmd = "%s pull --allow-unauthenticated '%s' '%s' && mv %s* '%s'" % (
-                tools.full_path("singularity"),
+                singularity_exec,
                 target_name,
                 t.src_url(),
                 target_name,
