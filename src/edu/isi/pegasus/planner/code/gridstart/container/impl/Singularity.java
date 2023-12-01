@@ -96,8 +96,10 @@ public class Singularity extends Abstract {
         sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
         ;
 
-        // assume singularity is available in path
-        sb.append("singularity exec").append(" ");
+        // PM-1888 the pegasus-lite-common.sh determines what
+        // is the singularity executable to use. We prefer apptainer if
+        // it exists
+        sb.append("$singularity_exec exec").append(" ");
 
         // do not mount home - this might not exists when running under for example the nobody user
         sb.append("--no-home").append(" ");
