@@ -438,6 +438,18 @@ singularity_init()
         pegasus_lite_log "singularity_init should be passed a docker url or a file"
         return 1
     fi
+
+    # prefer apptainer executable if it exists
+    singularity_exec=`which apptainer 2>/dev/null || true`
+    if [ ! -x $singularity_exec ] ; then
+	singularity_exec=`which singularity 2>/dev/null || true`
+    fi
+
+    if [ "X$singularity_exec" = "X" ]; then
+	pegasus_lite_log "Unable to find apptainer or singularity executable"	
+	return 1
+    fi
+    export $singularity_exec
     
     container_init
 
