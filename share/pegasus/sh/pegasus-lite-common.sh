@@ -449,6 +449,7 @@ singularity_init()
 	pegasus_lite_log "Unable to find apptainer or singularity executable"	
 	return 1
     fi
+    pegasus_lite_log "Using $singularity_exec to run the container"
     export singularity_exec
     
     container_init
