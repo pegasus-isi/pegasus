@@ -441,7 +441,7 @@ singularity_init()
 
     # prefer apptainer executable if it exists
     singularity_exec=`which apptainer 2>/dev/null || true`
-    if [ ! -x $singularity_exec ] ; then
+    if [ "X$singularity_exec" = "X" ]; then
 	singularity_exec=`which singularity 2>/dev/null || true`
     fi
 
