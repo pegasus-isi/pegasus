@@ -441,7 +441,7 @@ singularity_init()
 
     # prefer apptainer executable if it exists
     singularity_exec=`which apptainer 2>/dev/null || true`
-    if [ ! -x $singularity_exec ] ; then
+    if [ "X$singularity_exec" = "X" ]; then
 	singularity_exec=`which singularity 2>/dev/null || true`
     fi
 
@@ -449,7 +449,8 @@ singularity_init()
 	pegasus_lite_log "Unable to find apptainer or singularity executable"	
 	return 1
     fi
-    export $singularity_exec
+    pegasus_lite_log "Using $singularity_exec to run the container"
+    export singularity_exec
     
     container_init
 
