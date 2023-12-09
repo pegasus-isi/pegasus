@@ -3683,8 +3683,8 @@ class SingularityHandler(TransferHandlerBase):
 
         tools = utils.Tools()
         singularity_exec = tools.find(
-            "apptainer", "--version", "^([0-9]+\.[0-9]+)"
-        ) or tools.find("singularity", "--version", "^([0-9]+\.[0-9]+)")
+            "apptainer", "--version", r"^([0-9]+\.[0-9]+)"
+        ) or tools.find("singularity", "--version", r"^([0-9]+\.[0-9]+)")
         if singularity_exec is None:
             logger.error(
                 "Unable to do pull Singularity images as unable to find either apptainer or singularity commands"
