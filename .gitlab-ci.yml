@@ -301,7 +301,7 @@ macOS:
 Docs and R Package:
   <<: *retry-and-timeout
   stage: build
-  image: pegasus/buildenv:rhel_7
+  image: pegasus/buildenv:rhel_9
   before_script:
   - env
   #- set -ex
