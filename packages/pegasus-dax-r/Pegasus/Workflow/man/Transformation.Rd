@@ -60,8 +60,6 @@ Transformation(namespace='montage',name='mDiff',version='3.0')
   mFitplane <- Executable(namespace="montage", name="mFitplane", version="3.0")
   mDiffFit <- Executable(namespace="montage", name="mDiffFit", version="3.0")
   x_mDiffFit <- Transformation(mDiffFit)
-  x_mDiffFit <- Uses(x_mDiffFit, mDiff)
-  x_mDiffFit <- Uses(x_mDiffFit, mFitplane)
 
 # Config files too:
   conf <- File("jbsim.conf")
