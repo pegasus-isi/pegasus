@@ -161,11 +161,15 @@ public abstract class Abstract implements CondorStyle {
                 // make sure we can have a path to credential
                 String credentialPath = handler.getPath(siteHandle);
                 if (credentialPath == null) {
-                    this.complainForCredential(job, handler.getProfileKey(), siteHandle);
+                    if (credType != CredentialHandler.TYPE.http) {
+                        this.complainForCredential(job, handler.getProfileKey(), siteHandle);
+                    }
                 }
 
                 // PM-1150 verify credential
-                handler.verify(job, credType, credentialPath);
+                if (credentialPath != null) {
+                    handler.verify(job, credType, credentialPath);
+                }
 
                 switch (credType) {
                     case x509:
@@ -194,23 +198,54 @@ public abstract class Abstract implements CondorStyle {
 
                         break;
 
+                    case http:
+                        if (credentialPath != null) {
+                            // PM-1935 check if there is http url prefix defined
+                            // in credentials file for associated http endpoints for
+                            // the job for the site
+                            Set<String> endpoints = job.getDataURLEndpoints(siteHandle);
+                            boolean add = false;
+                            for (String endpoint : endpoints) {
+                                if (handler.hasCredential(credentialPath, endpoint)) {
+                                    // for http transfers we have to associate
+                                    // credential file only if it is determined
+                                    // to contain the information for the endpoint
+                                    // we get out of loop on first detection, since
+                                    // we have to add the credential file to the job
+                                    add = true;
+                                }
+                            }
+                            if (add) {
+                                // transfer using condor file transfer, and advertise in env
+                                // but first make sure it is specified in our environment
+                                credentialsForCondorFileTransfer.add(credentialPath);
+                                job.envVariables.construct(
+                                        handler.getEnvironmentVariable(siteHandle),
+                                        handler.getBaseName(siteHandle));
+                            }
+                        }
+                        break;
                     case credentials:
                     case irods:
                     case s3:
                     case boto:
                     case googlep12:
                     case ssh:
-                        // transfer using condor file transfer, and advertise in env
-                        // but first make sure it is specified in our environment
-                        credentialsForCondorFileTransfer.add(credentialPath);
-                        job.envVariables.construct(
-                                handler.getEnvironmentVariable(siteHandle),
-                                handler.getBaseName(siteHandle));
+                        if (credentialPath != null) {
+                            // transfer using condor file transfer, and advertise in env
+                            // but first make sure it is specified in our environment
+                            credentialsForCondorFileTransfer.add(credentialPath);
+                            job.envVariables.construct(
+                                    handler.getEnvironmentVariable(siteHandle),
+                                    handler.getBaseName(siteHandle));
+                        }
                         break;
-
                     default:
                         throw new CondorStyleException(
-                                "Job has been tagged with unknown credential type");
+                                "Job "
+                                        + job.getID()
+                                        + " has been tagged with unknown credential type "
+                                        + credType);
                 }
             } // for each credential for each site
         }
@@ -241,8 +276,42 @@ public abstract class Abstract implements CondorStyle {
             String siteHandle = entry.getKey();
             for (CredentialHandler.TYPE credType : entry.getValue()) {
                 CredentialHandler handler = mCredentialFactory.loadInstance(credType);
+                // make sure we can have a path to credential
+                String credentialPath = handler.getPath(siteHandle);
+                if (credentialPath == null) {
+                    if (credType != CredentialHandler.TYPE.http) {
+                        this.complainForCredential(job, handler.getProfileKey(), siteHandle);
+                    }
+                }
+
+                // PM-1150 verify credential
+                if (credentialPath != null) {
+                    handler.verify(job, credType, credentialPath);
+                }
 
                 switch (credType) {
+                    case http:
+                        if (credentialPath != null) {
+                            // PM-1935 check if there is http url prefix defined
+                            // in credentials file for associated http endpoints for
+                            // the job for the site
+                            Set<String> endpoints = job.getDataURLEndpoints(siteHandle);
+                            boolean associate = false;
+                            for (String endpoint : endpoints) {
+                                if (handler.hasCredential(credentialPath, endpoint)) {
+                                    // for http transfers we have to associate
+                                    // credential file only if it is determined
+                                    // to contain the information for the endpoint
+                                    // we get out of loop on first detection, since
+                                    // we have to add the credential file to the job
+                                    associate = true;
+                                }
+                            }
+                            if (associate) {
+                                applyCredentialForLocalExec(handler, credType, job, siteHandle);
+                            }
+                        }
+                        break;
                     case credentials:
                     case x509:
                     case irods:
@@ -250,28 +319,15 @@ public abstract class Abstract implements CondorStyle {
                     case boto:
                     case googlep12:
                     case ssh:
-                        // for local exec, just set envionment variables to full path
-                        String path = handler.getPath(siteHandle);
-                        if (path == null) {
-                            this.complainForCredential(job, handler.getProfileKey(), siteHandle);
-                        }
-
-                        // PM-1150 verify credential
-                        handler.verify(job, credType, path);
-
-                        // PM-1358 check if local credential path is valid or not
-                        if (this.localCredentialPathValid(path)) {
-                            job.envVariables.construct(
-                                    handler.getEnvironmentVariable(siteHandle), path);
-                        } else {
-                            // flag an error
-                            this.complainForMountUnderScratch(job, path);
-                        }
+                        applyCredentialForLocalExec(handler, credType, job, siteHandle);
                         break;
 
                     default:
                         throw new CondorStyleException(
-                                "Job has been tagged with unknown credential type");
+                                "Job "
+                                        + job.getID()
+                                        + " has been tagged with unknown credential type "
+                                        + credType);
                 }
             }
         }
@@ -419,5 +475,35 @@ public abstract class Abstract implements CondorStyle {
             }
         }
         return valid;
+    }
+
+    /**
+     * A convenience method to setup credential for a job that executes locally
+     *
+     * @param handler
+     * @param credType
+     * @param job
+     * @param siteHandle
+     * @throws CondorStyleException
+     */
+    private void applyCredentialForLocalExec(
+            CredentialHandler handler, CredentialHandler.TYPE credType, Job job, String siteHandle)
+            throws CondorStyleException {
+        // for local exec, just set envionment variables to full path
+        String path = handler.getPath(siteHandle);
+        if (path == null) {
+            this.complainForCredential(job, handler.getProfileKey(), siteHandle);
+        }
+
+        // PM-1150 verify credential
+        handler.verify(job, credType, path);
+
+        // PM-1358 check if local credential path is valid or not
+        if (this.localCredentialPathValid(path)) {
+            job.envVariables.construct(handler.getEnvironmentVariable(siteHandle), path);
+        } else {
+            // flag an error
+            this.complainForMountUnderScratch(job, path);
+        }
     }
 }
