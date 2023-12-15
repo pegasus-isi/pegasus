@@ -67,7 +67,7 @@ function test_local_cp {
 function test_http_headers {
     chmod 600 http-headers.creds
     PEGASUS_CREDENTIALS=$PWD/http-headers.creds transfer --file http-headers.in
-    if ! (grep 'real_custom: It works!' test.out) >/dev/null 2>&1; then
+    if ! (grep 'real_custom: It works!' test.err) >/dev/null 2>&1; then
         echo "ERROR: The wget/curl command line does not have the custom header"
         return 1
     fi
