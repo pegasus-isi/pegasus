@@ -64,6 +64,16 @@ function test_local_cp {
     return $?
 }
 
+function test_http_headers {
+    chmod 600 http-headers.creds
+    PEGASUS_CREDENTIALS=$PWD/http-headers.creds transfer --file http-headers.in
+    if ! (grep 'real_custom: It works!' test.out) >/dev/null 2>&1; then
+        echo "ERROR: The wget/curl command line does not have the custom header"
+        return 1
+    fi
+    return $?
+}
+
 function test_integrity_local_cp {
     rm -f $KICKSTART_INTEGRITY_DATA
     if ! (transfer --file cp.in); then
@@ -199,6 +209,7 @@ rm -f $KICKSTART_INTEGRITY_DATA
 # RUN THE TESTS
 run_test test_integrity
 run_test test_local_cp
+run_test test_http_headers
 run_test test_integrity_local_cp
 
 # requires singularity v3.0 or greater for all transfers to work

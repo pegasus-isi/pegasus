@@ -1332,6 +1332,7 @@ class HttpHandler(TransferHandlerBase):
                 cmd += (
                     " --no-cookies --no-check-certificate"
                     + " --timeout=300 --tries=1"
+                    + self._cred_options("wget", t.get_src_proto(), t.get_src_host())
                     + " -O '"
                     + t.get_dst_path()
                     + "'"
@@ -1345,6 +1346,7 @@ class HttpHandler(TransferHandlerBase):
                     cmd += " -s -S"
                 cmd += (
                     " --insecure --location"
+                    + self._cred_options("curl", t.get_src_proto(), t.get_src_host())
                     + " -o '"
                     + t.get_dst_path()
                     + "'"
@@ -1373,6 +1375,28 @@ class HttpHandler(TransferHandlerBase):
             successful_l.append(t)
 
         return [successful_l, failed_l]
+
+    def _cred_options(self, tool, proto, host):
+        options = ""
+        if not credentials:
+            return ""
+        # determine if there is an specific entry for the URL, or generic one
+        section = None
+        if credentials.has_section(f"{proto}://{host}"):
+            section = f"{proto}://{host}"
+        elif credentials.has_section(host):
+            section = host
+        if not section:
+            return ""
+        # iterate over the keys
+        for key, value in credentials.items(section):
+            if key.startswith("header."):
+                realkey = key.replace("header.", "")
+                if tool == "wget":
+                    options += f" --header='{realkey}: {value}'"
+                else:
+                    options += f" --header '{realkey}: {value}'"
+        return options
 
 
 class HPSSHandler(TransferHandlerBase):

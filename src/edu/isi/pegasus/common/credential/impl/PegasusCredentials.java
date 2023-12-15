@@ -19,7 +19,17 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.configuration2.INIConfiguration;
+import org.apache.commons.configuration2.SubnodeConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 
 /**
  * A convenience class that allows us to determine the path to the user's Pegasus credentials file.
@@ -43,9 +53,16 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
     /** The local path to the credential */
     private String mLocalCredentialPath;
 
+    /**
+     * A map indexed by a credential file path and maps to the contents of that credential file in
+     * the ini file format.
+     */
+    private Map<String, Map<String, Map<String, String>>> mCredfileContents;
+
     /** The default constructor. */
     public PegasusCredentials() {
         super();
+        mCredfileContents = new HashMap();
     }
 
     /**
@@ -57,6 +74,7 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
     public void initialize(PegasusBag bag) {
         super.initialize(bag);
         mLocalCredentialPath = this.getLocalPath();
+        // loadPegasusCredentialsFile(mLocalCredentialPath);
     }
 
     /**
@@ -187,5 +205,61 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
      */
     public String getDescription() {
         return PegasusCredentials.DESCRIPTION;
+    }
+
+    /**
+     * Returns a boolean whether a credential located at a particular path has credentials for a
+     * particular endpoint or not
+     *
+     * @param credentialPath the path to credentials file of that type
+     * @param endpoint the end point
+     * @return
+     */
+    public boolean hasCredential(String credentialPath, String endpoint) {
+        if (!this.mCredfileContents.containsKey(credentialPath)) {
+            // sanity check before loading
+            this.verify(null, TYPE.credentials, credentialPath);
+            this.mCredfileContents.put(credentialPath, loadPegasusCredentialsFile(credentialPath));
+        }
+
+        // we have this credential file loaded
+        // check for the section for the end point
+        return this.mCredfileContents.get(credentialPath).containsKey(endpoint);
+    }
+
+    /**
+     * Loads a credential file using the ini file reader. The contents get loaded indexed by section
+     * name, and list is a map of key value pairs
+     *
+     * @param file
+     * @return Map<String, Map<String, String>>
+     */
+    protected Map<String, Map<String, String>> loadPegasusCredentialsFile(String file) {
+        INIConfiguration iniConfiguration = new INIConfiguration();
+        try (FileReader fileReader = new FileReader(file)) {
+            iniConfiguration.read(fileReader);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(PegasusCredentials.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(PegasusCredentials.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ConfigurationException ex) {
+            Logger.getLogger(PegasusCredentials.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        Map<String, Map<String, String>> iniFileContents = new HashMap<>();
+
+        for (String section : iniConfiguration.getSections()) {
+            Map<String, String> subSectionMap = new HashMap<>();
+            SubnodeConfiguration confSection = iniConfiguration.getSection(section);
+            Iterator<String> keyIterator = confSection.getKeys();
+            while (keyIterator.hasNext()) {
+                String key = keyIterator.next();
+                String value = confSection.getProperty(key).toString();
+                subSectionMap.put(key, value);
+            }
+            iniFileContents.put(section, subSectionMap);
+        }
+
+        return iniFileContents;
     }
 }
