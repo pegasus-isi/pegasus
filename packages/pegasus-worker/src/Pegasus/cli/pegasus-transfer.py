@@ -1367,7 +1367,7 @@ class HttpHandler(TransferHandlerBase):
                 if not logger.isEnabledFor(logging.DEBUG):
                     cmd += " -s -S"
                 cmd += (
-                    " --insecure --location"
+                    " --fail --insecure --location"
                     + self._cred_options("curl", t.get_src_proto(), t.get_src_host())
                     + " -o '"
                     + t.get_dst_path()
