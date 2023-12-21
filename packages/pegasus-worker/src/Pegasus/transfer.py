@@ -1340,7 +1340,7 @@ class HttpHandler(TransferHandlerBase):
                 if not logger.isEnabledFor(logging.DEBUG):
                     cmd += " -s -S"
                 cmd += (
-                    " --insecure --location"
+                    "--fail --insecure --location"
                     + " -o '"
                     + t.get_dst_path()
                     + "'"
@@ -5143,7 +5143,7 @@ def pegasus_transfer(
     2. loads credentials
     3. starts threads to handle transfers
 
-    pegasus-transfer may be directly invoked using this as an alternative to the 
+    pegasus-transfer may be directly invoked using this as an alternative to the
     pegasus-tranfser CLI tool.
 
 
