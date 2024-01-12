@@ -708,10 +708,46 @@ is just an arbitrary name with an endpoint entry. Example:
     access_key = 90c4143642cb097c88fe2ec66ce4ad4e
     secret_key = abababababababababababababababab
 
+    # If you want to retrieve protected data using a token
+    # from a HTTP server. For example from a private GitHub
+    # or GitLab repository, you can specify the private token
+    # that is passed through as a header when retrieving the data
+    # using curl or wget.
+
+    [https://example.isi.edu]
+    header.Private-Token=XXXXYYYYXXXX
 
 The ``~/.pegasus/credentials.conf`` file will be picked up
 automatically by the planner and sent with the job in case
 the credentials are needed.
+
+
+.. _http-cred:
+
+HTTP Private Tokens
+-------------------
+
+Pegasus allows for you to list a private token and other http headers for
+retrieving data from a HTTP server in the pegasus credentials file. The
+credentials file gets associated with a job only if Pegasus determines
+that the HTTP server URL prefix is listed in the credentials file.
+
+In the example below; if a job retrieves data frm https://example.isi.edu
+will have a credentials file associated with it. However, a job
+retrieving data from https://data.isi.edu will not have the credentials
+file associated with it.
+
+::
+
+    # If you want to retrieve protected data using a token
+    # from a HTTP server. For example from a private GitHub
+    # or GitLab repository, you can specify the private token
+    # that is passed through as a header when retrieving the data
+    # using curl or wget.
+
+    [https://example.isi.edu]
+    header.Private-Token=XXXXYYYYXXXX
+
 
 
 .. _x509-cred:
