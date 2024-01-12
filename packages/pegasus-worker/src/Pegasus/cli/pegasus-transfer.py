@@ -123,8 +123,7 @@ class PegasusURL:
     path = ""
 
     def __init__(self, url, file_type, site_label, priority=0):
-        # the url should be URL decoded to work with our shell callouts
-        self.url = urllib.unquote(url)
+        self.url = url
         self.file_type = file_type
         # make the site label to match site labels in the env
         self.site_label = site_label.replace("-", "_")
