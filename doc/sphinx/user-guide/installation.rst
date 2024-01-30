@@ -245,3 +245,34 @@ Pegasus Python Packages for PyPi
    ::
 
       $ pip install pegasus-wms.api
+
+Mixing Environments (system/venv/conda/...)
+===========================================
+
+If you need to mix a Pegasus install with other environments, such as using
+the Pegasus command line tools from a system install, but use the Python
+install and libraries from Conda, you can tell Pegasus to leave the
+environment alone. Note that by doing this, you will need to supply the 
+requirements in your own environment. Set the environemnt variable:
+
+   ::
+
+      $ export PEGASUS_UPDATE_PYTHONPATH=0
+
+Then install the following packages:
+
+
+   ::
+
+      boto3
+      certifi
+      GitPython
+      pyjwt
+      pyyaml
+      s3transfer
+      six
+      urllib3
+
+You should now be able to use the Pegasus command line tools.
+
+

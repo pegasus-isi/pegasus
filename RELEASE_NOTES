@@ -1,4 +1,45 @@
 ===============================
+Release Notes for Pegasus 5.0.7
+===============================
+
+We are happy to announce the release of Pegasus 5.0.7, which is a minor
+bug fix release for Pegasus 5.0 branch.
+
+The release can be downloaded from https://pegasus.isi.edu/downloads
+
+This release included improvements such as
+ - users now to specify an input directory with executables to avoid
+     creating a transformation catalog 
+ - support for SGE clusters in pegasus-init
+ - support for private tokens while retrieving data from http endpoints
+ - preference of apptainer executables over singularity
+ 
+JIRA items
+----------------------------
+Exhaustive list of features, improvements and bug fixes can be found below.
+Pegasus JIRA is accessible at https://jira.isi.edu/
+
+New Features and Improvements
+-----------------------------
+1) [PM-1926] – pegasus should allow users to specify an input directory with
+            executables to avoid creating a TC
+2) [PM-1888] – Apptainer support
+3) [PM-1929] – convenient way to associate profiles for a site in properties file
+4) [PM-1931] – support for local SGE cluster in pegasus-init
+5) [PM-1933] – support for private-token to curl invocations
+6) [PM-1936] – CLONE – support for local SGE cluster in pegasus-init
+7) [PM-1928] – update python api to add the -t|–transformations-dir to the planner
+8) [PM-1930] – add a convenience function to python api for adding site profiles
+9) [PM-1935] – update the planner to optionally use the credentials file
+               for http transfers
+ 
+Bugs Fixed
+----------
+1) [PM-1921] – arm arch string not consistent on linux and mac platforms
+2) [PM-1922] – fix recording of download metrics
+3) [PM-1927] – kickstart fails to filter out some UTF-8 non-printable characters
+
+===============================
 Release Notes for Pegasus 5.0.6
 ===============================
 
