@@ -69,7 +69,7 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
     # it is annoying when we can't run for example Java tools because of a missing
     # Python module.
     if [ $ALLOW_PY2 = 0 ]; then
-        if [ "x$BASE_NAME" != "xpegasus-config" ]; then
+        if [ "x$BASE_NAME" != "xpegasus-preflight-check" -a "x$BASE_NAME" != "xpegasus-config" ]; then
             # this is just a warning for now
             "$PEXE" "$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py" || true
         fi
@@ -80,12 +80,17 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
     export PEGASUS_PYTHON
 
     # set up a PYTHONPATH so the tools do not have to worry about that, but remember the original one
-    PEGASUS_ORIG_PYTHONPATH=$PYTHONPATH
-    export PEGASUS_ORIG_PYTHONPATH
-    PYTHONPATH="$PEGASUS_HOME/@PYTHON_LIBDIR@:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python${PYTHONPATH:+:}${PYTHONPATH}"
-    export PYTHONPATH
-    PEGASUS_PYTHONPATH_SET=1
-    export PEGASUS_PYTHONPATH_SET
+    if [ "x$PEGASUS_UPDATE_PYTHONPATH" != "x0" ]; then
+        PEGASUS_ORIG_PYTHONPATH=$PYTHONPATH
+        export PEGASUS_ORIG_PYTHONPATH
+        PYTHONPATH="$PEGASUS_HOME/@PYTHON_LIBDIR@:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python${PYTHONPATH:+:}${PYTHONPATH}"
+        export PYTHONPATH
+        PEGASUS_PYTHONPATH_SET=1
+        export PEGASUS_PYTHONPATH_SET
+    else
+        # make sure we carry the setting forward
+        export PEGASUS_UPDATE_PYTHONPATH
+    fi
 
 fi
 
