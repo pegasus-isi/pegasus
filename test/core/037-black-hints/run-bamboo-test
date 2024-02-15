@@ -47,7 +47,7 @@ cat >sites.xml <<EOF
     </site>
 
     <site  handle="CCG" arch="x86_64" os="LINUX">
-        <grid  type="batch" contact="slurm-pegasus.isi.edu" scheduler="slurm" jobtype="auxillary"/>
+        <grid  type="batch" contact="slurm-pegasus.isi.edu:2222" scheduler="slurm" jobtype="auxillary"/>
 	        <!-- incorrect end point given deliberately -->
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor1" scheduler="Condor" jobtype="compute"/>
 
