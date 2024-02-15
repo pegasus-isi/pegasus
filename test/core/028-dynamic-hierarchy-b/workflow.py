@@ -43,8 +43,8 @@ local_site.add_directories(
 # CCG site
 ccg_site = Site(name="CCG", arch=Arch.X86_64, os_type=OS.LINUX)
 ccg_site.add_grids(
-    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu", scheduler_type=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
-    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu", scheduler_type=Scheduler.SLURM, job_type=SupportedJobs.COMPUTE),
+    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu:2222", scheduler_type=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
+    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu:2222", scheduler_type=Scheduler.SLURM, job_type=SupportedJobs.COMPUTE),
 )
 ccg_site.add_directories(
     Directory(Directory.SHARED_SCRATCH, "/nfs/bamboo/scratch-90-days/CCG/scratch")
