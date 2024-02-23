@@ -50,6 +50,7 @@ public class PegasusCredentialsTest {
 
     private static int mTestNumber = 1;
     private PegasusProperties mProps;
+    private static String CREDENTIALS_TEST_FILE = "credentials.conf";
 
     public PegasusCredentialsTest() {}
 
@@ -186,6 +187,39 @@ public class PegasusCredentialsTest {
         }
     }
 
+    @Test
+    public void testForExistingEndpointInCredFile() throws IOException {
+
+        File credFile = new File(mTestSetup.getInputDirectory(), CREDENTIALS_TEST_FILE);
+
+        this.testForEndpointInCredentialFile(
+                credFile,
+                CredentialHandler.TYPE.http,
+                "http://download.pegasus.isi.edu",
+                true,
+                "testForExistingEndpointInCredFile");
+    }
+
+    @Test
+    public void testForNonExistingEndpointInCredFile() throws IOException {
+
+        File credFile = new File(mTestSetup.getInputDirectory(), CREDENTIALS_TEST_FILE);
+
+        this.testForEndpointInCredentialFile(
+                credFile,
+                CredentialHandler.TYPE.http,
+                "http://not.existant.endpoint",
+                false,
+                "testForNonExistingEndpointInCredFile");
+    }
+
+    /**
+     * @param credFile
+     * @param expectedException
+     * @param type
+     * @param testName
+     * @throws IOException
+     */
     private void testVerify(
             File credFile,
             Exception expectedException,
@@ -223,6 +257,47 @@ public class PegasusCredentialsTest {
                             + expectedException.getMessage(),
                     exception.getMessage().contains(expectedException.getMessage()));
         }
+        mLogger.logEventCompletion();
+    }
+
+    /**
+     * Tests whether there is a credential for an particular endpoint in a credential file
+     *
+     * @param credFile
+     * @param type
+     * @param endPoint
+     * @param exists
+     * @param testName
+     * @throws IOException
+     */
+    private void testForEndpointInCredentialFile(
+            File credFile,
+            CredentialHandler.TYPE type,
+            String endPoint,
+            boolean exists,
+            String testName)
+            throws IOException {
+        mLogger.logEventStart(
+                "test.pegasus.common.credentials.PegasusCredentials",
+                testName,
+                Integer.toString(mTestNumber++));
+
+        mProps.setProperty(
+                Profiles.NAMESPACES.pegasus
+                        + "."
+                        + PegasusCredentials.CREDENTIALS_FILE.toLowerCase(),
+                credFile.toString());
+        CredentialHandlerFactory factory = new CredentialHandlerFactory();
+        factory.initialize(mBag);
+
+        CredentialHandler credentials = factory.loadInstance(CredentialHandler.TYPE.credentials);
+        credentials.verify(new Job(), type, credFile.getAbsolutePath());
+
+        assertEquals(
+                endPoint + " existence in cred file",
+                exists,
+                credentials.hasCredential(type, credFile.getAbsolutePath(), endPoint));
+
         mLogger.logEventCompletion();
     }
 }
