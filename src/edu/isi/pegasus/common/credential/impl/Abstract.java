@@ -128,13 +128,16 @@ public abstract class Abstract implements CredentialHandler {
      * Returns a boolean whether a credential located at a particular path has credentials for a
      * particular endpoint or not
      *
+     * @param type the type of credential
      * @param credentialPath the path to credentials file of that type
      * @param endpoint the end point
-     * @return
+     * @return boolean
      */
-    public boolean hasCredential(String credentialPath, String endpoint) {
+    public boolean hasCredential(
+            CredentialHandler.TYPE type, String credentialPath, String endpoint) {
         throw new RuntimeException(
-                this.getDescription() + " does not support hasCredential(String,String) function");
+                this.getDescription()
+                        + " does not support hasCredential(String,String,String) function");
     }
 
     /**

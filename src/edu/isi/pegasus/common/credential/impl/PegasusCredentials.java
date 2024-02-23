@@ -16,6 +16,7 @@ package edu.isi.pegasus.common.credential.impl;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import java.io.File;
@@ -208,23 +209,51 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
     }
 
     /**
+     * Verify a local credential accessible via path specified
+     *
+     * @param job the job with which the credential is associated
+     * @param type the type of credential
+     * @param path the path to the credential
+     * @throws RuntimeException in case of being unable to verify credential.
+     */
+    @Override
+    public void verify(Job job, CredentialHandler.TYPE type, String path) {
+        if (type == TYPE.http) {
+            // we only attempt to verify a http credential if it exists
+            if (!new File(path).exists()) {
+                // PM-1939 http credential but file does not exist. dont attempt further
+                // verification
+                return;
+            }
+        }
+        super.verify(job, type, path);
+
+        // PM-1939 we attempt load credential file once, when the credential
+        // file has been verified successuflly
+        if (!this.mCredfileContents.containsKey(path)) {
+            this.mCredfileContents.put(path, loadPegasusCredentialsFile(path));
+        }
+    }
+
+    /**
      * Returns a boolean whether a credential located at a particular path has credentials for a
      * particular endpoint or not
      *
+     * @param type the type of credential
      * @param credentialPath the path to credentials file of that type
      * @param endpoint the end point
-     * @return
+     * @return boolean
      */
-    public boolean hasCredential(String credentialPath, String endpoint) {
-        if (!this.mCredfileContents.containsKey(credentialPath)) {
-            // sanity check before loading
-            this.verify(null, TYPE.credentials, credentialPath);
-            this.mCredfileContents.put(credentialPath, loadPegasusCredentialsFile(credentialPath));
+    public boolean hasCredential(
+            CredentialHandler.TYPE type, String credentialPath, String endpoint) {
+        Map<String, Map<String, String>> credFileContent =
+                this.mCredfileContents.get(credentialPath);
+        if (credFileContent != null) {
+            // we have this credential file loaded
+            // check for the section for the end point
+            return credFileContent.containsKey(endpoint);
         }
-
-        // we have this credential file loaded
-        // check for the section for the end point
-        return this.mCredfileContents.get(credentialPath).containsKey(endpoint);
+        return false;
     }
 
     /**

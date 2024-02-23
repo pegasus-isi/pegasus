@@ -206,7 +206,7 @@ public abstract class Abstract implements CondorStyle {
                             Set<String> endpoints = job.getDataURLEndpoints(siteHandle);
                             boolean add = false;
                             for (String endpoint : endpoints) {
-                                if (handler.hasCredential(credentialPath, endpoint)) {
+                                if (handler.hasCredential(credType, credentialPath, endpoint)) {
                                     // for http transfers we have to associate
                                     // credential file only if it is determined
                                     // to contain the information for the endpoint
@@ -298,7 +298,7 @@ public abstract class Abstract implements CondorStyle {
                             Set<String> endpoints = job.getDataURLEndpoints(siteHandle);
                             boolean associate = false;
                             for (String endpoint : endpoints) {
-                                if (handler.hasCredential(credentialPath, endpoint)) {
+                                if (handler.hasCredential(credType, credentialPath, endpoint)) {
                                     // for http transfers we have to associate
                                     // credential file only if it is determined
                                     // to contain the information for the endpoint
