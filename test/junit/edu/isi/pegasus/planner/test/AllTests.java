@@ -20,6 +20,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+    edu.isi.pegasus.common.credential.impl.PegasusCredentialsTest.class,
     edu.isi.pegasus.common.util.CommonPropertiesTest.class,
     edu.isi.pegasus.common.util.CondorVersionTest.class,
     edu.isi.pegasus.common.util.VersionTest.class,
