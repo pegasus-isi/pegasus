@@ -745,6 +745,13 @@ public class SUBDAXGenerator {
                 dagJob.addCredentialType(site, credType);
             }
         }
+        // PM-1940 also copy over http credential endpoints to the dagjob
+        Map<String, Set<String>> dataURLEndPoints = preScriptJob.getDataURLEndPoints();
+        for (String site : dataURLEndPoints.keySet()) {
+            for (String url : dataURLEndPoints.get(site)) {
+                dagJob.addDataURLEndpoint(site, url);
+            }
+        }
 
         // set the xbit on the shell script
         // for 3.2, we will have 1.6 as the minimum jdk requirement

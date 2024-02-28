@@ -17,9 +17,22 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import static org.junit.Assert.*;
 
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.site.classes.Directory;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
+import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,12 +55,24 @@ public class CondorTest {
 
     private static final String REQUEST_DISK_KEY =
             edu.isi.pegasus.planner.namespace.Condor.REQUEST_DISK_KEY;
+    private DefaultTestSetup mTestSetup;
+    private LogManager mLogger;
 
     public CondorTest() {}
 
     @Before
-    public void setUp() {
+    public void setUp() throws CondorStyleException {
+        mTestSetup = new DefaultTestSetup();
+        PegasusBag bag = new PegasusBag();
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        mLogger = mTestSetup.loadLogger(props);
+        mLogger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.logEventStart("test.pegasus.code.generator.style.Condor", "setup", "0");
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.SITE_STORE, this.constructTestSiteStore());
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         cs = new Condor();
+        cs.initialize(bag, new CredentialHandlerFactory());
     }
 
     @Test
@@ -106,5 +131,47 @@ public class CondorTest {
         cs.apply(j);
         assertTrue(j.condorVariables.containsKey(key));
         assertEquals(expectedValue, j.condorVariables.get(key));
+    }
+
+    private SiteStore constructTestSiteStore() {
+        SiteStore store = new SiteStore();
+
+        SiteCatalogEntry computeSite = new SiteCatalogEntry("compute");
+        computeSite.setArchitecture(SysInfo.Architecture.x86_64);
+        computeSite.setOS(SysInfo.OS.linux);
+        Directory dir = new Directory();
+        dir.setType(Directory.TYPE.shared_scratch);
+        dir.setInternalMountPoint(
+                new InternalMountPoint("/internal/workflows/compute/shared-scratch"));
+        FileServer fs = new FileServer();
+        fs.setSupportedOperation(FileServerType.OPERATION.get);
+        PegasusURL url =
+                new PegasusURL("gsiftp://compute.isi.edu/workflows/compute/shared-scratch");
+        fs.setURLPrefix(url.getURLPrefix());
+        fs.setProtocol(url.getProtocol());
+        fs.setMountPoint(url.getPath());
+        dir.addFileServer(fs);
+        computeSite.addDirectory(dir);
+        store.addEntry(computeSite);
+
+        // add a default local site
+        SiteCatalogEntry localSite = new SiteCatalogEntry("local");
+        localSite.setArchitecture(SysInfo.Architecture.x86_64);
+        localSite.setOS(SysInfo.OS.linux);
+        dir = new Directory();
+        dir.setType(Directory.TYPE.shared_scratch);
+        dir.setInternalMountPoint(
+                new InternalMountPoint("/internal/workflows/local/shared-scratch"));
+        fs = new FileServer();
+        fs.setSupportedOperation(FileServerType.OPERATION.all);
+        url = new PegasusURL("gsiftp://local.isi.edu/workflows/local/shared-scratch");
+        fs.setURLPrefix(url.getURLPrefix());
+        fs.setProtocol(url.getProtocol());
+        fs.setMountPoint(url.getPath());
+        dir.addFileServer(fs);
+        localSite.addDirectory(dir);
+        store.addEntry(localSite);
+
+        return store;
     }
 }

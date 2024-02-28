@@ -856,6 +856,17 @@ public class Job extends Data implements GraphNodeContent {
     }
 
     /**
+     * Returns A map indexed by site name from/to which this job retrieves data using the pegasus
+     * credentials file. The value Set of hostnames/url prefixes associated for that site. Only set
+     * for http transfers
+     *
+     * @return Map<String, Set<String>>
+     */
+    public Map<String, Set<String>> getDataURLEndPoints() {
+        return mSiteToURLEndpointsForCredentials;
+    }
+
+    /**
      * A boolean method indicating whether credentials are associated with the job
      *
      * @return boolean
