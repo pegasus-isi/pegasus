@@ -169,6 +169,8 @@ class Status:
             else:
                 print()
 
+        return None
+
     def get_braindump(self, submit_dir: str):
         try:
             with (Path(submit_dir) / "braindump.yml").open("r") as f:
@@ -186,8 +188,7 @@ class Status:
         print("{} {}".format(shutil.which("condor_q"), " ".join(self.q_cmd[1:])))
 
     def get_q_values(self):
-        """ Internal method to retrieve Condor Q jobs
-        """
+        """Internal method to retrieve Condor Q jobs"""
         if self.submit_dir_entered:
             expression = r"" 'pegasus_root_wf_uuid == "{}"' "".format(self.root_wf_uuid)
             self.q_cmd = ["condor_q", "-constraint", expression, "-json"]
@@ -361,7 +362,7 @@ class Status:
 
         dag_dict = None
         for dagman_file in dagman_list:
-            wf_name = dagman_file.split("/")[-1].split(".")[0]
+            wf_name = Path(Path(Path(Path(dagman_file).name).stem).stem).stem
 
             # if the directory is root directory
             if dagman_file[: dagman_file.rfind("/")] == submit_dir:
@@ -399,7 +400,7 @@ class Status:
                     key_total_val += self.status_output["dags"][each_dag][key]
                 self.status_output[self.K_TOTALS][key] = key_total_val
 
-        #%Done for the entire workflow
+        # %Done for the entire workflow
         if self.status_output[self.K_TOTALS][self.K_TOTAL]:
             total_percent_done = float(
                 "{:.2f}".format(
@@ -619,7 +620,7 @@ class Status:
                     state = " "
                     name = each_dag[1]
                 else:
-                    dag = each_dag[0].split(".")[0]
+                    dag = Path(each_dag[0]).stem
                     dag_dict = values["dags"][dag]
                     state = dag_dict[self.K_DAGSTATE]
                     name = each_dag[1]
@@ -669,7 +670,7 @@ class Status:
         for i in range(1, len(dags)):
             curr_level = dags[i].count("/")
             prev_level = dags[i - 1].count("/")
-            curr_dag_name = "{}.dag".format(dags[i].split("/")[-1].split(".")[0])
+            curr_dag_name = Path(Path(Path(dags[i]).name).stem).stem
             if curr_level <= prev_level:
                 diff = prev_level - curr_level
                 for i in range((diff // 3) + 1):
@@ -702,7 +703,7 @@ class Status:
         L = "\u2514\u2500"
         pointers = [t] * (len(paths) - 1) + [L]
         for pointer, path in zip(pointers, paths):
-            wf = path.split(".")[0]
+            wf = Path(path).stem
             if wf == self.root_wf_name:
                 k = "root"
             else:
