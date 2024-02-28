@@ -203,19 +203,8 @@ public abstract class Abstract implements CondorStyle {
                             // PM-1935 check if there is http url prefix defined
                             // in credentials file for associated http endpoints for
                             // the job for the site
-                            Set<String> endpoints = job.getDataURLEndpoints(siteHandle);
-                            boolean add = false;
-                            for (String endpoint : endpoints) {
-                                if (handler.hasCredential(credType, credentialPath, endpoint)) {
-                                    // for http transfers we have to associate
-                                    // credential file only if it is determined
-                                    // to contain the information for the endpoint
-                                    // we get out of loop on first detection, since
-                                    // we have to add the credential file to the job
-                                    add = true;
-                                }
-                            }
-                            if (add) {
+                            if (associateHTTPCredentialFileForJob(
+                                    job, handler, credentialPath, siteHandle)) {
                                 // transfer using condor file transfer, and advertise in env
                                 // but first make sure it is specified in our environment
                                 credentialsForCondorFileTransfer.add(credentialPath);
@@ -295,19 +284,8 @@ public abstract class Abstract implements CondorStyle {
                             // PM-1935 check if there is http url prefix defined
                             // in credentials file for associated http endpoints for
                             // the job for the site
-                            Set<String> endpoints = job.getDataURLEndpoints(siteHandle);
-                            boolean associate = false;
-                            for (String endpoint : endpoints) {
-                                if (handler.hasCredential(credType, credentialPath, endpoint)) {
-                                    // for http transfers we have to associate
-                                    // credential file only if it is determined
-                                    // to contain the information for the endpoint
-                                    // we get out of loop on first detection, since
-                                    // we have to add the credential file to the job
-                                    associate = true;
-                                }
-                            }
-                            if (associate) {
+                            if (associateHTTPCredentialFileForJob(
+                                    job, handler, credentialPath, siteHandle)) {
                                 applyCredentialForLocalExec(handler, credType, job, siteHandle);
                             }
                         }
@@ -505,5 +483,42 @@ public abstract class Abstract implements CondorStyle {
             // flag an error
             this.complainForMountUnderScratch(job, path);
         }
+    }
+
+    /**
+     * Returns a boolean indicating if a job needs to have a HTTP credential file associated with it
+     *
+     * @param job the job
+     * @param handler the credential handler
+     * @param credentialPath the path to http credential file
+     * @param site the site for which the credential is required.
+     * @return boolean
+     */
+    protected boolean associateHTTPCredentialFileForJob(
+            Job job, CredentialHandler handler, String credentialPath, String site) {
+        // PM-1935 check if there is http url prefix defined
+        // in credentials file for associated http endpoints for
+        // the job for the site
+        Set<String> endpoints = job.getDataURLEndpoints(site);
+        boolean associate = false;
+        if (endpoints == null) {
+            // PM-1940
+            mLogger.log(
+                    "Job requires http creds. However no http endpoints associated for job "
+                            + job.getID(),
+                    LogManager.WARNING_MESSAGE_LEVEL);
+            return associate;
+        }
+        for (String endpoint : endpoints) {
+            if (handler.hasCredential(CredentialHandler.TYPE.http, credentialPath, endpoint)) {
+                // for http transfers we have to associate
+                // credential file only if it is determined
+                // to contain the information for the endpoint
+                // we get out of loop on first detection, since
+                // we have to add the credential file to the job
+                associate = true;
+            }
+        }
+        return associate;
     }
 }
