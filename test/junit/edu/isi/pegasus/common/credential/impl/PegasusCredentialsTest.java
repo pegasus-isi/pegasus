@@ -282,6 +282,14 @@ public class PegasusCredentialsTest {
                 testName,
                 Integer.toString(mTestNumber++));
 
+        // git only tracks x bits on files. So 600 permission
+        // does not get preserved at check in .
+        // https://unix.stackexchange.com/questions/560448/permission-changed-from-600-to-664-after-git-push-pull
+        Set<PosixFilePermission> perms = new HashSet<>();
+        perms.add(PosixFilePermission.OWNER_READ);
+        perms.add(PosixFilePermission.OWNER_WRITE);
+        Files.setPosixFilePermissions(credFile.toPath(), perms);
+
         mProps.setProperty(
                 Profiles.NAMESPACES.pegasus
                         + "."
