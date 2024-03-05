@@ -136,6 +136,7 @@ public class InPlace extends AbstractCleanupStrategy {
                                         + " will not be cleaned up for job "
                                         + curGN_SI.getID(),
                                 LogManager.DEBUG_MESSAGE_LEVEL);
+                        continue;
                     }
 
                     // PM-1918 additional filtering for sub workflow input file
