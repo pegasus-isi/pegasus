@@ -17,7 +17,7 @@ if command -v nvidia-smi 2>&1 >/dev/null; then
 fi
 
 if [ -z "$NVIDIA_DRIVER" ]; then
-  $PEGASUS_HOME/bin/pegasus-kickstart-cpu $@
+  $PEGASUS_HOME/bin/pegasus-kickstart-cpu "$@"
 else
-  $PEGASUS_HOME/bin/pegasus-kickstart-cuda $@
+  $PEGASUS_HOME/bin/pegasus-kickstart-cuda "$@"
 fi
