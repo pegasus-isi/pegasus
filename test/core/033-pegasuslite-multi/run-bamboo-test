@@ -41,31 +41,33 @@ cat >sites.xml <<EOF
         <directory type="local-storage" path="$TOPDIR/outputs">
             <file-server operation="all" url="file://$TOPDIR/outputs"/>
         </directory>
-        <profile namespace="env" key="PATH">$PEGASUS_BIN_DIR:/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
     </site>
+
     <site  handle="condorpool" arch="x86_64" os="LINUX">
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PATH">/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
         <profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
 
-     <site  handle="CCG" arch="x86_64" os="LINUX">
-        <grid  type="batch" contact="slurm-pegasus.isi.edu" scheduler="slurm" jobtype="auxillary"/>
-        <grid  type="batch" contact="slurm-pegasus.isi.edu" scheduler="slurm" jobtype="compute"/>
+     <site  handle="eclair" arch="x86_64" os="LINUX">
+        <grid  type="batch" contact="rynge@eclair-sub-01.isi.edu:22" scheduler="slurm" jobtype="auxillary"/>
+        <grid  type="batch" contact="rynge@eclair-sub-01.isi.edu:22" scheduler="slurm" jobtype="compute"/>
 
-        <directory type="shared-scratch" path="/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/scratch">
-            <file-server operation="all" url="scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/scratch"/>
+        <directory type="shared-scratch" path="/nas/home/rynge/tmp/${TEST_NAME}/scratch">
+            <file-server operation="all" url="scp://rynge@eclair-sub-01.isi.edu/nas/home/rynge/tmp/${TEST_NAME}/scratch"/>
         </directory>
-        <directory type="local-storage" path="/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/outputs">
-            <file-server operation="all" url="scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/outputs"/>
-        </directory>
+
         <profile namespace="pegasus" key="style">ssh</profile>
         <profile namespace="pegasus" key="change.dir">true</profile>
+        <profile namespace="pegasus" key="queue">scavenge</profile>
+        <profile namespace="pegasus" key="project">scavenge</profile>
+        <profile namespace="pegasus" key="runtime">600</profile>
+        <profile namespace="pegasus" key="glite.arguments">--cpus-per-task=1</profile>
+        <profile namespace="pegasus" key="memory">1G</profile>
         <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
         <profile namespace="pegasus" key="clusters.num">1</profile>
         <profile namespace="pegasus" key="data.configuration">sharedfs</profile>	
-        <profile namespace="env" key="PEGASUS_HOME">/opt/pegasus</profile>        
+        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>        
     </site>
 
 
@@ -75,7 +77,7 @@ EOF
 # plan and submit the  workflow
 pegasus-plan \
     --conf $testdir/pegasusrc \
-    --sites condorpool,CCG \
+    --sites condorpool,eclair \
     --dir work \
     --output-sites local \
     --cluster horizontal \

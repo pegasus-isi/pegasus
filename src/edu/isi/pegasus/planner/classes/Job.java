@@ -23,6 +23,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
@@ -129,7 +130,7 @@ public class Job extends Data implements GraphNodeContent {
     public static String makeDAGManCompliant(String name) {
         // PM-1262 and PM-1222
         if (name != null) {
-            name = name.replaceAll("[\\.\\+]", "_");
+            name = name.replaceAll("[\\.\\+\\=]", "_");
         }
 
         return name;
@@ -354,6 +355,12 @@ public class Job extends Data implements GraphNodeContent {
     /** Set of credential types required by a job to execute remotely. */
     private Map<String, Set<CredentialHandler.TYPE>> mCredentialsType;
 
+    /**
+     * A map indexed by site name from/to which this job retrieves data using the pegasus
+     * credentials file. The value Set of hostnames/url prefixes associated for that site
+     */
+    private Map<String, Set<String>> mSiteToURLEndpointsForCredentials;
+
     /** The node label */
     private String mNodeLabel;
 
@@ -402,6 +409,7 @@ public class Job extends Data implements GraphNodeContent {
         mStagingSite = null;
         mDirectory = null;
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
+        mSiteToURLEndpointsForCredentials = new HashMap<String, Set<String>>();
         mSubmissionCredential = null;
         mNodeLabel = null;
         mGraphNode = null;
@@ -452,6 +460,7 @@ public class Job extends Data implements GraphNodeContent {
         mDirectory = job.mDirectory;
         mSubmissionCredential = job.mSubmissionCredential;
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
+        mSiteToURLEndpointsForCredentials = new HashMap<String, Set<String>>();
         mNodeLabel = null;
         mGraphNode = job.getGraphNodeReference();
         mContainer = job.getContainer();
@@ -524,6 +533,13 @@ public class Job extends Data implements GraphNodeContent {
             String site = entry.getKey();
             for (CredentialHandler.TYPE cred : entry.getValue()) {
                 newSub.addCredentialType(site, cred);
+            }
+        }
+        for (Map.Entry<String, Set<String>> entry :
+                this.mSiteToURLEndpointsForCredentials.entrySet()) {
+            String site = entry.getKey();
+            for (String endPoint : entry.getValue()) {
+                newSub.addDataURLEndpoint(site, endPoint);
             }
         }
 
@@ -744,7 +760,7 @@ public class Job extends Data implements GraphNodeContent {
     /**
      * Looks at a URL to determine whether a credential should be associated with a job or not.
      *
-     * @param site the site with which the credential is associated
+     * @param site the site from whcih data is being pulled/pushed to
      * @param url the url for which a credential needs to be added
      */
     public void addCredentialType(String site, String url) {
@@ -755,7 +771,14 @@ public class Job extends Data implements GraphNodeContent {
 
         if (url.startsWith("webdav") || url.startsWith("s3")) {
             this.addCredentialType(site, CredentialHandler.TYPE.credentials);
+        } else if (url.startsWith("http")) {
+            // PM-1935 we want to optionally add the credential, only if
+            // it exists and contains hostname/url prefix
+            this.addCredentialType(site, CredentialHandler.TYPE.http);
+            this.addDataURLEndpoint(site, new PegasusURL(url).getURLPrefix());
+
         } else if (url.startsWith("gsiftp")
+                || url.startsWith("gsidavs")
                 || url.startsWith("xroot")
                 || url.startsWith("root")
                 || url.startsWith("srm")) {
@@ -801,6 +824,7 @@ public class Job extends Data implements GraphNodeContent {
     /**
      * Adds a type of credential that will be required by a job.
      *
+     * @param site the associated site
      * @param type the credential type.
      */
     public void addCredentialType(String site, CredentialHandler.TYPE type) {
@@ -812,6 +836,34 @@ public class Job extends Data implements GraphNodeContent {
             this.mCredentialsType.put(site, set);
         }
         set.add(type);
+    }
+
+    /**
+     * Adds a data url endpoint that from which an http transfer is required for this job
+     *
+     * @param site the associated site
+     * @param url the url
+     */
+    public void addDataURLEndpoint(String site, String url) {
+        Set<String> set = null;
+        if (this.mSiteToURLEndpointsForCredentials.containsKey(site)) {
+            set = this.mSiteToURLEndpointsForCredentials.get(site);
+        } else {
+            set = new HashSet();
+            this.mSiteToURLEndpointsForCredentials.put(site, set);
+        }
+        set.add(url);
+    }
+
+    /**
+     * Returns A map indexed by site name from/to which this job retrieves data using the pegasus
+     * credentials file. The value Set of hostnames/url prefixes associated for that site. Only set
+     * for http transfers
+     *
+     * @return Map<String, Set<String>>
+     */
+    public Map<String, Set<String>> getDataURLEndPoints() {
+        return mSiteToURLEndpointsForCredentials;
     }
 
     /**
@@ -845,9 +897,21 @@ public class Job extends Data implements GraphNodeContent {
         return this.mCredentialsType;
     }
 
+    /**
+     * Return Data URL endpoints associated with a site for this job that may require http
+     * credentials
+     *
+     * @param site
+     * @return
+     */
+    public Set<String> getDataURLEndpoints(String site) {
+        return this.mSiteToURLEndpointsForCredentials.get(site);
+    }
+
     /** Resets the credential types required by a job. */
     public void resetCredentialTypes() {
         this.mCredentialsType.clear();
+        this.mSiteToURLEndpointsForCredentials.clear();
     }
 
     /**
@@ -2409,6 +2473,15 @@ public class Job extends Data implements GraphNodeContent {
                                 "pegasusWorkflow job has to have file specified" + node);
                     }
                     ((DAXJob) j).setDAXLFN(file);
+
+                    // PM-1905 traverse through all the input files and make sure
+                    // if there is an input file with dax lfn, then set
+                    // the for planning attribute set to true
+                    for (PegasusFile pf : j.getInputFiles()) {
+                        if (pf.getLFN().equalsIgnoreCase(file)) {
+                            pf.setUseForPlanning();
+                        }
+                    }
 
                     // the job should be tagged type pegasus
                     j.setTypeRecursive();

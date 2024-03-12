@@ -321,7 +321,7 @@ def get_pegasus_lite_wrapper(my_job):
         except Exception:
             # print "error opening submit file: %s" % (my_job.sub_file)
             raise AnalyzerError("error opening submit file: " + my_job.sub_file)
-            
+
         else:
             SUB.close()
 
@@ -598,9 +598,8 @@ def find_file(input_dir, file_type):
     for file in file_list:
         if file.endswith(file_type):
             return os.path.join(input_dir, file)
-            
-    raise AnalyzerError(f"could not find any {file_type} file in {input_dir}")
 
+    raise AnalyzerError(f"could not find any {file_type} file in {input_dir}")
 
 
 def parse_dag_file(dag_fn):
@@ -1360,10 +1359,12 @@ def analyze_files():
                 invoke_monitord("%s.dagman.out" % (dag_path), None)
             else:
                 # User must provide the --output-dir option
-                raise AnalyzerError(input_dir 
-                                    + " is not writable. "
-                                    + "User must specify directory for new monitord logs with the --output-dir option,"
-                                    + " exiting...")                             
+                raise AnalyzerError(
+                    input_dir
+                    + " is not writable. "
+                    + "User must specify directory for new monitord logs with the --output-dir option,"
+                    + " exiting..."
+                )
     else:
         if output_dir is not None:
             # jobstate.log file uses wf_uuid as prefix and is inside output_dir
@@ -1418,7 +1419,7 @@ def analyze_files():
     if failed > 0:
         # Workflow has failures, exit with exitcode 2
         raise WorkflowFailureError("One or more workflows failed")
-    
+
     # Workflow has no failures, exit with exitcode 0
     return
 
@@ -1817,7 +1818,9 @@ exit $STATUS
         # Make our debug script executable
         os.chmod(debug_script_name, 0o755)
     except Exception:
-        raise AnalyzerError(f"cannot change permissions for the debug script {debug_script}")
+        raise AnalyzerError(
+            f"cannot change permissions for the debug script {debug_script}"
+        )
 
     # Print next step
     print()
@@ -1869,7 +1872,9 @@ def debug_workflow():
 
         # Check if we can write to the debug directory
         if not os.access(debug_dir, os.W_OK):
-            raise AnalyzerError(f"not able to write to temporary directory: {debug_dir}")
+            raise AnalyzerError(
+                f"not able to write to temporary directory: {debug_dir}"
+            )
 
     # Handle workflow type
     if workflow_type is not None:

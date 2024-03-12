@@ -70,7 +70,7 @@ public class CommonProperties implements Cloneable {
     private File m_schemaDir;
 
     /** Basename of the file to read to obtain system properties */
-    public static final String PROPERTY_FILENAME = "properties";
+    public static final String PROPERTY_FILENAME = "pegasus.properties";
 
     /** Basename of the (new) file to read for user properties. */
     public static final String USER_PROPERTY_FILENAME = ".pegasusrc";
@@ -94,7 +94,17 @@ public class CommonProperties implements Cloneable {
      */
     protected static Properties addProperties(Properties a, Properties b) {
         // initial
-        Properties result = new Properties(a);
+        // PM-1917 doing it via constructor Properties(defaults) is incorrect, as
+        // in the native Java Properties class the clone method does not
+        // clone defaults member variable. So we iterate through and add values
+        // to result explicitly.
+        // Properties result = new Properties(a);
+        Properties result = new Properties();
+        for (Enumeration e = a.propertyNames(); e.hasMoreElements(); ) {
+            String key = (String) e.nextElement();
+            String value = a.getProperty(key);
+            result.setProperty(key, value);
+        }
         Properties sys = System.getProperties();
         Pattern pattern = Pattern.compile("\\$\\{[-a-zA-Z0-9._]+\\}");
 
@@ -193,6 +203,12 @@ public class CommonProperties implements Cloneable {
             }
         }
 
+        // PM-1917 check for an alternative property file spec in the etc dir
+        this.m_sysConfDir = pickPath(null, System.getProperty("pegasus.home.sysconfdir"));
+        if (this.m_sysConfDir != null && this.m_sysConfDir.exists()) {
+            loadProperties(new File(m_sysConfDir, CommonProperties.PROPERTY_FILENAME));
+        }
+
         // add user properties afterwards to have higher precedence
         String userHome = System.getProperty("user.home", ".");
 
@@ -206,16 +222,7 @@ public class CommonProperties implements Cloneable {
                         ? confProps
                         : props;
 
-        if (props.exists()) {
-            // if this file exists, read the properties (will throw IOException)
-            Properties temp = new Properties();
-            InputStream stream = new BufferedInputStream(new FileInputStream(props));
-            // PM-1593 load everything in properties as UTF-8
-            temp.load(new InputStreamReader(stream, DEFAULT_ENCODING_SET));
-            stream.close();
-
-            this.m_props = addProperties(this.m_props, temp);
-        }
+        loadProperties(props);
 
         // PM-1391 pick any properties from the environment
         // and add/override them from those picked up from
@@ -637,5 +644,24 @@ public class CommonProperties implements Cloneable {
         }
 
         return p;
+    }
+
+    /**
+     * Attempts to load properties into the internal properties store
+     *
+     * @param props path to properties file
+     * @throws IOException
+     */
+    private void loadProperties(File props) throws IOException {
+        if (props.exists()) {
+            // if this file exists, read the properties (will throw IOException)
+            Properties temp = new Properties();
+            InputStream stream = new BufferedInputStream(new FileInputStream(props));
+            // PM-1593 load everything in properties as UTF-8
+            temp.load(new InputStreamReader(stream, DEFAULT_ENCODING_SET));
+            stream.close();
+
+            this.m_props = addProperties(this.m_props, temp);
+        }
     }
 }

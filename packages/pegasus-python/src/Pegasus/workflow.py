@@ -101,7 +101,11 @@ def _to_wf(d: dict) -> Workflow:
             # add uses
             uses = set()
             for u in j["uses"]:
-                f = File(u["lfn"], size=u.get("size"))
+                f = File(
+                    u["lfn"],
+                    size=u.get("size"),
+                    for_planning=u.get("forPlanning", False),
+                )
                 try:
                     f.metadata = u["metadata"]
                 except KeyError:

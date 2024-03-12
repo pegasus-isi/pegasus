@@ -49,6 +49,8 @@ public class CredentialHandlerFactory {
 
     private static final String SSH_IMPLEMENTING_CLASS = "Ssh";
 
+    private static final String HTTP_CREDENTIALS_IMPLEMENTING_CLASS = "PegasusCredentials";
+
     /**
      * Returns a table that maps, the credential types to the implementing classes.
      *
@@ -59,6 +61,8 @@ public class CredentialHandlerFactory {
             mImplementingClassNameTable = new HashMap(3);
             mImplementingClassNameTable.put(
                     CredentialHandler.TYPE.credentials, CREDENTIALS_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put(
+                    CredentialHandler.TYPE.http, CREDENTIALS_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.x509, X509_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.irods, IRODS_IMPLEMENTING_CLASS);
             // PM-1831 we no longer load this, as for S3 transfers we now only rely on

@@ -13,6 +13,7 @@ $defs:
       - sparcv7
       - sparcv9
       - amd64
+      - aarch64
 
   os.type:
     type: string

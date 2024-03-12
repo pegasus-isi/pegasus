@@ -56,11 +56,18 @@ public class DAXJob extends Job {
     /** The corresponding backend path */
     private String mOutputMapperBackendPath;
 
+    /**
+     * The cache file that is passed to the planner when the sub workflow corresponding to this job
+     * is planned.
+     */
+    private String mInputWorkflowCacheFile;
+
     /** The default constructor. */
     public DAXJob() {
         super();
         mDAXFile = null;
         mDirectory = null;
+        mInputWorkflowCacheFile = null;
         this.setJobType(Job.DAX_JOB);
     }
 
@@ -73,6 +80,8 @@ public class DAXJob extends Job {
     public DAXJob(Job job) {
         super(job);
         mDAXFile = null;
+        mDirectory = null;
+        mInputWorkflowCacheFile = null;
         this.setJobType(Job.DAX_JOB);
     }
 
@@ -212,6 +221,7 @@ public class DAXJob extends Job {
         newJob.setDAXLFN(this.getDAXLFN());
         newJob.setDAXFile(this.getDAXFile());
         newJob.setDirectory(this.getDirectory());
+        newJob.setInputWorkflowCacheFile(this.getInputWorkflowCacheFile());
         return newJob;
     }
 
@@ -251,5 +261,25 @@ public class DAXJob extends Job {
                             + mOutputMapperBackendPath,
                     e);
         }
+    }
+
+    /**
+     * Sets the path to workflow cache file that is passed to the planner, when the sub workflow
+     * corresponding to the DAXJob is planned.
+     *
+     * @param cache
+     */
+    public void setInputWorkflowCacheFile(String file) {
+        this.mInputWorkflowCacheFile = file;
+    }
+
+    /**
+     * Returns the path to workflow cache file that is passed to the planner, when the sub workflow
+     * corresponding to the DAXJob is planned.
+     *
+     * @return cache
+     */
+    public String getInputWorkflowCacheFile() {
+        return this.mInputWorkflowCacheFile;
     }
 }

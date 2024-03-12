@@ -70,8 +70,23 @@ class TestFile:
         "lfn,size,for_planning,expected",
         [
             ("f1", None, True, {"lfn": "f1", "forPlanning": True}),
-            ("f2", 2048, False, {"lfn": "f2", "size": 2048, "metadata": {"size": 2048}}),
-            ("f3", 1024, True, {"lfn": "f3", "size": 1024, "forPlanning": True, "metadata": {"size": 1024}})
+            (
+                "f2",
+                2048,
+                False,
+                {"lfn": "f2", "size": 2048, "metadata": {"size": 2048}},
+            ),
+            (
+                "f3",
+                1024,
+                True,
+                {
+                    "lfn": "f3",
+                    "size": 1024,
+                    "forPlanning": True,
+                    "metadata": {"size": 1024},
+                },
+            ),
         ],
     )
     def test_tojson_no_metadata(self, lfn, size, for_planning, expected):
@@ -97,14 +112,18 @@ class TestFile:
         validate(instance=result, schema=file_schema)
 
         assert result == expected
-        
+
     def test_tojson_forplanning_with_metdata(self):
-        result = File("subwf_tc.yml", size=1024, for_planning=True).add_metadata(creator="zaiyan").__json__()
+        result = (
+            File("subwf_tc.yml", size=1024, for_planning=True)
+            .add_metadata(creator="zaiyan")
+            .__json__()
+        )
         expected = {
             "lfn": "subwf_tc.yml",
             "metadata": {"creator": "zaiyan", "size": 1024},
             "size": 1024,
-            "forPlanning": True
+            "forPlanning": True,
         }
         assert result == expected
 

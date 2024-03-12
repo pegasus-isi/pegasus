@@ -1,279 +1,268 @@
-02/14/23 16:40:09 ******************************************************
-02/14/23 16:40:09 ** condor_scheduniv_exec.12308.0 (CONDOR_DAGMAN) STARTING UP
-02/14/23 16:40:09 ** /usr/bin/condor_dagman
-02/14/23 16:40:09 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
-02/14/23 16:40:09 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
-02/14/23 16:40:09 ** $CondorVersion: 10.2.0 2023-01-05 BuildID: 621409 PackageID: 10.2.0-1 $
-02/14/23 16:40:09 ** $CondorPlatform: x86_64_AlmaLinux8 $
-02/14/23 16:40:09 ** PID = 4162551
-02/14/23 16:40:09 ** Log last touched time unavailable (No such file or directory)
-02/14/23 16:40:09 ******************************************************
-02/14/23 16:40:09 Using config source: /etc/condor/condor_config
-02/14/23 16:40:09 Using local config sources: 
-02/14/23 16:40:09    /etc/condor/config.d/00-htcondor-9.0.config
-02/14/23 16:40:09    /etc/condor/config.d/10-isi-main.conf
-02/14/23 16:40:09    /etc/condor/config.d/10-stash-plugin.conf
-02/14/23 16:40:09    /etc/condor/config.d/20-machine-specifics.conf
-02/14/23 16:40:09    /etc/condor/config.d/80-pegasus.conf
-02/14/23 16:40:09    /etc/condor/config.d/90-common-overrides.conf
-02/14/23 16:40:09    /etc/condor/config.d/99-local.conf
-02/14/23 16:40:09    /etc/condor/condor_config.local
-02/14/23 16:40:09 config Macros = 114, Sorted = 114, StringBytes = 3605, TablesBytes = 4208
-02/14/23 16:40:09 CLASSAD_CACHING is ENABLED
-02/14/23 16:40:09 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
-02/14/23 16:40:09 DaemonCore: No command port requested.
-02/14/23 16:40:09 DAGMAN_USE_STRICT setting: 1
-02/14/23 16:40:09 DAGMAN_VERBOSITY setting: 3
-02/14/23 16:40:09 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
-02/14/23 16:40:09 DAGMAN_DEBUG_CACHE_ENABLE setting: False
-02/14/23 16:40:09 DAGMAN_SUBMIT_DELAY setting: 0
-02/14/23 16:40:09 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
-02/14/23 16:40:09 DAGMAN_STARTUP_CYCLE_DETECT setting: False
-02/14/23 16:40:09 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
-02/14/23 16:40:09 DAGMAN_AGGRESSIVE_SUBMIT setting: False
-02/14/23 16:40:09 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
-02/14/23 16:40:09 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
-02/14/23 16:40:09 DAGMAN_DEFAULT_PRIORITY setting: 0
-02/14/23 16:40:09 DAGMAN_SUPPRESS_NOTIFICATION setting: True
-02/14/23 16:40:09 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
-02/14/23 16:40:09 DAGMAN_RETRY_SUBMIT_FIRST setting: True
-02/14/23 16:40:09 DAGMAN_RETRY_NODE_FIRST setting: False
-02/14/23 16:40:09 DAGMAN_MAX_JOBS_IDLE setting: 1000
-02/14/23 16:40:09 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
-02/14/23 16:40:09 DAGMAN_MAX_PRE_SCRIPTS setting: 20
-02/14/23 16:40:09 DAGMAN_MAX_POST_SCRIPTS setting: 20
-02/14/23 16:40:09 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
-02/14/23 16:40:09 DAGMAN_MUNGE_NODE_NAMES setting: True
-02/14/23 16:40:09 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
-02/14/23 16:40:09 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
-02/14/23 16:40:09 DAGMAN_ALWAYS_RUN_POST setting: False
-02/14/23 16:40:09 DAGMAN_CONDOR_SUBMIT_EXE setting: /usr/bin/condor_submit
-02/14/23 16:40:09 DAGMAN_USE_DIRECT_SUBMIT setting: True
-02/14/23 16:40:09 DAGMAN_DEFAULT_APPEND_VARS setting: False
-02/14/23 16:40:09 DAGMAN_ABORT_DUPLICATES setting: True
-02/14/23 16:40:09 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
-02/14/23 16:40:09 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
-02/14/23 16:40:09 DAGMAN_AUTO_RESCUE setting: True
-02/14/23 16:40:09 DAGMAN_MAX_RESCUE_NUM setting: 100
-02/14/23 16:40:09 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
-02/14/23 16:40:09 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
-02/14/23 16:40:09 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
-02/14/23 16:40:09 DAGMAN_MAX_JOB_HOLDS setting: 100
-02/14/23 16:40:09 DAGMAN_HOLD_CLAIM_TIME setting: 20
-02/14/23 16:40:09 ALL_DEBUG setting: 
-02/14/23 16:40:09 DAGMAN_DEBUG setting: 
-02/14/23 16:40:09 DAGMAN_SUPPRESS_JOB_LOGS setting: False
-02/14/23 16:40:09 DAGMAN_REMOVE_NODE_JOBS setting: True
-02/14/23 16:40:09 DAGMAN will adjust edges after parsing
-02/14/23 16:40:09 argv[0] == "condor_scheduniv_exec.12308.0"
-02/14/23 16:40:09 argv[1] == "-Lockfile"
-02/14/23 16:40:09 argv[2] == "process-0.dag.lock"
-02/14/23 16:40:09 argv[3] == "-AutoRescue"
-02/14/23 16:40:09 argv[4] == "1"
-02/14/23 16:40:09 argv[5] == "-DoRescueFrom"
-02/14/23 16:40:09 argv[6] == "0"
-02/14/23 16:40:09 argv[7] == "-Dag"
-02/14/23 16:40:09 argv[8] == "process-0.dag"
-02/14/23 16:40:09 argv[9] == "-MaxPost"
-02/14/23 16:40:09 argv[10] == "20"
-02/14/23 16:40:09 argv[11] == "-Suppress_notification"
-02/14/23 16:40:09 argv[12] == "-CsdVersion"
-02/14/23 16:40:09 argv[13] == "$CondorVersion: 10.2.0 2023-01-05 BuildID: 621409 PackageID: 10.2.0-1 $"
-02/14/23 16:40:09 argv[14] == "-Dagman"
-02/14/23 16:40:09 argv[15] == "/usr/bin/condor_dagman"
-02/14/23 16:40:09 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-02/14/23 16:40:09 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-02/14/23 16:40:09 TOKEN: No token found.
-02/14/23 16:40:09 Workflow batch-id: <12308.0>
-02/14/23 16:40:09 Workflow batch-name: <process-0.dag+12308>
-02/14/23 16:40:09 Workflow accounting_group: <>
-02/14/23 16:40:09 Workflow accounting_group_user: <>
-02/14/23 16:40:09 Warning: failed to get attribute DAGNodeName
-02/14/23 16:40:09 DAGMAN_LOG_ON_NFS_IS_ERROR setting: False
-02/14/23 16:40:09 Default node log file is: </home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log>
-02/14/23 16:40:09 DAG Lockfile will be written to process-0.dag.lock
-02/14/23 16:40:09 DAG Input file is process-0.dag
-02/14/23 16:40:09 Parsing 1 dagfiles
-02/14/23 16:40:09 Parsing process-0.dag ...
-02/14/23 16:40:09 Adjusting edges
-02/14/23 16:40:09 Warning: category cleanup has no assigned nodes, so the throttle setting (4) will have no effect
-02/14/23 16:40:09 Warning: category stagein has no assigned nodes, so the throttle setting (10) will have no effect
-02/14/23 16:40:09 Dag contains 5 total jobs
-02/14/23 16:40:09 Bootstrapping...
-02/14/23 16:40:09 Number of pre-completed nodes: 0
-02/14/23 16:40:09 MultiLogFiles: truncating log file /home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log
-02/14/23 16:40:09 DAG status: 0 (DAG_STATUS_OK)
-02/14/23 16:40:09 Of 5 nodes total:
-02/14/23 16:40:09  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:40:09   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:40:09     0       0        0       0       1          4        0        0
-02/14/23 16:40:09 0 job proc(s) currently held
-02/14/23 16:40:09 DAGMan Runtime Statistics: [ EventCycleTimeCount = 0.0; EventCycleTimeSum = 0.0; LogProcessCycleTimeCount = 0.0; LogProcessCycleTimeSum = 0.0; SleepCycleTimeCount = 0.0; SleepCycleTimeSum = 0.0; SubmitCycleTimeCount = 0.0; SubmitCycleTimeSum = 0.0; ]
-02/14/23 16:40:09 Registering condor_event_timer...
-02/14/23 16:40:10 Submitting HTCondor Node create_dir_process_0_local job(s)...
-02/14/23 16:40:10 Submitting node create_dir_process_0_local from file 00/00/create_dir_process_0_local.sub using direct job submission
-02/14/23 16:40:10 	assigned HTCondor ID (12309.0.0)
-02/14/23 16:40:10 Just submitted 1 job this cycle...
-02/14/23 16:40:10 DAG status: 0 (DAG_STATUS_OK)
-02/14/23 16:40:10 Of 5 nodes total:
-02/14/23 16:40:10  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:40:10   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:40:10     0       0        1       0       0          4        0        0
-02/14/23 16:40:10 0 job proc(s) currently held
-02/14/23 16:40:10 DAGMan Runtime Statistics: [ EventCycleTimeCount = 0.0; EventCycleTimeSum = 0.0; LogProcessCycleTimeCount = 0.0; LogProcessCycleTimeSum = 0.0; SleepCycleTimeCount = 0.0; SleepCycleTimeSum = 0.0; SubmitCycleTimeAvg = 0.0116889476776123; SubmitCycleTimeCount = 1.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 0.0116889476776123; SubmitCycleTimeStd = 0.0116889476776123; SubmitCycleTimeSum = 0.0116889476776123; ]
-02/14/23 16:40:15 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:40:15 Reassigning the id of job create_dir_process_0_local from (12309.0.0) to (12309.0.0)
-02/14/23 16:40:15 Event: ULOG_SUBMIT for HTCondor Node create_dir_process_0_local (12309.0.0) {02/14/23 16:40:10}
-02/14/23 16:40:15 Number of idle job procs: 1
-02/14/23 16:40:20 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:40:20 Event: ULOG_EXECUTE for HTCondor Node create_dir_process_0_local (12309.0.0) {02/14/23 16:40:15}
-02/14/23 16:40:20 Number of idle job procs: 0
-02/14/23 16:40:20 Event: ULOG_JOB_TERMINATED for HTCondor Node create_dir_process_0_local (12309.0.0) {02/14/23 16:40:18}
-02/14/23 16:40:20 Number of idle job procs: 0
-02/14/23 16:40:20 Node create_dir_process_0_local job proc (12309.0.0) completed successfully.
-02/14/23 16:40:20 Node create_dir_process_0_local job completed
-02/14/23 16:40:20 Running POST script of Node create_dir_process_0_local...
-02/14/23 16:40:20 Warning: mysin has length 0 (ignore if produced by DAGMan; see gittrac #4987, #5031)
-02/14/23 16:40:20 DAG status: 0 (DAG_STATUS_OK)
-02/14/23 16:40:20 Of 5 nodes total:
-02/14/23 16:40:20  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:40:20   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:40:20     0       0        0       1       0          4        0        0
-02/14/23 16:40:20 0 job proc(s) currently held
-02/14/23 16:40:20 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.006180405616760254; EventCycleTimeCount = 2.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 0.0004489421844482422; EventCycleTimeStd = 0.008105513318221097; EventCycleTimeSum = 0.01236081123352051; LogProcessCycleTimeAvg = 0.002633094787597656; LogProcessCycleTimeCount = 2.0; LogProcessCycleTimeMax = 0.004839181900024414; LogProcessCycleTimeMin = 0.0004270076751708984; LogProcessCycleTimeStd = 0.00311987831417042; LogProcessCycleTimeSum = 0.005266189575195312; SleepCycleTimeAvg = 5.00514554977417; SleepCycleTimeCount = 2.0; SleepCycleTimeMax = 5.005186080932617; SleepCycleTimeMin = 5.005105018615723; SleepCycleTimeStd = 5.731971397481589E-05; SleepCycleTimeSum = 10.01029109954834; SubmitCycleTimeAvg = 0.00390164057413737; SubmitCycleTimeCount = 3.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 7.867813110351562E-06; SubmitCycleTimeStd = 0.0067440057797339; SubmitCycleTimeSum = 0.01170492172241211; ]
-02/14/23 16:40:21 Initializing user log writer for /home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log, (12309.0.0)
-02/14/23 16:40:25 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:40:25 Event: ULOG_POST_SCRIPT_TERMINATED for HTCondor Node create_dir_process_0_local (12309.0.0) {02/14/23 16:40:21}
-02/14/23 16:40:25 POST Script of node create_dir_process_0_local completed successfully.
-02/14/23 16:40:25 DAG status: 0 (DAG_STATUS_OK)
-02/14/23 16:40:25 Of 5 nodes total:
-02/14/23 16:40:25  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:40:25   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:40:25     1       0        0       0       1          3        0        0
-02/14/23 16:40:25 0 job proc(s) currently held
-02/14/23 16:40:25 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.005836963653564453; EventCycleTimeCount = 3.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 0.0004489421844482422; EventCycleTimeStd = 0.005762250447714083; EventCycleTimeSum = 0.01751089096069336; LogProcessCycleTimeAvg = 0.001912673314412435; LogProcessCycleTimeCount = 3.0; LogProcessCycleTimeMax = 0.004839181900024414; LogProcessCycleTimeMin = 0.0004270076751708984; LogProcessCycleTimeStd = 0.002534529866601403; LogProcessCycleTimeSum = 0.005738019943237305; SleepCycleTimeAvg = 4.805263996124268; SleepCycleTimeCount = 3.0; SleepCycleTimeMax = 5.005186080932617; SleepCycleTimeMin = 4.405500888824463; SleepCycleTimeStd = 0.3462050087899815; SleepCycleTimeSum = 14.4157919883728; SubmitCycleTimeAvg = 0.002928256988525391; SubmitCycleTimeCount = 4.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 7.867813110351562E-06; SubmitCycleTimeStd = 0.005840460460472686; SubmitCycleTimeSum = 0.01171302795410156; ]
-02/14/23 16:40:30 Submitting HTCondor Node ls_ID0000001 job(s)...
-02/14/23 16:40:30 Submitting node ls_ID0000001 from file 00/00/ls_ID0000001.sub using direct job submission
-02/14/23 16:40:30 	assigned HTCondor ID (12310.0.0)
-02/14/23 16:40:30 Just submitted 1 job this cycle...
-02/14/23 16:40:30 DAG status: 0 (DAG_STATUS_OK)
-02/14/23 16:40:30 Of 5 nodes total:
-02/14/23 16:40:30  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:40:30   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:40:30     1       0        1       0       0          3        0        0
-02/14/23 16:40:30 0 job proc(s) currently held
-02/14/23 16:40:30 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.00455772876739502; EventCycleTimeCount = 4.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 0.0004489421844482422; EventCycleTimeStd = 0.005355506921922436; EventCycleTimeSum = 0.01823091506958008; LogProcessCycleTimeAvg = 0.001912673314412435; LogProcessCycleTimeCount = 3.0; LogProcessCycleTimeMax = 0.004839181900024414; LogProcessCycleTimeMin = 0.0004270076751708984; LogProcessCycleTimeStd = 0.002534529866601403; LogProcessCycleTimeSum = 0.005738019943237305; SleepCycleTimeAvg = 4.855223000049591; SleepCycleTimeCount = 4.0; SleepCycleTimeMax = 5.005186080932617; SleepCycleTimeMin = 4.405500888824463; SleepCycleTimeStd = 0.2998147434116987; SleepCycleTimeSum = 19.42089200019836; SubmitCycleTimeAvg = 0.004247617721557617; SubmitCycleTimeCount = 5.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 7.867813110351562E-06; SubmitCycleTimeStd = 0.005855492935022234; SubmitCycleTimeSum = 0.02123808860778809; ]
-02/14/23 16:40:35 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:40:35 Reassigning the id of job ls_ID0000001 from (12310.0.0) to (12310.0.0)
-02/14/23 16:40:35 Event: ULOG_SUBMIT for HTCondor Node ls_ID0000001 (12310.0.0) {02/14/23 16:40:30}
-02/14/23 16:40:35 Number of idle job procs: 1
-02/14/23 16:40:50 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:40:50 Event: ULOG_EXECUTE for HTCondor Node ls_ID0000001 (12310.0.0) {02/14/23 16:40:49}
-02/14/23 16:40:50 Number of idle job procs: 0
-02/14/23 16:40:55 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:40:55 Event: ULOG_JOB_TERMINATED for HTCondor Node ls_ID0000001 (12310.0.0) {02/14/23 16:40:52}
-02/14/23 16:40:55 Number of idle job procs: 0
-02/14/23 16:40:55 Node ls_ID0000001 job proc (12310.0.0) failed with status 2.
-02/14/23 16:40:55 Node ls_ID0000001 job completed
-02/14/23 16:40:55 Running POST script of Node ls_ID0000001...
-02/14/23 16:40:55 Warning: mysin has length 0 (ignore if produced by DAGMan; see gittrac #4987, #5031)
-02/14/23 16:40:55 DAG status: 0 (DAG_STATUS_OK)
-02/14/23 16:40:55 Of 5 nodes total:
-02/14/23 16:40:55  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:40:55   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:40:55     1       0        0       1       0          3        0        0
-02/14/23 16:40:55 0 job proc(s) currently held
-02/14/23 16:40:55 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.003188769022623698; EventCycleTimeCount = 9.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 9.059906005859375E-06; EventCycleTimeStd = 0.004665038218723621; EventCycleTimeSum = 0.02869892120361328; LogProcessCycleTimeAvg = 0.001865466435750325; LogProcessCycleTimeCount = 6.0; LogProcessCycleTimeMax = 0.004864931106567383; LogProcessCycleTimeMin = 0.0001850128173828125; LogProcessCycleTimeStd = 0.002315535634007617; LogProcessCycleTimeSum = 0.01119279861450195; SleepCycleTimeAvg = 4.938492324617174; SleepCycleTimeCount = 9.0; SleepCycleTimeMax = 5.005186080932617; SleepCycleTimeMin = 4.405500888824463; SleepCycleTimeStd = 0.1998717903164464; SleepCycleTimeSum = 44.44643092155457; SubmitCycleTimeAvg = 0.002127265930175781; SubmitCycleTimeCount = 10.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 4.053115844726562E-06; SubmitCycleTimeStd = 0.004498223355464816; SubmitCycleTimeSum = 0.02127265930175781; ]
-02/14/23 16:40:55 Initializing user log writer for /home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log, (12310.0.0)
-02/14/23 16:41:00 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:41:00 Event: ULOG_POST_SCRIPT_TERMINATED for HTCondor Node ls_ID0000001 (12310.0.0) {02/14/23 16:40:55}
-02/14/23 16:41:00 POST Script of node ls_ID0000001 failed with status 1
-02/14/23 16:41:00 POST for Node ls_ID0000001 returned 1
-02/14/23 16:41:00 Retrying node ls_ID0000001 (retry #1 of 1)...
-02/14/23 16:41:00 DAG status: 0 (DAG_STATUS_OK)
-02/14/23 16:41:00 Of 5 nodes total:
-02/14/23 16:41:00  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:41:00   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:41:00     1       0        0       0       1          3        0        0
-02/14/23 16:41:00 0 job proc(s) currently held
-02/14/23 16:41:00 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.003384304046630859; EventCycleTimeCount = 10.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 9.059906005859375E-06; EventCycleTimeStd = 0.004441492588989398; EventCycleTimeSum = 0.03384304046630859; LogProcessCycleTimeAvg = 0.001670973641531808; LogProcessCycleTimeCount = 7.0; LogProcessCycleTimeMax = 0.004864931106567383; LogProcessCycleTimeMin = 0.0001850128173828125; LogProcessCycleTimeStd = 0.002175518295943835; LogProcessCycleTimeSum = 0.01169681549072266; SleepCycleTimeAvg = 4.980873489379883; SleepCycleTimeCount = 10.0; SleepCycleTimeMax = 5.362303972244263; SleepCycleTimeMin = 4.405500888824463; SleepCycleTimeStd = 0.2312393041159743; SleepCycleTimeSum = 49.80873489379883; SubmitCycleTimeAvg = 0.001934615048495206; SubmitCycleTimeCount = 11.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 4.053115844726562E-06; SubmitCycleTimeStd = 0.004314958864742462; SubmitCycleTimeSum = 0.02128076553344727; ]
-02/14/23 16:41:05 Reassigning the id of job ls_ID0000001 from (12310.0.0) to (-1.-1.-1)
-02/14/23 16:41:05 Submitting HTCondor Node ls_ID0000001 job(s)...
-02/14/23 16:41:05 Submitting node ls_ID0000001 from file 00/00/ls_ID0000001.sub using direct job submission
-02/14/23 16:41:05 	assigned HTCondor ID (12311.0.0)
-02/14/23 16:41:05 Just submitted 1 job this cycle...
-02/14/23 16:41:05 DAG status: 0 (DAG_STATUS_OK)
-02/14/23 16:41:05 Of 5 nodes total:
-02/14/23 16:41:05  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:41:05   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:41:05     1       0        1       0       0          3        0        0
-02/14/23 16:41:05 0 job proc(s) currently held
-02/14/23 16:41:05 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.003145282918756659; EventCycleTimeCount = 11.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 9.059906005859375E-06; EventCycleTimeStd = 0.004287494941281654; EventCycleTimeSum = 0.03459811210632324; LogProcessCycleTimeAvg = 0.001670973641531808; LogProcessCycleTimeCount = 7.0; LogProcessCycleTimeMax = 0.004864931106567383; LogProcessCycleTimeMin = 0.0001850128173828125; LogProcessCycleTimeStd = 0.002175518295943835; LogProcessCycleTimeSum = 0.01169681549072266; SleepCycleTimeAvg = 4.983077981255271; SleepCycleTimeCount = 11.0; SleepCycleTimeMax = 5.362303972244263; SleepCycleTimeMin = 4.405500888824463; SleepCycleTimeStd = 0.2194946737849327; SleepCycleTimeSum = 54.81385779380798; SubmitCycleTimeAvg = 0.002611319224039713; SubmitCycleTimeCount = 12.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 4.053115844726562E-06; SubmitCycleTimeStd = 0.004735122802309957; SubmitCycleTimeSum = 0.03133583068847656; ]
-02/14/23 16:41:10 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:41:10 Reassigning the id of job ls_ID0000001 from (12311.0.0) to (12311.0.0)
-02/14/23 16:41:10 Event: ULOG_SUBMIT for HTCondor Node ls_ID0000001 (12311.0.0) {02/14/23 16:41:05}
-02/14/23 16:41:10 Number of idle job procs: 1
-02/14/23 16:46:11 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:46:11 Event: ULOG_EXECUTE for HTCondor Node ls_ID0000001 (12311.0.0) {02/14/23 16:46:10}
-02/14/23 16:46:11 Number of idle job procs: 0
-02/14/23 16:46:16 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:46:16 Event: ULOG_JOB_TERMINATED for HTCondor Node ls_ID0000001 (12311.0.0) {02/14/23 16:46:13}
-02/14/23 16:46:16 Number of idle job procs: 0
-02/14/23 16:46:16 Node ls_ID0000001 job proc (12311.0.0) failed with status 2.
-02/14/23 16:46:16 Node ls_ID0000001 job completed
-02/14/23 16:46:16 Running POST script of Node ls_ID0000001...
-02/14/23 16:46:16 Warning: mysin has length 0 (ignore if produced by DAGMan; see gittrac #4987, #5031)
-02/14/23 16:46:16 DAG status: 0 (DAG_STATUS_OK)
-02/14/23 16:46:16 Of 5 nodes total:
-02/14/23 16:46:16  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:46:16   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:46:16     1       0        0       1       0          3        0        0
-02/14/23 16:46:16 0 job proc(s) currently held
-02/14/23 16:46:16 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.0007035275028176504; EventCycleTimeCount = 73.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 8.821487426757812E-06; EventCycleTimeStd = 0.002316312975119573; EventCycleTimeSum = 0.05135750770568848; LogProcessCycleTimeAvg = 0.00171506404876709; LogProcessCycleTimeCount = 10.0; LogProcessCycleTimeMax = 0.004864931106567383; LogProcessCycleTimeMin = 0.0001850128173828125; LogProcessCycleTimeStd = 0.002156937924959783; LogProcessCycleTimeSum = 0.0171506404876709; SleepCycleTimeAvg = 5.001646636283561; SleepCycleTimeCount = 73.0; SleepCycleTimeMax = 5.362303972244263; SleepCycleTimeMin = 4.405500888824463; SleepCycleTimeStd = 0.08218139825193309; SleepCycleTimeSum = 365.1202044487; SubmitCycleTimeAvg = 0.0004294595202884158; SubmitCycleTimeCount = 74.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 3.814697265625E-06; SubmitCycleTimeStd = 0.00207667609083565; SubmitCycleTimeSum = 0.03178000450134277; ]
-02/14/23 16:46:16 Initializing user log writer for /home/mzalam/pro/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log, (12311.0.0)
-02/14/23 16:46:21 Currently monitoring 1 HTCondor log file(s)
-02/14/23 16:46:21 Event: ULOG_POST_SCRIPT_TERMINATED for HTCondor Node ls_ID0000001 (12311.0.0) {02/14/23 16:46:16}
-02/14/23 16:46:21 POST Script of node ls_ID0000001 failed with status 1
-02/14/23 16:46:21 POST for Node ls_ID0000001 returned 1
-02/14/23 16:46:21 DAG status: 2 (DAG_STATUS_NODE_FAILED)
-02/14/23 16:46:21 Of 5 nodes total:
-02/14/23 16:46:21  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:46:21   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:46:21     1       0        0       0       0          0        1        3
-02/14/23 16:46:21 0 job proc(s) currently held
-02/14/23 16:46:21 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.0007635612745542783; EventCycleTimeCount = 74.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 8.821487426757812E-06; EventCycleTimeStd = 0.002357648921366255; EventCycleTimeSum = 0.0565035343170166; LogProcessCycleTimeAvg = 0.001601327549327503; LogProcessCycleTimeCount = 11.0; LogProcessCycleTimeMax = 0.004864931106567383; LogProcessCycleTimeMin = 0.0001850128173828125; LogProcessCycleTimeStd = 0.002080730399467772; LogProcessCycleTimeSum = 0.01761460304260254; SleepCycleTimeAvg = 5.006679074184315; SleepCycleTimeCount = 74.0; SleepCycleTimeMax = 5.374047040939331; SleepCycleTimeMin = 4.405500888824463; SleepCycleTimeStd = 0.09238693936183674; SleepCycleTimeSum = 370.4942514896393; SubmitCycleTimeAvg = 0.0004238128662109375; SubmitCycleTimeCount = 75.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 3.814697265625E-06; SubmitCycleTimeStd = 0.002063176381783151; SubmitCycleTimeSum = 0.03178596496582031; ]
-02/14/23 16:46:21 ERROR: the following job(s) failed:
-02/14/23 16:46:21 ---------------------- Job ----------------------
-02/14/23 16:46:21       Node Name: ls_ID0000001
-02/14/23 16:46:21            Noop: false
-02/14/23 16:46:21          NodeID: 1
-02/14/23 16:46:21     Node Status: STATUS_ERROR    
-02/14/23 16:46:21 Node return val: 1
-02/14/23 16:46:21           Error: Job exited with status 2 and POST Script failed with status 1 (after 1 node retries)
-02/14/23 16:46:21 Job Submit File: 00/00/ls_ID0000001.sub
-02/14/23 16:46:21     POST Script: /home/mzalam/pegasus_master/pegasus/dist/pegasus-5.1.0dev/bin/pegasus-exitcode  -r $RETURN -s PegasusLite:+exitcode+0 -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/ls_ID0000001.out
-02/14/23 16:46:21           Retry: 1
-02/14/23 16:46:21  HTCondor Job ID: (12311.0.0)
-02/14/23 16:46:21 PARENTS: create_dir_process_0_local WAITING: 0 CHILDREN: stage_out_local_local_0_0
-02/14/23 16:46:21 ---------------------------------------	<END>
-02/14/23 16:46:21 Aborting DAG...
-02/14/23 16:46:21 Writing Rescue DAG to process-0.dag.rescue001...
-02/14/23 16:46:21 Removing submitted jobs...
-02/14/23 16:46:21 Removing any/all submitted HTCondor jobs...
-02/14/23 16:46:21 Running: /usr/bin/condor_rm -const DAGManJobId==12308
-02/14/23 16:46:21 Note: 0 total job deferrals because of -MaxJobs limit (0)
-02/14/23 16:46:21 Note: 0 total job deferrals because of -MaxIdle limit (1000)
-02/14/23 16:46:21 Note: 0 total job deferrals because of node category throttles
-02/14/23 16:46:21 Note: 0 total PRE script deferrals because of -MaxPre limit (20) or DEFER
-02/14/23 16:46:21 Note: 0 total POST script deferrals because of -MaxPost limit (20) or DEFER
-02/14/23 16:46:21 Note: 0 total HOLD script deferrals because of -MaxHold limit (20) or DEFER
-02/14/23 16:46:21 DAG status: 2 (DAG_STATUS_NODE_FAILED)
-02/14/23 16:46:21 Of 5 nodes total:
-02/14/23 16:46:21  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
-02/14/23 16:46:21   ===     ===      ===     ===     ===        ===      ===      ===
-02/14/23 16:46:21     1       0        0       0       0          0        1        3
-02/14/23 16:46:21 0 job proc(s) currently held
-02/14/23 16:46:21 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.0007635612745542783; EventCycleTimeCount = 74.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 8.821487426757812E-06; EventCycleTimeStd = 0.002357648921366255; EventCycleTimeSum = 0.0565035343170166; LogProcessCycleTimeAvg = 0.001601327549327503; LogProcessCycleTimeCount = 11.0; LogProcessCycleTimeMax = 0.004864931106567383; LogProcessCycleTimeMin = 0.0001850128173828125; LogProcessCycleTimeStd = 0.002080730399467772; LogProcessCycleTimeSum = 0.01761460304260254; SleepCycleTimeAvg = 5.006679074184315; SleepCycleTimeCount = 74.0; SleepCycleTimeMax = 5.374047040939331; SleepCycleTimeMin = 4.405500888824463; SleepCycleTimeStd = 0.09238693936183674; SleepCycleTimeSum = 370.4942514896393; SubmitCycleTimeAvg = 0.0004238128662109375; SubmitCycleTimeCount = 75.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 3.814697265625E-06; SubmitCycleTimeStd = 0.002063176381783151; SubmitCycleTimeSum = 0.03178596496582031; ]
-02/14/23 16:46:21 Wrote metrics file process-0.dag.metrics.
-02/14/23 16:46:21 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.0007635612745542783; EventCycleTimeCount = 74.0; EventCycleTimeMax = 0.01191186904907227; EventCycleTimeMin = 8.821487426757812E-06; EventCycleTimeStd = 0.002357648921366255; EventCycleTimeSum = 0.0565035343170166; LogProcessCycleTimeAvg = 0.001601327549327503; LogProcessCycleTimeCount = 11.0; LogProcessCycleTimeMax = 0.004864931106567383; LogProcessCycleTimeMin = 0.0001850128173828125; LogProcessCycleTimeStd = 0.002080730399467772; LogProcessCycleTimeSum = 0.01761460304260254; SleepCycleTimeAvg = 5.006679074184315; SleepCycleTimeCount = 74.0; SleepCycleTimeMax = 5.374047040939331; SleepCycleTimeMin = 4.405500888824463; SleepCycleTimeStd = 0.09238693936183674; SleepCycleTimeSum = 370.4942514896393; SubmitCycleTimeAvg = 0.0004238128662109375; SubmitCycleTimeCount = 75.0; SubmitCycleTimeMax = 0.0116889476776123; SubmitCycleTimeMin = 3.814697265625E-06; SubmitCycleTimeStd = 0.002063176381783151; SubmitCycleTimeSum = 0.03178596496582031; ]
-02/14/23 16:46:21 **** condor_scheduniv_exec.12308.0 (condor_DAGMAN) pid 4162551 EXITING WITH STATUS 1
+03/03/23 23:09:48 ******************************************************
+03/03/23 23:09:48 ** condor_scheduniv_exec.7.0 (CONDOR_DAGMAN) STARTING UP
+03/03/23 23:09:48 ** /home/mzalam/wf/condor/usr/bin/condor_dagman
+03/03/23 23:09:48 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+03/03/23 23:09:48 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+03/03/23 23:09:48 ** $CondorVersion: 10.2.5 2023-02-27 BuildID: 631644 PackageID: 10.2.5-1 $
+03/03/23 23:09:48 ** $CondorPlatform: x86_64_AlmaLinux8 $
+03/03/23 23:09:48 ** PID = 147795
+03/03/23 23:09:48 ** Log last touched time unavailable (No such file or directory)
+03/03/23 23:09:48 ******************************************************
+03/03/23 23:09:48 Using config source: /home/mzalam/wf/condor/etc/condor_config
+03/03/23 23:09:48 Using local config sources: 
+03/03/23 23:09:48    /home/mzalam/wf/condor/local/config.d/00-personal-condor
+03/03/23 23:09:48 config Macros = 63, Sorted = 62, StringBytes = 1913, TablesBytes = 2316
+03/03/23 23:09:48 CLASSAD_CACHING is ENABLED
+03/03/23 23:09:48 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+03/03/23 23:09:48 DaemonCore: No command port requested.
+03/03/23 23:09:48 DAGMAN_USE_STRICT setting: 1
+03/03/23 23:09:48 DAGMAN_VERBOSITY setting: 3
+03/03/23 23:09:48 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+03/03/23 23:09:48 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+03/03/23 23:09:48 DAGMAN_SUBMIT_DELAY setting: 0
+03/03/23 23:09:48 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+03/03/23 23:09:48 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+03/03/23 23:09:48 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+03/03/23 23:09:48 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+03/03/23 23:09:48 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+03/03/23 23:09:48 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300
+03/03/23 23:09:48 DAGMAN_DEFAULT_PRIORITY setting: 0
+03/03/23 23:09:48 DAGMAN_SUPPRESS_NOTIFICATION setting: True
+03/03/23 23:09:48 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+03/03/23 23:09:48 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+03/03/23 23:09:48 DAGMAN_RETRY_NODE_FIRST setting: False
+03/03/23 23:09:48 DAGMAN_MAX_JOBS_IDLE setting: 1000
+03/03/23 23:09:48 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+03/03/23 23:09:48 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+03/03/23 23:09:48 DAGMAN_MAX_POST_SCRIPTS setting: 20
+03/03/23 23:09:48 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+03/03/23 23:09:48 DAGMAN_MUNGE_NODE_NAMES setting: True
+03/03/23 23:09:48 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+03/03/23 23:09:48 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+03/03/23 23:09:48 DAGMAN_ALWAYS_RUN_POST setting: False
+03/03/23 23:09:48 DAGMAN_CONDOR_SUBMIT_EXE setting: /home/mzalam/wf/condor/bin/condor_submit
+03/03/23 23:09:48 DAGMAN_USE_DIRECT_SUBMIT setting: True
+03/03/23 23:09:48 DAGMAN_DEFAULT_APPEND_VARS setting: False
+03/03/23 23:09:48 DAGMAN_ABORT_DUPLICATES setting: True
+03/03/23 23:09:48 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+03/03/23 23:09:48 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+03/03/23 23:09:48 DAGMAN_AUTO_RESCUE setting: True
+03/03/23 23:09:48 DAGMAN_MAX_RESCUE_NUM setting: 100
+03/03/23 23:09:48 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+03/03/23 23:09:48 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+03/03/23 23:09:48 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+03/03/23 23:09:48 DAGMAN_MAX_JOB_HOLDS setting: 100
+03/03/23 23:09:48 DAGMAN_HOLD_CLAIM_TIME setting: 20
+03/03/23 23:09:48 ALL_DEBUG setting: 
+03/03/23 23:09:48 DAGMAN_DEBUG setting: 
+03/03/23 23:09:48 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+03/03/23 23:09:48 DAGMAN_REMOVE_NODE_JOBS setting: True
+03/03/23 23:09:48 DAGMAN will adjust edges after parsing
+03/03/23 23:09:48 argv[0] == "condor_scheduniv_exec.7.0"
+03/03/23 23:09:48 argv[1] == "-Lockfile"
+03/03/23 23:09:48 argv[2] == "process-0.dag.lock"
+03/03/23 23:09:48 argv[3] == "-AutoRescue"
+03/03/23 23:09:48 argv[4] == "1"
+03/03/23 23:09:48 argv[5] == "-DoRescueFrom"
+03/03/23 23:09:48 argv[6] == "0"
+03/03/23 23:09:48 argv[7] == "-Dag"
+03/03/23 23:09:48 argv[8] == "process-0.dag"
+03/03/23 23:09:48 argv[9] == "-MaxPost"
+03/03/23 23:09:48 argv[10] == "20"
+03/03/23 23:09:48 argv[11] == "-Suppress_notification"
+03/03/23 23:09:48 argv[12] == "-CsdVersion"
+03/03/23 23:09:48 argv[13] == "$CondorVersion: 10.2.5 2023-02-27 BuildID: 631644 PackageID: 10.2.5-1 $"
+03/03/23 23:09:48 argv[14] == "-Dagman"
+03/03/23 23:09:48 argv[15] == "/home/mzalam/wf/condor/bin/condor_dagman"
+03/03/23 23:09:48 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+03/03/23 23:09:48 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+03/03/23 23:09:48 Workflow batch-id: <7.0>
+03/03/23 23:09:48 Workflow batch-name: <process-0.dag+7>
+03/03/23 23:09:48 Workflow accounting_group: <>
+03/03/23 23:09:48 Workflow accounting_group_user: <>
+03/03/23 23:09:48 Warning: failed to get attribute DAGNodeName
+03/03/23 23:09:48 DAGMAN_LOG_ON_NFS_IS_ERROR setting: False
+03/03/23 23:09:48 Default node log file is: </home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log>
+03/03/23 23:09:48 DAG Lockfile will be written to process-0.dag.lock
+03/03/23 23:09:48 DAG Input file is process-0.dag
+03/03/23 23:09:48 Parsing 1 dagfiles
+03/03/23 23:09:48 Parsing process-0.dag ...
+03/03/23 23:09:48 Adjusting edges
+03/03/23 23:09:48 Warning: category cleanup has no assigned nodes, so the throttle setting (4) will have no effect
+03/03/23 23:09:48 Warning: category stagein has no assigned nodes, so the throttle setting (10) will have no effect
+03/03/23 23:09:48 Dag contains 5 total jobs
+03/03/23 23:09:48 Bootstrapping...
+03/03/23 23:09:48 Number of pre-completed nodes: 0
+03/03/23 23:09:48 MultiLogFiles: truncating log file /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log
+03/03/23 23:09:48 DAG status: 0 (DAG_STATUS_OK)
+03/03/23 23:09:48 Of 5 nodes total:
+03/03/23 23:09:48  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:09:48   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:09:48     0       0        0       0       1          4        0        0
+03/03/23 23:09:48 0 job proc(s) currently held
+03/03/23 23:09:48 DAGMan Runtime Statistics: [ EventCycleTimeCount = 0.0; EventCycleTimeSum = 0.0; LogProcessCycleTimeCount = 0.0; LogProcessCycleTimeSum = 0.0; SleepCycleTimeCount = 0.0; SleepCycleTimeSum = 0.0; SubmitCycleTimeCount = 0.0; SubmitCycleTimeSum = 0.0; ]
+03/03/23 23:09:48 Registering condor_event_timer...
+03/03/23 23:09:49 Submitting HTCondor Node create_dir_process_0_local job(s)...
+03/03/23 23:09:49 Submitting node create_dir_process_0_local from file 00/00/create_dir_process_0_local.sub using direct job submission
+03/03/23 23:09:49 	assigned HTCondor ID (8.0.0)
+03/03/23 23:09:49 Just submitted 1 job this cycle...
+03/03/23 23:09:49 DAG status: 0 (DAG_STATUS_OK)
+03/03/23 23:09:49 Of 5 nodes total:
+03/03/23 23:09:49  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:09:49   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:09:49     0       0        1       0       0          4        0        0
+03/03/23 23:09:49 0 job proc(s) currently held
+03/03/23 23:09:49 DAGMan Runtime Statistics: [ EventCycleTimeCount = 0.0; EventCycleTimeSum = 0.0; LogProcessCycleTimeCount = 0.0; LogProcessCycleTimeSum = 0.0; SleepCycleTimeCount = 0.0; SleepCycleTimeSum = 0.0; SubmitCycleTimeAvg = 0.01012086868286133; SubmitCycleTimeCount = 1.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 0.01012086868286133; SubmitCycleTimeStd = 0.01012086868286133; SubmitCycleTimeSum = 0.01012086868286133; ]
+03/03/23 23:09:54 Currently monitoring 1 HTCondor log file(s)
+03/03/23 23:09:54 Reassigning the id of job create_dir_process_0_local from (8.0.0) to (8.0.0)
+03/03/23 23:09:54 Event: ULOG_SUBMIT for HTCondor Node create_dir_process_0_local (8.0.0) {03/03/23 23:09:49}
+03/03/23 23:09:54 Number of idle job procs: 1
+03/03/23 23:09:54 Event: ULOG_EXECUTE for HTCondor Node create_dir_process_0_local (8.0.0) {03/03/23 23:09:53}
+03/03/23 23:09:54 Number of idle job procs: 0
+03/03/23 23:09:59 Currently monitoring 1 HTCondor log file(s)
+03/03/23 23:09:59 Event: ULOG_JOB_TERMINATED for HTCondor Node create_dir_process_0_local (8.0.0) {03/03/23 23:09:56}
+03/03/23 23:09:59 Number of idle job procs: 0
+03/03/23 23:09:59 Node create_dir_process_0_local job proc (8.0.0) completed successfully.
+03/03/23 23:09:59 Node create_dir_process_0_local job completed
+03/03/23 23:09:59 Running POST script of Node create_dir_process_0_local...
+03/03/23 23:09:59 Warning: mysin has length 0 (ignore if produced by DAGMan; see gittrac #4987, #5031)
+03/03/23 23:09:59 DAG status: 0 (DAG_STATUS_OK)
+03/03/23 23:09:59 Of 5 nodes total:
+03/03/23 23:09:59  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:09:59   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:09:59     0       0        0       1       0          4        0        0
+03/03/23 23:09:59 0 job proc(s) currently held
+03/03/23 23:09:59 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.005333542823791504; EventCycleTimeCount = 2.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 0.0002951622009277344; EventCycleTimeStd = 0.007125346209251745; EventCycleTimeSum = 0.01066708564758301; LogProcessCycleTimeAvg = 0.002400398254394531; LogProcessCycleTimeCount = 2.0; LogProcessCycleTimeMax = 0.004525899887084961; LogProcessCycleTimeMin = 0.0002748966217041016; LogProcessCycleTimeStd = 0.003005913235796962; LogProcessCycleTimeSum = 0.004800796508789062; SleepCycleTimeAvg = 5.005172967910767; SleepCycleTimeCount = 2.0; SleepCycleTimeMax = 5.005225896835327; SleepCycleTimeMin = 5.005120038986206; SleepCycleTimeStd = 7.48528029553478E-05; SleepCycleTimeSum = 10.01034593582153; SubmitCycleTimeAvg = 0.003378709157307943; SubmitCycleTimeCount = 3.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 7.152557373046875E-06; SubmitCycleTimeStd = 0.005838881444967123; SubmitCycleTimeSum = 0.01013612747192383; ]
+03/03/23 23:10:00 Initializing user log writer for /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log, (8.0.0)
+03/03/23 23:10:04 Currently monitoring 1 HTCondor log file(s)
+03/03/23 23:10:04 Event: ULOG_POST_SCRIPT_TERMINATED for HTCondor Node create_dir_process_0_local (8.0.0) {03/03/23 23:10:00}
+03/03/23 23:10:04 POST Script of node create_dir_process_0_local completed successfully.
+03/03/23 23:10:04 DAG status: 0 (DAG_STATUS_OK)
+03/03/23 23:10:04 Of 5 nodes total:
+03/03/23 23:10:04  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:10:04   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:10:04     1       0        0       0       1          3        0        0
+03/03/23 23:10:04 0 job proc(s) currently held
+03/03/23 23:10:04 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.005143324534098308; EventCycleTimeCount = 3.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 0.0002951622009277344; EventCycleTimeStd = 0.005049141342253207; EventCycleTimeSum = 0.01542997360229492; LogProcessCycleTimeAvg = 0.001665592193603516; LogProcessCycleTimeCount = 3.0; LogProcessCycleTimeMax = 0.004525899887084961; LogProcessCycleTimeMin = 0.0001959800720214844; LogProcessCycleTimeStd = 0.002477413375174864; LogProcessCycleTimeSum = 0.004996776580810547; SleepCycleTimeAvg = 4.802140315373738; SleepCycleTimeCount = 3.0; SleepCycleTimeMax = 5.005225896835327; SleepCycleTimeMin = 4.396075010299683; SleepCycleTimeStd = 0.3516628737727912; SleepCycleTimeSum = 14.40642094612122; SubmitCycleTimeAvg = 0.002535760402679443; SubmitCycleTimeCount = 4.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 6.914138793945312E-06; SubmitCycleTimeStd = 0.005056738879683875; SubmitCycleTimeSum = 0.01014304161071777; ]
+03/03/23 23:10:09 Submitting HTCondor Node ls_ID0000001 job(s)...
+03/03/23 23:10:09 Submitting node ls_ID0000001 from file 00/00/ls_ID0000001.sub using direct job submission
+03/03/23 23:10:09 	assigned HTCondor ID (9.0.0)
+03/03/23 23:10:09 Just submitted 1 job this cycle...
+03/03/23 23:10:09 DAG status: 0 (DAG_STATUS_OK)
+03/03/23 23:10:09 Of 5 nodes total:
+03/03/23 23:10:09  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:10:09   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:10:09     1       0        1       0       0          3        0        0
+03/03/23 23:10:09 0 job proc(s) currently held
+03/03/23 23:10:09 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.003967761993408203; EventCycleTimeCount = 4.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 0.0002951622009277344; EventCycleTimeStd = 0.004745911364286327; EventCycleTimeSum = 0.01587104797363281; LogProcessCycleTimeAvg = 0.001665592193603516; LogProcessCycleTimeCount = 3.0; LogProcessCycleTimeMax = 0.004525899887084961; LogProcessCycleTimeMin = 0.0001959800720214844; LogProcessCycleTimeStd = 0.002477413375174864; LogProcessCycleTimeSum = 0.004996776580810547; SleepCycleTimeAvg = 4.852882742881775; SleepCycleTimeCount = 4.0; SleepCycleTimeMax = 5.005225896835327; SleepCycleTimeMin = 4.396075010299683; SleepCycleTimeStd = 0.3045384928998693; SleepCycleTimeSum = 19.4115309715271; SubmitCycleTimeAvg = 0.00400700569152832; SubmitCycleTimeCount = 5.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 6.914138793945312E-06; SubmitCycleTimeStd = 0.005477295826663005; SubmitCycleTimeSum = 0.0200350284576416; ]
+03/03/23 23:10:14 Currently monitoring 1 HTCondor log file(s)
+03/03/23 23:10:14 Reassigning the id of job ls_ID0000001 from (9.0.0) to (9.0.0)
+03/03/23 23:10:14 Event: ULOG_SUBMIT for HTCondor Node ls_ID0000001 (9.0.0) {03/03/23 23:10:09}
+03/03/23 23:10:14 Number of idle job procs: 1
+03/03/23 23:11:04 Currently monitoring 1 HTCondor log file(s)
+03/03/23 23:11:04 Event: ULOG_EXECUTE for HTCondor Node ls_ID0000001 (9.0.0) {03/03/23 23:10:59}
+03/03/23 23:11:04 Number of idle job procs: 0
+03/03/23 23:11:04 Event: ULOG_JOB_TERMINATED for HTCondor Node ls_ID0000001 (9.0.0) {03/03/23 23:11:00}
+03/03/23 23:11:04 Number of idle job procs: 0
+03/03/23 23:11:04 Node ls_ID0000001 job proc (9.0.0) failed with status 2.
+03/03/23 23:11:04 Node ls_ID0000001 job completed
+03/03/23 23:11:04 Running POST script of Node ls_ID0000001...
+03/03/23 23:11:04 Warning: mysin has length 0 (ignore if produced by DAGMan; see gittrac #4987, #5031)
+03/03/23 23:11:04 DAG status: 0 (DAG_STATUS_OK)
+03/03/23 23:11:04 Of 5 nodes total:
+03/03/23 23:11:04  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:11:04   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:11:04     1       0        0       1       0          3        0        0
+03/03/23 23:11:04 0 job proc(s) currently held
+03/03/23 23:11:04 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.001757669448852539; EventCycleTimeCount = 15.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 1.311302185058594E-05; EventCycleTimeStd = 0.003657655564754758; EventCycleTimeSum = 0.02636504173278809; LogProcessCycleTimeAvg = 0.002042961120605469; LogProcessCycleTimeCount = 5.0; LogProcessCycleTimeMax = 0.005053043365478516; LogProcessCycleTimeMin = 0.0001649856567382812; LogProcessCycleTimeStd = 0.002514446407660023; LogProcessCycleTimeSum = 0.01021480560302734; SleepCycleTimeAvg = 4.964531866709391; SleepCycleTimeCount = 15.0; SleepCycleTimeMax = 5.005286931991577; SleepCycleTimeMin = 4.396075010299683; SleepCycleTimeStd = 0.1572588629986833; SleepCycleTimeSum = 74.46797800064087; SubmitCycleTimeAvg = 0.001257508993148804; SubmitCycleTimeCount = 16.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 5.006790161132812E-06; SubmitCycleTimeStd = 0.003415484656248685; SubmitCycleTimeSum = 0.02012014389038086; ]
+03/03/23 23:11:04 Initializing user log writer for /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log, (9.0.0)
+03/03/23 23:11:09 Currently monitoring 1 HTCondor log file(s)
+03/03/23 23:11:09 Event: ULOG_POST_SCRIPT_TERMINATED for HTCondor Node ls_ID0000001 (9.0.0) {03/03/23 23:11:04}
+03/03/23 23:11:09 POST Script of node ls_ID0000001 failed with status 1
+03/03/23 23:11:09 POST for Node ls_ID0000001 returned 1
+03/03/23 23:11:09 Retrying node ls_ID0000001 (retry #1 of 1)...
+03/03/23 23:11:09 DAG status: 0 (DAG_STATUS_OK)
+03/03/23 23:11:09 Of 5 nodes total:
+03/03/23 23:11:09  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:11:09   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:11:09     1       0        0       0       1          3        0        0
+03/03/23 23:11:09 0 job proc(s) currently held
+03/03/23 23:11:09 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.001982122659683228; EventCycleTimeCount = 16.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 1.311302185058594E-05; EventCycleTimeStd = 0.00364590398255238; EventCycleTimeSum = 0.03171396255493164; LogProcessCycleTimeAvg = 0.001738150914510091; LogProcessCycleTimeCount = 6.0; LogProcessCycleTimeMax = 0.005053043365478516; LogProcessCycleTimeMin = 0.0001649856567382812; LogProcessCycleTimeStd = 0.002369685244929156; LogProcessCycleTimeSum = 0.01042890548706055; SleepCycleTimeAvg = 4.993276566267014; SleepCycleTimeCount = 16.0; SleepCycleTimeMax = 5.424447059631348; SleepCycleTimeMin = 4.396075010299683; SleepCycleTimeStd = 0.1905302706519978; SleepCycleTimeSum = 79.89242506027222; SubmitCycleTimeAvg = 0.001183944589951459; SubmitCycleTimeCount = 17.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 5.006790161132812E-06; SubmitCycleTimeStd = 0.003320909323717767; SubmitCycleTimeSum = 0.0201270580291748; ]
+03/03/23 23:11:14 Reassigning the id of job ls_ID0000001 from (9.0.0) to (-1.-1.-1)
+03/03/23 23:11:14 Submitting HTCondor Node ls_ID0000001 job(s)...
+03/03/23 23:11:14 Submitting node ls_ID0000001 from file 00/00/ls_ID0000001.sub using direct job submission
+03/03/23 23:11:14 	assigned HTCondor ID (10.0.0)
+03/03/23 23:11:14 Just submitted 1 job this cycle...
+03/03/23 23:11:14 DAG status: 0 (DAG_STATUS_OK)
+03/03/23 23:11:14 Of 5 nodes total:
+03/03/23 23:11:14  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:11:14   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:11:14     1       0        1       0       0          3        0        0
+03/03/23 23:11:14 0 job proc(s) currently held
+03/03/23 23:11:14 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.001891402637257295; EventCycleTimeCount = 17.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 1.311302185058594E-05; EventCycleTimeStd = 0.003549892877445628; EventCycleTimeSum = 0.03215384483337402; LogProcessCycleTimeAvg = 0.001738150914510091; LogProcessCycleTimeCount = 6.0; LogProcessCycleTimeMax = 0.005053043365478516; LogProcessCycleTimeMin = 0.0001649856567382812; LogProcessCycleTimeStd = 0.002369685244929156; LogProcessCycleTimeSum = 0.01042890548706055; SleepCycleTimeAvg = 4.993970828897813; SleepCycleTimeCount = 17.0; SleepCycleTimeMax = 5.424447059631348; SleepCycleTimeMin = 4.396075010299683; SleepCycleTimeStd = 0.1845023483394269; SleepCycleTimeSum = 84.89750409126282; SubmitCycleTimeAvg = 0.001663896772596571; SubmitCycleTimeCount = 18.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 5.006790161132812E-06; SubmitCycleTimeStd = 0.0038113095916294; SubmitCycleTimeSum = 0.02995014190673828; ]
+03/03/23 23:11:19 Currently monitoring 1 HTCondor log file(s)
+03/03/23 23:11:19 Reassigning the id of job ls_ID0000001 from (10.0.0) to (10.0.0)
+03/03/23 23:11:19 Event: ULOG_SUBMIT for HTCondor Node ls_ID0000001 (10.0.0) {03/03/23 23:11:14}
+03/03/23 23:11:19 Number of idle job procs: 1
+03/03/23 23:11:19 Event: ULOG_EXECUTE for HTCondor Node ls_ID0000001 (10.0.0) {03/03/23 23:11:14}
+03/03/23 23:11:19 Number of idle job procs: 0
+03/03/23 23:11:19 Event: ULOG_JOB_TERMINATED for HTCondor Node ls_ID0000001 (10.0.0) {03/03/23 23:11:15}
+03/03/23 23:11:19 Number of idle job procs: 0
+03/03/23 23:11:19 Node ls_ID0000001 job proc (10.0.0) failed with status 2.
+03/03/23 23:11:19 Node ls_ID0000001 job completed
+03/03/23 23:11:19 Running POST script of Node ls_ID0000001...
+03/03/23 23:11:19 Warning: mysin has length 0 (ignore if produced by DAGMan; see gittrac #4987, #5031)
+03/03/23 23:11:19 DAG status: 0 (DAG_STATUS_OK)
+03/03/23 23:11:19 Of 5 nodes total:
+03/03/23 23:11:19  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:11:19   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:11:19     1       0        0       1       0          3        0        0
+03/03/23 23:11:19 0 job proc(s) currently held
+03/03/23 23:11:19 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.002346052063835992; EventCycleTimeCount = 18.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 1.311302185058594E-05; EventCycleTimeStd = 0.003947299136151485; EventCycleTimeSum = 0.04222893714904785; LogProcessCycleTimeAvg = 0.002266713551112584; LogProcessCycleTimeCount = 7.0; LogProcessCycleTimeMax = 0.005438089370727539; LogProcessCycleTimeMin = 0.0001649856567382812; LogProcessCycleTimeStd = 0.002575879660565372; LogProcessCycleTimeSum = 0.01586699485778809; SleepCycleTimeAvg = 4.99458744790819; SleepCycleTimeCount = 18.0; SleepCycleTimeMax = 5.424447059631348; SleepCycleTimeMin = 4.396075010299683; SleepCycleTimeStd = 0.1790126863232535; SleepCycleTimeSum = 89.90257406234741; SubmitCycleTimeAvg = 0.00157668716029117; SubmitCycleTimeCount = 19.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 5.006790161132812E-06; SubmitCycleTimeStd = 0.003723383021832127; SubmitCycleTimeSum = 0.02995705604553223; ]
+03/03/23 23:11:19 Initializing user log writer for /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/./process-0.dag.nodes.log, (10.0.0)
+03/03/23 23:11:24 Currently monitoring 1 HTCondor log file(s)
+03/03/23 23:11:24 Event: ULOG_POST_SCRIPT_TERMINATED for HTCondor Node ls_ID0000001 (10.0.0) {03/03/23 23:11:19}
+03/03/23 23:11:24 POST Script of node ls_ID0000001 failed with status 1
+03/03/23 23:11:24 POST for Node ls_ID0000001 returned 1
+03/03/23 23:11:24 DAG status: 2 (DAG_STATUS_NODE_FAILED)
+03/03/23 23:11:24 Of 5 nodes total:
+03/03/23 23:11:24  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:11:24   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:11:24     1       0        0       0       0          0        1        3
+03/03/23 23:11:24 0 job proc(s) currently held
+03/03/23 23:11:24 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.002524150045294511; EventCycleTimeCount = 19.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 1.311302185058594E-05; EventCycleTimeStd = 0.00391384833860146; EventCycleTimeSum = 0.0479588508605957; LogProcessCycleTimeAvg = 0.002012521028518677; LogProcessCycleTimeCount = 8.0; LogProcessCycleTimeMax = 0.005438089370727539; LogProcessCycleTimeMin = 0.0001649856567382812; LogProcessCycleTimeStd = 0.002490820608115064; LogProcessCycleTimeSum = 0.01610016822814941; SleepCycleTimeAvg = 5.014467904442235; SleepCycleTimeCount = 19.0; SleepCycleTimeMax = 5.424447059631348; SleepCycleTimeMin = 4.396075010299683; SleepCycleTimeStd = 0.1943570232107438; SleepCycleTimeSum = 95.27489018440247; SubmitCycleTimeAvg = 0.001498198509216309; SubmitCycleTimeCount = 20.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 5.006790161132812E-06; SubmitCycleTimeStd = 0.003641033964360361; SubmitCycleTimeSum = 0.02996397018432617; ]
+03/03/23 23:11:24 ERROR: the following job(s) failed:
+03/03/23 23:11:24 ---------------------- Job ----------------------
+03/03/23 23:11:24       Node Name: ls_ID0000001
+03/03/23 23:11:24            Noop: false
+03/03/23 23:11:24          NodeID: 1
+03/03/23 23:11:24     Node Status: STATUS_ERROR    
+03/03/23 23:11:24 Node return val: 1
+03/03/23 23:11:24           Error: Job exited with status 2 and POST Script failed with status 1 (after 1 node retries)
+03/03/23 23:11:24 Job Submit File: 00/00/ls_ID0000001.sub
+03/03/23 23:11:24     POST Script: /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -s PegasusLite:+exitcode+0 -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/ls_ID0000001.out
+03/03/23 23:11:24           Retry: 1
+03/03/23 23:11:24  HTCondor Job ID: (10.0.0)
+03/03/23 23:11:24 PARENTS: create_dir_process_0_local WAITING: 0 CHILDREN: stage_out_local_local_0_0
+03/03/23 23:11:24 ---------------------------------------	<END>
+03/03/23 23:11:24 Aborting DAG...
+03/03/23 23:11:24 Writing Rescue DAG to process-0.dag.rescue001...
+03/03/23 23:11:24 Removing submitted jobs...
+03/03/23 23:11:24 Removing any/all submitted HTCondor jobs...
+03/03/23 23:11:24 Running: /home/mzalam/wf/condor/bin/condor_rm -const DAGManJobId==7
+03/03/23 23:11:24 Note: 0 total job deferrals because of -MaxJobs limit (0)
+03/03/23 23:11:24 Note: 0 total job deferrals because of -MaxIdle limit (1000)
+03/03/23 23:11:24 Note: 0 total job deferrals because of node category throttles
+03/03/23 23:11:24 Note: 0 total PRE script deferrals because of -MaxPre limit (20) or DEFER
+03/03/23 23:11:24 Note: 0 total POST script deferrals because of -MaxPost limit (20) or DEFER
+03/03/23 23:11:24 Note: 0 total HOLD script deferrals because of -MaxHold limit (20) or DEFER
+03/03/23 23:11:24 DAG status: 2 (DAG_STATUS_NODE_FAILED)
+03/03/23 23:11:24 Of 5 nodes total:
+03/03/23 23:11:24  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+03/03/23 23:11:24   ===     ===      ===     ===     ===        ===      ===      ===
+03/03/23 23:11:24     1       0        0       0       0          0        1        3
+03/03/23 23:11:24 0 job proc(s) currently held
+03/03/23 23:11:24 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.002524150045294511; EventCycleTimeCount = 19.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 1.311302185058594E-05; EventCycleTimeStd = 0.00391384833860146; EventCycleTimeSum = 0.0479588508605957; LogProcessCycleTimeAvg = 0.002012521028518677; LogProcessCycleTimeCount = 8.0; LogProcessCycleTimeMax = 0.005438089370727539; LogProcessCycleTimeMin = 0.0001649856567382812; LogProcessCycleTimeStd = 0.002490820608115064; LogProcessCycleTimeSum = 0.01610016822814941; SleepCycleTimeAvg = 5.014467904442235; SleepCycleTimeCount = 19.0; SleepCycleTimeMax = 5.424447059631348; SleepCycleTimeMin = 4.396075010299683; SleepCycleTimeStd = 0.1943570232107438; SleepCycleTimeSum = 95.27489018440247; SubmitCycleTimeAvg = 0.001498198509216309; SubmitCycleTimeCount = 20.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 5.006790161132812E-06; SubmitCycleTimeStd = 0.003641033964360361; SubmitCycleTimeSum = 0.02996397018432617; ]
+03/03/23 23:11:24 Wrote metrics file process-0.dag.metrics.
+03/03/23 23:11:24 DAGMan Runtime Statistics: [ EventCycleTimeAvg = 0.002524150045294511; EventCycleTimeCount = 19.0; EventCycleTimeMax = 0.01037192344665527; EventCycleTimeMin = 1.311302185058594E-05; EventCycleTimeStd = 0.00391384833860146; EventCycleTimeSum = 0.0479588508605957; LogProcessCycleTimeAvg = 0.002012521028518677; LogProcessCycleTimeCount = 8.0; LogProcessCycleTimeMax = 0.005438089370727539; LogProcessCycleTimeMin = 0.0001649856567382812; LogProcessCycleTimeStd = 0.002490820608115064; LogProcessCycleTimeSum = 0.01610016822814941; SleepCycleTimeAvg = 5.014467904442235; SleepCycleTimeCount = 19.0; SleepCycleTimeMax = 5.424447059631348; SleepCycleTimeMin = 4.396075010299683; SleepCycleTimeStd = 0.1943570232107438; SleepCycleTimeSum = 95.27489018440247; SubmitCycleTimeAvg = 0.001498198509216309; SubmitCycleTimeCount = 20.0; SubmitCycleTimeMax = 0.01012086868286133; SubmitCycleTimeMin = 5.006790161132812E-06; SubmitCycleTimeStd = 0.003641033964360361; SubmitCycleTimeSum = 0.02996397018432617; ]
+03/03/23 23:11:24 **** condor_scheduniv_exec.7.0 (condor_DAGMAN) pid 147795 EXITING WITH STATUS 1

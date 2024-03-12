@@ -621,7 +621,8 @@ public class TransferEngine extends Engine {
                                     mSiteStore.getExternalWorkDirectory(
                                             server, pJob.getSiteHandle());
 
-                            sourceURL = sourceURI + File.separator + outFile;
+                            sourceURL =
+                                    sourceURI + File.separator + addOn + File.separator + outFile;
 
                             if (job instanceof DAXJob) {
                                 // Case 3 PM-1766 DAX job has some input files that are produced by
@@ -912,7 +913,10 @@ public class TransferEngine extends Engine {
                 .append(job.getRelativeSubmitDirectory())
                 .append(File.separator)
                 .append(job.getID())
-                .append(".cache");
+                .append(".input.cache");
+
+        // PM-1916 set the path to input cache file for sub workflow explicilty
+        job.setInputWorkflowCacheFile(file.toString());
 
         // set the appropriate property to designate path to file
         cacheProps.setProperty(WORKFLOW_CACHE_REPLICA_CATALOG_KEY, file.toString());

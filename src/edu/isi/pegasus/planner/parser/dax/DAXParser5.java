@@ -122,7 +122,7 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
         try {
             reader = new VariableExpansionReader(new FileReader(file));
         } catch (IOException ioe) {
-            throw new RuntimeException("Exception while reading file " + file);
+            throw new RuntimeException("Exception while reading file " + file, ioe);
         }
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);

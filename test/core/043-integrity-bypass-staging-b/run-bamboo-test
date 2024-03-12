@@ -1,7 +1,7 @@
 #!/bin/bash
-
+#set -x
 set -e
-set -o pipefail
+
 TOP_DIR=`pwd`
 
 # determine TEST_NAME to setup site catalog
@@ -12,14 +12,23 @@ TESTDIR=$(cd $testdir && pwd)
 TEST_NAME=`basename $TESTDIR`
 export TEST_NAME
 
-# pegasus bin directory is needed to find keg
-BIN_DIR=`pegasus-config --bin`
-PEGASUS_LOCAL_BIN_DIR=$BIN_DIR
-export PEGASUS_LOCAL_BIN_DIR
 
 #input file directory
 input_dir=/scitech/shared/scratch-90-days/bamboo/${TEST_NAME}
 mkdir -p ${input_dir}
+
+# untar the pegasus worker package from local install to a shared dir
+# available on all the compute nodes
+PEGASUS_WORKER_PACKAGE_DIR=`pegasus-config --java`/../worker-packages/
+tar xzf $PEGASUS_WORKER_PACKAGE_DIR/pegasus-worker-*.tar.gz -C ${input_dir}
+worker_package_dir=$(tar tzf $PEGASUS_WORKER_PACKAGE_DIR/pegasus-worker-*.tar.gz  | head | sed 's;/.*;;' | sort | uniq)
+set -o pipefail
+
+# pegasus bin directory is needed to find keg.
+# has to be keg in a directory visible to all compute nodes
+PEGASUS_SHARED_BIN_DIR=${input_dir}/${worker_package_dir}/bin
+export PEGASUS_SHARED_BIN_DIR
+echo "bin dir from untarred worker package dir  ${PEGASUS_SHARED_BIN_DIR}"
 
 echo "Running blackdiamond.py"
 export PYTHONPATH=`pegasus-config --python`

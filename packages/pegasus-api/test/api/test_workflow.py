@@ -617,6 +617,7 @@ class TestSubWorkflow:
                     "cache": ["cache", Path("cache2")],
                     "input_dirs": ["input_dir1", Path("input_dir2")],
                     "output_dir": "output_dir",
+                    "transformations_dir": "transformations_dir",
                     "dir": "dir",
                     "relative_dir": "relative_dir",
                     "random_dir": True,
@@ -655,6 +656,8 @@ class TestSubWorkflow:
                     "input_dir1,input_dir2",
                     "--output-dir",
                     "output_dir",
+                    "--transformations-dir",
+                    "transformations_dir",
                     "--dir",
                     "dir",
                     "--relative-dir",
@@ -690,6 +693,7 @@ class TestSubWorkflow:
                     "cache": ["cache", Path("cache2")],
                     "input_dirs": ["input_dir1", Path("input_dir2")],
                     "output_dir": "output_dir",
+                    "transformations_dir": "transformations_dir",
                     "dir": Path("dir"),
                     "relative_dir": Path("relative_dir"),
                     "random_dir": Path("random_dir"),
@@ -728,6 +732,8 @@ class TestSubWorkflow:
                     "input_dir1,input_dir2",
                     "--output-dir",
                     "output_dir",
+                    "--transformations-dir",
+                    "transformations_dir",
                     "--dir",
                     "dir",
                     "--relative-dir",
@@ -811,7 +817,7 @@ class TestSubWorkflow:
                     "id": "test-subworkflow",
                     "nodeLabel": "label",
                     "arguments": ["--sites", "condorpool"],
-                    "uses": [{"lfn": "file", "type": "input"}],
+                    "uses": [{"forPlanning": True, "lfn": "file", "type": "input"}],
                 },
             ),
             (
@@ -822,7 +828,7 @@ class TestSubWorkflow:
                     "id": "test-subworkflow",
                     "nodeLabel": "label",
                     "arguments": [],
-                    "uses": [{"lfn": "file", "type": "input"}],
+                    "uses": [{"forPlanning": True, "lfn": "file", "type": "input"}],
                 },
             ),
         ],
@@ -930,14 +936,18 @@ def expected_json():
                 "file": "subworkflow.dag",
                 "id": "c",
                 "arguments": ["--sites", "condorpool"],
-                "uses": [{"lfn": "subworkflow.dag", "type": "input"}],
+                "uses": [
+                    {"forPlanning": True, "lfn": "subworkflow.dag", "type": "input"}
+                ],
             },
             {
                 "type": "pegasusWorkflow",
                 "file": "subworkflow.dax",
                 "id": "d",
                 "arguments": [],
-                "uses": [{"lfn": "subworkflow.dax", "type": "input"}],
+                "uses": [
+                    {"forPlanning": True, "lfn": "subworkflow.dax", "type": "input"}
+                ],
             },
         ],
         "jobDependencies": [{"id": "a", "children": ["b"]}],
@@ -1648,6 +1658,7 @@ class TestWorkflow:
             java_options=None,
             job_prefix=None,
             output_dir=None,
+            transformations_dir=None,
             output_sites=["local"],
             quiet=0,
             random_dir=False,
@@ -1672,6 +1683,7 @@ class TestWorkflow:
             conf=Path("pegasus.properties"),
             input_dirs=["/path1", Path("/path2")],
             output_dir=Path("/output_dir"),
+            transformations_dir=Path("/executables-dir"),
             relative_dir=Path("run1"),
             relative_submit_dir=Path("run1"),
             dir=Path("/dir"),
@@ -1699,6 +1711,7 @@ class TestWorkflow:
             java_options=None,
             job_prefix=None,
             output_dir="/output_dir",
+            transformations_dir="/executables-dir",
             output_sites=["local"],
             quiet=0,
             random_dir=False,
@@ -1735,6 +1748,7 @@ class TestWorkflow:
                     "java_options": None,
                     "job_prefix": None,
                     "output_dir": None,
+                    "transformations_dir": None,
                     "output_sites": ["local"],
                     "quiet": 0,
                     "random_dir": True,
@@ -1765,6 +1779,7 @@ class TestWorkflow:
                     "java_options": None,
                     "job_prefix": None,
                     "output_dir": None,
+                    "transformations_dir": None,
                     "output_sites": ["local"],
                     "quiet": 0,
                     "random_dir": "/path/to/dir",
@@ -1795,6 +1810,7 @@ class TestWorkflow:
                     "java_options": None,
                     "job_prefix": None,
                     "output_dir": None,
+                    "transformations_dir": None,
                     "output_sites": ["local"],
                     "quiet": 0,
                     "random_dir": "/path/to/dir",
@@ -1833,6 +1849,7 @@ class TestWorkflow:
             relative_dir="run1",
             input_dirs=["/dir1", "/dir2"],
             output_dir="/out",
+            transformations_dir="/executables",
         )
 
         assert wf._path == DEFAULT_WF_PATH
@@ -1853,6 +1870,7 @@ class TestWorkflow:
             java_options=None,
             job_prefix=None,
             output_dir="/out",
+            transformations_dir="/executables",
             output_sites=["local"],
             quiet=0,
             random_dir=False,
@@ -2018,7 +2036,7 @@ class TestWorkflow:
         wf.analyze()
 
         Pegasus.client._client.Client.analyzer.assert_called_once_with(
-            wf._submit_dir, verbose=0
+            wf._submit_dir, json_mode=False, traverse_all=False, verbose=0
         )
 
     def test_statistics(self, wf, mocker):

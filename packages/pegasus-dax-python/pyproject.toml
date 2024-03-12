@@ -1,0 +1,47 @@
+profile           = "black"
+known_first_party = "Pegasus"
+forced_separate   = "Pegasus"
+skip              = [
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".tox",
+  ".venv",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  "Pegasus/cli"
+]
+
+
+[tool.black]
+
+target-version = ["py27"]
+
+exclude       = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | Pegasus/cli
+)/
+'''
+
+
+[build-system]
+
+requires      = ["setuptools<69", "wheel"]
+build-backend = "setuptools.build_meta"

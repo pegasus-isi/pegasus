@@ -1,0 +1,29 @@
+2023-03-03 23:09:49,308:INFO:pegasus-monitord(58): pegasus-monitord starting - pid 147796 
+2023-03-03 23:09:49,317:INFO:pegasus-monitord(456): Final Command line options are: ['-N', 'process-0.dag.dagman.out']
+2023-03-03 23:09:49,319:INFO:Pegasus.monitoring.event_output(630): Connecting workflow event sink to sqlite:////home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/process-0.stampede.db
+Pegasus database was successfully created.
+Database version: '5.0.5' (sqlite:////home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/process-0.stampede.db)
+2023-03-03 23:09:49,694:INFO:Pegasus.monitoring.event_output(704): output type=DB namespace=stampede. name=sqlite:////home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/process-0.stampede.db
+2023-03-03 23:09:49,694:INFO:Pegasus.monitoring.event_output(630): Connecting workflow event sink to sqlite:////home/mzalam/.pegasus/workflow.db
+Database version: '5.0.5' (sqlite:////home/mzalam/.pegasus/workflow.db)
+2023-03-03 23:09:50,038:INFO:Pegasus.monitoring.event_output(704): output type=DB namespace=dashboard. name=sqlite:////home/mzalam/.pegasus/workflow.db
+2023-03-03 23:09:50,038:INFO:pegasus-monitord(1253): monitord started in fast start mode
+2023-03-03 23:09:50,050:INFO:Pegasus.monitoring.workflow(461): cannot open state file /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/monitord.info, continuing without state...
+2023-03-03 23:09:50,050:INFO:Pegasus.monitoring.workflow(1148): creating new file /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/jobstate.log
+2023-03-03 23:09:50,051:INFO:Pegasus.monitoring.workflow(1158): Appending to existing jobstate.log replay_mode 0 previous_processed_line 0
+2023-03-03 23:09:50,051:INFO:Pegasus.monitoring.notifications(474): loading notifications from /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/process-0.notify
+2023-03-03 23:09:50,195:INFO:Pegasus.monitoring.workflow(205): Parsing DAG file /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/process-0.dag
+2023-03-03 23:09:50,196:INFO:pegasus-monitord(980): Using DAGMan version 10.2.5 100205
+2023-03-03 23:09:50,196:INFO:pegasus-monitord(955): DAGMan runs at pid 147795
+2023-03-03 23:09:50,200:INFO:pegasus-monitord(961): using dag process-0.dag
+2023-03-03 23:09:50,200:INFO:Pegasus.monitoring.workflow(811): DAGMan starting with condor id 7.0
+2023-03-03 23:11:25,581:INFO:pegasus-monitord(933): DAGMan process-0.dag finished with exit code 1
+2023-03-03 23:11:26,586:INFO:pegasus-monitord(1433): workflow /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/process-0.dag.dagman.out ended
+2023-03-03 23:11:26,587:INFO:Pegasus.monitoring.workflow(1378): recovery file deleted: /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/monitord.recover
+2023-03-03 23:11:26,587:INFO:pegasus-monitord(1671): finishing workflow: /home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/process-0.dag.dagman.out
+2023-03-03 23:11:26,587:INFO:pegasus-monitord(1725): finishing notifications...
+2023-03-03 23:11:26,588:INFO:pegasus-monitord(1733): monitord process 147796 exiting with 0
+2023-03-03 23:11:26,588:INFO:pegasus-monitord(198): DB flushing beginning
+2023-03-03 23:11:26,588:INFO:Pegasus.db.workflow_loader.WorkflowLoader(1244): Executing final flush
+2023-03-03 23:11:26,604:INFO:Pegasus.db.dashboard_loader.DashboardLoader(397): Executing final flush
+2023-03-03 23:11:26,605:INFO:pegasus-monitord(214): DB flushing ended

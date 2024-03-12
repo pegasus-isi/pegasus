@@ -22,7 +22,6 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
@@ -30,8 +29,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryException;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
@@ -212,11 +209,20 @@ public class CPlanner extends Executable {
             cPlanner.log(fe.convertException(), LogManager.FATAL_MESSAGE_LEVEL);
             result = 2;
         } catch (OutOfMemoryError error) {
-            cPlanner.log(
-                    "Out of Memory Error " + error.getMessage(), LogManager.FATAL_MESSAGE_LEVEL);
+            if (cPlanner.mLogger == null) {
+                // if you are out of memory or have wrong memory settings
+                // account for logger to be uninitialized
+                System.err.println("Out of memory error and logger is uninitialized");
+            } else {
+                cPlanner.log(
+                        "Out of Memory Error " + error.getMessage(),
+                        LogManager.FATAL_MESSAGE_LEVEL);
+            }
             error.printStackTrace();
-            // lets print out some GC stats
-            cPlanner.logMemoryUsage();
+            if (cPlanner.mLogger != null) {
+                // lets print out some GC stats
+                cPlanner.logMemoryUsage();
+            }
             result = 4;
         } catch (RuntimeException rte) {
             plannerException = rte;
@@ -417,7 +423,7 @@ public class CPlanner extends Executable {
         s.setForPlannerUse(mProps, mPOptions);
 
         // update the local/output site entry if required
-        configurator.updateSiteStoreAndOptions(s, mPOptions);
+        configurator.updateSiteStoreAndOptions(s, mPOptions, mProps);
 
         if (eSites.contains("*")) {
             // set execution sites to all sites that are loaded into site store
@@ -439,7 +445,9 @@ public class CPlanner extends Executable {
         }
 
         mBag.add(PegasusBag.SITE_STORE, s);
-        mBag.add(PegasusBag.TRANSFORMATION_CATALOG, loadTransformationCatalog(mBag, orgDag));
+        mBag.add(
+                PegasusBag.TRANSFORMATION_CATALOG,
+                TransformationFactory.loadInstanceWithStores(mBag, orgDag));
 
         // populate planner metrics
         mPMetrics.setVOGroup(mPOptions.getVOGroup());
@@ -769,7 +777,7 @@ public class CPlanner extends Executable {
                 new Getopt(
                         "pegasus-plan",
                         args,
-                        "vqhfSzVJr::D:d:s:o:O:m:c:C:b:2:j:3:F:X:4:5:6:78:9:1:R:",
+                        "vqhfSzVJr::D:d:s:o:O:m:c:C:b:2:j:3:F:X:4:5:6:78:9:1:R:t:",
                         longOptions,
                         false);
         g.setOpterr(false);
@@ -911,6 +919,10 @@ public class CPlanner extends Executable {
 
                 case 's': // sites
                     options.setExecutionSites(g.getOptarg());
+                    break;
+
+                case 't': // transformations dir
+                    options.setTransformationsDirectory(g.getOptarg());
                     break;
 
                 case '9': // staging-site
@@ -1083,7 +1095,7 @@ public class CPlanner extends Executable {
      * @return array of <code>LongOpt</code> objects , corresponding to the valid options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[32];
+        LongOpt[] longopts = new LongOpt[33];
 
         longopts[0] = new LongOpt("dir", LongOpt.REQUIRED_ARGUMENT, null, '8');
         longopts[1] = new LongOpt("dax", LongOpt.REQUIRED_ARGUMENT, null, 'd');
@@ -1119,6 +1131,7 @@ public class CPlanner extends Executable {
         longopts[29] = new LongOpt("cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1');
         longopts[30] = new LongOpt("reuse", LongOpt.REQUIRED_ARGUMENT, null, 'R');
         longopts[31] = new LongOpt("json", LongOpt.NO_ARGUMENT, null, 'J');
+        longopts[32] = new LongOpt("transformations-dir", LongOpt.REQUIRED_ARGUMENT, null, 't');
         return longopts;
     }
 
@@ -1133,9 +1146,9 @@ public class CPlanner extends Executable {
                         + "                     [-C style[,style…]] [--dir dir] [--force] [--force-replan]\n"
                         + "                     [--inherited-rc-files file1[,file2…]] [-j prefix] [--json] [-n]\n"
                         + "                     [-I input-dir1[,input-dir2…]] [-O output-dir] [-o site1[,site2…]]\n"
-                        + "                     [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]][--randomdir[=dirname]]\n"
-                        + "                     [--relative-dir dir] [--relative-submit-dir dir] [-X[non standard jvm option]]\n"
-                        + "                     abstract-workflow]";
+                        + "                     [-t transformations-dir] [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]]\n"
+                        + "                     [--randomdir[=dirname]][--relative-dir dir] [--relative-submit-dir dir] \n"
+                        + "                     [-X[non standard jvm option]] abstract-workflow]";
 
         System.out.println(text);
     }
@@ -1232,7 +1245,8 @@ public class CPlanner extends Executable {
                 .append("\n -S |--submit          submit the executable workflow generated")
                 .append(
                         "\n --staging-site        comma separated list of key=value pairs, where key is the execution site and value is the")
-                .append("\n                       staging site")
+                .append(
+                        "\n -t |--transformations-dir directory where users transformations are picked up, defaults to transformations")
                 .append(
                         "\n -v |--verbose         increases the verbosity of messages about what is going on")
                 .append(
@@ -1965,62 +1979,6 @@ public class CPlanner extends Executable {
                         LogManager.CONSOLE_MESSAGE_LEVEL);
             }
         }
-    }
-
-    /**
-     * Loads the transformation catalog. Throws an exception encountered while loading only if the
-     * daxStore is null or empty
-     *
-     * @param bag
-     * @param daxStore
-     * @return
-     */
-    private TransformationCatalog loadTransformationCatalog(PegasusBag bag, ADag dag) {
-
-        TransformationCatalog store = null;
-        TransformationStore daxStore = dag.getTransformationStore();
-        try {
-            store = TransformationFactory.loadInstance(bag);
-        } catch (TransformationFactoryException e) {
-            if ((daxStore == null || daxStore.isEmpty())
-                    && dag.getWorkflowMetrics().getTaskCount(Job.COMPUTE_JOB)
-                            != 0) { // pure hierarchal workflows with no compute jobs should not
-                // throw error
-                throw e;
-            }
-            // log the error nevertheless
-            bag.getLogger()
-                    .log(
-                            "Ignoring error encountered while loading Transformation Catalog "
-                                    + e.convertException(),
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-        }
-        // create a temp file as a TC backend for planning purposes
-        if (store == null) {
-            File f = null;
-            try {
-                f = File.createTempFile("tc.", ".txt");
-                bag.getLogger()
-                        .log(
-                                "Created a temporary transformation catalog backend " + f,
-                                LogManager.DEBUG_MESSAGE_LEVEL);
-            } catch (IOException ex) {
-                throw new RuntimeException(
-                        "Unable to create a temporary transformation catalog backend " + f, ex);
-            }
-            PegasusBag b = new PegasusBag();
-            b.add(PegasusBag.PEGASUS_LOGMANAGER, bag.getLogger());
-            PegasusProperties props = PegasusProperties.nonSingletonInstance();
-            props.setProperty(
-                    PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
-                    TransformationFactory.TEXT_CATALOG_IMPLEMENTOR);
-            props.setProperty(
-                    PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
-                    f.getAbsolutePath());
-            b.add(PegasusBag.PEGASUS_PROPERTIES, props);
-            return loadTransformationCatalog(b, dag);
-        }
-        return store;
     }
 }
 /**

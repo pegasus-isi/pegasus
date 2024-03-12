@@ -1,0 +1,196 @@
+- invocation: True
+  version: 3.0
+  start: 2023-03-04T11:57:07.327-08:00
+  duration: 0.116
+  transformation: "curl"
+  derivation: "ID0000001"
+  resource: "condorpool"
+  wf-label: "hierarchical-workflow"
+  wf-stamp: "2023-03-04T11:55:58-08:00"
+  interface: enp129s0
+  hostaddr: 128.9.46.53
+  hostname: workflow.isi.edu
+  pid: 382176
+  uid: 8073
+  user: mzalam
+  gid: 1018
+  group: div23
+  umask: 0o0022
+  mainjob:
+    start: 2023-03-04T11:57:07.427-08:00
+    duration: 0.016
+    pid: 382177
+    usage:
+      utime: 0.006
+      stime: 0.008
+      maxrss: 8888
+      minflt: 460
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 16
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 5
+      nivcsw: 0
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /usr/bin/curl
+      mode: 0o100755
+      size: 235648
+      inode: 135783213
+      nlink: 1
+      blksize: 4096
+      blocks: 464
+      mtime: 2023-02-21T08:49:24-08:00
+      atime: 2023-03-03T22:20:15-08:00
+      ctime: 2023-02-22T06:56:29-08:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    argument_vector:
+      - "-o"
+      - "pegasus.html"
+      - "http://pegasus.isi.edu"
+    procs:
+  jobids:
+    condor: 100.0
+  cwd: /home/mzalam/wf/condor/local/execute/dir_382044
+  usage:
+    utime: 0.017
+    stime: 0.071
+    maxrss: 2608
+    minflt: 133
+    majflt: 0
+    nswap: 0
+    inblock: 0
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 2
+    nivcsw: 7
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: workflow.isi.edu
+    uname_release: 4.18.0-425.10.1.el8_7.x86_64
+    uname_machine: x86_64
+    ram_total: 65653728
+    ram_free: 19190952
+    ram_shared: 230408
+    ram_buffer: 10616
+    swap_total: 20971516
+    swap_free: 18894768
+    cpu_count: 24
+    cpu_speed: 2336
+    cpu_vendor: GenuineIntel
+    cpu_model: Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz
+    load_min1: 0.43
+    load_min5: 0.41
+    load_min15: 0.39
+    procs_total: 464
+    procs_running: 2
+    procs_sleeping: 288
+    procs_other: 174
+    procs_vmsize: 86586512
+    procs_rss: 9280568
+    task_total: 1428
+    task_running: 4
+    task_sleeping: 1250
+    task_other: 174
+  files:
+    pegasus.html:
+      lfn: "pegasus.html"
+      file_name: /home/mzalam/wf/condor/local/execute/dir_382044/pegasus.html
+      mode: 0o100644
+      size: 313
+      inode: 204600336
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-03-04T11:57:07-08:00
+      atime: 2023-03-04T11:57:07-08:00
+      ctime: 2023-03-04T11:57:07-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+      output: True
+      sha256: 802da25c9659db059de19f14c01528c081576ceeb43bb3510931f0573fc3d18d
+      checksum_timing: 0.00
+    stdin:
+      file_name: /dev/null
+      mode: 0o20666
+      size: 0
+      inode: 3075
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-01-25T15:24:15-08:00
+      atime: 2023-01-25T15:24:15-08:00
+      ctime: 2023-01-25T15:24:15-08:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    stdout:
+      temporary_name: /home/mzalam/wf/condor/local/execute/dir_382044/ks.out.hFEhcQ
+      descriptor: 3
+      mode: 0o100600
+      size: 0
+      inode: 204600332
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T11:57:07-08:00
+      atime: 2023-03-04T11:57:07-08:00
+      ctime: 2023-03-04T11:57:07-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    stderr:
+      temporary_name: /home/mzalam/wf/condor/local/execute/dir_382044/ks.err.L0SPZP
+      descriptor: 4
+      mode: 0o100600
+      size: 317
+      inode: 204600333
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-03-04T11:57:07-08:00
+      atime: 2023-03-04T11:57:07-08:00
+      ctime: 2023-03-04T11:57:07-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+      data_truncated: false
+      data: |
+        % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                         Dload  Upload   Total   Spent    Left  Speed
+        
+          0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+        100   313  100   313    0     0  62600      0 --:--:-- --:--:-- --:--:-- 62600
+        
+    metadata:
+      temporary_name: /home/mzalam/wf/condor/local/execute/dir_382044/ks.meta.Xn37C2
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 204600334
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T11:57:07-08:00
+      atime: 2023-03-04T11:57:07-08:00
+      ctime: 2023-03-04T11:57:07-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23

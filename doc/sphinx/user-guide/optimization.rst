@@ -1668,11 +1668,9 @@ Information on how to control manully the maxinum number of stagein and
 stageout jobs can be found in the `Data Movement
 Nodes <#data_movement_nodes>`__ section.
 
-How to control the number of threads pegasus-transfer can use depends on
-if you want to control standard transfer jobs, or PegasusLite. For the
-former, see the `pegasus.transfer.threads <#transfer_props>`__ property,
-and for the latter the
-`pegasus.transfer.lite.threads <#transfer_props>`__ property.
+To control the number of threads pegasus-transfer can use in 
+standard transfer jobs and when invoked by PegasusLite,
+see the :ref:`pegasus.transfer.threads <transfer-props>` property.
 
 .. _job-throttling:
 

@@ -24,12 +24,13 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 public interface CredentialHandler {
 
     /** The version of the API being used. */
-    public static final String VERSION = "1.3";
+    public static final String VERSION = "1.5";
 
     // type of credentials associated
     /** An enumeration of valid types of credentials that are supported. */
     public static enum TYPE {
         credentials,
+        http,
         x509,
         s3,
         boto,
@@ -100,4 +101,16 @@ public interface CredentialHandler {
      * @throws RuntimeException in case of being unable to verify credential.
      */
     public void verify(Job job, CredentialHandler.TYPE type, String path);
+
+    /**
+     * Returns a boolean whether a credential located at a particular path has credentials for a
+     * particular endpoint or not
+     *
+     * @param type the type of credential
+     * @param credentialPath the path to credentials file of that type
+     * @param endpoint the end point
+     * @return boolean
+     */
+    public boolean hasCredential(
+            CredentialHandler.TYPE type, String credentialPath, String endpoint);
 }

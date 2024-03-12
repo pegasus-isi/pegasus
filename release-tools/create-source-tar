@@ -51,7 +51,7 @@ perl -p -i -e "s/\\+\\@OSID\\@//g" changelog
 cd $TOP_DIR
 
 cd dist/
-tar czf pegasus-$VERSION.tar.gz pegasus-$VERSION
+tar --dereference -czf pegasus-$VERSION.tar.gz pegasus-$VERSION
 rm -rf pegasus-$VERSION
 
 echo "The generated source tarball is ready at dist/pegasus-$VERSION.tar.gz"

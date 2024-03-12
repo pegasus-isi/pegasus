@@ -1,4 +1,5 @@
 import logging
+import re
 from configparser import DEFAULTSECT, ConfigParser
 from io import StringIO
 from typing import Optional, TextIO, Union
@@ -37,6 +38,7 @@ class Properties:
         "pegasus.catalog.replica.output.*",
         "pegasus.catalog.*.timeout",
         "pegasus.catalog.replica.db.*",
+        "pegasus.catalog.site.sites.*.profiles.*.*",
         "env.*",
         "dagman.*",
         "condor.*",
@@ -282,9 +284,15 @@ class Properties:
         else:
             for p in cls._pattern_props:
                 _ = p.split("*")
-                if k.startswith(_[0]) and k.endswith(_[1]) and len(k) >= len(p):
-                    rv = True
-                    break
+                if len(_) > 2:
+                    # do pure regex match , as there are more than 1 *
+                    if re.search(p, k) is not None:
+                        rv = True
+                        break
+                else:
+                    if k.startswith(_[0]) and k.endswith(_[1]) and len(k) >= len(p):
+                        rv = True
+                        break
 
         return rv
 
@@ -295,6 +303,35 @@ class Properties:
             return v
         else:
             return str(v)
+
+    @staticmethod
+    def _get_site_profile_key(site, namespace, key):
+        if site is None:
+            raise ValueError("Site cannot be none")
+
+        if namespace is None:
+            raise ValueError("Namespace cannot be none")
+
+        if key is None:
+            raise ValueError("Key cannot be none")
+
+        return "pegasus.catalog.site.sites.{site}.profiles.{namespace}.{key}".format(
+            site=site, namespace=namespace, key=key
+        )
+
+    def add_site_profile(self, site, namespace, key, value):
+        """
+        Maps a site profile to a property that can be picked up by the planner, to
+        override site catalog entries loaded from the Site Catalog.
+
+        :param site:  the site
+        :param namespace: the namespace for which profile has to be added
+        :param key:   the profile key
+        :param value: the profile value
+        :return:
+        """
+
+        self.__setitem__(self._get_site_profile_key(site, namespace, key), value)
 
     def write(self, file: Optional[Union[str, TextIO]] = None):
         """Write these properties to a file. If :code:`file` is not given, these

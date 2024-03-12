@@ -1,0 +1,12 @@
+# Rescue DAG file, created after running
+#   the Drug-Combination-Therapy-0.dag DAG file
+# Created 3/5/2023 17:12:12 UTC
+# Rescue DAG version: 2.0.1 (partial)
+#
+# Total number of Nodes: 8
+# Nodes premarked DONE: 2
+# Nodes that failed: 1
+#   chebi_drug_loader_ID0000001,<ENDLIST>
+
+DONE create_dir_Drug-Combination-Therapy_0_local
+DONE stage_in_local_local_0_0

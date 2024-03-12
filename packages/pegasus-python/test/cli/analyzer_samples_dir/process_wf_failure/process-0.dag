@@ -9,32 +9,32 @@ MAXJOBS cleanup 4
 MAXJOBS stageout 10
 
 JOB create_dir_process_0_local 00/00/create_dir_process_0_local.sub
-SCRIPT POST create_dir_process_0_local /home/mzalam/pegasus_master/pegasus/dist/pegasus-5.1.0dev/bin/pegasus-exitcode  -r $RETURN -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/create_dir_process_0_local.out
+SCRIPT POST create_dir_process_0_local /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/create_dir_process_0_local.out
 PRIORITY create_dir_process_0_local 800
 RETRY create_dir_process_0_local 1
 VARS create_dir_process_0_local +DAGNodeRetry="$(RETRY)"
 
 JOB ls_ID0000001 00/00/ls_ID0000001.sub
-SCRIPT POST ls_ID0000001 /home/mzalam/pegasus_master/pegasus/dist/pegasus-5.1.0dev/bin/pegasus-exitcode  -r $RETURN -s PegasusLite:+exitcode+0 -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/ls_ID0000001.out
+SCRIPT POST ls_ID0000001 /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -s PegasusLite:+exitcode+0 -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/ls_ID0000001.out
 PRIORITY ls_ID0000001 10
 RETRY ls_ID0000001 1
 VARS ls_ID0000001 +DAGNodeRetry="$(RETRY)"
 
 JOB stage_out_local_local_0_0 00/00/stage_out_local_local_0_0.sub
-SCRIPT POST stage_out_local_local_0_0 /home/mzalam/pegasus_master/pegasus/dist/pegasus-5.1.0dev/bin/pegasus-exitcode  -r $RETURN -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/stage_out_local_local_0_0.out
+SCRIPT POST stage_out_local_local_0_0 /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/stage_out_local_local_0_0.out
 PRIORITY stage_out_local_local_0_0 900
 RETRY stage_out_local_local_0_0 1
 CATEGORY stage_out_local_local_0_0 stageout
 VARS stage_out_local_local_0_0 +DAGNodeRetry="$(RETRY)"
 
 JOB cleanup_process_0_local 00/00/cleanup_process_0_local.sub
-SCRIPT POST cleanup_process_0_local /home/mzalam/pegasus_master/pegasus/dist/pegasus-5.1.0dev/bin/pegasus-exitcode  -r $RETURN -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/cleanup_process_0_local.out
+SCRIPT POST cleanup_process_0_local /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/cleanup_process_0_local.out
 PRIORITY cleanup_process_0_local 1000
 RETRY cleanup_process_0_local 1
 VARS cleanup_process_0_local +DAGNodeRetry="$(RETRY)"
 
 JOB register_local_0_0 00/00/register_local_0_0.sub
-SCRIPT POST register_local_0_0 /home/mzalam/pegasus_master/pegasus/dist/pegasus-5.1.0dev/bin/pegasus-exitcode  -r $RETURN -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/register_local_0_0.out
+SCRIPT POST register_local_0_0 /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l process-0.exitcode.log -M process-0.cache.meta   .//00/00/register_local_0_0.out
 PRIORITY register_local_0_0 30
 RETRY register_local_0_0 1
 CATEGORY register_local_0_0 registration

@@ -98,7 +98,7 @@ $(LIBDIR)/certifi: certifi-2019.11.28.tar.gz
 $(LIBDIR)/influxdb: influxdb-4.1.1.tar.gz
 $(LIBDIR)/chardet: chardet-3.0.4.tar.gz
 $(LIBDIR)/click: click-7.1.1.tar.gz
-$(LIBDIR)/docutils: docutils-0.15.2.tar.gz
+$(LIBDIR)/docutils: docutils-0.18.1.tar.gz
 $(LIBDIR)/globus_sdk: globus-sdk-3.5.0.tar.gz
 $(LIBDIR)/idna: idna-2.9.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-1.1.0.tar.gz
@@ -112,6 +112,7 @@ $(LIBDIR)/s3transfer: s3transfer-0.3.3.tar.gz
 $(LIBDIR)/six: six-1.14.0.tar.gz
 $(LIBDIR)/urllib3: urllib3-1.25.8.tar.gz
 $(LIBDIR)/pytz: pytz-2017.3.tar.gz
+$(LIBDIR)/dataclasses: dataclasses-0.8.tar.gz
 
 
 clean:

@@ -1,0 +1,16 @@
+# Rescue DAG file, created after running
+#   the process-0.dag DAG file
+# Created 3/4/2023 07:11:24 UTC
+# Rescue DAG version: 2.0.1 (partial)
+#
+# Total number of Nodes: 5
+# Nodes premarked DONE: 1
+# Nodes that failed: 1
+#   ls_ID0000001,<ENDLIST>
+
+DONE create_dir_process_0_local
+RETRY create_dir_process_0_local 1
+RETRY ls_ID0000001 1
+RETRY stage_out_local_local_0_0 1
+RETRY cleanup_process_0_local 1
+RETRY register_local_0_0 1

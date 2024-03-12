@@ -17,12 +17,30 @@ Pegasus currently has support for the following container
 technologies:
 
 1. **Docker**
-2. **Singularity**
+2. **Singularity/Apptainer**
 3. **Shifter**
 
 The **worker package is not required to be pre-installed in images**. If a
 matching worker package is not installed, Pegasus will try to determine
 which package is required and download it.
+
+Singularity vs Apptainer
+========================
+
+Singularity project was moved into the Linux foundation in November 2021,
+with an associated name change to **Apptainer**. To preserve backward
+compatibility all `apptainer` releases, have a symlink named `singularity`
+that points to the `apptainer` executable to preserve backward compatibility.
+
+The above notwithstanding, Pegasus has been updated to prefer the `apptainer`
+executable over the `singularity` executable. In the case, where a job runs
+on a node where only an old singularity install exists, the Pegasus jobs will
+fallback to using the singularity executable.
+
+In the workflow APIs; when using Pegasus you should continue to tag containers
+to type Singularity.
+
+
 
 .. _containers-configuration:
 
@@ -151,7 +169,7 @@ follows:
    Docker containers)
 
 4. Mounts the job directory into the container as ``/scratch`` for Docker
-   containers and as ``/srv`` for Singularity containers
+   containers and as ``/srv`` for Apptainer/Singularity containers
 
 5. Container will run a job specific script created by
    PegasusLite that does the following:

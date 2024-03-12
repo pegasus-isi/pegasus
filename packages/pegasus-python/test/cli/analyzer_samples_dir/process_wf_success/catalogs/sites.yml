@@ -1,0 +1,21 @@
+x-pegasus: {apiLang: python, createdBy: mzalam, createdOn: '03-03-23T21:52:43Z'}
+pegasus: 5.0.4
+sites:
+- name: local
+  directories:
+  - type: sharedScratch
+    path: /home/mzalam/processwf/scratch
+    sharedFileSystem: false
+    fileServers:
+    - {url: 'file:///home/mzalam/processwf/scratch', operation: all}
+  - type: localStorage
+    path: /home/mzalam/processwf/output
+    sharedFileSystem: false
+    fileServers:
+    - {url: 'file:///home/mzalam/processwf/output', operation: all}
+- name: condorpool
+  directories: []
+  profiles:
+    condor: {universe: vanilla, periodic_remove: (JobStatus == 5) && ((CurrentTime
+        - EnteredCurrentStatus) > 10)}
+    pegasus: {style: condor, data.configuration: condorio, clusters.num: 2}

@@ -1,0 +1,42 @@
+{
+  "client": "pegasus-plan",
+  "version": "5.0.5",
+  "wf_api": "python",
+  "type": "metrics",
+  "start_time": 1.677920535218E9,
+  "end_time": 1.677920539513E9,
+  "duration": 4.295,
+  "exitcode": 0,
+  "root_wf_uuid": "48f759a4-165f-47d6-8c32-571649ce311b",
+  "wf_uuid": "160be601-bda4-45fb-86cd-9cf7a269bb22",
+  "data_config": "condorio",
+  "planner_args": "--conf inner_diamond_workflow.pegasus.properties --dir /home/mzalam/hierar/hierarichal-sample-wf/submit --relative-dir mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow --relative-submit-dir mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow --basename inner --sites condorpool --cache /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.cache --output-map /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.output.map --output-sites local --cleanup none --verbose --verbose --verbose --deferred /home/mzalam/hierar/hierarichal-sample-wf/inner_diamond_workflow.yml ",
+  "uses_pmc": false,
+  "wf_metrics": {
+    "compute_tasks": 4,
+    "dax_tasks": 0,
+    "dag_tasks": 0,
+    "total_tasks": 4,
+    "deleted_tasks": 0,
+    "dax_input_files": 1,
+    "dax_inter_files": 4,
+    "dax_output_files": 1,
+    "dax_total_files": 6,
+    "compute_jobs": 4,
+    "clustered_jobs": 0,
+    "si_tx_jobs": 4,
+    "so_tx_jobs": 3,
+    "inter_tx_jobs": 0,
+    "reg_jobs": 3,
+    "cleanup_jobs": 0,
+    "create_dir_jobs": 1,
+    "dax_jobs": 0,
+    "dag_jobs": 0,
+    "chmod_jobs": 0,
+    "total_jobs": 15
+  },
+  "app_metrics": {
+    "name": "blackdiamond"
+  }
+}
+

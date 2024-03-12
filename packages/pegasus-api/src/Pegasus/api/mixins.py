@@ -232,6 +232,18 @@ def to_mb(value: str) -> int:
         )
 
 
+def to_kb(value: str) -> int:
+    """Convert the given value to KB
+
+    :param value: str formatted as str formatted as :code:`'<int> [MB | GB | TB | PB | EB | ZB | YB]'`
+    :type value: str
+    :raises ValueError: invalid format
+    :return: value in KB
+    :rtype: int
+    """
+    return to_mb(value) * 1024
+
+
 class ProfileMixin:
     @_chained
     def add_profiles(
@@ -360,7 +372,7 @@ class ProfileMixin:
         request_cpus="request_cpus",
         request_gpus="request_gpus",
         request_memory=("request_memory", to_mb),
-        request_disk=("request_disk", to_mb),
+        request_disk=("request_disk", to_kb),
         requirements="requirements",
         should_transfer_files="should_transfer_files",
         when_to_transfer_output="when_to_transfer_output",
@@ -544,7 +556,7 @@ class ProfileMixin:
         :type job_aggregator: int, optional
         :param job_aggregator_arguments: Additional arguments with which a clustering executable should be invoked, defaults to None
         :type job_aggregator_arguments: str, optional
-        :param grid_start: Determines the executable for launching a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`_ for more information), defaults to None
+        :param grid_start: Determines the executable for launching a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`__ for more information), defaults to None
         :type grid_start: int, optional
         :param grid_start_path: Sets the path to the gridstart . This profile is best set in the Site Catalog, defaults to None
         :type grid_start_path: str, optional
@@ -658,7 +670,7 @@ class ProfileMixin:
         :type execution_site: str, optional
         :param pfn: the physical file name to the main executable that a job refers to. Overrides any entries specified in the transformation catalog, defaults to None
         :type pfn: Union[str, Path], optional
-        :param grid_job_type: This profile is usually used to ensure that a compute job executes on another job manager (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`_ for more information), defaults to None
+        :param grid_job_type: This profile is usually used to ensure that a compute job executes on another job manager (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`__ for more information), defaults to None
         :type grid_job_type: str, optional
         :return: self
         """
@@ -711,7 +723,7 @@ class ProfileMixin:
         :type pre: Union[str, Path], optional
         :param pre_arguments: are command-line arguments for the pre-script, if any, defaults to None
         :type pre_arguments: str, optional
-        :param post: is the postscript type/mode that a user wants to associate with a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`_ for more information), defaults to None
+        :param post: is the postscript type/mode that a user wants to associate with a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`__ for more information), defaults to None
         :type post: str, optional
         :param post_arguments: are the command line arguments for the post script, if any, defaults to None
         :type post_arguments: str, optional
@@ -731,7 +743,7 @@ class ProfileMixin:
         :type max_jobs: str, optional
         :param max_idle: Sets the maximum number of idle jobs allowed before HTCondor DAGMan stops submitting more jobs. Once idle jobs start to run, HTCondor DAGMan will resume submitting jobs. If the option is omitted, the number of idle jobs is unlimited, defaults to None
         :type max_idle: str, optional
-        :param post_scope: can be "all", "none" or "essential" (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`_ for more information), defaults to None
+        :param post_scope: can be "all", "none" or "essential" (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`__ for more information), defaults to None
         :type post_scope: str, optional
         :return: self
         """

@@ -112,6 +112,7 @@ public class InPlace extends AbstractCleanupStrategy {
                 GraphNode curGN = (GraphNode) pQA[curP].iterator().next();
                 pQA[curP].remove(curGN);
                 Job curGN_SI = (Job) curGN.getContent();
+                boolean isSubWorkflow = curGN_SI instanceof DAXJob;
 
                 if (!typeNeedsCleanUp(curGN)) {
                     continue;
@@ -135,6 +136,29 @@ public class InPlace extends AbstractCleanupStrategy {
                                         + " will not be cleaned up for job "
                                         + curGN_SI.getID(),
                                 LogManager.DEBUG_MESSAGE_LEVEL);
+                        continue;
+                    }
+
+                    // PM-1918 additional filtering for sub workflow input file
+                    // ensure only those input files, whose source site matches
+                    // the site id have to be considered. In case of sub workflow jobs,
+                    // the inputs can come in from parent compute jobs that may run
+                    // on sites other than site local (which is what sub worklfow staging/execution
+                    // site is set)
+                    if (isSubWorkflow) {
+                        String sourceCleanupSite = pf.getMetadata(this.CLEANUP_SOURCE_SITE_KEY);
+
+                        // an input file in a sub workflow can be assocaited with exactly
+                        // one cleanup source site. so after considering it once we can
+                        // remove the metadata key from file object to avoid pollution
+                        if (sourceCleanupSite != null && sourceCleanupSite.equals(site)) {
+                            pf.getAllMetadata().removeKey(this.CLEANUP_SOURCE_SITE_KEY);
+                        } else {
+                            // the cleanup site does not match. do not consider this file
+                            // for the site in this invocation
+                            it.remove();
+                            continue;
+                        }
                     }
                 }
 
@@ -249,7 +273,10 @@ public class InPlace extends AbstractCleanupStrategy {
                         mImpl.createCleanupJob(
                                 cleanupNode.getID(),
                                 cleanupJobContent.getListOfFilesToDelete(),
-                                computeJob);
+                                computeJob,
+                                computeJob instanceof DAXJob // PM-1918 is job a sub workflow
+                                        ? site
+                                        : computeJob.getStagingSiteHandle());
 
                 // add the job as a content to the graphnode
                 // and the cleanupNode itself to the Graph

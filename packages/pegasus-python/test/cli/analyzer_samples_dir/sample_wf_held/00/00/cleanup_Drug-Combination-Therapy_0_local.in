@@ -1,0 +1,6 @@
+[
+  {
+    "id": 1,
+    "type": "remove",
+    "target": { "site_label": "local", "url": "file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013", "recursive": "True" } }
+]

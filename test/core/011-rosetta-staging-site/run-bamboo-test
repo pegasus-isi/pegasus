@@ -53,31 +53,32 @@ cat > sites.yml <<EOF
 pegasus: "5.0"
 sites:
  -
-  name: "CCG"
+  name: "eclair"
   arch: "x86_64"
   os.type: "linux"
   grids: 
    - 
     type: "batch" 
-    contact: "slurm-pegasus.isi.edu" 
-    scheduler: "slurm" 
-    jobtype: "compute" 
-   - 
-    type: "batch" 
-    contact: "slurm-pegasus.isi.edu" 
+    contact: "rynge@eclair-sub-01.isi.edu:22" 
     scheduler: "slurm" 
     jobtype: "compute" 
   profiles: 
      pegasus: 
       # SSH is the style to use for Bosco SSH submits. 
       style: ssh 
+      #
+      queue: scavenge
+      project: scavenge
+      runtime: 1800
+      glite.arguments: --cpus-per-task=1
+      memory: 2G
       # Works around bug in the HTCondor GAHP, that does not 
       # set the remote directory 
       change.dir: 'true' 
       # the key to use for scp transfers 
       SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa 
      env:
-      PEGASUS_FORCE_GUC: "1"
+      TMPDIR: "/scratch"
  -
   name: "local"
   arch: "x86_64"
@@ -97,19 +98,13 @@ sites:
      -
       operation: "all"
       url: "scp://bamboo@bamboo.isi.edu:$TOP_DIR/scratch"
-  grids:
-   -
-    type: "gt5"
-    contact: "localhost/jobmanager-fork"
-    scheduler: "fork"
-    jobtype: "auxillary"
   profiles:
     env:
       PEGASUS_BIN_DIR: "$PEGASUS_BIN_DIR"
     pegasus: 
       SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa 
  -
-  name: "CCG_Staging"
+  name: "staging"
   arch: "x86_64"
   os.type: "linux"
   directories:
@@ -128,8 +123,8 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --dir work \
-    --sites CCG \
-    --staging-site CCG_Staging \
+    --sites eclair \
+    --staging-site staging \
     --output-sites local \
     --submit dax.xml | tee $TOP_DIR/plan.out
 

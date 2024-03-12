@@ -195,6 +195,9 @@ public class PlannerOptions extends Data implements Cloneable {
     /** whether to log final output as json or not */
     private boolean mIsFinalOutputToJson;
 
+    /** the directory where the transformations are to be picked from */
+    private String mTransformationsDir;
+
     /** Default Constructor. */
     public PlannerOptions() {
         //        mSubmitFileDir    = ".";
@@ -235,6 +238,7 @@ public class PlannerOptions extends Data implements Cloneable {
         mOutputMap = null;
         mConfFile = null;
         mIsFinalOutputToJson = false;
+        mTransformationsDir = null;
     }
 
     /**
@@ -405,6 +409,15 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     public String getOutputDirectory() {
         return this.mOutputDir;
+    }
+
+    /**
+     * Returns the transformations directory to pick up the transformations from
+     *
+     * @return String
+     */
+    public String getTransformationsDirectory() {
+        return this.mTransformationsDir;
     }
 
     /**
@@ -916,7 +929,7 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
-     * Sets the input directory.
+     * Sets the data reuse submit directory.
      *
      * @param input a comma separated list of data reuse submit dirs to us
      */
@@ -925,6 +938,15 @@ public class PlannerOptions extends Data implements Cloneable {
         for (String dir : input.split(",")) {
             mDataReuseSubmitDirs.add(sanitizePath(dir));
         }
+    }
+
+    /**
+     * Sets the transformations directory to pick up the transformations from
+     *
+     * @param dir the directory where executables are placed.
+     */
+    public void setTransformationsDirectory(String dir) {
+        this.mTransformationsDir = sanitizePath(dir);
     }
 
     /**
@@ -1236,6 +1258,8 @@ public class PlannerOptions extends Data implements Cloneable {
                         + this.setToString(mInputDirs, ",")
                         + "\n Output Directory     "
                         + this.mOutputDir
+                        + "\n Transformations Directory     "
+                        + this.mTransformationsDir
                         + "\n Output Map     "
                         + this.mOutputMap
                         + "\n Output Sites          "
@@ -1353,6 +1377,11 @@ public class PlannerOptions extends Data implements Cloneable {
         // specify the output directory
         if (this.mOutputDir != null) {
             sb.append(" --output-dir ").append(this.mOutputDir);
+        }
+
+        // specify the transformations directory
+        if (this.mTransformationsDir != null) {
+            sb.append(" --transformations-dir ").append(this.mOutputDir);
         }
 
         // specify the output directory
@@ -1544,6 +1573,7 @@ public class PlannerOptions extends Data implements Cloneable {
         pOpt.mOriginalArgumentString = this.mOriginalArgumentString;
         pOpt.mConfFile = this.mConfFile;
         pOpt.mIsFinalOutputToJson = this.logFinalOutputAsJSON();
+        pOpt.mTransformationsDir = this.getTransformationsDirectory();
 
         // a shallow clone for forward options
         pOpt.mForwardOptions = this.mForwardOptions;

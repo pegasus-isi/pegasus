@@ -13,7 +13,7 @@ python3 -m venv $VIRTUAL_ENV_DIR
 
 source cwl_venv/bin/activate
 
-pip install "ruamel-yaml==0.16.5" "cwl-utils==0.5" "jsonschema==3.2.0" "PyYAML" "GitPython"
+pip install  "cwl-utils==0.5" "ruamel-yaml==0.16.5" "jsonschema==3.2.0" "PyYAML" "GitPython"
 
 echo
 echo "Creating input.yml from input.yml.template"

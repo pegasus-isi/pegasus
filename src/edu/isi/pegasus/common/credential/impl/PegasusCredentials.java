@@ -16,10 +16,21 @@ package edu.isi.pegasus.common.credential.impl;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.configuration2.INIConfiguration;
+import org.apache.commons.configuration2.SubnodeConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 
 /**
  * A convenience class that allows us to determine the path to the user's Pegasus credentials file.
@@ -43,9 +54,16 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
     /** The local path to the credential */
     private String mLocalCredentialPath;
 
+    /**
+     * A map indexed by a credential file path and maps to the contents of that credential file in
+     * the ini file format.
+     */
+    private Map<String, Map<String, Map<String, String>>> mCredfileContents;
+
     /** The default constructor. */
     public PegasusCredentials() {
         super();
+        mCredfileContents = new HashMap();
     }
 
     /**
@@ -57,6 +75,7 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
     public void initialize(PegasusBag bag) {
         super.initialize(bag);
         mLocalCredentialPath = this.getLocalPath();
+        // loadPegasusCredentialsFile(mLocalCredentialPath);
     }
 
     /**
@@ -187,5 +206,89 @@ public class PegasusCredentials extends Abstract implements CredentialHandler {
      */
     public String getDescription() {
         return PegasusCredentials.DESCRIPTION;
+    }
+
+    /**
+     * Verify a local credential accessible via path specified
+     *
+     * @param job the job with which the credential is associated
+     * @param type the type of credential
+     * @param path the path to the credential
+     * @throws RuntimeException in case of being unable to verify credential.
+     */
+    @Override
+    public void verify(Job job, CredentialHandler.TYPE type, String path) {
+        if (type == TYPE.http) {
+            // we only attempt to verify a http credential if it exists
+            if (!new File(path).exists()) {
+                // PM-1939 http credential but file does not exist. dont attempt further
+                // verification
+                return;
+            }
+        }
+        super.verify(job, type, path);
+
+        // PM-1939 we attempt load credential file once, when the credential
+        // file has been verified successuflly
+        if (!this.mCredfileContents.containsKey(path)) {
+            this.mCredfileContents.put(path, loadPegasusCredentialsFile(path));
+        }
+    }
+
+    /**
+     * Returns a boolean whether a credential located at a particular path has credentials for a
+     * particular endpoint or not
+     *
+     * @param type the type of credential
+     * @param credentialPath the path to credentials file of that type
+     * @param endpoint the end point
+     * @return boolean
+     */
+    public boolean hasCredential(
+            CredentialHandler.TYPE type, String credentialPath, String endpoint) {
+        Map<String, Map<String, String>> credFileContent =
+                this.mCredfileContents.get(credentialPath);
+        if (credFileContent != null) {
+            // we have this credential file loaded
+            // check for the section for the end point
+            return credFileContent.containsKey(endpoint);
+        }
+        return false;
+    }
+
+    /**
+     * Loads a credential file using the ini file reader. The contents get loaded indexed by section
+     * name, and list is a map of key value pairs
+     *
+     * @param file
+     * @return Map<String, Map<String, String>>
+     */
+    protected Map<String, Map<String, String>> loadPegasusCredentialsFile(String file) {
+        INIConfiguration iniConfiguration = new INIConfiguration();
+        try (FileReader fileReader = new FileReader(file)) {
+            iniConfiguration.read(fileReader);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(PegasusCredentials.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(PegasusCredentials.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ConfigurationException ex) {
+            Logger.getLogger(PegasusCredentials.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        Map<String, Map<String, String>> iniFileContents = new HashMap<>();
+
+        for (String section : iniConfiguration.getSections()) {
+            Map<String, String> subSectionMap = new HashMap<>();
+            SubnodeConfiguration confSection = iniConfiguration.getSection(section);
+            Iterator<String> keyIterator = confSection.getKeys();
+            while (keyIterator.hasNext()) {
+                String key = keyIterator.next();
+                String value = confSection.getProperty(key).toString();
+                subSectionMap.put(key, value);
+            }
+            iniFileContents.put(section, subSectionMap);
+        }
+
+        return iniFileContents;
     }
 }

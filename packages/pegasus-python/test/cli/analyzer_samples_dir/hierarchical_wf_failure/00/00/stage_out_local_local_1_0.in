@@ -1,0 +1,12 @@
+[
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "f.d",
+   "id": 1,
+   "src_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0003/./f.d" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/outputs/local-site/f.d" }
+   ] }
+]

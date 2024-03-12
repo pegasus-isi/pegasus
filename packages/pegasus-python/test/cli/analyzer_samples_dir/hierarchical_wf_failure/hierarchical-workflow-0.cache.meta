@@ -1,0 +1,4 @@
+inner_diamond_workflow.pegasus.properties @@PFN@@ user="mzalam" size="130" ctime="2023-03-04T19:55:58.305464" checksum.type="sha256" checksum.value="794b95edae5f3231c73dbf4b2822bf3068ae7caca00a35d61e9c500454a15cf5" checksum.timing="0.029"
+inner_diamond_workflow_tc.yml @@PFN@@ user="mzalam" size="406" ctime="2023-03-04T19:55:58.309464" checksum.type="sha256" checksum.value="ff04be6b0c5edac75cb00a99717145e63fdedcaa3e183b6fde24658f356c738c" checksum.timing="0.027"
+sites.yml @@PFN@@ user="mzalam" size="843" ctime="2023-03-04T19:55:58.307464" checksum.type="sha256" checksum.value="9d655e69fe9fab533af080eeb4ba6a5cb8d05ba6a82ebd2687bba5f80d279049" checksum.timing="0.026"
+pegasus.html @@PFN@@ user="mzalam" size="313" ctime="2023-03-04T11:57:07-08:00" checksum.type="sha256" checksum.value="802da25c9659db059de19f14c01528c081576ceeb43bb3510931f0573fc3d18d" checksum.timing="0.0"

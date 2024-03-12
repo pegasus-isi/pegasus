@@ -1,0 +1,52 @@
+1677959774 INTERNAL *** MONITORD_STARTED ***
+1677959772 INTERNAL *** DAGMAN_STARTED 96.0 ***
+1677959773 create_dir_hierarchical-workflow_0_local SUBMIT 97.0 local - 1
+1677959773 stage_worker_local_hierarchical-workflow_0_local SUBMIT 98.0 local - 2
+1677959777 create_dir_hierarchical-workflow_0_local EXECUTE 97.0 local - 1
+1677959777 stage_worker_local_hierarchical-workflow_0_local EXECUTE 98.0 local - 2
+1677959780 create_dir_hierarchical-workflow_0_local JOB_TERMINATED 97.0 local - 1
+1677959783 create_dir_hierarchical-workflow_0_local JOB_SUCCESS 0 local - 1
+1677959783 create_dir_hierarchical-workflow_0_local POST_SCRIPT_STARTED 97.0 local - 1
+1677959780 stage_worker_local_hierarchical-workflow_0_local JOB_TERMINATED 98.0 local - 2
+1677959783 stage_worker_local_hierarchical-workflow_0_local JOB_SUCCESS 0 local - 2
+1677959783 stage_worker_local_hierarchical-workflow_0_local POST_SCRIPT_STARTED 98.0 local - 2
+1677959784 create_dir_hierarchical-workflow_0_local POST_SCRIPT_TERMINATED 97.0 local - 1
+1677959788 create_dir_hierarchical-workflow_0_local POST_SCRIPT_SUCCESS 0 local - 1
+1677959784 stage_worker_local_hierarchical-workflow_0_local POST_SCRIPT_TERMINATED 98.0 local - 2
+1677959788 stage_worker_local_hierarchical-workflow_0_local POST_SCRIPT_SUCCESS 0 local - 2
+1677959793 stage_in_local_local_1_0 SUBMIT 99.0 local - 3
+1677959793 curl_ID0000001 SUBMIT 100.0 condorpool - 4
+1677959793 stage_in_local_local_1_0 EXECUTE 99.0 local - 3
+1677959797 stage_in_local_local_1_0 JOB_TERMINATED 99.0 local - 3
+1677959798 stage_in_local_local_1_0 JOB_SUCCESS 0 local - 3
+1677959798 stage_in_local_local_1_0 POST_SCRIPT_STARTED 99.0 local - 3
+1677959798 stage_in_local_local_1_0 POST_SCRIPT_TERMINATED 99.0 local - 3
+1677959803 stage_in_local_local_1_0 POST_SCRIPT_SUCCESS 0 local - 3
+1677959826 curl_ID0000001 EXECUTE 100.0 condorpool - 4
+1677959827 curl_ID0000001 JOB_TERMINATED 100.0 condorpool - 4
+1677959828 curl_ID0000001 JOB_SUCCESS 0 condorpool - 4
+1677959828 curl_ID0000001 POST_SCRIPT_STARTED 100.0 condorpool - 4
+1677959829 curl_ID0000001 POST_SCRIPT_TERMINATED 100.0 condorpool - 4
+1677959833 curl_ID0000001 POST_SCRIPT_SUCCESS 0 condorpool - 4
+1677959833 pegasus-plan_diamond_subworkflow PRE_SCRIPT_STARTED - local - 5
+1677959835 pegasus-plan_diamond_subworkflow PRE_SCRIPT_TERMINATED - local - 5
+1677959835 pegasus-plan_diamond_subworkflow PRE_SCRIPT_FAILURE 2 local - 5
+1677959835 pegasus-plan_diamond_subworkflow PRE_SCRIPT_STARTED - local - 6
+1677959837 pegasus-plan_diamond_subworkflow PRE_SCRIPT_TERMINATED - local - 6
+1677959837 pegasus-plan_diamond_subworkflow PRE_SCRIPT_FAILURE 2 local - 6
+1677959838 stage_out_local_local_0_0 SUBMIT 101.0 local - 7
+1677959838 stage_out_local_local_0_0 EXECUTE 101.0 local - 7
+1677959840 stage_out_local_local_0_0 JOB_TERMINATED 101.0 local - 7
+1677959843 stage_out_local_local_0_0 JOB_SUCCESS 0 local - 7
+1677959843 stage_out_local_local_0_0 POST_SCRIPT_STARTED 101.0 local - 7
+1677959843 stage_out_local_local_0_0 POST_SCRIPT_TERMINATED 101.0 local - 7
+1677959848 stage_out_local_local_0_0 POST_SCRIPT_SUCCESS 0 local - 7
+1677959853 register_local_0_0 SUBMIT 102.0 local - 8
+1677959853 register_local_0_0 EXECUTE 102.0 local - 8
+1677959856 register_local_0_0 JOB_TERMINATED 102.0 local - 8
+1677959858 register_local_0_0 JOB_SUCCESS 0 local - 8
+1677959858 register_local_0_0 POST_SCRIPT_STARTED 102.0 local - 8
+1677959859 register_local_0_0 POST_SCRIPT_TERMINATED 102.0 local - 8
+1677959863 register_local_0_0 POST_SCRIPT_SUCCESS 0 local - 8
+1677959863 INTERNAL *** DAGMAN_FINISHED 1 ***
+1677959864 INTERNAL *** MONITORD_FINISHED 0 ***

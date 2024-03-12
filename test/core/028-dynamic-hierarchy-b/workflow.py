@@ -43,8 +43,8 @@ local_site.add_directories(
 # CCG site
 ccg_site = Site(name="CCG", arch=Arch.X86_64, os_type=OS.LINUX)
 ccg_site.add_grids(
-    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu", scheduler_type=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
-    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu", scheduler_type=Scheduler.SLURM, job_type=SupportedJobs.COMPUTE),
+    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu:2222", scheduler_type=Scheduler.FORK, job_type=SupportedJobs.AUXILLARY),
+    Grid(grid_type=Grid.BATCH, contact="slurm-pegasus.isi.edu:2222", scheduler_type=Scheduler.SLURM, job_type=SupportedJobs.COMPUTE),
 )
 ccg_site.add_directories(
     Directory(Directory.SHARED_SCRATCH, "/nfs/bamboo/scratch-90-days/CCG/scratch")
@@ -160,10 +160,10 @@ diamond_wf_job = SubWorkflow(file=diamond_wf_file, is_planned=False, _id="diamon
                         "inner"
                     )\
                     .add_inputs(
-                        File("inner_diamond_workflow.pegasus.properties"),
-                        File("inner_diamond_workflow_rc.yml"),
-                        File("inner_diamond_workflow_tc.yml"),
-                        File("sites.yml"),
+                        File("inner_diamond_workflow.pegasus.properties", for_planning=True),
+                        File("inner_diamond_workflow_rc.yml", for_planning=True),
+                        File("inner_diamond_workflow_tc.yml", for_planning=True),
+                        File("sites.yml", for_planning=True),
                     )
 
 sleep_wf_file = File("inner_sleep_workflow.yml")

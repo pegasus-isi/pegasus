@@ -91,6 +91,22 @@ class TestTransformationSite:
                     ),
                 },
             ),
+            (
+                "local",
+                "/pfn",
+                True,
+                {
+                    "arch": Arch.AARCH64,
+                    "os_type": OS.LINUX,
+                    "os_release": "release",
+                    "os_version": "1.1.1",
+                    "container": Container(
+                        "centos-pegasus",
+                        Container.DOCKER,
+                        "docker:///zaiyan/random-container:latest",
+                    ),
+                },
+            ),
         ],
     )
     def test_valid_transformation_site(
@@ -135,6 +151,18 @@ class TestTransformationSite:
                     "os_release": None,
                     "os_version": None,
                     "container": 123,
+                },
+            ),
+            (
+                "local",
+                "/pfn",
+                True,
+                {
+                    "arch": Arch.AARCH64,
+                    "os_type": "random os name",
+                    "os_release": None,
+                    "os_version": None,
+                    "container": None,
                 },
             ),
         ],

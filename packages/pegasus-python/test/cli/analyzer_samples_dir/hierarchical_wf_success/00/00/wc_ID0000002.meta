@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "count.txt",
+    "_type": "file",
+    "_attributes": {
+      "user": "mzalam",
+      "size": "7",
+      "ctime": "2023-03-04T01:06:01-08:00",
+      "checksum.type": "sha256",
+      "checksum.value": "021d2756af22672430431af6d1e6065f983a59b25e0560534fa03b07ceedd432",
+      "checksum.timing": "0.0"
+    }
+  }
+]

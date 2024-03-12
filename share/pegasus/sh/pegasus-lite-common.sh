@@ -439,6 +439,19 @@ singularity_init()
         return 1
     fi
 
+    # prefer apptainer executable if it exists
+    singularity_exec=`which apptainer 2>/dev/null || true`
+    if [ "X$singularity_exec" = "X" ]; then
+	singularity_exec=`which singularity 2>/dev/null || true`
+    fi
+
+    if [ "X$singularity_exec" = "X" ]; then
+	pegasus_lite_log "Unable to find apptainer or singularity executable"	
+	return 1
+    fi
+    pegasus_lite_log "Using $singularity_exec to run the container"
+    export singularity_exec
+    
     container_init
 
     # for singularity we don't need to load anything like in docker.
@@ -655,6 +668,11 @@ pegasus_lite_get_system()
         arch="x86"
     fi
 
+    # align macos arm arch with linux (->aarch64)
+    if [ "X$arch" = "Xarm64" ]; then
+        arch="aarch64"
+    fi
+
     if [ "$osname" = "Linux" ]; then
 
         # /etc/issue and /etc/os-release works most of the time, but there are exceptions
@@ -666,9 +684,19 @@ pegasus_lite_get_system()
                 "debian") osname="deb" ;;
                 "centos"|"rocky"|"scientific") osname="rhel" ;;
                 "fedora") osname="fc" ;;
-                "sles") osname="suse" ;;
+                "sles"|"opensuse-leap") osname="suse" ;;
                 *) osname="$osname" ;;
             esac
+
+            # sometimes VERSION_CODENAME is set, but not VERSION_ID
+            if [ "X$osversion" = "X" ]; then
+                oscodename=$(grep -w VERSION_CODENAME /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2)
+                case $oscodename in
+                    "bullseye")  osversion="11" ;;
+                    "bookworm")  osversion="12" ;;
+                    "trixie")    osversion="13" ;;
+                esac
+            fi
         elif [ -e /etc/issue ]; then
             osname=`cat /etc/issue | head -n1 | awk '{print $1;}' | tr '[:upper:]' '[:lower:]'`
 

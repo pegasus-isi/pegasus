@@ -91,14 +91,14 @@ public class InterPoolEngine extends Engine implements Refiner {
     /** handle to PegasusConfiguration */
     private PegasusConfiguration mPegasusConfiguration;
 
-    /**
-     * Handle to the transformation store that stores the transformation catalog user specifies in
-     * the DAX
-     */
-    protected TransformationStore mDAXTransformationStore;
-
     /** Handle to the estimator. */
     private Estimator mEstimator;
+
+    /**
+     * Handle to the transformation store that stores the transformation catalog entries picked up
+     * from the transformations directory.
+     */
+    private TransformationStore mDirectoriesTransformationStore;
 
     /**
      * Default constructor.
@@ -129,8 +129,6 @@ public class InterPoolEngine extends Engine implements Refiner {
         mDag = dag;
         mExecPools = (Set) mPOptions.getExecutionSites();
         mLogger.log("List of executions sites is " + mExecPools, LogManager.DEBUG_MESSAGE_LEVEL);
-
-        this.mDAXTransformationStore = dag.getTransformationStore();
         this.mEstimator = EstimatorFactory.loadEstimator(dag, bag);
     }
 
@@ -174,28 +172,6 @@ public class InterPoolEngine extends Engine implements Refiner {
      * @param sites the list of execution sites, specified by the user.
      */
     public void scheduleJobs(ADag dag, List sites) {
-
-        // we iterate through the DAX Transformation Store and update
-        // the transformation catalog with any transformation specified.
-        for (TransformationCatalogEntry entry : this.mDAXTransformationStore.getAllEntries()) {
-            try {
-                // insert an entry into the transformation catalog
-                // for the mapper to pick up later on
-                mLogger.log(
-                        "Addding entry into transformation catalog " + entry,
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-
-                if (mTCHandle.insert(entry, false) != 1) {
-                    mLogger.log(
-                            "Unable to add entry to transformation catalog " + entry,
-                            LogManager.WARNING_MESSAGE_LEVEL);
-                }
-            } catch (Exception ex) {
-                throw new RuntimeException(
-                        "Exception while inserting into TC in Interpool Engine " + ex);
-            }
-        }
-
         mSiteSelector = SiteSelectorFactory.loadInstance(mBag);
         mSiteSelector.mapWorkflow(dag, sites);
 
@@ -338,7 +314,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         // overriding the one from pool catalog.
         job.updateProfiles(tcEntry);
 
-        // the profile information from the properties file
+        // the profile information from the Properties file
         // is assimilated overidding the one from transformation
         // catalog.
         job.updateProfiles(mProps);

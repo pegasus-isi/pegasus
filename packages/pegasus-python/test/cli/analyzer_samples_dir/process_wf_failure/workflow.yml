@@ -1,0 +1,20 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-03-23T23:09:21Z
+pegasus: 5.0.4
+name: process
+jobs:
+- type: job
+  name: ls
+  id: ID0000001
+  stdout: listing.txt
+  arguments:
+  - -z
+  - /
+  uses:
+  - lfn: listing.txt
+    type: output
+    stageOut: true
+    registerReplica: true
+jobDependencies: []

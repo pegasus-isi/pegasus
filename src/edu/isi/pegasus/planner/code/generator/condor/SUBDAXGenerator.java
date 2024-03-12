@@ -430,11 +430,10 @@ public class SUBDAXGenerator {
         // PM-1766 instead of the workflow cache file, we now pass the cache
         // file created specifically for the sub workflow job to ensure only
         // those files that have a depedency are passed to the sub workflow
-        String jobCacheFile =
-                job.getFileFullPath(
-                        this.mPegasusPlanOptions.getSubmitDirectory(),
-                        SUBDAXGenerator.CACHE_FILE_SUFFIX);
-        cacheFiles.add(jobCacheFile);
+        String wfCacheFile = ((DAXJob) job).getInputWorkflowCacheFile();
+        if (wfCacheFile != null) {
+            cacheFiles.add(wfCacheFile);
+        }
 
         // do some sanitization of the path to the dax file.
         // if it is a relative path, then ???
@@ -744,6 +743,13 @@ public class SUBDAXGenerator {
                                 + dagJob.getID(),
                         LogManager.DEBUG_MESSAGE_LEVEL);
                 dagJob.addCredentialType(site, credType);
+            }
+        }
+        // PM-1940 also copy over http credential endpoints to the dagjob
+        Map<String, Set<String>> dataURLEndPoints = preScriptJob.getDataURLEndPoints();
+        for (String site : dataURLEndPoints.keySet()) {
+            for (String url : dataURLEndPoints.get(site)) {
+                dagJob.addDataURLEndpoint(site, url);
             }
         }
 

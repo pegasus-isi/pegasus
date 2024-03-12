@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "listing.txt",
+    "_type": "file",
+    "_attributes": {
+      "user": "mzalam",
+      "size": "1779",
+      "ctime": "2023-03-03T22:24:20-08:00",
+      "checksum.type": "sha256",
+      "checksum.value": "891b2d4096cb77b3f99d029183053cacd5121c8c0a4902a5d06105b42d59236b",
+      "checksum.timing": "0.0"
+    }
+  }
+]

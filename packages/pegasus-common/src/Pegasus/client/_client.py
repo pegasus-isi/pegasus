@@ -80,6 +80,7 @@ class Client:
         cache: List[str] = None,
         input_dirs: List[str] = None,
         output_dir: str = None,
+        transformations_dir: str = None,
         dir: str = None,
         relative_dir: str = None,
         relative_submit_dir: str = None,
@@ -167,6 +168,9 @@ class Client:
         if output_dir:
             cmd.extend(("--output-dir", output_dir))
 
+        if transformations_dir:
+            cmd.extend(("--transformations-dir", transformations_dir))
+
         if dir:
             cmd.extend(("--dir", dir))
 
@@ -244,7 +248,7 @@ class Client:
         self._log.info("\n################\n# pegasus-plan #\n################")
 
         # don't stream stdout from planner, as this will be json output
-        rv = self._exec(cmd, stream_stdout=False, stream_stderr=True)
+        rv = self._exec(cmd, stream_stdout=True, stream_stderr=True)
 
         json_output = rv.json
         submit_dir = json_output["submit_dir"]
@@ -543,18 +547,24 @@ class Client:
         self._log.info("\n##################\n# pegasus-remove #\n##################")
         self._exec(cmd)
 
-    def analyzer(self, submit_dir: str, verbose: int = 0):
+    def analyzer(
+        self,
+        submit_dir: str,
+        verbose: int = 0,
+        json_mode: bool = False,
+        traverse_all: bool = False,
+    ):
         cmd = [self._analyzer]
-
         if verbose:
             cmd.append("-" + "v" * verbose)
-
+        if json_mode:
+            cmd.append("--json")
+        if traverse_all:
+            cmd.append("-T")
         cmd.append(submit_dir)
-
         self._log.info(
             "\n####################\n# pegasus-analyzer #\n####################"
         )
-
         self._exec(cmd)
 
     def statistics(self, submit_dir: str, verbose: int = 0):

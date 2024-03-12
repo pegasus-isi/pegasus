@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "f.b2",
+    "_type": "file",
+    "_attributes": {
+      "user": "mzalam",
+      "size": "424",
+      "ctime": "2023-03-04T01:03:01-08:00",
+      "checksum.type": "sha256",
+      "checksum.value": "3c76a04871e2c0490a0f9f25ee7fdf460c3819f0f9454024f394012f6374236a",
+      "checksum.timing": "0.0"
+    }
+  },
+  {
+    "_id": "f.b1",
+    "_type": "file",
+    "_attributes": {
+      "user": "mzalam",
+      "size": "424",
+      "ctime": "2023-03-04T01:03:01-08:00",
+      "checksum.type": "sha256",
+      "checksum.value": "3c76a04871e2c0490a0f9f25ee7fdf460c3819f0f9454024f394012f6374236a",
+      "checksum.timing": "0.0"
+    }
+  }
+]

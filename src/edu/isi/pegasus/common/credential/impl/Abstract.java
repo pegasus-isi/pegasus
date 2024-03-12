@@ -125,6 +125,22 @@ public abstract class Abstract implements CredentialHandler {
     }
 
     /**
+     * Returns a boolean whether a credential located at a particular path has credentials for a
+     * particular endpoint or not
+     *
+     * @param type the type of credential
+     * @param credentialPath the path to credentials file of that type
+     * @param endpoint the end point
+     * @return boolean
+     */
+    public boolean hasCredential(
+            CredentialHandler.TYPE type, String credentialPath, String endpoint) {
+        throw new RuntimeException(
+                this.getDescription()
+                        + " does not support hasCredential(String,String,String) function");
+    }
+
+    /**
      * Complain if a particular credential is un-verified, as the moment only checks for file
      * existence
      *
@@ -138,14 +154,11 @@ public abstract class Abstract implements CredentialHandler {
             throws RuntimeException {
         StringBuilder error = new StringBuilder();
 
-        error.append("Unable to verify credential of type")
-                .append(" ")
-                .append(type)
-                .append(" ")
-                .append("for job")
-                .append(" ")
-                .append(job.getName())
-                .append(".")
+        error.append("Unable to verify credential of type").append(" ").append(type);
+        if (job != null) {
+            error.append(" ").append("for job").append(" ").append(job.getName());
+        }
+        error.append(".")
                 .append("\n")
                 .append("Please make sure the credential")
                 .append(" ")

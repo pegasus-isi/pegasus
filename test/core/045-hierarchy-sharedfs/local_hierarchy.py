@@ -56,12 +56,12 @@ sites:
   grids:
    -
     type: "batch"
-    contact: "slurm-pegasus.isi.edu"
+    contact: "slurm-pegasus.isi.edu:2222"
     scheduler: "slurm"
     jobtype: "compute"
    -
     type: "batch"
-    contact: "slurm-pegasus.isi.edu"
+    contact: "slurm-pegasus.isi.edu:2222"
     scheduler: "slurm"
     jobtype: "compute"
   profiles:

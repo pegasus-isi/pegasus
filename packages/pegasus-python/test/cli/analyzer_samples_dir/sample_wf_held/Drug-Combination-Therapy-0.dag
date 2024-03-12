@@ -1,0 +1,74 @@
+######################################################################
+# PEGASUS WMS GENERATED DAG FILE
+# DAG Drug-Combination-Therapy
+# Index = 0, Count = null
+######################################################################
+MAXJOBS registration 1
+MAXJOBS stagein 10
+MAXJOBS cleanup 4
+MAXJOBS stageout 10
+
+JOB create_dir_Drug-Combination-Therapy_0_local 00/00/create_dir_Drug-Combination-Therapy_0_local.sub
+SCRIPT POST create_dir_Drug-Combination-Therapy_0_local /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l Drug-Combination-Therapy-0.exitcode.log -M Drug-Combination-Therapy-0.cache.meta -N    .//00/00/create_dir_Drug-Combination-Therapy_0_local.out
+PRIORITY create_dir_Drug-Combination-Therapy_0_local 800
+RETRY create_dir_Drug-Combination-Therapy_0_local 0
+VARS create_dir_Drug-Combination-Therapy_0_local +DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_local_0_0 00/00/stage_in_local_local_0_0.sub
+SCRIPT POST stage_in_local_local_0_0 /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l Drug-Combination-Therapy-0.exitcode.log -M Drug-Combination-Therapy-0.cache.meta -N    .//00/00/stage_in_local_local_0_0.out
+PRIORITY stage_in_local_local_0_0 700
+RETRY stage_in_local_local_0_0 0
+CATEGORY stage_in_local_local_0_0 stagein
+VARS stage_in_local_local_0_0 +DAGNodeRetry="$(RETRY)"
+
+JOB chebi_drug_loader_ID0000001 00/00/chebi_drug_loader_ID0000001.sub
+SCRIPT POST chebi_drug_loader_ID0000001 /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -s PegasusLite:+exitcode+0 -l Drug-Combination-Therapy-0.exitcode.log -M Drug-Combination-Therapy-0.cache.meta -N    .//00/00/chebi_drug_loader_ID0000001.out
+PRIORITY chebi_drug_loader_ID0000001 20
+RETRY chebi_drug_loader_ID0000001 0
+VARS chebi_drug_loader_ID0000001 +DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_local_level_3_0 00/00/clean_up_local_level_3_0.sub
+SCRIPT POST clean_up_local_level_3_0 /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l Drug-Combination-Therapy-0.exitcode.log -M Drug-Combination-Therapy-0.cache.meta -N    .//00/00/clean_up_local_level_3_0.out
+PRIORITY clean_up_local_level_3_0 1000
+RETRY clean_up_local_level_3_0 0
+CATEGORY clean_up_local_level_3_0 cleanup
+VARS clean_up_local_level_3_0 +DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_local_0_0 00/00/stage_out_local_local_0_0.sub
+SCRIPT POST stage_out_local_local_0_0 /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l Drug-Combination-Therapy-0.exitcode.log -M Drug-Combination-Therapy-0.cache.meta -N    .//00/00/stage_out_local_local_0_0.out
+PRIORITY stage_out_local_local_0_0 900
+RETRY stage_out_local_local_0_0 0
+CATEGORY stage_out_local_local_0_0 stageout
+VARS stage_out_local_local_0_0 +DAGNodeRetry="$(RETRY)"
+
+JOB register_local_0_0 00/00/register_local_0_0.sub
+SCRIPT POST register_local_0_0 /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l Drug-Combination-Therapy-0.exitcode.log -M Drug-Combination-Therapy-0.cache.meta -N    .//00/00/register_local_0_0.out
+PRIORITY register_local_0_0 40
+RETRY register_local_0_0 0
+CATEGORY register_local_0_0 registration
+VARS register_local_0_0 +DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_local_level_4_0 00/00/clean_up_local_level_4_0.sub
+SCRIPT POST clean_up_local_level_4_0 /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l Drug-Combination-Therapy-0.exitcode.log -M Drug-Combination-Therapy-0.cache.meta -N    .//00/00/clean_up_local_level_4_0.out
+PRIORITY clean_up_local_level_4_0 1000
+RETRY clean_up_local_level_4_0 0
+CATEGORY clean_up_local_level_4_0 cleanup
+VARS clean_up_local_level_4_0 +DAGNodeRetry="$(RETRY)"
+
+JOB cleanup_Drug-Combination-Therapy_0_local 00/00/cleanup_Drug-Combination-Therapy_0_local.sub
+SCRIPT POST cleanup_Drug-Combination-Therapy_0_local /home/mzalam/pegasus-5.0.5/bin/pegasus-exitcode  -r $RETURN -l Drug-Combination-Therapy-0.exitcode.log -M Drug-Combination-Therapy-0.cache.meta -N    .//00/00/cleanup_Drug-Combination-Therapy_0_local.out
+PRIORITY cleanup_Drug-Combination-Therapy_0_local 1000
+RETRY cleanup_Drug-Combination-Therapy_0_local 0
+VARS cleanup_Drug-Combination-Therapy_0_local +DAGNodeRetry="$(RETRY)"
+
+PARENT  chebi_drug_loader_ID0000001 CHILD clean_up_local_level_3_0
+PARENT  chebi_drug_loader_ID0000001 CHILD stage_out_local_local_0_0
+PARENT  clean_up_local_level_3_0 CHILD cleanup_Drug-Combination-Therapy_0_local
+PARENT  stage_out_local_local_0_0 CHILD register_local_0_0
+PARENT  stage_out_local_local_0_0 CHILD clean_up_local_level_4_0
+PARENT  clean_up_local_level_4_0 CHILD cleanup_Drug-Combination-Therapy_0_local
+PARENT  create_dir_Drug-Combination-Therapy_0_local CHILD stage_in_local_local_0_0
+PARENT  stage_in_local_local_0_0 CHILD chebi_drug_loader_ID0000001
+######################################################################
+# End of DAG
+######################################################################

@@ -1,0 +1,44 @@
+######################################################################
+# PEGASUS WMS GENERATED SUBMIT FILE
+# DAG : Drug-Combination-Therapy, Index = 0, Count = null
+# SUBMIT FILE NAME : chebi_drug_loader_ID0000001.sub
+######################################################################
+stream_error  = false
+stream_output = false
+environment = "LANG=en_US.UTF-8 CONDOR_JOBID=$(cluster).$(process) PEGASUS_WF_UUID=7a53210c-eb8a-4986-8c14-80e6e523598f PEGASUS_WF_LABEL=Drug-Combination-Therapy PEGASUS_DAG_JOB_ID=chebi_drug_loader_ID0000001 PEGASUS_SITE=condorpool"
++WantIOProxy = True
+error = /home/mzalam/covid/mzalam/pegasus/Drug-Combination-Therapy/run0013//00/00/chebi_drug_loader_ID0000001.err
+executable = /home/mzalam/covid/mzalam/pegasus/Drug-Combination-Therapy/run0013/00/00/chebi_drug_loader_ID0000001.sh
+initialdir = /home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013
+log = /home/mzalam/covid/mzalam/pegasus/Drug-Combination-Therapy/run0013/Drug-Combination-Therapy-0.log
+notification = NEVER
+output = /home/mzalam/covid/mzalam/pegasus/Drug-Combination-Therapy/run0013//00/00/chebi_drug_loader_ID0000001.out
+periodic_release = False
+periodic_remove = (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 30)
+priority = 20
+should_transfer_files = YES
+submit_event_user_notes = pool:condorpool
+transfer_executable = true
+transfer_input_files = chebi.obo,chebi_drug_loader,/home/mzalam/covid/mzalam/pegasus/Drug-Combination-Therapy/run0013/pegasus-worker-5.0.5-x86_64_rhel_8.tar.gz,/home/mzalam/covid/mzalam/pegasus/Drug-Combination-Therapy/run0013/pegasus-lite-common.sh
+transfer_output_files = chebi_dict.pickle
+universe = vanilla
+when_to_transfer_output = ON_EXIT
++pegasus_generator = "Pegasus"
++pegasus_root_wf_uuid = "7a53210c-eb8a-4986-8c14-80e6e523598f"
++pegasus_wf_uuid = "7a53210c-eb8a-4986-8c14-80e6e523598f"
++pegasus_version = "5.0.5"
++pegasus_wf_name = "Drug-Combination-Therapy-0"
++pegasus_wf_time = "20230305T091006-0800"
++pegasus_wf_xformation = "chebi_drug_loader"
++pegasus_wf_dax_job_id = "ID0000001"
++pegasus_wf_dag_job_id = "chebi_drug_loader_ID0000001"
++pegasus_job_class = 1
++pegasus_site = "condorpool"
++pegasus_job_runtime = 0
++pegasus_cores = 1
++pegasus_gpus = 1
++pegasus_cluster_size = 1
+queue
+######################################################################
+# END OF SUBMIT FILE
+######################################################################

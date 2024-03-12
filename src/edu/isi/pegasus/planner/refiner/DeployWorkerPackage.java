@@ -100,7 +100,7 @@ public class DeployWorkerPackage extends Engine {
     private static final String mRegexExpression =
             //
             // "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z]*)-x86.*";
-            "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc|ppc64le)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
+            "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc|ppc64le|aarch64)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
 
     /** The path to be set for create dir jobs. */
     public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";

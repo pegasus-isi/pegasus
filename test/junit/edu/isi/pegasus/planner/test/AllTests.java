@@ -20,15 +20,17 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+    edu.isi.pegasus.common.credential.impl.PegasusCredentialsTest.class,
     edu.isi.pegasus.common.util.CommonPropertiesTest.class,
     edu.isi.pegasus.common.util.CondorVersionTest.class,
     edu.isi.pegasus.common.util.VersionTest.class,
     edu.isi.pegasus.common.util.PegasusURLTest.class,
     edu.isi.pegasus.common.util.FileDetectorTest.class,
-    edu.isi.pegasus.common.util.GLiteEscapeTest.class,
+    edu.isi.pegasus.common.util.GliteEscapeTest.class,
     edu.isi.pegasus.common.util.VariableExpanderTest.class,
     edu.isi.pegasus.planner.namespace.PegasusTest.class,
     edu.isi.pegasus.planner.namespace.MetadataTest.class,
+    edu.isi.pegasus.planner.common.PegasusPropertiesTest.class,
     edu.isi.pegasus.planner.catalog.replica.ReplicaFactoryTest.class,
     edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStoreTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.RegexRCTest.class,
@@ -58,7 +60,7 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.code.GridStartTest.class,
     edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscapeTest.class,
     edu.isi.pegasus.planner.code.generator.condor.PegasusSubmitDAGTest.class,
-    edu.isi.pegasus.planner.code.generator.condor.style.GliteTest.class,
+    edu.isi.pegasus.planner.code.generator.condor.style.GLiteTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.CondorTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.CondorGTest.class,
     edu.isi.pegasus.planner.common.PegasusConfigurationTest.class,

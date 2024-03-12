@@ -94,8 +94,7 @@ class PegasusURL:
     path = ""
 
     def __init__(self, url, file_type, site_label, priority=0):
-        # the url should be URL decoded to work with our shell callouts
-        self.url = urllib.unquote(url)
+        self.url = url
         self.file_type = file_type
         # make the site label to match site labels in the env
         self.site_label = site_label.replace("-", "_")
@@ -1320,6 +1319,7 @@ class HttpHandler(TransferHandlerBase):
                 cmd += (
                     " --no-cookies --no-check-certificate"
                     + " --timeout=300 --tries=1"
+                    + self._cred_options("wget", t.get_src_proto(), t.get_src_host())
                     + " -O '"
                     + t.get_dst_path()
                     + "'"
@@ -1333,6 +1333,7 @@ class HttpHandler(TransferHandlerBase):
                     cmd += " -s -S"
                 cmd += (
                     " --fail --insecure --location"
+                    + self._cred_options("curl", t.get_src_proto(), t.get_src_host())
                     + " -o '"
                     + t.get_dst_path()
                     + "'"
@@ -1361,6 +1362,28 @@ class HttpHandler(TransferHandlerBase):
             successful_l.append(t)
 
         return [successful_l, failed_l]
+
+    def _cred_options(self, tool, proto, host):
+        options = ""
+        if not credentials:
+            return ""
+        # determine if there is an specific entry for the URL, or generic one
+        section = None
+        if credentials.has_section(f"{proto}://{host}"):
+            section = f"{proto}://{host}"
+        elif credentials.has_section(host):
+            section = host
+        if not section:
+            return ""
+        # iterate over the keys
+        for key, value in credentials.items(section):
+            if key.startswith("header."):
+                realkey = key.replace("header.", "")
+                if tool == "wget":
+                    options += f" --header='{realkey}: {value}'"
+                else:
+                    options += f" --header '{realkey}: {value}'"
+        return options
 
 
 class HPSSHandler(TransferHandlerBase):
@@ -2600,8 +2623,15 @@ class GSHandler(TransferHandlerBase):
 
 class GFALHandler(TransferHandlerBase):
     _name = "GFALHandler"
-    _mkdir_cleanup_protocols = ["gfal"]
-    _protocol_map = ["root->file", "file->root", "srm->file", "file->srm"]
+    _mkdir_cleanup_protocols = ["root", "srm", "gsidavs"]
+    _protocol_map = [
+        "root->file",
+        "file->root",
+        "srm->file",
+        "file->srm",
+        "gsidavs->file",
+        "file->gsidavs",
+    ]
 
     def do_mkdirs(self, mkdir_list):
         tools = utils.Tools()
@@ -2617,7 +2647,7 @@ class GFALHandler(TransferHandlerBase):
             cmd = "gfal-mkdir -p"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
-            cmd = cmd + " '%s'" % (t.get_url())
+            cmd = cmd + " '%s'" % (self._gfal_url(t.get_url()))
 
             env_overrides = self._gfal_creds(t)
 
@@ -2663,7 +2693,9 @@ class GFALHandler(TransferHandlerBase):
             cmd = "gfal-copy -f -p -t 7200 -T 7200"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
-            cmd = cmd + " '{}' '{}'".format(t.src_url(), t.dst_url())
+            cmd = cmd + " '{}' '{}'".format(
+                self._gfal_url(t.src_url()), self._gfal_url(t.dst_url()),
+            )
 
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=self._gfal_creds(t))
@@ -2695,7 +2727,7 @@ class GFALHandler(TransferHandlerBase):
                 cmd = cmd + " -v"
             if t.get_recursive():
                 cmd += " -r"
-            cmd = cmd + " '%s'" % (t.get_url())
+            cmd = cmd + " '%s'" % (self._gfal_url(t.get_url()))
 
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=self._gfal_creds(t))
@@ -2744,6 +2776,11 @@ class GFALHandler(TransferHandlerBase):
                 env_override["X509_USER_PROXY"] = os.environ[key]
 
         return env_override
+
+    def _gfal_url(self, url):
+        # modify urls to fit the gfal expectations
+        url = re.sub("^gsidavs", "davs", url)
+        return url
 
 
 class ScpHandler(TransferHandlerBase):
@@ -3299,8 +3336,8 @@ class StashHandler(TransferHandlerBase):
     """
 
     _name = "StashHandler"
-    _mkdir_cleanup_protocols = ["stash"]
-    _protocol_map = ["stash->file", "file->stash"]
+    _mkdir_cleanup_protocols = ["osdf", "stash"]
+    _protocol_map = ["osdf->file", "stash->file", "file->osdf", "file->stash"]
 
     def do_mkdirs(self, transfers):
         # noop for now
@@ -3347,8 +3384,8 @@ class StashHandler(TransferHandlerBase):
             self._pre_transfer_attempt(t)
             t_start = time.time()
 
-            if t.get_dst_proto() == "stash":
-                # write file:// to stash://
+            if t.get_dst_proto() in ["osdf", "stash"]:
+                # write file:// to stash:// or osdf://
 
                 # src has to exist and be readable
                 if not verify_local_file(t.get_src_path()):
@@ -3356,8 +3393,17 @@ class StashHandler(TransferHandlerBase):
                     failed_l.append(t)
                     continue
 
-                if os.path.exists("/mnt/ceph/osg/public"):
-                    # hack for now - local cp
+                if os.path.exists("/mnt/stash/ospool"):
+                    # uw.osg-htc.org hack for now (we don't have a scitoken
+                    # locally) local cp
+                    src_path = t.get_src_path()
+                    dst_path = re.sub("^/ospool", "/mnt/stash/ospool", t.get_dst_path())
+
+                    prepare_local_dir(os.path.dirname(dst_path))
+                    cmd = "/bin/cp '{}' '{}'".format(src_path, dst_path)
+                elif os.path.exists("/mnt/ceph/osg"):
+                    # OSG Connect hack for now (we don't have a scitoken
+                    # locally) local cp
                     src_path = t.get_src_path()
                     dst_path = re.sub("^/osgconnect", "", t.get_dst_path())
 
@@ -3371,26 +3417,34 @@ class StashHandler(TransferHandlerBase):
                     )
             else:
                 # read
-                # stashcp wants just the path with a single leading slash
-                src_path = t.src_url()
-                src_path = re.sub("^stash:", "", src_path)
-                src_path = re.sub("^/+", "", src_path)
-                src_path = "/" + src_path
 
-                local_dir = os.path.dirname(t.get_dst_path())
-                prepare_local_dir(local_dir)
-                # use --methods as we want to exclude cvmfs - it can take a
-                # long time to update, and we have seen partial files being
-                # published there in the past
-                cmd = "{} '{}' '{}'".format(
-                    tools.full_path("stashcp"),
-                    src_path,
-                    local_dir,
-                )
-                remote_fname = os.path.basename(t.get_src_path())
-                local_fname = os.path.basename(t.get_dst_path())
-                if remote_fname != local_fname:
-                    cmd += " && mv '{}' '{}'".format(remote_fname, local_fname)
+                if os.path.exists("/mnt/stash/ospool"):
+                    # uw.osg-htc.org hack for now (we don't have a scitoken
+                    # locally) local cp
+                    src_path = re.sub("^/ospool", "/mnt/stash/ospool", t.get_src_path())
+                    dst_path = t.get_dst_path()
+
+                    prepare_local_dir(os.path.dirname(dst_path))
+                    cmd = "/bin/cp '{}' '{}'".format(src_path, dst_path)
+                elif os.path.exists("/mnt/ceph/osg"):
+                    # OSG Connect hack for now (we don't have a scitoken
+                    # locally) local cp
+                    src_path = re.sub("^/osgconnect", "", t.get_src_path())
+                    dst_path = t.get_dst_path()
+
+                    prepare_local_dir(os.path.dirname(dst_path))
+                    cmd = "/bin/cp '{}' '{}'".format(src_path, dst_path)
+                else:
+                    # stashcp wants just the path with a single leading slash
+                    src_path = t.src_url()
+                    src_path = re.sub("^(osdf|stash):", "", src_path)
+                    src_path = re.sub("^/+", "/", src_path)
+
+                    local_dir = os.path.dirname(t.get_dst_path())
+                    prepare_local_dir(local_dir)
+                    cmd = "{} '{}' '{}'".format(
+                        tools.full_path("stashcp"), src_path, t.get_dst_path()
+                    )
 
             try:
                 tc = utils.TimedCommand(cmd)
@@ -3611,11 +3665,15 @@ class SingularityHandler(TransferHandlerBase):
 
     def do_transfers(self, transfers_l):
         tools = utils.Tools()
-        if tools.find("singularity", "--version", r"^([0-9]+\.[0-9]+)") is None:
+        singularity_exec = tools.find(
+            "apptainer", "--version", r"^([0-9]+\.[0-9]+)"
+        ) or tools.find("singularity", "--version", r"^([0-9]+\.[0-9]+)")
+        if singularity_exec is None:
             logger.error(
-                "Unable to do pull Singularity images as singularity command could not be found"
+                "Unable to do pull Singularity images as unable to find either apptainer or singularity commands"
             )
             return [[], transfers_l]
+        logger.info("Using Singularity executable: '%s'" % (singularity_exec))
 
         successful_l = []
         failed_l = []
@@ -3624,7 +3682,7 @@ class SingularityHandler(TransferHandlerBase):
             t_start = time.time()
 
             cmd = "{} pull --allow-unauthenticated '{}' '{}' && mv {}* '{}'".format(
-                tools.full_path("singularity"),
+                singularity_exec,
                 target_name,
                 t.src_url(),
                 target_name,
