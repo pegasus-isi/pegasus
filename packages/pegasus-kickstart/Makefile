@@ -64,13 +64,12 @@ endif
     OBJS += monitoring.o
     NVIDIA_DRIVER_BRANCH = $(shell nvidia-smi | grep Driver | cut -f 3 -d' ' | cut -f 1 -d '.')
 ifneq ($(NVIDIA_DRIVER_BRANCH),)
-		    TARGET += pegasus-monitor-cuda
-		    TARGET += pegasus-kickstart-cuda
-				CUDA_CFLAGS += -DHAS_CUDA
+        TARGET += pegasus-monitor-cuda
+        TARGET += pegasus-kickstart-cuda
+        CUDA_CFLAGS += -DHAS_CUDA
         CUDA_OBJS += nvidia/nvml_wrapper.o
         CUDA_OBJS += nvidia_monitoring.o
-        CUDA_LDLIBS += -lnvidia-ml
-#-L /usr/lib/nvidia-440
+        CUDA_LDLIBS += -L /usr/lib/x86_64-linux-gnu/ -l:libnvidia-ml.so.1
 endif
 endif
 
