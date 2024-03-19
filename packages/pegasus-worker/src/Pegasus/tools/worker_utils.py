@@ -206,7 +206,7 @@ class Tools(object):
                 if executable in self._info:
                     if self._info[executable] is None:
                         return None
-                    return self._info[executable]
+                    return self._info[executable]["full_path"]
 
                 logger.debug(
                     "Trying to detect availability/location of tool: %s" % (executable)
