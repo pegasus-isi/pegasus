@@ -33,7 +33,7 @@ import java.util.Iterator;
  *
  * @author vahi
  */
-public class Shifter extends Abstract {
+public class Shifter extends AbstractContainer {
 
     /**
      * The suffix for the shell script created on the remote worker node, that actually launches the
@@ -165,7 +165,7 @@ public class Shifter extends Abstract {
      */
     protected String constructJobLaunchScriptInContainer(Job job, String scriptName) {
         if (WORKER_PACKAGE_SETUP_SNIPPET == null) {
-            WORKER_PACKAGE_SETUP_SNIPPET = Shifter.constructContainerWorkerPackagePreamble();
+            WORKER_PACKAGE_SETUP_SNIPPET = this.constructContainerWorkerPackagePreamble();
         }
         StringBuilder sb = new StringBuilder();
         Container c = job.getContainer();
@@ -214,9 +214,6 @@ public class Shifter extends Abstract {
 
         // PM-1214 worker package setup in container should happen after
         // the environment variables have been set.
-        if (WORKER_PACKAGE_SETUP_SNIPPET == null) {
-            WORKER_PACKAGE_SETUP_SNIPPET = Shifter.constructContainerWorkerPackagePreamble();
-        }
         sb.append(WORKER_PACKAGE_SETUP_SNIPPET);
 
         sb.append(super.inputFilesToPegasusLite(job));
@@ -268,50 +265,14 @@ public class Shifter extends Abstract {
     }
 
     /**
-     * Construct the snippet that generates the shell script responsible for setting up the worker
-     * package in the container.
-     *
-     * @return
+     * Return the directory inside the container where the user job is launched 
+     * from 
+     * 
+     * @return String
      */
-    protected static String constructContainerWorkerPackagePreamble() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("pegasus_lite_version_major=$pegasus_lite_version_major").append("\n");
-        sb.append("pegasus_lite_version_minor=$pegasus_lite_version_minor").append("\n");
-        sb.append("pegasus_lite_version_patch=$pegasus_lite_version_patch").append("\n");
-
-        sb.append("pegasus_lite_enforce_strict_wp_check=$pegasus_lite_enforce_strict_wp_check")
-                .append("\n");
-
-        sb.append(
-                        "pegasus_lite_version_allow_wp_auto_download=$pegasus_lite_version_allow_wp_auto_download")
-                .append("\n");
-
-        // PM-1875 we need to export the pegasus_lite_work_dir variable to
-        // ensure pegasus-transfer picks from the environment
-        sb.append("export pegasus_lite_work_dir=")
-                .append(Shifter.CONTAINER_WORKING_DIRECTORY)
-                .append("\n");
-        sb.append("echo \\$PWD").append("  1>&2").append("\n");
-
-        sb.append(". ./pegasus-lite-common.sh").append("\n");
-        sb.append("pegasus_lite_init").append("\n").append("\n");
-
-        sb.append("\n");
-        appendStderrFragment(
-                sb,
-                Abstract.CONTAINER_MESSAGE_PREFIX,
-                "Figuring out Pegasus worker package to use");
-        sb.append("# figure out the worker package to use").append("\n");
-
-        sb.append("pegasus_lite_worker_package").append("\n");
-
-        sb.append("echo \"PATH in container is set to is set to \\$PATH\"")
-                .append("  1>&2")
-                .append("\n");
-        sb.append("\n");
-
-        return sb.toString();
+    @Override
+    public  String getContainerWorkingDirectory(){
+        return Shifter.CONTAINER_WORKING_DIRECTORY;
     }
 
     /**
