@@ -25,7 +25,6 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * An interface to determine how a job gets wrapped to be launched on various containers, as a
@@ -181,27 +180,11 @@ public class Shifter extends AbstractContainer {
                 sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Now in pegasus lite container script");
         sb.append("set -e").append("\n");
 
-        // set the job environment variables explicitly in the -cont.sh file
-        sb.append("# setting environment variables for job").append('\n');
-        ENV containerENVProfiles = (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env);
-        for (Iterator it = containerENVProfiles.getProfileKeyIterator(); it.hasNext(); ) {
-            String key = (String) it.next();
-            String value = (String) containerENVProfiles.get(key);
-            sb.append("export").append(" ").append(key).append("=");
+        sb.append("\n");
 
-            // check for env variables that are constructed based on condor job classds
-            // such asCONDOR_JOBID=$(cluster).$(process). these are set by condor
-            // and can only picked up from the shell when a job runs on a node
-            // so we only set the key
-            boolean fromShell = value.contains("$(");
-            if (fromShell) {
-                // append the $variable
-                sb.append("=").append("$").append(key);
-            } else {
-                sb.append("\"").append(value).append("\"");
-            }
-            sb.append('\n');
-        }
+        // set environment variables required for the job to run
+        // inside the container
+        sb.append(this.constructJobEnvironmentInContainer(job));
 
         // update and include runtime environment variables such as credentials
         sb.append("EOF\n");
@@ -265,13 +248,33 @@ public class Shifter extends AbstractContainer {
     }
 
     /**
-     * Return the directory inside the container where the user job is launched 
-     * from 
-     * 
+     * Returns the bash snippet containing the environment variables to be set for a job inside the
+     * container.This snippet is embedded in the <job>-cont.sh file that is written out in
+     * PegasusLite on the worker dir, and is launched inside the container.
+     *
+     * @param job
+     * @return the bash snippet
+     */
+    @Override
+    public String constructJobEnvironmentInContainer(Job job) {
+        StringBuilder sb = new StringBuilder();
+
+        // set the job environment variables explicitly in the -cont.sh file
+        sb.append("# setting environment variables for job").append('\n');
+        sb.append(this.constructJobEnvironmentFromContainer(job.getContainer()));
+
+        ENV containerENVProfiles =
+                (ENV) job.getContainer().getProfilesObject().get(Profiles.NAMESPACES.env);
+        return sb.toString();
+    }
+
+    /**
+     * Return the directory inside the container where the user job is launched from
+     *
      * @return String
      */
     @Override
-    public  String getContainerWorkingDirectory(){
+    public String getContainerWorkingDirectory() {
         return Shifter.CONTAINER_WORKING_DIRECTORY;
     }
 

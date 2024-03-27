@@ -25,7 +25,6 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * An interface to determine how a job gets wrapped to be launched on various containers, as a
@@ -230,43 +229,11 @@ public class Docker extends AbstractContainer {
         sb.append("#!/bin/bash").append("\n");
         sb.append("set -e").append("\n");
 
-        // set the job environment variables explicitly in the -cont.sh file
-        sb.append("# setting environment variables for job").append('\n');
-        ENV containerENVProfiles = (ENV) c.getProfilesObject().get(Profiles.NAMESPACES.env);
-        boolean pathVariableSet = false;
-        for (Iterator it = containerENVProfiles.getProfileKeyIterator(); it.hasNext(); ) {
-            String key = (String) it.next();
-            String value = (String) containerENVProfiles.get(key);
-            pathVariableSet = key.equals("PATH");
+        sb.append("\n");
 
-            sb.append("export").append(" ").append(key).append("=");
-
-            // check for env variables that are constructed based on condor job classds
-            // such as CONDOR_JOBID=$(cluster).$(process). these are set by condor
-            // and can only picked up from the shell when a job runs on a node
-            // so we only set the key
-            boolean fromShell = value.contains("$(");
-            if (fromShell) {
-                // append the $variable
-                sb.append("=").append("$").append(key);
-            } else {
-                sb.append("\"").append(value).append("\"");
-            }
-            sb.append('\n');
-        }
-
-        if (!pathVariableSet) {
-            // PM-1630 special handling for path varialble. if a user has not
-            // associated a PATH variable with the job, we set the PATH to
-            // root_path that stores the PATH set for the root user
-            sb.append("export")
-                    .append(" ")
-                    .append("PATH")
-                    .append("=")
-                    .append("\\$")
-                    .append(ROOT_PATH_VARIABLE_KEY);
-            sb.append('\n');
-        }
+        // set environment variables required for the job to run
+        // inside the container
+        sb.append(this.constructJobEnvironmentInContainer(job));
 
         // update and include runtime environment variables such as credentials
         sb.append("EOF\n");
@@ -327,13 +294,48 @@ public class Docker extends AbstractContainer {
     }
 
     /**
-     * Return the directory inside the container where the user job is launched 
-     * from 
-     * 
+     * Returns the bash snippet containing the environment variables to be set for a job inside the
+     * container.This snippet is embedded in the <job>-cont.sh file that is written out in
+     * PegasusLite on the worker dir, and is launched inside the container.
+     *
+     * @param job
+     * @return the bash snippet
+     */
+    @Override
+    public String constructJobEnvironmentInContainer(Job job) {
+        StringBuilder sb = new StringBuilder();
+
+        // set the job environment variables explicitly in the -cont.sh file
+        sb.append("# setting environment variables for job").append('\n');
+        sb.append(this.constructJobEnvironmentFromContainer(job.getContainer()));
+
+        ENV containerENVProfiles =
+                (ENV) job.getContainer().getProfilesObject().get(Profiles.NAMESPACES.env);
+        boolean pathVariableSet = containerENVProfiles.containsKey("PATH");
+
+        if (!pathVariableSet) {
+            // PM-1630 special handling for PATH variable. if a user has not
+            // associated a PATH variable with the job, we set the PATH to
+            // root_path that stores the PATH set for the root user
+            sb.append("export")
+                    .append(" ")
+                    .append("PATH")
+                    .append("=")
+                    .append("\\$")
+                    .append(ROOT_PATH_VARIABLE_KEY);
+            sb.append('\n');
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Return the directory inside the container where the user job is launched from
+     *
      * @return String
      */
     @Override
-    public  String getContainerWorkingDirectory(){
+    public String getContainerWorkingDirectory() {
         return Docker.CONTAINER_WORKING_DIRECTORY;
     }
 }
