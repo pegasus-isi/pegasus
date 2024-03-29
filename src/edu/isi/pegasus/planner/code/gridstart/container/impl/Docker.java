@@ -19,7 +19,6 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -33,12 +32,6 @@ import java.io.IOException;
  * @author vahi
  */
 public class Docker extends AbstractContainer {
-
-    /**
-     * The suffix for the shell script created on the remote worker node, that actually launches the
-     * job in the container.
-     */
-    public static final String CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX = "-cont.sh";
 
     /** The directory in the container to be used as working directory */
     public static final String CONTAINER_WORKING_DIRECTORY = "/scratch";
@@ -61,46 +54,35 @@ public class Docker extends AbstractContainer {
     }
 
     /**
-     * Returns the snippet to wrap a single job execution In this implementation we don't wrap with
-     * any container, just plain shell invocation is returned.
+     * Creates the snippet for container initialization, in the script that is launched on the host
+     * OS, by PegasusLite
      *
      * @param job
-     * @return
+     * @return the bash snippet
      */
-    public String wrap(Job job) {
+    @Override
+    public StringBuilder containerInit(Job job) {
         StringBuilder sb = new StringBuilder();
-
-        sb.append("set -e").append("\n");
-
-        // PM-1818 for the debug mode set -x
-        if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
-            sb.append("set -x").append('\n');
-        }
-
-        // within the pegasus lite script create a wrapper
-        // to launch job in the container. wrapper is required to
-        // deploy pegasus worker package in the container and launch the user job
-        String scriptName = job.getID() + Docker.CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX;
-        sb.append(constructJobLaunchScriptInContainer(job, scriptName));
-
-        sb.append("chmod +x ").append(scriptName).append("\n");
-
-        // copy pegasus lite common from the directory where condor transferred it via it's file
-        // transfer.
-        sb.append("if ! [ $pegasus_lite_start_dir -ef . ]; then").append("\n");
-        sb.append("\tcp $pegasus_lite_start_dir/pegasus-lite-common.sh . ").append("\n");
-        sb.append("fi").append("\n");
-        sb.append("\n");
-
-        sb.append("set +e").append('\n'); // PM-701
-        sb.append("job_ec=0").append("\n");
 
         // sets up the variables used for docker run command
         // FIXME docker_init has to be passed the name of the tar file?
         Container c = job.getContainer();
-        sb.append("docker_init").append(" ").append(c.getLFN()).append("\n");
+        sb.append("docker_init").append(" ").append(c.getLFN());
 
-        sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
+        return sb;
+    }
+
+    /**
+     * Constructs the snippet for executing the container, in the PegasusLite script launched on the
+     * HOST OS
+     *
+     * @param job
+     * @return the bash snippet
+     */
+    @Override
+    public StringBuilder containerRun(Job job) {
+        StringBuilder sb = new StringBuilder();
+        Container c = job.getContainer();
 
         // we want to sleep for few seconds to allow the container to boot up fully
         // sb.append( "sleep" ).append( " " ).append( Docker.SLEEP_TIME_FOR_DOCKER_BOOTUP ).append(
@@ -161,36 +143,27 @@ public class Docker extends AbstractContainer {
                 .append("fi; ")
                 .append("su $cont_user -c ");
         sb.append("\\\"");
-        sb.append("./").append(scriptName).append(" ");
+        sb.append("./").append(this.getJobLaunchScriptName(job)).append(" ");
         sb.append("\\\"");
 
         sb.append("\"");
-
-        sb.append("\n");
-
-        sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
-
-        // remove the docker container
-        sb.append("docker rm --force $cont_name ").append(" 1>&2").append("\n");
-        sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
-
-        return sb.toString();
+        return sb;
     }
 
     /**
-     * Returns the snippet to wrap a single job execution
+     * Constructs the snippet for removing the container, in the PegasusLite script launched on the
+     * HOST OS
      *
      * @param job
-     * @return
+     * @return the bash snippet
      */
-    public String wrap(AggregatedJob job) {
-        String snippet = this.wrap((Job) job);
+    public StringBuilder containerRemove(Job job) {
+        StringBuilder sb = new StringBuilder();
 
-        // rest the jobs stdin
-        job.setStdIn("");
-        job.condorVariables.removeKey("input");
+        // remove the docker container
+        sb.append("docker rm --force $cont_name ").append(" 1>&2");
 
-        return snippet;
+        return sb;
     }
 
     /**
@@ -211,7 +184,8 @@ public class Docker extends AbstractContainer {
      * @param scriptName basename of the script
      * @return
      */
-    protected String constructJobLaunchScriptInContainer(Job job, String scriptName) {
+    @Override
+    public String constructJobLaunchScriptInContainer(Job job, String scriptName) {
         if (WORKER_PACKAGE_SETUP_SNIPPET == null) {
             WORKER_PACKAGE_SETUP_SNIPPET = this.constructContainerWorkerPackagePreamble();
         }

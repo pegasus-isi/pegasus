@@ -15,7 +15,9 @@ package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import java.util.Iterator;
 
@@ -25,6 +27,50 @@ import java.util.Iterator;
  * @author Karan Vahi
  */
 public abstract class AbstractContainer extends Abstract {
+
+    /**
+     * The suffix for the shell script created on the remote worker node, that actually launches the
+     * job in the container.
+     */
+    public static final String CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX = "-cont.sh";
+
+    /**
+     * Return the container package snippet. Construct the snippet that generates the shell script
+     * responsible for setting up the worker package in the container and launch the job in the
+     * container.
+     *
+     * @param job the job
+     * @param scriptName basename of the script
+     * @return
+     */
+    public abstract String constructJobLaunchScriptInContainer(Job job, String scriptName);
+
+    /**
+     * Constructs the snippet for container initialization, in the PegasusLite script launched on
+     * the HOST OS
+     *
+     * @param job
+     * @return the bash snippet
+     */
+    public abstract StringBuilder containerInit(Job job);
+
+    /**
+     * Constructs the snippet for executing the container, in the PegasusLite script launched on the
+     * HOST OS
+     *
+     * @param job
+     * @return the bash snippet
+     */
+    public abstract StringBuilder containerRun(Job job);
+
+    /**
+     * Constructs the snippet for removing the container, in the PegasusLite script launched on the
+     * HOST OS
+     *
+     * @param job
+     * @return the bash snippet
+     */
+    public abstract StringBuilder containerRemove(Job job);
 
     /**
      * Returns the bash snippet containing the environment variables to be set for a job inside the
@@ -42,6 +88,76 @@ public abstract class AbstractContainer extends Abstract {
      * @return String
      */
     public abstract String getContainerWorkingDirectory();
+
+    /**
+     * Returns the snippet to wrap a single job execution In this implementation we don't wrap with
+     * any container, just plain shell invocation is returned.
+     *
+     * @param job
+     * @return
+     */
+    public String wrap(Job job) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("set -e").append("\n");
+
+        // PM-1818 for the debug mode set -x
+        if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
+            sb.append("set -x").append('\n');
+        }
+
+        // Step 1: within the pegasus lite script create a wrapper
+        // to launch job in the container. wrapper is required to
+        // deploy pegasus worker package in the container and launch the user job
+        String scriptName = getJobLaunchScriptName(job);
+        sb.append(constructJobLaunchScriptInContainer(job, scriptName));
+
+        sb.append("chmod +x ").append(scriptName).append("\n");
+
+        // copy pegasus lite common from the directory where condor transferred it via it's file
+        // transfer.
+        sb.append("if ! [ $pegasus_lite_start_dir -ef . ]; then").append("\n");
+        sb.append("\tcp $pegasus_lite_start_dir/pegasus-lite-common.sh . ").append("\n");
+        sb.append("fi").append("\n");
+        sb.append("\n");
+
+        sb.append("set +e").append('\n'); // PM-701
+        sb.append("job_ec=0").append("\n");
+
+        // Step 2
+        sb.append(containerInit(job));
+        sb.append("\n");
+        sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
+
+        // Step 3
+        sb.append(containerRun(job));
+        sb.append("\n");
+        sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
+
+        // Step 4
+        // remove the docker container
+        sb.append(containerRemove(job));
+        sb.append("\n");
+        sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
+
+        return sb.toString();
+    }
+
+    /**
+     * Returns the snippet to wrap a single job execution
+     *
+     * @param job
+     * @return
+     */
+    public String wrap(AggregatedJob job) {
+        String snippet = this.wrap((Job) job);
+
+        // rest the jobs stdin
+        job.setStdIn("");
+        job.condorVariables.removeKey("input");
+
+        return snippet;
+    }
 
     /**
      * Returns the bash snippet containing the environment variables inherited from the Container
@@ -123,6 +239,19 @@ public abstract class AbstractContainer extends Abstract {
                 .append("\n");
         sb.append("\n");
 
+        return sb.toString();
+    }
+
+    /**
+     * Returns the name of the script that is created by PegasusLite on the HostOS, that is invoked
+     * when the job is run in the container.
+     *
+     * @param job
+     * @return
+     */
+    public String getJobLaunchScriptName(Job job) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(job.getID()).append(AbstractContainer.CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX);
         return sb.toString();
     }
 }
