@@ -14,14 +14,12 @@
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import edu.isi.pegasus.common.util.PegasusURL;
-import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
@@ -263,8 +261,6 @@ public class Shifter extends AbstractContainer {
         sb.append("# setting environment variables for job").append('\n');
         sb.append(this.constructJobEnvironmentFromContainer(job.getContainer()));
 
-        ENV containerENVProfiles =
-                (ENV) job.getContainer().getProfilesObject().get(Profiles.NAMESPACES.env);
         return sb.toString();
     }
 

@@ -31,7 +31,7 @@ public abstract class AbstractContainer extends Abstract {
      * container.This snippet is embedded in the <job>-cont.sh file that is written out in
      * PegasusLite on the worker dir, and is launched inside the container.
      *
-     * @param jon the job
+     * @param job the job
      * @return
      */
     public abstract String constructJobEnvironmentInContainer(Job job);
