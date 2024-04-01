@@ -112,6 +112,8 @@ public abstract class AbstractContainer extends Abstract {
             sb.append("set -x").append('\n');
         }
 
+        // Step 1: setup transfers for inputs on the HOST OS
+        // if so configured
         if (this.mTransfersOnHostOS) {
             sb.append("pegasus_lite_section_start stage_in").append('\n');
             sb.append(super.inputFilesToPegasusLite(job));
@@ -119,7 +121,7 @@ public abstract class AbstractContainer extends Abstract {
             sb.append("pegasus_lite_section_end stage_in").append('\n');
         }
 
-        // Step 1: within the pegasus lite script create a wrapper
+        // Step 2: within the pegasus lite script create a wrapper
         // to launch job in the container. wrapper is required to
         // deploy pegasus worker package in the container and launch the user job
         String scriptName = getJobLaunchScriptName(job);
@@ -137,22 +139,27 @@ public abstract class AbstractContainer extends Abstract {
         sb.append("set +e").append('\n'); // PM-701
         sb.append("job_ec=0").append("\n");
 
-        // Step 2
+        // Step 3
         sb.append(containerInit(job));
         sb.append("\n");
         sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
 
-        // Step 3
+        // Step 4
         sb.append(containerRun(job));
         sb.append("\n");
         sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
 
-        // Step 4
+        // Step 5
         // remove the docker container
-        sb.append(containerRemove(job));
-        sb.append("\n");
-        sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
+        StringBuilder containerRemove = containerRemove(job);
+        if (containerRemove.length() != 0) {
+            sb.append(containerRemove);
+            sb.append("\n");
+            sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
+        }
 
+        // Step 6: setup transfers for outputs on the HOST OS
+        // if so configured
         if (this.mTransfersOnHostOS) {
             sb.append("pegasus_lite_section_start stage_out").append('\n');
             sb.append(super.outputFilesToPegasusLite(job));
