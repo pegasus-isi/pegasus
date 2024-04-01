@@ -137,6 +137,7 @@ public abstract class Abstract implements ContainerShellWrapper {
      * @param bag
      * @param dag
      */
+    @Override
     public void initialize(PegasusBag bag, ADag dag) {
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();
@@ -155,7 +156,7 @@ public abstract class Abstract implements ContainerShellWrapper {
     }
 
     /**
-     * Convers the collection of files into an input format suitable for the transfer executable
+     * Traverse the collection of files into an input format suitable for the transfer executable
      *
      * @param files Collection of <code>FileTransfer</code> objects.
      * @param linkage file type of transfers

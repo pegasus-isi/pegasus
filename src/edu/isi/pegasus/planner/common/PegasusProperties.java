@@ -69,6 +69,9 @@ public class PegasusProperties implements Cloneable {
     public static final String PEGASUS_TRANSFER_LITE_ARGUMENTS_KEY =
             "pegasus.transfer.lite.arguments";
 
+    public static final String PEGASUS_TRANSFER_CONTAINER_ON_HOST =
+            "pegasus.transfer.container.onhost";
+
     public static final String PEGASUS_TRANSFORMATION_CATALOG_PROPERTY =
             "pegasus.catalog.transformation";
 
@@ -1413,6 +1416,20 @@ public class PegasusProperties implements Cloneable {
         // if value in properties file is corrupted
         // again use the default transfer priority
         return (val < 0) ? mDefaultTransferPriority : Integer.toString(val);
+    }
+
+    /**
+     * Returns whether data transfers for containerized jobs happen on the HOSTOS or inside the
+     * ccontainer.
+     *
+     * <p>Referred to by "pegasus.transfer.container.onhost" property.
+     *
+     * @return boolean value specified in the properties file, else false in case of non boolean
+     *     value being specified or property not being set.
+     * @see #PEGASUS_TRANSFER_CONTAINER_ON_HOST
+     */
+    public boolean containerTransfersOnHOSTOS() {
+        return Boolean.parse(mProps.getProperty(PEGASUS_TRANSFER_CONTAINER_ON_HOST), false);
     }
 
     // REPLICA SELECTOR FUNCTIONS

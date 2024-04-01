@@ -17,8 +17,10 @@ import static edu.isi.pegasus.planner.code.gridstart.container.impl.Abstract.app
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import java.io.File;
@@ -37,6 +39,9 @@ public abstract class AbstractContainer extends Abstract {
      * job in the container.
      */
     public static final String CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX = "-cont.sh";
+
+    /** A boolean tracking whether transfers should be on the HOST OS or not */
+    protected boolean mTransfersOnHostOS;
 
     /**
      * Constructs the snippet for container initialization, in the PegasusLite script launched on
@@ -83,6 +88,18 @@ public abstract class AbstractContainer extends Abstract {
     public abstract String getContainerWorkingDirectory();
 
     /**
+     * Initiailizes the Container shell wrapper
+     *
+     * @param bag
+     * @param dag
+     */
+    @Override
+    public void initialize(PegasusBag bag, ADag dag) {
+        super.initialize(bag, dag);
+        mTransfersOnHostOS = mProps.containerTransfersOnHOSTOS();
+    }
+
+    /**
      * Returns the snippet to wrap a single job execution In this implementation we don't wrap with
      * any container, just plain shell invocation is returned.
      *
@@ -97,6 +114,13 @@ public abstract class AbstractContainer extends Abstract {
         // PM-1818 for the debug mode set -x
         if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
             sb.append("set -x").append('\n');
+        }
+
+        if (this.mTransfersOnHostOS) {
+            sb.append("pegasus_lite_section_start stage_in").append('\n');
+            sb.append(super.inputFilesToPegasusLite(job));
+            sb.append(super.enableForIntegrity(job, ""));
+            sb.append("pegasus_lite_section_end stage_in").append('\n');
         }
 
         // Step 1: within the pegasus lite script create a wrapper
@@ -132,6 +156,12 @@ public abstract class AbstractContainer extends Abstract {
         sb.append(containerRemove(job));
         sb.append("\n");
         sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
+
+        if (this.mTransfersOnHostOS) {
+            sb.append("pegasus_lite_section_start stage_out").append('\n');
+            sb.append(super.outputFilesToPegasusLite(job));
+            sb.append("pegasus_lite_section_end stage_out").append('\n');
+        }
 
         return sb.toString();
     }
@@ -198,10 +228,11 @@ public abstract class AbstractContainer extends Abstract {
         // the environment variables have been set.
         sb.append(workerPackageSnippet);
 
-        sb.append(super.inputFilesToPegasusLite(job));
-
-        // PM-1305 the integrity check should happen in the container
-        sb.append(super.enableForIntegrity(job, Abstract.CONTAINER_MESSAGE_PREFIX));
+        if (!this.mTransfersOnHostOS) {
+            sb.append(super.inputFilesToPegasusLite(job));
+            // PM-1305 the integrity check should happen in the container
+            sb.append(super.enableForIntegrity(job, Abstract.CONTAINER_MESSAGE_PREFIX));
+        }
 
         appendStderrFragment(sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Launching user task");
         sb.append("\n");
@@ -235,8 +266,10 @@ public abstract class AbstractContainer extends Abstract {
                     .append("\n");
         }
 
-        sb.append("set -e").append('\n'); // PM-701
-        sb.append(super.outputFilesToPegasusLite(job));
+        if (!this.mTransfersOnHostOS) {
+            sb.append("set -e").append('\n'); // PM-701
+            sb.append(super.outputFilesToPegasusLite(job));
+        }
 
         sb.append("EOF2").append("\n");
         // appendStderrFragment( sb, "Writing out script to launch user TASK in docker container
