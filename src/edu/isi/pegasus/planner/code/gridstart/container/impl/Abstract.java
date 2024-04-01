@@ -100,6 +100,9 @@ public abstract class Abstract implements ContainerShellWrapper {
 
     protected PegasusProperties.PEGASUS_MODE mPegasusMode;
 
+    /** A boolean tracking whether transfers should be on the HOST OS or not */
+    protected boolean mTransfersOnHostOS;
+
     /**
      * Appends a fragment to the pegasus lite script that logs a message to stderr
      *
@@ -153,6 +156,7 @@ public abstract class Abstract implements ContainerShellWrapper {
         mIntegrityHandler = new Integrity();
         mIntegrityHandler.initialize(bag, dag);
         mPegasusMode = mProps.getPegasusMode();
+        mTransfersOnHostOS = mProps.containerTransfersOnHOSTOS();
     }
 
     /**
@@ -637,7 +641,7 @@ public abstract class Abstract implements ContainerShellWrapper {
      */
     public String getWorkerNodeDirectory(Job job) {
         Container c = job.getContainer();
-        if (c == null) {
+        if (c == null || this.mTransfersOnHostOS) {
             return "$PWD";
         } else {
             if (c.getType().equals(Container.TYPE.docker)) {

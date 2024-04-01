@@ -40,9 +40,6 @@ public abstract class AbstractContainer extends Abstract {
      */
     public static final String CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX = "-cont.sh";
 
-    /** A boolean tracking whether transfers should be on the HOST OS or not */
-    protected boolean mTransfersOnHostOS;
-
     /**
      * Constructs the snippet for container initialization, in the PegasusLite script launched on
      * the HOST OS
@@ -96,7 +93,6 @@ public abstract class AbstractContainer extends Abstract {
     @Override
     public void initialize(PegasusBag bag, ADag dag) {
         super.initialize(bag, dag);
-        mTransfersOnHostOS = mProps.containerTransfersOnHOSTOS();
     }
 
     /**
