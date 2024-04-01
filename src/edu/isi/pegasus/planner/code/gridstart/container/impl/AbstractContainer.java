@@ -13,12 +13,16 @@
  */
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
+import static edu.isi.pegasus.planner.code.gridstart.container.impl.Abstract.appendStderrFragment;
+
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
+import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 
 /**
@@ -33,17 +37,6 @@ public abstract class AbstractContainer extends Abstract {
      * job in the container.
      */
     public static final String CONTAINER_JOB_LAUNCH_SCRIPT_SUFFIX = "-cont.sh";
-
-    /**
-     * Return the container package snippet. Construct the snippet that generates the shell script
-     * responsible for setting up the worker package in the container and launch the job in the
-     * container.
-     *
-     * @param job the job
-     * @param scriptName basename of the script
-     * @return
-     */
-    public abstract String constructJobLaunchScriptInContainer(Job job, String scriptName);
 
     /**
      * Constructs the snippet for container initialization, in the PegasusLite script launched on
@@ -157,6 +150,101 @@ public abstract class AbstractContainer extends Abstract {
         job.condorVariables.removeKey("input");
 
         return snippet;
+    }
+
+    /**
+     * Return the container package snippet. Construct the snippet that generates the shell script
+     * responsible for setting up the worker package in the container and launch the job in the
+     * container.
+     *
+     * @param job the job
+     * @param scriptName basename of the script
+     * @return
+     */
+    public String constructJobLaunchScriptInContainer(Job job, String scriptName) {
+
+        String workerPackageSnippet = this.constructContainerWorkerPackagePreamble();
+
+        StringBuilder sb = new StringBuilder();
+        Container c = job.getContainer();
+
+        sb.append("\n");
+        appendStderrFragment(
+                sb,
+                Abstract.PEGASUS_LITE_MESSAGE_PREFIX,
+                "Writing out script to launch user task in container");
+        sb.append("\n");
+        sb.append("cat <<EOF > ").append(scriptName).append("\n");
+
+        sb.append("#!/bin/bash").append("\n");
+        sb.append("set -e").append("\n");
+
+        sb.append("\n");
+
+        // set environment variables required for the job to run
+        // inside the container
+        sb.append(this.constructJobEnvironmentInContainer(job));
+
+        // update and include runtime environment variables such as credentials
+        sb.append("EOF\n");
+        sb.append("container_env ")
+                .append(this.getContainerWorkingDirectory())
+                .append(" >> ")
+                .append(scriptName)
+                .append("\n");
+        sb.append("cat <<EOF2 >> ").append(scriptName).append("\n");
+
+        // PM-1214 worker package setup in container should happen after
+        // the environment variables have been set.
+        sb.append(workerPackageSnippet);
+
+        sb.append(super.inputFilesToPegasusLite(job));
+
+        // PM-1305 the integrity check should happen in the container
+        sb.append(super.enableForIntegrity(job, Abstract.CONTAINER_MESSAGE_PREFIX));
+
+        appendStderrFragment(sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Launching user task");
+        sb.append("\n");
+        // sb.append( "\\$kickstart \"\\${original_args[@]}\" ").append( "\n" );
+
+        if (job instanceof AggregatedJob) {
+            try {
+                // for clustered jobs we embed the contents of the input
+                // file in the shell wrapper itself
+                sb.append(job.getRemoteExecutable()).append(" ").append(job.getArguments());
+                sb.append(" << CLUSTER").append('\n');
+
+                // PM-833 figure out the job submit directory
+                String jobSubmitDirectory =
+                        new File(job.getFileFullPath(mSubmitDir, ".in")).getParent();
+
+                sb.append(slurpInFile(jobSubmitDirectory, job.getStdIn()));
+                sb.append("CLUSTER").append('\n');
+            } catch (IOException ioe) {
+                throw new RuntimeException(
+                        "[Pegasus-Lite] Error while "
+                                + this.describe()
+                                + " wrapping job "
+                                + job.getID(),
+                        ioe);
+            }
+        } else {
+            sb.append(job.getRemoteExecutable())
+                    .append(" ")
+                    .append(job.getArguments())
+                    .append("\n");
+        }
+
+        sb.append("set -e").append('\n'); // PM-701
+        sb.append(super.outputFilesToPegasusLite(job));
+
+        sb.append("EOF2").append("\n");
+        // appendStderrFragment( sb, "Writing out script to launch user TASK in docker container
+        // (END)" );
+        sb.append("\n");
+        sb.append("\n");
+
+        return sb.toString();
     }
 
     /**
