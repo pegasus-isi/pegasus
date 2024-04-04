@@ -86,7 +86,8 @@ public class Docker extends AbstractContainer {
         // "\n" );
 
         // assume docker is available in path
-        sb.append("docker run ");
+        sb.append(this.wrapContainerInvocationWithLauncher(job, "docker"));
+        sb.append(" ").append("run").append(" ");
         sb.append("--user root ");
 
         // directory where job is run is mounted as scratch

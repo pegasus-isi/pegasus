@@ -328,6 +328,19 @@ public class PegasusTest {
         testKey(Pegasus.DEPRECATED_RUNTIME_KEY, "dummy", Namespace.DEPRECATED_KEY);
         mLogger.logEventCompletion();
 
+        // container related keys
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
+        testKey(Pegasus.CONTAINER_ARGUMENTS_KEY, "pegasus", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
+        testKey(Pegasus.CONTAINER_LAUNCHER_KEY, "pegasus", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
+        testKey(Pegasus.CONTAINER_LAUNCHER_ARGUMENTS_KEY, "pegasus", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+
         // other keys
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY, "true", Namespace.VALID_KEY);

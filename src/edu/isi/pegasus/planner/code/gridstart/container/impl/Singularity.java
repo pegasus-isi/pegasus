@@ -72,7 +72,8 @@ public class Singularity extends AbstractContainer {
         // PM-1888 the pegasus-lite-common.sh determines what
         // is the singularity executable to use. We prefer apptainer if
         // it exists
-        sb.append("$singularity_exec exec").append(" ");
+        sb.append(this.wrapContainerInvocationWithLauncher(job, "$singularity_exec"));
+        sb.append(" ").append("exec").append(" ");
 
         // do not mount home - this might not exists when running under for example the nobody user
         sb.append("--no-home").append(" ");

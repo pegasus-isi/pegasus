@@ -405,6 +405,12 @@ public class Pegasus extends Namespace {
     /** Users specified arguments the container invocation. */
     public static final String CONTAINER_ARGUMENTS_KEY = "container.arguments";
 
+    /** An optional executable or script to launch container. */
+    public static final String CONTAINER_LAUNCHER_KEY = "container.launcher";
+
+    /** Any arguments to be passed to the container launcher */
+    public static final String CONTAINER_LAUNCHER_ARGUMENTS_KEY = "container.launcher.arguments";
+
     /** Profile key to determine condor quoting for a job. */
     public static final String CONDOR_QUOTE_ARGUMENTS_KEY = "condor.arguments.quote";
 
@@ -565,7 +571,9 @@ public class Pegasus extends Namespace {
                         || (key.compareTo(Pegasus.CHECKPOINT_TIME_KEY) == 0)
                         || (key.compareTo(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0)
                         || (key.compareTo(Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY) == 0)
-                        || (key.compareTo(Pegasus.CONTAINER_ARGUMENTS_KEY) == 0)) {
+                        || (key.compareTo(Pegasus.CONTAINER_ARGUMENTS_KEY) == 0)
+                        || (key.compareTo(Pegasus.CONTAINER_LAUNCHER_KEY) == 0)
+                        || (key.compareTo(Pegasus.CONTAINER_LAUNCHER_ARGUMENTS_KEY) == 0)) {
                     res = VALID_KEY;
                 } else if (key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0
                         || (key.compareTo(COLLAPSER_KEY) == 0)) {

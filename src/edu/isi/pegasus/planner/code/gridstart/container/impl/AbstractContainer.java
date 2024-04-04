@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import static edu.isi.pegasus.planner.code.gridstart.container.impl.Abstract.appendStderrFragment;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -23,6 +24,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -364,6 +366,40 @@ public abstract class AbstractContainer extends Abstract {
         sb.append("\n");
 
         return sb.toString();
+    }
+
+    /**
+     * Wrap the container invocation with a launcher
+     *
+     * @param job the job
+     * @param containerInvocation the existing command to invoke the container executable
+     * @return the invocation
+     */
+    protected String wrapContainerInvocationWithLauncher(Job job, String containerInvocation) {
+        String launcher = job.vdsNS.getStringValue(Pegasus.CONTAINER_LAUNCHER_KEY);
+        String launcherArguments =
+                job.vdsNS.getStringValue(Pegasus.CONTAINER_LAUNCHER_ARGUMENTS_KEY);
+        if (launcher == null) {
+            return containerInvocation;
+        }
+
+        StringBuilder wrappedInvocation = new StringBuilder();
+        wrappedInvocation.append(launcher).append(" ");
+
+        if (launcherArguments != null) {
+            wrappedInvocation.append(launcherArguments).append(" ");
+        }
+
+        wrappedInvocation.append(containerInvocation);
+
+        mLogger.log(
+                "Wrapped container invocation for job "
+                        + job.getID()
+                        + " with "
+                        + wrappedInvocation,
+                LogManager.DEBUG_MESSAGE_LEVEL);
+
+        return wrappedInvocation.toString();
     }
 
     /**

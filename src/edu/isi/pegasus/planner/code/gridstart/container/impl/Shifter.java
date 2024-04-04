@@ -73,9 +73,8 @@ public class Shifter extends AbstractContainer {
         Container c = job.getContainer();
 
         // assume shifter is available in path
-        sb.append("shifter ");
-
-        sb.append("--image ").append(c.getLFN()).append(" ");
+        sb.append(this.wrapContainerInvocationWithLauncher(job, "shifter"));
+        sb.append(" ").append("--image").append(" ").append(c.getLFN()).append(" ");
 
         // PM-1298 mount any host directories if specified
         sb.append("--volume ");
