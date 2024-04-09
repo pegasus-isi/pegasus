@@ -361,10 +361,8 @@ public class Transfer implements SLS {
                 // same site
                 // where job and also the compute site has a shared filesystem access OR
                 // staging site is local and the compute site is visible to the local site
-                boolean useFileURLAsSource =
-                        (stagingSite.equals(computeSite) && computeSiteEntry.hasSharedFileSystem())
-                                || (stagingSite.equals("local")
-                                        && computeSiteEntry.isVisibleToLocalSite());
+                boolean useFileURLAsSource = this.useFileURLAsSource(computeSiteEntry, stagingSite);
+
                 if (useFileURLAsSource) {
                     // construct the source URL as a file url
                     url.append(PegasusURL.FILE_URL_SCHEME)
@@ -387,19 +385,8 @@ public class Transfer implements SLS {
                 }
 
                 // construct the location with respect to the staging site
-                if (symlinkingEnabledForJob && useFileURLAsSource) {
-                    symlink = true;
-                    if (pf.isExecutable()) {
-                        // PM-734 for executable files we can have the source url as file url
-                        // but we cannot have the destination URL as symlink://
-                        // as we want to do chmod on the local copy on the worker node
-                        symlink = false;
-                    }
-                    if (pf.isCheckpointFile()) {
-                        // we never symlink checkpoint files
-                        symlink = false;
-                    }
-                }
+                symlink = this.symlinkingEnabled(pf, symlinkingEnabledForJob, useFileURLAsSource);
+
                 // PM-833 append the relative staging site add on directory
                 url.append(File.separator)
                         .append(mStagingMapper.getRelativeDirectory(stagingSite, lfn));
@@ -419,19 +406,15 @@ public class Transfer implements SLS {
                     sources.add((ReplicaCatalogEntry) cacheLocation.clone());
 
                     symlink =
-                            (symlinkingEnabledForJob
-                                    && // specified in configuration
-                                    !pf.isCheckpointFile()
-                                    && // can only do symlinks for data files . not checkpoint files
-                                    !pf.isExecutable()
-                                    && // can only do symlinks for data files . not executables
+                            this.symlinkingEnabled(
+                                    pf,
+                                    symlinkingEnabledForJob,
+                                    // source URL logically on the same site where job is to be run
+                                    // AND
+                                    // source URL is a file URL
                                     cacheLocation.getResourceHandle().equals(job.getSiteHandle())
-                                    && // source URL logically on the same site where job is to be
-                                    // run
-                                    url.toString()
-                                            .startsWith(
-                                                    PegasusURL.FILE_URL_SCHEME)); // source URL is a
-                    // file URL
+                                            && url.toString()
+                                                    .startsWith(PegasusURL.FILE_URL_SCHEME));
                 }
             }
 
@@ -859,6 +842,35 @@ public class Transfer implements SLS {
     }
 
     /**
+     * Returns a boolean indicating whether a particular file for a job can be symlinked or not.
+     *
+     * @param pf the PegasusFile object for the file
+     * @param symlinkingEnabledForJob whether symlinking is enabled for job
+     * @param useFileURLAsSource whether the source URL for transfer being created is a file URL
+     * @return boolean
+     */
+    protected boolean symlinkingEnabled(
+            PegasusFile pf, boolean symlinkingEnabledForJob, boolean useFileURLAsSource) {
+        boolean symlink = false;
+        // construct the location with respect to the staging site
+        if (symlinkingEnabledForJob && useFileURLAsSource) {
+            symlink = true;
+            if (pf.isExecutable()) {
+                // PM-734 for executable files we can have the source url as file url
+                // but we cannot have the destination URL as symlink://
+                // as we want to do chmod on the local copy on the worker node
+                symlink = false;
+            }
+            if (pf.isCheckpointFile()) {
+                // we never symlink checkpoint files
+                symlink = false;
+            }
+        }
+
+        return symlink;
+    }
+
+    /**
      * A convenience method that indicates whether to enable symlinking for a job or not
      *
      * @param job the job for which symlinking needs to be enabled
@@ -873,6 +885,28 @@ public class Transfer implements SLS {
 
         // the profile value can turn symlinking off
         return !job.vdsNS.getBooleanValue(Pegasus.NO_SYMLINK_KEY);
+    }
+
+    /**
+     * Returns a boolean indicating whether a source URL on a staging site can be prefixed with file
+     * URL scheme when the transfer has to happen to a compute site.
+     *
+     * <p>The source URL can be a file URL if source URL logically on the same site where job and
+     * also the compute site has a shared filesystem access OR staging site is local and the compute
+     * site is visible to the local site
+     *
+     * @param computeSiteEntry
+     * @param stagingSite
+     * @return boolean
+     */
+    protected boolean useFileURLAsSource(SiteCatalogEntry computeSiteEntry, String stagingSite) {
+        // PM-1787 PM-1789 the source URL can be a file URL if source URL logically on the
+        // same site where job and also the compute site has a shared filesystem access
+        // OR
+        // staging site is local and the compute site is visible to the local site
+        return (stagingSite.equals(computeSiteEntry.getSiteHandle())
+                        && computeSiteEntry.hasSharedFileSystem())
+                || (stagingSite.equals("local") && computeSiteEntry.isVisibleToLocalSite());
     }
 
     /**
