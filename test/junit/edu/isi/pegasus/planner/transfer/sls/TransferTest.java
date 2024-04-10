@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
@@ -117,6 +118,69 @@ public class TransferTest {
     }
 
     @Test
+    public void testSymlinkingEnabledForJobWithWFSymlinkOff() {
+        Job j = new Job();
+        this.testSymlinkingEnabledForJob(j, false, false);
+    }
+
+    @Test
+    public void testSymlinkingEnabledForJobWithWFSymlinkOn() {
+        Job j = new Job();
+        this.testSymlinkingEnabledForJob(j, true, true);
+    }
+
+    @Test
+    public void testSymlinkingEnabledForJobWithWFSymlinkOnAndNoSymlinkProfileOn() {
+        Job j = new Job();
+        j.vdsNS.construct(Pegasus.NO_SYMLINK_KEY, "True");
+        this.testSymlinkingEnabledForJob(j, true, false);
+    }
+
+    @Test
+    public void testSymlinkingEnabledForJobWithWFSymlinkOnAndNoSymlinkProfileOFF() {
+        Job j = new Job();
+        j.vdsNS.construct(Pegasus.NO_SYMLINK_KEY, "False");
+        this.testSymlinkingEnabledForJob(j, true, true);
+    }
+
+    @Test
+    public void testUseFileURLAsSourceWithComputeSiteDifferentStagingSite() {
+        this.testUseFileURLAsSource("compute", "staging", false, false);
+    }
+
+    @Test
+    public void testUseFileURLAsSourceWithComputeSiteSameStagingSite() {
+        // cannot use file url as source since no shared filesystem on
+        // compute
+        this.testUseFileURLAsSource("compute", "compute", false, false);
+    }
+
+    @Test
+    public void testUseFileURLAsSourceWithComputeSiteSameStagingSiteSharedFS() {
+        // cannot use file url as source since no shared filesystem on
+        // compute
+        this.testUseFileURLAsSource("compute", "compute", true, true);
+    }
+
+    @Test
+    public void testUseFileURLAsSourceWithComputeStagingLocal() {
+        // use file url only if compute site is visible to local site
+        this.testUseFileURLAsSource("compute", "local", false, false);
+    }
+
+    @Test
+    public void testUseFileURLAsSourceWithComputeStagingLocalAndVisible() {
+        // use file url only if compute site is visible to local site
+        mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
+        Transfer t = new Transfer();
+        t.initialize(mBag);
+        SiteCatalogEntry compute = mBag.getHandleToSiteStore().lookup("compute");
+        compute.addProfile(new Profile("pegasus", Pegasus.LOCAL_VISIBLE_KEY, "True"));
+        assertEquals("use file URL as source:", t.useFileURLAsSource(compute, "local"), true);
+        mLogger.logEventCompletion();
+    }
+
+    @Test
     public void testDefaultStageIn() {
         FileTransfer expectedOutput = new FileTransfer();
         expectedOutput.setLFN("f.in");
@@ -142,6 +206,86 @@ public class TransferTest {
         expectedOutput.addDestination("compute", "file://$PWD/f.in");
 
         this.testStageIn("compute", expectedOutput);
+    }
+
+    @Test
+    public void testSymlinkingForFileWithFileURLAndJobSymlinkOn() {
+        PegasusFile pf = new PegasusFile("f.in");
+        this.testSymlinkingEnabledForFile(pf, true, true, true);
+    }
+
+    @Test
+    public void testSymlinkingForFileWithFileURLAndJobSymlinkOFF() {
+        PegasusFile pf = new PegasusFile("f.in");
+        this.testSymlinkingEnabledForFile(pf, false, true, false);
+    }
+
+    @Test
+    public void testSymlinkingForFileWithHTTPURLAndJobSymlinkOn() {
+        PegasusFile pf = new PegasusFile("f.in");
+        this.testSymlinkingEnabledForFile(pf, true, false, false);
+    }
+
+    @Test
+    public void testSymlinkingForFileWithHTTPURLAndJobSymlinkOff() {
+        PegasusFile pf = new PegasusFile("f.in");
+        this.testSymlinkingEnabledForFile(pf, false, false, false);
+    }
+
+    @Test
+    public void testSymlinkingForCheckpointFile() {
+        PegasusFile pf = new PegasusFile("f.checkpoint");
+        pf.setType(PegasusFile.CHECKPOINT_TYPE);
+        // even though job symlinking on and file urls. no symlink for checkpoint
+        this.testSymlinkingEnabledForFile(pf, true, true, false);
+    }
+
+    @Test
+    public void testSymlinkingForExecutableFile() {
+        PegasusFile pf = new PegasusFile("pegasus-ket");
+        pf.setType(PegasusFile.EXECUTABLE_TYPE);
+        // even though job symlinking on and file urls. no symlink for executable files
+        this.testSymlinkingEnabledForFile(pf, true, true, false);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testUpdateSourceFileURLForContainerizedJobWithNoMount() {
+        this.testSourceFileURLForContainerizedJob(
+                "file:///shared/scratch/f.in", null, "file:///shared/scratch/f.in");
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testUpdateSourceFileURLForContainerizedJobWithWrongMount() {
+        this.testSourceFileURLForContainerizedJob(
+                "file:///shared/scratch/f.in",
+                new Container.MountPoint("/scratch/:/scratch"),
+                "file:///shared/scratch/f.in");
+    }
+
+    @Test
+    public void testUpdateSourceFileURLForContainerizedJobWithCorrectSameMount() {
+        this.testSourceFileURLForContainerizedJob(
+                "file:///shared/scratch/f.in",
+                new Container.MountPoint("/shared/scratch:/shared/scratch"),
+                "file:///shared/scratch/f.in");
+    }
+
+    @Test
+    public void testUpdateSourceFileURLForContainerizedJobWithCorrectDiffMount() {
+        // valid mount. but mount to different dest dir
+        this.testSourceFileURLForContainerizedJob(
+                "file:///shared/scratch/f.in",
+                new Container.MountPoint("/shared/scratch:/incontainer"),
+                "file:///incontainer/f.in");
+    }
+
+    @Test
+    public void testUpdateSourceHTTPURLForContainerizedJobWithCorrectMount() {
+        // valid mount. but mount to different dest dir
+        this.testSourceFileURLForContainerizedJob(
+                "http://test.example.com/shared/scratch/f.in",
+                new Container.MountPoint("/shared/scratch:/shared/scratch"),
+                "http://test.example.com/shared/scratch/f.in");
     }
 
     /**
@@ -452,6 +596,68 @@ public class TransferTest {
                 "compute", "file:///internal/workflows/compute/shared-scratch/./f.out");
 
         this.testStageOut("compute", expectedOutput);
+    }
+
+    public void testUseFileURLAsSource(
+            String computeSite,
+            String stagingSite,
+            boolean sharedFileSystem,
+            boolean expectedValue) {
+        mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
+        Transfer t = new Transfer();
+        t.initialize(mBag);
+        SiteCatalogEntry compute = new SiteCatalogEntry(computeSite);
+        Directory dir = new Directory();
+        dir.setType(Directory.TYPE.shared_scratch);
+        dir.setSharedFileSystemAccess(sharedFileSystem);
+        compute.addDirectory(dir);
+        assertEquals(
+                "use file URL as source:",
+                expectedValue,
+                t.useFileURLAsSource(compute, stagingSite));
+        mLogger.logEventCompletion();
+    }
+
+    public void testSymlinkingEnabledForJob(
+            Job job, boolean workflowSymlinking, boolean expectedValue) {
+        mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
+        Transfer t = new Transfer();
+        t.initialize(mBag);
+        assertEquals(
+                "Symlinking enabled for job:",
+                expectedValue,
+                t.symlinkingEnabled(job, workflowSymlinking));
+        mLogger.logEventCompletion();
+    }
+
+    public void testSymlinkingEnabledForFile(
+            PegasusFile pf,
+            boolean symlinkingEnabledForJob,
+            boolean useFileURLAsSource,
+            boolean expectedValue) {
+        mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
+        Transfer t = new Transfer();
+        t.initialize(mBag);
+        assertEquals(
+                "Symlinking enabled for file:",
+                expectedValue,
+                t.symlinkingEnabled(pf, symlinkingEnabledForJob, useFileURLAsSource));
+        mLogger.logEventCompletion();
+    }
+
+    private void testSourceFileURLForContainerizedJob(
+            String sourceURL, Container.MountPoint mp, String expectedReplacedURL) {
+        mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
+        Transfer t = new Transfer();
+        t.initialize(mBag);
+        ReplicaCatalogEntry source = new ReplicaCatalogEntry(sourceURL);
+        Container c = new Container("centos-9");
+        if (mp != null) {
+            c.addMountPoint(mp);
+        }
+        t.updateSourceFileURLForContainerizedJob(c, new PegasusFile("f.in"), source, "ID1");
+        assertEquals("source file url in containerized jobs", expectedReplacedURL, source.getPFN());
+        mLogger.logEventCompletion();
     }
 
     private void testStageOut(String stagingSite, FileTransfer expected) {
