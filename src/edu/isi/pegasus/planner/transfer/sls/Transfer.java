@@ -118,6 +118,12 @@ public class Transfer implements SLS {
     /** The dial for integrity checking */
     protected PegasusProperties.INTEGRITY_DIAL mIntegrityDial;
 
+    /**
+     * A boolean tracking whether transfers should be on the HOST OS or not for jobs running inside
+     * a container
+     */
+    protected boolean mTransfersOnHostOS;
+
     /** The default constructor. */
     public Transfer() {}
 
@@ -137,6 +143,7 @@ public class Transfer implements SLS {
         mPlannerCache = bag.getHandleToPlannerCache();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mIntegrityDial = mProps.getIntegrityDial();
+        mTransfersOnHostOS = mProps.containerTransfersOnHOSTOS();
     }
 
     /**
@@ -928,6 +935,14 @@ public class Transfer implements SLS {
             Container c, PegasusFile pf, ReplicaCatalogEntry source, String jobID) {
         String sourceURL = source.getPFN();
         String lfn = pf.getLFN();
+
+        if (mTransfersOnHostOS) {
+            // PM-1942 if transfers for a job happen on the host OS
+            // then no need to update the file URL's as we are doing
+            // just a copy
+            return;
+        }
+
         if (sourceURL.startsWith(PegasusURL.FILE_URL_SCHEME)) {
             String replacedURL = c.getPathInContainer(sourceURL);
             if (replacedURL != null) {

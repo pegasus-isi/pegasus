@@ -251,7 +251,7 @@ public class TransferTest {
     @Test(expected = RuntimeException.class)
     public void testUpdateSourceFileURLForContainerizedJobWithNoMount() {
         this.testSourceFileURLForContainerizedJob(
-                "file:///shared/scratch/f.in", null, "file:///shared/scratch/f.in");
+                "file:///shared/scratch/f.in", null, "file:///shared/scratch/f.in", false);
     }
 
     @Test(expected = RuntimeException.class)
@@ -259,7 +259,8 @@ public class TransferTest {
         this.testSourceFileURLForContainerizedJob(
                 "file:///shared/scratch/f.in",
                 new Container.MountPoint("/scratch/:/scratch"),
-                "file:///shared/scratch/f.in");
+                "file:///shared/scratch/f.in",
+                false);
     }
 
     @Test
@@ -267,7 +268,8 @@ public class TransferTest {
         this.testSourceFileURLForContainerizedJob(
                 "file:///shared/scratch/f.in",
                 new Container.MountPoint("/shared/scratch:/shared/scratch"),
-                "file:///shared/scratch/f.in");
+                "file:///shared/scratch/f.in",
+                false);
     }
 
     @Test
@@ -276,7 +278,8 @@ public class TransferTest {
         this.testSourceFileURLForContainerizedJob(
                 "file:///shared/scratch/f.in",
                 new Container.MountPoint("/shared/scratch:/incontainer"),
-                "file:///incontainer/f.in");
+                "file:///incontainer/f.in",
+                false);
     }
 
     @Test
@@ -285,7 +288,19 @@ public class TransferTest {
         this.testSourceFileURLForContainerizedJob(
                 "http://test.example.com/shared/scratch/f.in",
                 new Container.MountPoint("/shared/scratch:/shared/scratch"),
-                "http://test.example.com/shared/scratch/f.in");
+                "http://test.example.com/shared/scratch/f.in",
+                false);
+    }
+
+    @Test
+    public void testUpdateSourceFileURLForHostOSContainerizedJobWithCorrectDiffMount() {
+        // valid mount. but mount to different dest dir
+        // no effect since transfers are on the HOST OS
+        this.testSourceFileURLForContainerizedJob(
+                "file:///shared/scratch/f.in",
+                new Container.MountPoint("/shared/scratch:/incontainer"),
+                "file:///shared/scratch/f.in",
+                true);
     }
 
     /**
@@ -646,9 +661,16 @@ public class TransferTest {
     }
 
     private void testSourceFileURLForContainerizedJob(
-            String sourceURL, Container.MountPoint mp, String expectedReplacedURL) {
+            String sourceURL,
+            Container.MountPoint mp,
+            String expectedReplacedURL,
+            boolean transferOnHostOS) {
         mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
         Transfer t = new Transfer();
+        mBag.getPegasusProperties()
+                .setProperty(
+                        PegasusProperties.PEGASUS_TRANSFER_CONTAINER_ON_HOST,
+                        Boolean.toString(transferOnHostOS));
         t.initialize(mBag);
         ReplicaCatalogEntry source = new ReplicaCatalogEntry(sourceURL);
         Container c = new Container("centos-9");
