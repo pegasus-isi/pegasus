@@ -127,7 +127,6 @@ class FileServer(ProfileMixin):
         self.profiles = defaultdict(OrderedDict)
 
     def __json__(self):
-        print(self.profiles)
         return _filter_out_nones(
             OrderedDict(
                 [

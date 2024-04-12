@@ -4,7 +4,7 @@ import os
 from argparse import ArgumentParser
 
 import globus_sdk
-from globus_sdk.scopes import GCSCollectionScopeBuilder, TransferScopes
+from globus_sdk.scopes import GCSCollectionScopeBuilder, GCSEndpointScopeBuilder, TransferScopes
 
 try:
     from configparser import ConfigParser
@@ -27,8 +27,23 @@ parser.add_argument(
     "--endpoints",
     nargs="*",
     default=[],
-    help="list of endpoint uuids to acquire data_consents",
+    help="list of endpoint uuids to acquire manage_collections consent",
 )
+parser.add_argument(
+    "-c",
+    "--collections",
+    nargs="*",
+    default=[],
+    help="list of collection uuids to acquire data_access consent",
+)
+parser.add_argument(
+    "-d",
+    "--domains",
+    nargs="*",
+    default=[],
+    help="list of domain requirements which must be satisfied by the identities under the globus user account",
+)
+
 
 args = parser.parse_args()
 
@@ -37,10 +52,21 @@ config.add_section("oauth")
 config.set("oauth", "client_id", client_id)
 
 pegasus_scopes = [TransferScopes.all]
-for c in args.endpoints:
+for c in args.collections:
     sb = GCSCollectionScopeBuilder(c, known_scopes=[TransferScopes.all])
     pegasus_scopes.append("{}[*{}]".format(TransferScopes.all, sb.data_access))
     pegasus_scopes.append(sb.data_access)
+
+for e in args.endpoints:
+    sb = GCSEndpointScopeBuilder(e)
+    pegasus_scopes.append(sb.manage_collections)
+
+required_domains = None
+for d in args.domains:
+    if not required_domains:
+        required_domains = [d]
+    else:
+        required_domains.append(d)
 
 client = globus_sdk.NativeAppAuthClient(client_id)
 if args.permanent:
@@ -48,7 +74,7 @@ if args.permanent:
 else:
     client.oauth2_start_flow(requested_scopes=pegasus_scopes)
 
-authorize_url = client.oauth2_get_authorize_url()
+authorize_url = client.oauth2_get_authorize_url(session_required_single_domain=required_domains)
 print("Please go to this URL and login: {}".format(authorize_url))
 
 get_input = getattr(__builtins__, "raw_input", input)
