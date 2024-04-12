@@ -5,7 +5,11 @@ import os
 from argparse import ArgumentParser
 
 import globus_sdk
-from globus_sdk.scopes import GCSCollectionScopeBuilder, GCSEndpointScopeBuilder, TransferScopes
+from globus_sdk.scopes import (
+    GCSCollectionScopeBuilder,
+    GCSEndpointScopeBuilder,
+    TransferScopes,
+)
 
 try:
     from configparser import ConfigParser
@@ -75,7 +79,9 @@ if args.permanent:
 else:
     client.oauth2_start_flow(requested_scopes=pegasus_scopes)
 
-authorize_url = client.oauth2_get_authorize_url(session_required_single_domain=required_domains)
+authorize_url = client.oauth2_get_authorize_url(
+    session_required_single_domain=required_domains
+)
 print("Please go to this URL and login: {}".format(authorize_url))
 
 get_input = getattr(__builtins__, "raw_input", input)
