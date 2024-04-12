@@ -23,6 +23,8 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapperFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 
@@ -122,32 +124,79 @@ public class DockerTest {
     
     @Test
     public void testDockerInit() {
+        mLogger.logEventStart("test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
         Job j =   (Job) mDAG.getNode(TEST_JOB_ID).getContent();
-        ContainerShellWrapper wrapper = mFactory.loadInstance(j);
-        assertThat(wrapper, instanceOf(Docker.class));
-        Docker docker = (Docker)wrapper; 
-        assertEquals("docker_init centos-osgvo-el8", docker.containerInit(j).toString() , "docker initiation"); 
+        assertEquals("docker_init centos-osgvo-el8", dockerInstance(j).containerInit(j).toString() , "docker initiation"); 
+        mLogger.logEventCompletion();
     }
     
     @Test
     public void testDockerRun() {
+        mLogger.logEventStart("test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
         Job j =   (Job) mDAG.getNode(TEST_JOB_ID).getContent();
-        ContainerShellWrapper wrapper = mFactory.loadInstance(j);
-        assertThat(wrapper, instanceOf(Docker.class));
-        Docker docker = (Docker)wrapper; 
         String expected = "docker run --user root -v $PWD:/scratch -w=/scratch --entrypoint /bin/sh --name $cont_name  $cont_image -c \"set -e ;export root_path=\\$PATH ;if ! grep -q -E  \"^$cont_group:\" /etc/group ; then groupadd -f --gid $c"
                 + "ont_groupid $cont_group ;fi; if ! id $cont_user 2>/dev/null >/dev/null; then    if id $cont_userid 2>/dev/null >/dev/null; then        useradd -o --uid $cont_userid --gid $cont_groupid $cont_user;    else        "
                 + "useradd --uid $cont_userid --gid $cont_groupid $cont_user;    fi; fi; su $cont_user -c \\\"./preprocess_ID1-cont.sh \\\"\"";
-        assertEquals(expected, docker.containerRun(j).toString(), "docker run command"); 
+        assertEquals(expected, dockerInstance(j).containerRun(j).toString(), "docker run command"); 
+        mLogger.logEventCompletion();
+    }
+    
+    @Test
+    public void testDockerRunWithMount() {
+        mLogger.logEventStart("test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
+        Job j =   (Job) mDAG.getNode(TEST_JOB_ID).getContent();
+        Container c = j.getContainer();
+        c.addMountPoint("/shared/scratch:/scratch");
+        // get the part of docker run with the options
+        assertThat(invocationWithJustOptions(dockerInstance(j).containerRun(j)), containsString("-v /shared/scratch:/scratch")); 
+        mLogger.logEventCompletion();
+    }
+    
+    @Test
+    public void testDockerRunWithShellWrapper() {        
+        mLogger.logEventStart("test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
+        Job j =   (Job) mDAG.getNode(TEST_JOB_ID).getContent();
+        j.vdsNS.construct(Pegasus.CONTAINER_LAUNCHER_KEY, "srun");
+        j.vdsNS.construct(Pegasus.CONTAINER_LAUNCHER_ARGUMENTS_KEY, "--kill-on-bad-exit");
+        // get the part of docker run with the options
+        assertTrue(dockerInstance(j).containerRun(j).toString().startsWith("srun --kill-on-bad-exit")); 
+        mLogger.logEventCompletion();
+    }
+    
+    @Test
+    public void testDockerRunWithGPUsPegasusProfile() {
+        mLogger.logEventStart("test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
+        Job j =   (Job) mDAG.getNode(TEST_JOB_ID).getContent();
+        j.vdsNS.construct(Pegasus.GPUS_KEY, "5");
+        // get the part of docker run with the options
+        assertThat(invocationWithJustOptions(dockerInstance(j).containerRun(j)), containsString("--gpus all")); 
+        mLogger.logEventCompletion();
+    }
+    
+    @Test
+    public void testDockerRunWithGPUsCondorProfile() {
+        mLogger.logEventStart("test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
+        Job j =   (Job) mDAG.getNode(TEST_JOB_ID).getContent();
+        j.condorVariables.construct(Condor.REQUEST_GPUS_KEY, "5");
+        // get the part of docker run with the options
+        assertThat(invocationWithJustOptions(dockerInstance(j).containerRun(j)), containsString("--gpus all")); 
+        mLogger.logEventCompletion();
+    }
+    
+    @Test
+    public void testDockerRemove() {
+        mLogger.logEventStart("test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
+        Job j =   (Job) mDAG.getNode(TEST_JOB_ID).getContent();
+        assertEquals("docker rm --force $cont_name  1>&2", dockerInstance(j).containerRemove(j).toString(), "docker rm command"); 
+        mLogger.logEventCompletion();
     }
     
     @Test
     public void testContainerWorkingDirectory() {
+        mLogger.logEventStart("test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
         Job j =   (Job) mDAG.getNode(TEST_JOB_ID).getContent();
-        ContainerShellWrapper wrapper = mFactory.loadInstance(j);
-        assertThat(wrapper, instanceOf(Docker.class));
-        Docker docker = (Docker)wrapper; 
-        assertEquals("/scratch", docker.getContainerWorkingDirectory(), "container working dir"); 
+        assertEquals("/scratch", dockerInstance(j).getContainerWorkingDirectory(), "container working dir"); 
+        mLogger.logEventCompletion();
     }
 
     private ADag constructTestWorkflow() {
@@ -178,5 +227,21 @@ public class DockerTest {
         return j;
     }
     
+    private Docker dockerInstance(Job j){
+        ContainerShellWrapper wrapper = mFactory.loadInstance(j);
+        assertThat(wrapper, instanceOf(Docker.class));
+        return (Docker)wrapper; 
+    }
+
+    /**
+     * Convenience method to just return the docker run command with the arguments passed
+     * 
+     * @param inv
+     * 
+     * @return 
+     */
+    private String invocationWithJustOptions(StringBuilder inv) {
+        return inv.substring(inv.indexOf("docker run", 0), inv.indexOf("$cont_image"));
+    }
     
 }
