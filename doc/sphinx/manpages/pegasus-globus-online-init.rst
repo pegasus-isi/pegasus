@@ -9,6 +9,9 @@ Initializes OAuth tokens for Globus Online authentication.
 
       pegasus-globus-online-init  [-h]
                                   [--permanent]
+                                  [--collections]
+                                  [--endpoints]
+                                  [--domains]
 
 
 
@@ -40,6 +43,14 @@ Options
    Requests a refresh token that can be used indefinetely. Access can be
    revoked from globus web interface (manage consents).
 
+**-c**; \ **--collections**
+   A list of collection uuids that require data_access consent to move data to
+   and from them. Access can be revoked from the globus web interface.
+
 **-e**; \ **--endpoints**
-   A list of endpoints that require data_access consent to move data to
-   and from them. Access can be revoked from globus web interface.
+   A list of endpoint uuids that require manage_collections consent to create
+   collections in them. Access can be revoked from the globus web interface.
+
+**-d**; \ **--domains**
+   A list of domain requirements that must be satisfied by the valid identities 
+   of the user under globus auth. The token generated will be granted the domain.
