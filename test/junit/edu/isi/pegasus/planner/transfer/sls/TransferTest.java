@@ -772,7 +772,7 @@ public class TransferTest {
         Job j = new Job();
         j.setTXName("preprocess");
         j.setLogicalID("ID1");
-        j.setName("preprocess_ID1");
+        j.setName("preprocess_ID1"); 
         j.setRemoteExecutable("/usr/bin/pegasus-keg");
         j.setSiteHandle("compute");
         j.setJobType(Job.COMPUTE_JOB);
