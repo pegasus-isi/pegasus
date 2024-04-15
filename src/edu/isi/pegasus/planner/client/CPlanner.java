@@ -22,6 +22,7 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
@@ -240,6 +241,10 @@ public class CPlanner extends Executable {
                     LogManager.FATAL_MESSAGE_LEVEL);
             result = 3;
         } finally {
+            if (cPlanner != null && cPlanner.mBag != null) {
+                // PM-1947 cleanup a transient tc if it was generated
+                cPlanner.cleanupTransientTC(cPlanner.mBag.getHandleToTransformationCatalog());
+            }
             endDate = new Date();
         }
 
@@ -1979,6 +1984,28 @@ public class CPlanner extends Executable {
                         LogManager.CONSOLE_MESSAGE_LEVEL);
             }
         }
+    }
+
+    /**
+     * Attempts to cleanup a transient tc that might have been created for planner internal use.
+     *
+     * @param catalog
+     * @return boolean indicating whether the file source was cleaned or not.
+     */
+    private boolean cleanupTransientTC(TransformationCatalog catalog) {
+        boolean deleted = false;
+        if (catalog != null) {
+            File source = catalog.getFileSource();
+            if (source != null && source.exists() && source.canWrite()) {
+                source.delete();
+                deleted = true;
+                mLogger.log(
+                        "Deleted transient tc that was created for planner internal use "
+                                + source.getAbsolutePath(),
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            }
+        }
+        return deleted;
     }
 }
 /**
