@@ -108,6 +108,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(Text.class));
+        assertFalse("loaded catalog should not be transient", tc.isTransient());
         mLogger.logEventCompletion();
     }
 
@@ -123,6 +124,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(Text.class));
+        assertFalse("loaded catalog should not be transient", tc.isTransient());
         mLogger.logEventCompletion();
     }
 
@@ -140,6 +142,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory() + "/yaml/", "tc.yml").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
+        assertFalse("loaded catalog should not be transient", tc.isTransient());
         mLogger.logEventCompletion();
     }
 
@@ -155,6 +158,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory() + "/yaml/", "tc.yml").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
+        assertFalse("loaded catalog should not be transient", tc.isTransient());
         mLogger.logEventCompletion();
     }
 
@@ -187,6 +191,36 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(Text.class));
+            assertFalse("loaded catalog should not be transient", s.isTransient());
+        } finally {
+            dir.delete();
+        }
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testWithEmptyTransientTextFile() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.transformation.factory",
+                "default-text-empty-file-test",
+                Integer.toString(mTestNumber++));
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.catalog.transformation.transient", "true");
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        Path p = Files.createTempDirectory("pegasus");
+        File dir = p.toFile();
+        File text =
+                new File(dir, TransformationFactory.DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(text));
+        writer.close();
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
+        try {
+            TransformationCatalog s = TransformationFactory.loadInstance(bag);
+            assertThat(s, instanceOf(Text.class));
+            assertTrue("catalog should be transient", s.isTransient());
         } finally {
             dir.delete();
         }
@@ -225,6 +259,7 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(YAML.class));
+            assertFalse("loaded catalog should not be transient", s.isTransient());
         } finally {
             dir.delete();
         }
@@ -276,6 +311,7 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(YAML.class));
+            assertFalse("loaded catalog should not be transient", s.isTransient());
         } finally {
             dir.delete();
         }
@@ -419,6 +455,8 @@ public class TransformationFactoryTest {
                             null, expected.getLogicalName(), null, (String) null, TCType.STAGEABLE);
             assertEquals("Number of entries retrieved from TC", num, entries.size());
             assertEquals("Transformation retrieved from TC as ", expected, entries.get(0));
+            // maybe should be false. need to be revisited
+            assertTrue("loaded catalog should be transient", c.isTransient());
         } finally {
             dir.delete();
         }
