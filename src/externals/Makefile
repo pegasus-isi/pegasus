@@ -36,8 +36,12 @@ PACKAGES+=s3transfer
 PACKAGES+=six
 PACKAGES+=urllib3
 
+PYV=$(shell $(PYTHON) --version 2>&1 | cut -d ' ' -f 2)
+PYV_MAJOR=$(shell echo $(PYV) | cut -d '.' -f 1)
+PYV_MINOR=$(shell echo $(PYV) | cut -d '.' -f 2)
 
-ifeq ($(shell $(PYTHON) --version 2>&1 | grep " 2."),)
+#make sure system python is > 3.6 for globus-sdk
+ifeq ($(shell ([ $(PYV_MAJOR) -eq 3 ] && [ $(PYV_MINOR) -gt 6 ]) || [ $(PYV_MAJOR) -gt 3 ]; echo $$?),0)
     PACKAGES+=globus_sdk
 else
     $(warning WARNING: globus_sdk does not work with Python 2.x: skipping globus_sdk library)
