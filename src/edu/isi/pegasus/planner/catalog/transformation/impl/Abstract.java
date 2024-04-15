@@ -141,4 +141,14 @@ public abstract class Abstract implements TransformationCatalog {
 
         return pfn;
     }
+
+    /**
+     * Returns a boolean indicating whether the catalog instance is transient or not i.e. instance
+     * is only instantiated for planner internal purposes.
+     *
+     * @return boolean
+     */
+    public boolean isTransient() {
+        return this.mTransient;
+    }
 }

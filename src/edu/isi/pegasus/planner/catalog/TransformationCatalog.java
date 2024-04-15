@@ -35,7 +35,7 @@ import java.util.List;
 public interface TransformationCatalog extends edu.isi.pegasus.planner.catalog.Catalog {
 
     /** The version of the API */
-    public static final String VERSION = "1.4";
+    public static final String VERSION = "1.5";
 
     /** Prefix for the property subset to use with this catalog. */
     public static final String c_prefix = "pegasus.catalog.transformation";
@@ -414,4 +414,12 @@ public interface TransformationCatalog extends edu.isi.pegasus.planner.catalog.C
      * @return the file source if it exists , else null
      */
     public File getFileSource();
+
+    /**
+     * Returns a boolean indicating whether the catalog instance is transient or not i.e. instance
+     * is only instantiated for planner internal purposes.
+     *
+     * @return boolean
+     */
+    public boolean isTransient();
 }
