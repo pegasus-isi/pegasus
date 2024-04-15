@@ -29,7 +29,6 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStor
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.ScannerException;
 import edu.isi.pegasus.planner.parser.TransformationCatalogYAMLParser;
 import java.io.BufferedWriter;
@@ -109,17 +108,8 @@ public class YAML extends Abstract implements TransformationCatalog {
     /** Describes the transformation catalog mode. */
     public static final String DESCRIPTION = "YAML TC";
 
-    /**
-     * The LogManager object which is used to log all the messages. It's values are set in the
-     * CPlanner (the main toolkit) class.
-     */
-    protected LogManager mLogger;
-
     /** The path to the yaml based TC. */
     private String mTCFile;
-
-    /** The handle to the properties object. */
-    private PegasusProperties mProps;
 
     /** Instance to the TextParser. */
     private TransformationCatalogYAMLParser yamlParser;
@@ -145,6 +135,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @param bag the bag of Pegasus initialization objects.
      */
     public void initialize(PegasusBag bag) {
+        super.initialize(bag);
         mBag = bag;
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();

@@ -18,10 +18,14 @@
 
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -33,6 +37,42 @@ import java.net.URL;
  * @version $Revision$
  */
 public abstract class Abstract implements TransformationCatalog {
+    /**
+     * The LogManager object which is used to log all the messages. It's values are set in the
+     * CPlanner (the main toolkit) class.
+     */
+    protected LogManager mLogger;
+
+    /** The handle to the properties object. */
+    protected PegasusProperties mProps;
+
+    /**
+     * A boolean tracking whether a TC instance is transient i.e. used only internally for planner
+     * use
+     */
+    protected boolean mTransient;
+
+    /**
+     * Initialize the implementation, and return an instance of the implementation. It should be in
+     * the connect method, to be consistent with the other catalogs.
+     *
+     * @param bag the bag of Pegasus initialization objects.
+     */
+    @Override
+    public void initialize(PegasusBag bag) {
+        mProps = bag.getPegasusProperties();
+        mLogger = bag.getLogger();
+        mTransient =
+                Boolean.parse(
+                        mProps.getProperty(
+                                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY
+                                        + "."
+                                        + TransformationCatalog.TRANSIENT_KEY),
+                        false);
+        mLogger.log(
+                "Transformation Catalog Type used " + this.getDescription(),
+                LogManager.CONFIG_MESSAGE_LEVEL);
+    }
 
     /**
      * Modifies a Transformation Catalog Entry to handle file URL's. A file URL if specified for the
@@ -99,5 +139,15 @@ public abstract class Abstract implements TransformationCatalog {
         }
 
         return pfn;
+    }
+
+    /**
+     * Returns a boolean indicating whether the catalog instance is transient or not i.e. instance
+     * is only instantiated for planner internal purposes.
+     *
+     * @return boolean
+     */
+    public boolean isTransient() {
+        return this.mTransient;
     }
 }

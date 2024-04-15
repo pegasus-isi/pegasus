@@ -353,7 +353,8 @@ public class MainEngine extends Engine {
             sources.addAll(replicaBridge.getReplicaFileSources());
         }
         File tc = transformationCatalog == null ? null : transformationCatalog.getFileSource();
-        if (tc != null) {
+        if (tc != null && !transformationCatalog.isTransient()) {
+            // PM-1947 we don't transfer a file tc if it is transient
             sources.add(tc);
         }
         File sc = siteStore == null ? null : siteStore.getFileSource();
@@ -436,7 +437,9 @@ public class MainEngine extends Engine {
         }
 
         TransformationCatalog c = bag.getHandleToTransformationCatalog();
-        if (c != null) {
+        if (c != null && !c.isTransient()) {
+            // PM-1947 for transient tc (internal for planner purposes) we never
+            // write out to the properties file
             File catalogFile = c.getFileSource();
             if (catalogFile != null && catalogFile.exists()) {
                 p.setProperty(

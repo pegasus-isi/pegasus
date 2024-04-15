@@ -196,6 +196,12 @@ public class TransformationFactory {
             props.setProperty(
                     PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                     f.getAbsolutePath());
+            // PM-1947
+            props.setProperty(
+                    PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY
+                            + "."
+                            + TransformationCatalog.TRANSIENT_KEY,
+                    "true");
             b.add(PegasusBag.PEGASUS_PROPERTIES, props);
             return loadInstanceWithStores(b, dag, directoriesTXStore);
         }

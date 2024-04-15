@@ -28,7 +28,6 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -100,15 +99,6 @@ public class Directory extends Abstract implements TransformationCatalog {
      */
     public static final String FLAT_LFN_PROPERTY_KEY = "directory.flat.lfn";
 
-    /**
-     * The LogManager object which is used to log all the messages. It's values are set in the
-     * CPlanner (the main toolkit) class.
-     */
-    protected LogManager mLogger;
-
-    /** The handle to the properties object. */
-    private PegasusProperties mProps;
-
     /** The transformation store containing the transformations after parsing the file. */
     private TransformationStore mTCStore;
 
@@ -144,9 +134,8 @@ public class Directory extends Abstract implements TransformationCatalog {
      * @param bag the bag of Pegasus initialization objects.
      */
     public void initialize(PegasusBag bag) {
+        super.initialize(bag);
         mBag = bag;
-        mProps = bag.getPegasusProperties();
-        mLogger = bag.getLogger();
         mSysInfo = createSysInfo(bag);
         mFlushOnClose = false;
         modifyFileURL = true;
