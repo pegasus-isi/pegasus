@@ -50,6 +50,12 @@ public interface TransformationCatalog extends edu.isi.pegasus.planner.catalog.C
     public static final String VARIABLE_EXPANSION_KEY = "expand";
 
     /**
+     * the basename of the property key that indicates the transformation catalog loaded is
+     * transient
+     */
+    public static final String TRANSIENT_KEY = "transient";
+
+    /**
      * Initialize the implementation, and return an instance of the implementation.
      *
      * @param bag the bag of Pegasus initialization objects.

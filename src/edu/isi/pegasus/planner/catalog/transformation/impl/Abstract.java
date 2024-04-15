@@ -23,7 +23,6 @@ import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -68,7 +67,7 @@ public abstract class Abstract implements TransformationCatalog {
                         mProps.getProperty(
                                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY
                                         + "."
-                                        + TransformationFactory.TRANSIENT_PROPERTY_KEY),
+                                        + TransformationCatalog.TRANSIENT_KEY),
                         false);
         mLogger.log(
                 "Transformation Catalog Type used " + this.getDescription(),
