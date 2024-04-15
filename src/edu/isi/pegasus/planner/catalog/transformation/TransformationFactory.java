@@ -69,6 +69,12 @@ public class TransformationFactory {
     public static final String DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME = "tc.txt";
 
     /**
+     * the basename of the property key that indicates the transformation catalog loaded is
+     * transient
+     */
+    public static final String TRANSIENT_PROPERTY_KEY = "transient";
+
+    /**
      * Connects the interface with the transformation catalog implementation. The choice of backend
      * is configured through properties. This method uses default properties from the property
      * singleton.
@@ -196,6 +202,12 @@ public class TransformationFactory {
             props.setProperty(
                     PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                     f.getAbsolutePath());
+            // PM-1947
+            props.setProperty(
+                    PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY
+                            + "."
+                            + TransformationFactory.TRANSIENT_PROPERTY_KEY,
+                    "true");
             b.add(PegasusBag.PEGASUS_PROPERTIES, props);
             return loadInstanceWithStores(b, dag, directoriesTXStore);
         }
