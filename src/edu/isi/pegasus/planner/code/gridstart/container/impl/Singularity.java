@@ -104,7 +104,7 @@ public class Singularity extends AbstractContainer {
 
         // the script that sets up pegasus worker package and execute
         // user application
-        sb.append("/srv/").append(this.getJobLaunchScriptName(job)).append(" ");
+        sb.append("/srv/").append(this.getJobLaunchScriptName(job));
 
         return sb;
     }
