@@ -1057,6 +1057,16 @@ understands.
     | | Since : 5.0                              | | the container associated with this profile is executed            |
     | | Type :String                             |                                                                     |
     +--------------------------------------------+---------------------------------------------------------------------+
+    | | Profile Key: container.launcher          | | A wrapper around docker/singularity execution. Applies            |
+    | | Scope : TC, Workflow, Properties         | | only to containerized jobs. Useful, when the the user executable  |
+    | | Since : 5.1                              | | has to be launched via srun for example.                          |
+    | | Type :String                             |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
+    | | Profile Key: container.launcher.arguments| | indicates additional arguments that will be appended to           |
+    | | Scope : TC, Workflow, Properties         | | container wrapper. Comes into play only if a job has              |
+    | | Since : 5.1                              | | container.launcher profile  associated with it.                   |
+    | | Type :String                             |                                                                     |
+    +--------------------------------------------+---------------------------------------------------------------------+
     | | Profile Key: pegasus_lite_env_source     | | indicates a path to a setup script residing on the submit host    |
     | | Scope : Site Catalog                     | | that needs to be sourced in PegasusLite when running the job.     |
     | | Since : 5.0                              | | This profile should be associated with local site in the          |
