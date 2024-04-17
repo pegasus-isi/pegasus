@@ -252,38 +252,30 @@ HPC Clusters
 
 .. _glite:
 
-Submitting to Slurm, PBS, ...
------------------------------
+Installation Scenarios
+----------------------
 
-Goal
-~~~~
-
-This section describes the configuration required for Pegasus to
-use `HTCondor's batch type <https://htcondor.readthedocs.io/en/latest/grid-computing/grid-universe.html>`_
-to submit to Slurm, PBS, LSF or SGE batch systems. A HTCondor
-scheduler daemon will run on a cluster login node and hand of
-jobs to the batch scheduler.
+There are 3 scenarios to consider when deploying Pegasus and HTCondor on
+a HPC Cluster. The 3 scenarios, mainly differ in how HTCondor is installed,
+and launched. A pre-requisite for all the scenarios, is that Pegasus and
+HTCondor are installed on node, where it can interact with
+the local batch scheduler using the standard command line tools such as
+`squeue`, `sbatch` etc in case of SLURM
 
 
-Overview
-~~~~~~~~
+Root Install on Interactive Login Node
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The main requirement is that HTCondor and Pegasus need to be installed
-on one of the cluster login nodes so that it can interact with
-the local batch scheduler using the standard command line tools.
+This is the easiest, and recommended option to install Pegasus and HTCondor if
+your system administrator is OK with it. In this deployment
 
-.. note::
+* HTCondor and Pegasus are installed on the **interactive login node** from
+  a native package such as RPM or DEB.
+* HTCondor runs in multi user mode i.e. HTCondor daeamons run as root, and do
+  user switching when a user job has to be submitted. This is similar to what
+  local batch schedulers such as SLURM do.
+* All users on the cluster have access, since they can logon to the login node
 
-   Glite is the old name for BLAH (or BLAHP). BLAH binaries are
-   distributed with HTCondor as the "batch_gahp". For historical
-   reasons, we often use the term "glite", and you will see "glite" and
-   "batch_gahp" references in HTCondor, but all of them refer to the
-   same thing, which has been renamed BLAH.
-
-This guide covers Slurm, PBS, Moab, and SGE, but glite also works with
-other PBS-like batch systems, including LSF, Cobalt and others. If you
-need help configuring Pegasus and HTCondor to work with one of these
-systems, please contact pegasus-support@isi.edu.
 
 Example Installation on a RHEL 7 Login Node
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -316,6 +308,84 @@ Example:
 
 Once done, you can verify that HTcondor is enabled by running
 ``condor_q``, which should return an empty queue and no errors.
+
+Root Install on a Workflow Node
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some HPC centers have a notion of a worklfow submit node, which is similar to the
+interactive login node in that it has access to the local batch scheduler using the
+standard command line tools i.e. a user can submit a job to the cluster in the same manner
+they do on the login node.
+
+In this deployment
+
+* HTCondor and Pegasus are installed on the **interactive login node** from
+  a native package such as RPM or DEB.
+* HTCondor runs in multi user mode i.e. HTCondor daeamons run as root, and do
+  user switching when a user job has to be submitted. This is similar to what
+  local batch schedulers such as SLURM do.
+* The system administrator needs to ensure that the cluster users can login
+  to this node, to submit their workflows.
+* Also, any relevant file systems such as users home directories, scratch directories
+  and project directories might need to be mounted for user to access their
+  data and files.
+
+
+User Install on a Login Node
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+In this deployment,
+
+* you install HTCondor and Pegasus on the **login node** as a binary install in
+  user space.
+* HTCondor daeamons run per user, and need to be launched once per user submitting the
+  workflows.
+
+A note on Debian/Ubuntu based Glite installs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+HTCondor has an issue for the Slurm configuration when running on
+Ubuntu systems. Since in Ubuntu, ``/bin/sh`` does not link to
+``bash``, the Slurm script will fail when trying to run the
+``source`` command. A quick fix to this issue is to force the script
+to use ``bash``. In the ``bls_set_up_local_and_extra_args`` function
+of the ``blah_common_submit_functions.sh`` script, which is located
+in the same folder as the installation above, only add ``bash``
+before ``$bls_opt_tmp_req_file >> $bls_tmp_file 2> /dev/null`` line.
+
+Submitting to Slurm, PBS, ...
+-----------------------------
+
+Goal
+~~~~
+
+This section describes the configuration required for Pegasus to
+use `HTCondor's batch type <https://htcondor.readthedocs.io/en/latest/grid-computing/grid-universe.html>`_
+to submit to Slurm, PBS, LSF or SGE batch systems. A HTCondor
+scheduler daemon will run on a cluster login node and hand of
+jobs to the batch scheduler.
+
+
+Overview
+~~~~~~~~
+
+The main requirement is that HTCondor and Pegasus need to be installed
+on one of the cluster login nodes so that it can interact with
+the local batch scheduler using the standard command line tools.
+
+.. note::
+
+   Glite is the old name for BLAH (or BLAHP). BLAH binaries are
+   distributed with HTCondor as the "batch_gahp". For historical
+   reasons, we often use the term "glite", and you will see "glite" and
+   "batch_gahp" references in HTCondor, but all of them refer to the
+   same thing, which has been renamed BLAH.
+
+This guide covers Slurm, PBS, Moab, and SGE, but glite also works with
+other PBS-like batch systems, including LSF, Cobalt and others. If you
+need help configuring Pegasus and HTCondor to work with one of these
+systems, please contact pegasus-support@isi.edu.
 
 
 Configuring Workflows for Glite
@@ -425,17 +495,7 @@ which do not use kickstart as a launcher, we recommend using a
 wrapper scripts which `cd $PEGASUS_SCRATCH_DIR` before kicking
 of the actual code.
 
-A note on Debian/Ubuntu based Glite installs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-HTCondor has an issue for the Slurm configuration when running on
-Ubuntu systems. Since in Ubuntu, ``/bin/sh`` does not link to
-``bash``, the Slurm script will fail when trying to run the
-``source`` command. A quick fix to this issue is to force the script
-to use ``bash``. In the ``bls_set_up_local_and_extra_args`` function
-of the ``blah_common_submit_functions.sh`` script, which is located
-in the same folder as the installation above, only add ``bash``
-before ``$bls_opt_tmp_req_file >> $bls_tmp_file 2> /dev/null`` line.
 
 .. _titan:
 
