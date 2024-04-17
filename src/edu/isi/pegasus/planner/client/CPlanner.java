@@ -1994,7 +1994,7 @@ public class CPlanner extends Executable {
      */
     private boolean cleanupTransientTC(TransformationCatalog catalog) {
         boolean deleted = false;
-        if (catalog != null) {
+        if (catalog != null && catalog.isTransient()) {
             File source = catalog.getFileSource();
             if (source != null && source.exists() && source.canWrite()) {
                 source.delete();
