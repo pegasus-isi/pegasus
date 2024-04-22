@@ -241,7 +241,8 @@ HTCondor are installed on an interactive login node, where it can interact
 with the local batch scheduler using the standard command line tools such
 as `squeue`, `sbatch` etc in case of SLURM.
 
-The second scenario, *user space*, is disussed in the next section.
+The second scenario, *user space*, is disussed in the :ref:`hpc_userspace`
+section.
 
 The first scenario, is a system install. The system administrator
 installs Pegasus and HTCondor:
@@ -266,11 +267,14 @@ Step 1: Install HTCondor
 
 On the interactive login node, install HTCondor. We recommend using the
 RPM or Debian packages. Instructions can be found
-[here]<https://htcondor.readthedocs.io/en/latest/getting-htcondor/from-our-repositories.html>.
+`here <https://htcondor.readthedocs.io/en/latest/getting-htcondor/from-our-repositories.html>`_.
 On a RHEL based system:
+
+::
 
     $ dnf install condor condor-externals
 
+..
 
 Step 2: Configure HTCondor
 --------------------------
@@ -280,21 +284,28 @@ the queue part. Pegasus will submit jobs to the HTCondor queue, and the
 jobs will then be translated to Slurm jobs automatically. To enabled
 the `schedd` and enable HTCondor on a RHEL based system:
 
+::
+
     $ echo "DAEMON_LIST = MASTER, SCHEDD" >>/etc/condor/config.d/50-main.config
     $ systemctl start condor
     $ systemctl enable condor
 
+..
+
 Validate the HTCondor is running correcty by querying the queue:
+
+::
 
     $ condor_q
     Total for query: 0 jobs; 0 completed, 0 idle, 0 running
 
+..
 
 Step 3: Install Pegasus
 -----------------------
 
-Pegasus installation is described in the `installation`_ chapter.
-Again, we recommend that you use the RHEL/DEB `rhel`_ packages.
+Pegasus installation is described in the :ref:`installation` chapter.
+Again, we recommend that you use the RHEL/DEB :ref:`rhel` packages.
 
 
 Step 4: Configure the HTCondor/Slurm interface
@@ -317,8 +328,11 @@ This guide covers Slurm, PBS, Moab, and SGE, but glite also works with
 other PBS-like batch systems, including LSF, Cobalt and others. To
 complete the installation, run:
 
+::
+
     $ pegasus-configure-glite
 
+..
 
 Running Workflows under Glite
 -----------------------------
@@ -441,6 +455,7 @@ in the same folder as the installation above, only add ``bash``
 before ``$bls_opt_tmp_req_file >> $bls_tmp_file 2> /dev/null`` line.
 
 
+.. _hpc_userspace:
 
 HPC Clusters - User Install
 ===========================
@@ -448,7 +463,7 @@ HPC Clusters - User Install
 In this deployment,
 
 * you install HTCondor and Pegasus on the **login node** as a binary install in
-  user space.
+  user space (usually the $HOME directory)
 * HTCondor daeamons run per user, and need to be launched once per user submitting the
   workflows.
 
