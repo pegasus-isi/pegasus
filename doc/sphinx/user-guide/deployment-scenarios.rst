@@ -232,8 +232,6 @@ in their properties
 HPC Clusters - System Install
 =============================
 
-.. _glite:
-
 There are 2 scenarios to choose from when deploying Pegasus and HTCondor on
 a HPC Cluster. The scenarios mainly differ in how HTCondor is installed,
 and launched. A pre-requisite for all the scenarios, is that Pegasus and
@@ -266,15 +264,8 @@ Step 1: Install HTCondor
 ------------------------
 
 On the interactive login node, install HTCondor. We recommend using the
-RPM or Debian packages. Instructions can be found
-`here <https://htcondor.readthedocs.io/en/latest/getting-htcondor/from-our-repositories.html>`_.
-On a RHEL based system:
-
-::
-
-    $ dnf install condor condor-externals
-
-..
+RPM or Debian packages. Instructions can be found in the
+`HTCondor documentation <https://htcondor.readthedocs.io/en/latest/getting-htcondor/from-our-repositories.html>`_.
 
 Step 2: Configure HTCondor
 --------------------------
@@ -305,8 +296,10 @@ Step 3: Install Pegasus
 -----------------------
 
 Pegasus installation is described in the :ref:`installation` chapter.
-Again, we recommend that you use the RHEL/DEB :ref:`rhel` packages.
+Again, we recommend that you use the :ref:`rhel` packages.
 
+
+.. _glite:
 
 Step 4: Configure the HTCondor/Slurm interface
 ----------------------------------------------
@@ -466,6 +459,53 @@ In this deployment,
   user space (usually the $HOME directory)
 * HTCondor daeamons run per user, and need to be launched once per user submitting the
   workflows.
+
+First, install a "personal" HTCondor in your $HOME directory. Instructions can 
+be found `HTCondor user install documentation <https://htcondor.readthedocs.io/en/latest/getting-htcondor/install-linux-as-user.html>`_.
+Verify the install by running ``condor_q``:
+
+::
+
+    $ condor_q
+    -- Schedd: azaphrael.org : <184.60.25.78:34585?... @ 11/11/20 14:44:06
+    OWNER BATCH_NAME      SUBMITTED   DONE   RUN    IDLE   HOLD  TOTAL JOB_IDS
+
+    Total for query: 0 jobs; 0 completed, 0 removed, 0 idle, 0 running, 0 held, 0 suspended
+    Total for all users: 0 jobs; 0 completed, 0 removed, 0 idle, 0 running, 0 held, 0 suspended
+
+..
+
+Install Pegasus using the :ref:`tarballs`. Add the ``bin/`` directory to the ``$PATH``, and
+verify the install by running ``pegasus-version``. Example:
+
+::
+
+    $ export PATH=$HOME/pegasus/bin:$PATH
+    $ pegasus-version
+    5.1.0
+
+..
+
+Lastly, run the ``pegasus-configure-glite`` as described in the :ref:`glite` section above.
+
+To ensure that your environment is always consistent, it is recommended to add the following
+to your ``~/.bashrc``:
+
+::
+
+    . ~/condor/condor.sh
+    export PATH=$HOME/pegasus/bin:$PATH
+
+..
+
+.. note::
+
+    A common problem with user space installs is running into resource limits on 
+    the login node. Some sites set "ulimits" to make sure users are not using
+    up too much of the resources on the host. If HTCondor or you workflow
+    gets killed by the system, please examine the configured 
+    ulimits by running ``ulimits -a``, and discuss with your system
+    administrator.
 
 
 HPC Clusters - Specific Systems
