@@ -12,6 +12,7 @@ Welcome to Pegasus WMS's documentation!
     :maxdepth: 2
 
     user-guide/introduction.rst
+    user-guide/deployment-scenarios.rst
     user-guide/installation.rst
     user-guide/tutorial.rst
     user-guide/example-workflows.rst
@@ -19,7 +20,6 @@ Welcome to Pegasus WMS's documentation!
     user-guide/running-workflows.rst
     user-guide/submit-directory.rst
     user-guide/monitoring-debugging-stats.rst
-    user-guide/execution-environments.rst
     user-guide/containers.rst
     user-guide/data-transfers.rst
     user-guide/optimization.rst
