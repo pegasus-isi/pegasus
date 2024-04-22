@@ -374,53 +374,61 @@ File / Symlink (file:// , symlink://)
 
 .. _transfer-globus-online:
 
-Globus Online (go://)
+Globus Transfers (go://)
 ---------------------
 
-`Globus Online <http://globus.org>`__ is a transfer service with
+`Globus <http://globus.org>`__ offers a transfer service with
 features such as policy based connection management and automatic
-failure detection and recovery. Pegasus has limited the support for
-Globus Online transfers.
+failure detection and recovery. Pegasus has limited support for
+Globus transfers.
 
-If you want to use Globus Online in your workflow, all data has to be
-accessible via a Globus Online endpoint. You can not mix Globus Online
-endpoints with other protocols. For most users, this means they will
-have to create an endpoint for their submit host and probably modify
-both the replica catalog and Abstract Workflow generator so that all URLs in the
-workflow are for Globus Online endpoints.
+If you want to use Globus transfers in your workflow, all data has to be
+accessible via Globus collections. You cannot mix Globus 
+transfers with other protocols. For most users, this means they will
+have to create an endpoint for their submit host, expose their data via a collection
+and modify both the replica catalog and Abstract Workflow generator so that all 
+URLs in the workflow are referencing the relevant Globus collections.
 
-There are two levels of credentials required. One is for the workflow to
-use the Globus Online API, which is handled by OAuth tokens, provided by
-Globus Auth service. The second level is for the endpoints, which the
-user will have to manage via the Globus Online web interface. The
-required steps are:
+The Globus service offers high security assurance and as such users and applications
+are required to authenticate themselves.
+To support Globus transfers, Pegasus workflows use OAuth tokens, 
+provided by the Globus Auth service, in order to authenticate themselves and use the 
+Globus API to instantiate transfers between collections.
 
-1. Using *pegasus-globus-online-init*, provide authorization to Pegasus
-   and retrieve your transfer access tokens. By default Pegasus acquires
-   temporary tokens that expire within a few days. Using --permanent
-   option you can request refreshable tokens that last indefinetely (or
-   until access is revoked). With endpoints running Globus Connect Server(GCS)
-   versions 5.4+ data collections may require *data_access* consent to allow
-   to operate on them (e.g., transfers). Endpoints that support this usually
-   have their *host_id* set to None. To acquire *data_access* consent for
-   these endpoints under pegasus, you can use the --endpoints option and list
-   the *UUIDs* of the endpoints you would like to give pegasus consent for.
+Using *pegasus-globus-online-init*, a user can provide authorization to Pegasus
+to retrieve a valid transfer access tokens. By default Pegasus acquires
+temporary tokens that expire within a few days. Using --permanent
+option you can request refreshable tokens that last until the token's session expires
+(or until access is revoked).
+With endpoints running Globus Connect Server(GCS) versions 5.4+ data collections 
+may require *data_access* consent to allow to operate on them (e.g., transfers).
+To acquire *data_access* consent for these collections under pegasus, 
+you can use the --collections option and list the *UUIDs* of the collections
+you would like to give pegasus consent for.
+Additionally some endpoints have enabled the High Assurance setting which
+requires users and tokens to be authenticated under specific domains.
+For example, OLCF DTN is one of the endpoints requiring domain authentication.
+To acquire a domain authenticated token you can use the --domains option and list
+the domains required.
 
-2. In the Globus Online web interface, under Endpoints, find the
-   endpoints you need for the workflow, and activate them. Note that you
-   should activate them for the whole duration of the workflow or you
-   will have to regularly log in and re-activate the endpoints during
-   workflow execution.
+Let's assume that a workflow requires to transfer data between NERSC and OLCF.
+NERSC has enabled the *data_access* consent while OLCF has enabled the high assurance
+domain requirements. NERSC DTN's collection UUID is 9d6d994a-6d04-11e5-ba46-22000b92c6ec
+and  OLCF DTN's domain requirement is sso.ccs.ornl.gov.
+To request a valid token one can use the following invocation of *pegasus-globus-online-init*
+and follow the steps.
+*pegasus-globus-online-init --collections 9d6d994a-6d04-11e5-ba46-22000b92c6ec --domains sso.ccs.ornl.gov*.
+For domain authenticated tokens it is not advised to request a refreshable token with the
+-p option. The number of days the token can be used is dictated by the policies of the
+domain authentication. Endpoints, such as OLCF, require re-authentication of the token
+every few days. As a result, *pegasus-globus-online-init* should be invoked frequently
+to avoid transfer failures. 
 
-URLs for Globus Online endpoint data follows the following scheme:
-*go://[endpoint]/[path]*. For example, for a user with the Globus Online
-private endpoint *bob#researchdata* and a file
-*/home/bsmith/experiment/1.dat*, the URL would be:
-*go://bob#researchdata/home/bsmith/experiment/1.dat*
-
-Additionally you can use the UUIDs of the endpoints directly and not their
-Legacy Names. For example:
-*go://56569ec1-adn1-4785-a6c1-8524231c7a6d/home/bsmith/experiment/1.dat*
+URLs for data in Globus collections follow the scheme:
+*go://[collection_uuid]/[path]*. For example, a user named bsmith,
+that wants to use the NERSC DTN Globus collection to transfer a file
+with absolute path */global/homes/p/bsmith/1.dat*, the Globus URL would be:
+*go://9d6d994a-6d04-11e5-ba46-22000b92c6ec/home/bsmith/experiment/1.dat*
 
 
 .. _transfer-gridftp:
