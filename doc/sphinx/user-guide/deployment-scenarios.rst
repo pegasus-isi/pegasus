@@ -1,51 +1,43 @@
 .. _execution-environments:
 
-======================
-Execution Environments
-======================
+.. _deployment-scenarios:
 
-Pegasus supports a number of execution environments. An execution
-environment is a setup where jobs from a workflow are running.
+====================
+Deployment Scenarios
+====================
 
-Localhost
-=========
+This section covers a set of Pegasus deployment scenarios. Where you
+deploy and use Pegasus is closely related to where you want your jobs
+to execute. In some scenarios, Pegasus is deployed directly at the
+execution resources, and sometimes Pegasus is deployed on an access
+point which is separate from the execution environment. At the
+minimum, Pegasus needs to be colocated with a HTCondor install
+having the schedd subsystem enabled.
+   
 
-In this configuration, Pegasus schedules the jobs to run locally on the
-submit host. Running locally is a good approach for smaller workflows,
-testing workflows, and for demonstations such as the :ref:`tutorial`. 
-Pegasus supports two methods of local
-execution: local HTCondor pool, and shell planner. The former is
-preferred as the latter does not support all Pegasus' features (such as
-notifications).
+.. _hosted:
 
-Running on a local HTCondor pool is achieved by executing the workflow
-on site local (**--sites local** option to pegasus-plan). The site
-"local" is a reserved site in Pegasus and results in the jobs to run on
-the submit host in HTCondor universe local. The site catalog can be left
-very simple in this case:
+Hosted Pegasus Instances
+========================
 
-::
+ACCESS Pegasus
+--------------
 
-  pegasus: '5.0'
-  sites:
-  - name: local
-    directories:
-    - type: sharedScratch
-      path: /tmp/wf/work
-      fileServers:
-      - url: file:///tmp/wf/work
-        operation: all
-    - type: localStorage
-      path: /tmp/wf/storage
-      fileServers:
-      - url: file:///tmp/wf/storage
-        operation: all
+ACCESS Pegasus is a hosted environment, using Open OnDemand and Jupyter
+to provide a web based interface to workflow composition and execution.
+The system also includes tooling to provision resources from ACCESS HPC,
+HTC and cloud systems. ACCESS Pegasus is available to any user with an
+ACCESS account.
 
-The simplest execution environment does not involve HTCondor. Pegasus is
-capable of planning small workflows for local execution using a shell
-planner. Please refer to the ``share/pegasus/examples`` directory in
-your Pegasus installation, the shell planner's :ref:`documentation
-section <pegasus-plan-properties>`, or the tutorials, for details.
+  * `Overview <https://support.access-ci.org/tools/pegasus>`_
+  * `Documentation <https://xsedetoaccess.ccs.uky.edu/confluence/redirect/ACCESS+Pegasus.html>`_
+  * `Login <https://pegasus.access-ci.org/>`_
+
+OSG OSPool Access Points
+------------------------
+
+Pegasus is installed on most OSG OSPool access points. Please refer
+to the `OSPool Documentation <https://portal.osg-htc.org/documentation/>`_
 
 .. _condor-pool:
 
@@ -235,39 +227,24 @@ in their properties
    # pegasus properties
    pegasus.data.configuration    condorio
 
-.. _open-science-grid:
-
-Open Science Grid Using glideinWMS
-----------------------------------
-
-`glideinWMS <http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/>`__
-is a glidein system widely used on Open Science Grid. Running on top of
-glideinWMS is like running on a condor pool without a
-shared filesystem.
 
 
-
-HPC Clusters
-============
+HPC Clusters - System Install
+=============================
 
 .. _glite:
 
-Installation Scenarios
-----------------------
-
-There are 3 scenarios to consider when deploying Pegasus and HTCondor on
-a HPC Cluster. The 3 scenarios, mainly differ in how HTCondor is installed,
+There are 2 scenarios to choose from when deploying Pegasus and HTCondor on
+a HPC Cluster. The scenarios mainly differ in how HTCondor is installed,
 and launched. A pre-requisite for all the scenarios, is that Pegasus and
-HTCondor are installed on node, where it can interact with
-the local batch scheduler using the standard command line tools such as
-`squeue`, `sbatch` etc in case of SLURM
+HTCondor are installed on an interactive login node, where it can interact
+with the local batch scheduler using the standard command line tools such
+as `squeue`, `sbatch` etc in case of SLURM.
 
+The second scenario, *user space*, is disussed in the next section.
 
-Root Install on Interactive Login Node
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This is the easiest, and recommended option to install Pegasus and HTCondor if
-your system administrator is OK with it. In this deployment
+The first scenario, is a system install. The system administrator
+installs Pegasus and HTCondor:
 
 * HTCondor and Pegasus are installed on the **interactive login node** from
   a native package such as RPM or DEB.
@@ -276,103 +253,57 @@ your system administrator is OK with it. In this deployment
   local batch schedulers such as SLURM do.
 * All users on the cluster have access, since they can logon to the login node
 
+Note that the interactice login node can be an existing login node on
+your cluster, or a new login node set up to be a dedicated workflow
+management node. The system administrator needs to ensure that the
+cluster users can login to this node, and any relevant file systems such
+as users home directories, scratch directories and project directories
+mounted.
 
-Example Installation on a RHEL 7 Login Node
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To provide an idea of what needs to be installed and configured, here
-are the steps for a RHEL 7 based login node. First install HTCondor
-and Pegasus, and configure HTCondor to only run the scheduler.
+Step 1: Install HTCondor
+------------------------
 
-You also need to modifiy the HTCondor glite installation that
-will be used to submit jobs to the local scheduler. To do this, run the
-``pegasus-configure-glite`` command. This command will install all the
-required scripts to map Pegasus profiles to batch-system specific job
-attributes.
+On the interactive login node, install HTCondor. We recommend using the
+RPM or Debian packages. Instructions can be found
+[here]<https://htcondor.readthedocs.io/en/latest/getting-htcondor/from-our-repositories.html>.
+On a RHEL based system:
 
-Example:
+    $ dnf install condor condor-externals
 
-::
 
-    $ wget https://research.cs.wisc.edu/htcondor/yum/RPM-GPG-KEY-HTCondor
-    $ rpm --import RPM-GPG-KEY-HTCondor
-    $ cd /etc/yum.repos.d
-    $ wget https://research.cs.wisc.edu/htcondor/yum/repo.d/htcondor-stable-rhel7.repo
-    $ yum install condor condor-externals
+Step 2: Configure HTCondor
+--------------------------
+
+The `schedd` subsystem of HTCondor needs to be enabled. This provides
+the queue part. Pegasus will submit jobs to the HTCondor queue, and the
+jobs will then be translated to Slurm jobs automatically. To enabled
+the `schedd` and enable HTCondor on a RHEL based system:
+
     $ echo "DAEMON_LIST = MASTER, SCHEDD" >>/etc/condor/config.d/50-main.config
     $ systemctl start condor
     $ systemctl enable condor
-    $ wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/wms/download/rhel/7/pegasus.repo
-    $ yum install pegasus
-    $ pegasus-configure-glite
 
-Once done, you can verify that HTcondor is enabled by running
-``condor_q``, which should return an empty queue and no errors.
+Validate the HTCondor is running correcty by querying the queue:
 
-Root Install on a Workflow Node
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Some HPC centers have a notion of a worklfow submit node, which is similar to the
-interactive login node in that it has access to the local batch scheduler using the
-standard command line tools i.e. a user can submit a job to the cluster in the same manner
-they do on the login node.
-
-In this deployment
-
-* HTCondor and Pegasus are installed on the **interactive login node** from
-  a native package such as RPM or DEB.
-* HTCondor runs in multi user mode i.e. HTCondor daeamons run as root, and do
-  user switching when a user job has to be submitted. This is similar to what
-  local batch schedulers such as SLURM do.
-* The system administrator needs to ensure that the cluster users can login
-  to this node, to submit their workflows.
-* Also, any relevant file systems such as users home directories, scratch directories
-  and project directories might need to be mounted for user to access their
-  data and files.
+    $ condor_q
+    Total for query: 0 jobs; 0 completed, 0 idle, 0 running
 
 
-User Install on a Login Node
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3: Install Pegasus
+-----------------------
+
+Pegasus installation is described in the `installation`_ chapter.
+Again, we recommend that you use the RHEL/DEB `rhel`_ packages.
 
 
-In this deployment,
+Step 4: Configure the HTCondor/Slurm interface
+----------------------------------------------
 
-* you install HTCondor and Pegasus on the **login node** as a binary install in
-  user space.
-* HTCondor daeamons run per user, and need to be launched once per user submitting the
-  workflows.
-
-A note on Debian/Ubuntu based Glite installs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-HTCondor has an issue for the Slurm configuration when running on
-Ubuntu systems. Since in Ubuntu, ``/bin/sh`` does not link to
-``bash``, the Slurm script will fail when trying to run the
-``source`` command. A quick fix to this issue is to force the script
-to use ``bash``. In the ``bls_set_up_local_and_extra_args`` function
-of the ``blah_common_submit_functions.sh`` script, which is located
-in the same folder as the installation above, only add ``bash``
-before ``$bls_opt_tmp_req_file >> $bls_tmp_file 2> /dev/null`` line.
-
-Submitting to Slurm, PBS, ...
------------------------------
-
-Goal
-~~~~
-
-This section describes the configuration required for Pegasus to
-use `HTCondor's batch type <https://htcondor.readthedocs.io/en/latest/grid-computing/grid-universe.html>`_
-to submit to Slurm, PBS, LSF or SGE batch systems. A HTCondor
-scheduler daemon will run on a cluster login node and hand of
-jobs to the batch scheduler.
-
-
-Overview
-~~~~~~~~
-
-The main requirement is that HTCondor and Pegasus need to be installed
-on one of the cluster login nodes so that it can interact with
-the local batch scheduler using the standard command line tools.
+An important step is to finish the install by configuring the
+HTCondor/Slurm interface using the ``pegasus-configure-glite`` command.
+This command will install all the required scripts to map Pegasus
+profiles to batch-system specific job attributes.
 
 .. note::
 
@@ -383,13 +314,14 @@ the local batch scheduler using the standard command line tools.
    same thing, which has been renamed BLAH.
 
 This guide covers Slurm, PBS, Moab, and SGE, but glite also works with
-other PBS-like batch systems, including LSF, Cobalt and others. If you
-need help configuring Pegasus and HTCondor to work with one of these
-systems, please contact pegasus-support@isi.edu.
+other PBS-like batch systems, including LSF, Cobalt and others. To
+complete the installation, run:
+
+    $ pegasus-configure-glite
 
 
-Configuring Workflows for Glite
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running Workflows under Glite
+-----------------------------
 
 In order to configure a workflow to use glite you need to create an
 entry in your site catalog for the cluster and set the following
@@ -484,7 +416,7 @@ The job requirements are constructed based on the following profiles:
    ======================= ============================= ====================== ================== ================ =================== ================= =====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
 
 Specifying a remote directory for the job
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 gLite/blahp does not follow the ``remote_initialdir`` or ``initialdir``
 classad directives. Therefore, all the jobs that have the ``glite``
@@ -496,6 +428,33 @@ wrapper scripts which `cd $PEGASUS_SCRATCH_DIR` before kicking
 of the actual code.
 
 
+A note on Debian/Ubuntu based Glite installs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+HTCondor has an issue for the Slurm configuration when running on
+Ubuntu systems. Since in Ubuntu, ``/bin/sh`` does not link to
+``bash``, the Slurm script will fail when trying to run the
+``source`` command. A quick fix to this issue is to force the script
+to use ``bash``. In the ``bls_set_up_local_and_extra_args`` function
+of the ``blah_common_submit_functions.sh`` script, which is located
+in the same folder as the installation above, only add ``bash``
+before ``$bls_opt_tmp_req_file >> $bls_tmp_file 2> /dev/null`` line.
+
+
+
+HPC Clusters - User Install
+===========================
+
+In this deployment,
+
+* you install HTCondor and Pegasus on the **login node** as a binary install in
+  user space.
+* HTCondor daeamons run per user, and need to be launched once per user submitting the
+  workflows.
+
+
+HPC Clusters - Specific Systems
+===============================
 
 .. _titan:
 
@@ -574,8 +533,8 @@ and an example site calatog entry looks like this:
    submissions.
 
 
-Remote Clusters
-===============
+Remote HPC Clusters
+===================
 
 
 .. _bosco:
@@ -679,9 +638,6 @@ An example site catalog entry for a BOSCO site looks like this:
         runtime: '300'
 
 ..
-
-
-
 
 
 .. _pyglidein:
@@ -1515,5 +1471,45 @@ you have the following properties in your configuration file
    # ARN of the job queue that you create using pegasus-aws-batch
    pegasus.aws.batch.job_queue=pegasus-awsbatch-example-job-queue
 
+
+Localhost
+=========
+
+In this configuration, Pegasus schedules the jobs to run locally on the
+submit host. Running locally is a good approach for smaller workflows,
+testing workflows, and for demonstations such as the :ref:`tutorial`. 
+Pegasus supports two methods of local
+execution: local HTCondor pool, and shell planner. The former is
+preferred as the latter does not support all Pegasus' features (such as
+notifications).
+
+Running on a local HTCondor pool is achieved by executing the workflow
+on site local (**--sites local** option to pegasus-plan). The site
+"local" is a reserved site in Pegasus and results in the jobs to run on
+the submit host in HTCondor universe local. The site catalog can be left
+very simple in this case:
+
+::
+
+  pegasus: '5.0'
+  sites:
+  - name: local
+    directories:
+    - type: sharedScratch
+      path: /tmp/wf/work
+      fileServers:
+      - url: file:///tmp/wf/work
+        operation: all
+    - type: localStorage
+      path: /tmp/wf/storage
+      fileServers:
+      - url: file:///tmp/wf/storage
+        operation: all
+
+The simplest execution environment does not involve HTCondor. Pegasus is
+capable of planning small workflows for local execution using a shell
+planner. Please refer to the ``share/pegasus/examples`` directory in
+your Pegasus installation, the shell planner's :ref:`documentation
+section <pegasus-plan-properties>`, or the tutorials, for details.
 
 
