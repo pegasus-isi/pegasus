@@ -4,7 +4,7 @@
 pegasus-globus-online
 =====================
 
-Interfaces with Globus Online for managed transfers.
+Interfaces with Globus for managed transfers.
 ::
 
       pegasus-globus-online [--mkdir]
@@ -19,11 +19,9 @@ Description
 ===========
 
 **pegasus-globus-online** takes a JSON input from the pegasus-transfer
-tool and executes the list by interacting with the Globus Online
-service.
+tool and executes the list by interacting with the Globus service.
 
-It assumes that the endpoints already have been activated using the web
-interface. To authenticate with Globus Online, OAuth tokens must be
+To authenticate with Globus, OAuth tokens must be
 provided inside the JSON that defines the operation. Tokens can be
 initialized with **pegasus-globus-online-init** tool.
 
