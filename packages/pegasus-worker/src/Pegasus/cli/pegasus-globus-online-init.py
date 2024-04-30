@@ -79,7 +79,8 @@ else:
     client.oauth2_start_flow(requested_scopes=pegasus_scopes)
 
 authorize_url = client.oauth2_get_authorize_url(
-    session_required_single_domain=required_domains
+    session_required_single_domain=required_domains,
+    prompt='login'
 )
 print("Please go to this URL and login: {}".format(authorize_url))
 
