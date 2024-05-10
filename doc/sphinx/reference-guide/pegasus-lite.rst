@@ -46,6 +46,58 @@ it performs the following actions:
    If you are using containers for your workflow, then Steps 3-6
    will occur inside the container.
 
+.. _worker-node-directory-pegasuslite:
+
+Setting the directory on the local filesystem for the job
+=========================================================
+
+By default, PegasusLite discovers the best run-time directory based on
+space requirements and creates the directory on the local filesystem
+of the worker node to execute the job. If you want to specify a
+particular directory where job should run in via PegasusLite you can
+
+* specify in the Site Catalog for the compute site where the PegasusLite
+  job will run, a Directory of type LOCAL_SCRATCH . For example
+
+  .. tabs::
+
+    .. code-tab:: python generate_sc.py
+
+        from Pegasus.api import *
+
+        shared_scratch_dir = "/shared/scratch")
+        local_scratch_dir = "/local/scratch")
+        compute = Site("compute").add_directories(
+            Directory(
+                Directory.SHARED_SCRATCH, shared_scratch_dir, shared_file_system=True
+            ).add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
+            Directory(Directory.LOCAL_SCRATCH, local_scratch_dir).add_file_servers(
+                FileServer("file://" + local_scratch_dir, Operation.ALL)
+            ),
+        )
+
+
+    .. code-tab:: yaml YAML Site entry
+
+        pegasus: '5.0'
+
+        sites:
+        - name: compute
+        directories:
+            - type: sharedScratch
+              path: /shared/scratch
+              sharedFileSystem: true
+              fileServers:
+              - url: file:///shared/scratch"
+                operation: all
+            - type: localScratch
+              path: /local/scratch
+              sharedFileSystem: false
+              fileServers:
+              - url: file:///local/scratch
+                operation: all
+
+
 .. _source-env-in-pegasuslite:
 
 Setting the environment in PegasusLite for your job
