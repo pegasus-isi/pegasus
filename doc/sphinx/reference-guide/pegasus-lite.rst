@@ -57,7 +57,9 @@ of the worker node to execute the job. If you want to specify a
 particular directory where job should run in via PegasusLite you can
 
 * specify in the Site Catalog for the compute site where the PegasusLite
-  job will run, a Directory of type LOCAL_SCRATCH . For example
+  job will run, a Directory of type LOCAL_SCRATCH . This internally, ensures
+  that in the generated PegasusLite script PEGASUS_WN_TMP environment variable
+  is set to the localScratch directory specified. For example
 
   .. tabs::
 

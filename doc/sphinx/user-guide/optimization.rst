@@ -1626,7 +1626,7 @@ are running (each level of nesting produces another DAGMan process) .
 The figure below illustrates an example with recursion 2 levels deep.
 
 .. figure:: ../images/recursion_in_hierarchal_workflows.png
-   :alt: Recursion in Hierarchal Workflows
+   :alt: Recursion in Hierarchical Workflows
 
    Recursion in Hierarchal Workflows
 
@@ -1637,6 +1637,45 @@ illustrated below.
    :alt: Execution Time-line for Hierarchal Workflows
 
    Execution Time-line for Hierarchal Workflows
+
+Hierarchical Workflows with Globus Online Endpoint on Submit Host
+-----------------------------------------------------------------
+
+If your workflows are using Globus Online for data transfers; then
+you might find yourself setting up Globus Online endpoint for the
+submit host (local site) and also describing your Site Catalog
+accordingly.
+
+
+.. code-block:: yaml
+
+    x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '05-01-24T16:11:43Z'}
+    pegasus: 5.0.4
+    sites:
+    - name: local
+      arch: x86_64
+      os.type: linux
+      os.release: rhel
+      os.version: '7'
+      directories:
+      - type: sharedScratch
+        path: /local-site/scratch
+        sharedFileSystem: true
+        fileServers:
+        - {url: 'go://565ssssxxxx/local-site/scratch', operation: all}
+
+
+However, this configuration can cause errors with hierarchical workflows, with
+the prescript for the sub workflow failing since it tried to do a transfer
+between GO endpoint and a file URL; which is not supported by Globus Online.
+
+To get around this, you need to ensure
+* the *sharedFileSystem* attribute for the sharedScratch directory for the
+  local site is set to True, as in the snippet above.
+
+
+* if you have a compute job in the workflow that generates the abstract workflow for
+
 
 
 .. _data-transfers:

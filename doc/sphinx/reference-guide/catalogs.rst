@@ -896,7 +896,7 @@ associated with the compute sites against which the workflow is being planned.
 Pegasus will create the mappings the transformation catalog entries with the
 following values internally
 
-:: yaml
+.. code-block:: yaml
 
         x-pegasus: {apiLang: python, createdBy: vahi, createdOn: '07-23-20T16:43:51Z'}
         pegasus: '5.0'
