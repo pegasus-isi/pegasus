@@ -156,3 +156,37 @@ with your job
 #. **gridstart.launcher.arguments**: Specifies the arguments to pass to
    the launcher. In the above example, value for this would be
    -n 1 -a 1 -c 42 -g 0 .
+
+.. _separate-containterized-compute-job:
+
+Specify Wrapper to Launch a Containerized Compute Job in PegasusLite
+=====================================================================
+
+When running workflows with containerized jobs such as `Tensor Flow`, `PyTorch`
+or even Open MPI jobs via PegasusLite, one may encounter a situation where the actual
+*docker* or *singularity* invocation has to be prefixed with srun for example,
+to allow for a job to detect and use the multiple cores on a node.
+
+For example; an invocation of a containerized compute job in PegasusLite would
+need to look like this
+
+..
+
+    srun --kill-on-bad-exit $singularity_exec exec --no-home --bind $PWD:/srv --bind /scratch image.sif /srv/job-cont.sh
+
+
+The above cannot be achieved by specifying a gridstart launcher, as mentioning
+the launcher for the job will wrap *pegasus-kickstart* invocation that happens
+inside the container as part of the /srv/job-cont.sh. In this scenario, we want the wrapper
+(srun) to run on the HOST OS.
+
+To get this behavior you can specify the following Pegasus Profile keys
+with your job
+
+#. **container.launcher** : Specifies the launcher executable to use to
+   launch the singularity|docker invocation. In the above example value
+   for this would be srun.
+
+#. **container.launcher.arguments**: Specifies the arguments to pass to
+   the launcher. In the above example, value for this would be
+   --kill-on-bad-exit .

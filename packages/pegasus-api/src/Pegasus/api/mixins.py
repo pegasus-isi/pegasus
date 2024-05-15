@@ -489,6 +489,8 @@ class ProfileMixin:
         project="project",
         boto_config="BOTO_CONFIG",
         container_arguments="container.arguments",
+        container_launcher="container.launcher",
+        container_launcher_arguments="container.launcher.arguments",
         label="label",
         pegasus_lite_env_source="pegasus_lite_env_source",
         SSH_PRIVATE_KEY="SSH_PRIVATE_KEY",
@@ -541,6 +543,8 @@ class ProfileMixin:
         project: str = None,
         boto_config: str = None,
         container_arguments: str = None,
+        container_launcher: str = None,
+        container_launcher_arguments: str = None,
         label: str = None,
         pegasus_lite_env_source: Union[str, Path] = None,
         SSH_PRIVATE_KEY: str = None,
@@ -636,6 +640,10 @@ class ProfileMixin:
         :type boto_config: str, optional
         :param container_arguments: additional cli arguments that will be added to the :code:`docker container run` or :code:`singularity exec` command
         :type container_arguments: str, optional
+        :param container_launcher: wrapper to launch the container invocation in PegasusLite for running the container e.g.  :code:`srun singularity exec` command
+        :type container_launcher: str, optional
+        :param container_launcher_arguments: additional cli arguments that will be added to the wrapper to launch the container invocation in PegasusLite for running the container e.g.  :code:`srun singularity exec` command
+        :type container_launcher_arguments: str, optional
         :param label: associate a label to a job; used for label based clustering
         :type label: str, optional
         :param pegasus_lite_env_source: specify a path on the submit host to indicate the file that needs to be sourced, defaults to None

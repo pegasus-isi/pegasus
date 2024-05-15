@@ -118,6 +118,12 @@ public class Transfer implements SLS {
     /** The dial for integrity checking */
     protected PegasusProperties.INTEGRITY_DIAL mIntegrityDial;
 
+    /**
+     * A boolean tracking whether transfers should be on the HOST OS or not for jobs running inside
+     * a container
+     */
+    protected boolean mTransfersOnHostOS;
+
     /** The default constructor. */
     public Transfer() {}
 
@@ -137,6 +143,7 @@ public class Transfer implements SLS {
         mPlannerCache = bag.getHandleToPlannerCache();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mIntegrityDial = mProps.getIntegrityDial();
+        mTransfersOnHostOS = mProps.containerTransfersOnHOSTOS();
     }
 
     /**
@@ -287,7 +294,7 @@ public class Transfer implements SLS {
             return null;
         }
 
-        boolean symlinkingEnabledForJob = symlinkingEnabled(job, this.mUseSymLinks);
+        boolean symlinkingEnabledForJob = Transfer.this.symlinkingEnabled(job, this.mUseSymLinks);
         Set files = job.getInputFiles();
 
         //      To handle for null conditions?
@@ -361,10 +368,8 @@ public class Transfer implements SLS {
                 // same site
                 // where job and also the compute site has a shared filesystem access OR
                 // staging site is local and the compute site is visible to the local site
-                boolean useFileURLAsSource =
-                        (stagingSite.equals(computeSite) && computeSiteEntry.hasSharedFileSystem())
-                                || (stagingSite.equals("local")
-                                        && computeSiteEntry.isVisibleToLocalSite());
+                boolean useFileURLAsSource = this.useFileURLAsSource(computeSiteEntry, stagingSite);
+
                 if (useFileURLAsSource) {
                     // construct the source URL as a file url
                     url.append(PegasusURL.FILE_URL_SCHEME)
@@ -387,19 +392,8 @@ public class Transfer implements SLS {
                 }
 
                 // construct the location with respect to the staging site
-                if (symlinkingEnabledForJob && useFileURLAsSource) {
-                    symlink = true;
-                    if (pf.isExecutable()) {
-                        // PM-734 for executable files we can have the source url as file url
-                        // but we cannot have the destination URL as symlink://
-                        // as we want to do chmod on the local copy on the worker node
-                        symlink = false;
-                    }
-                    if (pf.isCheckpointFile()) {
-                        // we never symlink checkpoint files
-                        symlink = false;
-                    }
-                }
+                symlink = this.symlinkingEnabled(pf, symlinkingEnabledForJob, useFileURLAsSource);
+
                 // PM-833 append the relative staging site add on directory
                 url.append(File.separator)
                         .append(mStagingMapper.getRelativeDirectory(stagingSite, lfn));
@@ -419,80 +413,36 @@ public class Transfer implements SLS {
                     sources.add((ReplicaCatalogEntry) cacheLocation.clone());
 
                     symlink =
-                            (symlinkingEnabledForJob
-                                    && // specified in configuration
-                                    !pf.isCheckpointFile()
-                                    && // can only do symlinks for data files . not checkpoint files
-                                    !pf.isExecutable()
-                                    && // can only do symlinks for data files . not executables
+                            this.symlinkingEnabled(
+                                    pf,
+                                    symlinkingEnabledForJob,
+                                    // source URL logically on the same site where job is to be run
+                                    // AND
+                                    // source URL is a file URL
                                     cacheLocation.getResourceHandle().equals(job.getSiteHandle())
-                                    && // source URL logically on the same site where job is to be
-                                    // run
-                                    url.toString()
-                                            .startsWith(
-                                                    PegasusURL.FILE_URL_SCHEME)); // source URL is a
-                    // file URL
+                                            && url.toString()
+                                                    .startsWith(PegasusURL.FILE_URL_SCHEME));
                 }
             }
 
             if (containerLFN != null) {
                 if (symlink) {
-                    // PM-1197 special handling for the case where job is to be
-                    // launched in a container.Normally, we can only symlink the
-                    // container image.
-                    if (!pf.getLFN().equals(containerLFN)) {
-                        symlink = false;
-                        // PM-1298 check if source file directory is mounted
-                        for (ReplicaCatalogEntry source : sources) {
-                            String sourceURL = source.getPFN();
-                            String replacedURL = c.getPathInContainer(sourceURL);
-                            if (replacedURL != null) {
-                                symlink = true;
-                                source.setPFN(replacedURL);
-                                // we don't want pegasus-transfer to fail in PegasusLite
-                                // on the missing source path that is only visible in the container
-                                ft.setVerifySymlinkSource(false);
-                                mLogger.log(
-                                        constructMessage(
-                                                job,
-                                                lfn,
-                                                "Replaced source URL on host "
-                                                        + sourceURL
-                                                        + " with path in the container "
-                                                        + source.getPFN()),
-                                        LogManager.DEBUG_MESSAGE_LEVEL);
-                            }
-                        }
+                    // the file is candidate for symlinking
+                    // however extra checks when a jobs runs inside a container
+                    symlink = symlinkingEnabled(c, pf, sources, job.getID());
+                    if (symlink && !lfn.equals(containerLFN)) {
+                        // we don't want pegasus-transfer to fail in PegasusLite
+                        // on the missing source path that is only visible in the container
+                        ft.setVerifySymlinkSource(false);
                     }
+
                 } else {
                     // PM-1893 when job is launched inside a container, we
                     // want to make sure the file URL's are mounted correctly
                     // for files other than the container image itself
                     if (!pf.getLFN().equals(containerLFN)) {
                         for (ReplicaCatalogEntry source : sources) {
-                            String sourceURL = source.getPFN();
-                            if (sourceURL.startsWith(PegasusURL.FILE_URL_SCHEME)) {
-                                String replacedURL = c.getPathInContainer(sourceURL);
-                                if (replacedURL != null) {
-                                    source.setPFN(replacedURL);
-                                    mLogger.log(
-                                            constructMessage(
-                                                    job,
-                                                    lfn,
-                                                    "Replaced source URL on host "
-                                                            + sourceURL
-                                                            + " with path in the container "
-                                                            + source.getPFN()),
-                                            LogManager.DEBUG_MESSAGE_LEVEL);
-                                } else {
-                                    throw new RuntimeException(
-                                            constructMessage(
-                                                    job,
-                                                    lfn,
-                                                    "source url directory is not mounted in the container "
-                                                            + sourceURL));
-                                }
-                            }
+                            updateSourceFileURLForContainerizedJob(c, pf, source, job.getID());
                         }
                     }
                 }
@@ -859,6 +809,35 @@ public class Transfer implements SLS {
     }
 
     /**
+     * Returns a boolean indicating whether a particular file for a job can be symlinked or not.
+     *
+     * @param pf the PegasusFile object for the file
+     * @param symlinkingEnabledForJob whether symlinking is enabled for job
+     * @param useFileURLAsSource whether the source URL for transfer being created is a file URL
+     * @return boolean
+     */
+    protected boolean symlinkingEnabled(
+            PegasusFile pf, boolean symlinkingEnabledForJob, boolean useFileURLAsSource) {
+        boolean symlink = false;
+        // construct the location with respect to the staging site
+        if (symlinkingEnabledForJob && useFileURLAsSource) {
+            symlink = true;
+            if (pf.isExecutable()) {
+                // PM-734 for executable files we can have the source url as file url
+                // but we cannot have the destination URL as symlink://
+                // as we want to do chmod on the local copy on the worker node
+                symlink = false;
+            }
+            if (pf.isCheckpointFile()) {
+                // we never symlink checkpoint files
+                symlink = false;
+            }
+        }
+
+        return symlink;
+    }
+
+    /**
      * A convenience method that indicates whether to enable symlinking for a job or not
      *
      * @param job the job for which symlinking needs to be enabled
@@ -876,6 +855,119 @@ public class Transfer implements SLS {
     }
 
     /**
+     * Returns a boolean indicating whether a source URL on a staging site can be prefixed with file
+     * URL scheme when the transfer has to happen to a compute site.
+     *
+     * <p>The source URL can be a file URL if source URL logically on the same site where job and
+     * also the compute site has a shared filesystem access OR staging site is local and the compute
+     * site is visible to the local site
+     *
+     * @param computeSiteEntry
+     * @param stagingSite
+     * @return boolean
+     */
+    protected boolean useFileURLAsSource(SiteCatalogEntry computeSiteEntry, String stagingSite) {
+        // PM-1787 PM-1789 the source URL can be a file URL if source URL logically on the
+        // same site where job and also the compute site has a shared filesystem access
+        // OR
+        // staging site is local and the compute site is visible to the local site
+        return (stagingSite.equals(computeSiteEntry.getSiteHandle())
+                        && computeSiteEntry.hasSharedFileSystem())
+                || (stagingSite.equals("local") && computeSiteEntry.isVisibleToLocalSite());
+    }
+
+    /**
+     * Updates the source URL's for a file, in order for it to be symlinked when a job is run inside
+     * the container, and also returns a boolean indicating whether the file can be symlinked or
+     * not.
+     *
+     * @param c the container
+     * @param pf the PegasusFile object
+     * @param sources the sources from where it has to be retrieved
+     * @param jobID the id of the job
+     * @return boolean
+     */
+    protected boolean symlinkingEnabled(
+            Container c, PegasusFile pf, Collection<ReplicaCatalogEntry> sources, String jobID) {
+        if (c == null) {
+            throw new IllegalArgumentException("Container cannot be null");
+        }
+        boolean symlink = true;
+        String containerLFN = c.getLFN();
+        String lfn = pf.getLFN();
+        // PM-1197 special handling for the case where job is to be
+        // launched in a container.Normally, we can only symlink the
+        // container image.
+        if (!lfn.equals(containerLFN)) {
+            symlink = false;
+            // PM-1298 check if source file directory is mounted
+            for (ReplicaCatalogEntry source : sources) {
+                String sourceURL = source.getPFN();
+                String replacedURL = c.getPathInContainer(sourceURL);
+                if (replacedURL != null) {
+                    symlink = true;
+                    source.setPFN(replacedURL);
+
+                    mLogger.log(
+                            constructMessage(
+                                    jobID,
+                                    lfn,
+                                    "Replaced source URL on host "
+                                            + sourceURL
+                                            + " with path in the container "
+                                            + source.getPFN()),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                }
+            }
+        }
+        return symlink;
+    }
+
+    /**
+     * Updates a file source URL with the path in the container taking into account the mount points
+     *
+     * @param c the container
+     * @param pf the PegasusFile object
+     * @param source the source
+     * @param jobID the job ID
+     */
+    protected void updateSourceFileURLForContainerizedJob(
+            Container c, PegasusFile pf, ReplicaCatalogEntry source, String jobID) {
+        String sourceURL = source.getPFN();
+        String lfn = pf.getLFN();
+
+        if (mTransfersOnHostOS) {
+            // PM-1942 if transfers for a job happen on the host OS
+            // then no need to update the file URL's as we are doing
+            // just a copy
+            return;
+        }
+
+        if (sourceURL.startsWith(PegasusURL.FILE_URL_SCHEME)) {
+            String replacedURL = c.getPathInContainer(sourceURL);
+            if (replacedURL != null) {
+                source.setPFN(replacedURL);
+                mLogger.log(
+                        constructMessage(
+                                jobID,
+                                lfn,
+                                "Replaced source URL on host "
+                                        + sourceURL
+                                        + " with path in the container "
+                                        + source.getPFN()),
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            } else {
+                throw new RuntimeException(
+                        constructMessage(
+                                jobID,
+                                lfn,
+                                "source url directory is not mounted in the container "
+                                        + sourceURL));
+            }
+        }
+    }
+
+    /**
      * Helper message to construct a log message
      *
      * @param job
@@ -884,8 +976,20 @@ public class Transfer implements SLS {
      * @return
      */
     private String constructMessage(Job job, String lfn, String message) {
+        return this.constructMessage(job.getID(), lfn, message);
+    }
+
+    /**
+     * Helper message to construct a log message
+     *
+     * @param jobID
+     * @param lfn
+     * @param message
+     * @return
+     */
+    private String constructMessage(String jobID, String lfn, String message) {
         StringBuilder sb = new StringBuilder();
-        sb.append("For").append(" ").append("(").append(job.getID());
+        sb.append("For").append(" ").append("(").append(jobID);
         if (lfn != null) {
             sb.append(",").append(lfn).append(")");
         }
