@@ -79,7 +79,9 @@ import org.junit.runners.Suite;
     edu.isi.pegasus.planner.dax.ADAGTest.class,
     edu.isi.pegasus.planner.transfer.generator.StageOutTest.class,
     edu.isi.pegasus.planner.transfer.generator.StageInTest.class,
-    edu.isi.pegasus.planner.transfer.sls.TransferTest.class,
+    edu.isi.pegasus.planner.transfer.sls.TransferTestContainer.class,
+    edu.isi.pegasus.planner.transfer.sls.TransferTestContainerOnHost.class,
+    edu.isi.pegasus.planner.transfer.sls.TransferTestNoContainer.class,
     edu.isi.pegasus.planner.transfer.sls.CondorTest.class
 })
 public class AllTests {}
