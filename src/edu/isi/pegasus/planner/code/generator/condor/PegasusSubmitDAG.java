@@ -48,6 +48,9 @@ import java.util.Properties;
  */
 public class PegasusSubmitDAG {
 
+    /** The environment variable PEGASUS_UPDATE_PYTHONPATH */
+    public static final String PEGASUS_UPDATE_PYTHONPATH_ENV_VARIABLE = "PEGASUS_UPDATE_PYTHONPATH";
+
     /**
      * The dagman knobs controlled through property. They map the property name to the corresponding
      * dagman option.
@@ -60,7 +63,7 @@ public class PegasusSubmitDAG {
     };
 
     public static final String[] ENV_VARIABLES_PICKED_FROM_USER_ENV = {
-        "USER", "HOME", "LANG", "LC_ALL", "TZ"
+        "USER", "HOME", "LANG", "LC_ALL", "TZ", PEGASUS_UPDATE_PYTHONPATH_ENV_VARIABLE
     };
 
     /** Default number of max postscripts run by dagman at a time. */
@@ -163,6 +166,22 @@ public class PegasusSubmitDAG {
                 "Additional Environment that will be associated with the DAGMan condor sub file "
                         + additionalENV,
                 LogManager.DEBUG_MESSAGE_LEVEL);
+
+        // PM-1943 always log to config whether PEGASUS_UPDATE_PYTHONPATH was set or not
+        if (additionalENV.containsKey(PEGASUS_UPDATE_PYTHONPATH_ENV_VARIABLE)) {
+            mLogger.log(
+                    PEGASUS_UPDATE_PYTHONPATH_ENV_VARIABLE
+                            + " "
+                            + "will be set in the generated DAGMan condor sub file to "
+                            + additionalENV.get(PEGASUS_UPDATE_PYTHONPATH_ENV_VARIABLE),
+                    LogManager.CONFIG_MESSAGE_LEVEL);
+        } else {
+            mLogger.log(
+                    PEGASUS_UPDATE_PYTHONPATH_ENV_VARIABLE
+                            + " was not found in the user environment",
+                    LogManager.CONFIG_MESSAGE_LEVEL);
+        }
+
         if (!modifyEnvironmentInDAGManSubmitFile(dagSubmitFile, additionalENV)) {
             mLogger.log(
                     "Unable to add additional environment into DAGMan condor sub file for dag "
