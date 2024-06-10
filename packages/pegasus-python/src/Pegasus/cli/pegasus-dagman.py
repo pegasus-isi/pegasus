@@ -97,13 +97,13 @@ def dagman_launch(dagman_bin, arguments=[]):
                     env.pop(base_k, None)
                 else:
                     env[base_k] = env[k]
-                    
+
         # PM-1736 now remove all PEGASUS_ ones
         for k, v in env.copy().items():
             # PM-1943 preserve PEGASUS_UPDATE_PYTHONPATH in the environment
             if re.search("^PEGASUS_UPDATE_PYTHONPATH", k):
-                continue;
-            
+                continue
+
             if re.search("^PEGASUS_", k):
                 env.pop(k, None)
 
