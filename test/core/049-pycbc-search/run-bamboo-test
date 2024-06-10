@@ -17,5 +17,6 @@ cd pycbc/examples/search/
 source /scitech/shared/projects/LIGO/test-wf/env/bin/activate
 export PEGASUS_UPDATE_PYTHONPATH=0
 
+chmod +x ./master.sh
 ./master.sh
 
