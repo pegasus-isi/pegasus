@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+TOP_DIR=`pwd`
+
+rm -rf ./pycbc
+git clone https://github.com/gwastro/pycbc
+
+echo
+echo
+
+cd pycbc/examples/search/
+
+# we are using mixed environment from our conda env
+# make sure to set PEGASUS_UPDATE_PYTHONPAT
+source /scitech/shared/projects/LIGO/test-wf/env/bin/activate
+export PEGASUS_UPDATE_PYTHONPATH=0
+
+./master.sh
+

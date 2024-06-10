@@ -1,0 +1,2 @@
+runs a pycbc example search workflow to test the mixed conda environment that LIGO uses
+Also exercises multiple levels in hierarchy of recursive workflows
