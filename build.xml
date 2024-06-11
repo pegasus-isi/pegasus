@@ -96,7 +96,7 @@
         <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
       </exec>
       <mkdir dir="${dist.lib}/pegasus/python"/>
-      <symlink link="${dist.lib}/pegasus/python/Pegasus" resource="../../../${dist.python-lib.subdir}/Pegasus"/>
+      <symlink link="${dist.lib}/pegasus/python/Pegasus" resource="../../../${dist.python-lib.subdir}/Pegasus" overwrite="true"/>
     </sequential>
   </macrodef>
 
