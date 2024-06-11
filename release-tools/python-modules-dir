@@ -7,7 +7,7 @@
 SYSLIB="$1"
 
 if [ "$(uname -s)" == "Darwin" ]; then
-    echo "$SYSLIB/pegasus/python"
+    echo "$SYSLIB/python/dist-packages"
     exit 0
 fi
 
