@@ -95,6 +95,8 @@
       <exec executable="${dist.python}" dir="packages/@{name}" failonerror="true">
         <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
       </exec>
+      <mkdir dir="${dist.lib}/pegasus/python"/>
+      <symlink link="${dist.lib}/pegasus/python/Pegasus" resource="../../../${dist.python-lib.subdir}/Pegasus"/>
     </sequential>
   </macrodef>
 
@@ -164,7 +166,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
         <filter token="LIBDIR" value="${dist.lib.subdir}"/>
-        <filter token="PYTHON_LIBDIR" value="${dist.python-lib.subdir}"/>
+        <filter token="PYTHON_LIBDIR" value="${dist.lib.subdir}/pegasus/python"/>
       </filterset>
     </copy>
   </target>
@@ -287,7 +289,13 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <!-- Update pegasus-config -->
     <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PEGASUS_VERSION@" value="${pegasus.version}" />
     <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@LIBDIR@" value="${dist.lib.subdir}" />
-    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PYTHON_LIBDIR@" value="${dist.python-lib.subdir}" />
+    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PYTHON_LIBDIR@" value="${dist.lib.subdir}/pegasus/python" />
+    <!-- replace sometimes changes permissions - make sure pegasus-config.py permissions are correct -->
+    <chmod perm="0644" type="file">
+      <fileset dir="${dist.python-lib}/Pegasus/cli">
+        <include name="pegasus-config.py"/>
+      </fileset>
+    </chmod>
 
     <chmod perm="0755" type="file">
       <fileset dir="${dist.python-lib}">
