@@ -228,9 +228,9 @@ public class PegasusSubmitDAG {
         // Instead it should always set PEGASUS_PYTHON to empty string
         env.removeKey("PATH");
         env.removeKey("PYTHONPATH");
-        
+
         // PM-1943 never set PEGASUS_PYTHON expliclity
-        //env.construct("PEGASUS_PYTHON", "");
+        // env.construct("PEGASUS_PYTHON", "");
         return env;
     }
 
