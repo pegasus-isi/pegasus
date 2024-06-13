@@ -379,24 +379,35 @@ public class StageIn extends Abstract {
                 // PM-1213 remote the source URL. will be added later back
                 nv = ((FileTransfer) pf).removeSourceURL();
 
-                NameValue<String, String> destNV = ((FileTransfer) pf).removeDestURL();
-
                 // PM-833 we have to explicity set the remote executable
                 // especially for the staging of executables in sharedfs
                 if (lfn.equalsIgnoreCase(job.getStagedExecutableBaseName())) {
                     job.setRemoteExecutable(dAbsPath + File.separator + lfn);
                 }
 
-                destPutURL =
-                        (mTransferJobPlacer.runTransferOnLocalSite(
-                                        stagingSite, destPutURL, Job.STAGE_IN_JOB))
-                                ?
-                                // the destination URL is already third party
-                                // enabled. use as it is
-                                destPutURL
-                                :
-                                // explicitly convert to file URL scheme
-                                scheme + "://" + new PegasusURL(destPutURL).getPath();
+                // PM-1950 TO DO: add check for container universe to trigger transfer from
+                // submit dir
+                if (containerLFN == null) {
+                    destPutURL =
+                            (mTransferJobPlacer.runTransferOnLocalSite(
+                                            stagingSite, destPutURL, Job.STAGE_IN_JOB))
+                                    ? // the destination URL is already third party
+                                    // enabled. use as it is
+                                    destPutURL
+                                    : // explicitly convert to file URL scheme
+                                    scheme + "://" + new PegasusURL(destPutURL).getPath();
+                } else if (pf.getLFN().equals(containerLFN)) {
+                    // PM-1950 only transfer the container to the submit directory of the workfow
+                    destPutURL =
+                            scheme
+                                    + "://"
+                                    + new PegasusURL(
+                                                    this.mPOptions.getSubmitDirectory()
+                                                            + File.separator
+                                                            + containerLFN)
+                                            .getPath();
+                    stagingSiteHandle = "local";
+                }
 
                 // for time being for this case the get url is same as put url
                 destGetURL = destPutURL;
