@@ -14,8 +14,13 @@
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Condor;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * An implementation that leverages
@@ -38,9 +43,10 @@ public class CondorSingularity extends AbstractContainer {
     @Override
     public void initialize(PegasusBag bag, ADag dag) {
         super.initialize(bag, dag);
-        // force to make sure that transfers are set to
-        // happen inside the container
-        this.mTransfersOnHostOS = false;
+        // PM-1950 force to make sure that transfers are set to
+        // happen outside the container from Pegasus perspective
+        // Condor will launch the PegasusLite job inside the container only
+        this.mTransfersOnHostOS = true;
     }
 
     /**
@@ -52,11 +58,59 @@ public class CondorSingularity extends AbstractContainer {
      */
     @Override
     public String wrap(Job job) {
-        String wrapped = super.wrap(job);
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("set -e").append("\n");
+
+        // PM-1818 for the debug mode set -x
+        if (this.mPegasusMode == PegasusProperties.PEGASUS_MODE.debug) {
+            sb.append("set -x").append('\n');
+        }
+
+        // set environment variables required for the job to run
+        // inside the container
+        sb.append(this.constructJobEnvironmentInContainer(job));
+
+        // Step 1: setup transfers for inputs on the HOST OS
+        // if so configured
+        if (this.mTransfersOnHostOS) {
+            sb.append("pegasus_lite_section_start stage_in").append('\n');
+            sb.append(super.inputFilesToPegasusLite(job));
+            sb.append(super.enableForIntegrity(job, ""));
+            sb.append("pegasus_lite_section_end stage_in").append('\n');
+        }
+
+        // Step 2: within the pegasus lite script create a wrapper
+        // to launch job in the container. wrapper is required to
+        // deploy pegasus worker package in the container and launch the user job
+        // NOTHING TO DO, as job is launched  by HTCondor inside the container
+
+        // Step 3
+        // NOTHING TO DO, as job is launched  by HTCondor inside the container
+
+        // Step 4
+        sb.append(containerRun(job));
+        sb.append("\n");
+        sb.append("job_ec=$(($job_ec + $?))").append("\n").append("\n");
+
+        // Step 5
+        // remove the docker container
+        // NOTHING TO DO, as job is launched  by HTCondor inside the container
+        // and HTCondor removes it
+
+        // Step 6: setup transfers for outputs on the HOST OS
+        // if so configured
+        if (this.mTransfersOnHostOS) {
+            sb.append("pegasus_lite_section_start stage_out").append('\n');
+            sb.append(super.outputFilesToPegasusLite(job));
+            sb.append("pegasus_lite_section_end stage_out").append('\n');
+        }
+
         // now add some extra stuff
-        job.condorVariables.construct("universe", "container");
+        job.condorVariables.construct("universe", Condor.CONTAINER_UNIVERSE);
         job.condorVariables.construct("container_image", job.getContainer().getLFN());
-        return wrapped;
+
+        return sb.toString();
     }
 
     /**
@@ -120,7 +174,35 @@ public class CondorSingularity extends AbstractContainer {
 
         // the script that sets up pegasus worker package and execute
         // user application
-        sb.append("/srv/").append(this.getJobLaunchScriptName(job));
+        // sb.append("/srv/").append(this.getJobLaunchScriptName(job));
+
+        if (job instanceof AggregatedJob) {
+            try {
+                // for clustered jobs we embed the contents of the input
+                // file in the shell wrapper itself
+                sb.append(job.getRemoteExecutable()).append(" ").append(job.getArguments());
+                sb.append(" << CLUSTER").append('\n');
+
+                // PM-833 figure out the job submit directory
+                String jobSubmitDirectory =
+                        new File(job.getFileFullPath(mSubmitDir, ".in")).getParent();
+
+                sb.append(slurpInFile(jobSubmitDirectory, job.getStdIn()));
+                sb.append("CLUSTER").append('\n');
+            } catch (IOException ioe) {
+                throw new RuntimeException(
+                        "[Pegasus-Lite] Error while "
+                                + this.describe()
+                                + " wrapping job "
+                                + job.getID(),
+                        ioe);
+            }
+        } else {
+            sb.append(job.getRemoteExecutable())
+                    .append(" ")
+                    .append(job.getArguments())
+                    .append("\n");
+        }
 
         return sb;
     }
@@ -175,11 +257,13 @@ public class CondorSingularity extends AbstractContainer {
     @Override
     public String constructJobEnvironmentInContainer(Job job) {
         StringBuilder sb = new StringBuilder();
+        /* dont need it when condor is handling the container
         sb.append("# tmp dirs are handled by Singularity - don't use the ones from the host\n");
         sb.append("unset TEMP\n");
         sb.append("unset TMP\n");
         sb.append("unset TMPDIR\n");
         sb.append("\n");
+        */
 
         // set the job environment variables explicitly in the -cont.sh file
         sb.append("# setting environment variables for job").append('\n');
