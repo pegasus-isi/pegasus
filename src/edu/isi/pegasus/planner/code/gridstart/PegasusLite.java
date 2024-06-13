@@ -894,18 +894,12 @@ public class PegasusLite implements GridStart {
                                 stagingSiteDirectory,
                                 workerNodeDir);
 
-                // PM-779 split the checkpoint files from the input files
+                // PM-779 split the checkpoint files and container from the input files
                 // as we want to stage them separately
-                Collection<FileTransfer> inputFiles = new LinkedList();
-                Collection<FileTransfer> chkpointFiles = new LinkedList();
                 Collection<FileTransfer> containerFiles = new LinkedList();
                 for (FileTransfer ft : files) {
-                    if (ft.isCheckpointFile()) {
-                        chkpointFiles.add(ft);
-                    } else if (ft.isContainerFile()) {
+                    if (ft.isContainerFile()) {
                         containerFiles.add(ft);
-                    } else {
-                        inputFiles.add(ft);
                     }
                 }
 
