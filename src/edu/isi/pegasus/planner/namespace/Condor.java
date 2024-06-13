@@ -178,6 +178,9 @@ public class Condor extends Namespace {
     /** The condor universe key value for parallel universe. */
     public static final String PARALLEL_UNIVERSE = "parallel";
 
+    /** The condor universe key value for container universe. */
+    public static String CONTAINER_UNIVERSE = "container";
+
     /** The preserve_relative_paths key for condor file io */
     public static final String PRESERVE_RELATIVE_PATHS_KEY = "preserve_relative_paths";
 

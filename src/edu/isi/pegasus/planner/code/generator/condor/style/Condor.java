@@ -57,6 +57,9 @@ public class Condor extends Abstract {
     public static final String PARALLEL_UNIVERSE =
             edu.isi.pegasus.planner.namespace.Condor.PARALLEL_UNIVERSE;
 
+    public static final String CONTAINER_UNIVERSE =
+            edu.isi.pegasus.planner.namespace.Condor.CONTAINER_UNIVERSE;
+
     public static final String TRANSFER_EXECUTABLE_KEY =
             edu.isi.pegasus.planner.namespace.Condor.TRANSFER_EXECUTABLE_KEY;
 
@@ -184,6 +187,12 @@ public class Condor extends Abstract {
         // set the universe for the job
         // Karan Jan 28, 2008
         job.condorVariables.construct("universe", universe);
+
+        if (universe.equals("container")) {
+            // PM-1950 container universe is same as vanilla universe
+            // at this point
+            universe = "vanilla";
+        }
 
         if (universe.equalsIgnoreCase(Condor.VANILLA_UNIVERSE)
                 || universe.equalsIgnoreCase(Condor.STANDARD_UNIVERSE)
