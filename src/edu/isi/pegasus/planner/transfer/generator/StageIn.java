@@ -337,6 +337,9 @@ public class StageIn extends Abstract {
             List pfns = null;
             ReplicaLocation rl = null;
 
+            // PM-1950 reinitialize always
+            stagingSiteHandle = job.getStagingSiteHandle();
+
             String lfn = pf.getLFN();
             NameValue<String, String> nv = null;
 
@@ -388,7 +391,6 @@ public class StageIn extends Abstract {
                 if (pf.getLFN().equals(containerLFN)
                         && job.runsInContainerUniverse()) // PM-1950 check for container universe
                 // to trigger transfer from submit dir
-
                 {
                     // PM-1950 only transfer the container to the submit directory of the workfow
                     destPutURL =
@@ -400,6 +402,7 @@ public class StageIn extends Abstract {
                                                             + containerLFN)
                                             .getPath();
                     runTransferOnLocalSite = true;
+                    stagingSiteHandle = "local";
                 } else {
                     destPutURL =
                             (mTransferJobPlacer.runTransferOnLocalSite(
