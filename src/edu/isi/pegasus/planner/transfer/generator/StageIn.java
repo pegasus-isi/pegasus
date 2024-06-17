@@ -506,7 +506,7 @@ public class StageIn extends Abstract {
                 boolean bypassFirstLevelStagingForCandidateLocation = false;
                 if (symLinkSelectedLocation =
                         (symlinkingEnabledForJob
-                                && selLoc.getResourceHandle().equals(job.getStagingSiteHandle())
+                                && selLoc.getResourceHandle().equals(stagingSiteHandle)
                                 && !pf.isExecutable() // PM-1086 symlink only data files as chmod
                         // fails on symlinked file
                         )) {
@@ -637,13 +637,13 @@ public class StageIn extends Abstract {
                     // part of the first level staging
                     // we always store the thirdparty url
                     // trackInCaches( lfn, destPutURL, job.getSiteHandle() );
-                    trackInPlannerCache(lfn, destPutURL, job.getStagingSiteHandle());
+                    trackInPlannerCache(lfn, destPutURL, stagingSiteHandle);
 
                     if (candidateNum == 1) {
                         // PM-1014 we only track the first candidate in the workflow cache
                         // i.e the cache file written out in the submit directory
 
-                        trackInWorkflowCache(lfn, destGetURL, job.getStagingSiteHandle());
+                        trackInWorkflowCache(lfn, destGetURL, stagingSiteHandle);
                     }
                 }
 
