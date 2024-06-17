@@ -393,6 +393,8 @@ public class StageIn extends Abstract {
                 // to trigger transfer from submit dir
                 {
                     // PM-1950 only transfer the container to the submit directory of the workfow
+                    // and turn off integrity checking for the container since HTCondor
+                    // is managing it
                     destPutURL =
                             scheme
                                     + "://"
@@ -403,6 +405,7 @@ public class StageIn extends Abstract {
                                             .getPath();
                     runTransferOnLocalSite = true;
                     stagingSiteHandle = "local";
+                    pf.setForIntegrityChecking(false);
                 } else {
                     destPutURL =
                             (mTransferJobPlacer.runTransferOnLocalSite(
