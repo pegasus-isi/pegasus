@@ -399,7 +399,7 @@ public class StageIn extends Abstract {
                                                             + File.separator
                                                             + containerLFN)
                                             .getPath();
-                    stagingSiteHandle = "local";
+                    runTransferOnLocalSite = true;
                 } else {
                     destPutURL =
                             (mTransferJobPlacer.runTransferOnLocalSite(
