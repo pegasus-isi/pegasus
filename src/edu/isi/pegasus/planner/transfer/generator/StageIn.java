@@ -385,18 +385,11 @@ public class StageIn extends Abstract {
                     job.setRemoteExecutable(dAbsPath + File.separator + lfn);
                 }
 
-                // PM-1950 TO DO: add check for container universe to trigger transfer from
-                // submit dir
-                if (containerLFN == null) {
-                    destPutURL =
-                            (mTransferJobPlacer.runTransferOnLocalSite(
-                                            stagingSite, destPutURL, Job.STAGE_IN_JOB))
-                                    ? // the destination URL is already third party
-                                    // enabled. use as it is
-                                    destPutURL
-                                    : // explicitly convert to file URL scheme
-                                    scheme + "://" + new PegasusURL(destPutURL).getPath();
-                } else if (pf.getLFN().equals(containerLFN)) {
+                if (pf.getLFN().equals(containerLFN)
+                        && job.runsInContainerUniverse()) // PM-1950 check for container universe
+                // to trigger transfer from submit dir
+
+                {
                     // PM-1950 only transfer the container to the submit directory of the workfow
                     destPutURL =
                             scheme
@@ -407,6 +400,15 @@ public class StageIn extends Abstract {
                                                             + containerLFN)
                                             .getPath();
                     stagingSiteHandle = "local";
+                } else {
+                    destPutURL =
+                            (mTransferJobPlacer.runTransferOnLocalSite(
+                                            stagingSite, destPutURL, Job.STAGE_IN_JOB))
+                                    ? // the destination URL is already third party
+                                    // enabled. use as it is
+                                    destPutURL
+                                    : // explicitly convert to file URL scheme
+                                    scheme + "://" + new PegasusURL(destPutURL).getPath();
                 }
 
                 // for time being for this case the get url is same as put url

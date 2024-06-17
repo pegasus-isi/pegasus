@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
@@ -124,6 +125,8 @@ public class Transfer implements SLS {
      */
     protected boolean mTransfersOnHostOS;
 
+    private PlannerOptions mPOptions;
+
     /** The default constructor. */
     public Transfer() {}
 
@@ -134,6 +137,7 @@ public class Transfer implements SLS {
      */
     public void initialize(PegasusBag bag) {
         mProps = bag.getPegasusProperties();
+        mPOptions = bag.getPlannerOptions();
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
         mTCHandle = bag.getHandleToTransformationCatalog();
@@ -317,6 +321,8 @@ public class Transfer implements SLS {
             }
         }
 
+        boolean jobRunsInContainerUniverse = job.runsInContainerUniverse();
+
         String computeSite = job.getSiteHandle();
         SiteCatalogEntry computeSiteEntry = this.mSiteStore.lookup(computeSite);
 
@@ -328,6 +334,15 @@ public class Transfer implements SLS {
             if (lfn.equals(ENV.X509_USER_PROXY_KEY)) {
                 // ignore the proxy file for time being
                 // as we picking it from the head node directory
+                continue;
+            }
+
+            if (jobRunsInContainerUniverse && lfn.equals(containerLFN)) {
+                // PM-1950 we just add it as transfer_input_files and not
+                // have it in SLS stuff and have the transfer appear in the
+                // PegasusLite Script
+                job.condorVariables.addIPFileForTransfer(
+                        this.mPOptions.getSubmitDirectory() + File.separator + containerLFN);
                 continue;
             }
 
@@ -364,6 +379,7 @@ public class Transfer implements SLS {
             }
             if (cacheLocations == null || cacheLocations.isEmpty()) {
                 String stagingSite = job.getStagingSiteHandle();
+
                 // PM-1787 PM-1789 the source URL can be a file URL if source URL logically on the
                 // same site
                 // where job and also the compute site has a shared filesystem access OR
