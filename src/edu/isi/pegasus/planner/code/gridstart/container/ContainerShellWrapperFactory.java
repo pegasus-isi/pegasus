@@ -113,15 +113,29 @@ public class ContainerShellWrapperFactory {
             shortName = ContainerShellWrapperFactory.NO_SHELL_WRAPPER_CLASS;
         } else {
             Container.TYPE type = c.getType();
-            if (c.getType().equals(Container.TYPE.docker)) {
-                shortName = ContainerShellWrapperFactory.DOCKER_SHELL_WRAPPER_CLASS;
-            } else if (c.getType().equals(Container.TYPE.singularity)) {
-                shortName = ContainerShellWrapperFactory.SINGULARITY_SHELL_WRAPPER_CLASS;
-            } else if (c.getType().equals(Container.TYPE.shifter)) {
-                shortName = ContainerShellWrapperFactory.SHIFTER_SHELL_WRAPPER_CLASS;
+            boolean useContainerUniverse = job.runsInContainerUniverse();
+            // PM-1950 check for use of container universe to load appropriate
+            // implementation
+            if (useContainerUniverse) {
+                if (c.getType().equals(Container.TYPE.singularity)) {
+                    shortName =
+                            "Condor" + ContainerShellWrapperFactory.SINGULARITY_SHELL_WRAPPER_CLASS;
+                } else {
+                    throw new ContainerShellWrapperFactoryException(
+                            "Unsupported Container Shell Wrapper for container universe execution of type "
+                                    + type);
+                }
             } else {
-                throw new ContainerShellWrapperFactoryException(
-                        "Unsupported Container Shell Wrapper of type " + type);
+                if (c.getType().equals(Container.TYPE.docker)) {
+                    shortName = ContainerShellWrapperFactory.DOCKER_SHELL_WRAPPER_CLASS;
+                } else if (c.getType().equals(Container.TYPE.singularity)) {
+                    shortName = ContainerShellWrapperFactory.SINGULARITY_SHELL_WRAPPER_CLASS;
+                } else if (c.getType().equals(Container.TYPE.shifter)) {
+                    shortName = ContainerShellWrapperFactory.SHIFTER_SHELL_WRAPPER_CLASS;
+                } else {
+                    throw new ContainerShellWrapperFactoryException(
+                            "Unsupported Container Shell Wrapper of type " + type);
+                }
             }
         }
 
