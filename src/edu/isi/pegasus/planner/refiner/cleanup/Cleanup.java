@@ -163,6 +163,8 @@ public class Cleanup implements CleanupImplementation {
         SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
         boolean stagingSiteVisibleToLocalSite = stagingSite.isVisibleToLocalSite();
 
+        boolean runsInContainerUniverse = job.runsInContainerUniverse();
+
         // by default execution site for a cleanup job is local unless
         // overridden because of File URL's in list of files to be cleaned
         String eSite = "local";
@@ -186,6 +188,12 @@ public class Cleanup implements CleanupImplementation {
             // iterate first to check where the cleanup job should run
             for (Iterator it = files.iterator(); it.hasNext(); ) {
                 PegasusFile file = (PegasusFile) it.next();
+                if (runsInContainerUniverse && file.isContainerFile()) {
+                    // PM-1950 short circuit for container for a job running
+                    // in container universe, as we know it is being staged
+                    // from the submit dir on local site
+                    continue;
+                }
                 String pfn = mPlannerCache.lookup(file.getLFN(), stagingSiteHandle, OPERATION.put);
 
                 if (pfn == null) {
@@ -223,14 +231,24 @@ public class Cleanup implements CleanupImplementation {
             int fileNum = 1;
             for (Iterator it = files.iterator(); it.hasNext(); fileNum++) {
                 PegasusFile file = (PegasusFile) it.next();
-                String pfn = mPlannerCache.lookup(file.getLFN(), stagingSiteHandle, OPERATION.put);
+                String fileSite =
+                        stagingSiteHandle; // tracks where the file resides that we have to cleanup
+                if (runsInContainerUniverse && file.isContainerFile()) {
+                    // PM-1950 short circuit for container for a job running
+                    // in container universe, as we know it is being staged
+                    // from the submit dir on local site, and not the staging
+                    // site of the compute site
+                    fileSite = "local";
+                }
+
+                String pfn = mPlannerCache.lookup(file.getLFN(), fileSite, OPERATION.put);
 
                 if (pfn == null) {
                     throw new RuntimeException(
                             "Unable to determine cleanup url for lfn "
                                     + file.getLFN()
                                     + " at site "
-                                    + stagingSiteHandle);
+                                    + fileSite);
                 }
 
                 if (runCleanupJobRemotely
@@ -259,7 +277,7 @@ public class Cleanup implements CleanupImplementation {
                 }
 
                 // associate a credential if required
-                cJob.addCredentialType(stagingSiteHandle, pfn);
+                cJob.addCredentialType(fileSite, pfn);
 
                 if (fileNum > 1) {
                     writer.write("  ,\n");
@@ -269,7 +287,7 @@ public class Cleanup implements CleanupImplementation {
                 writer.write("    \"id\": " + fileNum + ",\n");
                 writer.write("    \"type\": \"remove\",\n");
                 writer.write("    \"target\": {");
-                writer.write(" \"site_label\": \"" + stagingSiteHandle + "\",");
+                writer.write(" \"site_label\": \"" + fileSite + "\",");
                 writer.write(" \"url\": \"" + pfn + "\",");
                 writer.write(" \"recursive\": \"False\"");
                 writer.write(" }");
