@@ -469,6 +469,7 @@ Workflow Tests:
       - 048-black-deep-condorio
       - 048-black-deep-condorio-local
       - 048-ligo-getenv
+      - 049-pycbc-search
       - blackdiamond pl-condorio
       - blackdiamond pl-condorio-local
       - blackdiamond pl-pt

@@ -48,7 +48,7 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
     # Some quick validations
     if [ "x$BASE_NAME" != "xpegasus-preflight-check" -a "x$BASE_NAME" != "xpegasus-config" ]; then
         # this is just a warning for now
-        "$PEXE" "$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/pegasus-preflight-check.py" || true
+        "$PEXE" "$PEGASUS_HOME/@LIBDIR@/pegasus/python/Pegasus/cli/pegasus-preflight-check.py" || true
     fi
 
     # remember the Python version to use when calling other Pegasus tools
@@ -59,7 +59,7 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
     if [ "x$PEGASUS_UPDATE_PYTHONPATH" != "x0" ]; then
         PEGASUS_ORIG_PYTHONPATH=$PYTHONPATH
         export PEGASUS_ORIG_PYTHONPATH
-        PYTHONPATH="$PEGASUS_HOME/@PYTHON_LIBDIR@:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python${PYTHONPATH:+:}${PYTHONPATH}"
+        PYTHONPATH="$PEGASUS_HOME/@LIBDIR@/pegasus/python:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python${PYTHONPATH:+:}${PYTHONPATH}"
         export PYTHONPATH
         PEGASUS_PYTHONPATH_SET=1
         export PEGASUS_PYTHONPATH_SET

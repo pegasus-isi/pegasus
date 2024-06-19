@@ -53,7 +53,10 @@ if [ "${_PEGASUS_EXECUTE_IN_INITIAL_DIR}" = "true" ];then
 fi
 
 # PM-1029 prepend PATH with PEGASUS_BIN_DIR 
-if [ "x$PEGASUS_BIN_DIR" != "x" ]; then
+# PM-1951 do not prepend /usr/bin as it will mess up Conda installs
+#         for example, it would pick up /usr/bin/openssl when the
+#         conda one should be used
+if [ "x$PEGASUS_BIN_DIR" != "x" -a "x$PEGASUS_BIN_DIR" != "x/usr/bin" ]; then
     export PATH="$PEGASUS_BIN_DIR:$PATH"
 fi
 
