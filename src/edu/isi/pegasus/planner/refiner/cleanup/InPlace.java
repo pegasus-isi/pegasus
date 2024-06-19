@@ -159,8 +159,16 @@ public class InPlace extends AbstractCleanupStrategy {
                             it.remove();
                             continue;
                         }
+                    } else if (pf.isContainerFile() && curGN_SI.runsInContainerUniverse()) {
+                        // PM-1950 container for container universe jobs is staged
+                        // via the submit directory on the local site.
+                        // so keep the file only  if the site is matches local, else remove
+                        if (!site.equals("local")) {
+                            it.remove();
+                            continue;
+                        }
                     }
-                }
+                } // end of traversal through job input files
 
                 for (Object obj : curGN_SI.getOutputFiles()) {
                     PegasusFile pf = (PegasusFile) obj;

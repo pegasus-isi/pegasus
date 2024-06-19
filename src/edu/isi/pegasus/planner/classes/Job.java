@@ -2291,6 +2291,19 @@ public class Job extends Data implements GraphNodeContent {
     }
 
     /**
+     * Returns whether a job is set to run in condor container universe
+     *
+     * @return
+     */
+    public boolean runsInContainerUniverse() {
+        String universe = (String) this.condorVariables.get(Condor.UNIVERSE_KEY);
+        // PM-1950 check if a job runs in container universe
+        return this.getContainer() != null
+                && universe != null
+                && universe.equals(Condor.CONTAINER_UNIVERSE);
+    }
+
+    /**
      * Custom deserializer for YAML representation of uses section that designates a job
      *
      * @author Karan Vahi

@@ -373,6 +373,11 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
         } else if (job.getJobType() == Job.COMPUTE_JOB) {
             // for compute jobs we refer to the staging site
             sites.add(job.getStagingSiteHandle());
+            // PM-1950 if a job is set to run in container universe
+            // then add local site too?
+            if (job.runsInContainerUniverse()) {
+                sites.add("local");
+            }
         } else if (job.getJobType() == Job.DAX_JOB) {
             return this.getSitesForCleanup((DAXJob) job);
         } else {

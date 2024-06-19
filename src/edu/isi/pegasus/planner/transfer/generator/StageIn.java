@@ -337,6 +337,9 @@ public class StageIn extends Abstract {
             List pfns = null;
             ReplicaLocation rl = null;
 
+            // PM-1950 reinitialize always
+            stagingSiteHandle = job.getStagingSiteHandle();
+
             String lfn = pf.getLFN();
             NameValue<String, String> nv = null;
 
@@ -379,24 +382,40 @@ public class StageIn extends Abstract {
                 // PM-1213 remote the source URL. will be added later back
                 nv = ((FileTransfer) pf).removeSourceURL();
 
-                NameValue<String, String> destNV = ((FileTransfer) pf).removeDestURL();
-
                 // PM-833 we have to explicity set the remote executable
                 // especially for the staging of executables in sharedfs
                 if (lfn.equalsIgnoreCase(job.getStagedExecutableBaseName())) {
                     job.setRemoteExecutable(dAbsPath + File.separator + lfn);
                 }
 
-                destPutURL =
-                        (mTransferJobPlacer.runTransferOnLocalSite(
-                                        stagingSite, destPutURL, Job.STAGE_IN_JOB))
-                                ?
-                                // the destination URL is already third party
-                                // enabled. use as it is
-                                destPutURL
-                                :
-                                // explicitly convert to file URL scheme
-                                scheme + "://" + new PegasusURL(destPutURL).getPath();
+                if (pf.getLFN().equals(containerLFN)
+                        && job.runsInContainerUniverse()) // PM-1950 check for container universe
+                // to trigger transfer from submit dir
+                {
+                    // PM-1950 only transfer the container to the submit directory of the workfow
+                    // and turn off integrity checking for the container since HTCondor
+                    // is managing it
+                    destPutURL =
+                            scheme
+                                    + "://"
+                                    + new PegasusURL(
+                                                    this.mPOptions.getSubmitDirectory()
+                                                            + File.separator
+                                                            + containerLFN)
+                                            .getPath();
+                    runTransferOnLocalSite = true;
+                    stagingSiteHandle = "local";
+                    pf.setForIntegrityChecking(false);
+                } else {
+                    destPutURL =
+                            (mTransferJobPlacer.runTransferOnLocalSite(
+                                            stagingSite, destPutURL, Job.STAGE_IN_JOB))
+                                    ? // the destination URL is already third party
+                                    // enabled. use as it is
+                                    destPutURL
+                                    : // explicitly convert to file URL scheme
+                                    scheme + "://" + new PegasusURL(destPutURL).getPath();
+                }
 
                 // for time being for this case the get url is same as put url
                 destGetURL = destPutURL;
@@ -490,7 +509,7 @@ public class StageIn extends Abstract {
                 boolean bypassFirstLevelStagingForCandidateLocation = false;
                 if (symLinkSelectedLocation =
                         (symlinkingEnabledForJob
-                                && selLoc.getResourceHandle().equals(job.getStagingSiteHandle())
+                                && selLoc.getResourceHandle().equals(stagingSiteHandle)
                                 && !pf.isExecutable() // PM-1086 symlink only data files as chmod
                         // fails on symlinked file
                         )) {
@@ -621,13 +640,13 @@ public class StageIn extends Abstract {
                     // part of the first level staging
                     // we always store the thirdparty url
                     // trackInCaches( lfn, destPutURL, job.getSiteHandle() );
-                    trackInPlannerCache(lfn, destPutURL, job.getStagingSiteHandle());
+                    trackInPlannerCache(lfn, destPutURL, stagingSiteHandle);
 
                     if (candidateNum == 1) {
                         // PM-1014 we only track the first candidate in the workflow cache
                         // i.e the cache file written out in the submit directory
 
-                        trackInWorkflowCache(lfn, destGetURL, job.getStagingSiteHandle());
+                        trackInWorkflowCache(lfn, destGetURL, stagingSiteHandle);
                     }
                 }
 
