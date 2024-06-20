@@ -13,32 +13,47 @@
  */
 package edu.isi.pegasus.planner.transfer.generator;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.refiner.TransferEngine;
+import edu.isi.pegasus.planner.selector.ReplicaSelector;
+import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
+import java.io.File;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -81,6 +96,7 @@ public class StageInTest {
 
         PlannerOptions options = new PlannerOptions();
         options.setExecutionSites("compute");
+        options.setSubmitDirectory(new File("."));
         mBag.add(PegasusBag.PLANNER_OPTIONS, options);
 
         mLogger = mTestSetup.loadLogger(mProps);
@@ -325,6 +341,49 @@ public class StageInTest {
         this.testSymlinkingEnabled(false, false, true);
     }
 
+    /** Test Container Stagein */
+    @Test
+    public void testContainerStageIn() {
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        // reset the input files
+        job.setInputFiles(new HashSet());
+        Container c = constructTestContainer();
+        job.setContainer(c);
+        job.condorVariables.checkKeyInNS(Condor.UNIVERSE_KEY, Condor.CONTAINER_UNIVERSE);
+
+        FileTransfer containerFT = new FileTransfer(new PegasusFile(c.getLFN()));
+        containerFT.addSource("nonlocal", c.getImageURL().getURL());
+        job.addInputFile(containerFT);
+
+        FileTransfer expected = new FileTransfer(new PegasusFile(c.getLFN()));
+        ReplicaCatalogEntry source =
+                new ReplicaCatalogEntry(c.getImageURL().toString(), "nonlocal");
+        // replica selector adds it as part of ranking
+        source.addAttribute(ReplicaSelector.PRIORITY_KEY, "10");
+        expected.addSource(source);
+        expected.addDestination(
+                "local",
+                new PegasusURL(
+                                PegasusURL.DEFAULT_PROTOCOL
+                                        + "://"
+                                        + mBag.getPlannerOptions().getSubmitDirectory()
+                                        + File.separator
+                                        + c.getLFN())
+                        .getURL());
+        // integrity checking is turned off when containers are managed by HTCondor
+        expected.setForIntegrityChecking(false);
+
+        Collection<FileTransfer> expectedLocal = new LinkedList();
+        expectedLocal.add(expected);
+        Collection<FileTransfer> expectedRemote = new LinkedList();
+
+        this.testStageIn(
+                job,
+                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
+                expectedLocal,
+                expectedRemote);
+    }
+
     private void testSymlinkingEnabled(
             boolean expected, boolean workflowSymlinking, Boolean noSymlinkProfileValue) {
         mLogger.logEventStart(
@@ -336,6 +395,92 @@ public class StageInTest {
         }
         assertEquals(
                 "Symlinking for job was ", expected, si.symlinkingEnabled(j, workflowSymlinking));
+        mLogger.logEventCompletion();
+    }
+
+    private void testStageIn(
+            Job job,
+            String dataConfig,
+            Collection<FileTransfer> expectedLocal,
+            Collection<FileTransfer> expectedRemote) {
+        mLogger.logEventStart(
+                "test.transfer.generator.stagein", "set", Integer.toString(mTestNumber++));
+
+        StageIn si = new StageIn();
+        PlannerCache plannerCache = new PlannerCache();
+        plannerCache.initialize(mBag, mDAG);
+        ReplicaCatalog wfCache = null;
+        Properties props = new Properties();
+
+        File file = null;
+        try {
+            file =
+                    File.createTempFile(
+                            "test-wf",
+                            ".cache",
+                            new File(mBag.getPlannerOptions().getSubmitDirectory()));
+            // set the appropriate property to designate path to file
+            props.setProperty(
+                    TransferEngine.WORKFLOW_CACHE_REPLICA_CATALOG_KEY, file.getAbsolutePath());
+            wfCache = ReplicaFactory.loadInstance("SimpleFile", mBag, props);
+
+            ReplicaSelector rs = ReplicaSelectorFactory.loadInstance(mBag.getPegasusProperties());
+            si.initalize(
+                    mDAG,
+                    mBag,
+                    RefinerFactory.loadInstance(mDAG, mBag),
+                    null,
+                    rs,
+                    plannerCache,
+                    wfCache);
+
+            // In TransferEngine the data configuration is already associated at per job level
+            // so set profile instead of properties
+            job.setDataConfiguration(dataConfig);
+
+            if (dataConfig.equals(PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE)) {
+                job.setStagingSiteHandle("staging");
+            } else if (dataConfig.equals(PegasusConfiguration.CONDOR_CONFIGURATION_VALUE)) {
+                job.setStagingSiteHandle("local");
+            } else {
+                job.setStagingSiteHandle(job.getSiteHandle());
+            }
+
+            Collection<FileTransfer>[] generated = si.constructFileTX(job, job.getInputFiles());
+
+            /*
+                        FileTransfer generatedFT = null;
+                        for(FileTransfer ft: generated[0]){
+                            generatedFT = ft;
+                        }
+                        FileTransfer localFT = null;
+                        for(FileTransfer ft: expectedLocal){
+                            localFT = ft;
+                        }
+                        System.err.println( generatedFT.toString().equals(localFT.toString()));
+                        System.err.println( generatedFT.equals(localFT));
+                        System.err.println( generatedFT.toString().length() + "," + localFT.toString().length());
+
+                        System.err.println("***** Generated One *** ");
+                        System.err.println(generatedFT.toString());
+                        System.err.println("*****");
+
+                        System.err.println("***** Expected One *** ");
+                        System.err.println(localFT.toString());
+                        System.err.println("*****");
+            */
+
+            assertThat(generated[0], containsInAnyOrder(expectedLocal.toArray()));
+            assertThat(generated[1], containsInAnyOrder(expectedRemote.toArray()));
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Unable to initialize Workflow Cache File in the Submit Directory  " + file, e);
+        } finally {
+            if (file != null) {
+                file.delete();
+            }
+        }
+
         mLogger.logEventCompletion();
     }
 
@@ -469,5 +614,13 @@ public class StageInTest {
         store.addEntry(localSite);
 
         return store;
+    }
+
+    private Container constructTestContainer() {
+        String sourceURL = "scp://osg.example.com/images/opensciencegrid__osgvo-el7__latest.sif";
+        Container c = new Container("osgvo-el7");
+        c.setImageSite("nonlocal");
+        c.setImageURL(sourceURL);
+        return c;
     }
 }
