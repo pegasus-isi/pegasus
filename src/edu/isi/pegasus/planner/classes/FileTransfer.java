@@ -534,7 +534,11 @@ public class FileTransfer extends PegasusFile {
         Map.Entry<String, List<ReplicaCatalogEntry>> entry = null;
         List l = null;
 
-        sb.append(mLogicalFile).append(" ").append(mode);
+        // PM-1950 append the PegasusFile info for better tracing
+        // in unit tests that may fail
+        sb.append(super.toString()).append("\n");
+        sb.append("mode").append(" ").append(mode).append("\n");
+        // sb.append(mLogicalFile).append(" ").append(mode);
 
         // writing out all the sources
         it = mSourceMap.entrySet().iterator();
@@ -542,7 +546,7 @@ public class FileTransfer extends PegasusFile {
         while (it.hasNext()) {
             entry = (Map.Entry) it.next();
             // inserting the source site
-            sb.append("\n").append("#").append(entry.getKey());
+            sb.append("\n").append("# ").append(entry.getKey());
             l = (List<ReplicaCatalogEntry>) entry.getValue();
             Iterator it1 = l.iterator();
             while (it1.hasNext()) {
