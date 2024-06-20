@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -30,7 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 /**
  * Test class to test YAML based RC with Regex Support
@@ -45,7 +45,7 @@ public class YAMLRCTest {
 
     public YAMLRCTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         mYAMLRC = new YAML();
         mRCFile = File.createTempFile("replica", ".yml");
@@ -214,7 +214,7 @@ public class YAMLRCTest {
         mYAMLRC.close();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mRCFile.delete();
     }

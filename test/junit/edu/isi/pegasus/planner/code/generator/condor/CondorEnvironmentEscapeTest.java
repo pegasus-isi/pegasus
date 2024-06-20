@@ -15,13 +15,13 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.namespace.ENV;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * To test the Condor Environment Escaping logic implemented in Pegasus.
@@ -33,7 +33,7 @@ public class CondorEnvironmentEscapeTest {
 
     public CondorEnvironmentEscapeTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mEscape = new CondorEnvironmentEscape();
     }

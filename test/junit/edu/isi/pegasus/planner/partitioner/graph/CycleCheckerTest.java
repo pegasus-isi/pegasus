@@ -15,17 +15,18 @@
  */
 package edu.isi.pegasus.planner.partitioner.graph;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test class for checking cycles in a DAG
@@ -40,13 +41,13 @@ public class CycleCheckerTest {
 
     private int mTestNumber = 1;
 
-    @BeforeClass
-    public static void setUpClass() {}
+    @BeforeAll
+    public static void setUpAll() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
 
@@ -68,7 +69,7 @@ public class CycleCheckerTest {
 
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals("Input Test Case should be determined cycle free", false, cyclic);
+        assertEquals(false, cyclic, "Input Test Case should be determined cycle free");
         mLogger.logEventCompletion();
     }
 
@@ -85,11 +86,11 @@ public class CycleCheckerTest {
 
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals("Input Test Case should be determined cycle free", false, cyclic);
+        assertEquals(false, cyclic, "Input Test Case should be determined cycle free");
         mLogger.logEventCompletion();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSingleNodeCyclic() {
 
         mLogger.logEventStart(
@@ -99,17 +100,7 @@ public class CycleCheckerTest {
         Graph g = new MapGraph();
 
         g.addNode(new GraphNode("A", "A"));
-        g.addEdge("A", "A");
-
-        CycleChecker c = new CycleChecker(g);
-        boolean cyclic = c.hasCycles();
-        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
-
-        if (cyclic) {
-            // cyclic edge is null since the whole workflow constitutes a cycle
-            NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", null, cyclicEdge);
-        }
+        assertThrows(IllegalArgumentException.class, () -> g.addEdge("A", "A"));
         mLogger.logEventCompletion();
     }
 
@@ -134,7 +125,7 @@ public class CycleCheckerTest {
 
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals("Input Test Case should be determined cycle free", false, cyclic);
+        assertEquals(false, cyclic, "Input Test Case should be determined cycle free");
         mLogger.logEventCompletion();
     }
 
@@ -160,12 +151,12 @@ public class CycleCheckerTest {
 
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
+        assertEquals(true, cyclic, "Input Test Case should be determined to be cyclic");
 
         if (cyclic) {
             // cyclic edge is null since the whole workflow constitutes a cycle
             NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", null, cyclicEdge);
+            assertEquals(null, cyclicEdge, "Cyclic Edge does not match");
         }
 
         mLogger.logEventCompletion();
@@ -195,12 +186,12 @@ public class CycleCheckerTest {
 
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
+        assertEquals(true, cyclic, "Input Test Case should be determined to be cyclic");
 
         if (cyclic) {
             // cyclic edge is null since the whole workflow constitutes a cycle
             NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", new NameValue("E", "D"), cyclicEdge);
+            assertEquals(new NameValue("E", "D"), cyclicEdge, "Cyclic Edge does not match");
         }
 
         mLogger.logEventCompletion();
@@ -228,7 +219,7 @@ public class CycleCheckerTest {
 
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals("Input Test Case should be determined cycle free", false, cyclic);
+        assertEquals(false, cyclic, "Input Test Case should be determined cycle free");
 
         mLogger.logEventCompletion();
     }
@@ -256,12 +247,12 @@ public class CycleCheckerTest {
 
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
+        assertEquals(true, cyclic, "Input Test Case should be determined to be cyclic");
 
         if (cyclic) {
             // cyclic edge is null since the whole workflow constitutes a cycle
             NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", new NameValue("E", "B"), cyclicEdge);
+            assertEquals(new NameValue("E", "B"), cyclicEdge, "Cyclic Edge does not match");
         }
 
         mLogger.logEventCompletion();
@@ -301,12 +292,12 @@ public class CycleCheckerTest {
 
         CycleChecker c = new CycleChecker(g);
         boolean cyclic = c.hasCycles();
-        assertEquals("Input Test Case should be determined to be cyclic", true, cyclic);
+        assertEquals(true, cyclic, "Input Test Case should be determined to be cyclic");
 
         if (cyclic) {
             // cyclic edge is null since the whole workflow constitutes a cycle
             NameValue cyclicEdge = c.getCyclicEdge();
-            assertEquals("Cyclic Edge does not match", new NameValue("E'", "B'"), cyclicEdge);
+            assertEquals(new NameValue("E'", "B'"), cyclicEdge, "Cyclic Edge does not match");
         }
 
         mLogger.logEventCompletion();

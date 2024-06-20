@@ -13,17 +13,17 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class to test the Pegasus namespace and check if it accepts the right keys
@@ -39,13 +39,13 @@ public class PegasusTest {
 
     public PegasusTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
 
@@ -60,7 +60,6 @@ public class PegasusTest {
 
     @Test
     public void testcheckKey() {
-
         // should print
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
         testKey(Pegasus.BUNDLE_KEY, "dummy", Namespace.VALID_KEY);
@@ -361,7 +360,7 @@ public class PegasusTest {
         mLogger.logEventCompletion();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mTestSetup = null;
@@ -378,6 +377,6 @@ public class PegasusTest {
         System.out.println("Testing Key " + key);
         Pegasus p = new Pegasus();
         int result = p.checkKey(key, value);
-        assertEquals(key, expected, result);
+        assertEquals(expected, result, key);
     }
 }

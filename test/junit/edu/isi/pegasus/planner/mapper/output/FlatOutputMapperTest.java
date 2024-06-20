@@ -13,7 +13,7 @@
  */
 package edu.isi.pegasus.planner.mapper.output;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
@@ -28,11 +28,11 @@ import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * A JUnit Test to test the output mapper interface.
@@ -54,16 +54,16 @@ public class FlatOutputMapperTest {
 
     private static int mTestNum;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {
         mTestNum = 1;
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
         mTestSetup = new OutputMapperTestSetup();
         mBag = new PegasusBag();
@@ -101,15 +101,15 @@ public class FlatOutputMapperTest {
         String lfn = "f.a";
         String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
         assertEquals(
-                lfn + " not mapped to right location ",
                 "file:///test/junit/output/mapper/blackdiamond/outputs/f.a",
-                pfn);
+                pfn,
+                lfn + " not mapped to right location ");
 
         pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
         assertEquals(
-                lfn + " not mapped to right location ",
                 "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/f.a",
-                pfn);
+                pfn,
+                lfn + " not mapped to right location ");
 
         List<NameValue<String, String>> pfns =
                 mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
@@ -144,17 +144,17 @@ public class FlatOutputMapperTest {
 
         String deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
         assertEquals(
-                lfn + " not mapped to right location ",
                 "file:///test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a",
-                deepPFN);
+                deepPFN,
+                lfn + " not mapped to right location ");
 
         deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
         assertEquals(
-                lfn + " not mapped to right location ",
                 "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
                         + relativeDir
                         + "/f.a",
-                deepPFN);
+                deepPFN,
+                lfn + " not mapped to right location ");
 
         List<NameValue<String, String>> deepPFNS =
                 mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
@@ -190,17 +190,17 @@ public class FlatOutputMapperTest {
 
         String deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
         assertEquals(
-                lfn + " not mapped to right location ",
                 "file:///test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a",
-                deepPFN);
+                deepPFN,
+                lfn + " not mapped to right location ");
 
         deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
         assertEquals(
-                lfn + " not mapped to right location ",
                 "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
                         + relativeDir
                         + "/f.a",
-                deepPFN);
+                deepPFN,
+                lfn + " not mapped to right location ");
 
         List<NameValue<String, String>> deepPFNS =
                 mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
@@ -237,17 +237,17 @@ public class FlatOutputMapperTest {
 
         String deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
         assertEquals(
-                lfn + " not mapped to right location ",
                 "file:///test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a",
-                deepPFN);
+                deepPFN,
+                lfn + " not mapped to right location ");
 
         deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
         assertEquals(
-                lfn + " not mapped to right location ",
                 "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
                         + relativeDir
                         + "/f.a",
-                deepPFN);
+                deepPFN,
+                lfn + " not mapped to right location ");
 
         List<NameValue<String, String>> deepPFNS =
                 mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
@@ -262,7 +262,7 @@ public class FlatOutputMapperTest {
         mLogger.logEventCompletion();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mProps = null;

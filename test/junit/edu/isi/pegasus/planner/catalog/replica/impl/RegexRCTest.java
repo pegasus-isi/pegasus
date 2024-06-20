@@ -16,14 +16,14 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 /**
  * Test class to test Regex RC
@@ -37,7 +37,7 @@ public class RegexRCTest {
 
     public RegexRCTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         mRegex = new Regex();
         mRCFile = File.createTempFile("replica", ".txt");
@@ -144,7 +144,7 @@ public class RegexRCTest {
         assertTrue(c.contains(new ReplicaCatalogEntry("b")));
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mRCFile.delete();
     }

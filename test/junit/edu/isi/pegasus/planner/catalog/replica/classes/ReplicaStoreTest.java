@@ -17,7 +17,7 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.classes;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,10 +31,10 @@ import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for ReplicaStore
@@ -47,17 +47,17 @@ public class ReplicaStoreTest {
 
     public ReplicaStoreTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
 
         mTestSetup.setInputDirectory(this.getClass());
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test
@@ -175,7 +175,7 @@ public class ReplicaStoreTest {
         assertEquals("karan", rl.getMetadata("user"));
     }
 
-    @Test(expected = ReplicaCatalogException.class)
+    @Test
     public void replicaWithRegexTrue() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
@@ -189,10 +189,11 @@ public class ReplicaStoreTest {
                         + "      - pfn: \"file:///Volumes/data/input/f.a\"\n"
                         + "        site: \"local\"";
 
-        ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
+        assertThrows(
+                ReplicaCatalogException.class, () -> mapper.readValue(test, ReplicaStore.class));
     }
 
-    @Test(expected = ReplicaCatalogException.class)
+    @Test
     public void replicaWithoutLFN() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
@@ -204,10 +205,11 @@ public class ReplicaStoreTest {
                         + "     - pfn: \"file:///Volumes/data/input/f.a\"\n"
                         + "       site: \"local\"";
 
-        ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
+        assertThrows(
+                ReplicaCatalogException.class, () -> mapper.readValue(test, ReplicaStore.class));
     }
 
-    @Test(expected = ReplicaCatalogException.class)
+    @Test
     public void replicaWithoutPFN() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
@@ -215,7 +217,8 @@ public class ReplicaStoreTest {
         String test =
                 "pegasus: \"5.0\"\n" + "replicas:\n" + "  - lfn: \"f.a\"\n" + "    site: \"local\"";
 
-        ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
+        assertThrows(
+                ReplicaCatalogException.class, () -> mapper.readValue(test, ReplicaStore.class));
     }
 
     @Test

@@ -15,14 +15,14 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * To test the Condor style class for condor code generator.
@@ -34,7 +34,7 @@ public class CondorGTest {
 
     public CondorGTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         cs = new CondorG();
     }

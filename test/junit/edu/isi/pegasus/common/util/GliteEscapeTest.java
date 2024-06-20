@@ -13,9 +13,9 @@
  */
 package edu.isi.pegasus.common.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 /**
  * Test class to test the GLiteEscape class
@@ -28,7 +28,7 @@ public class GliteEscapeTest {
 
     public GliteEscapeTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ge = new GliteEscape();
     }
@@ -51,21 +51,21 @@ public class GliteEscapeTest {
         assertEquals("A\\\\\"B", ge.escape(value));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testValWithSingleQuotes() {
         String value = "A'B";
-        ge.escape(value);
+        assertThrows(RuntimeException.class, () -> ge.escape(value));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testValWithNewLine() {
         String value = "A\nB";
-        ge.escape(value);
+        assertThrows(RuntimeException.class, () -> ge.escape(value));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testValWithTab() {
         String value = "A\tB";
-        ge.escape(value);
+        assertThrows(RuntimeException.class, () -> ge.escape(value));
     }
 }

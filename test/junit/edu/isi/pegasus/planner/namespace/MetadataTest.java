@@ -13,7 +13,7 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,10 +23,10 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author vahi */
 public class MetadataTest {
@@ -35,17 +35,17 @@ public class MetadataTest {
 
     public MetadataTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
 
         mTestSetup.setInputDirectory(this.getClass());
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test

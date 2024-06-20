@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
@@ -28,8 +28,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.*;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.TestMethodOrder;
 
 /**
  * Test class to test File based replica catalog.
@@ -38,7 +38,7 @@ import org.junit.runners.MethodSorters;
  *
  * @author Karan Vahi
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.Alphanumeric.class)
 public class SimpleFileTest {
 
     /** * track across insert and delete methods */
@@ -52,7 +52,7 @@ public class SimpleFileTest {
 
     public SimpleFileTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws IOException {
         Map<String, String> testEnvVariables = new HashMap();
         testEnvVariables.put("USER", "bamboo");
@@ -63,7 +63,7 @@ public class SimpleFileTest {
         mTempRC = File.createTempFile("replica", ".txt");
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         Map<String, String> testEnvVariables = new HashMap();
         testEnvVariables.put("USER", EXPANDED_USER);
@@ -121,12 +121,12 @@ public class SimpleFileTest {
         assertEquals(4, count);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mCatalog.close();
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {
         if (mTempRC != null) {
             mTempRC.delete();

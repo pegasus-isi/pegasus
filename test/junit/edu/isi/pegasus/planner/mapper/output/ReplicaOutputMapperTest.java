@@ -13,7 +13,7 @@
  */
 package edu.isi.pegasus.planner.mapper.output;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -28,11 +28,11 @@ import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * A JUnit Test to test the Replica Output Mapper interface.
@@ -59,14 +59,14 @@ public class ReplicaOutputMapperTest {
 
     private TestSetup mTestSetup;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
         mTestSetup = new OutputMapperTestSetup();
         mBag = new PegasusBag();
@@ -110,7 +110,7 @@ public class ReplicaOutputMapperTest {
             String expected1 = "gsiftp://corbusier.isi.edu/Volumes/data/output/nonregex/" + lfn;
             String expected2 = "gsiftp://corbusier.isi.edu/Volumes/data/output/" + lfn;
             String pfn = mapper.map(lfn, "local", operation).getValue();
-            assertEquals(lfn + " not mapped to right location ", expected1, pfn);
+            assertEquals(expected1, pfn, lfn + " not mapped to right location ");
             NameValue[] expectedPFNS = new NameValue[2];
             expectedPFNS[0] = new NameValue("local", expected1);
             expectedPFNS[1] = new NameValue("local", expected2);
@@ -127,7 +127,7 @@ public class ReplicaOutputMapperTest {
                 // replica mapper maps all operations to the same pfn
                 String expected = "gsiftp://corbusier.isi.edu/Volumes/data/output/" + lfn;
                 String pfn = mapper.map(lfn, "local", operation).getValue();
-                assertEquals(lfn + " not mapped to right location ", expected, pfn);
+                assertEquals(expected, pfn, lfn + " not mapped to right location ");
                 NameValue[] expectedPFNS = new NameValue[1];
                 expectedPFNS[0] = new NameValue("local", expected);
                 List<NameValue<String, String>> pfns = mapper.mapAll(lfn, "local", operation);
@@ -156,12 +156,12 @@ public class ReplicaOutputMapperTest {
             String lfn = "f0";
             String expected1 = "/Users/vahi/Pegasus/PM-1675-output-mapper/" + lfn;
             String pfn = mapper.map(lfn, "local", operation).getValue();
-            assertEquals(lfn + " not mapped to right location ", expected1, pfn);
+            assertEquals(expected1, pfn, lfn + " not mapped to right location ");
         }
         mLogger.logEventCompletion();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mProps = null;

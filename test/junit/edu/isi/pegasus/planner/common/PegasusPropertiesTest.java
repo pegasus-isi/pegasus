@@ -13,7 +13,7 @@
  */
 package edu.isi.pegasus.planner.common;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.*;
@@ -24,9 +24,7 @@ import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
-import org.junit.*;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.*;
 
 /**
  * Test class to test the Pegasus Properties class
@@ -44,7 +42,7 @@ public class PegasusPropertiesTest {
 
     public PegasusPropertiesTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mOriginalEnv = System.getenv();
@@ -57,7 +55,7 @@ public class PegasusPropertiesTest {
         mLogger.logEventStart("test.pegasus.url", "setup", "0");
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         mLogger = null;
         mTestSetup = null;
@@ -80,10 +78,10 @@ public class PegasusPropertiesTest {
         for (Profiles.NAMESPACES ns : Profiles.NAMESPACES.values()) {
             Namespace n = p.get(ns);
             if (ns.toString().equals("condor")) {
-                assertEquals("Namspace should be of size", 1, n.size());
-                assertEquals("Value of key " + key, value, n.get(key));
+                assertEquals(1, n.size(), "Namspace should be of size");
+                assertEquals(value, n.get(key), "Value of key " + key);
             } else {
-                assertTrue("Namepsace " + n.namespaceName() + " should be empty", n.isEmpty());
+                assertTrue(n.isEmpty(), "Namepsace " + n.namespaceName() + " should be empty");
             }
         }
         mLogger.logEventCompletion();

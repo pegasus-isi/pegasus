@@ -23,27 +23,27 @@ import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class ReplicaLocationTest {
 
     private TestSetup mTestSetup;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
 
         mTestSetup.setInputDirectory(this.getClass());
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test

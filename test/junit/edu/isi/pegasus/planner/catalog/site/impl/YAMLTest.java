@@ -15,7 +15,7 @@
  */
 package edu.isi.pegasus.planner.catalog.site.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
@@ -42,10 +42,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * A Test class to test the Site catalog implementation un YAML
@@ -78,7 +78,7 @@ public class YAMLTest {
     private static int mTestNumber = 1;
     private SiteCatalog mCatalog;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {
         Map<String, String> testEnvVariables = new HashMap();
         testEnvVariables.put("SITE", EXPANDED_SITE);
@@ -91,13 +91,13 @@ public class YAMLTest {
         EnvSetup.setEnvironmentVariables(testEnvVariables);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     public YAMLTest() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -132,7 +132,7 @@ public class YAMLTest {
         mLogger.logEventStart(
                 "test.catalog.site.impl.YAML", "whole-count-test", Integer.toString(mTestNumber++));
         Set<String> entries = mCatalog.list();
-        assertEquals("Expected total number of entries", 7, entries.size());
+        assertEquals(7, entries.size(), "Expected total number of entries");
         SiteCatalogEntry entry = mCatalog.lookup("osg");
         assertNotNull(entry);
         mLogger.logEventCompletion();

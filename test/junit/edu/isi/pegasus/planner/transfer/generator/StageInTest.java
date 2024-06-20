@@ -15,7 +15,8 @@ package edu.isi.pegasus.planner.transfer.generator;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
@@ -54,11 +55,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class StageInTest {
@@ -75,16 +76,16 @@ public class StageInTest {
 
     private static int mTestNumber = 1;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     public StageInTest() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -446,7 +447,7 @@ public class StageInTest {
             j.vdsNS.construct(Pegasus.NO_SYMLINK_KEY, noSymlinkProfileValue.toString());
         }
         assertEquals(
-                "Symlinking for job was ", expected, si.symlinkingEnabled(j, workflowSymlinking));
+                expected, si.symlinkingEnabled(j, workflowSymlinking), "Symlinking for job was ");
         mLogger.logEventCompletion();
     }
 
@@ -606,7 +607,7 @@ public class StageInTest {
         mLogger.logEventCompletion();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mProps = null;

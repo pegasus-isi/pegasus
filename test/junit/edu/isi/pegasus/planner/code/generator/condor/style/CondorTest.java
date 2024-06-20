@@ -15,7 +15,7 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.credential.impl.PegasusCredentials;
@@ -42,8 +42,8 @@ import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * To test the Condor style class for condor code generator.
@@ -74,7 +74,7 @@ public class CondorTest {
 
     public CondorTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() throws CondorStyleException {
         mTestSetup = new DefaultTestSetup();
         mTestSetup.setInputDirectory(this.getClass());
@@ -446,25 +446,25 @@ public class CondorTest {
         // System.err.println(j);
 
         assertEquals(
-                "Num of Environment Variables in " + j.envVariables,
                 expectedEnv.size(),
-                j.envVariables.size());
+                j.envVariables.size(),
+                "Num of Environment Variables in " + j.envVariables);
         for (Object key : expectedEnv.keySet()) {
             assertEquals(
-                    "Value for key " + key + " in " + j.envVariables,
                     expectedEnv.get(key),
-                    j.envVariables.get(key));
+                    j.envVariables.get(key),
+                    "Value for key " + key + " in " + j.envVariables);
         }
         // System.err.println(j.condorVariables);
         assertEquals(
-                "Num of Condor Variables in " + j.condorVariables,
                 expectedCondorVariables.size(),
-                j.condorVariables.size());
+                j.condorVariables.size(),
+                "Num of Condor Variables in " + j.condorVariables);
         for (Object key : expectedCondorVariables.keySet()) {
             assertEquals(
-                    "Value for key " + key + " in " + j.condorVariables,
                     expectedCondorVariables.get(key),
-                    j.condorVariables.get(key));
+                    j.condorVariables.get(key),
+                    "Value for key " + key + " in " + j.condorVariables);
         }
 
         mLogger.logEventCompletion(0);

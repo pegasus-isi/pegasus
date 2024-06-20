@@ -16,13 +16,13 @@
 
 package edu.isi.pegasus.common.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 /** Test class for file type detector */
 public class FileDetectorTest {
@@ -31,7 +31,7 @@ public class FileDetectorTest {
 
     public FileDetectorTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {}
 
     @Test
@@ -200,7 +200,7 @@ public class FileDetectorTest {
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mTestFile.delete();
     }

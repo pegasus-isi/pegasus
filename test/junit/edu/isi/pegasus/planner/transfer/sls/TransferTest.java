@@ -14,7 +14,7 @@
 package edu.isi.pegasus.planner.transfer.sls;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
@@ -40,10 +40,11 @@ import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for nonshared fs mode, PegasusLite transfers
@@ -65,15 +66,15 @@ public abstract class TransferTest {
 
     public TransferTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public final void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
         mTestSetup.setInputDirectory(this.getClass());
@@ -104,7 +105,7 @@ public abstract class TransferTest {
         mLogger.logEventCompletion();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mProps = null;
@@ -126,9 +127,9 @@ public abstract class TransferTest {
         dir.setSharedFileSystemAccess(sharedFileSystem);
         compute.addDirectory(dir);
         assertEquals(
-                "use file URL as source:",
+
                 expectedValue,
-                t.useFileURLAsSource(compute, stagingSite));
+                t.useFileURLAsSource(compute, stagingSite), "use file URL as source:");
         mLogger.logEventCompletion();
     }
 
@@ -138,9 +139,9 @@ public abstract class TransferTest {
         Transfer t = new Transfer();
         t.initialize(mBag);
         assertEquals(
-                "Symlinking enabled for job:",
+
                 expectedValue,
-                t.symlinkingEnabled(job, workflowSymlinking));
+                t.symlinkingEnabled(job, workflowSymlinking),"Symlinking enabled for job:");
         mLogger.logEventCompletion();
     }
 
@@ -153,9 +154,9 @@ public abstract class TransferTest {
         Transfer t = new Transfer();
         t.initialize(mBag);
         assertEquals(
-                "Symlinking enabled for file:",
+
                 expectedValue,
-                t.symlinkingEnabled(pf, symlinkingEnabledForJob, useFileURLAsSource));
+                t.symlinkingEnabled(pf, symlinkingEnabledForJob, useFileURLAsSource), "Symlinking enabled for file:");
         mLogger.logEventCompletion();
     }
 
@@ -177,7 +178,7 @@ public abstract class TransferTest {
             c.addMountPoint(mp);
         }
         t.updateSourceFileURLForContainerizedJob(c, new PegasusFile("f.in"), source, "ID1");
-        assertEquals("source file url in containerized jobs", expectedReplacedURL, source.getPFN());
+        assertEquals( expectedReplacedURL, source.getPFN(), "source file url in containerized jobs");
         mLogger.logEventCompletion();
     }
 
