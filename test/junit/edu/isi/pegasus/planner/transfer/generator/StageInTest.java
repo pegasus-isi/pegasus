@@ -341,33 +341,38 @@ public class StageInTest {
         this.testSymlinkingEnabled(false, false, true);
     }
 
-    /** Test Container Stagein for container universe jobs */
+    /** Test Container Stagein for jobs in nonsharedfs not using container universe */
     @Test
     public void testContainerStageInNonSharedFS() {
         // if running in Container universe we stage in to submit dir
         Container c = constructTestContainer();
 
-        String destSite = "local";
-        PegasusURL destURL =
+        String expectedDestSite = "staging";
+        // gets staged to staging server on site staging
+        PegasusURL expectedDestURL =
                 new PegasusURL(
-                        PegasusURL.DEFAULT_PROTOCOL
-                                + "://"
-                                + mBag.getPlannerOptions().getSubmitDirectory()
+                        "gsiftp://staging.isi.edu/workflows/staging/shared-scratch/"
+                                + "."
                                 + File.separator
                                 + c.getLFN());
 
         this.testContainerStageIn(
-                c, PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE, false, destSite, destURL);
+                c,
+                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
+                false,
+                expectedDestSite,
+                expectedDestURL);
     }
-    
-    /** Test Container Stagein for container universe jobs */
+
+    /** Test Container Stagein for job in nonsharedfs using container universe */
     @Test
     public void testContainerStageInContainerUniverseNonSharedFS() {
         // if running in Container universe we stage in to submit dir
         Container c = constructTestContainer();
 
-        String destSite = "local";
-        PegasusURL destURL =
+        // staged to submit dir for container universe
+        String expectedDestSite = "local";
+        PegasusURL expectedDestURL =
                 new PegasusURL(
                         PegasusURL.DEFAULT_PROTOCOL
                                 + "://"
@@ -376,17 +381,46 @@ public class StageInTest {
                                 + c.getLFN());
 
         this.testContainerStageIn(
-                c, PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE, true, destSite, destURL);
+                c,
+                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
+                true,
+                expectedDestSite,
+                expectedDestURL);
     }
-    
-    /** Test Container Stagein for container universe jobs */
+
+    /** Test Container Stagein for jobs in condorio not using container universe */
+    @Test
+    public void testContainerStageInCondorIO() {
+        // if running in Container universe we stage in to submit dir
+        Container c = constructTestContainer();
+
+        // this gets staged to scratch dir on local site
+        // gsiftp://local.isi.edu/workflows/local/shared-scratch/./osgvo-el7
+        String expectedDestSite = "local";
+        PegasusURL expectedDestURL =
+                new PegasusURL(
+                        "gsiftp://local.isi.edu/workflows/local/shared-scratch/"
+                                + "."
+                                + File.separator
+                                + c.getLFN());
+
+        this.testContainerStageIn(
+                c,
+                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
+                false,
+                expectedDestSite,
+                expectedDestURL);
+    }
+
+    /** Test Container Stagein for jobs in condorio using container universe */
     @Test
     public void testContainerStageInContainerUniverseCondorIO() {
         // if running in Container universe we stage in to submit dir
         Container c = constructTestContainer();
 
-        String destSite = "local";
-        PegasusURL destURL =
+        // staged to submit dir for container universe
+        String expectedDestSite = "local";
+        PegasusURL expectedDestURL =
                 new PegasusURL(
                         PegasusURL.DEFAULT_PROTOCOL
                                 + "://"
@@ -395,7 +429,11 @@ public class StageInTest {
                                 + c.getLFN());
 
         this.testContainerStageIn(
-                c, PegasusConfiguration.CONDOR_CONFIGURATION_VALUE, true, destSite, destURL);
+                c,
+                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
+                true,
+                expectedDestSite,
+                expectedDestURL);
     }
 
     private void testSymlinkingEnabled(
@@ -432,8 +470,7 @@ public class StageInTest {
         job.addInputFile(containerFT);
 
         FileTransfer expected = new FileTransfer(new PegasusFile(c.getLFN()));
-        ReplicaCatalogEntry source =
-                new ReplicaCatalogEntry(c.getImageURL().toString(), "nonlocal");
+        ReplicaCatalogEntry source = new ReplicaCatalogEntry(c.getImageURL().getURL(), "nonlocal");
         // replica selector adds it as part of ranking
         source.addAttribute(ReplicaSelector.PRIORITY_KEY, "10");
         expected.addSource(source);
@@ -501,27 +538,28 @@ public class StageInTest {
 
             Collection<FileTransfer>[] generated = si.constructFileTX(job, job.getInputFiles());
 
-            
-                        FileTransfer generatedFT = null;
-                        for(FileTransfer ft: generated[0]){
-                            generatedFT = ft;
-                        }
-                        FileTransfer localFT = null;
-                        for(FileTransfer ft: expectedLocal){
-                            localFT = ft;
-                        }
-                        System.err.println( generatedFT.toString().equals(localFT.toString()));
-                        System.err.println( generatedFT.equals(localFT));
-                        System.err.println( generatedFT.toString().length() + "," + localFT.toString().length());
+            /*
+            FileTransfer generatedFT = null;
+            for (FileTransfer ft : generated[0]) {
+                generatedFT = ft;
+            }
+            FileTransfer localFT = null;
+            for (FileTransfer ft : expectedLocal) {
+                localFT = ft;
+            }
 
-                        System.err.println("***** Generated One *** ");
-                        System.err.println(generatedFT.toString());
-                        System.err.println("*****");
+            System.err.println(generatedFT.toString().equals(localFT.toString()));
+            System.err.println(generatedFT.equals(localFT));
+            System.err.println(generatedFT.toString().length() + "," + localFT.toString().length());
 
-                        System.err.println("***** Expected One *** ");
-                        System.err.println(localFT.toString());
-                        System.err.println("*****");
-            
+            System.err.println("***** Generated One *** ");
+            System.err.println(generatedFT.toString());
+            System.err.println("*****");
+
+            System.err.println("***** Expected One *** ");
+            System.err.println(localFT.toString());
+            System.err.println("*****");
+            */
 
             assertThat(generated[0], containsInAnyOrder(expectedLocal.toArray()));
             assertThat(generated[1], containsInAnyOrder(expectedRemote.toArray()));
