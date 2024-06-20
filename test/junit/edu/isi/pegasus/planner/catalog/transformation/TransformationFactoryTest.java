@@ -15,7 +15,8 @@
 package edu.isi.pegasus.planner.catalog.transformation;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
@@ -38,11 +39,11 @@ import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for testing the TransformationFactory, and whether it loads correct backend classes
@@ -65,13 +66,13 @@ public class TransformationFactoryTest {
 
     public TransformationFactoryTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -90,7 +91,7 @@ public class TransformationFactoryTest {
         mLogger.logEventCompletion();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test
@@ -108,7 +109,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(Text.class));
-        assertFalse("loaded catalog should not be transient", tc.isTransient());
+        assertFalse(tc.isTransient(), "loaded catalog should not be transient");
         mLogger.logEventCompletion();
     }
 
@@ -124,7 +125,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(Text.class));
-        assertFalse("loaded catalog should not be transient", tc.isTransient());
+        assertFalse(tc.isTransient(), "loaded catalog should not be transient");
         mLogger.logEventCompletion();
     }
 
@@ -142,7 +143,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory() + "/yaml/", "tc.yml").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
-        assertFalse("loaded catalog should not be transient", tc.isTransient());
+        assertFalse(tc.isTransient(), "loaded catalog should not be transient");
         mLogger.logEventCompletion();
     }
 
@@ -158,7 +159,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory() + "/yaml/", "tc.yml").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
-        assertFalse("loaded catalog should not be transient", tc.isTransient());
+        assertFalse(tc.isTransient(), "loaded catalog should not be transient");
         mLogger.logEventCompletion();
     }
 
@@ -191,7 +192,7 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(Text.class));
-            assertFalse("loaded catalog should not be transient", s.isTransient());
+            assertFalse(s.isTransient(), "loaded catalog should not be transient");
         } finally {
             dir.delete();
         }
@@ -220,7 +221,7 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(Text.class));
-            assertTrue("catalog should be transient", s.isTransient());
+            assertTrue(s.isTransient(), "catalog should be transient");
         } finally {
             dir.delete();
         }
@@ -259,7 +260,7 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(YAML.class));
-            assertFalse("loaded catalog should not be transient", s.isTransient());
+            assertFalse(s.isTransient(), "loaded catalog should not be transient");
         } finally {
             dir.delete();
         }
@@ -311,7 +312,7 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(YAML.class));
-            assertFalse("loaded catalog should not be transient", s.isTransient());
+            assertFalse(s.isTransient(), "loaded catalog should not be transient");
         } finally {
             dir.delete();
         }
@@ -453,10 +454,10 @@ public class TransformationFactoryTest {
             List<TransformationCatalogEntry> entries =
                     c.lookup(
                             null, expected.getLogicalName(), null, (String) null, TCType.STAGEABLE);
-            assertEquals("Number of entries retrieved from TC", num, entries.size());
-            assertEquals("Transformation retrieved from TC as ", expected, entries.get(0));
+            assertEquals(num, entries.size(), "Number of entries retrieved from TC");
+            assertEquals(expected, entries.get(0), "Transformation retrieved from TC as ");
             // maybe should be false. need to be revisited
-            assertTrue("loaded catalog should be transient", c.isTransient());
+            assertTrue(c.isTransient(), "loaded catalog should be transient");
         } finally {
             dir.delete();
         }

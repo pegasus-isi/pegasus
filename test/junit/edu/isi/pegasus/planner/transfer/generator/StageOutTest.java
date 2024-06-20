@@ -14,9 +14,9 @@
 package edu.isi.pegasus.planner.transfer.generator;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
@@ -45,11 +45,11 @@ import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class StageOutTest {
@@ -66,16 +66,16 @@ public class StageOutTest {
 
     private static int mTestNumber = 1;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     public StageOutTest() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -539,7 +539,7 @@ public class StageOutTest {
         assertEquals(expected.getDestURL(), actual.getDestURL());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mProps = null;

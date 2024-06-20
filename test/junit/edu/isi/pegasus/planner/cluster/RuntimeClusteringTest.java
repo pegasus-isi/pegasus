@@ -15,7 +15,7 @@
  */
 package edu.isi.pegasus.planner.cluster;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
@@ -26,11 +26,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class to test runtime clustering
@@ -46,13 +46,13 @@ public class RuntimeClusteringTest {
 
     public RuntimeClusteringTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() throws NoSuchMethodException {
         mTestSetup = new DefaultTestSetup();
         mCluster = new Horizontal();
@@ -89,7 +89,7 @@ public class RuntimeClusteringTest {
         assertEquals(jobs.size(), results.size());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mTestSetup = null;

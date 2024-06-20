@@ -13,7 +13,7 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -22,11 +22,11 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author vahi */
 public class PegasusSubmitDAGTest {
@@ -41,13 +41,13 @@ public class PegasusSubmitDAGTest {
 
     public PegasusSubmitDAGTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -67,7 +67,7 @@ public class PegasusSubmitDAGTest {
         mLogger.logEventStart("test.code.generator.condor.PegasusSubmitDAG", "setup", "0");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test

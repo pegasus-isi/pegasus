@@ -15,7 +15,8 @@
 package edu.isi.pegasus.planner.catalog.site;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
@@ -30,11 +31,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for testing the SiteFactory, and whether it loads correct backend classes based on
@@ -58,13 +59,13 @@ public class SiteFactoryTest {
 
     public SiteFactoryTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -77,7 +78,7 @@ public class SiteFactoryTest {
         mLogger.logEventCompletion();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test
@@ -260,7 +261,7 @@ public class SiteFactoryTest {
         mLogger.logEventCompletion();
     }
 
-    @Test(expected = SiteFactoryException.class)
+    @Test
     public void testWithEmptyProperties() throws Exception {
 
         mLogger.logEventStart(
@@ -269,7 +270,7 @@ public class SiteFactoryTest {
                 Integer.toString(mTestNumber++));
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, props);
-        SiteCatalog s = SiteFactory.loadInstance(mBag);
+        assertThrows(SiteFactoryException.class, () -> SiteFactory.loadInstance(mBag));
         mLogger.logEventCompletion();
     }
 }

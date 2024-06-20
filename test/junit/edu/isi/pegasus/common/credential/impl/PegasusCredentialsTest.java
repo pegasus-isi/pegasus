@@ -15,7 +15,7 @@
  */
 package edu.isi.pegasus.common.credential.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
@@ -33,11 +33,11 @@ import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class PegasusCredentialsTest {
@@ -54,13 +54,13 @@ public class PegasusCredentialsTest {
 
     public PegasusCredentialsTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -76,7 +76,7 @@ public class PegasusCredentialsTest {
         mLogger.logEventCompletion();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test
@@ -251,11 +251,11 @@ public class PegasusCredentialsTest {
                                 credentials.verify(new Job(), type, credFile.getAbsolutePath());
                             });
             assertTrue(
+                    exception.getMessage().contains(expectedException.getMessage()),
                     "EXCEPTION MESSAGE "
                             + exception.getMessage()
                             + " DOES NOT CONTAIN "
-                            + expectedException.getMessage(),
-                    exception.getMessage().contains(expectedException.getMessage()));
+                            + expectedException.getMessage());
         }
         mLogger.logEventCompletion();
     }
@@ -302,9 +302,9 @@ public class PegasusCredentialsTest {
         credentials.verify(new Job(), type, credFile.getAbsolutePath());
 
         assertEquals(
-                endPoint + " existence in cred file",
                 exists,
-                credentials.hasCredential(type, credFile.getAbsolutePath(), endPoint));
+                credentials.hasCredential(type, credFile.getAbsolutePath(), endPoint),
+                endPoint + " existence in cred file");
 
         mLogger.logEventCompletion();
     }

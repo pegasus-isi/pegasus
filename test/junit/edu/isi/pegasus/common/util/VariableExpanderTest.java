@@ -13,7 +13,8 @@
  */
 package edu.isi.pegasus.common.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
@@ -22,10 +23,10 @@ import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class VariableExpanderTest {
@@ -38,17 +39,17 @@ public class VariableExpanderTest {
 
     public VariableExpanderTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {
         Map<String, String> testEnvVariables = new HashMap();
         testEnvVariables.put("USER", "bamboo");
         EnvSetup.setEnvironmentVariables(testEnvVariables);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
 
@@ -70,11 +71,11 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
 
-        assertEquals("Invalid Expansion", expected, exp.expand(input));
+        assertEquals(expected, exp.expand(input), "Invalid Expansion");
         mLogger.logEventCompletion();
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testKnownVariableCaseSensitiveError() {
 
         mLogger.logEventStart(
@@ -85,11 +86,11 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
 
-        assertEquals("Invalid Expansion", expected, exp.expand(input));
+        assertThrows(RuntimeException.class, () -> exp.expand(input));
         mLogger.logEventCompletion();
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testUnKnownVariableCaseSensitive() {
 
         mLogger.logEventStart(
@@ -100,7 +101,7 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
 
-        assertEquals("Invalid Expansion", expected, exp.expand(input));
+        assertThrows(RuntimeException.class, () -> exp.expand(input));
         mLogger.logEventCompletion();
     }
 
@@ -115,7 +116,7 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
 
-        assertEquals("Invalid Expansion", expected, exp.expand(input));
+        assertEquals(expected, exp.expand(input), "Invalid Expansion");
         mLogger.logEventCompletion();
     }
 
@@ -130,11 +131,11 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
 
-        assertEquals("Invalid Expansion", expected, exp.expand(input));
+        assertEquals(expected, exp.expand(input), "Invalid Expansion");
         mLogger.logEventCompletion();
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testUnKnownVariableCaseInSensitive() {
 
         mLogger.logEventStart(
@@ -145,7 +146,7 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
 
-        assertEquals("Invalid Expansion", expected, exp.expand(input));
+        assertThrows(RuntimeException.class, () -> exp.expand(input));
         mLogger.logEventCompletion();
     }
 
@@ -160,7 +161,7 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? \\" + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + variable;
 
-        assertEquals("Invalid Expansion", expected, exp.expand(input));
+        assertEquals(expected, exp.expand(input), "Invalid Expansion");
         mLogger.logEventCompletion();
     }
 }

@@ -13,7 +13,8 @@
  */
 package edu.isi.pegasus.planner.mapper.submit;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
@@ -28,11 +29,11 @@ import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * A JUnit Test to test the Named Submit Mapper mapper interface.
@@ -54,7 +55,7 @@ public class NamedSubmitMapperTest {
 
     private static int mTestNum = 1;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {
         mTestSetup = new DefaultTestSetup();
         mTestSetup.setInputDirectory(NamedSubmitMapperTest.class);
@@ -65,7 +66,7 @@ public class NamedSubmitMapperTest {
         }
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {
         if (mBaseTestSubmitDir != null) {
             mBaseTestSubmitDir.delete();
@@ -73,7 +74,7 @@ public class NamedSubmitMapperTest {
     }
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
 
         mBag = new PegasusBag();
@@ -132,7 +133,7 @@ public class NamedSubmitMapperTest {
         mLogger.logEventCompletion();
     }
 
-    @Test(expected = MapperException.class)
+    @Test
     public void testEmptyComputeJob() {
 
         // test with no deep storage structure enabled
@@ -142,7 +143,10 @@ public class NamedSubmitMapperTest {
         Job j = new Job();
         j.setName("empty-compute");
         j.setJobType(Job.COMPUTE_JOB);
-        this.test(j, mBaseTestSubmitDir, ".", mapper.getRelativeDir(j));
+
+        assertThrows(
+                MapperException.class,
+                () -> this.test(j, mBaseTestSubmitDir, ".", mapper.getRelativeDir(j)));
 
         mLogger.logEventCompletion();
     }
@@ -165,9 +169,9 @@ public class NamedSubmitMapperTest {
     private void test(Job j, File baseDir, String expectedDir, File actualDir) {
         try {
             assertEquals(
-                    "Job " + j.getName() + " not mapped to right location ",
                     expectedDir,
-                    actualDir.getPath());
+                    actualDir.getPath(),
+                    "Job " + j.getName() + " not mapped to right location ");
         } finally {
             if (actualDir != null && !actualDir.getPath().equals(".")) {
                 // cleanup any relative directory that was created
@@ -177,7 +181,7 @@ public class NamedSubmitMapperTest {
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mBag = null;

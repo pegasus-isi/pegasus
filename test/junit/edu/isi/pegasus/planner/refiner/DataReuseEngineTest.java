@@ -13,7 +13,7 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -36,11 +36,11 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * A JUnit Test to test the DataReuseEngine
@@ -62,16 +62,16 @@ public class DataReuseEngineTest {
 
     private static int mTestNumber = 1;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     public DataReuseEngineTest() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
         mTestSetup = new DataReuseEngineTestSetup();
         mBag = new PegasusBag();
@@ -118,15 +118,20 @@ public class DataReuseEngineTest {
         Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray(new Job[0]);
 
         String[] expectedDeletedJobs = {
-            "add_replace_ID0000005", "alignment_to_reference_ID0000008", "dedup_ID0000006",
-            "indel_realign_ID0000003", "realign_target_creator_ID0000004", "reduce_reads_ID0000002",
-            "sort_sam_ID0000007", "unified_genotyper_indel_ID0000011",
-                    "unified_genotyper_snp_ID0000009",
+            "add_replace_ID0000005",
+            "alignment_to_reference_ID0000008",
+            "dedup_ID0000006",
+            "indel_realign_ID0000003",
+            "realign_target_creator_ID0000004",
+            "reduce_reads_ID0000002",
+            "sort_sam_ID0000007",
+            "unified_genotyper_indel_ID0000011",
+            "unified_genotyper_snp_ID0000009",
         };
         assertArrayEquals(
-                "Deleted Jobs don't match ",
                 expectedDeletedJobs,
-                toSortedStringArray(actualDeletedJobs));
+                toSortedStringArray(actualDeletedJobs),
+                "Deleted Jobs don't match ");
         mLogger.logEventCompletion();
         System.out.println("\n");
     }
@@ -176,9 +181,9 @@ public class DataReuseEngineTest {
             "analyze_ID0000004", "findrange_ID0000003",
         };
         assertArrayEquals(
-                "Deleted Jobs don't match ",
                 expectedDeletedJobs,
-                toSortedStringArray(actualDeletedJobs));
+                toSortedStringArray(actualDeletedJobs),
+                "Deleted Jobs don't match ");
         mLogger.logEventCompletion();
         System.out.println("\n");
     }
@@ -220,9 +225,9 @@ public class DataReuseEngineTest {
             "unified_genotyper_indel_ID0000011", "unified_genotyper_snp_ID0000009",
         };
         assertArrayEquals(
-                "Deleted Jobs don't match ",
                 expectedDeletedJobs,
-                toSortedStringArray(actualDeletedJobs));
+                toSortedStringArray(actualDeletedJobs),
+                "Deleted Jobs don't match ");
         mLogger.logEventCompletion();
         System.out.println("\n");
     }
@@ -261,9 +266,9 @@ public class DataReuseEngineTest {
             "unified_genotyper_indel_ID0000011", "unified_genotyper_snp_ID0000009",
         };
         assertArrayEquals(
-                "Deleted Jobs don't match ",
                 expectedDeletedJobs,
-                toSortedStringArray(actualDeletedJobs));
+                toSortedStringArray(actualDeletedJobs),
+                "Deleted Jobs don't match ");
         mLogger.logEventCompletion();
         System.out.println("\n");
     }
@@ -299,16 +304,16 @@ public class DataReuseEngineTest {
             "findrange_ID0000002",
         };
         assertArrayEquals(
-                "Deleted Jobs don't match ",
                 expectedDeletedJobs,
-                toSortedStringArray(actualDeletedJobs));
+                toSortedStringArray(actualDeletedJobs),
+                "Deleted Jobs don't match ");
         mLogger.logEventCompletion();
         System.out.println("\n");
 
         mProps.removeProperty("pegasus.data.reuse.scope");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mProps = null;
@@ -360,6 +365,7 @@ public class DataReuseEngineTest {
         }
     }
 }
+
 /**
  * A default test setup implementation for the junit tests.
  *

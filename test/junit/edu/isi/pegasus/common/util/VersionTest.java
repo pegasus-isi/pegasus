@@ -1,10 +1,11 @@
 package edu.isi.pegasus.common.util;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.util.Properties;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class VersionTest {
     private Properties props = new Properties();
@@ -12,7 +13,7 @@ public class VersionTest {
 
     public VersionTest() {}
 
-    @Before
+    @BeforeEach
     public void loadProperties() throws Exception {
         props.load(Version.class.getClassLoader().getResourceAsStream("pegasus.build.properties"));
     }
@@ -20,56 +21,56 @@ public class VersionTest {
     @Test
     public void testVersion() {
         String version = ver.getVersion();
-        Assert.assertTrue(version != null);
-        Assert.assertTrue(version.matches("\\d+[.]\\d+[.]\\d+([a-zA-Z0-9]+)?"));
+        assertTrue(version != null);
+        assertTrue(version.matches("\\d+[.]\\d+[.]\\d+([a-zA-Z0-9]+)?"));
     }
 
     @Test
     public void testMajorMinorPatch() {
         String major = ver.getMajor();
-        Assert.assertTrue(major != null);
-        Assert.assertTrue(major.matches("\\d+"));
+        assertTrue(major != null);
+        assertTrue(major.matches("\\d+"));
 
         String minor = ver.getMinor();
-        Assert.assertTrue(minor != null);
-        Assert.assertTrue(minor.matches("\\d+"));
+        assertTrue(minor != null);
+        assertTrue(minor.matches("\\d+"));
 
         String patch = ver.getPatch();
-        Assert.assertTrue(patch != null);
-        Assert.assertTrue(patch.matches("\\d+([a-zA-Z0-9]+)?"));
+        assertTrue(patch != null);
+        assertTrue(patch.matches("\\d+([a-zA-Z0-9]+)?"));
 
         String version = ver.getVersion();
-        Assert.assertEquals(version, major + "." + minor + "." + patch);
+        assertEquals(version, major + "." + minor + "." + patch);
     }
 
     @Test
     public void testTimestamp() {
         String ts = ver.getTimestamp();
-        Assert.assertTrue(ts != null);
-        Assert.assertTrue(ts.matches("\\d{14}Z"));
+        assertTrue(ts != null);
+        assertTrue(ts.matches("\\d{14}Z"));
     }
 
     @Test
     public void testPlatform() {
         String plat = ver.getPlatform();
-        Assert.assertTrue(plat != null);
+        assertTrue(plat != null);
     }
 
     @Test
     public void testArchitceture() {
         SysInfo.Architecture arch = ver.getArchitecture();
-        Assert.assertTrue(arch != null);
+        assertTrue(arch != null);
     }
 
     @Test
     public void testOS() {
         SysInfo.OS os = ver.getOS();
-        Assert.assertTrue(os != null);
+        assertTrue(os != null);
     }
 
     @Test
     public void testOSReleaese() {
         SysInfo.OS_RELEASE release = ver.getOSRelease();
-        Assert.assertTrue(release != null);
+        assertTrue(release != null);
     }
 }

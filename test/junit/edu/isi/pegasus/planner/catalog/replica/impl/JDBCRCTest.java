@@ -15,9 +15,9 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
@@ -29,9 +29,9 @@ import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author Rafael Ferreira da Silva */
 public class JDBCRCTest {
@@ -42,7 +42,7 @@ public class JDBCRCTest {
 
     public JDBCRCTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
 
         String basename = "pegasus-db-admin";
@@ -319,7 +319,7 @@ public class JDBCRCTest {
         assertEquals(1, map.size());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         jdbcrc.close();
         new File("jdbcrc_test.db").delete();

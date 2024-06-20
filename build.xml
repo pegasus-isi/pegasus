@@ -747,7 +747,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </copy>
 
     <mkdir dir="${junitreport.dir}"/>
-    <junit printsummary="yes" haltonfailure="yes" fork="true" forkmode="once">
+    <java classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
       <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
       <sysproperty key="pegasus.home.schemadir" value="${dist.schema}"/>
       <sysproperty key="pegasus.home.bindir" value="${dist.bin}"/>
@@ -761,11 +761,17 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <path location="${dist.jars}/pegasus-test.jar"/>
         <path location="${dist.jars}/vdl.jar"/>
       </classpath>
-
-      <formatter type="xml" usefile="yes"/>
-      <formatter type="brief" usefile="no"/>
-      <test name="edu.isi.pegasus.planner.test.AllTests" todir="${junitreport.dir}"/>
-    </junit>
+      <arg value="execute"/>
+      <arg value="--fail-if-no-tests"/>
+      <arg value="--scan-classpath=build/tests/classes"/>
+      <arg line="--reports-dir ${junitreport.dir}"/>
+    </java>
+    <junitreport todir="${junitreport.dir}">
+      <fileset dir="${junitreport.dir}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report format="frames" todir="${junitreport.dir}/html"/>
+    </junitreport>
   </target>
 
   <target name="test-kickstart" depends="compile-pegasus-kickstart,compile-pegasus-worker" description="Run kickstart unit tests">

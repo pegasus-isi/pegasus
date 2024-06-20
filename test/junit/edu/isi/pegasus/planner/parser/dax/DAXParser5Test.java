@@ -5,7 +5,7 @@
  */
 package edu.isi.pegasus.planner.parser.dax;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -18,11 +18,11 @@ import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.util.LinkedList;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author vahi */
 public class DAXParser5Test {
@@ -41,14 +41,14 @@ public class DAXParser5Test {
     /** The parsed DAX file */
     private ADag mParsedDAX;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -80,33 +80,33 @@ public class DAXParser5Test {
     public void testWorkflowTaskMetrics() {
         WorkflowMetrics metrics = mParsedDAX.getWorkflowMetrics();
         // System.err.println(metrics);
-        assertEquals("number of compute tasks ", 4, metrics.getTaskCount(Job.COMPUTE_JOB));
-        assertEquals("number of dag tasks ", 0, metrics.getTaskCount(Job.DAG_JOB));
-        assertEquals("number of dax tasks ", 0, metrics.getTaskCount(Job.DAX_JOB));
+        assertEquals(4, metrics.getTaskCount(Job.COMPUTE_JOB), "number of compute tasks ");
+        assertEquals(0, metrics.getTaskCount(Job.DAG_JOB), "number of dag tasks ");
+        assertEquals(0, metrics.getTaskCount(Job.DAX_JOB), "number of dax tasks ");
     }
 
     @Test
     public void testWorkflowFileMetrics() {
         WorkflowMetrics metrics = mParsedDAX.getWorkflowMetrics();
         assertEquals(
-                "number of raw input files ",
                 1,
-                metrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.input));
+                metrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.input),
+                "number of raw input files ");
         assertEquals(
-                "number of intermediate files ",
                 4,
-                metrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.intermediate));
+                metrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.intermediate),
+                "number of intermediate files ");
         assertEquals(
-                "number of output files ",
                 1,
-                metrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.output));
+                metrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.output),
+                "number of output files ");
         assertEquals(
-                "number of total files ",
                 6,
-                metrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.total));
+                metrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.total),
+                "number of total files ");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mProps = null;

@@ -15,8 +15,8 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -36,10 +36,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** A Test class to test the YAML format of the Transformation Catalog */
 public class YAMLTest {
@@ -76,7 +76,7 @@ public class YAMLTest {
     private static final String EXPANDED_OS = "linux";
     private static final String EXPANDED_KEG_PATH = "file:///usr/bin/pegasus-keg";
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {
         Map<String, String> testEnvVariables = new HashMap();
         testEnvVariables.put("SITE", EXPANDED_SITE);
@@ -89,13 +89,13 @@ public class YAMLTest {
         EnvSetup.setEnvironmentVariables(testEnvVariables);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     public YAMLTest() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -129,10 +129,10 @@ public class YAMLTest {
                 "whole-count-test",
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> entries = mCatalog.getContents();
-        assertEquals("Expected total number of entries", 4, entries.size());
+        assertEquals(4, entries.size(), "Expected total number of entries");
         List<TransformationCatalogEntry> kegEntries =
                 mCatalog.lookup("example", "keg", "1.0", (String) null, null);
-        assertEquals("Expected total number of keg entries", 2, kegEntries.size());
+        assertEquals(2, kegEntries.size(), "Expected total number of keg entries");
         mLogger.logEventCompletion();
     }
 
@@ -144,7 +144,7 @@ public class YAMLTest {
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> kegEntries =
                 mCatalog.lookup("example", "keg", "1.0", (String) null, null);
-        assertEquals("Expected total number of keg entries", 2, kegEntries.size());
+        assertEquals(2, kegEntries.size(), "Expected total number of keg entries");
         mLogger.logEventCompletion();
     }
 
@@ -168,7 +168,7 @@ public class YAMLTest {
     private void testProfile(Container containerInfo, String env, String key, String value) {
         Profile p = new Profile(env, key, value);
         List profiles = containerInfo.getProfiles();
-        assertTrue("Entry " + containerInfo, profiles.contains(p));
+        assertTrue(profiles.contains(p), "Entry " + containerInfo);
     }
 
     @Test
@@ -181,17 +181,17 @@ public class YAMLTest {
                 mCatalog.lookup(null, "myxform", null, "condorpool", null);
         TransformationCatalogEntry entry = entries.get(0);
         SysInfo info = entry.getSysInfo();
-        assertEquals("Expected attribute ", "INSTALLED", entry.getType().name());
-        assertEquals("Expected attribute ", null, entry.getLogicalNamespace());
-        assertEquals("Expected attribute ", "myxform", entry.getLogicalName());
-        assertEquals("Expected attribute ", null, entry.getLogicalVersion());
-        assertEquals("Expected attribute ", "condorpool", entry.getResourceId());
-        assertEquals("Expected attribute ", "/usr/bin/true", entry.getPhysicalTransformation());
+        assertEquals("INSTALLED", entry.getType().name(), "Expected attribute ");
+        assertEquals(null, entry.getLogicalNamespace(), "Expected attribute ");
+        assertEquals("myxform", entry.getLogicalName(), "Expected attribute ");
+        assertEquals(null, entry.getLogicalVersion(), "Expected attribute ");
+        assertEquals("condorpool", entry.getResourceId(), "Expected attribute ");
+        assertEquals("/usr/bin/true", entry.getPhysicalTransformation(), "Expected attribute ");
         assertEquals(
-                "Expected attribute ",
                 Architecture.x86_64.toString(),
-                info.getArchitecture().name());
-        assertEquals("Expected attribute ", OS.linux.toString(), info.getOS().name());
+                info.getArchitecture().name(),
+                "Expected attribute ");
+        assertEquals(OS.linux.toString(), info.getOS().name(), "Expected attribute ");
         testProfile(entry, Profile.METADATA, "key", "value");
         testProfile(entry, Profile.METADATA, "appmodel", "myxform.aspen");
         testProfile(entry, Profile.METADATA, "version", "2.0");
@@ -252,14 +252,14 @@ public class YAMLTest {
                         EXPANDED_NAMESPACE, EXPANDED_NAME, EXPECTED_VERSION, EXPANDED_SITE, null);
         TransformationCatalogEntry expanded = kegEntries.get(0);
         SysInfo info = expanded.getSysInfo();
-        assertEquals("Expected attribute ", EXPANDED_NAMESPACE, expanded.getLogicalNamespace());
-        assertEquals("Expected attribute ", EXPANDED_NAME, expanded.getLogicalName());
-        assertEquals("Expected attribute ", EXPECTED_VERSION, expanded.getLogicalVersion());
-        assertEquals("Expected attribute ", EXPANDED_SITE, expanded.getResourceId());
-        assertEquals("Expected attribute ", EXPANDED_ARCH, info.getArchitecture().name());
-        assertEquals("Expected attribute ", EXPANDED_OS, info.getOS().name());
+        assertEquals(EXPANDED_NAMESPACE, expanded.getLogicalNamespace(), "Expected attribute ");
+        assertEquals(EXPANDED_NAME, expanded.getLogicalName(), "Expected attribute ");
+        assertEquals(EXPECTED_VERSION, expanded.getLogicalVersion(), "Expected attribute ");
+        assertEquals(EXPANDED_SITE, expanded.getResourceId(), "Expected attribute ");
+        assertEquals(EXPANDED_ARCH, info.getArchitecture().name(), "Expected attribute ");
+        assertEquals(EXPANDED_OS, info.getOS().name(), "Expected attribute ");
         assertEquals(
-                "Expected attribute ", EXPANDED_KEG_PATH, expanded.getPhysicalTransformation());
+                EXPANDED_KEG_PATH, expanded.getPhysicalTransformation(), "Expected attribute ");
 
         mLogger.logEventCompletion();
     }
@@ -293,6 +293,6 @@ public class YAMLTest {
             TransformationCatalogEntry entry, String namespace, String key, String value) {
         Profile p = new Profile(namespace, key, value);
         List profiles = entry.getProfiles(namespace);
-        assertTrue("Entry " + entry, profiles.contains(p));
+        assertTrue(profiles.contains(p), "Entry " + entry);
     }
 }

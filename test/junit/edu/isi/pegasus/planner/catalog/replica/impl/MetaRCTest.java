@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import java.io.BufferedWriter;
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 /**
  * Test class to test YAML based RC with Regex Support
@@ -41,7 +41,7 @@ public class MetaRCTest {
 
     public MetaRCTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         mMetaRC = new Meta();
         mRCFile = File.createTempFile("replica", ".meta");
@@ -79,7 +79,7 @@ public class MetaRCTest {
 
     @Test
     public void simpleChecksOnMetaFile() {
-        assertEquals("Number of Entries in RC ", 2, mMetaRC.list().size());
+        assertEquals(2, mMetaRC.list().size(), "Number of Entries in RC ");
         assertFalse(mMetaRC.list().contains("f.a"));
         assertTrue(mMetaRC.list().contains("f.b1"));
         assertTrue(mMetaRC.list().contains("f.b2"));
@@ -88,13 +88,13 @@ public class MetaRCTest {
     @Test
     public void checkParsedRCE() {
         String lfn = "f.b1";
-        assertEquals("Number of Entries in RC ", 2, mMetaRC.list().size());
-        assertTrue("Replica Catalog should contain lfn", mMetaRC.list().contains(lfn));
+        assertEquals(2, mMetaRC.list().size(), "Number of Entries in RC ");
+        assertTrue(mMetaRC.list().contains(lfn), "Replica Catalog should contain lfn");
         Collection<ReplicaCatalogEntry> rces = mMetaRC.lookup(lfn);
-        assertEquals("There should be only one rce for lfn " + lfn, 1, rces.size());
+        assertEquals(1, rces.size(), "There should be only one rce for lfn " + lfn);
         for (ReplicaCatalogEntry rce : rces) {
-            assertNull("PFN for RCE should be null", rce.getPFN());
-            assertEquals("Number of attributes found", 6, rce.getAttributeCount());
+            assertNull(rce.getPFN(), "PFN for RCE should be null");
+            assertEquals(6, rce.getAttributeCount(), "Number of Entries in RC ");
             assertAttribute("user", "bamboo", rce);
 
             assertAttribute("size", "56", rce);
@@ -112,13 +112,13 @@ public class MetaRCTest {
     public void lookupWholeCatalogWithConstraints() {
         Map<String, Collection<ReplicaCatalogEntry>> m = mMetaRC.lookup(new HashMap());
         String lfn = "f.b1";
-        assertEquals("Number of Entries in map ", 2, m.entrySet().size());
-        assertTrue("MAP should contain lfn", m.containsKey(lfn));
+        assertEquals(2, m.entrySet().size(), "Number of Entries in map ");
+        assertTrue(m.containsKey(lfn), "MAP should contain lfn");
         Collection<ReplicaCatalogEntry> rces = m.get(lfn);
-        assertEquals("There should be only one rce for lfn " + lfn, 1, rces.size());
+        assertEquals(1, rces.size(), "There should be only one rce for lfn " + lfn);
         for (ReplicaCatalogEntry rce : rces) {
-            assertNull("PFN for RCE should be null", rce.getPFN());
-            assertEquals("Number of attributes found", 6, rce.getAttributeCount());
+            assertNull(rce.getPFN(), "PFN for RCE should be null");
+            assertEquals(6, rce.getAttributeCount(), "Number of attributes found");
             assertAttribute("user", "bamboo", rce);
 
             assertAttribute("size", "56", rce);
@@ -167,7 +167,7 @@ public class MetaRCTest {
         assertTrue(c.contains(new ReplicaCatalogEntry("c", "handle")));
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mRCFile.delete();
     }

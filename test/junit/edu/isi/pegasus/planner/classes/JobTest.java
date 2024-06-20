@@ -5,18 +5,18 @@
  */
 package edu.isi.pegasus.planner.classes;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.util.Collection;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for testing creation of jobs
@@ -27,16 +27,16 @@ public class JobTest {
 
     public JobTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {}
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test
@@ -251,7 +251,7 @@ public class JobTest {
         testPegasusFile(expectedInput, (PegasusFile) inputs.toArray()[0]);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testDAXJobWihtoutFile() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
@@ -265,7 +265,7 @@ public class JobTest {
                         + "    stageOut: True\n"
                         + "    registerReplica: False";
 
-        DAXJob job = (DAXJob) mapper.readValue(test, Job.class);
+        assertThrows(RuntimeException.class, () -> mapper.readValue(test, Job.class));
     }
 
     @Test
@@ -301,7 +301,7 @@ public class JobTest {
         testPegasusFile(expectedInput, (PegasusFile) inputs.toArray()[0]);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testDAGJobWihtoutFile() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
@@ -315,7 +315,7 @@ public class JobTest {
                         + "    stageOut: True\n"
                         + "    registerReplica: False";
 
-        DAGJob job = (DAGJob) mapper.readValue(test, Job.class);
+        assertThrows(RuntimeException.class, () -> mapper.readValue(test, Job.class));
     }
 
     @Test

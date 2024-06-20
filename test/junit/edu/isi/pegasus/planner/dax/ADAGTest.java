@@ -13,7 +13,7 @@
  */
 package edu.isi.pegasus.planner.dax;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAX2CDAG;
 import edu.isi.pegasus.planner.parser.dax.DAXParser5;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author ryantanaka */
 public class ADAGTest {

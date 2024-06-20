@@ -13,7 +13,7 @@
  */
 package edu.isi.pegasus.common.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 /**
  * Test class to test the Common Properties that loads the various properties
@@ -48,7 +48,7 @@ public class CommonPropertiesTest {
 
     public CommonPropertiesTest() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mOriginalEnv = System.getenv();
@@ -61,7 +61,7 @@ public class CommonPropertiesTest {
         mLogger.logEventStart("test.pegasus.url", "setup", "0");
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         mLogger = null;
         mTestSetup = null;

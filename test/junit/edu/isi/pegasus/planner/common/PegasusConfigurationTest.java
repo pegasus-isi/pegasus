@@ -15,7 +15,7 @@
 
 package edu.isi.pegasus.planner.common;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -23,11 +23,11 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties.PEGASUS_MODE;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for testing the PegasusConfiguration
@@ -47,14 +47,14 @@ public class PegasusConfigurationTest {
 
     public PegasusConfigurationTest() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
-    @Before
+    @BeforeEach
     public final void setUp() {
         mTestSetup = new DefaultTestSetup();
         mTestSetup.setInputDirectory(this.getClass());
@@ -132,10 +132,10 @@ public class PegasusConfigurationTest {
     private void testComputeLogLevel(PEGASUS_MODE mode, PlannerOptions options, int expected) {
         PegasusConfiguration pc = new PegasusConfiguration(mLogger);
         int actual = pc.computeLogLevel(mode, options);
-        assertEquals("Computed Log Level does not match", expected, actual);
+        assertEquals(expected, actual, "Computed Log Level does not match");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mLogger = null;
         mProps = null;
