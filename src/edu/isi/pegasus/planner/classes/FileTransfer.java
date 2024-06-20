@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * This is a container for the storing the transfers that are required in between sites. It refers
@@ -508,6 +509,36 @@ public class FileTransfer extends PegasusFile {
         // the maps are not cloned underneath
 
         return ft;
+    }
+
+    /**
+     * Checks if an object is similar to the one referred to by this class. We do a full match,
+     * relying on the toString method
+     *
+     * @return true if the primary key (lfn) matches. else false.
+     */
+    @Override    
+    public boolean equals(Object o) {
+        if (o instanceof FileTransfer) {
+            FileTransfer file = (FileTransfer) o;
+            // PM-1950 the PegasusFile equals is only on LFN
+            // which is not fully complete
+            return file.toString().equals(this.toString());
+        }
+        return false;
+    }
+    
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 37 * hash + Objects.hashCode(this.mJob);
+        hash = 37 * hash + Objects.hashCode(this.mSourceMap);
+        hash = 37 * hash + Objects.hashCode(this.mDestMap);
+        hash = 37 * hash + Objects.hashCode(this.mURLForRegistrationOnDestination);
+        hash = 37 * hash + this.mPriority;
+        hash = 37 * hash + (this.mVerifySymlinkSource ? 1 : 0);
+        return hash;
     }
 
     /**
