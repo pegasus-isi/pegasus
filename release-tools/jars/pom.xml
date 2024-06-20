@@ -11,13 +11,20 @@
     <dependencies>
         <!--
             Unit Testing
-            JUnit 5: https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
-            Mockito: https://mvnrepository.com/artifact/org.mockito/mockito-core
+            JUnit 5:  https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
+            Hamcrest: https://mvnrepository.com/artifact/org.hamcrest/hamcrest
+            Mockito:  https://mvnrepository.com/artifact/org.mockito/mockito-core
         -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>2.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
