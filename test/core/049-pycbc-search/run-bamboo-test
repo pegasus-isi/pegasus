@@ -2,7 +2,27 @@
 
 set -e
 
-TOP_DIR=`pwd`
+TOPDIR=`pwd`
+
+# pegasus-version is required to ensure uniqueness for the submit dir
+# if 2 piplelines for different branches run in gitlab at same time
+PEGASUS_VERSION=`pegasus-version`
+
+# determine TEST_NAME to setup the submit dir on the
+# shared filesytem. LIGO test setup requires the submit
+# dir to be on a shared filesystem visible to the condorpool
+# nodes, since the site catalog is constructed w.r.t it.
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+fi
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+
+LAUNCHDIR=/scitech/shared/scratch-90-days/${PEGASUS_VERSION}/${TEST_NAME}
+mkdir -p ${LAUNCHDIR}
+cd ${LAUNCHDIR}
+
+echo "TEST ${TEST_NAME} will be launched from ${LAUNCHDIR}"
 
 rm -rf ./pycbc
 git clone https://github.com/gwastro/pycbc
