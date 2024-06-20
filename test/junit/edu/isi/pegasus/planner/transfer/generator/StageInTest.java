@@ -341,47 +341,61 @@ public class StageInTest {
         this.testSymlinkingEnabled(false, false, true);
     }
 
-    /** Test Container Stagein */
+    /** Test Container Stagein for container universe jobs */
     @Test
-    public void testContainerStageIn() {
-        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
-        // reset the input files
-        job.setInputFiles(new HashSet());
+    public void testContainerStageInNonSharedFS() {
+        // if running in Container universe we stage in to submit dir
         Container c = constructTestContainer();
-        job.setContainer(c);
-        job.condorVariables.checkKeyInNS(Condor.UNIVERSE_KEY, Condor.CONTAINER_UNIVERSE);
 
-        FileTransfer containerFT = new FileTransfer(new PegasusFile(c.getLFN()));
-        containerFT.addSource("nonlocal", c.getImageURL().getURL());
-        job.addInputFile(containerFT);
-
-        FileTransfer expected = new FileTransfer(new PegasusFile(c.getLFN()));
-        ReplicaCatalogEntry source =
-                new ReplicaCatalogEntry(c.getImageURL().toString(), "nonlocal");
-        // replica selector adds it as part of ranking
-        source.addAttribute(ReplicaSelector.PRIORITY_KEY, "10");
-        expected.addSource(source);
-        expected.addDestination(
-                "local",
+        String destSite = "local";
+        PegasusURL destURL =
                 new PegasusURL(
-                                PegasusURL.DEFAULT_PROTOCOL
-                                        + "://"
-                                        + mBag.getPlannerOptions().getSubmitDirectory()
-                                        + File.separator
-                                        + c.getLFN())
-                        .getURL());
-        // integrity checking is turned off when containers are managed by HTCondor
-        expected.setForIntegrityChecking(false);
+                        PegasusURL.DEFAULT_PROTOCOL
+                                + "://"
+                                + mBag.getPlannerOptions().getSubmitDirectory()
+                                + File.separator
+                                + c.getLFN());
 
-        Collection<FileTransfer> expectedLocal = new LinkedList();
-        expectedLocal.add(expected);
-        Collection<FileTransfer> expectedRemote = new LinkedList();
+        this.testContainerStageIn(
+                c, PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE, false, destSite, destURL);
+    }
+    
+    /** Test Container Stagein for container universe jobs */
+    @Test
+    public void testContainerStageInContainerUniverseNonSharedFS() {
+        // if running in Container universe we stage in to submit dir
+        Container c = constructTestContainer();
 
-        this.testStageIn(
-                job,
-                PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE,
-                expectedLocal,
-                expectedRemote);
+        String destSite = "local";
+        PegasusURL destURL =
+                new PegasusURL(
+                        PegasusURL.DEFAULT_PROTOCOL
+                                + "://"
+                                + mBag.getPlannerOptions().getSubmitDirectory()
+                                + File.separator
+                                + c.getLFN());
+
+        this.testContainerStageIn(
+                c, PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE, true, destSite, destURL);
+    }
+    
+    /** Test Container Stagein for container universe jobs */
+    @Test
+    public void testContainerStageInContainerUniverseCondorIO() {
+        // if running in Container universe we stage in to submit dir
+        Container c = constructTestContainer();
+
+        String destSite = "local";
+        PegasusURL destURL =
+                new PegasusURL(
+                        PegasusURL.DEFAULT_PROTOCOL
+                                + "://"
+                                + mBag.getPlannerOptions().getSubmitDirectory()
+                                + File.separator
+                                + c.getLFN());
+
+        this.testContainerStageIn(
+                c, PegasusConfiguration.CONDOR_CONFIGURATION_VALUE, true, destSite, destURL);
     }
 
     private void testSymlinkingEnabled(
@@ -396,6 +410,45 @@ public class StageInTest {
         assertEquals(
                 "Symlinking for job was ", expected, si.symlinkingEnabled(j, workflowSymlinking));
         mLogger.logEventCompletion();
+    }
+
+    private void testContainerStageIn(
+            Container c,
+            String dataConfiguration,
+            boolean runInContainerUniverse,
+            String expectedDestSite,
+            PegasusURL expectedDestURL) {
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        // reset the input files
+        job.setInputFiles(new HashSet());
+        job.setContainer(c);
+
+        if (runInContainerUniverse) {
+            job.condorVariables.checkKeyInNS(Condor.UNIVERSE_KEY, Condor.CONTAINER_UNIVERSE);
+        }
+
+        FileTransfer containerFT = new FileTransfer(new PegasusFile(c.getLFN()));
+        containerFT.addSource("nonlocal", c.getImageURL().getURL());
+        job.addInputFile(containerFT);
+
+        FileTransfer expected = new FileTransfer(new PegasusFile(c.getLFN()));
+        ReplicaCatalogEntry source =
+                new ReplicaCatalogEntry(c.getImageURL().toString(), "nonlocal");
+        // replica selector adds it as part of ranking
+        source.addAttribute(ReplicaSelector.PRIORITY_KEY, "10");
+        expected.addSource(source);
+
+        expected.addDestination(expectedDestSite, expectedDestURL.getURL());
+
+        if (runInContainerUniverse) {
+            // integrity checking is turned off when containers are managed by HTCondor
+            expected.setForIntegrityChecking(false);
+        }
+        Collection<FileTransfer> expectedLocal = new LinkedList();
+        expectedLocal.add(expected);
+        Collection<FileTransfer> expectedRemote = new LinkedList();
+
+        this.testStageIn(job, dataConfiguration, expectedLocal, expectedRemote);
     }
 
     private void testStageIn(
@@ -448,7 +501,7 @@ public class StageInTest {
 
             Collection<FileTransfer>[] generated = si.constructFileTX(job, job.getInputFiles());
 
-            /*
+            
                         FileTransfer generatedFT = null;
                         for(FileTransfer ft: generated[0]){
                             generatedFT = ft;
@@ -468,7 +521,7 @@ public class StageInTest {
                         System.err.println("***** Expected One *** ");
                         System.err.println(localFT.toString());
                         System.err.println("*****");
-            */
+            
 
             assertThat(generated[0], containsInAnyOrder(expectedLocal.toArray()));
             assertThat(generated[1], containsInAnyOrder(expectedRemote.toArray()));
