@@ -31,11 +31,11 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class SingularityTest {
@@ -54,15 +54,15 @@ public class SingularityTest {
 
     private static int mTestNumber = 1;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
     private ContainerShellWrapperFactory mFactory;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
@@ -98,7 +98,7 @@ public class SingularityTest {
         mLogger.logEventCompletion();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test

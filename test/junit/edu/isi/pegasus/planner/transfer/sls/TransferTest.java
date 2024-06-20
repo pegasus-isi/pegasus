@@ -44,7 +44,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for nonshared fs mode, PegasusLite transfers
@@ -74,7 +73,7 @@ public abstract class TransferTest {
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
-    public final void setUp() {
+    public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
         mTestSetup.setInputDirectory(this.getClass());
@@ -127,9 +126,9 @@ public abstract class TransferTest {
         dir.setSharedFileSystemAccess(sharedFileSystem);
         compute.addDirectory(dir);
         assertEquals(
-
                 expectedValue,
-                t.useFileURLAsSource(compute, stagingSite), "use file URL as source:");
+                t.useFileURLAsSource(compute, stagingSite),
+                "use file URL as source:");
         mLogger.logEventCompletion();
     }
 
@@ -139,9 +138,9 @@ public abstract class TransferTest {
         Transfer t = new Transfer();
         t.initialize(mBag);
         assertEquals(
-
                 expectedValue,
-                t.symlinkingEnabled(job, workflowSymlinking),"Symlinking enabled for job:");
+                t.symlinkingEnabled(job, workflowSymlinking),
+                "Symlinking enabled for job:");
         mLogger.logEventCompletion();
     }
 
@@ -154,9 +153,9 @@ public abstract class TransferTest {
         Transfer t = new Transfer();
         t.initialize(mBag);
         assertEquals(
-
                 expectedValue,
-                t.symlinkingEnabled(pf, symlinkingEnabledForJob, useFileURLAsSource), "Symlinking enabled for file:");
+                t.symlinkingEnabled(pf, symlinkingEnabledForJob, useFileURLAsSource),
+                "Symlinking enabled for file:");
         mLogger.logEventCompletion();
     }
 
@@ -178,7 +177,7 @@ public abstract class TransferTest {
             c.addMountPoint(mp);
         }
         t.updateSourceFileURLForContainerizedJob(c, new PegasusFile("f.in"), source, "ID1");
-        assertEquals( expectedReplacedURL, source.getPFN(), "source file url in containerized jobs");
+        assertEquals(expectedReplacedURL, source.getPFN(), "source file url in containerized jobs");
         mLogger.logEventCompletion();
     }
 

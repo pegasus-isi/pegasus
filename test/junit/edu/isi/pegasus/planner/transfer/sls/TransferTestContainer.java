@@ -14,7 +14,7 @@
 package edu.isi.pegasus.planner.transfer.sls;
 
 import static edu.isi.pegasus.planner.transfer.sls.TransferTest.mTestNumber;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
@@ -26,24 +26,24 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** @author vahi */
 public class TransferTestContainer extends TransferTest {
 
     public TransferTestContainer() {}
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {}
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {}
 
-    @Before
+    @BeforeEach
     public void setUp() {
         super.setUp();
         // ensure explicitly that transfers are set up to be
@@ -51,7 +51,7 @@ public class TransferTestContainer extends TransferTest {
         mProps.setProperty(PegasusProperties.PEGASUS_TRANSFER_CONTAINER_ON_HOST, "false");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {}
 
     @Test
@@ -129,19 +129,28 @@ public class TransferTestContainer extends TransferTest {
         mLogger.logEventCompletion();
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testUpdateSourceFileURLForContainerizedJobWithNoMount() {
-        this.testSourceFileURLForContainerizedJob(
-                "file:///shared/scratch/f.in", null, "file:///shared/scratch/f.in", false);
+        assertThrows(
+                RuntimeException.class,
+                () ->
+                        this.testSourceFileURLForContainerizedJob(
+                                "file:///shared/scratch/f.in",
+                                null,
+                                "file:///shared/scratch/f.in",
+                                false));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testUpdateSourceFileURLForContainerizedJobWithWrongMount() {
-        this.testSourceFileURLForContainerizedJob(
-                "file:///shared/scratch/f.in",
-                new Container.MountPoint("/scratch/:/scratch"),
-                "file:///shared/scratch/f.in",
-                false);
+        assertThrows(
+                RuntimeException.class,
+                () ->
+                        this.testSourceFileURLForContainerizedJob(
+                                "file:///shared/scratch/f.in",
+                                new Container.MountPoint("/scratch/:/scratch"),
+                                "file:///shared/scratch/f.in",
+                                false));
     }
 
     @Test

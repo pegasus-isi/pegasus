@@ -517,7 +517,7 @@ public class FileTransfer extends PegasusFile {
      *
      * @return true if the primary key (lfn) matches. else false.
      */
-    @Override    
+    @Override
     public boolean equals(Object o) {
         if (o instanceof FileTransfer) {
             FileTransfer file = (FileTransfer) o;
@@ -527,7 +527,6 @@ public class FileTransfer extends PegasusFile {
         }
         return false;
     }
-    
 
     @Override
     public int hashCode() {
