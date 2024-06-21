@@ -493,7 +493,7 @@ Workflow Tests:
   tags:
   - bamboo
   retry: 0
-  timeout: 1 hour 5 minutes
+  timeout: 2 hour 35 minutes
 
 # Performance tests
 
