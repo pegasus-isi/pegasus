@@ -225,8 +225,8 @@ class Status:
         }
 
         if long:
-            idcol = "{:^5}".format("ID")
-            st = "{:^11}".format("SITE")
+            idcol = "{:^8}".format("ID")
+            st = "{:^15}".format("SITE")
         else:
             idcol = ""
             st = ""
@@ -276,8 +276,8 @@ class Status:
                 status = self.job_status_codes[job["JobStatus"]]
 
                 if long:
-                    jobid = "{:^5}".format(job["ClusterId"])
-                    site = "{:^11}".format(job["pegasus_site"])
+                    jobid = "{:^8}".format(job["ClusterId"])
+                    site = "{:^15}".format(job["pegasus_site"])
                 else:
                     jobid = ""
                     site = ""
