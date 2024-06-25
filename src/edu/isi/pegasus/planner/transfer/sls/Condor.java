@@ -18,6 +18,7 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -191,6 +192,11 @@ public class Condor implements SLS {
         Collection<FileTransfer> result = new LinkedList();
         Set<PegasusFile> bypassTXs = new LinkedHashSet();
         String destDir = workerNodeDirectory;
+
+        Container c = job.getContainer();
+        String containerLFN = c == null ? null : c.getLFN();
+        boolean jobRunsInContainerUniverse = job.runsInContainerUniverse();
+
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
@@ -198,6 +204,15 @@ public class Condor implements SLS {
             if (lfn.equals(ENV.X509_USER_PROXY_KEY)) {
                 // ignore the proxy file for time being
                 // as we picking it from the head node directory
+                continue;
+            }
+
+            if (jobRunsInContainerUniverse && lfn.equals(containerLFN)) {
+                // PM-1950 we just add it as transfer_input_files and not
+                // have it in SLS stuff and have the transfer appear in the
+                // PegasusLite Script
+                job.condorVariables.addIPFileForTransfer(
+                        this.mPOptions.getSubmitDirectory() + File.separator + containerLFN);
                 continue;
             }
 
