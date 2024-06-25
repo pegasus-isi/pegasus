@@ -196,7 +196,6 @@ public class Condor implements SLS {
         Container c = job.getContainer();
         String containerLFN = c == null ? null : c.getLFN();
         boolean jobRunsInContainerUniverse = job.runsInContainerUniverse();
-
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
@@ -208,11 +207,9 @@ public class Condor implements SLS {
             }
 
             if (jobRunsInContainerUniverse && lfn.equals(containerLFN)) {
-                // PM-1950 we just add it as transfer_input_files and not
-                // have it in SLS stuff and have the transfer appear in the
-                // PegasusLite Script
-                job.condorVariables.addIPFileForTransfer(
-                        this.mPOptions.getSubmitDirectory() + File.separator + containerLFN);
+                // PM-1950 we dont add to transfer_input_files
+                // it will be picked from container_image. but make sure no
+                // transfer is triggered in PegasusLite script
                 continue;
             }
 
@@ -353,6 +350,9 @@ public class Condor implements SLS {
         Collection<String> files = new LinkedList();
 
         // iterate through all the input files
+        boolean jobRunsInContainerUniverse = job.runsInContainerUniverse();
+        Container c = job.getContainer();
+        String containerLFN = c == null ? null : c.getLFN();
         for (Iterator it = job.getInputFiles().iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
@@ -375,6 +375,11 @@ public class Condor implements SLS {
                 // Transfer SLS implementation
                 continue;
             }
+            if (jobRunsInContainerUniverse && lfn.equals(containerLFN)) {
+                // PM-1950 we dont add to transfer_input_files
+                continue;
+            }
+
             if (cacheLocation == null) {
                 // nothing in the cache
                 // construct the location with respect to the staging site

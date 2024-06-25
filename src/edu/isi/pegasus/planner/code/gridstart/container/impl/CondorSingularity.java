@@ -108,7 +108,9 @@ public class CondorSingularity extends AbstractContainer {
 
         // now add some extra stuff
         job.condorVariables.construct("universe", Condor.CONTAINER_UNIVERSE);
-        job.condorVariables.construct("container_image", job.getContainer().getLFN());
+        job.condorVariables.construct(
+                "container_image",
+                this.mPOptions.getSubmitDirectory() + File.separator + job.getContainer().getLFN());
 
         return sb.toString();
     }

@@ -338,11 +338,9 @@ public class Transfer implements SLS {
             }
 
             if (jobRunsInContainerUniverse && lfn.equals(containerLFN)) {
-                // PM-1950 we just add it as transfer_input_files and not
-                // have it in SLS stuff and have the transfer appear in the
-                // PegasusLite Script
-                job.condorVariables.addIPFileForTransfer(
-                        this.mPOptions.getSubmitDirectory() + File.separator + containerLFN);
+                // PM-1950 we dont add to transfer_input_files
+                // it will be picked from container_image. but make sure no
+                // transfer is triggered in PegasusLite script
                 continue;
             }
 
