@@ -631,11 +631,11 @@ def condor_q_values():
             True,
             dedent(
                 """
-                 ID     SITE    STAT  IN_STATE  JOB                      
-                4700    local    Run    00:00   sample-workflow-0 (root/workflow/submit/directory)
-                4701    local    Run    00:00   ┣━job1                   
-                4702    local   Idle    00:00   ┣━job2                   
-                4703    local   Idle    00:00   ┗━job3                   
+                   ID        SITE      STAT  IN_STATE  JOB                      
+                  4700       local      Run    00:00   sample-workflow-0 (root/workflow/submit/directory)
+                  4701       local      Run    00:00   ┣━job1                   
+                  4702       local     Idle    00:00   ┣━job2                   
+                  4703       local     Idle    00:00   ┗━job3                   
                 Summary: 4 Condor jobs total (I:2 R:2)
                 
                 """
