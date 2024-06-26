@@ -18,7 +18,7 @@ fi
 TESTDIR=$(cd $testdir && pwd)
 TEST_NAME=`basename $TESTDIR`
 
-LAUNCHDIR=/scitech/shared/scratch-90-days/${PEGASUS_VERSION}/${TEST_NAME}
+LAUNCHDIR=/scitech/shared/scratch2-90-days/${PEGASUS_VERSION}/${TEST_NAME}
 mkdir -p ${LAUNCHDIR}
 cd ${LAUNCHDIR}
 
