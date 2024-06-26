@@ -269,8 +269,8 @@ public class CondorSingularity extends AbstractContainer {
 
         // set the job environment variables explicitly in the -cont.sh file
         sb.append("# setting environment variables for job").append('\n');
-        sb.append("HOME=/srv").append('\n');
-        sb.append("export HOME").append('\n');
+        // PM-1950 we don't set any home in container universe
+        // let HTCondor set to whatever it does
 
         sb.append("\n");
         sb.append(this.constructJobEnvironmentFromContainer(job.getContainer()));
