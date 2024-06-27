@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import hashlib
 import json
 import logging
 import math
@@ -3720,6 +3721,13 @@ class SingularityHandler(TransferHandlerBase):
         for t in transfers_l:
             self._pre_transfer_attempt(t)
             t_start = time.time()
+
+            # singularity pull only accepts a filename, not a full path, so
+            # download and then move to the correct location
+
+            target_name = hashlib.sha224(t.get_dst_path().encode("utf-8")).hexdigest()
+
+            prepare_local_dir(os.path.dirname(t.get_dst_path()))
 
             cmd = "{} pull --allow-unauthenticated '{}' '{}' && mv {}* '{}'".format(
                 singularity_exec,
