@@ -630,9 +630,7 @@ class IncConfigObj(configobj.ConfigObj):
                 n = int(m.group(1)) - 1
                 filename, lineno = file_lines[n]
                 msg = 'Invalid line {} in {}: "{}"'.format(
-                    lineno,
-                    filename,
-                    lines[n].strip(),
+                    lineno, filename, lines[n].strip(),
                 )
                 raise configobj.ParseError(msg)
 
@@ -812,6 +810,7 @@ try:
     def uuid1():
         return str(uuid.uuid1())
 
+
 except ImportError:
     # From: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761
     import random
@@ -830,11 +829,7 @@ except ImportError:
         data = str(t) + " " + str(r) + " " + str(a)
         data = md5.md5(data).hexdigest()
         return "{}-{}-{}-{}-{}".format(
-            data[0:8],
-            data[8:12],
-            data[12:16],
-            data[16:20],
-            data[20:32],
+            data[0:8], data[8:12], data[12:16], data[16:20], data[20:32],
         )
 
 
