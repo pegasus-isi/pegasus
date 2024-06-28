@@ -1,6 +1,7 @@
 """
 Utility functions for NetLogger modules and command-line programs
 """
+
 __rcsid__ = "$Id: util.py 27069 2011-02-08 20:09:10Z dang $"
 __author__ = "Dan Gunter (dkgunter (at) lbl.gov)"
 import glob
@@ -11,7 +12,6 @@ import signal
 import sys
 import time
 import traceback
-from asyncore import compact_traceback
 from copy import copy
 from optparse import Option, OptionParser, OptionValueError, make_option
 
@@ -166,6 +166,29 @@ class FIFODict:
 
 def traceback():
     """Traceback as a string with no newlines."""
+
+    def compact_traceback():
+        t, v, tb = sys.exc_info()
+        tbinfo = []
+        if not tb:  # Must have a traceback
+            raise AssertionError("traceback does not exist")
+        while tb:
+            tbinfo.append(
+                (
+                    tb.tb_frame.f_code.co_filename,
+                    tb.tb_frame.f_code.co_name,
+                    str(tb.tb_lineno),
+                )
+            )
+            tb = tb.tb_next
+
+        # just to be safe
+        del tb
+
+        file, function, line = tbinfo[-1]
+        info = " ".join(["[%s|%s|%s]" % x for x in tbinfo])
+        return (file, function, line), t, v, info
+
     return str(compact_traceback())
 
 
@@ -607,7 +630,9 @@ class IncConfigObj(configobj.ConfigObj):
                 n = int(m.group(1)) - 1
                 filename, lineno = file_lines[n]
                 msg = 'Invalid line {} in {}: "{}"'.format(
-                    lineno, filename, lines[n].strip(),
+                    lineno,
+                    filename,
+                    lines[n].strip(),
                 )
                 raise configobj.ParseError(msg)
 
@@ -789,7 +814,6 @@ try:
     def uuid1():
         return str(uuid.uuid1())
 
-
 except ImportError:
     # From: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/213761
     import random
@@ -808,7 +832,11 @@ except ImportError:
         data = str(t) + " " + str(r) + " " + str(a)
         data = md5.md5(data).hexdigest()
         return "{}-{}-{}-{}-{}".format(
-            data[0:8], data[8:12], data[12:16], data[16:20], data[20:32],
+            data[0:8],
+            data[8:12],
+            data[12:16],
+            data[16:20],
+            data[20:32],
         )
 
 
