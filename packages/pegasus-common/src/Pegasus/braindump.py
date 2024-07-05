@@ -13,11 +13,11 @@ Basic Usage::
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, TextIO
 
 from Pegasus import yaml
-from Pegasus.vendor import attr
 
 __all__ = (
     "load",
@@ -28,7 +28,7 @@ __all__ = (
 )
 
 
-@attr.s(slots=True, kw_only=True)
+@dataclass()
 class Braindump:
     """
     Data class representing Braindump file.
@@ -38,103 +38,99 @@ class Braindump:
         Use :mod:`dataclasses` instead of :mod:`attr`
     """
 
+    def __post_init__(self):
+        self.dax = Path(self.dax) if self.dax else self.dax
+        self.basedir = Path(self.basedir) if self.basedir else self.basedir
+        self.submit_dir = Path(self.submit_dir) if self.submit_dir else self.submit_dir
+        self.planner = Path(self.planner) if self.planner else self.planner
+        self.bindir = Path(self.bindir) if self.bindir else self.bindir
+        self.uses_pmc = None if self.uses_pmc is None else bool(self.uses_pmc)
+
     #: The username of the user that ran pegasus-plan
-    user = attr.ib(type=str, default=None)  # type: str
+    user: str = field(default=None)
 
     #: The Distinguished Name in the proxy
-    grid_dn = attr.ib(type=str, default=None)  # type: str
+    grid_dn: str = field(default=None)
 
     #: The hostname of the submit host
-    submit_hostname = attr.ib(type=str, default=None)  # type: str
+    submit_hostname: str = field(default=None)  # type: str
 
     #: The workflow uuid of the root workflow
-    root_wf_uuid = attr.ib(type=str, default=None)  # type: str
+    root_wf_uuid: str = field(default=None)  # type: str
 
     #: The workflow uuid of the current workflow i.e the one whose submit directory
     #: the braindump file is.
-    wf_uuid = attr.ib(type=str, default=None)  # type: str
+    wf_uuid: str = field(default=None)  # type: str
 
     #: The path to the dax file
-    dax = attr.ib(
-        type=Path, default=None, converter=attr.converters.optional(Path)
-    )  # type: Path
+    dax: Path = field(default=None)  # type: Path
 
     #: The label attribute in the adag element of the dax
-    dax_label = attr.ib(type=str, default=None)  # type: str
+    dax_label: str = field(default=None)  # type: str
 
     #: The index in the dax.
-    dax_index = attr.ib(type=str, default=None)  # type: str
+    dax_index: str = field(default=None)  # type: str
 
     #: The version of the DAX schema that DAX referred to.
-    dax_version = attr.ib(type=str, default=None)  # type: str
+    dax_version: str = field(default=None)  # type: str
 
     #: The workflow name constructed by pegasus when planning
-    pegasus_wf_name = attr.ib(type=str, default=None)  # type: str
+    pegasus_wf_name: str = field(default=None)  # type: str
 
     #: The timestamp when planning occured
-    timestamp = attr.ib(type=str, default=None)  # type: str
+    timestamp: str = field(default=None)  # type: str
 
     #: The base submit directory
-    basedir = attr.ib(
-        type=Path, default=None, converter=attr.converters.optional(Path)
-    )  # type: Path
+    basedir: Path = field(default=None)  # type: Path
 
     #: The full path for the submit directory
-    submit_dir = attr.ib(
-        type=Path, default=None, converter=attr.converters.optional(Path)
-    )  # type: Path
+    submit_dir: Path = field(default=None)  # type: Path
 
     #: The planner used to construct the executable workflow. always pegasus
-    planner = attr.ib(
-        type=Path, default=None, converter=attr.converters.optional(Path)
-    )  # type: Path
+    planner: Path = field(default=None)  # type: Path
 
     #: The versions of the planner
-    planner_version = attr.ib(type=str, default=None)  # type: str
+    planner_version: str = field(default=None)  # type: str
 
     #: The arguments with which the planner is invoked.
-    planner_arguments = attr.ib(type=str, default=None)  # type: str
+    planner_arguments: str = field(default=None)  # type: str
 
     #: The build timestamp
-    pegasus_build = attr.ib(type=str, default=None)  # type: str
+    pegasus_build: str = field(default=None)  # type: str
 
     #: The path to the jobstate file
-    jsd = attr.ib(type=str, default=None)  # type: str
+    jsd: str = field(default=None)  # type: str
 
     #: The rundir in the numbering scheme for the submit directories
-    rundir = attr.ib(type=str, default=None)  # type: str
+    rundir: str = field(default=None)  # type: str
 
     #: The bin directory of the pegasus installation
-    bindir = attr.ib(
-        type=Path, default=None, converter=attr.converters.optional(Path)
-    )  # type: Path
+    bindir: Path = field(default=None)  # type: Path
 
     #: The vo group to which the user belongs to. Defaults to pegasus
-    vogroup = attr.ib(type=str, default=None)  # type: str
+    vogroup: str = field(default=None)  # type: str
 
     #: Whether the workflow uses PMC
-    uses_pmc = attr.ib(
-        type=bool, default=None, converter=attr.converters.optional(bool)
-    )  # type: Optional[bool]
+    uses_pmc: bool = field(default=None)  # type: Optional[bool]
 
     #: The full path to the properties file in the submit directory
-    properties = attr.ib(type=str, default=None)  # type: str
+    properties: str = field(default=None)  # type: str
 
     #: The full path to condor common log in the submit directory
-    condor_log = attr.ib(type=str, default=None)  # type: str
+    condor_log: str = field(default=None)  # type: str
 
     #: The basename of the dag file created
-    dag = attr.ib(type=str, default=None)  # type: str
+    dag: str = field(default=None)  # type: str
 
     #: The type of executable workflow. Can be dag | shell
-    type = attr.ib(type=str, default=None)  # type: str
+    type: str = field(default=None)  # type: str
 
     #: The notify file that contains any notifications that need to be sent
     #: for the workflow.
-    notify = attr.ib(type=str, default=None)  # type: str
+    notify: str = field(default=None)  # type: str
 
     #: Set in PMC mode.
-    script = attr.ib(type=str, default=None)  # type: str
+    script: str = field(default=None)  # type: str
 
 
 def load(fp: TextIO, *args, **kwargs) -> Braindump:

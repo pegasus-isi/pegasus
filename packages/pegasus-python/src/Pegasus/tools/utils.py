@@ -28,10 +28,10 @@ import sys
 import time
 import traceback
 import urllib
+from dataclasses import asdict
 from pathlib import Path
 
 from Pegasus import braindump
-from Pegasus.vendor import attr
 
 __all__ = ("quote", "unquote")
 
@@ -409,8 +409,7 @@ def slurp_braindb(run_dir, brain_alternate=None):
         with bdump.open("r") as fp:
             cfg = braindump.load(fp)
             cfg = {
-                k: str(v) if isinstance(v, Path) else v
-                for k, v in attr.asdict(cfg).items()
+                k: str(v) if isinstance(v, Path) else v for k, v in asdict(cfg).items()
             }
 
     return cfg
