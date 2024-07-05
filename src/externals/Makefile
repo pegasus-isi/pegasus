@@ -47,6 +47,10 @@ else
     $(warning WARNING: globus_sdk does not work with Python 2.x: skipping globus_sdk library)
 endif
 
+ifeq ($(shell ([ $(PYV_MAJOR) -eq 3 ] && [ $(PYV_MINOR) -eq 6 ])), 0)
+    PACKAGES+=dataclasses
+endif
+
 all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
 $(LIBDIR)/%:
