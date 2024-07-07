@@ -13,7 +13,7 @@ Basic Usage::
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional, TextIO
 
@@ -179,7 +179,7 @@ def dump(obj: Braindump, fp: TextIO, *args, **kwargs) -> None:
     :return: [description]
     :rtype: NoReturn
     """
-    yaml.dump(attr.asdict(obj), fp, *args, **kwargs)
+    yaml.dump(asdict(obj), fp, *args, **kwargs)
 
 
 def dumps(obj: Braindump, *args, **kwargs) -> str:
@@ -193,4 +193,4 @@ def dumps(obj: Braindump, *args, **kwargs) -> str:
     :return: [description]
     :rtype: str
     """
-    return yaml.dumps(attr.asdict(obj), *args, **kwargs)
+    return yaml.dumps(asdict(obj), *args, **kwargs)

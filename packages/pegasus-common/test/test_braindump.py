@@ -1,12 +1,12 @@
 import io
+from dataclasses import fields
 from typing import Dict
 
 import pytest
 
-import Pegasus.vendor.attr as attr
 from Pegasus.braindump import Braindump, dump, dumps, load, loads
 
-fields = attr.fields_dict(Braindump)
+cls_fields = {field.name: field for field in fields(Braindump)}
 
 
 @pytest.mark.parametrize(
@@ -24,11 +24,10 @@ def test_load(s, obj):
     b = load(fp)
 
     assert isinstance(b, Braindump)
-
     for k, v in obj.items():
-        assert k in fields
-        assert isinstance(getattr(b, k), fields[k].type)
-        assert isinstance(getattr(b, k), fields[k].type)
+        assert k in cls_fields
+        assert isinstance(getattr(b, k), cls_fields[k].type)
+        assert isinstance(getattr(b, k), cls_fields[k].type)
 
 
 @pytest.mark.parametrize(
@@ -47,9 +46,9 @@ def test_loads(s, obj):
     assert isinstance(b, Braindump)
 
     for k, v in obj.items():
-        assert k in fields
-        assert isinstance(getattr(b, k), fields[k].type)
-        assert isinstance(getattr(b, k), fields[k].type)
+        assert k in cls_fields
+        assert isinstance(getattr(b, k), cls_fields[k].type)
+        assert isinstance(getattr(b, k), cls_fields[k].type)
 
 
 def test_loads_fail():
@@ -77,8 +76,8 @@ def test_dump(obj: Dict):
     fp = io.StringIO()
 
     for k in obj.keys():
-        assert k in fields
-        assert isinstance(getattr(b, k), fields[k].type)
+        assert k in cls_fields
+        assert isinstance(getattr(b, k), cls_fields[k].type)
 
     dump(b, fp)
 
@@ -105,8 +104,8 @@ def test_dumps(obj: Dict):
     b = Braindump(**obj)
 
     for k in obj:
-        assert k in fields
-        assert isinstance(getattr(b, k), fields[k].type)
+        assert k in cls_fields
+        assert isinstance(getattr(b, k), cls_fields[k].type)
 
     rv = dumps(b)
     for attr_name, attr_val in obj.items():
