@@ -175,7 +175,6 @@ RHEL:
       - x86_64
       - arm64
       OS:
-      - rhel_7
       - rhel_8
       - rhel_9
   image: pegasus/buildenv:${OS}
@@ -187,11 +186,6 @@ RHEL:
     - dist/pegasus-worker*.tar.gz
     - dist/pegasus-*.rpm
   dependencies: []
-  rules:
-  # Do not build arm64 packages for EL7. Order of the 2 if statements is important
-  - if: $ARCH == 'arm64' && $OS == 'rhel_7'
-    when: never
-  - if: $ARCH == $ARCH
   tags:
   - ${ARCH}
   - docker
@@ -251,7 +245,6 @@ Ubuntu:
       - x86_64
       - arm64
       OS:
-      - ubuntu_18
       - ubuntu_20
       - ubuntu_22
   image: pegasus/buildenv:${OS}
@@ -263,11 +256,6 @@ Ubuntu:
     - dist/pegasus-worker*.tar.gz
     - dist/pegasus*.deb
   dependencies: []
-  rules:
-  # Do not build arm64 packages for Ubuntu 18. Order of the 2 if statements is important
-  - if: $ARCH == 'arm64' && $OS == 'ubuntu_18'
-    when: never
-  - if: $ARCH == $ARCH
   tags:
   - ${ARCH}
   - docker
