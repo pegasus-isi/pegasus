@@ -28,7 +28,7 @@ Requires:       java-1.8.0-openjdk-headless, python36-cryptography, python36-PyY
 
 %if 0%{?rhel} == 8
 BuildRequires:  java-11-openjdk-devel, python3-setuptools_scm
-Requires:       java-11-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
+Requires:       java-11-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython, python3-dataclasses
 %endif
 
 %if 0%{?rhel} >= 9
