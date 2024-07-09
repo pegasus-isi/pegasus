@@ -220,7 +220,6 @@ Debian:
       - x86_64
       - arm64
       OS:
-      - deb_10
       - deb_11
       - deb_12
   image: pegasus/buildenv:${OS}
