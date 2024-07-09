@@ -245,8 +245,8 @@ Ubuntu:
       - x86_64
       - arm64
       OS:
-      - ubuntu_20
       - ubuntu_22
+      - ubuntu_24
   image: pegasus/buildenv:${OS}
   script:
   - ant dist-worker dist-release dist-deb
