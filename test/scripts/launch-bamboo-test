@@ -97,13 +97,14 @@ if [ $STATUS = 0 ]; then
    # Run Pegasus Statistics
    pegasus-statistics -s all $RUN_DIR
    # TODO: Rajiv: Remove after new p-stats is finalized
-   pegasus-statistics -s all -t text -o old $RUN_DIR
-   pegasus-statistics -s all -t csv -o old $RUN_DIR
-   pegasus-newstatistics -s all -t text -o new $RUN_DIR
-   pegasus-newstatistics -s all -t csv -o new $RUN_DIR
+   pegasus-statistics    -s all -f text -o old $RUN_DIR
+   pegasus-statistics    -s all -f csv  -o old $RUN_DIR
+   pegasus-newstatistics -s all -f text -o new $RUN_DIR
+   pegasus-newstatistics -s all -f csv  -o new $RUN_DIR
    diff -bBur old new
    if [ $? -ne 0 ]; then
       echo "Old and new statistics output is different"
+      STATUS=$(($STATUS + 1))
    fi
    # TODO: Rajiv: Remove after new p-stats is finalized
    STATUS=$(($STATUS + $?))
