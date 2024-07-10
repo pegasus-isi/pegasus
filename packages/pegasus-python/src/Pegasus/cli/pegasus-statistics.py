@@ -658,7 +658,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
                 write_to_file(
                     time_stats_file_txt, "w", formatted_time_stats_legends_text()
                 )
-                write_to_file(time_stats_file_txt, "a", content)
+                write_to_file(time_stats_file_txt, "a", content + "\n")
 
             time_stats_file_csv = os.path.join(
                 output_dir, time_statistics_file_name + csv_file_extension
