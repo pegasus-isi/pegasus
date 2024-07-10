@@ -1,247 +1,92 @@
 #!/usr/bin/env python3
 
-import json
+import atexit
 import logging
-import os
-import re
 import sys
-import traceback
-from dataclasses import asdict, dataclass
+import typing as t
+from collections import namedtuple
+from dataclasses import dataclass
+from itertools import chain
+from pathlib import Path
 
+import click
+
+from Pegasus import braindump
 from Pegasus.db import connection
+from Pegasus.db.connection import ConnectionError
 from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
 from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.tools import utils
 
-root_logger = logging.getLogger()
-logger = logging.getLogger("pegasus-newstatistics")
+log = logging.getLogger("pegasus-statistics")
 
 
-utils.configureLogging(level=logging.WARNING)
-
-# Regular expressions
-re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
-
-
-@dataclass
-class Options:
-    output_dir: str = None
-    verbose: int = 0
-    quiet: int = 0
-    file_type: str = None
-    config_properties: str = None
-    statistics_level: str = None
-    time_filter: str = None
-    ignore_db_inconsistency: bool = False
-    multiple_wf: bool = False
-    uses_PMC: bool = False
-    is_uuid: bool = False
-    calc_wf_stats: bool = False
-    calc_wf_summary: bool = False
-    calc_jb_stats: bool = False
-    calc_tf_stats: bool = False
-    calc_ti_stats: bool = False
-    calc_int_stats: bool = False
-
-    @property
-    def json(self):
-        return json.dumps(asdict(self), indent=2)
+def remove_file(path):
+    try:
+        Path(path).unlink()
+    except FileNotFoundError:
+        log = logging.getLogger("pegasus-statistics")
+        log.error("Can't remove file {path} because it was not found")
 
 
-workflow_summary_file_name = "summary"
-workflow_summary_time_file_name = "summary-time"
-workflow_statistics_file_name = "workflow"
-job_statistics_file_name = "jobs"
-logical_transformation_statistics_file_name = "breakdown"
-logical_integrity_statistics_file_name = "integrity"
-time_statistics_file_name = "time"
-time_statistics_per_host_file_name = "time-per-host"
-text_file_extension = ".txt"
-csv_file_extension = ".csv"
-NEW_LINE_STR = "\n"
-DEFAULT_OUTPUT_DIR = "statistics"
-FILE_TYPE_TXT = "txt"
-FILE_TYPE_CSV = "csv"
+def format_seconds(duration):
+    """."""
+    return "-" if duration is None else stats_utils.format_seconds(duration)
 
 
-# Transformations file column names
-transformation_stats_col_name_text = [
-    "Transformation",
-    "Type",
-    "Count",
-    "Min (runtime)",
-    "Max (runtime)",
-    "Mean (runtime)",
-    "Total (runtime)",
-    "Min (mem)",
-    "Max (mem)",
-    "Mean (mem)",
-    "Min (avg. cpu)",
-    "Max (avg. cpu)",
-    "Mean (avg. cpu)",
-]
-transformation_stats_col_name_csv = [
-    "Workflow_Id",
-    "Dax_Label",
-    "Transformation",
-    "Type",
-    "Count",
-    "Min (runtime)",
-    "Max (runtime)",
-    "Mean (runtime)",
-    "Total (runtime)",
-    "Min (mem)",
-    "Max (mem)",
-    "Mean (mem)",
-    "Min (avg. cpu)",
-    "Max (avg. cpu)",
-    "Mean (avg. cpu)",
-]
-
-transformation_stats_col_size = [
-    15,
-    5,
-    6,
-    14,
-    14,
-    21,
-    22,
-    10,
-    10,
-    11,
-    15,
-    15,
-    16,
-]
-
-# Integrity file column names
-integrity_stats_col_name_text = ["Type", "File Type", "Count", "Total Duration"]
-integrity_stats_col_name_csv = [
-    "Workflow_Id",
-    "Dax_Label",
-    "Type",
-    "File Type",
-    "Count",
-    "Total Duration",
-]
-integrity_stats_col_size = [10, 15, 10, 25]
-
-# Jobs file column names
-job_stats_col_name_text = [
-    "Job",
-    "Try",
-    "Site",
-    "Kickstart",
-    "Mult",
-    "Kickstart-Mult",
-    "CPU-Time",
-    "Post",
-    "CondorQTime",
-    "Resource",
-    "Runtime",
-    "Seqexec",
-    "Seqexec-Delay",
-    "Exitcode",
-    "Hostname",
-]
-job_stats_col_name_csv = [
-    "Workflow_Id",
-    "Dax_Label",
-    "Job",
-    "Try",
-    "Site",
-    "Kickstart",
-    "Mult",
-    "Kickstart-Mult",
-    "CPU-Time",
-    "Post",
-    "CondorQTime",
-    "Resource",
-    "Runtime",
-    "Seqexec",
-    "Seqexec-Delay",
-    "Exitcode",
-    "Hostname",
-]
-job_stats_col_size = [35, 4, 12, 12, 6, 16, 12, 6, 12, 12, 12, 12, 15, 10, 30]
-
-# Summary file column names
-workflow_summary_col_name_csv = [
-    "Type",
-    "Succeeded",
-    "Failed",
-    "Incomplete",
-    "Total",
-    "Retries",
-    "Total+Retries",
-]
-workflow_summary_col_name_text = [
-    "Type",
-    "Succeeded",
-    "Failed",
-    "Incomplete",
-    "Total",
-    "Retries",
-    "Total+Retries",
-]
-workflow_summary_col_size = [15, 10, 8, 12, 10, 10, 13]
-workflow_time_summary_col_name_csv = ["stat_type", "time_seconds"]
-
-# Workflow file column names
-workflow_status_col_name_text = [
-    "Type",
-    "Succeeded",
-    "Failed",
-    "Incomplete",
-    "Total",
-    "Retries",
-    "Total+Retries",
-    "WF Retries",
-]
-workflow_status_col_name_csv = [
-    "Workflow_Id",
-    "Dax_Label",
-    "Type",
-    "Succeeded",
-    "Failed",
-    "Incomplete",
-    "Total",
-    "Retries",
-    "Total+Retries",
-    "WF_Retries",
-]
-workflow_status_col_size = [15, 11, 10, 12, 10, 10, 15, 10]
-
-# Time file column names
-time_stats_col_name_csv = ["stat_type", "date", "count", "runtime (sec)"]
-time_stats_col_name_text = ["Date", "Count", "Runtime (sec)"]
-time_stats_col_size = [30, 20, 20]
-time_host_stats_col_name_csv = ["stat_type", "date", "host", "count", "runtime (sec)"]
-time_host_stats_col_name_text = ["Date", "Host", "Count", "Runtime (sec)"]
-time_host_stats_col_size = [23, 30, 10, 20]
+def istr(value):
+    """."""
+    return "-" if value is None else str(value)
 
 
+def fstr(value, to=3):
+    """."""
+    return "-" if value is None else stats_utils.round_decimal_to_str(value, to)
+
+
+def pstr(value, to=2):
+    """."""
+    return "-" if value is None else stats_utils.round_decimal_to_str(value, to) + "%"
+
+
+@dataclass(init=False)
 class JobStatistics:
-    def __init__(self):
-        self.name = None
-        self.site = None
-        self.kickstart = None
-        self.multiplier_factor = None
-        self.kickstart_mult = None
-        self.remote_cpu_time = None
-        self.post = None
-        self.condor_delay = None
-        self.resource = None
-        self.runtime = None
-        self.condorQlen = None
-        self.seqexec = None
-        self.seqexec_delay = None
-        self.retry_count = 0
-        self.exitcode = None
-        self.hostname = None
+    """."""
 
-    def getFormattedJobStatistics(self):
+    #: Description
+    name: str = None
+    #: Description
+    site: str = None
+    #: Description
+    kickstart: float = None
+    #: Description
+    multiplier_factor: int = None
+    #: Description
+    kickstart_mult: float = None
+    #: Description
+    remote_cpu_time: float = None
+    #: Description
+    post: float = None
+    #: Description
+    condor_delay: float = None
+    #: Description
+    resource: t.Optional[float] = None
+    #: Description
+    runtime: float = None
+    #: Description
+    #: Description
+    seqexec: t.Optional[float] = None
+    #: Description
+    seqexec_delay: t.Optional[float] = None
+    #: Description
+    retry_count: int = 0
+    #: Description
+    exitcode: int = None
+    #: Description
+    hostname: str = None
+
+    def get_formatted_job_statistics(self):
         return [
             self.name,
             str(self.retry_count),
@@ -257,13 +102,36 @@ class JobStatistics:
             fstr(self.seqexec),
             fstr(self.seqexec_delay),
             str(self.exitcode),
-            self.hostname,
+            self.hostname or "None",
         ]
 
 
-def formatted_wf_summary_legends_part1():
-    return """
-#
+# TODO: All compute methods to generate a dict.
+# TODO: Use utils.write_table.writetable method to write text tables, then remove col_sizes
+# TODO: Remomve sys.exit and print statements
+
+
+class PegasusStatistics:
+    #: The name of the default output directory.
+    default_output_dir: str = "statistics"
+
+    #: Text file type.
+    file_type_txt: str = "text"
+    #: Text file extension.
+    file_extn_text: str = "txt"
+
+    #: Comma separated file type.
+    file_type_csv: str = "csv"
+    #: Comma separated file extension.
+    file_extn_csv: str = "csv"
+
+    # Summary
+
+    #: The file name for workflow summary.
+    workflow_summary_file_name: str = "summary"
+    #: Legend for workflow summary stats.
+    # TODO: Change HTTP to HTTPS
+    workflow_summary_legends: str = """#
 # Pegasus Workflow Management System - http://pegasus.isi.edu
 #
 # Workflow summary:
@@ -283,12 +151,35 @@ def formatted_wf_summary_legends_part1():
 #     * Retries - total retry count of tasks/jobs/sub workflows.
 #     * Total+Retries - total count of tasks/jobs/sub workflows executed
 #       during workflow run. This is the cumulative of retries,
-#       succeeded and failed count."""
+#       succeeded and failed count.
+"""
+    #: The column names for workflow summary file of type text.
+    workflow_summary_col_name_text: t.Tuple[str, ...] = (
+        "Type",
+        "Succeeded",
+        "Failed",
+        "Incomplete",
+        "Total",
+        "Retries",
+        "Total+Retries",
+    )
+    #: Column widths for workflow summary file.
+    workflow_summary_col_size = (15, 10, 8, 12, 10, 10, 13)
+    #: The column names for workflow summary file of type csv.
+    workflow_summary_col_name_csv: t.Tuple[str, ...] = (
+        "Type",
+        "Succeeded",
+        "Failed",
+        "Incomplete",
+        "Total",
+        "Retries",
+        "Total+Retries",
+    )
 
-
-def formatted_wf_summary_legends_part2():
-    return """
-# Workflow wall time:
+    #: The file name for workflow time summary.
+    workflow_summary_time_file_name: str = "summary-time"
+    #: Legend for workflow summary time stats.
+    workflow_summary_time_legends: str = """# Workflow wall time:
 #   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
@@ -315,24 +206,20 @@ def formatted_wf_summary_legends_part2():
 #   job management overhead and delays. In case of job retries the value
 #   is the cumulative of all retries. For workflows having sub workflow
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
-#   from the sub workflows as well."""
+#   from the sub workflows as well.
+"""
+    #: The column names for workflow summary file of type csv.
+    workflow_summary_time_col_name_csv: t.Tuple[str, ...] = (
+        "stat_type",
+        "time_seconds",
+    )
 
+    # Workflow Summary
 
-def formatted_wf_summary_legends_txt():
-    return formatted_wf_summary_legends_part1() + formatted_wf_summary_legends_part2()
-
-
-def formatted_wf_summary_legends_csv1():
-    return formatted_wf_summary_legends_part1()
-
-
-def formatted_wf_summary_legends_csv2():
-    return formatted_wf_summary_legends_part2()
-
-
-def formatted_wf_status_legends():
-    return """
-# Workflow summary
+    #: The file name for workflow statistics.
+    workflow_stats_file_name: str = "workflow"
+    #: Legend for workflow stats
+    workflow_stats_legends: str = """# Workflow summary
 #   Summary of the workflow execution. It shows total
 #   tasks/jobs/sub workflows run, how many succeeded/failed etc.
 #   In case of hierarchical workflow the calculation shows the
@@ -356,11 +243,39 @@ def formatted_wf_status_legends():
 #       succeeded and failed count.
 #
 """
+    #: The column names for workflow statistics file of type text.
+    workflow_stats_col_name_text: t.Tuple[str, ...] = (
+        "Type",
+        "Succeeded",
+        "Failed",
+        "Incomplete",
+        "Total",
+        "Retries",
+        "Total+Retries",
+        "WF Retries",
+    )
+    #: Column widths for workflow statistics file.
+    workflow_stats_col_size: t.Tuple[int, ...] = (15, 11, 10, 12, 10, 10, 15, 10)
+    #: The column names for workflow statistics file of type csv.
+    workflow_stats_col_name_csv: t.Tuple[str, ...] = (
+        "Workflow_Id",
+        "Dax_Label",
+        "Type",
+        "Succeeded",
+        "Failed",
+        "Incomplete",
+        "Total",
+        "Retries",
+        "Total+Retries",
+        "WF_Retries",
+    )
 
+    # Jobs Breakdown
 
-def formatted_job_stats_legends():
-    return """
-# Job            - name of the job
+    #: The file name for job statistics.
+    job_stats_file_name: str = "jobs"
+    #: Legend for job stats.
+    job_stats_legends: str = """# Job            - name of the job
 # Try            - number representing the job instance run count
 # Site           - site where the job ran
 # Kickstart      - actual duration of the job instance in seconds on the
@@ -383,12 +298,71 @@ def formatted_job_stats_legends():
 #                  tasks Kickstart time
 # Exitcode       - exitcode for this job
 # Hostname       - name of the host where the job ran, as reported by
-#                  Kickstart"""
+#                  Kickstart
+"""
+    #: The column names for job statistics file of type text.
+    job_stats_col_name_text: t.Tuple[str, ...] = (
+        "Job",
+        "Try",
+        "Site",
+        "Kickstart",
+        "Mult",
+        "Kickstart-Mult",
+        "CPU-Time",
+        "Post",
+        "CondorQTime",
+        "Resource",
+        "Runtime",
+        "Seqexec",
+        "Seqexec-Delay",
+        "Exitcode",
+        "Hostname",
+    )
+    #: Column widths for job statistics file.
+    job_stats_col_size: t.Tuple[int, ...] = (
+        35,
+        4,
+        12,
+        12,
+        6,
+        16,
+        12,
+        6,
+        12,
+        12,
+        12,
+        12,
+        15,
+        10,
+        30,
+    )
+    #: The column names for job statistics file of type csv.
+    job_stats_col_name_csv: t.Tuple[str, ...] = (
+        "Workflow_Id",
+        "Dax_Label",
+        "Job",
+        "Try",
+        "Site",
+        "Kickstart",
+        "Mult",
+        "Kickstart-Mult",
+        "CPU-Time",
+        "Post",
+        "CondorQTime",
+        "Resource",
+        "Runtime",
+        "Seqexec",
+        "Seqexec-Delay",
+        "Exitcode",
+        "Hostname",
+    )
 
+    # Transformation
 
-def formatted_transformation_stats_legends():
-    return """
-# Transformation   - name of the transformation.
+    #: The file name for transformation statistics.
+    transformation_stats_file_name: str = "breakdown"
+    #: Legend for transformation statistics.
+    transformation_stats_legends: str = """# Transformation   - name of the transformation.
 # Type             - successful or failed
 # Count            - the number of times the invocations corresponding to
 #                    the transformation was executed.
@@ -411,1490 +385,287 @@ def formatted_transformation_stats_legends():
 # Max (avg. cpu)   - the maximum of the average cpu utilization value corresponding
 #                    to the transformation.
 # Mean (avg. cpu)  - the mean of the average cpu utilization value corresponding
-#                    to the transformation."""
+#                    to the transformation.
+"""
+    #: The column names for transformation statistics file of type text.
+    transformation_stats_col_name_text: t.Tuple[str, ...] = (
+        "Transformation",
+        "Type",
+        "Count",
+        "Min (runtime)",
+        "Max (runtime)",
+        "Mean (runtime)",
+        "Total (runtime)",
+        "Min (mem)",
+        "Max (mem)",
+        "Mean (mem)",
+        "Min (avg. cpu)",
+        "Max (avg. cpu)",
+        "Mean (avg. cpu)",
+    )
+    #: Column widths for transformation statistics file.
+    transformation_stats_col_size: t.Tuple[int, ...] = (
+        15,
+        5,
+        6,
+        14,
+        14,
+        21,
+        22,
+        10,
+        10,
+        11,
+        15,
+        15,
+        16,
+    )
+    #: The column names for transformation statistics file of type csv.
+    transformation_stats_col_name_csv: t.Tuple[str, ...] = (
+        "Workflow_Id",
+        "Dax_Label",
+        "Transformation",
+        "Type",
+        "Count",
+        "Min (runtime)",
+        "Max (runtime)",
+        "Mean (runtime)",
+        "Total (runtime)",
+        "Min (mem)",
+        "Max (mem)",
+        "Mean (mem)",
+        "Min (avg. cpu)",
+        "Max (avg. cpu)",
+        "Mean (avg. cpu)",
+    )
 
+    # Integrity
 
-def formatted_integrity_stats_legends():
-    return """
-# Integrity Statistics Breakdown
+    #: The file name for integrity statistics.
+    integrity_stats_file_name: str = "integrity"
+    #: Legend for integrity stats.
+    integrity_stats_legends: str = """# Integrity Statistics Breakdown
 # Type           - the type of integrity metric.
-                   check - means checksum was compared for a file,
-                   compute - means a checksum was generated for a file
+                check - means checksum was compared for a file,
+                compute - means a checksum was generated for a file
 # File Type      - the type of file: input or output from a job perspective
 # Count          - the number of times done
 # Total Duration - sum of duration in seconds for the 'count' number
-                   of records matching the particular type,
-                   file-type combo
+                of records matching the particular type,
+                file-type combo
 """
-
-
-def formatted_time_stats_legends_text(options):
-    return """
-# Job instance statistics per FILTER:
-#   the number of job instances run, total runtime sorted by FILTER
-# Invocation statistics per FILTER:
-#   the number of invocations , total runtime sorted by FILTER
-# Job instance statistics by host per FILTER:
-#   the number of job instance run, total runtime on each host sorted by FILTER
-# Invocation by host per FILTER:
-#   the number of invocations, total runtime on each host sorted by FILTER
-""".replace(
-        "FILTER", str(options.time_filter)
+    #: The column names for integrity statistics file of type text.
+    integrity_stats_col_name_text: t.Tuple[str, ...] = (
+        "Type",
+        "File Type",
+        "Count",
+        "Total Duration",
+    )
+    #: Column widths for integrity statistics file.
+    integrity_stats_col_size: t.Tuple[int, ...] = (10, 15, 10, 25)
+    #: The column names for integrity statistics file of type csv.
+    integrity_stats_col_name_csv: t.Tuple[str, ...] = (
+        "Workflow_Id",
+        "Dax_Label",
+        "Type",
+        "File Type",
+        "Count",
+        "Total Duration",
     )
 
+    # Time
 
-def formatted_time_stats_legends_csv(options):
-    return """
-# Job instance statistics per FILTER:
-#   the number of job instances run, total runtime sorted by FILTER
-# Invocation statistics per FILTER:
-#   the number of invocations , total runtime sorted by FILTER
-""".replace(
-        "FILTER", str(options.time_filter)
-    )
+    #: The file name for time statistics.
+    time_stats_file_name: str = "time"
+    #: Legend for time stats (txt).
+    time_stats_legends_text: str = """# Job instance statistics per %(time_filter)s:
+#   the number of job instances run, total runtime sorted by %(time_filter)s
+# Invocation statistics per %(time_filter)s:
+#   the number of invocations , total runtime sorted by %(time_filter)s
+# Job instance statistics by host per %(time_filter)s:
+#   the number of job instance run, total runtime on each host sorted by %(time_filter)s
+# Invocation by host per %(time_filter)s:
+#   the number of invocations, total runtime on each host sorted by %(time_filter)s"""
+    #: Legend for time stats (csv).
+    time_stats_legends_csv: str = """# Job instance statistics per %(time_filter)s:
+#   the number of job instances run, total runtime sorted by %(time_filter)s
+# Invocation statistics per %(time_filter)s:
+#   the number of invocations , total runtime sorted by %(time_filter)s
+"""
+    #: The column names for time statistics file of type text.
+    time_stats_col_name_text: t.List[str] = [
+        "Date%(tf_format)s",
+        "Count",
+        "Runtime (sec)",
+    ]
+    #: Column widths for time statistics file.
+    time_stats_col_size: t.Tuple[int, ...] = (30, 20, 20)
+    #: The column names for time statistics file of type csv.
+    time_stats_col_name_csv: t.List[str] = [
+        "stat_type",
+        "date%(tf_format)s",
+        "count",
+        "runtime (sec)",
+    ]
 
+    #: The file name for host statistics.
+    time_host_stats_file_name: str = "time-per-host"
+    #: Legend for time host stats.
+    time_host_stats_legends: str = """# Job instance statistics by host per %(time_filter)s:
+#   the number of job instance run, total runtime on each host sorted by %(time_filter)s
+# Invocation by host per %(time_filter)s:
+#   the number of invocations, total runtime on each host sorted by %(time_filter)s
+"""
+    #: The column names for host statistics file of type text.
+    time_host_stats_col_name_text: t.List[str] = [
+        "Date%(tf_format)s",
+        "Host",
+        "Count",
+        "Runtime (sec)",
+    ]
+    #: Column widths for host statistics file.
+    time_host_stats_col_size: t.Tuple[int, ...] = (23, 30, 10, 20)
+    #: The column names for host statistics file of type csv.
+    time_host_stats_col_name_csv: t.List[str] = [
+        "stat_type",
+        "date%(tf_format)s",
+        "host",
+        "count",
+        "runtime (sec)",
+    ]
 
-def formatted_time_host_stats_legends_csv(options):
-    return """
-# Job instance statistics by host per FILTER:
-#   the number of job instance run, total runtime on each host sorted by FILTER
-# Invocation by host per FILTER:
-#   the number of invocations, total runtime on each host sorted by FILTER
-""".replace(
-        "FILTER", str(options.time_filter)
-    )
-
-
-def remove_file(path):
-    try:
-        os.remove(path)
-    except OSError as e:
-        if e.errno != 2:
-            raise
-
-
-def write_to_file(file_path, mode, content):
-    """
-    Utility method for writing content to a given file
-    @param file_path :  file path
-    @param mode :   file writing mode 'a' append , 'w' write
-    @param content :  content to write to file
-    """
-    try:
-        fh = open(file_path, mode)
-        fh.write(content)
-    except OSError:
-        logger.error("Unable to write to file " + file_path)
-        sys.exit(1)
-    else:
-        fh.close()
-
-
-def format_seconds(duration):
-    """
-    Utility for converting time to a readable format
-    @param duration :  time in seconds and miliseconds
-    @return time in format day,hour, min,sec
-    """
-    return stats_utils.format_seconds(duration)
-
-
-def istr(value):
-    """
-    Utility for returning a str representation of the given value.
-    Return '-' if value is None
-    @parem value : the given value that need to be converted to string
-    """
-    if value is None:
-        return "-"
-    return str(value)
-
-
-def fstr(value, to=3):
-    """
-    Utility method for rounding the float value to rounded string
-    @param value :  value to round
-    @param to    :  how many decimal points to round to
-    """
-    if value is None:
-        return "-"
-    return stats_utils.round_decimal_to_str(value, to)
-
-
-def pstr(value, to=2):
-    """
-    Utility method for rounding the float value to rounded string
-    @param value :  value to round
-    @param to    :  how many decimal points to round to
-    """
-    if value is None:
-        return "-"
-    return stats_utils.round_decimal_to_str(value, to) + "%"
-
-
-def print_row(row, sizes, fmt):
-    """
-    Utility method for generating formatted row based on the column format given
-    row   : list of column values
-    sizes : list of column widths for text format
-    fmt   : format of the row ('text' or 'csv')
-    """
-    if fmt in ["text", "txt"]:
-        return "".join(value.ljust(sizes[i]) for i, value in enumerate(row))
-    elif fmt == "csv":
-        return ",".join(row)
-    else:
-        print("Output format %s not recognized!" % fmt)
-        sys.exit(1)
-
-
-def get_workflow_details(
-    options, output_db_url, wf_uuid, output_dir, multiple_wf=False
-):
-    """
-    Prints the workflow statistics information of all workflows
-    @param output_db_url : URL of stampede DB
-    @param wf_uuid       : uuid of the top level workflow
-    @param output_dir    : directory to write output files
-    """
-
-    errors = 0
-    try:
-        if multiple_wf:
-            expanded_workflow_stats = StampedeWorkflowStatistics(output_db_url)
-        else:
-            expanded_workflow_stats = StampedeStatistics(output_db_url)
-
-        wf_found = expanded_workflow_stats.initialize(wf_uuid)
-
-        if wf_found is False:
-            print(
-                "Workflow {!r} not found in database {!r}".format(
-                    wf_uuid, output_db_url
-                )
-            )
-            sys.exit(1)
-    except Exception:
-        logger.error("Failed to load the database." + output_db_url)
-        logger.warning(traceback.format_exc())
-        sys.exit(1)
-
-    # print workflow statistics
-    if multiple_wf:
-        wf_uuid_list = []
-        desc_wf_uuid_list = expanded_workflow_stats.get_workflow_ids()
-    else:
-        wf_uuid_list = [wf_uuid]
-        desc_wf_uuid_list = expanded_workflow_stats.get_descendant_workflow_ids()
-
-    for wf_det in desc_wf_uuid_list:
-        wf_uuid_list.append(wf_det.wf_uuid)
-
-    if options.calc_wf_stats:
-        if options.file_type == FILE_TYPE_TXT:
-            wf_stats_file_txt = os.path.join(
-                output_dir, workflow_statistics_file_name + text_file_extension
-            )
-            write_to_file(wf_stats_file_txt, "w", formatted_wf_status_legends())
-            header = print_row(
-                workflow_status_col_name_text, workflow_status_col_size, "text"
-            )
-            write_to_file(wf_stats_file_txt, "a", header)
-
-        if options.file_type == FILE_TYPE_CSV:
-            wf_stats_file_csv = os.path.join(
-                output_dir, workflow_statistics_file_name + csv_file_extension
-            )
-            write_to_file(wf_stats_file_csv, "w", formatted_wf_status_legends())
-            header = print_row(
-                workflow_status_col_name_csv, workflow_status_col_size, "csv"
-            )
-            write_to_file(wf_stats_file_csv, "a", header)
-
-    if options.calc_jb_stats:
-        jobs_stats_file_txt = os.path.join(
-            output_dir, job_statistics_file_name + text_file_extension
-        )
-        if options.file_type == FILE_TYPE_TXT:
-            write_to_file(jobs_stats_file_txt, "w", formatted_job_stats_legends())
-
-        jobs_stats_file_csv = os.path.join(
-            output_dir, job_statistics_file_name + csv_file_extension
-        )
-        if options.file_type == FILE_TYPE_CSV:
-            write_to_file(jobs_stats_file_csv, "w", formatted_job_stats_legends())
-
-    if options.calc_tf_stats:
-        if options.file_type == FILE_TYPE_TXT:
-            transformation_stats_file_txt = os.path.join(
-                output_dir,
-                logical_transformation_statistics_file_name + text_file_extension,
-            )
-            write_to_file(
-                transformation_stats_file_txt,
-                "w",
-                formatted_transformation_stats_legends(),
-            )
-
-        if options.file_type == FILE_TYPE_CSV:
-            transformation_stats_file_csv = os.path.join(
-                output_dir,
-                logical_transformation_statistics_file_name + csv_file_extension,
-            )
-            write_to_file(
-                transformation_stats_file_csv,
-                "w",
-                formatted_transformation_stats_legends(),
-            )
-
-    if options.calc_int_stats:
-        if options.file_type == FILE_TYPE_TXT:
-            integrity_stats_file_txt = os.path.join(
-                output_dir, logical_integrity_statistics_file_name + text_file_extension
-            )
-            write_to_file(
-                integrity_stats_file_txt, "w", formatted_integrity_stats_legends()
-            )
-
-        if options.file_type == FILE_TYPE_CSV:
-            integrity_stats_file_csv = os.path.join(
-                output_dir, logical_integrity_statistics_file_name + csv_file_extension
-            )
-            write_to_file(
-                integrity_stats_file_csv, "w", formatted_integrity_stats_legends()
-            )
-
-    if options.calc_ti_stats:
-        try:
-            time_stats_file_txt = os.path.join(
-                output_dir, time_statistics_file_name + text_file_extension
-            )
-            if options.file_type == FILE_TYPE_TXT:
-                content = get_statistics_by_time_and_host(
-                    options,
-                    expanded_workflow_stats,
-                    "text",
-                    combined=True,
-                    per_host=True,
-                )
-                write_to_file(
-                    time_stats_file_txt, "w", formatted_time_stats_legends_text(options)
-                )
-                write_to_file(time_stats_file_txt, "a", content)
-
-            time_stats_file_csv = os.path.join(
-                output_dir, time_statistics_file_name + csv_file_extension
-            )
-            if options.file_type == FILE_TYPE_CSV:
-                content = get_statistics_by_time_and_host(
-                    options,
-                    expanded_workflow_stats,
-                    "csv",
-                    combined=True,
-                    per_host=False,
-                )
-                write_to_file(
-                    time_stats_file_csv, "w", formatted_time_stats_legends_csv(options)
-                )
-                write_to_file(time_stats_file_csv, "a", content)
-
-                time_stats_file2_csv = os.path.join(
-                    output_dir, time_statistics_per_host_file_name + csv_file_extension
-                )
-                content = get_statistics_by_time_and_host(
-                    options,
-                    expanded_workflow_stats,
-                    "csv",
-                    combined=False,
-                    per_host=True,
-                )
-                write_to_file(
-                    time_stats_file2_csv,
-                    "w",
-                    formatted_time_host_stats_legends_csv(options),
-                )
-                write_to_file(time_stats_file2_csv, "a", content)
-        except Exception:
-            logger.warn("time statistics generation failed")
-            logger.debug("time statistics generation failed", exc_info=1)
-
-            options.calc_ti_stats = False
-            if options.file_type == FILE_TYPE_TXT:
-                remove_file(time_stats_file_txt)
-            if options.file_type == FILE_TYPE_CSV:
-                remove_file(time_stats_file_csv)
-                remove_file(time_stats_file2_csv)
-
-            errors += 1
-
-    if (
-        options.calc_jb_stats
-        or options.calc_tf_stats
-        or options.calc_wf_stats
-        or options.calc_int_stats
+    def __init__(
+        self,
+        output_dir: str = default_output_dir,
+        filetype: str = file_type_txt,
+        config_properties=None,
+        statistics_level: set = {"summary"},
+        time_filter: str = "day",
+        ignore_db_inconsistency: bool = False,
+        multiple_wf: bool = False,
+        is_pmc: bool = False,
+        is_uuid: bool = False,
+        submit_dirs: t.Union[str, t.List[str]] = [],
     ):
-        for sub_wf_uuid in wf_uuid_list:
-            try:
-                individual_workflow_stats = StampedeStatistics(output_db_url, False)
-                wf_found = individual_workflow_stats.initialize(sub_wf_uuid)
+        """."""
+        self.log = logging.getLogger("pegasus-statistics")
 
-                if wf_found is False:
-                    print(
-                        "Workflow %r not found in database %r"
-                        % (sub_wf_uuid, output_db_url)
-                    )
-                    sys.exit(1)
-            except Exception:
-                logger.error("Failed to load the database." + output_db_url)
-                logger.warning(traceback.format_exc())
-                sys.exit(1)
+        self.output_dir = output_dir
+        self.file_type = filetype or self.file_type_txt
+        self.config_properties = config_properties
+        self.statistics_level = statistics_level or {"summary"}
+        self.time_filter = time_filter or "day"
+        self.ignore_db_inconsistency = ignore_db_inconsistency
+        self.multiple_wf = multiple_wf
+        self.is_pmc = is_pmc
+        self.is_uuid = is_uuid
+        self.submit_dirs = submit_dirs or []
+        self.wf_uuids: t.Union[str, list] = []
 
-            wf_det = individual_workflow_stats.get_workflow_details()[0]
+        self.wf_uuid_list: t.Sequence[t.Tuple[str, t.Any]] = []
+        self.wf_stats: t.Any = None
 
-            workflow_id = str(sub_wf_uuid)
-            dax_label = str(wf_det.dax_label)
-            logger.info(
-                "Generating statistics information about the workflow "
-                + workflow_id
-                + " ... "
-            )
+    def _initialize(self, verbose: int = 0, quiet: int = 0):
+        """."""
+        # Initialize logging
+        utils.configure_logging(verbose, quiet)
 
-            if options.calc_jb_stats:
-                try:
-                    logger.debug(
-                        "Generating job instance statistics information for workflow "
-                        + workflow_id
-                        + " ... "
-                    )
-                    individual_workflow_stats.set_job_filter("all")
-
-                    if options.file_type == FILE_TYPE_TXT:
-                        content = get_individual_wf_job_stats(
-                            options,
-                            individual_workflow_stats,
-                            workflow_id,
-                            dax_label,
-                            "text",
-                        )
-                        write_to_file(jobs_stats_file_txt, "a", content)
-
-                    if options.file_type == FILE_TYPE_CSV:
-                        content = get_individual_wf_job_stats(
-                            options,
-                            individual_workflow_stats,
-                            workflow_id,
-                            dax_label,
-                            "csv",
-                        )
-                        write_to_file(jobs_stats_file_csv, "a", content)
-                except Exception:
-                    logger.warn("job instance statistics generation failed")
-                    logger.debug(
-                        "job instance statistics generation failed", exc_info=1
-                    )
-
-                    options.calc_jb_stats = False
-                    if options.file_type == FILE_TYPE_TXT:
-                        remove_file(jobs_stats_file_txt)
-                    if options.file_type == FILE_TYPE_CSV:
-                        remove_file(jobs_stats_file_csv)
-
-                    errors += 1
-
-            if options.calc_tf_stats:
-                try:
-                    logger.debug(
-                        "Generating invocation statistics information for workflow "
-                        + workflow_id
-                        + " ... "
-                    )
-                    individual_workflow_stats.set_job_filter("all")
-                    if options.file_type == FILE_TYPE_TXT:
-                        content = get_wf_transformation_stats(
-                            options,
-                            individual_workflow_stats,
-                            workflow_id,
-                            dax_label,
-                            "text",
-                        )
-                        write_to_file(transformation_stats_file_txt, "a", content)
-
-                    if options.file_type == FILE_TYPE_CSV:
-                        content = get_wf_transformation_stats(
-                            options,
-                            individual_workflow_stats,
-                            workflow_id,
-                            dax_label,
-                            "csv",
-                        )
-                        write_to_file(transformation_stats_file_csv, "a", content)
-                except Exception:
-                    logger.warn("transformation statistics generation failed")
-                    logger.debug(
-                        "transformation statistics generation failed", exc_info=1
-                    )
-
-                    options.calc_tf_stats = False
-                    if options.file_type == FILE_TYPE_TXT:
-                        remove_file(transformation_stats_file_txt)
-                    if options.file_type == FILE_TYPE_CSV:
-                        remove_file(transformation_stats_file_csv)
-
-                    errors += 1
-
-            if options.calc_int_stats:
-                try:
-                    logger.debug(
-                        "Generating integrity statistics information for workflow "
-                        + workflow_id
-                        + " ... "
-                    )
-                    individual_workflow_stats.set_job_filter("all")
-                    if options.file_type == FILE_TYPE_TXT:
-                        content = get_wf_integrity_stats(
-                            options,
-                            individual_workflow_stats,
-                            workflow_id,
-                            dax_label,
-                            "text",
-                        )
-                        write_to_file(integrity_stats_file_txt, "a", content)
-
-                    if options.file_type == FILE_TYPE_CSV:
-                        content = get_wf_integrity_stats(
-                            options,
-                            individual_workflow_stats,
-                            workflow_id,
-                            dax_label,
-                            "csv",
-                        )
-                        write_to_file(integrity_stats_file_csv, "a", content)
-                except Exception:
-                    logger.error(traceback.format_exc())
-                    logger.warn("integrity statistics generation failed")
-                    logger.debug("integrity statistics generation failed", exc_info=1)
-
-                    options.calc_int_stats = False
-                    if options.file_type == FILE_TYPE_TXT:
-                        remove_file(integrity_stats_file_txt)
-                    if options.file_type == FILE_TYPE_CSV:
-                        remove_file(integrity_stats_file_csv)
-
-                    errors += 1
-
-            if options.calc_wf_stats:
-                try:
-                    logger.debug(
-                        "Generating workflow statistics information for workflow "
-                        + workflow_id
-                        + " ... "
-                    )
-                    individual_workflow_stats.set_job_filter("all")
-                    if options.file_type == FILE_TYPE_TXT:
-                        content = get_individual_workflow_stats(
-                            options,
-                            individual_workflow_stats,
-                            workflow_id,
-                            dax_label,
-                            "text",
-                        )
-                        write_to_file(wf_stats_file_txt, "a", content)
-
-                    if options.file_type == FILE_TYPE_CSV:
-                        content = get_individual_workflow_stats(
-                            options,
-                            individual_workflow_stats,
-                            workflow_id,
-                            dax_label,
-                            "csv",
-                        )
-                        write_to_file(wf_stats_file_csv, "a", content)
-                except Exception:
-                    logger.warn("workflow statistics generation failed")
-                    logger.debug("workflow statistics generation failed", exc_info=1)
-
-                    options.calc_wf_stats = False
-                    if options.file_type == FILE_TYPE_TXT:
-                        remove_file(wf_stats_file_txt)
-                    if options.file_type == FILE_TYPE_CSV:
-                        remove_file(wf_stats_file_csv)
-
-                    errors += 1
-
-            individual_workflow_stats.close()
-
-    #
-    # Output printed to console
-    #
-
-    stats_output = ""
-
-    if options.calc_wf_summary:
-
-        logger.info("Generating workflow summary ... ")
-        try:
-
-            if options.file_type == FILE_TYPE_TXT:
-                summary_output = formatted_wf_summary_legends_txt()
-                summary_output += NEW_LINE_STR
-                summary_output += get_workflow_summary(
-                    options,
-                    expanded_workflow_stats,
-                    "text",
-                    wf_summary=True,
-                    time_summary=True,
-                    multiple_wf=multiple_wf,
+        if not self.submit_dirs:
+            self.submit_dirs = "*" if self.multiple_wf is True else "."
+        elif len(self.submit_dirs) > 1:
+            if self.multiple_wf is False:
+                self.log.warning(
+                    "Multiple submit-dirs are specified, but multiple-wf flag is not set."
                 )
-                wf_summary_file_txt = os.path.join(
-                    output_dir, workflow_summary_file_name + text_file_extension
-                )
-                write_to_file(wf_summary_file_txt, "w", summary_output)
-
-                stats_output += summary_output + "\n"
-                stats_output += "{:<30}: {}\n".format("Summary", wf_summary_file_txt)
-
-            if options.file_type == FILE_TYPE_CSV:
-                # Generate the first csv summary file
-                summary_output = formatted_wf_summary_legends_csv1()
-                summary_output += NEW_LINE_STR
-                summary_output += get_workflow_summary(
-                    options,
-                    expanded_workflow_stats,
-                    "csv",
-                    wf_summary=True,
-                    time_summary=False,
-                    multiple_wf=multiple_wf,
-                )
-                wf_summary_file_csv = os.path.join(
-                    output_dir, workflow_summary_file_name + csv_file_extension
-                )
-                write_to_file(wf_summary_file_csv, "w", summary_output)
-
-                stats_output += "{:<30}: {}\n".format("Summary:", wf_summary_file_csv)
-
-                # Generate the second csv summary file
-                summary_output = formatted_wf_summary_legends_csv2()
-                summary_output += NEW_LINE_STR
-                summary_output += get_workflow_summary(
-                    options,
-                    expanded_workflow_stats,
-                    "csv",
-                    wf_summary=False,
-                    time_summary=True,
-                    multiple_wf=multiple_wf,
-                )
-                wf_summary_file2_csv = os.path.join(
-                    output_dir, workflow_summary_time_file_name + csv_file_extension
-                )
-                write_to_file(wf_summary_file2_csv, "w", summary_output)
-
-                stats_output += "{:<30}: {}\n".format(
-                    "Summary Time:", wf_summary_file2_csv
-                )
-        except Exception:
-            logger.warn("summary statistics generation failed")
-            logger.debug("summary statistics generation failed", exc_info=1)
-            stats_output = ""
-
-            options.calc_wf_summary = False
-            if options.file_type == FILE_TYPE_TXT:
-                remove_file(wf_summary_file_txt)
-            if options.file_type == FILE_TYPE_CSV:
-                remove_file(workflow_summary_file_name)
-                remove_file(wf_summary_file2_csv)
-
-            errors += 1
-
-    if options.calc_wf_stats:
-        pre_stats_output = stats_output
-        try:
-            stats_output += "%-30s: " % "Workflow execution statistics"
-
-            if options.file_type == FILE_TYPE_TXT:
-                content = get_individual_workflow_stats(
-                    options, expanded_workflow_stats, "All Workflows", "", "text"
-                )
-                write_to_file(wf_stats_file_txt, "a", content)
-                stats_output += wf_stats_file_txt + "\n"
-
-            if options.file_type == FILE_TYPE_CSV:
-                content = get_individual_workflow_stats(
-                    options, expanded_workflow_stats, "ALL", "", "csv"
-                )
-                write_to_file(wf_stats_file_csv, "a", content)
-                stats_output += wf_stats_file_csv + "\n"
-        except Exception:
-            logger.warn("workflow statistics generation failed")
-            logger.debug("workflow statistics generation failed", exc_info=1)
-            stats_output = pre_stats_output
-
-            options.calc_wf_stats = False
-            if options.file_type == FILE_TYPE_TXT:
-                remove_file(wf_stats_file_txt)
-            if options.file_type == FILE_TYPE_CSV:
-                remove_file(wf_stats_file_csv)
-
-            errors += 1
-
-    if options.calc_jb_stats:
-        stats_output += "%-30s: " % "Job instance statistics"
-        if options.file_type == FILE_TYPE_TXT:
-            stats_output += jobs_stats_file_txt + "\n"
-
-        if options.file_type == FILE_TYPE_CSV:
-            stats_output += jobs_stats_file_csv + "\n"
-
-    if options.calc_tf_stats:
-        expanded_workflow_stats.set_job_filter("all")
-        pre_stats_output = stats_output
-
-        try:
-            stats_output += "%-30s: " % "Transformation statistics"
-
-            if options.file_type == FILE_TYPE_TXT:
-                content = get_wf_transformation_stats(
-                    options, expanded_workflow_stats, "All", "", "text"
-                )
-                write_to_file(transformation_stats_file_txt, "a", content)
-                stats_output += transformation_stats_file_txt + "\n"
-
-            if options.file_type == FILE_TYPE_CSV:
-                content = get_wf_transformation_stats(
-                    options, expanded_workflow_stats, "ALL", "", "csv"
-                )
-                write_to_file(transformation_stats_file_csv, "a", content)
-                stats_output += transformation_stats_file_csv + "\n"
-        except Exception:
-            logger.warn("transformation statistics generation failed")
-            logger.debug("transformation statistics generation failed", exc_info=1)
-            stats_output = pre_stats_output
-
-            options.calc_tf_stats = False
-            if options.file_type == FILE_TYPE_TXT:
-                remove_file(transformation_stats_file_txt)
-            if options.file_type == FILE_TYPE_CSV:
-                remove_file(transformation_stats_file_csv)
-            errors += 1
-
-    if options.calc_int_stats:
-        expanded_workflow_stats.set_job_filter("all")
-        pre_stats_output = stats_output
-
-        try:
-            stats_output += "%-30s: " % "Integrity statistics"
-
-            if options.file_type == FILE_TYPE_TXT:
-                content = get_wf_integrity_stats(
-                    options, expanded_workflow_stats, "All", "", "text"
-                )
-                write_to_file(integrity_stats_file_txt, "a", content)
-                stats_output += integrity_stats_file_txt + "\n"
-
-            if options.file_type == FILE_TYPE_CSV:
-                content = get_wf_integrity_stats(
-                    options, expanded_workflow_stats, "ALL", "", "csv"
-                )
-                write_to_file(integrity_stats_file_csv, "a", content)
-                stats_output += integrity_stats_file_csv + "\n"
-        except Exception:
-            logger.warn("integrity statistics generation failed")
-            logger.debug("integrity statistics generation failed", exc_info=1)
-            stats_output = pre_stats_output
-
-            options.calc_int_stats = False
-            if options.file_type == FILE_TYPE_TXT:
-                remove_file(integrity_stats_file_txt)
-            if options.file_type == FILE_TYPE_CSV:
-                remove_file(integrity_stats_file_csv)
-
-            errors += 1
-
-    if options.calc_ti_stats:
-        stats_output += "%-30s: " % "Time statistics"
-
-        if options.file_type == FILE_TYPE_TXT:
-            stats_output += time_stats_file_txt + "\n"
-
-        if options.file_type == FILE_TYPE_CSV:
-            stats_output += time_stats_file_csv + "\n"
-
-    expanded_workflow_stats.close()
-
-    print(stats_output)
-    return errors
-
-
-def get_workflow_summary(
-    options,
-    workflow_stats,
-    output_format,
-    wf_summary=True,
-    time_summary=True,
-    multiple_wf=False,
-):
-    """
-    Prints the workflow statistics summary of an top level workflow
-    @param workflow_stats :  workflow statistics object reference
-    """
-
-    summary_str = ""
-
-    if wf_summary is True:
-        # status
-        workflow_stats.set_job_filter("nonsub")
-
-        # Tasks
-        total_tasks = workflow_stats.get_total_tasks_status()
-        total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status(
-            options.uses_PMC
-        )
-        total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
-        total_unsubmitted_tasks = total_tasks - (
-            total_succeeded_tasks + total_failed_tasks
-        )
-        total_task_retries = workflow_stats.get_total_tasks_retries()
-        total_invocations = (
-            total_succeeded_tasks + total_failed_tasks + total_task_retries
-        )
-
-        # Jobs
-        total_jobs = workflow_stats.get_total_jobs_status()
-        total_succeeded_failed_jobs = (
-            workflow_stats.get_total_succeeded_failed_jobs_status()
-        )
-        total_failed_jobs_integrity = workflow_stats.get_total_succeeded_failed_jobs_status(
-            classify_error=True, tag="int.error"
-        )
-        total_succeeded_jobs = total_succeeded_failed_jobs.succeeded
-        total_failed_jobs = total_succeeded_failed_jobs.failed
-        total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs)
-        total_job_retries = workflow_stats.get_total_jobs_retries()
-        total_job_instance_retries = (
-            total_succeeded_jobs + total_failed_jobs + total_job_retries
-        )
-
-        # Sub workflows
-        workflow_stats.set_job_filter("subwf")
-        total_sub_wfs = workflow_stats.get_total_jobs_status()
-        total_succeeded_failed_sub_wfs = (
-            workflow_stats.get_total_succeeded_failed_jobs_status()
-        )
-        total_succeeded_sub_wfs = total_succeeded_failed_sub_wfs.succeeded
-        total_failed_sub_wfs = total_succeeded_failed_sub_wfs.failed
-        # for non hierarichal workflows the combined query can return none
-        if total_succeeded_sub_wfs is None:
-            total_succeeded_sub_wfs = 0
-
-        if total_failed_sub_wfs is None:
-            total_failed_sub_wfs = 0
-
-        total_unsubmitted_sub_wfs = total_sub_wfs - (
-            total_succeeded_sub_wfs + total_failed_sub_wfs
-        )
-        total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
-        total_sub_wfs_tries = (
-            total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
-        )
-
-        # Format the output
-        if output_format == "text":
-            summary_str += "".center(sum(workflow_summary_col_size), "-") + "\n"
-            summary_str += (
-                print_row(
-                    workflow_summary_col_name_text,
-                    workflow_summary_col_size,
-                    output_format,
-                )
-                + "\n"
-            )
+            self.multiple_wf = True
         else:
-            summary_str += (
-                print_row(
-                    workflow_summary_col_name_csv,
-                    workflow_summary_col_size,
-                    output_format,
+            if self.multiple_wf is True:
+                self.log.warning(
+                    "Single submit-dir is specified, but multiple-wf flag is set."
                 )
-                + "\n"
+            self.multiple_wf = False
+            self.submit_dirs = self.submit_dirs[0]
+
+        if self.is_uuid is True or self.submit_dirs == "*":
+            self.wf_uuids = self.submit_dirs
+
+        self.tf_format = stats_utils.get_date_print_format(self.time_filter)
+
+        self.log.info(f"File type is {self.file_type}")
+        self.log.info(f"Time filter is {self.time_filter}")
+        self.log.info(f"Time format is {self.tf_format}")
+
+        # Identify what statistics need to be computed
+        self._initialize_statistics_levels()
+
+        # Register cleanup function
+        atexit.register(self._cleanup)
+
+    def _check_braindump(self, submit_dir):
+        try:
+            with (Path(submit_dir) / "braindump.yml").open("r") as f:
+                braindb = braindump.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Not a workflow submit directory {submit_dir}")
+
+        return braindb
+
+    def _check_inputs(self):
+        """."""
+        self._check_args()
+
+        # Check if the submit directory is valid
+        # i.e. a braindump file exists
+        self._check_workflow_dir()
+
+        # Check if the run conditions are suitable
+        # i.e. the workflow is not running
+        self._check_workflow_state()
+
+    def _check_args(self):
+        """."""
+        if self.multiple_wf and self.calc_jb_stats:
+            self.log.fatal(
+                "Job breakdown statistics cannot be computed over multiple workflows"
             )
-
-        content = [
-            "Tasks",
-            istr(total_succeeded_tasks),
-            istr(total_failed_tasks),
-            istr(total_unsubmitted_tasks),
-            istr(total_tasks),
-            istr(total_task_retries),
-            istr(total_invocations),
-        ]
-        summary_str += (
-            print_row(content, workflow_summary_col_size, output_format) + "\n"
-        )
-
-        content = [
-            "Jobs",
-            istr(total_succeeded_jobs),
-            istr(total_failed_jobs),
-            istr(total_unsubmitted_jobs),
-            istr(total_jobs),
-            str(total_job_retries),
-            istr(total_job_instance_retries),
-        ]
-        summary_str += (
-            print_row(content, workflow_summary_col_size, output_format) + "\n"
-        )
-
-        content = [
-            "Sub-Workflows",
-            istr(total_succeeded_sub_wfs),
-            istr(total_failed_sub_wfs),
-            istr(total_unsubmitted_sub_wfs),
-            istr(total_sub_wfs),
-            str(total_sub_wfs_retries),
-            istr(total_sub_wfs_tries),
-        ]
-        summary_str += (
-            print_row(content, workflow_summary_col_size, output_format) + "\n"
-        )
-
-        if output_format == "text":
-            summary_str += "".center(sum(workflow_summary_col_size), "-") + "\n\n"
-
-    if time_summary is True:
-        states = workflow_stats.get_workflow_states()
-        wwt = stats_utils.get_workflow_wall_time(states)
-        wcjwt, wcgpt, wcbpt = workflow_stats.get_workflow_cum_job_wall_time()
-        ssjwt, ssgpt, ssbpt = workflow_stats.get_submit_side_job_wall_time()
-        if output_format == "text":
-
-            def myfmt(val):
-                if val is None:
-                    return "-"
-                else:
-                    return format_seconds(val)
-
-            if not multiple_wf:
-                summary_str += "{:<57}: {}\n".format("Workflow wall time", myfmt(wwt))
-            summary_str += "{:<57}: {}\n".format(
-                "Cumulative job wall time", myfmt(wcjwt)
-            )
-            summary_str += "{:<57}: {}\n".format(
-                "Cumulative job wall time as seen from submit side", myfmt(ssjwt),
-            )
-            summary_str += "{:<57}: {}\n".format(
-                "Cumulative job badput wall time", myfmt(wcbpt),
-            )
-            summary_str += "{:<57}: {}\n".format(
-                "Cumulative job badput wall time as seen from submit side",
-                myfmt(ssbpt),
-            )
-        else:
-
-            def myfmt(val):
-                if val is None:
-                    return ""
-                else:
-                    return str(val)
-
-            summary_str += (
-                print_row(workflow_time_summary_col_name_csv, None, output_format)
-                + "\n"
-            )
-            summary_str += "workflow_wall_time,%s\n" % myfmt(wwt)
-            summary_str += "workflow_cumulative_job_wall_time,%s\n" % myfmt(wcjwt)
-            summary_str += "cumulative_job_walltime_from_submit_side,%s\n" % myfmt(
-                ssjwt
-            )
-            summary_str += "workflow_cumulative_badput_time,%s\n" % myfmt(wcbpt)
-            summary_str += (
-                "cumulative_job_badput_walltime_from_submit_side,%s\n" % myfmt(ssbpt)
-            )
-
-        # PM-1260 integrity metrics summary
-        int_metrics_summary = workflow_stats.get_summary_integrity_metrics()
-        if int_metrics_summary and output_format == "text":
-
-            def myfmt(val):
-                if val is None:
-                    return "-"
-                else:
-                    return format_seconds(val)
-
-            summary_str += """
-    # Integrity Metrics
-    # Number of files for which checksums were compared/computed along with total time spent doing it. \n"""
-            for result in int_metrics_summary:
-                type = result.type
-                if result.type == "check":
-                    type = "compared"
-                if result.type == "compute":
-                    type = "generated"
-                summary_str += "{} files checksums {} with total duration of {}\n".format(
-                    result.count, type, myfmt(result.duration),
-                )
-
-            summary_str += """
-    # Integrity Errors
-    # Total:
-    #       Total number of integrity errors encountered across all job executions(including retries) of a workflow.
-    # Failures:
-    #       Number of failed jobs where the last job instance had integrity errors.
-    """
-            int_error_summary = workflow_stats.get_tag_metrics("int.error")
-            for result in int_error_summary:
-                type = result.name
-                if result.name == "int.error":
-                    type = "integrity"
-                summary_str += (
-                    "Total:    A total of %s %s errors encountered in the workflow\n"
-                    % (result.count, type)
-                )
-
-            # PM-1295 jobs where last_job_instance failed and there were integrity errors in those last job instances
-            summary_str += "Failures: %s job failures had integrity errors\n" % (
-                total_failed_jobs_integrity.failed or 0
-            )
-
-    return summary_str
-
-
-def get_individual_workflow_stats(
-    options, workflow_stats, workflow_id, dax_label, output_format
-):
-    """
-    Prints the workflow statistics of workflow
-    @param workflow_stats :  workflow statistics object reference
-    @param workflow_id  : workflow_id (title of the workflow table)
-    """
-    content_str = "\n"
-    # individual workflow status
-
-    # Add dax_label to workflow_id if writing text file
-    if output_format == "text" and dax_label != "":
-        workflow_id = workflow_id + " (" + dax_label + ")"
-
-    # workflow status
-    workflow_stats.set_job_filter("all")
-    total_wf_retries = workflow_stats.get_workflow_retries()
-    # only used for the text output...
-    content = [workflow_id, istr(total_wf_retries)]
-    retry_col_size = workflow_status_col_size[len(workflow_status_col_size) - 1]
-    wf_status_str = print_row(
-        content,
-        [sum(workflow_status_col_size) - retry_col_size, retry_col_size],
-        output_format,
-    )
-
-    # tasks
-    workflow_stats.set_job_filter("nonsub")
-    total_tasks = workflow_stats.get_total_tasks_status()
-    total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status(
-        options.uses_PMC
-    )
-    total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
-    total_unsubmitted_tasks = total_tasks - (total_succeeded_tasks + total_failed_tasks)
-    total_task_retries = workflow_stats.get_total_tasks_retries()
-    total_task_invocations = (
-        total_succeeded_tasks + total_failed_tasks + total_task_retries
-    )
-    if output_format == "text":
-        content = [
-            "Tasks",
-            istr(total_succeeded_tasks),
-            istr(total_failed_tasks),
-            istr(total_unsubmitted_tasks),
-            istr(total_tasks),
-            istr(total_task_retries),
-            istr(total_task_invocations),
-            "",
-        ]
-    else:
-        content = [
-            workflow_id,
-            dax_label,
-            "Tasks",
-            istr(total_succeeded_tasks),
-            istr(total_failed_tasks),
-            istr(total_unsubmitted_tasks),
-            istr(total_tasks),
-            istr(total_task_retries),
-            istr(total_task_invocations),
-            istr(total_wf_retries),
-        ]
-
-    tasks_status_str = print_row(content, workflow_status_col_size, output_format)
-
-    # job status
-    workflow_stats.set_job_filter("nonsub")
-    total_jobs = workflow_stats.get_total_jobs_status()
-
-    tmp = workflow_stats.get_total_succeeded_failed_jobs_status()
-    total_succeeded_jobs = tmp.succeeded
-    total_failed_jobs = tmp.failed
-
-    total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs)
-    total_job_retries = workflow_stats.get_total_jobs_retries()
-    total_job_invocations = total_succeeded_jobs + total_failed_jobs + total_job_retries
-    if output_format == "text":
-        content = [
-            "Jobs",
-            istr(total_succeeded_jobs),
-            istr(total_failed_jobs),
-            istr(total_unsubmitted_jobs),
-            istr(total_jobs),
-            istr(total_job_retries),
-            istr(total_job_invocations),
-            "",
-        ]
-    else:
-        content = [
-            workflow_id,
-            dax_label,
-            "Jobs",
-            istr(total_succeeded_jobs),
-            istr(total_failed_jobs),
-            istr(total_unsubmitted_jobs),
-            istr(total_jobs),
-            istr(total_job_retries),
-            istr(total_job_invocations),
-            istr(total_wf_retries),
-        ]
-
-    jobs_status_str = print_row(content, workflow_status_col_size, output_format)
-
-    # sub workflow
-    workflow_stats.set_job_filter("subwf")
-    total_sub_wfs = workflow_stats.get_total_jobs_status()
-
-    tmp = workflow_stats.get_total_succeeded_failed_jobs_status()
-
-    total_succeeded_sub_wfs = 0
-    if tmp.succeeded:
-        total_succeeded_sub_wfs = tmp.succeeded
-
-    total_failed_sub_wfs = 0
-    if tmp.failed:
-        total_failed_sub_wfs = tmp.failed
-
-    total_unsubmitted_sub_wfs = total_sub_wfs - (
-        total_succeeded_sub_wfs + total_failed_sub_wfs
-    )
-    total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
-    total_sub_wfs_invocations = (
-        total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
-    )
-    if output_format == "text":
-        content = [
-            "Sub Workflows",
-            istr(total_succeeded_sub_wfs),
-            istr(total_failed_sub_wfs),
-            istr(total_unsubmitted_sub_wfs),
-            istr(total_sub_wfs),
-            istr(total_sub_wfs_retries),
-            istr(total_sub_wfs_invocations),
-            "",
-        ]
-    else:
-        content = [
-            workflow_id,
-            dax_label,
-            "Sub_Workflows",
-            istr(total_succeeded_sub_wfs),
-            istr(total_failed_sub_wfs),
-            istr(total_unsubmitted_sub_wfs),
-            istr(total_sub_wfs),
-            istr(total_sub_wfs_retries),
-            istr(total_sub_wfs_invocations),
-            istr(total_wf_retries),
-        ]
-
-    sub_wf_status_str = print_row(content, workflow_status_col_size, output_format)
-
-    if output_format == "text":
-        # Only print these in the text format output
-        content_str += "".center(sum(workflow_status_col_size), "-") + "\n"
-        content_str += wf_status_str + "\n"
-
-    content_str += tasks_status_str + "\n"
-    content_str += jobs_status_str + "\n"
-    content_str += sub_wf_status_str + "\n"
-
-    return content_str
-
-
-def get_individual_wf_job_stats(
-    options, workflow_stats, workflow_id, dax_label, output_format
-):
-    """
-    Prints the job statistics of workflow
-    @param workflow_stats :  workflow statistics object reference
-    @param workflow_id : workflow_id (title for the table)
-    """
-    job_stats_list = []
-    job_retry_count_dict = {}
-
-    # Add dax_label to workflow_id if writing text file
-    if output_format == "text":
-        workflow_id = workflow_id + " (" + dax_label + ")"
-
-    if output_format == "text":
-        job_status_str = "\n# " + workflow_id + "\n"
-    else:
-        job_status_str = "\n"
-
-    if output_format == "text":
-        max_length = [max(0, len(i)) for i in job_stats_col_name_text]
-
-    wf_job_stats_list = workflow_stats.get_job_statistics()
-
-    # Go through each job in the workflow
-    for job in wf_job_stats_list:
-        job_stats = JobStatistics()
-        job_stats.name = job.job_name
-        job_stats.site = job.site
-        job_stats.kickstart = job.kickstart
-        job_stats.multiplier_factor = job.multiplier_factor
-        job_stats.kickstart_mult = job.kickstart_multi
-        job_stats.remote_cpu_time = job.remote_cpu_time
-        job_stats.post = job.post_time
-        job_stats.runtime = job.runtime
-        job_stats.condor_delay = job.condor_q_time
-        job_stats.resource = job.resource_delay
-        job_stats.seqexec = job.seqexec
-        job_stats.exitcode = utils.raw_to_regular(job.exit_code)
-        job_stats.hostname = job.host_name
-        if job_stats.seqexec is not None and job_stats.kickstart is not None:
-            job_stats.seqexec_delay = float(job_stats.seqexec) - float(
-                job_stats.kickstart
-            )
-        if job.job_name in job_retry_count_dict:
-            job_retry_count_dict[job.job_name] += 1
-        else:
-            job_retry_count_dict[job.job_name] = 1
-        job_stats.retry_count = job_retry_count_dict[job.job_name]
-
-        if output_format == "text":
-            max_length[0] = max(max_length[0], len(job_stats.name))
-            max_length[1] = max(max_length[1], len(str(job_stats.retry_count)))
-            max_length[2] = max(max_length[2], len(job_stats.site or " "))
-            max_length[3] = max(max_length[3], len(str(job_stats.kickstart)))
-            max_length[4] = max(max_length[4], len(str(job_stats.multiplier_factor)))
-            max_length[5] = max(max_length[5], len(str(job_stats.kickstart_mult)))
-            max_length[6] = max(max_length[6], len(str(job_stats.remote_cpu_time)))
-            max_length[7] = max(max_length[7], len(str(job_stats.post)))
-            max_length[8] = max(max_length[8], len(str(job_stats.condor_delay)))
-            max_length[9] = max(max_length[9], len(str(job_stats.resource)))
-            max_length[10] = max(max_length[10], len(str(job_stats.runtime)))
-            max_length[11] = max(max_length[11], len(str(job_stats.seqexec)))
-            max_length[12] = max(max_length[12], len(str(job_stats.seqexec_delay)))
-            max_length[13] = max(max_length[13], len(str(job_stats.exitcode)))
-            max_length[14] = max(
-                max_length[14],
-                len(job_stats.hostname if job_stats.hostname else "None"),
-            )
-
-        job_stats_list.append(job_stats)
-
-    # Print header
-    if output_format == "text":
-        max_length = [i + 1 for i in max_length]
-        job_status_str += print_row(job_stats_col_name_text, max_length, output_format)
-    else:
-        job_status_str += print_row(
-            job_stats_col_name_csv, job_stats_col_size, output_format
-        )
-
-    job_status_str += "\n"
-
-    # printing
-    # find the pretty print length
-    for job_stat in job_stats_list:
-        job_det = job_stat.getFormattedJobStatistics()
-        if output_format == "text":
-            index = 0
-            for content in job_det:
-                job_status_str += str(content).ljust(max_length[index])
-                index = index + 1
-        else:
-            job_status_str += workflow_id
-            job_status_str += ","
-            job_status_str += dax_label
-            for content in job_det:
-                job_status_str += "," + str(content)
-
-        job_status_str += NEW_LINE_STR
-
-    return job_status_str
-
-
-def get_wf_transformation_stats(options, stats, workflow_id, dax_label, fmt):
-    """
-    Prints the transformation statistics of workflow
-    stats       : workflow statistics object reference
-    workflow_id : UUID of workflow
-    dax_label   : Name of workflow
-    format      : Format of report ('text' or 'csv')
-    """
-    if fmt not in ["text", "csv"]:
-        print("Output format %s not recognized!" % fmt)
-        sys.exit(1)
-
-    report = ["\n"]
-
-    if fmt == "text":
-        # In text file, we need a line with the workflow id first
-        report.append("# {} ({})".format(workflow_id, dax_label or "All"))
-
-    col_names = transformation_stats_col_name_text
-    if fmt == "csv":
-        col_names = transformation_stats_col_name_csv
-
-    transformation_statistics = stats.get_transformation_statistics()
-
-    if fmt == "text":
-        max_length = [max(0, len(col_names[i])) for i in range(13)]
-        columns = ["" for i in range(13)]
-
-        for t in transformation_statistics:
-            max_length[0] = max(max_length[0], len(t.transformation))
-            max_length[1] = max(max_length[1], len(str(t.type)))
-            max_length[2] = max(max_length[2], len(str(t.count)))
-            max_length[3] = max(max_length[3], len(str(t.min)))
-            max_length[4] = max(max_length[4], len(str(t.max)))
-            max_length[5] = max(max_length[5], len(str(t.avg)))
-            max_length[6] = max(max_length[6], len(str(t.sum)))
-            # maxrss
-            max_length[7] = max(max_length[7], len(str(t.min_maxrss)))
-            max_length[8] = max(max_length[8], len(str(t.max_maxrss)))
-            max_length[9] = max(max_length[9], len(str(t.avg_maxrss)))
-            # avg_cpu
-            max_length[10] = max(max_length[10], len(str(t.min_avg_cpu)))
-            max_length[11] = max(max_length[11], len(str(t.max_avg_cpu)))
-            max_length[12] = max(max_length[12], len(str(t.avg_avg_cpu)))
-
-        max_length = [i + 1 for i in max_length]
-
-    header_printed = False
-
-    for t in transformation_statistics:
-        content = [
-            t.transformation,
-            t.type,
-            str(t.count),
-            fstr(t.min),
-            fstr(t.max),
-            fstr(t.avg),
-            fstr(t.sum),
-            fstr(t.min_maxrss / 1024) if t.min_maxrss else "-",
-            fstr(t.max_maxrss / 1024) if t.max_maxrss else "-",
-            fstr(t.avg_maxrss / 1024) if t.avg_maxrss else "-",
-            pstr(t.min_avg_cpu * 100) if t.min_avg_cpu else "-",
-            pstr(t.max_avg_cpu * 100) if t.max_avg_cpu else "-",
-            pstr(t.avg_avg_cpu * 100) if t.avg_avg_cpu else "-",
-        ]
-
-        if fmt == "text":
-            for i in range(0, 13):
-                columns[i] = col_names[i].ljust(max_length[i])
-                content[i] = content[i].ljust(max_length[i])
-
-        if fmt == "csv":
-            columns = transformation_stats_col_name_csv
-            content = [workflow_id, dax_label] + content
-
-        if not header_printed:
-            header_printed = True
-            report.append(print_row(columns, transformation_stats_col_size, fmt))
-
-        report.append(print_row(content, transformation_stats_col_size, fmt))
-
-    return NEW_LINE_STR.join(report) + NEW_LINE_STR
-
-
-def get_wf_integrity_stats(options, stats, workflow_id, dax_label, fmt):
-    """
-    Prints the integrity statistics of workflow
-    stats       : workflow statistics object reference
-    workflow_id : UUID of workflow
-    dax_label   : Name of workflow
-    format      : Format of report ('text' or 'csv')
-    """
-    if fmt not in ["text", "csv"]:
-        print("Output format %s not recognized!" % fmt)
-        sys.exit(1)
-
-    report = ["\n"]
-
-    if fmt == "text":
-        # In text file, we need a line with the workflow id first
-        report.append("# {} ({})".format(workflow_id, dax_label or "All"))
-
-    col_names = integrity_stats_col_name_text
-    if fmt == "csv":
-        col_names = integrity_stats_col_name_csv
-
-    integrity_statistics = stats.get_integrity_metrics()
-
-    if fmt == "text":
-        max_length = [max(0, len(col_names[i])) for i in range(4)]
-        columns = ["" for i in range(4)]
-        # figure out max lengths?
-        for i in integrity_statistics:
-            max_length[0] = max(max_length[0], len(i.type))
-            max_length[1] = max(max_length[0], len(i.file_type))
-            max_length[2] = max(max_length[1], len(str(i.count)))
-            max_length[3] = max(max_length[2], len(str(i.duration)))
-
-        max_length = [i + 1 for i in max_length]
-
-    header_printed = False
-
-    for i in integrity_statistics:
-        content = [i.type, i.file_type, str(i.count), str(i.duration)]
-
-        if fmt == "text":
-            for i in range(0, 4):
-                columns[i] = col_names[i].ljust(max_length[i])
-                content[i] = content[i].ljust(max_length[i])
-
-        if fmt == "csv":
-            columns = integrity_stats_col_name_csv
-            content = [workflow_id, dax_label] + content
-
-        if not header_printed:
-            header_printed = True
-            report.append(print_row(columns, integrity_stats_col_size, fmt))
-
-        report.append(print_row(content, integrity_stats_col_size, fmt))
-
-    return NEW_LINE_STR.join(report) + NEW_LINE_STR
-
-
-def get_statistics_by_time_and_host(options, stats, fmt, combined=True, per_host=True):
-    """
-    Prints the job instance and invocation statistics sorted by time
-    @param stats     : workflow statistics object reference
-    @param fmt       : indicates how to format the output: "text" or "csv"
-    @param combined  : print combined output (all hosts consolidated)
-    @param per_host  : print per-host totals
-    """
-    report = []
-    stats.set_job_filter("nonsub")
-    stats.set_time_filter("hour")
-    stats.set_transformation_filter(exclude=["condor::dagman"])
-
-    if combined is True:
-        col_names = time_stats_col_name_text
-        if fmt == "csv":
-            col_names = time_stats_col_name_csv
-
-        report.append("\n# Job instances statistics per " + options.time_filter)
-        report.append(print_row(col_names, time_stats_col_size, fmt))
-        stats_by_time = stats.get_jobs_run_by_time()
-        formatted = stats_utils.convert_stats_to_base_time(
-            stats_by_time, options.time_filter
-        )
-        for s in formatted:
-            content = [s["date_format"], str(s["count"]), fstr(s["runtime"])]
-            if fmt == "csv":
-                content.insert(0, "jobs/" + options.time_filter)
-            report.append(print_row(content, time_stats_col_size, fmt))
-
-        report.append("\n# Invocation statistics run per " + options.time_filter)
-        report.append(print_row(col_names, time_stats_col_size, fmt))
-        stats_by_time = stats.get_invocation_by_time()
-        formatted = stats_utils.convert_stats_to_base_time(
-            stats_by_time, options.time_filter
-        )
-        for s in formatted:
-            content = [s["date_format"], str(s["count"]), fstr(s["runtime"])]
-            if fmt == "csv":
-                content.insert(0, "invocations/" + options.time_filter)
-            report.append(print_row(content, time_stats_col_size, fmt))
-
-    if per_host is True:
-        col_names = time_host_stats_col_name_text
-        if fmt == "csv":
-            col_names = time_host_stats_col_name_csv
-
-        report.append("\n# Job instances statistics on host per " + options.time_filter)
-        report.append(print_row(col_names, time_host_stats_col_size, fmt))
-        stats_by_time = stats.get_jobs_run_by_time_per_host()
-        formatted_stats_list = stats_utils.convert_stats_to_base_time(
-            stats_by_time, options.time_filter, True
-        )
-        for s in formatted_stats_list:
-            content = [
-                s["date_format"],
-                str(s["host"]),
-                str(s["count"]),
-                fstr(s["runtime"]),
-            ]
-            if fmt == "csv":
-                content.insert(0, "jobs/host/" + options.time_filter)
-            report.append(print_row(content, time_host_stats_col_size, fmt))
-
-        report.append("\n# Invocation statistics on host per " + options.time_filter)
-        report.append(print_row(col_names, time_host_stats_col_size, fmt))
-        stats_by_time = stats.get_invocation_by_time_per_host()
-        formatted_stats_list = stats_utils.convert_stats_to_base_time(
-            stats_by_time, options.time_filter, True
-        )
-        for s in formatted_stats_list:
-            content = [
-                s["date_format"],
-                str(s["host"]),
-                str(s["count"]),
-                fstr(s["runtime"]),
-            ]
-            if fmt == "csv":
-                content.insert(0, "invocations/host/" + options.time_filter)
-            report.append(print_row(content, time_host_stats_col_size, fmt))
-
-    return "\n".join(report)
-
-
-def get_stats(options, args):
-
-    # Multiple workflow is set to true if there are multiple positional arguments.
-    multiple_wf = options.multiple_wf
-
-    if len(args) < 1:
-        # * means all workflows in the database, and . means current directory
-        submit_dir = "."
-        if multiple_wf:
-            submit_dir = "*"
-    elif len(args) > 1:
-        options.multiple_wf = True
-        multiple_wf = True
-        submit_dir = args
-    else:
-        options.multiple_wf = False
-        multiple_wf = False
-        submit_dir = args[0]
-
-    def check_dump(dir):
-        if not os.path.isfile(
-            os.path.join(dir, "braindump.yml")
-        ) and not os.path.isfile(os.path.join(dir, "braindump.txt")):
-            sys.stderr.write("Not a workflow submit directory: %s\n" % submit_dir)
             sys.exit(1)
 
-    if multiple_wf:
-        # Check for braindump file's existence if workflows are not specified as UUIDs and
-        # statistics need to be calculated only on a sub set of workflows
-        if not options.is_uuid and submit_dir != "*":
-            for dir in submit_dir:
-                check_dump(dir)
-    else:
-        if not options.is_uuid:
-            check_dump(submit_dir)
+        if (self.is_uuid or self.submit_dirs == "*") and not self.config_properties:
+            self.log.fatal(
+                "A config file is required if either is-uuid flag is set or submit-dirs is not set or set to *"
+            )
+            sys.exit(1)
 
-    if options.ignore_db_inconsistency:
-        logger.warning("Ignoring db inconsistency")
-        logger.warning(
-            "The tool is meant to be run after the completion of workflow run."
-        )
-    else:
+    def _check_workflow_dir(self):
+        """."""
+        if self.is_uuid is True or self.submit_dirs == "*":
+            return
+
+        if self.multiple_wf:
+            # Check for braindump file's existence if workflows are not specified as UUIDs and
+            # statistics need to be calculated only on a sub set of workflows
+            for dir in self.submit_dirs:
+                braindb = self._check_braindump(dir)
+                self.wf_uuids.append(braindb.wf_uuid)
+        else:
+            braindb = self._check_braindump(self.submit_dirs)
+            self.wf_uuids = braindb.wf_uuid
+
+    def _check_workflow_state(self):
+        """."""
+
+        if self.ignore_db_inconsistency:
+            self.log.warning("Ignoring db inconsistency")
+            self.log.warning(
+                "The tool is meant to be run after the workflow completion."
+            )
+            return
+
+        if self.is_uuid is True or self.submit_dirs == "*":
+            if self.submit_dirs == "*":
+                self.log.warning(
+                    "Statistics have to be calculated on all workflows. Tool cannot check to see if all of them have finished. Ensure that all workflows have finished"
+                )
+            return
 
         def loading_complete(dir):
             if not utils.loading_completed(dir):
@@ -1906,143 +677,1186 @@ def get_stats(options, args):
                     sys.stderr.write("Please run pegasus monitord in replay mode.\n")
                 sys.exit(1)
 
-        if multiple_wf:
-            if submit_dir == "*":
-                logger.warning(
-                    "Statistics have to be calculated on all workflows. Tool cannot check to see if all of them have finished. Ensure that all workflows have finished"
-                )
-
-            if not options.is_uuid and submit_dir != "*":
-                for dir in submit_dir:
-                    loading_complete(dir)
+        if self.multiple_wf:
+            for dir in self.submit_dirs:
+                loading_complete(dir)
         else:
-            if not options.is_uuid:
-                loading_complete(submit_dir)
+            loading_complete(self.submit_dirs)
 
-    # Figure out what statistics we need to calculate
-    logger.info("File type is %s" % options.file_type)
+    def _initialize_statistics_levels(self):
+        """."""
+        sl = self.statistics_level
+        self.log.info(f"Statistics level(s) are {', '.join(sl)}")
 
-    logger.info("Time filter is %s" % options.time_filter)
+        self.calc_all = "all" in sl
+        self.calc_wf_summary = self.calc_all or "summary" in sl
+        self.calc_wf_stats = self.calc_all or "wf_stats" in sl
+        self.calc_jb_stats = (
+            self.calc_all and not self.multiple_wf
+        ) or "jb_stats" in sl
+        self.calc_tf_stats = self.calc_all or "tf_stats" in sl
+        self.calc_ti_stats = self.calc_all or "ti_stats" in sl
+        self.calc_int_stats = self.calc_all or "int_stats" in sl
 
-    # Change the legend to show the time filter format
-    tf_format = str(stats_utils.get_date_print_format(options.time_filter))
-
-    time_stats_col_name_text[0] += tf_format
-    time_stats_col_name_csv[1] += tf_format
-    time_host_stats_col_name_text[0] += tf_format
-    time_host_stats_col_name_csv[1] += tf_format
-
-    if options.output_dir:
-        delete_if_exists = False
-        output_dir = options.output_dir
-    else:
-        delete_if_exists = True
-        if multiple_wf or options.is_uuid:
-            sys.stderr.write(
-                "Output directory option is required when calculating statistics over multiple workflows.\n"
+        self.calc_ind_stats = any(
+            (
+                self.calc_jb_stats,
+                self.calc_tf_stats,
+                self.calc_wf_stats,
+                self.calc_int_stats,
             )
-            sys.exit(1)
-        else:
-            output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
+        )
 
-    logger.info("Output directory is %s" % output_dir)
-    utils.create_directory(output_dir, delete_if_exists=delete_if_exists)
+    def _get_clustering_type(self):
+        """."""
 
-    def use_pmc(dir):
-        braindb = utils.slurp_braindb(dir)
-        return braindb["uses_pmc"] is True
+        def use_pmc(dir):
+            braindb = self._check_braindump(dir)
+            return braindb.uses_pmc is True
 
-    if options.uses_PMC:
-        logger.info("Calculating statistics with use of PMC clustering")
-        options.uses_PMC = True
-    else:
-        if options.is_uuid:
+        if self.is_pmc:
+            self.log.info("Calculating statistics with use of PMC clustering")
+        elif self.is_uuid:
             # User provided workflow UUID
-            logger.info("Workflows are specified as UUIDs and ispmc option is not set.")
-            options.uses_PMC = False
+            self.log.info(
+                "Workflows are specified as UUIDs and is_pmc option is not set."
+            )
         else:
             # User provided workflow submit directories
-            if multiple_wf:
-                if submit_dir == "*":
-                    logger.info(
-                        "Calculating statistics over all workflows, and ispmc option is not set."
+            if self.multiple_wf:
+                if self.submit_dirs == "*":
+                    self.log.info(
+                        "Calculating statistics over all workflows, and is_pmc option is not set."
                     )
                 else:
                     # int(True) -> 1
-                    tmp = sum(int(use_pmc(dir)) for dir in submit_dir)
+                    tmp = sum(int(use_pmc(dir)) for dir in self.submit_dirs)
 
-                    # All workflow are either PMC or non PMC workflows?
-                    if tmp == len(submit_dir) or tmp == 0:
-                        options.uses_PMC = use_pmc(submit_dir[0])
+                    # All workflows are either PMC or non PMC
+                    if tmp == 0 or tmp == len(self.submit_dirs):
+                        self.is_pmc = tmp != 0
                     else:
-                        options.uses_PMC = False
-                        logger.warn(
+                        self.log.warning(
                             "Input workflows use both PMC & regular clustering! Calculating statistics with regular clustering"
                         )
-
             else:
-                options.uses_PMC = use_pmc(submit_dir)
+                self.is_pmc = use_pmc(self.submit_dirs)
 
-    # Check db_url, and get wf_uuid's
-    if multiple_wf:
-        if options.is_uuid or submit_dir == "*":
-            # URL picked from config_properties file.
-            output_db_url = connection.url_by_properties(
-                options.config_properties, connection.DBType.WORKFLOW
-            )
-            wf_uuid = submit_dir
-
-            if not output_db_url:
-                logger.error(
+    def _get_workflow_db_url(self):
+        """."""
+        if self.is_uuid or self.submit_dirs == "*":
+            try:
+                # URL picked from config_properties file.
+                self.output_db_url = connection.url_by_properties(
+                    self.config_properties, connection.DBType.WORKFLOW
+                )
+            except ConnectionError:
+                self.log.error(
                     'Unable to determine database URL. Kindly specify a value for "pegasus.monitord.output" property'
                 )
                 sys.exit(1)
+        elif self.multiple_wf:
+            try:
+                db_url_set = set()
+
+                for dir in self.submit_dirs:
+                    db_url = connection.url_by_submitdir(
+                        dir, connection.DBType.WORKFLOW, self.config_properties
+                    )
+                    db_url_set.add(db_url)
+
+                if len(db_url_set) != 1:
+                    self.log.error(
+                        "Workflows are distributed across multiple databases, which is not supported"
+                    )
+                    sys.exit(1)
+
+                self.output_db_url = db_url_set.pop()
+            except ConnectionError:
+                self.log.error("Unable to determine database URL.")
+                sys.exit(1)
         else:
-            db_url_set = set()
-            wf_uuid = []
-
-            for dir in submit_dir:
-                db_url = connection.url_by_submitdir(
-                    dir, connection.DBType.WORKFLOW, options.config_properties
+            try:
+                self.output_db_url = connection.url_by_submitdir(
+                    self.submit_dirs, connection.DBType.WORKFLOW, self.config_properties
                 )
-                uuid = connection.get_wf_uuid(dir)
-                db_url_set.add(db_url)
-                wf_uuid.append(uuid)
+            except ConnectionError:
+                self.log.error("Unable to determine database URL.")
+                sys.exit(1)
 
-            if len(db_url_set) != 1:
-                logger.error(
-                    "Workflows are distributed across multiple databases, which is not supported"
+        self.log.info("DB URL is: %s" % self.output_db_url)
+        self.log.info("workflow UUID is: %s" % self.wf_uuids)
+
+    def _initialize_output_dir(self):
+        """."""
+        if self.output_dir:
+            delete_if_exists = False
+        else:
+            delete_if_exists = True
+            if self.multiple_wf or self.is_uuid:
+                sys.stderr.write(
+                    "Output directory option is required when calculating statistics over multiple workflows.\n"
+                )
+                sys.exit(1)
+            else:
+                self.output_dir = Path(self.submit_dirs, self.default_output_dir)
+
+        self.log.info("Output directory is %s" % self.output_dir)
+        utils.create_directory(str(self.output_dir), delete_if_exists=delete_if_exists)
+
+    def _compute_statistics(self):
+        """."""
+        try:
+            self.wf_stats = (
+                StampedeWorkflowStatistics(self.output_db_url)
+                if self.multiple_wf
+                else StampedeStatistics(self.output_db_url)
+            )
+            _wf_found = self.wf_stats.initialize(self.wf_uuids)
+
+            if _wf_found is False:
+                print(
+                    "Workflow {!r} not found in database {!r}".format(
+                        self.wf_uuids, self.output_db_url
+                    )
                 )
                 sys.exit(1)
 
-            output_db_url = db_url_set.pop()
+            WorkflowDetails = namedtuple("WorkflowDetails", ["wf_uuid", "dax_label"])
+            self._wf_det = WorkflowDetails("All", "")
 
-    else:
-        if options.is_uuid:
-            output_db_url = connection.url_by_properties(
-                options.config_properties, connection.DBType.WORKFLOW
-            )
-            wf_uuid = submit_dir
-
-            if not output_db_url:
-                logger.error(
-                    'Unable to determine database URL. Kindly specify a value for "pegasus.monitord.output" property'
+            if self.multiple_wf:
+                _wf_uuid_list = [_.wf_uuid for _ in self.wf_stats.get_workflow_ids()]
+            else:
+                _wf_uuid_list = [self.wf_uuids]
+                _wf_uuid_list.extend(
+                    [_.wf_uuid for _ in self.wf_stats.get_descendant_workflow_ids()]
                 )
-                sys.exit(1)
-        else:
-            output_db_url = connection.url_by_submitdir(
-                submit_dir, connection.DBType.WORKFLOW, options.config_properties
+
+            if self.calc_ind_stats:
+                self.wf_uuid_list = []
+                for wf_uuid in _wf_uuid_list:
+                    ind_wf_stats = StampedeStatistics(self.output_db_url, False)
+                    _wf_found = ind_wf_stats.initialize(wf_uuid)
+
+                    if _wf_found is False:
+                        print(
+                            "Workflow %r not found in database %r"
+                            % (wf_uuid, self.output_db_url)
+                        )
+                        sys.exit(1)
+
+                    _wf_det = ind_wf_stats.get_workflow_details()[0]
+                    self.wf_uuid_list.append((_wf_det, ind_wf_stats))
+        except Exception:
+            self.log.error(f"Failed to load the database {self.output_db_url}")
+            self.log.debug(
+                f"Failed to load the database {self.output_db_url}", exc_info=1
             )
-            wf_uuid = connection.get_wf_uuid(submit_dir)
+            sys.exit(1)
 
-    logger.info("DB URL is: %s" % output_db_url)
-    logger.info("workflow UUID is: %s" % wf_uuid)
+    def _compute_summary_statistics(self):
+        """."""
+        self._compute_workflow_summary_statistics()
+        self._compute_time_summary_statistics()
+        self._compute_integrity_summary_statistics()
 
-    if output_db_url is not None:
-        errors = get_workflow_details(
-            options, output_db_url, wf_uuid, output_dir, multiple_wf=multiple_wf
+    def _compute_workflow_summary_statistics(self):
+        self._compute_task_summary_statistics()
+        self._compute_job_summary_statistics()
+        self._compute_sub_wf_summary_statistics()
+
+    def _compute_task_summary_statistics(self, ind_or_wf_stats):
+        """."""
+        # print_workflow_summary
+
+        # status
+        ind_or_wf_stats.set_job_filter("nonsub")
+
+        # Tasks
+        total = ind_or_wf_stats.get_total_tasks_status()
+        succeeded = ind_or_wf_stats.get_total_succeeded_tasks_status(self.is_pmc)
+        failed = ind_or_wf_stats.get_total_failed_tasks_status()
+        unsubmitted = total - (succeeded + failed)
+        retries = ind_or_wf_stats.get_total_tasks_retries()
+        tries = succeeded + failed + retries
+
+        return (succeeded, failed, unsubmitted, total, retries, tries)
+
+    def _compute_job_summary_statistics(self, ind_or_wf_stats, filter="nonsub"):
+        """."""
+        # print_workflow_summary
+
+        # status
+        ind_or_wf_stats.set_job_filter(filter)
+
+        # Jobs
+        total = ind_or_wf_stats.get_total_jobs_status()
+        _total_succeeded_failed_jobs = (
+            ind_or_wf_stats.get_total_succeeded_failed_jobs_status()
+        )
+        succeeded = _total_succeeded_failed_jobs.succeeded or 0
+        failed = _total_succeeded_failed_jobs.failed or 0
+        unsubmitted = total - (succeeded + failed)
+        retries = ind_or_wf_stats.get_total_jobs_retries()
+        tries = succeeded + failed + retries
+
+        return (succeeded, failed, unsubmitted, total, retries, tries)
+
+    def _compute_sub_wf_summary_statistics(self, ind_or_wf_stats):
+        """."""
+        return self._compute_job_summary_statistics(ind_or_wf_stats, "subwf")
+
+    def _compute_workflow_retries(self, ind_of_wf_stats):
+        """."""
+        ind_of_wf_stats.set_job_filter("all")
+        total_wf_retries = ind_of_wf_stats.get_workflow_retries()
+        return total_wf_retries
+
+    def _compute_time_summary_statistics(self):
+        """."""
+        # print_workflow_summary
+        states = self.wf_stats.get_workflow_states()
+        wwt = stats_utils.get_workflow_wall_time(states)
+        wcjwt, wcgpt, wcbpt = self.wf_stats.get_workflow_cum_job_wall_time()
+        ssjwt, ssgpt, ssbpt = self.wf_stats.get_submit_side_job_wall_time()
+
+        return (wwt, wcjwt, wcgpt, wcbpt, ssjwt, ssgpt, ssbpt)
+
+    def _compute_integrity_summary_statistics(self):
+        """."""
+        # print_workflow_summary
+        total_failed_jobs_integrity = self.wf_stats.get_total_succeeded_failed_jobs_status(
+            classify_error=True, tag="int.error"
+        )
+        int_metrics_summary = self.wf_stats.get_summary_integrity_metrics()
+        int_error_summary = self.wf_stats.get_tag_metrics("int.error")
+
+        return (int_metrics_summary, int_error_summary, total_failed_jobs_integrity)
+
+    def _compute_job_statistics(self, ind_wf_stats):
+        """."""
+        ind_wf_stats.set_job_filter("all")
+
+        # print_individual_wf_job_stats
+        wf_job_stats_list = ind_wf_stats.get_job_statistics()
+
+        # Go through each job in the workflow
+        job_stats_list = []
+        job_retry_count_dict = dict()
+        for job in wf_job_stats_list:
+            job_stats = JobStatistics()
+            job_stats.name = job.job_name
+            job_stats.site = job.site
+            job_stats.kickstart = job.kickstart
+            job_stats.multiplier_factor = job.multiplier_factor
+            job_stats.kickstart_mult = job.kickstart_multi
+            job_stats.remote_cpu_time = job.remote_cpu_time
+            job_stats.post = job.post_time
+            job_stats.runtime = job.runtime
+            job_stats.condor_delay = job.condor_q_time
+            job_stats.resource = job.resource_delay
+            job_stats.seqexec = job.seqexec
+            job_stats.exitcode = utils.raw_to_regular(job.exit_code)
+            job_stats.hostname = job.host_name
+            if job_stats.seqexec is not None and job_stats.kickstart is not None:
+                job_stats.seqexec_delay = float(job_stats.seqexec) - float(
+                    job_stats.kickstart
+                )
+            if job.job_name in job_retry_count_dict:
+                job_retry_count_dict[job.job_name] += 1
+            else:
+                job_retry_count_dict[job.job_name] = 1
+            job_stats.retry_count = job_retry_count_dict[job.job_name]
+
+            job_stats_list.append(job_stats)
+
+        return job_stats_list
+
+    def _compute_transformation_statistics(self, wf_or_ind_stats):
+        """."""
+        wf_or_ind_stats.set_job_filter("all")
+
+        # print_wf_transformation_stats
+        return wf_or_ind_stats.get_transformation_statistics()
+
+    def _compute_integrity_statistics(self, wf_or_ind_stats):
+        """."""
+        wf_or_ind_stats.set_job_filter("all")
+
+        # print_wf_integrity_stats
+        return wf_or_ind_stats.get_integrity_metrics()
+
+    def _compute_time_statistics(self):
+        """."""
+        # print_statistics_by_time_and_host
+        self.wf_stats.set_job_filter("nonsub")
+        self.wf_stats.set_time_filter("hour")
+        self.wf_stats.set_transformation_filter(exclude=["condor::dagman"])
+
+        # If combined is True
+        jobs_by_time = self.wf_stats.get_jobs_run_by_time()
+        invocations_by_time = self.wf_stats.get_invocation_by_time()
+
+        # If per_host is True
+        jobs_per_host = self.wf_stats.get_jobs_run_by_time_per_host()
+        invocations_per_host = self.wf_stats.get_invocation_by_time_per_host()
+
+        return jobs_by_time, invocations_by_time, jobs_per_host, invocations_per_host
+
+    def _write_statistics(self):
+        """."""
+        if self.calc_wf_summary:
+            try:
+                self._write_summary_statistics()
+            except Exception:
+                self.log.warning("summary statistics generation failed")
+                self.log.debug("summary statistics generation failed", exc_info=1)
+        if self.calc_ti_stats:
+            try:
+                self._write_time_statistics()
+            except Exception:
+                self.log.warning("time statistics generation failed")
+                self.log.debug("time statistics generation failed", exc_info=1)
+        if self.calc_jb_stats:
+            try:
+                self._write_job_statistics()
+            except Exception:
+                self.log.warning("job instance statistics generation failed")
+                self.log.debug("job instance statistics generation failed", exc_info=1)
+        if self.calc_tf_stats:
+            try:
+                self._write_transformation_statistics()
+            except Exception:
+                self.log.warning("transformation statistics generation failed")
+                self.log.debug(
+                    "transformation statistics generation failed", exc_info=1
+                )
+        if self.calc_int_stats:
+            try:
+                self._write_integrity_statistics()
+            except Exception:
+                self.log.warning("integrity statistics generation failed")
+                self.log.debug("integrity statistics generation failed", exc_info=1)
+        if self.calc_wf_stats:
+            try:
+                self._write_workflow_statistics()
+            except Exception:
+                self.log.warning("workflow statistics generation failed")
+                self.log.debug("workflow statistics generation failed", exc_info=1)
+
+    def _write_summary_statistics(self):
+        """."""
+        if self.file_type == self.file_type_txt:
+            self._write_summary_statistics_text()
+        elif self.file_type == self.file_type_csv:
+            self._write_summary_statistics_csv()
+        else:
+            self.log.error(f"Invalid file type {self.file_type}")
+
+    def _write_summary_statistics_text(self):
+        """."""
+        # TODO: Make Sub Workflows string consistent across code
+        tasks = ("Tasks",) + self._compute_task_summary_statistics(self.wf_stats)
+        jobs = ("Jobs",) + self._compute_job_summary_statistics(self.wf_stats)
+        sub_wfs = ("Sub-Workflows",) + self._compute_sub_wf_summary_statistics(
+            self.wf_stats
         )
 
-        if errors:
-            logger.error("Failed to generate %d type(s) of statistics" % errors)
-            sys.exit(1)
+        (
+            wwt,
+            wcjwt,
+            _wcgpt,
+            wcbpt,
+            ssjwt,
+            _ssgpt,
+            ssbpt,
+        ) = self._compute_time_summary_statistics()
+        (
+            int_metrics_summary,
+            int_error_summary,
+            total_failed_jobs_integrity,
+        ) = self._compute_integrity_summary_statistics()
+
+        with utils.write_table(
+            Path(self.output_dir)
+            / f"{self.workflow_summary_file_name}.{self.file_extn_text}",
+            fields=self.workflow_summary_col_name_text,
+            widths=self.workflow_summary_col_size,
+        ) as writer:
+            # Workflow summary
+            writer.write(self.workflow_summary_legends)
+            writer.write(self.workflow_summary_time_legends)
+            writer.write("".center(sum(self.workflow_summary_col_size), "-") + "\n")
+            writer.writeheader()
+            writer.writerow(tasks)
+            writer.writerow(jobs)
+            writer.writerow(sub_wfs)
+            writer.write("".center(sum(self.workflow_summary_col_size), "-") + "\n\n")
+
+            # Time summary
+            if not self.multiple_wf:
+                writer.write(
+                    "{:<57}: {}\n".format("Workflow wall time", format_seconds(wwt))
+                )
+
+            writer.write(
+                "{:<57}: {}\n".format("Cumulative job wall time", format_seconds(wcjwt))
+            )
+            writer.write(
+                "{:<57}: {}\n".format(
+                    "Cumulative job wall time as seen from submit side",
+                    format_seconds(ssjwt),
+                )
+            )
+            writer.write(
+                "{:<57}: {}\n".format(
+                    "Cumulative job badput wall time", format_seconds(wcbpt)
+                )
+            )
+            writer.write(
+                "{:<57}: {}\n".format(
+                    "Cumulative job badput wall time as seen from submit side",
+                    format_seconds(ssbpt),
+                )
+            )
+
+            # Integrity summary
+            # TODO: Remove space between `doing it. \n`
+            writer.write(
+                """
+# Integrity Metrics
+# Number of files for which checksums were compared/computed along with total time spent doing it. \n"""
+            )
+            for result in int_metrics_summary:
+                type = result.type
+                if result.type == "check":
+                    type = "compared"
+                if result.type == "compute":
+                    type = "generated"
+                writer.write(
+                    f"{result.count} files checksums {type} with total duration of {format_seconds(result.duration)}\n"
+                )
+
+            # TODO: Add space between `executions(including retries)`
+            writer.write(
+                """
+# Integrity Errors
+# Total:
+#       Total number of integrity errors encountered across all job executions(including retries) of a workflow.
+# Failures:
+#       Number of failed jobs where the last job instance had integrity errors.
+"""
+            )
+            for result in int_error_summary:
+                type = "integrity" if result.name == "int.error" else result.name
+                writer.write(
+                    "Total:    A total of {result.count} {type} errors encountered in the workflow\n"
+                )
+
+            # PM-1295 jobs where last_job_instance failed and there were integrity errors in those last job instances
+            writer.write(
+                "Failures: %s job failures had integrity errors\n"
+                % (total_failed_jobs_integrity.failed or 0)
+            )
+
+    def _write_summary_statistics_csv(self):
+        """."""
+        tasks = ("Tasks",) + self._compute_task_summary_statistics(self.wf_stats)
+        jobs = ("Jobs",) + self._compute_job_summary_statistics(self.wf_stats)
+        sub_wfs = ("Sub-Workflows",) + self._compute_sub_wf_summary_statistics(
+            self.wf_stats
+        )
+
+        (
+            wwt,
+            wcjwt,
+            _wcgpt,
+            wcbpt,
+            ssjwt,
+            _ssgpt,
+            ssbpt,
+        ) = self._compute_time_summary_statistics()
+
+        with utils.write_csv(
+            Path(self.output_dir)
+            / f"{self.workflow_summary_file_name}.{self.file_extn_csv}",
+            fields=self.workflow_summary_col_name_csv,
+        ) as writer:
+            writer.write(self.workflow_summary_legends + "\n")
+            writer.writeheader()
+            writer.writerow(tasks)
+            writer.writerow(jobs)
+            writer.writerow(sub_wfs)
+
+        with utils.write_csv(
+            Path(self.output_dir)
+            / f"{self.workflow_summary_time_file_name}.{self.file_extn_csv}",
+            fields=self.workflow_summary_time_col_name_csv,
+        ) as writer:
+
+            def myfmt(val):
+                return "" if val is None else val
+
+            writer.write(self.workflow_summary_time_legends)
+            writer.writeheader()
+            writer.writerow(("workflow_wall_time", myfmt(wwt)))
+            writer.writerow(("workflow_cumulative_job_wall_time", myfmt(wcjwt)))
+            writer.writerow(("cumulative_job_walltime_from_submit_side", myfmt(ssjwt)))
+            writer.writerow(("workflow_cumulative_badput_time", myfmt(wcbpt)))
+            writer.writerow(
+                ("cumulative_job_badput_walltime_from_submit_side", myfmt(ssbpt))
+            )
+
+    def _write_workflow_statistics(self):
+        """."""
+        if self.file_type == self.file_type_txt:
+            self._write_workflow_statistics_text()
+        elif self.file_type == self.file_type_csv:
+            self._write_workflow_statistics_csv()
+        else:
+            self.log.error(f"Invalid file type {self.file_type}")
+
+    def _write_workflow_statistics_text(self):
+        """."""
+        with utils.write_table(
+            Path(self.output_dir)
+            / f"{self.workflow_stats_file_name}.{self.file_extn_text}",
+            fields=self.workflow_stats_col_name_text,
+            widths=self.workflow_stats_col_size,
+        ) as writer:
+            writer.write(self.workflow_stats_legends)
+
+            writer.writeheader()
+            for wf_det, ind_wf_stats in chain(
+                self.wf_uuid_list, [(self._wf_det, self.wf_stats)]
+            ):
+                self.log.debug(
+                    f"Generating workflow information for workflow {wf_det.wf_uuid} ..."
+                )
+
+                wf_retries = self._compute_workflow_retries(ind_wf_stats)
+                tasks = ("Tasks",) + self._compute_task_summary_statistics(ind_wf_stats)
+                jobs = ("Jobs",) + self._compute_job_summary_statistics(ind_wf_stats)
+                sub_wfs = ("Sub Workflows",) + self._compute_sub_wf_summary_statistics(
+                    ind_wf_stats
+                )
+
+                # Workflow status
+                wf_retry_width = (
+                    sum(self.workflow_stats_col_size)
+                    - self.workflow_stats_col_size[-1]
+                    + 1
+                )
+
+                if wf_det.wf_uuid == "All":
+                    wf_label = "All Workflows"
+                else:
+                    wf_label = f"{wf_det.wf_uuid} ({wf_det.dax_label})"
+
+                wf_retry_width -= len(wf_label)
+
+                writer.write("".center(sum(self.workflow_stats_col_size), "-") + "\n")
+                writer.write(
+                    f"{wf_label}{str(wf_retries).rjust(wf_retry_width)}" + "\n"
+                )
+
+                writer.writerow(tasks)
+                writer.writerow(jobs)
+                writer.writerow(sub_wfs)
+                if wf_det.wf_uuid != "All":
+                    writer.write("\n")
+
+    def _write_workflow_statistics_csv(self):
+        """."""
+        with utils.write_csv(
+            Path(self.output_dir)
+            / f"{self.workflow_stats_file_name}.{self.file_extn_csv}",
+            fields=self.workflow_stats_col_name_csv,
+        ) as writer:
+            writer.write(self.workflow_stats_legends)
+
+            writer.writeheader()
+            for wf_det, ind_wf_stats in chain(
+                self.wf_uuid_list, [(self._wf_det, self.wf_stats)]
+            ):
+                self.log.debug(
+                    f"Generating workflow information for workflow {wf_det.wf_uuid} ..."
+                )
+
+                wf_retries = self._compute_workflow_retries(ind_wf_stats)
+                wf_uuid = wf_det.wf_uuid if wf_det.wf_uuid != "All" else "ALL"
+                tasks = (
+                    wf_uuid,
+                    wf_det.dax_label,
+                    "Tasks",
+                ) + self._compute_task_summary_statistics(ind_wf_stats)
+                jobs = (
+                    wf_uuid,
+                    wf_det.dax_label,
+                    "Jobs",
+                ) + self._compute_job_summary_statistics(ind_wf_stats)
+                sub_wfs = (
+                    wf_uuid,
+                    wf_det.dax_label,
+                    "Sub_Workflows",
+                ) + self._compute_sub_wf_summary_statistics(ind_wf_stats)
+
+                writer.writerow(tasks + (wf_retries,))
+                writer.writerow(jobs + (wf_retries,))
+                writer.writerow(sub_wfs + (wf_retries,))
+                if wf_det.wf_uuid != "All":
+                    writer.write("\n")
+
+    def _write_job_statistics(self):
+        """."""
+        if self.file_type == self.file_type_txt:
+            self._write_job_statistics_text()
+        elif self.file_type == self.file_type_csv:
+            self._write_job_statistics_csv()
+        else:
+            self.log.error(f"Invalid file type {self.file_type}")
+
+    def _write_job_statistics_text(self):
+        """."""
+        with utils.write_table(
+            Path(self.output_dir) / f"{self.job_stats_file_name}.{self.file_extn_text}",
+            fields=self.job_stats_col_name_text,
+            widths=self.job_stats_col_size,
+        ) as writer:
+            writer.write(self.job_stats_legends)
+
+            for wf_det, ind_wf_stats in self.wf_uuid_list:
+                self.log.debug(
+                    f"Generating job instance statistics information for workflow {wf_det.wf_uuid} ..."
+                )
+                writer.write(f"# {wf_det.wf_uuid} ({wf_det.dax_label})\n")
+                max_length = [_ for _ in self.job_stats_col_size]
+                job_stats_list = self._compute_job_statistics(ind_wf_stats)
+
+                for i, job_stats in enumerate(job_stats_list):
+                    # Compute max length
+                    job_stats_list[
+                        i
+                    ] = job_stats = job_stats.get_formatted_job_statistics()
+                    for i in range(15):
+                        max_length[i] = max(max_length[i], len(job_stats[i]))
+
+                max_length = [i + 1 for i in max_length]
+                writer.widths = max_length
+
+                writer.writeheader()
+                for job_stats in job_stats_list:
+                    writer.writerow(job_stats)
+
+    def _write_job_statistics_csv(self):
+        """."""
+        with utils.write_csv(
+            Path(self.output_dir) / f"{self.job_stats_file_name}.{self.file_extn_csv}",
+            fields=self.job_stats_col_name_csv,
+        ) as writer:
+            writer.write(self.job_stats_legends)
+
+            for wf_det, ind_wf_stats in self.wf_uuid_list:
+                self.log.debug(
+                    f"Generating job instance statistics information for workflow {wf_det.wf_uuid} ..."
+                )
+                job_stats_list = self._compute_job_statistics(ind_wf_stats)
+
+                writer.writeheader()
+                for job_stats in job_stats_list:
+                    job_stats = job_stats.get_formatted_job_statistics()
+                    job_stats.insert(0, wf_det.wf_uuid)
+                    job_stats.insert(1, wf_det.dax_label)
+                    writer.writerow(job_stats)
+
+    def _write_transformation_statistics(self):
+        """."""
+        if self.file_type == self.file_type_txt:
+            self._write_transformation_statistics_text()
+        elif self.file_type == self.file_type_csv:
+            self._write_transformation_statistics_csv()
+        else:
+            self.log.error(f"Invalid file type {self.file_type}")
+
+    def _write_transformation_statistics_text(self):
+        """."""
+        with utils.write_table(
+            Path(self.output_dir)
+            / f"{self.transformation_stats_file_name}.{self.file_extn_text}",
+            fields=self.transformation_stats_col_name_text,
+            widths=self.transformation_stats_col_size,
+        ) as writer:
+            writer.write(self.transformation_stats_legends)
+
+            for wf_det, ind_wf_stats in chain(
+                self.wf_uuid_list, [(self._wf_det, self.wf_stats)]
+            ):
+                self.log.debug(
+                    f"Generating invocation statistics information for workflow {wf_det.wf_uuid} ..."
+                )
+                writer.write(f"\n# {wf_det.wf_uuid} ({wf_det.dax_label or 'All'})\n")
+                max_length = [_ for _ in self.transformation_stats_col_size]
+                transformation_stats = self._compute_transformation_statistics(
+                    ind_wf_stats
+                )
+
+                for i, transformation_stat in enumerate(transformation_stats):
+                    # TODO: Remove large repeated code block, maybe rewrite like JobStatistics
+                    transformation_stats[i] = transformation_stat = [
+                        transformation_stat.transformation,
+                        transformation_stat.type,
+                        str(transformation_stat.count),
+                        fstr(transformation_stat.min),
+                        fstr(transformation_stat.max),
+                        fstr(transformation_stat.avg),
+                        fstr(transformation_stat.sum),
+                        (
+                            fstr(transformation_stat.min_maxrss / 1024)
+                            if transformation_stat.min_maxrss
+                            else "-"
+                        ),
+                        (
+                            fstr(transformation_stat.max_maxrss / 1024)
+                            if transformation_stat.max_maxrss
+                            else "-"
+                        ),
+                        (
+                            fstr(transformation_stat.avg_maxrss / 1024)
+                            if transformation_stat.avg_maxrss
+                            else "-"
+                        ),
+                        (
+                            pstr(transformation_stat.min_avg_cpu * 100)
+                            if transformation_stat.min_avg_cpu
+                            else "-"
+                        ),
+                        (
+                            pstr(transformation_stat.max_avg_cpu * 100)
+                            if transformation_stat.max_avg_cpu
+                            else "-"
+                        ),
+                        (
+                            pstr(transformation_stat.avg_avg_cpu * 100)
+                            if transformation_stat.avg_avg_cpu
+                            else "-"
+                        ),
+                    ]
+                    for i in range(13):
+                        max_length[i] = max(max_length[i], len(transformation_stat[i]))
+
+                max_length = [i + 1 for i in max_length]
+                writer.widths = max_length
+
+                writer.writeheader()
+                for transformation_stat in transformation_stats:
+                    writer.writerow(transformation_stat)
+
+    def _write_transformation_statistics_csv(self):
+        """."""
+        with utils.write_csv(
+            Path(self.output_dir)
+            / f"{self.transformation_stats_file_name}.{self.file_extn_csv}",
+            fields=self.transformation_stats_col_name_csv,
+        ) as writer:
+            writer.write(self.transformation_stats_legends)
+
+            for wf_det, ind_wf_stats in chain(
+                self.wf_uuid_list, [(self._wf_det, self.wf_stats)]
+            ):
+                self.log.debug(
+                    f"Generating invocation statistics information for workflow {wf_det.wf_uuid} ..."
+                )
+                transformation_stats = self._compute_transformation_statistics(
+                    ind_wf_stats
+                )
+
+                writer.write("\n")
+                writer.writeheader()
+                for transformation_stat in transformation_stats:
+                    # TODO: Remove large repeated code block, maybe rewrite like JobStatistics
+                    transformation_stat = [
+                        (
+                            wf_det.wf_uuid
+                            if wf_det.wf_uuid != "All"
+                            else wf_det.wf_uuid.upper()
+                        ),
+                        wf_det.dax_label,
+                        transformation_stat.transformation,
+                        transformation_stat.type,
+                        str(transformation_stat.count),
+                        fstr(transformation_stat.min),
+                        fstr(transformation_stat.max),
+                        fstr(transformation_stat.avg),
+                        fstr(transformation_stat.sum),
+                        (
+                            fstr(transformation_stat.min_maxrss / 1024)
+                            if transformation_stat.min_maxrss
+                            else "-"
+                        ),
+                        (
+                            fstr(transformation_stat.max_maxrss / 1024)
+                            if transformation_stat.max_maxrss
+                            else "-"
+                        ),
+                        (
+                            fstr(transformation_stat.avg_maxrss / 1024)
+                            if transformation_stat.avg_maxrss
+                            else "-"
+                        ),
+                        (
+                            pstr(transformation_stat.min_avg_cpu * 100)
+                            if transformation_stat.min_avg_cpu
+                            else "-"
+                        ),
+                        (
+                            pstr(transformation_stat.max_avg_cpu * 100)
+                            if transformation_stat.max_avg_cpu
+                            else "-"
+                        ),
+                        (
+                            pstr(transformation_stat.avg_avg_cpu * 100)
+                            if transformation_stat.avg_avg_cpu
+                            else "-"
+                        ),
+                    ]
+                    writer.writerow(transformation_stat)
+
+    def _write_integrity_statistics(self):
+        """."""
+        if self.file_type == self.file_type_txt:
+            self._write_integrity_statistics_text()
+        elif self.file_type == self.file_type_csv:
+            self._write_integrity_statistics_csv()
+        else:
+            self.log.error(f"Invalid file type {self.file_type}")
+
+    def _write_integrity_statistics_text(self):
+        """."""
+        with utils.write_table(
+            Path(self.output_dir)
+            / f"{self.integrity_stats_file_name}.{self.file_extn_text}",
+            fields=self.integrity_stats_col_name_text,
+            widths=self.integrity_stats_col_size,
+        ) as writer:
+            writer.write(self.integrity_stats_legends)
+
+            for wf_det, ind_wf_stats in chain(
+                self.wf_uuid_list, [(self._wf_det, self.wf_stats)]
+            ):
+                self.log.debug(
+                    f"Generating integrity statistics information for workflow {wf_det.wf_uuid} ..."
+                )
+                writer.write(f"\n# {wf_det.wf_uuid} ({wf_det.dax_label or 'All'})\n")
+                max_length = [_ for _ in self.integrity_stats_col_size]
+                integrity_stats = self._compute_integrity_statistics(ind_wf_stats)
+
+                for i, integrity_stat in enumerate(integrity_stats):
+                    integrity_stats[i] = integrity_stat = [
+                        integrity_stat.type,
+                        integrity_stat.file_type,
+                        str(integrity_stat.count),
+                        str(integrity_stat.duration),
+                    ]
+                    for i in range(4):
+                        max_length[i] = max(max_length[i], len(integrity_stat[i]))
+
+                max_length = [i + 1 for i in max_length]
+                writer.widths = max_length
+
+                writer.writeheader()
+                for integrity_stat in integrity_stats:
+                    writer.writerow(integrity_stat)
+
+    def _write_integrity_statistics_csv(self):
+        """."""
+        with utils.write_csv(
+            Path(self.output_dir)
+            / f"{self.integrity_stats_file_name}.{self.file_extn_csv}",
+            fields=self.integrity_stats_col_name_csv,
+        ) as writer:
+            writer.write(self.integrity_stats_legends)
+
+            for wf_det, ind_wf_stats in chain(
+                self.wf_uuid_list, [(self._wf_det, self.wf_stats)]
+            ):
+                self.log.debug(
+                    f"Generating integrity statistics information for workflow {wf_det.wf_uuid} ..."
+                )
+                integrity_stats = self._compute_integrity_statistics(ind_wf_stats)
+
+                for i, integrity_stat in enumerate(integrity_stats):
+                    integrity_stats[i] = integrity_stat = [
+                        (
+                            wf_det.wf_uuid
+                            if wf_det.wf_uuid != "All"
+                            else wf_det.wf_uuid.upper()
+                        ),
+                        wf_det.dax_label,
+                        integrity_stat.type,
+                        integrity_stat.file_type,
+                        str(integrity_stat.count),
+                        str(integrity_stat.duration),
+                    ]
+
+                writer.writeheader()
+                for integrity_stat in integrity_stats:
+                    writer.writerow(integrity_stat)
+
+    def _write_time_statistics(self):
+        """."""
+        if self.file_type == self.file_type_txt:
+            self._write_time_statistics_text()
+        elif self.file_type == self.file_type_csv:
+            self._write_time_statistics_csv()
+        else:
+            self.log.error(f"Invalid file type {self.file_type}")
+
+    def _write_time_statistics_text(self):
+        """."""
+        (
+            jobs_by_time,
+            invocations_by_time,
+            jobs_per_host,
+            invocations_per_host,
+        ) = self._compute_time_statistics()
+
+        self.time_stats_col_name_text[0] %= {"tf_format": self.tf_format}
+        with utils.write_table(
+            Path(self.output_dir)
+            / f"{self.time_stats_file_name}.{self.file_extn_text}",
+            fields=self.time_stats_col_name_text,
+            widths=self.time_stats_col_size,
+        ) as writer:
+            writer.write(
+                "\n"
+                + self.time_stats_legends_text % {"time_filter": self.time_filter}
+                + "\n"
+            )
+            # Job instances statistics per day
+            writer.write(f"\n# Job instances statistics per {self.time_filter}\n")
+            writer.writeheader()
+            formatted = stats_utils.convert_stats_to_base_time(
+                jobs_by_time, self.time_filter
+            )
+            for s in formatted:
+                content = (s["date_format"], s["count"], fstr(s["runtime"]))
+                writer.writerow(content)
+
+            # Invocation statistics run per day
+            writer.write(f"\n# Invocation statistics run per {self.time_filter}\n")
+            writer.writeheader()
+            formatted = stats_utils.convert_stats_to_base_time(
+                invocations_by_time, self.time_filter
+            )
+            for s in formatted:
+                content = (s["date_format"], s["count"], fstr(s["runtime"]))
+                writer.writerow(content)
+
+            self.time_host_stats_col_name_text[0] %= {"tf_format": self.tf_format}
+            writer.fields = self.time_host_stats_col_name_text
+            writer.widths = self.time_host_stats_col_size
+
+            # Job instances statistics on host per day
+            writer.write(
+                f"\n# Job instances statistics on host per {self.time_filter}\n"
+            )
+            writer.writeheader()
+            formatted = stats_utils.convert_stats_to_base_time(
+                jobs_per_host, self.time_filter, True
+            )
+            for s in formatted:
+                content = [
+                    s["date_format"],
+                    s["host"],
+                    s["count"],
+                    fstr(s["runtime"]),
+                ]
+                writer.writerow(content)
+
+            # Invocation statistics on host per day
+            writer.write(f"\n# Invocation statistics on host per {self.time_filter}\n")
+            writer.writeheader()
+            formatted = stats_utils.convert_stats_to_base_time(
+                invocations_per_host, self.time_filter, True
+            )
+            for s in formatted:
+                content = [
+                    s["date_format"],
+                    s["host"],
+                    s["count"],
+                    fstr(s["runtime"]),
+                ]
+                writer.writerow(content)
+
+    def _write_time_statistics_csv(self):
+        """."""
+        (
+            jobs_by_time,
+            invocations_by_time,
+            jobs_per_host,
+            invocations_per_host,
+        ) = self._compute_time_statistics()
+
+        self.time_stats_col_name_csv[1] %= {"tf_format": self.tf_format}
+        with utils.write_csv(
+            Path(self.output_dir) / f"{self.time_stats_file_name}.{self.file_extn_csv}",
+            fields=self.time_stats_col_name_csv,
+        ) as writer:
+            writer.write(
+                self.time_stats_legends_csv % {"time_filter": self.time_filter}
+            )
+            # Job Instance statistics
+            writer.write(f"\n# Job instances statistics per {self.time_filter}\n")
+            writer.writerow(self.time_stats_col_name_csv)
+            formatted = stats_utils.convert_stats_to_base_time(
+                jobs_by_time, self.time_filter
+            )
+            for s in formatted:
+                content = (
+                    f"jobs/{self.time_filter}",
+                    s["date_format"],
+                    s["count"],
+                    fstr(s["runtime"]),
+                )
+                writer.writerow(content)
+
+            # Invocation statistics
+            writer.write(f"\n# Invocation statistics run per {self.time_filter}\n")
+            writer.writerow(self.time_stats_col_name_csv)
+            formatted = stats_utils.convert_stats_to_base_time(
+                invocations_by_time, self.time_filter
+            )
+            for s in formatted:
+                content = (
+                    f"invocations/{self.time_filter}",
+                    s["date_format"],
+                    s["count"],
+                    fstr(s["runtime"]),
+                )
+                writer.writerow(content)
+
+        self.time_host_stats_col_name_csv[1] %= {"tf_format": self.tf_format}
+        with utils.write_csv(
+            Path(self.output_dir)
+            / f"{self.time_host_stats_file_name}.{self.file_extn_csv}",
+            fields=self.time_host_stats_col_name_csv,
+        ) as writer:
+            writer.write(
+                self.time_host_stats_legends % {"time_filter": self.time_filter}
+            )
+            # Job instances statistics on host per day
+            writer.write(
+                f"\n# Job instances statistics on host per {self.time_filter}\n"
+            )
+            writer.writerow(self.time_host_stats_col_name_csv)
+            formatted = stats_utils.convert_stats_to_base_time(
+                jobs_per_host, self.time_filter, True
+            )
+            for s in formatted:
+                content = (
+                    f"jobs/host/{self.time_filter}",
+                    s["date_format"],
+                    s["host"],
+                    s["count"],
+                    fstr(s["runtime"]),
+                )
+                writer.writerow(content)
+
+            # Invocation statistics on host per day
+            writer.write(f"\n# Invocation statistics on host per {self.time_filter}\n")
+            writer.writerow(self.time_host_stats_col_name_csv)
+            formatted = stats_utils.convert_stats_to_base_time(
+                invocations_per_host, self.time_filter, True
+            )
+            for s in formatted:
+                content = (
+                    f"invocations/host/{self.time_filter}",
+                    s["date_format"],
+                    s["host"],
+                    s["count"],
+                    fstr(s["runtime"]),
+                )
+                writer.writerow(content)
+
+    def _cleanup(self):
+        """."""
+        for _, ind_wf_stats in chain(self.wf_uuid_list, [(None, self.wf_stats)]):
+            try:
+                if ind_wf_stats:
+                    ind_wf_stats.close()
+            except Exception:
+                self.log.warning("Error closing database")
+                self.log.debug("Error closing database", exc_info=1)
+
+    def console_output(self, ctx):
+        """."""
+        extn = self.file_extn_text if self.file_type == "text" else self.file_extn_csv
+
+        if self.calc_wf_summary:
+            name = Path(self.output_dir) / f"{self.workflow_summary_file_name}.{extn}"
+            if self.file_type == "text":
+                for line in name.open():
+                    click.echo(line.rstrip())
+                click.echo()
+
+            click.echo("%-30s: %s" % ("Summary", name))
+
+            if self.file_type == "csv":
+                name = (
+                    Path(self.output_dir)
+                    / f"{self.workflow_summary_time_file_name}.{extn}"
+                )
+                click.echo("%-30s: %s" % ("Summary Time", name))
+
+        if self.calc_wf_stats:
+            name = Path(self.output_dir) / f"{self.workflow_stats_file_name}.{extn}"
+            click.echo("%-30s: %s" % ("Workflow execution statistics", name))
+
+        if self.calc_jb_stats:
+            name = Path(self.output_dir) / f"{self.job_stats_file_name}.{extn}"
+            click.echo("%-30s: %s" % ("Job instance statistics", name))
+
+        if self.calc_tf_stats:
+            name = (
+                Path(self.output_dir) / f"{self.transformation_stats_file_name}.{extn}"
+            )
+            click.echo("%-30s: %s" % ("Transformation statistics", name))
+
+        if self.calc_int_stats:
+            name = Path(self.output_dir) / f"{self.integrity_stats_file_name}.{extn}"
+            click.echo("%-30s: %s" % ("Integrity statistics", name))
+
+        if self.calc_ti_stats:
+            name = Path(self.output_dir) / f"{self.time_stats_file_name}.{extn}"
+            click.echo("%-30s: %s" % ("Time statistics", name))
+            # TODO: Add time-per-host.csv
+
+    def __call__(self, ctx, verbose: int = 0, quiet: int = 0):
+        """."""
+        # Initialize logging
+        self._initialize(verbose, quiet)
+
+        # Check the inputs
+        self._check_inputs()
+
+        # Check the type of clustering to use while computing the statistics
+        self._get_clustering_type()
+
+        # Identify the workflow database URL from the submit-dir or the workflow UUID
+        self._get_workflow_db_url()
+
+        # Create the output directory
+        self._initialize_output_dir()
+
+        # Compute statistics for each level of statistics to be calculated
+        self._compute_statistics()
+
+        # Write out the statistics based on the chosen output format
+        self._write_statistics()
+
+        # Cleanup
+        self._cleanup()
+
+        # Final Output
+        self.console_output(ctx)

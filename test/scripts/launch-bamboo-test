@@ -53,7 +53,7 @@ fi
 #Get RUNDIR from the planning output
 RUN_DIR=`grep pegasus-remove $PLANFILE | sed 's/.*pegasus-remove //'`
 if [ "x$RUN_DIR" = "x" ]; then
-    
+
     # if the workflow was planned with out --submit, it only has a pegasus-run line
     RUN_DIR=`grep pegasus-run $PLANFILE | sed 's/.*pegasus-run //'`
 
@@ -74,12 +74,12 @@ STATUS=$?
 
 # PM-974
 # make sure there is only stampede database created per hierarchal workflow
-COUNT=`find . -name "*stampede.db" | grep -c stampede.db`                                                                                                                                                                                                   
-if [ $COUNT -ne "1" ]; then                                                                                                                                                                                                                                 
-    echo "ERROR: more than one stampede db in test $COUNT" 1>&2 
+COUNT=`find . -name "*stampede.db" | grep -c stampede.db`
+if [ $COUNT -ne "1" ]; then
+    echo "ERROR: more than one stampede db in test $COUNT" 1>&2
     exit 1
-fi                                                                                                                                                                                                                                                          
-  
+fi
+
 
 # always pegasus-analyzer to detect other problems
 pegasus-analyzer $RUN_DIR
@@ -87,7 +87,7 @@ STATUS=$(($STATUS + $?))
 
 # PM-956 also run pegasus-analyzer on any sub workflows
 # PM-1390 -not -name ignores any hidden pegasus multipart dirs that
-# may have been created . for e.g. .pegasus.mulitpart.d   
+# may have been created . for e.g. .pegasus.mulitpart.d
 for subdir in `find $RUN_DIR -type d -name "*.*" -not -name '.*'`; do
     pegasus-analyzer --top-dir $RUN_DIR $subdir
     STATUS=$(($STATUS + $?))
@@ -96,6 +96,16 @@ done
 if [ $STATUS = 0 ]; then
    # Run Pegasus Statistics
    pegasus-statistics -s all $RUN_DIR
+   # TODO: Rajiv: Remove after new p-stats is finalized
+   pegasus-statistics -s all -t text -o old $RUN_DIR
+   pegasus-statistics -s all -t csv -o old $RUN_DIR
+   pegasus-newstatistics -s all -t text -o new $RUN_DIR
+   pegasus-newstatistics -s all -t csv -o new $RUN_DIR
+   diff -bBur old new
+   if [ $? -ne 0 ]; then
+      echo "Old and new statistics output is different"
+   fi
+   # TODO: Rajiv: Remove after new p-stats is finalized
    STATUS=$(($STATUS + $?))
 fi
 

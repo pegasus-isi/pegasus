@@ -18,6 +18,7 @@
 
 
 import calendar
+import csv
 import datetime
 import errno
 import logging
@@ -28,6 +29,7 @@ import sys
 import time
 import traceback
 import urllib
+from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
 
@@ -83,6 +85,44 @@ class ConsoleHandler(logging.StreamHandler):
         #   http://bugs.python.org/issue6333
         if self.stream and hasattr(self.stream, "flush") and not self.stream.closed:
             logging.StreamHandler.flush(self)
+
+
+def configure_logging(verbose: int = 0, quiet: int = 0):
+    """
+    Configure logging for command line tools.
+
+    # --------------- # ------------- #
+    # verbose - quiet | logging.level #
+    # --------------- # ------------- #
+    #           < 0   |  ERROR        #
+    #             0   |  ERROR        #
+    #             1   |  WARNING      #
+    #             2   |  INFO         #
+    #             3   |  DEBUG        #
+    #             4   |  TRACE        #
+    #           > 4   |  TRACE        #
+    # --------------- # ------------- #
+
+    :param verbose: Increase verbosity of logging, defaults to 0
+    :type verbose: int, optional
+    :param quiet: Decrease the verbosity of logging, defaults to 0
+    :type quiet: int, optional
+    """
+    # Multiply by 10 because Python logging levels are 0, 10, 20, .., 50.
+    level = (verbose - quiet) * 10
+
+    # `verbose` - `quiet` can be < 0 or > 50, so normalize it between 0 and 40
+    level = min(40, max(0, level))
+
+    # Higher the `verbose` - `quiet` number greater the verbosity, but in
+    # Python higher the level lower the verbosity, so subtract - 40 to
+    # reverse the order
+    level = 40 - level
+
+    # Pegasus adds a custom level, TRACE, to be used as the most verbose level
+    level = 9 if level == 0 else level
+
+    configureLogging(level)
 
 
 def configureLogging(level=logging.INFO):
@@ -690,3 +730,66 @@ def make_boolean(value):
         return 1
 
     return 0
+
+
+@contextmanager
+def write_table(f, fields, headers=None, widths=None, encoding=None):
+    """."""
+    with open(f, "w", encoding=encoding) as writer:
+        if widths is None:
+            widths = [len(_) for _ in fields]
+
+        def writerow(row):
+            writer.write(
+                "".join(
+                    str(value).ljust(writer.widths[i]) for i, value in enumerate(row)
+                )
+            )
+            writer.write("\n")
+
+        def writeheader():
+            writer.writerow(writer.fields)
+
+        def writetable(table):
+            cols = writer.headers or writer.widths
+            max_length = [_ for _ in cols]
+
+            for row in table:
+                for i, col in enumerate(writer.fields):
+                    max_length[i] = max(max_length[i], len(str(row[col])))
+
+            max_length = [i + 1 for i in max_length]
+            for row in table:
+                writer.writerow(row)
+
+        writer.fields = fields
+        writer.headers = headers
+        writer.widths = widths
+        writer.writerow = writerow
+        writer.writeheader = writeheader
+        writer.writetable = writetable
+
+        yield writer
+
+
+@contextmanager
+def write_csv(f, fields, headers=None, dialect=csv.excel, encoding=None):
+    """."""
+    with open(f, "w", encoding=encoding) as csvfile:
+        writer = csv.DictWriter(
+            csvfile, dialect=dialect, fieldnames=fields, extrasaction="ignore"
+        )
+        _writerow = writer.writerow
+
+        def writerow(row):
+            _writerow({k: v for k, v in zip(fields, row)})
+
+        def writeheader():
+            writer.writerow(writer.headers or writer.fieldnames)
+
+        writer.headers = headers
+        writer.write = csvfile.write
+        writer.writerow = writerow
+        writer.writeheader = writeheader
+
+        yield writer
