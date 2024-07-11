@@ -1,6 +1,5 @@
 """Test Pegasus statistics."""
 
-
 import pytest
 from click.testing import CliRunner
 
@@ -126,6 +125,21 @@ def test_check_args_submit_dirs_config(caplog):
         p._check_args()
         assert (
             "A config file is required if either is-uuid flag is set or submit-dirs is not set or set to *"
+            in caplog.text
+        )
+
+
+@pytest.mark.parametrize("name", ["is_uuid", "multiple_wf"])
+def test_check_args_output_dir(caplog, name):
+    p = PegasusStatistics()
+    p._initialize(verbose=5)
+
+    p.output_dir = []
+    setattr(p, name, True)
+    with pytest.raises(SystemExit):
+        p._check_args()
+        assert (
+            "Output directory option is required when calculating statistics over multiple workflows."
             in caplog.text
         )
 
@@ -376,22 +390,6 @@ def test_initialize_output_dir(mocker, output_dir):
         m.assert_called_once_with("statistics", delete_if_exists=False)
     else:
         m.assert_called_once_with("statistics", delete_if_exists=True)
-
-
-@pytest.mark.parametrize("name", ["is_uuid", "multiple_wf"])
-def test_initialize_output_dir_fail(capsys, name):
-    p = PegasusStatistics(output_dir=None)
-    p._initialize(verbose=5)
-    setattr(p, name, True)
-
-    with pytest.raises(SystemExit):
-        p._initialize_output_dir()
-
-    captured = capsys.readouterr()
-    assert (
-        "Output directory option is required when calculating statistics over multiple workflows."
-        in captured.err
-    )
 
 
 # E2E

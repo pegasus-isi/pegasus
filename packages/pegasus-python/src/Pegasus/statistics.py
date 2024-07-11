@@ -635,6 +635,12 @@ class PegasusStatistics:
             )
             sys.exit(1)
 
+        if (self.multiple_wf or self.is_uuid) and not self.output_dir:
+            self.log.fatal(
+                "Output directory option is required when calculating statistics over multiple workflows."
+            )
+            sys.exit(1)
+
     def _check_workflow_dir(self):
         """."""
         if self.is_uuid is True or self.submit_dirs == "*":
@@ -793,13 +799,7 @@ class PegasusStatistics:
             delete_if_exists = False
         else:
             delete_if_exists = True
-            if self.multiple_wf or self.is_uuid:
-                sys.stderr.write(
-                    "Output directory option is required when calculating statistics over multiple workflows.\n"
-                )
-                sys.exit(1)
-            else:
-                self.output_dir = Path(self.submit_dirs, self.default_output_dir)
+            self.output_dir = Path(self.submit_dirs, self.default_output_dir)
 
         self.log.info("Output directory is %s" % self.output_dir)
         utils.create_directory(str(self.output_dir), delete_if_exists=delete_if_exists)
@@ -1122,6 +1122,9 @@ class PegasusStatistics:
             )
 
             # Integrity summary
+            if not int_metrics_summary:
+                return
+
             # TODO: Remove space between `doing it. \n`
             writer.write(
                 """
@@ -1551,6 +1554,9 @@ class PegasusStatistics:
                 max_length = [_ for _ in self.integrity_stats_col_size]
                 integrity_stats = self._compute_integrity_statistics(ind_wf_stats)
 
+                if not integrity_stats:
+                    continue
+
                 for i, integrity_stat in enumerate(integrity_stats):
                     integrity_stats[i] = integrity_stat = [
                         integrity_stat.type,
@@ -1584,6 +1590,9 @@ class PegasusStatistics:
                     f"Generating integrity statistics information for workflow {wf_det.wf_uuid} ..."
                 )
                 integrity_stats = self._compute_integrity_statistics(ind_wf_stats)
+
+                if not integrity_stats:
+                    continue
 
                 for i, integrity_stat in enumerate(integrity_stats):
                     integrity_stats[i] = integrity_stat = [
