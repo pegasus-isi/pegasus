@@ -1154,7 +1154,7 @@ class PegasusStatistics:
             for result in int_error_summary:
                 type = "integrity" if result.name == "int.error" else result.name
                 writer.write(
-                    "Total:    A total of {result.count} {type} errors encountered in the workflow\n"
+                    f"Total:    A total of {result.count} {type} errors encountered in the workflow\n"
                 )
 
             # PM-1295 jobs where last_job_instance failed and there were integrity errors in those last job instances
