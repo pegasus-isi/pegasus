@@ -19,7 +19,12 @@ from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistic
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.tools import utils
 
+
 log = logging.getLogger("pegasus-statistics")
+
+format_seconds = stats_utils.format_seconds
+
+fstr = stats_utils.round_decimal_to_str
 
 
 def remove_file(path):
@@ -30,19 +35,9 @@ def remove_file(path):
         log.error("Can't remove file {path} because it was not found")
 
 
-def format_seconds(duration):
-    """."""
-    return "-" if duration is None else stats_utils.format_seconds(duration)
-
-
 def istr(value):
     """."""
     return "-" if value is None else str(value)
-
-
-def fstr(value, to=3):
-    """."""
-    return "-" if value is None else stats_utils.round_decimal_to_str(value, to)
 
 
 def pstr(value, to=2):
@@ -50,7 +45,7 @@ def pstr(value, to=2):
     return "-" if value is None else stats_utils.round_decimal_to_str(value, to) + "%"
 
 
-@dataclass(init=False)
+@dataclass
 class JobStatistics:
     """."""
 
@@ -86,7 +81,7 @@ class JobStatistics:
     #: Description
     hostname: str = None
 
-    def get_formatted_job_statistics(self):
+    def get_formatted_statistics(self):
         return [
             self.name,
             str(self.retry_count),
@@ -106,9 +101,58 @@ class JobStatistics:
         ]
 
 
+@dataclass
+class TransformationStatistics:
+    """."""
+
+    #: Description
+    transformation: str = None
+    #: Description
+    type: str = None
+    #: Description
+    count: int = None
+    #: Description
+    min: float = None
+    #: Description
+    max: float = None
+    #: Description
+    avg: float = None
+    #: Description
+    sum: float = None
+    #: Description
+    min_maxrss: float = None
+    #: Description
+    max_maxrss: float = None
+    #: Description
+    avg_maxrss: float = None
+    #: Description
+    min_avg_cpu: float = None
+    #: Description
+    max_avg_cpu: float = None
+    #: Description
+    avg_avg_cpu: float = None
+
+    def get_formatted_statistics(self):
+        return [
+            self.transformation,
+            self.type,
+            str(self.count),
+            fstr(self.min),
+            fstr(self.max),
+            fstr(self.avg),
+            fstr(self.sum),
+            fstr(self.min_maxrss / 1024) if self.min_maxrss else "-",
+            fstr(self.max_maxrss / 1024) if self.max_maxrss else "-",
+            fstr(self.avg_maxrss / 1024) if self.avg_maxrss else "-",
+            pstr(self.min_avg_cpu * 100) if self.min_avg_cpu else "-",
+            pstr(self.max_avg_cpu * 100) if self.max_avg_cpu else "-",
+            pstr(self.avg_avg_cpu * 100) if self.avg_avg_cpu else "-",
+        ]
+
+
 # TODO: All compute methods to generate a dict.
 # TODO: Use utils.write_table.writetable method to write text tables, then remove col_sizes
-# TODO: Remomve sys.exit and print statements
+# TODO: Remove sys.exit and print statements
 
 
 class PegasusStatistics:
@@ -561,8 +605,9 @@ class PegasusStatistics:
         self.submit_dirs = submit_dirs or []
         self.wf_uuids: t.Union[str, list] = []
 
-        self.wf_uuid_list: t.Sequence[t.Tuple[str, t.Any]] = []
+        self.wf_uuid_list: t.Sequence[t.Tuple[str, StampedeStatistics]] = []
         self.wf_stats: t.Any = None
+        self.errors: int = 0
 
     def _initialize(self, verbose: int = 0, quiet: int = 0):
         """."""
@@ -587,6 +632,10 @@ class PegasusStatistics:
 
         if self.is_uuid is True or self.submit_dirs == "*":
             self.wf_uuids = self.submit_dirs
+
+        self.file_extn: str = (
+            self.file_extn_text if self.file_type == "text" else self.file_extn_csv
+        )
 
         self.tf_format = stats_utils.get_date_print_format(self.time_filter)
 
@@ -624,19 +673,19 @@ class PegasusStatistics:
     def _check_args(self):
         """."""
         if self.multiple_wf and self.calc_jb_stats:
-            self.log.fatal(
+            self.log.critical(
                 "Job breakdown statistics cannot be computed over multiple workflows"
             )
             sys.exit(1)
 
         if (self.is_uuid or self.submit_dirs == "*") and not self.config_properties:
-            self.log.fatal(
+            self.log.critical(
                 "A config file is required if either is-uuid flag is set or submit-dirs is not set or set to *"
             )
             sys.exit(1)
 
         if (self.multiple_wf or self.is_uuid) and not self.output_dir:
-            self.log.fatal(
+            self.log.critical(
                 "Output directory option is required when calculating statistics over multiple workflows."
             )
             sys.exit(1)
@@ -926,8 +975,10 @@ class PegasusStatistics:
     def _compute_integrity_summary_statistics(self):
         """."""
         # print_workflow_summary
-        total_failed_jobs_integrity = self.wf_stats.get_total_succeeded_failed_jobs_status(
-            classify_error=True, tag="int.error"
+        total_failed_jobs_integrity = (
+            self.wf_stats.get_total_succeeded_failed_jobs_status(
+                classify_error=True, tag="int.error"
+            )
         )
         int_metrics_summary = self.wf_stats.get_summary_integrity_metrics()
         int_error_summary = self.wf_stats.get_tag_metrics("int.error")
@@ -978,7 +1029,28 @@ class PegasusStatistics:
         wf_or_ind_stats.set_job_filter("all")
 
         # print_wf_transformation_stats
-        return wf_or_ind_stats.get_transformation_statistics()
+        wf_transformation_stats_list = wf_or_ind_stats.get_transformation_statistics()
+
+        # Go through each transformation in the workflow
+        transformation_stat_list = []
+        for transformation_stat in wf_transformation_stats_list:
+            transformation_stats = TransformationStatistics()
+            transformation_stats.transformation = transformation_stat.transformation
+            transformation_stats.type = transformation_stat.type
+            transformation_stats.count = transformation_stat.count
+            transformation_stats.min = transformation_stat.min
+            transformation_stats.max = transformation_stat.max
+            transformation_stats.avg = transformation_stat.avg
+            transformation_stats.sum = transformation_stat.sum
+            transformation_stats.min_maxrss = transformation_stat.min_maxrss
+            transformation_stats.max_maxrss = transformation_stat.max_maxrss
+            transformation_stats.avg_maxrss = transformation_stat.avg_maxrss
+            transformation_stats.min_avg_cpu = transformation_stat.min_avg_cpu
+            transformation_stats.max_avg_cpu = transformation_stat.max_avg_cpu
+            transformation_stats.avg_avg_cpu = transformation_stat.avg_avg_cpu
+            transformation_stat_list.append(transformation_stats)
+
+        return transformation_stat_list
 
     def _compute_integrity_statistics(self, wf_or_ind_stats):
         """."""
@@ -1006,24 +1078,55 @@ class PegasusStatistics:
 
     def _write_statistics(self):
         """."""
+        extn = self.file_extn
+
         if self.calc_wf_summary:
             try:
                 self._write_summary_statistics()
             except Exception:
                 self.log.warning("summary statistics generation failed")
                 self.log.debug("summary statistics generation failed", exc_info=1)
+
+                remove_file(
+                    self.output_dir / f"{self.workflow_summary_file_name}.{extn}"
+                )
+                if extn == "csv":
+                    remove_file(
+                        self.output_dir
+                        / f"{self.workflow_summary_time_file_name}.{extn}"
+                    )
+
+                self.calc_wf_summary = False
+                self.errors += 1
+
         if self.calc_ti_stats:
             try:
                 self._write_time_statistics()
             except Exception:
                 self.log.warning("time statistics generation failed")
                 self.log.debug("time statistics generation failed", exc_info=1)
+
+                remove_file(self.output_dir / f"{self.time_stats_file_name}.{extn}")
+                if extn == "csv":
+                    remove_file(
+                        self.output_dir / f"{self.time_host_stats_file_name}.{extn}"
+                    )
+
+                self.calc_ti_stats = False
+                self.errors += 1
+
         if self.calc_jb_stats:
             try:
                 self._write_job_statistics()
             except Exception:
                 self.log.warning("job instance statistics generation failed")
                 self.log.debug("job instance statistics generation failed", exc_info=1)
+
+                remove_file(self.output_dir / f"{self.job_stats_file_name}.{extn}")
+
+                self.calc_jb_stats = False
+                self.errors += 1
+
         if self.calc_tf_stats:
             try:
                 self._write_transformation_statistics()
@@ -1032,18 +1135,39 @@ class PegasusStatistics:
                 self.log.debug(
                     "transformation statistics generation failed", exc_info=1
                 )
+
+                remove_file(
+                    self.output_dir / f"{self.transformation_stats_file_name}.{extn}"
+                )
+
+                self.calc_tf_stats = False
+                self.errors += 1
+
         if self.calc_int_stats:
             try:
                 self._write_integrity_statistics()
             except Exception:
                 self.log.warning("integrity statistics generation failed")
                 self.log.debug("integrity statistics generation failed", exc_info=1)
+
+                remove_file(
+                    self.output_dir / f"{self.integrity_stats_file_name}.{extn}"
+                )
+
+                self.calc_int_stats = False
+                self.errors += 1
+
         if self.calc_wf_stats:
             try:
                 self._write_workflow_statistics()
             except Exception:
                 self.log.warning("workflow statistics generation failed")
                 self.log.debug("workflow statistics generation failed", exc_info=1)
+
+                remove_file(self.output_dir / f"{self.workflow_stats_file_name}.{extn}")
+
+                self.calc_wf_stats = False
+                self.errors += 1
 
     def _write_summary_statistics(self):
         """."""
@@ -1080,7 +1204,7 @@ class PegasusStatistics:
 
         with utils.write_table(
             Path(self.output_dir)
-            / f"{self.workflow_summary_file_name}.{self.file_extn_text}",
+            / f"{self.workflow_summary_file_name}.{self.file_extn}",
             fields=self.workflow_summary_col_name_text,
             widths=self.workflow_summary_col_size,
         ) as writer:
@@ -1183,7 +1307,7 @@ class PegasusStatistics:
 
         with utils.write_csv(
             Path(self.output_dir)
-            / f"{self.workflow_summary_file_name}.{self.file_extn_csv}",
+            / f"{self.workflow_summary_file_name}.{self.file_extn}",
             fields=self.workflow_summary_col_name_csv,
         ) as writer:
             writer.write(self.workflow_summary_legends + "\n")
@@ -1194,7 +1318,7 @@ class PegasusStatistics:
 
         with utils.write_csv(
             Path(self.output_dir)
-            / f"{self.workflow_summary_time_file_name}.{self.file_extn_csv}",
+            / f"{self.workflow_summary_time_file_name}.{self.file_extn}",
             fields=self.workflow_summary_time_col_name_csv,
         ) as writer:
 
@@ -1223,8 +1347,7 @@ class PegasusStatistics:
     def _write_workflow_statistics_text(self):
         """."""
         with utils.write_table(
-            Path(self.output_dir)
-            / f"{self.workflow_stats_file_name}.{self.file_extn_text}",
+            Path(self.output_dir) / f"{self.workflow_stats_file_name}.{self.file_extn}",
             fields=self.workflow_stats_col_name_text,
             widths=self.workflow_stats_col_size,
         ) as writer:
@@ -1273,8 +1396,7 @@ class PegasusStatistics:
     def _write_workflow_statistics_csv(self):
         """."""
         with utils.write_csv(
-            Path(self.output_dir)
-            / f"{self.workflow_stats_file_name}.{self.file_extn_csv}",
+            Path(self.output_dir) / f"{self.workflow_stats_file_name}.{self.file_extn}",
             fields=self.workflow_stats_col_name_csv,
         ) as writer:
             writer.write(self.workflow_stats_legends)
@@ -1323,7 +1445,7 @@ class PegasusStatistics:
     def _write_job_statistics_text(self):
         """."""
         with utils.write_table(
-            Path(self.output_dir) / f"{self.job_stats_file_name}.{self.file_extn_text}",
+            Path(self.output_dir) / f"{self.job_stats_file_name}.{self.file_extn}",
             fields=self.job_stats_col_name_text,
             widths=self.job_stats_col_size,
         ) as writer:
@@ -1339,9 +1461,7 @@ class PegasusStatistics:
 
                 for i, job_stats in enumerate(job_stats_list):
                     # Compute max length
-                    job_stats_list[
-                        i
-                    ] = job_stats = job_stats.get_formatted_job_statistics()
+                    job_stats_list[i] = job_stats = job_stats.get_formatted_statistics()
                     for i in range(15):
                         max_length[i] = max(max_length[i], len(job_stats[i]))
 
@@ -1355,7 +1475,7 @@ class PegasusStatistics:
     def _write_job_statistics_csv(self):
         """."""
         with utils.write_csv(
-            Path(self.output_dir) / f"{self.job_stats_file_name}.{self.file_extn_csv}",
+            Path(self.output_dir) / f"{self.job_stats_file_name}.{self.file_extn}",
             fields=self.job_stats_col_name_csv,
         ) as writer:
             writer.write(self.job_stats_legends)
@@ -1368,7 +1488,7 @@ class PegasusStatistics:
 
                 writer.writeheader()
                 for job_stats in job_stats_list:
-                    job_stats = job_stats.get_formatted_job_statistics()
+                    job_stats = job_stats.get_formatted_statistics()
                     job_stats.insert(0, wf_det.wf_uuid)
                     job_stats.insert(1, wf_det.dax_label)
                     writer.writerow(job_stats)
@@ -1386,7 +1506,7 @@ class PegasusStatistics:
         """."""
         with utils.write_table(
             Path(self.output_dir)
-            / f"{self.transformation_stats_file_name}.{self.file_extn_text}",
+            / f"{self.transformation_stats_file_name}.{self.file_extn}",
             fields=self.transformation_stats_col_name_text,
             widths=self.transformation_stats_col_size,
         ) as writer:
@@ -1405,46 +1525,9 @@ class PegasusStatistics:
                 )
 
                 for i, transformation_stat in enumerate(transformation_stats):
-                    # TODO: Remove large repeated code block, maybe rewrite like JobStatistics
-                    transformation_stats[i] = transformation_stat = [
-                        transformation_stat.transformation,
-                        transformation_stat.type,
-                        str(transformation_stat.count),
-                        fstr(transformation_stat.min),
-                        fstr(transformation_stat.max),
-                        fstr(transformation_stat.avg),
-                        fstr(transformation_stat.sum),
-                        (
-                            fstr(transformation_stat.min_maxrss / 1024)
-                            if transformation_stat.min_maxrss
-                            else "-"
-                        ),
-                        (
-                            fstr(transformation_stat.max_maxrss / 1024)
-                            if transformation_stat.max_maxrss
-                            else "-"
-                        ),
-                        (
-                            fstr(transformation_stat.avg_maxrss / 1024)
-                            if transformation_stat.avg_maxrss
-                            else "-"
-                        ),
-                        (
-                            pstr(transformation_stat.min_avg_cpu * 100)
-                            if transformation_stat.min_avg_cpu
-                            else "-"
-                        ),
-                        (
-                            pstr(transformation_stat.max_avg_cpu * 100)
-                            if transformation_stat.max_avg_cpu
-                            else "-"
-                        ),
-                        (
-                            pstr(transformation_stat.avg_avg_cpu * 100)
-                            if transformation_stat.avg_avg_cpu
-                            else "-"
-                        ),
-                    ]
+                    transformation_stats[i] = transformation_stat = (
+                        transformation_stat.get_formatted_statistics()
+                    )
                     for i in range(13):
                         max_length[i] = max(max_length[i], len(transformation_stat[i]))
 
@@ -1459,7 +1542,7 @@ class PegasusStatistics:
         """."""
         with utils.write_csv(
             Path(self.output_dir)
-            / f"{self.transformation_stats_file_name}.{self.file_extn_csv}",
+            / f"{self.transformation_stats_file_name}.{self.file_extn}",
             fields=self.transformation_stats_col_name_csv,
         ) as writer:
             writer.write(self.transformation_stats_legends)
@@ -1477,52 +1560,16 @@ class PegasusStatistics:
                 writer.write("\n")
                 writer.writeheader()
                 for transformation_stat in transformation_stats:
-                    # TODO: Remove large repeated code block, maybe rewrite like JobStatistics
-                    transformation_stat = [
+                    transformation_stat = transformation_stat.get_formatted_statistics()
+                    transformation_stat.insert(
+                        0,
                         (
                             wf_det.wf_uuid
                             if wf_det.wf_uuid != "All"
                             else wf_det.wf_uuid.upper()
                         ),
-                        wf_det.dax_label,
-                        transformation_stat.transformation,
-                        transformation_stat.type,
-                        str(transformation_stat.count),
-                        fstr(transformation_stat.min),
-                        fstr(transformation_stat.max),
-                        fstr(transformation_stat.avg),
-                        fstr(transformation_stat.sum),
-                        (
-                            fstr(transformation_stat.min_maxrss / 1024)
-                            if transformation_stat.min_maxrss
-                            else "-"
-                        ),
-                        (
-                            fstr(transformation_stat.max_maxrss / 1024)
-                            if transformation_stat.max_maxrss
-                            else "-"
-                        ),
-                        (
-                            fstr(transformation_stat.avg_maxrss / 1024)
-                            if transformation_stat.avg_maxrss
-                            else "-"
-                        ),
-                        (
-                            pstr(transformation_stat.min_avg_cpu * 100)
-                            if transformation_stat.min_avg_cpu
-                            else "-"
-                        ),
-                        (
-                            pstr(transformation_stat.max_avg_cpu * 100)
-                            if transformation_stat.max_avg_cpu
-                            else "-"
-                        ),
-                        (
-                            pstr(transformation_stat.avg_avg_cpu * 100)
-                            if transformation_stat.avg_avg_cpu
-                            else "-"
-                        ),
-                    ]
+                    )
+                    transformation_stat.insert(1, wf_det.dax_label)
                     writer.writerow(transformation_stat)
 
     def _write_integrity_statistics(self):
@@ -1538,7 +1585,7 @@ class PegasusStatistics:
         """."""
         with utils.write_table(
             Path(self.output_dir)
-            / f"{self.integrity_stats_file_name}.{self.file_extn_text}",
+            / f"{self.integrity_stats_file_name}.{self.file_extn}",
             fields=self.integrity_stats_col_name_text,
             widths=self.integrity_stats_col_size,
         ) as writer:
@@ -1578,7 +1625,7 @@ class PegasusStatistics:
         """."""
         with utils.write_csv(
             Path(self.output_dir)
-            / f"{self.integrity_stats_file_name}.{self.file_extn_csv}",
+            / f"{self.integrity_stats_file_name}.{self.file_extn}",
             fields=self.integrity_stats_col_name_csv,
         ) as writer:
             writer.write(self.integrity_stats_legends)
@@ -1632,8 +1679,7 @@ class PegasusStatistics:
 
         self.time_stats_col_name_text[0] %= {"tf_format": self.tf_format}
         with utils.write_table(
-            Path(self.output_dir)
-            / f"{self.time_stats_file_name}.{self.file_extn_text}",
+            Path(self.output_dir) / f"{self.time_stats_file_name}.{self.file_extn}",
             fields=self.time_stats_col_name_text,
             widths=self.time_stats_col_size,
         ) as writer:
@@ -1709,7 +1755,7 @@ class PegasusStatistics:
 
         self.time_stats_col_name_csv[1] %= {"tf_format": self.tf_format}
         with utils.write_csv(
-            Path(self.output_dir) / f"{self.time_stats_file_name}.{self.file_extn_csv}",
+            Path(self.output_dir) / f"{self.time_stats_file_name}.{self.file_extn}",
             fields=self.time_stats_col_name_csv,
         ) as writer:
             writer.write(
@@ -1748,7 +1794,7 @@ class PegasusStatistics:
         self.time_host_stats_col_name_csv[1] %= {"tf_format": self.tf_format}
         with utils.write_csv(
             Path(self.output_dir)
-            / f"{self.time_host_stats_file_name}.{self.file_extn_csv}",
+            / f"{self.time_host_stats_file_name}.{self.file_extn}",
             fields=self.time_host_stats_col_name_csv,
         ) as writer:
             writer.write(
@@ -1800,7 +1846,7 @@ class PegasusStatistics:
 
     def console_output(self, ctx):
         """."""
-        extn = self.file_extn_text if self.file_type == "text" else self.file_extn_csv
+        extn = self.file_extn
 
         if self.calc_wf_summary:
             name = Path(self.output_dir) / f"{self.workflow_summary_file_name}.{extn}"
@@ -1840,6 +1886,10 @@ class PegasusStatistics:
             name = Path(self.output_dir) / f"{self.time_stats_file_name}.{extn}"
             click.echo("%-30s: %s" % ("Time statistics", name))
             # TODO: Add time-per-host.csv
+
+        if self.errors:
+            self.log.critical(f"Failed to generate {self.errors} type(s) of statistics")
+            sys.exit(1)
 
     def __call__(self, ctx, verbose: int = 0, quiet: int = 0):
         """."""
