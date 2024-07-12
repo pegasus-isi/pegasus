@@ -48,25 +48,26 @@ exclude       = '''
 max-line-length        = 88
 ignore                 = "W503"
 exclude                = [
-    ".git",
-    ".tox",
-    "*.egg-info",
-    "htmlcov",
-    "test-reports",
-    ".pytest_cache",
-    "__pycache__",
-    "build"
+  ".git",
+  ".tox",
+  "*.egg-info",
+  "htmlcov",
+  "test-reports",
+  ".pytest_cache",
+  "__pycache__",
+  "build"
 ]
 
 
 [tool.pytest.ini_options]
 
-pythonpath = [
-  "src"
-]
-testpaths = [
-  "test"
-]
+pythonpath = ["src"]
+testpaths = ["test"]
+
+
+[tool.coverage.run]
+
+source = ["Pegasus"]
 
 
 [build-system]
