@@ -58,7 +58,7 @@ config.set("oauth", "client_id", client_id)
 pegasus_scopes = [TransferScopes.all]
 for c in args.collections:
     sb = GCSCollectionScopeBuilder(c, known_scopes=[TransferScopes.all])
-    pegasus_scopes.append("{}[*{}]".format(TransferScopes.all, sb.data_access))
+    pegasus_scopes.append(f"{TransferScopes.all}[*{sb.data_access}]")
     pegasus_scopes.append(sb.data_access)
 
 for e in args.endpoints:
@@ -81,7 +81,7 @@ else:
 authorize_url = client.oauth2_get_authorize_url(
     session_required_single_domain=required_domains, prompt="login"
 )
-print("Please go to this URL and login: {}".format(authorize_url))
+print(f"Please go to this URL and login: {authorize_url}")
 
 get_input = getattr(__builtins__, "raw_input", input)
 auth_code = get_input("Please enter the code you get after login here: ").strip()

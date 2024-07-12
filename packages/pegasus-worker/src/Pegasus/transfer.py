@@ -170,15 +170,15 @@ class PegasusURL:
     def get_url(self):
         # srm-copy is using broken urls - wants an extra /
         if self.proto == "srm" or self.proto == "root":
-            return "{}://{}/{}".format(self.proto, self.host, self.path)
-        return "{}://{}{}".format(self.proto, self.host, self.path)
+            return f"{self.proto}://{self.host}/{self.path}"
+        return f"{self.proto}://{self.host}{self.path}"
 
     def get_url_encoded(self):
-        return "{}://{}{}".format(self.proto, self.host, urllib.quote(self.path))
+        return f"{self.proto}://{self.host}{urllib.quote(self.path)}"
 
     def get_url_dirname(self):
         dn = os.path.dirname(self.path)
-        return "{}://{}{}".format(self.proto, self.host, dn)
+        return f"{self.proto}://{self.host}{dn}"
 
 
 class TransferBase:
@@ -794,7 +794,7 @@ class FileHandler(TransferHandlerBase):
 
             # some of the time, PegasusLite can tell us to take shortcut and symlink the files
             if symlink_file_transfer:
-                cmd = "ln -f -s '{}' '{}'".format(t.get_src_path(), t.get_dst_path())
+                cmd = f"ln -f -s '{t.get_src_path()}' '{t.get_dst_path()}'"
             else:
                 cmd = "/bin/cp -f -R -L '{}' '{}'".format(
                     t.get_src_path(), t.get_dst_path(),
@@ -1082,10 +1082,8 @@ class GridFtpHandler(TransferHandlerBase):
 
         for i, t in enumerate(transfers):
             num_pairs += 1
-            logger.debug(
-                "   adding {} {}".format(t.src_url_encoded(), t.dst_url_encoded())
-            )
-            tmp_file.write("{} {}\n".format(t.src_url_encoded(), t.dst_url_encoded()))
+            logger.debug(f"   adding {t.src_url_encoded()} {t.dst_url_encoded()}")
+            tmp_file.write(f"{t.src_url_encoded()} {t.dst_url_encoded()}\n")
 
         tmp_file.close()
 
@@ -1437,7 +1435,7 @@ class HPSSHandler(TransferHandlerBase):
                     return
 
             # copy user defined credential to default credential path
-            cmd = "/bin/cp -f '{}' '{}'".format(user_defined_cred, default_cred)
+            cmd = f"/bin/cp -f '{user_defined_cred}' '{default_cred}'"
             try:
                 tc = utils.TimedCommand(cmd)
                 tc.run()
@@ -1551,9 +1549,7 @@ class HPSSHandler(TransferHandlerBase):
             if src_file != t.lfn:
                 # we need post transfer move as directory needs to be flattened
                 # for example hpss/set2/f.c from tar has to be moved to f.c
-                logger.debug(
-                    "file {} from tar has to be moved to {}".format(src_file, t.lfn)
-                )
+                logger.debug(f"file {src_file} from tar has to be moved to {t.lfn}")
                 files_to_move[t.lfn] = src_file
 
             dir = self._compute_destination_directory(t)
@@ -2520,11 +2516,11 @@ class GSHandler(TransferHandlerBase):
             # use cp for gs->gs transfers, and get/put when one end is a file://
             if t.get_src_proto() == "gs" and t.get_dst_proto() == "gs":
                 # gs -> gs
-                cmd = "gsutil -q cp '{}' '{}'".format(t.src_url(), t.dst_url())
+                cmd = f"gsutil -q cp '{t.src_url()}' '{t.dst_url()}'"
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
-                cmd = "gsutil -q cp '{}' '{}'".format(t.src_url(), t.get_dst_path())
+                cmd = f"gsutil -q cp '{t.src_url()}' '{t.get_dst_path()}'"
             else:
                 # this is a 'put'
                 # src has to exist and be readable
@@ -2532,7 +2528,7 @@ class GSHandler(TransferHandlerBase):
                     failed_l.append(t)
                     self._post_transfer_attempt(t, False, t_start)
                     continue
-                cmd = "gsutil -q cp '{}' '{}'".format(t.get_src_path(), t.dst_url())
+                cmd = f"gsutil -q cp '{t.get_src_path()}' '{t.dst_url()}'"
 
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=env)
@@ -3441,7 +3437,7 @@ class StashHandler(TransferHandlerBase):
                     dst_path = re.sub("^/ospool", "/mnt/stash/ospool", t.get_dst_path())
 
                     prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = "/bin/cp '{}' '{}'".format(src_path, dst_path)
+                    cmd = f"/bin/cp '{src_path}' '{dst_path}'"
                 elif os.path.exists("/mnt/ceph/osg"):
                     # OSG Connect hack for now (we don't have a scitoken
                     # locally) local cp
@@ -3449,7 +3445,7 @@ class StashHandler(TransferHandlerBase):
                     dst_path = re.sub("^/osgconnect", "", t.get_dst_path())
 
                     prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = "/bin/cp '{}' '{}'".format(src_path, dst_path)
+                    cmd = f"/bin/cp '{src_path}' '{dst_path}'"
                 else:
                     cmd = "{} '{}' '{}'".format(
                         tools.full_path("stashcp"), t.get_src_path(), t.dst_url(),
@@ -3464,7 +3460,7 @@ class StashHandler(TransferHandlerBase):
                     dst_path = t.get_dst_path()
 
                     prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = "/bin/cp '{}' '{}'".format(src_path, dst_path)
+                    cmd = f"/bin/cp '{src_path}' '{dst_path}'"
                 elif os.path.exists("/mnt/ceph/osg"):
                     # OSG Connect hack for now (we don't have a scitoken
                     # locally) local cp
@@ -3472,7 +3468,7 @@ class StashHandler(TransferHandlerBase):
                     dst_path = t.get_dst_path()
 
                     prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = "/bin/cp '{}' '{}'".format(src_path, dst_path)
+                    cmd = f"/bin/cp '{src_path}' '{dst_path}'"
                 else:
                     # stashcp wants just the path with a single leading slash
                     src_path = t.src_url()
@@ -3561,7 +3557,7 @@ class SymlinkHandler(TransferHandlerBase):
                     successful_l.append(t)
                     continue
 
-            cmd = "ln -f -s '{}' '{}'".format(t.get_src_path(), t.get_dst_path())
+            cmd = f"ln -f -s '{t.get_src_path()}' '{t.get_dst_path()}'"
             try:
                 tc = utils.TimedCommand(cmd, timeout_secs=60)
                 tc.run()
@@ -3620,7 +3616,7 @@ class MovetoHandler(TransferHandlerBase):
                 failed_l.append(t)
                 continue
 
-            cmd = "mv '{}' '{}'".format(t.get_src_path(), t.get_dst_path())
+            cmd = f"mv '{t.get_src_path()}' '{t.get_dst_path()}'"
             try:
                 tc = utils.TimedCommand(cmd, timeout_secs=600)
                 tc.run()
@@ -5006,7 +5002,7 @@ def iso_prefix_formatted(n):
     elif n > (1024):
         prefix = "K"
         n = n / (1024)
-    return "{:.1f} {}".format(n, prefix)
+    return f"{n:.1f} {prefix}"
 
 
 def json_object_decoder(obj):

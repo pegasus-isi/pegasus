@@ -72,15 +72,15 @@ def configure_logging(verbose, debug):
 
 def human_size(size):
     if size >= TB:
-        return "{:6.1f}TB".format(size / float(TB))
+        return f"{size / float(TB):6.1f}TB"
     elif size >= GB:
-        return "{:6.1f}GB".format(size / float(GB))
+        return f"{size / float(GB):6.1f}GB"
     elif size >= MB:
-        return "{:6.1f}MB".format(size / float(MB))
+        return f"{size / float(MB):6.1f}MB"
     elif size >= KB:
-        return "{:6.1f}KB".format(size / float(KB))
+        return f"{size / float(KB):6.1f}KB"
     else:
-        return "{:6.0f}B".format(size)
+        return f"{size:6.0f}B"
 
 
 # see https://docs.aws.amazon.com/general/latest/gr/s3.html
@@ -258,7 +258,7 @@ class S3URI:
     def __init__(self, user, site, bucket=None, key=None, secure=False):
         self.user = user
         self.site = site
-        self.ident = "{}@{}".format(user, site)
+        self.ident = f"{user}@{site}"
         self.bucket = bucket
         self.key = key
         self.secure = secure
@@ -330,7 +330,7 @@ def parse_uri(uri):
     if result.port is None:
         site = result.hostname
     else:
-        site = "{}:{}".format(result.hostname, result.port)
+        site = f"{result.hostname}:{result.port}"
 
     return S3URI(user, site, bucket, key, secure)
 
@@ -348,11 +348,11 @@ def ls(args):
                 Bucket=uri.bucket, Prefix=uri.key if uri.key else "", FetchOwner=True
             )
         except s3.exceptions.NoSuchBucket:
-            raise Exception("Invalid bucket: {}".format(uri.bucket))
+            raise Exception(f"Invalid bucket: {uri.bucket}")
         except botocore.exceptions.ClientError as e:
             # endpoint may also raise this for invalid bucket name
             if e.response["Error"]["Code"] == "InvalidBucketName":
-                raise Exception("Invalid bucket: {}".format(uri.bucket))
+                raise Exception(f"Invalid bucket: {uri.bucket}")
             else:
                 raise e
 
@@ -379,7 +379,7 @@ def ls(args):
                         )
                     )
                 else:
-                    print("\t{}".format(key))
+                    print(f"\t{key}")
     else:
         # list buckets
         buckets = s3.list_buckets()
@@ -556,7 +556,7 @@ def rm(args):
         if uri.key is None:
             raise Exception("URL for rm must contain a key: %s" % uri)
 
-        bid = "{}/{}".format(uri.ident, uri.bucket)
+        bid = f"{uri.ident}/{uri.bucket}"
         buri = S3URI(uri.user, uri.site, uri.bucket, uri.secure)
 
         if bid not in buckets:
@@ -635,11 +635,11 @@ def rm(args):
                     s3.delete_object(Bucket=uri.bucket, Key=key_name)
 
         except s3.exceptions.NoSuchBucket:
-            raise Exception("Invalid bucket: {}".format(uri.bucket))
+            raise Exception(f"Invalid bucket: {uri.bucket}")
         except botocore.exceptions.ClientError as e:
             # endpoint may also raise this for invalid bucket name
             if e.response["Error"]["Code"] == "InvalidBucketName":
-                log.error("Invalid bucket: {}".format(uri.bucket))
+                log.error(f"Invalid bucket: {uri.bucket}")
 
             raise e
 
@@ -655,7 +655,7 @@ def get_key_for_path(path, infile, outkey):
     infile = infile.rstrip("/")
 
     if not infile.startswith(path):
-        raise Exception("file '{}' is not relative to '{}'".format(infile, path))
+        raise Exception(f"file '{infile}' is not relative to '{path}'")
 
     if outkey.endswith("/"):
         name = os.path.basename(path)
@@ -673,12 +673,12 @@ def put(args):
     url = args.url
 
     if not os.path.exists(path):
-        raise Exception("No such file or directory: {}".format(path))
+        raise Exception(f"No such file or directory: {path}")
 
     if os.path.isdir(path):
         raise Exception("FILE: %s is a directory. FILE must be a file." % path)
 
-    log.info("Attempting to upload {}".format(path))
+    log.info(f"Attempting to upload {path}")
 
     # Validate URL
     uri = parse_uri(url)
@@ -726,9 +726,7 @@ def put(args):
                 raise e
 
         if key_already_exists:
-            raise Exception(
-                "Key: {} already exists. Try --force to overwrite".format(path)
-            )
+            raise Exception(f"Key: {path} already exists. Try --force to overwrite")
 
     try:
         key = path if uri.key is None else uri.key
@@ -767,13 +765,13 @@ def get(args):
     try:
         s3.download_file(Bucket=uri.bucket, Key=uri.key, Filename=output)
     except s3.exceptions.NoSuchBucket:
-        raise Exception("Invalid bucket: {}".format(uri.bucket))
+        raise Exception(f"Invalid bucket: {uri.bucket}")
     except botocore.exceptions.ClientError as e:
         # endpoint may also raise this for invalid bucket name
         log.error("Response error code: {}".format(e.response["Error"]["Code"]))
         raise e
 
-    log.info("Download: {} complete".format(uri))
+    log.info(f"Download: {uri} complete")
 
 
 # --- Handle Command Line Arguments --------------------------------------------

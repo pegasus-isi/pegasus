@@ -60,7 +60,7 @@ def parse_args(args: List[str] = sys.argv[1:]) -> argparse.Namespace:
 
         if not is_valid or value < 0:
             raise argparse.ArgumentTypeError(
-                "interval {} must be a nonnegative integer".format(value)
+                f"interval {value} must be a nonnegative integer"
             )
 
         return value
@@ -130,7 +130,7 @@ def write_pid():
         pid = os.getpid()
         f.write(str(pid))
 
-        log.debug("started with PID: {}".format(pid))
+        log.debug(f"started with PID: {pid}")
 
 
 class PeriodicCheckpointNotifier(threading.Thread):
@@ -158,9 +158,7 @@ class PeriodicCheckpointNotifier(threading.Thread):
         Repeatedly sleep for the given interval, then notify checkpoint worker
         thread to start working upon waking up.
         """
-        self.log.debug(
-            "{} started with interval: {} seconds".format(self.name, self.interval)
-        )
+        self.log.debug(f"{self.name} started with interval: {self.interval} seconds")
         while True:
             time.sleep(self.interval)
             self.notify.set()
@@ -245,7 +243,7 @@ class CheckpointWorker(threading.Thread):
                 )
 
         CheckpointWorker.log.info(
-            "given patterns matched the following filenames: {}".format(matched)
+            f"given patterns matched the following filenames: {matched}"
         )
 
         return matched
@@ -272,9 +270,7 @@ class CheckpointWorker(threading.Thread):
                 checkpoint_size_in_mb, CHECKPOINT_FILENAME
             )
         )
-        CheckpointWorker.log.info(
-            "archive and gzip took {} seconds".format(end - start)
-        )
+        CheckpointWorker.log.info(f"archive and gzip took {end - start} seconds")
 
 
 if __name__ == "__main__":

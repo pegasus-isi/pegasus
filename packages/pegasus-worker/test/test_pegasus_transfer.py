@@ -175,13 +175,12 @@ class TestPegasusTransferInvocation:
                         "dest_urls": [
                             {
                                 "site_label": "local",
-                                "url": "file://"
-                                + str(temp_dir / "index{}.html".format(i)),
+                                "url": "file://" + str(temp_dir / f"index{i}.html"),
                             }
                         ],
                     }
                 )
-                downloaded_files.append("index{}.html".format(i))
+                downloaded_files.append(f"index{i}.html")
 
             sys.stdin = io.StringIO(json.dumps(xfers))
 
@@ -192,7 +191,7 @@ class TestPegasusTransferInvocation:
             assert is_successful == True
 
             logs = str(caplog.record_tuples)
-            assert "{} transfers loaded".format(NUM_XFERS) in logs
+            assert f"{NUM_XFERS} transfers loaded" in logs
             assert "All transfers completed" in logs
 
             for f in downloaded_files:
@@ -217,13 +216,12 @@ class TestPegasusTransferInvocation:
                         "dest_urls": [
                             {
                                 "site_label": "local",
-                                "url": "file://"
-                                + str(temp_dir / "index{}.html".format(i)),
+                                "url": "file://" + str(temp_dir / f"index{i}.html"),
                             }
                         ],
                     }
                 )
-                downloaded_files.append("index{}.html".format(i))
+                downloaded_files.append(f"index{i}.html")
 
             with tempfile.NamedTemporaryFile("w+", delete=True) as f:
                 f.write(json.dumps(xfers))
@@ -236,8 +234,8 @@ class TestPegasusTransferInvocation:
             assert is_successful == True
 
             logs = str(caplog.record_tuples)
-            assert "{} transfers loaded".format(NUM_XFERS) in logs
-            assert "Using {} threads for this set of transfers".format(8) in logs
+            assert f"{NUM_XFERS} transfers loaded" in logs
+            assert f"Using {8} threads for this set of transfers" in logs
             assert "All transfers completed" in logs
 
             for f in downloaded_files:

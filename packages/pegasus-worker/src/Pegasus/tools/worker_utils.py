@@ -83,7 +83,7 @@ class TimedCommand:
             # custom environment for the subshell
             sub_env = os.environ.copy()
             for key, value in self._env_overrides.items():
-                logger.debug("ENV override: {} = {}".format(key, value))
+                logger.debug(f"ENV override: {key} = {value}")
                 sub_env[key] = value
 
             self._process = subprocess.Popen(

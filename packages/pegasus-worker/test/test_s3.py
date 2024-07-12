@@ -189,7 +189,7 @@ def s3_client():
     os.environ["S3CFG"] = str(CFG_PATH)
     cfg = ConfigParser()
     if len(cfg.read(str(CFG_PATH))) != 1:
-        raise RuntimeError("Could not find {}".format(CFG_PATH))
+        raise RuntimeError(f"Could not find {CFG_PATH}")
 
     return boto3.client(
         "s3",
@@ -205,7 +205,7 @@ def get_s3_client():
     os.environ["S3CFG"] = str(CFG_PATH)
     cfg = ConfigParser()
     if len(cfg.read(str(CFG_PATH))) != 1:
-        raise RuntimeError("Could not find {}".format(CFG_PATH))
+        raise RuntimeError(f"Could not find {CFG_PATH}")
 
     return boto3.client(
         "s3",
@@ -306,8 +306,8 @@ class TestCp:
         parser, args = s3.parse_args(
             [
                 "cp",
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET2, test_file.name),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
+                f"s3://rynge@osgconnect/{BUCKET2}/{test_file.name}",
             ],
         )
         s3.cp(args)
@@ -351,8 +351,8 @@ class TestCp:
             [
                 "cp",
                 "--force",
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET2, test_file.name),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
+                f"s3://rynge@osgconnect/{BUCKET2}/{test_file.name}",
             ],
         )
         s3.cp(args)
@@ -389,8 +389,8 @@ class TestCp:
             [
                 "cp",
                 "--create-dest",
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET2, test_file.name),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
+                f"s3://rynge@osgconnect/{BUCKET2}/{test_file.name}",
             ],
         )
         s3.cp(args)
@@ -433,8 +433,8 @@ class TestCp:
                 "cp",
                 "--create-dest",
                 "--force",
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET2, test_file.name),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
+                f"s3://rynge@osgconnect/{BUCKET2}/{test_file.name}",
             ],
         )
         s3.cp(args)
@@ -476,9 +476,7 @@ class TestMkdir:
         BUCKET = "test-bucket"
 
         # pegasus-s3 mkdir s3://rynge@osgconnect/test-bucket
-        parser, args = s3.parse_args(
-            ["mkdir", "s3://rynge@osgconnect/{}".format(BUCKET)]
-        )
+        parser, args = s3.parse_args(["mkdir", f"s3://rynge@osgconnect/{BUCKET}"])
         s3.mkdir(args)
 
         # ensure test-bucket has been created
@@ -497,9 +495,7 @@ class TestMkdir:
         s3_client.create_bucket(Bucket=BUCKET)
 
         # pegasus-s3 mkdir s3://rynge@osgconnect/test-bucket
-        parser, args = s3.parse_args(
-            ["mkdir", "s3://rynge@osgconnect/{}".format(BUCKET)]
-        )
+        parser, args = s3.parse_args(["mkdir", f"s3://rynge@osgconnect/{BUCKET}"])
         s3.mkdir(args)
 
         # check that log message printed
@@ -548,14 +544,12 @@ class TestRm:
         try:
             s3_client.head_object(Bucket=BUCKET, Key=test_file.name)
         except botocore.exceptions.ClientError:
-            pytest.fail(
-                "Failed to upload test file: {} to bucket: {}".format(test_file, BUCKET)
-            )
+            pytest.fail(f"Failed to upload test file: {test_file} to bucket: {BUCKET}")
 
         # remove file
         # pegasus-s3 rm s3://rynge@osgconnect/test-bucket/test_file
         parser, args = s3.parse_args(
-            ["rm", "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name)]
+            ["rm", f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}"]
         )
         s3.rm(args)
 
@@ -578,20 +572,14 @@ class TestRm:
         # ensure file is NOT there before test
         try:
             s3_client.head_object(Bucket=BUCKET, Key=test_file.name)
-            pytest.fail(
-                "File: {} should not be in bucket: {}".format(test_file.name, BUCKET)
-            )
+            pytest.fail(f"File: {test_file.name} should not be in bucket: {BUCKET}")
         except botocore.exceptions.ClientError:
             pass
 
         # remove file
         # pegasus-s3 rm s3://rynge@osgconnect/test-bucket/test_file
         parser, args = s3.parse_args(
-            [
-                "rm",
-                "--force",
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
-            ]
+            ["rm", "--force", f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",]
         )
         s3.rm(args)
 
@@ -627,7 +615,7 @@ class TestRm:
         with rm_file.open("w") as fp:
             for b, keys in buckets_keys.items():
                 for k in keys:
-                    fp.write("s3://rynge@osgconnect/{}/{}\n".format(b, k.name))
+                    fp.write(f"s3://rynge@osgconnect/{b}/{k.name}\n")
 
         # remove file
         # pegasus-s3 rm s3://rynge@osgconnect/test-bucket/test_file
@@ -639,9 +627,7 @@ class TestRm:
             for k in keys:
                 try:
                     s3_client.head_object(Bucket=b, Key=k.name)
-                    pytest.fail(
-                        "Key: {} should not exist in Bucket: {}".format(k.name, b)
-                    )
+                    pytest.fail(f"Key: {k.name} should not exist in Bucket: {b}")
                 except botocore.exceptions.ClientError:
                     pass
 
@@ -680,7 +666,7 @@ class TestPut:
             [
                 "put",
                 str(test_file),
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
             ],
         )
         s3.put(args)
@@ -689,9 +675,7 @@ class TestPut:
         try:
             s3_client.head_object(Bucket=BUCKET, Key=test_file.name)
         except botocore.exceptions.ClientError:
-            pytest.fail(
-                "Key: {} should exist in Bucket: {}".format(test_file.name, BUCKET)
-            )
+            pytest.fail(f"Key: {test_file.name} should exist in Bucket: {BUCKET}")
 
         # cleanup bucket
         s3_client.delete_object(Bucket=BUCKET, Key=test_file.name)
@@ -703,11 +687,7 @@ class TestPut:
 
         # pegasus-s3 put test_file s3://rynge@osgconnect/test-bucket/test_file
         parser, args = s3.parse_args(
-            [
-                "put",
-                str(test_file),
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
-            ]
+            ["put", str(test_file), f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",]
         )
 
         with pytest.raises(Exception) as e:
@@ -734,7 +714,7 @@ class TestPut:
                 "put",
                 "--create-bucket",
                 str(test_file),
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
             ]
         )
         s3.put(args)
@@ -743,9 +723,7 @@ class TestPut:
         try:
             s3_client.head_object(Bucket=BUCKET, Key=test_file.name)
         except botocore.exceptions.ClientError:
-            pytest.fail(
-                "Key: {} should exist in Bucket: {}".format(test_file.name, BUCKET)
-            )
+            pytest.fail(f"Key: {test_file.name} should exist in Bucket: {BUCKET}")
 
         # cleanup
         s3_client.delete_object(Bucket=BUCKET, Key=test_file.name)
@@ -764,11 +742,7 @@ class TestPut:
         # upload file (key that already exists in bucket)
         # pegasus-s3 put test_file s3://rynge@osgconnect/test-bucket/test_file
         paser, args = s3.parse_args(
-            [
-                "put",
-                str(test_file),
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
-            ]
+            ["put", str(test_file), f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",]
         )
 
         with pytest.raises(Exception) as e:
@@ -797,7 +771,7 @@ class TestPut:
                 "put",
                 "--force",
                 str(test_file),
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
             ]
         )
         s3.put(args)
@@ -805,9 +779,7 @@ class TestPut:
         try:
             s3_client.head_object(Bucket=BUCKET, Key=test_file.name)
         except botocore.exceptions.ClientError:
-            pytest.fail(
-                "Key: {} should exist in Bucket: {}".format(test_file.name, BUCKET)
-            )
+            pytest.fail(f"Key: {test_file.name} should exist in Bucket: {BUCKET}")
 
         # cleanup
         s3_client.delete_object(Bucket=BUCKET, Key=test_file.name)
@@ -845,7 +817,7 @@ class TestGet:
         # get file
         # pegasus-s3 get s3://rynge@osgconnect/test-bucket/test_file
         parser, args = s3.parse_args(
-            ["get", "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name)]
+            ["get", f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}"]
         )
         s3.get(args)
 
@@ -872,7 +844,7 @@ class TestGet:
         parser, args = s3.parse_args(
             [
                 "get",
-                "s3://rynge@osgconnect/{}/{}".format(BUCKET, test_file.name),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
                 "new_test_file",
             ]
         )
