@@ -67,7 +67,7 @@ testpaths = ["test"]
 
 [tool.coverage.run]
 
-source = ["Pegasus"]
+source = ["src"]
 
 
 [build-system]
