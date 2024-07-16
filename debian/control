@@ -14,7 +14,6 @@ Build-Depends: debhelper (>= 9),
        python3-dev,
        python3-setuptools,
        python3-setuptools-scm,
-       r-base-dev,
        zlib1g-dev
 Standards-Version: 3.9.4
 X-Python3-Version: >= 3.6

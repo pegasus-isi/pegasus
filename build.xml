@@ -381,13 +381,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="compile-c" depends="setup,compile-pegasus-cluster,compile-pegasus-keg,compile-pegasus-kickstart" description="Compile C tools"/>
 
-  <target name="compile-r" description="Compile R Pegasus API">
-      <mkdir dir="${dist.share}/r"/>
-      <exec executable="./setup.sh" dir="packages/pegasus-dax-r/Pegasus" failonerror="true">
-        <arg line="${dist.share}/r" />
-      </exec>
-  </target>
-
   <target name="compile-java" depends="compile-vdl,compile-planner,compile-common,compile-junit" description="Copile all java code"/>
 
   <target name="compile" depends="compile-java,compile-c,compile-externals" description="Compile all code"/>
@@ -479,14 +472,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </javadoc>
   </target>
 
-  <target name="doc-r" depends="setup,compile-r" description="Generate r documentation">
-    <delete dir="${dist.doc}/wordpress/r"/>
-    <mkdir dir="${dist.doc}/wordpress/r"/>
-    <exec executable="./doc/r-docs" dir="${basedir}" failonerror="true">
-        <arg line="${dist.share}/r ${dist.doc}/wordpress/r" />
-    </exec>
-  </target>
-
   <target name="doc-schemas" depends="setup" description="Generate schemas">
     <!-- doc schemas -->
     <mkdir dir="${dist.doc}/schemas"/>
@@ -506,21 +491,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <fixcrlf srcdir="${dist.doc}/wordpress/schemas" includes="**/*.yml" eol="lf"/>
   </target>
 
-  <target name="doc" depends="setup,doc-user-guide,doc-java,doc-r,doc-schemas" description="Generate documentation"/>
+  <target name="doc" depends="setup,doc-user-guide,doc-java,doc-schemas" description="Generate documentation"/>
 
   <target name="dist-doc" depends="doc" description="Build documentation tarball">
     <tar destfile="dist/pegasus-doc-${pegasus.version}.tar.gz"
          basedir="dist" longfile="gnu" compression="gzip"
          includes="pegasus-${pegasus.version}/share/man/**,pegasus-${pegasus.version}/share/doc/**"/>
-  </target>
-
-  <target name="dist-r" depends="compile-r" description="Copy R DAX tarball to dist folder">
-      <copy preservelastmodified="true" todir="dist">
-          <fileset dir="${dist.share}/r" includes="*.tar.gz"/>
-          <mapper>
-            <mapper type="regexp" from="^(.*)\.tar\.gz" to="pegasus-r-\1.tar.gz"/>
-          </mapper>
-      </copy>
   </target>
 
   <target name="dist-worker" depends="setup,compile-c,compile-python,compile-externals" description="Build worker tarball">
@@ -556,7 +532,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist-common" depends="setup,jar,jar-aws-batch,compile-c,compile-python,compile-externals,compile-r">
+  <target name="dist-common" depends="setup,jar,jar-aws-batch,compile-c,compile-python,compile-externals">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">

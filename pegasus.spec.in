@@ -9,7 +9,7 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 
 Source:         pegasus-%{version}.tar.gz
 
-BuildRequires:  gcc, gcc-c++, javapackages-tools, make, openssl-devel, ant, R-devel, python3-devel, python3-setuptools
+BuildRequires:  gcc, gcc-c++, javapackages-tools, make, openssl-devel, ant, python3-devel, python3-setuptools
 Requires:       python3, condor >= 8.8, graphviz, perl-Getopt-Long
 
 %global debug_package %{nil}
