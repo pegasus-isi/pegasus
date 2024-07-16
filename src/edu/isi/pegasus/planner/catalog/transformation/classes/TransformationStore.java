@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import java.io.IOException;
 import java.util.Collection;
@@ -196,6 +197,9 @@ public class TransformationStore {
                                 + " refers to non existent container "
                                 + name);
             }
+
+            // PM-1945 check for consistency of container with executable name
+            this.sanityCheck(entry);
         }
     }
 
@@ -420,6 +424,56 @@ public class TransformationStore {
      */
     public boolean isEmpty() {
         return mTCStore.isEmpty();
+    }
+
+    /**
+     * Does a sanity check on the transformation catalog entry object w.r.t the container associated
+     * with it. This ensures that at runtime, there is no error, where container and executables are
+     * staged by the same name and clobber each other.
+     *
+     * @param entry the transformation catalog entry
+     */
+    public void sanityCheck(TransformationCatalogEntry entry) {
+        // PM-1945 sanity check to make sure transformation staged name
+        // does not clash with the container name
+        String stagedExecutableBasename =
+                new Job(
+                                entry.getLogicalNamespace(),
+                                entry.getLogicalName(),
+                                entry.getLogicalVersion())
+                        .getStagedExecutableBaseName();
+        Container c = entry.getContainer();
+        if (stagedExecutableBasename != null && c != null) {
+            String containerLFN = c.computeLFN(c.getImageURL());
+            if (containerLFN != null && containerLFN.equals(stagedExecutableBasename)) {
+                StringBuilder error = new StringBuilder();
+                /*
+                error.append("Container computed LFN").append(" ").
+                        append(containerLFN).append(" ").
+                        //append("for container").append("\n").
+                        //append( c).
+                        append("matches transformation staged executable basename").append(" ").
+                        append(stagedExecutableBasename).append(" ").
+                        append("in the transformation").
+                        append(entry);
+                */
+                error.append("Transformation staged executable basename")
+                        .append(" ")
+                        .append("'")
+                        .append(stagedExecutableBasename)
+                        .append("'")
+                        .append(" ")
+                        .append("matches associated container's computed LFN")
+                        .append(" ")
+                        .append("'")
+                        .append(containerLFN)
+                        .append("'")
+                        .append(" ")
+                        .append("in the transformation")
+                        .append(entry);
+                throw new RuntimeException(error.toString());
+            }
+        }
     }
 
     /**
