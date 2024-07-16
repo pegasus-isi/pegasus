@@ -285,7 +285,7 @@ macOS:
   - macOS-${VERSION}
   - shell
 
-Docs and R Package:
+Docs:
   <<: *retry-and-timeout
   stage: build
   image: pegasus/buildenv:rhel_9
@@ -296,11 +296,10 @@ Docs and R Package:
   #- yum install -y --enablerepo=devel git ant perl python3 python3-pip R-devel
   #- pip3 install tox
   script:
-  - ant dist-doc dist-r
+  - ant dist-doc
   artifacts:
     paths:
     - dist/pegasus-doc-*.tar.gz
-    - dist/pegasus-r-pegasus*.tar.gz
   dependencies: []
   tags:
   - docker
