@@ -467,6 +467,18 @@ public class Job extends Data implements GraphNodeContent {
     }
 
     /**
+     * Overloaded constructor
+     *
+     * @param namespace the transformation namespace
+     * @param name the transformation name
+     * @param version the transformation version
+     */
+    public Job(String namespace, String name, String version) {
+        this();
+        this.setTransformation(namespace, name, version);
+    }
+
+    /**
      * Returns a new copy of the Object.
      *
      * @return clone of the object.

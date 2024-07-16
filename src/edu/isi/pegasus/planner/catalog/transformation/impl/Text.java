@@ -545,6 +545,7 @@ public class Text extends Abstract implements TransformationCatalog {
      * Add single TCEntry object temporarily to the in memory Catalog. This is a hack to get around
      * for adding soft state entries to the TC
      *
+     * @param entry
      * @param tcentry Takes a single TransformationCatalogEntry object as input
      * @param write boolean enable write commits to backed catalog or not.
      * @throws Exception
@@ -552,6 +553,7 @@ public class Text extends Abstract implements TransformationCatalog {
      *     zero.
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
+    @Override
     public int insert(TransformationCatalogEntry entry, boolean write) throws Exception {
         /*if (this.addTCEntry(
                 entry.getLogicalNamespace(),
@@ -570,6 +572,7 @@ public class Text extends Abstract implements TransformationCatalog {
             throw new RuntimeException(
                     "Failed to add TransformationCatalogEntry " + entry.getLogicalName());
         }*/
+
         List<TransformationCatalogEntry> existing =
                 this.lookup(
                         entry.getLogicalNamespace(),
