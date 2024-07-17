@@ -2583,6 +2583,9 @@ class GSHandler(TransferHandlerBase):
 
         env = {}
 
+        # gsutil includes its own Python - make sure we don't interfer
+        env["PYTHONPATH"] = ""
+
         if "BOTO_CONFIG" in os.environ:
             env["BOTO_CONFIG"] = os.environ["BOTO_CONFIG"]
         key = "BOTO_CONFIG_" + site_name
