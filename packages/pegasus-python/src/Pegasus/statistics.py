@@ -2,6 +2,7 @@
 
 import atexit
 import logging
+import os
 import sys
 import typing as t
 from collections import namedtuple
@@ -26,7 +27,15 @@ format_seconds = stats_utils.format_seconds
 fstr = stats_utils.round_decimal_to_str
 
 
-def remove_file(path):
+def remove_file(path: t.Optional[str, os.PathLike]):
+    """
+    Remove a file.
+
+    Remove the file identified by the `path` from the file system.
+
+    :param path: The path of the file to be removed.
+    :type path: t.Optional[str, os.PathLike]
+    """
     try:
         Path(path).unlink()
     except FileNotFoundError:
@@ -34,13 +43,29 @@ def remove_file(path):
         log.error("Can't remove file {path} because it was not found")
 
 
-def istr(value):
-    """."""
+def istr(value: t.Any) -> str:
+    """
+    Return a str version of a number.
+
+    :param value: A value representing a number.
+    :type value: t.Any
+    :return: A `str` representing the number.
+    :rtype: str
+    """
     return "-" if value is None else str(value)
 
 
-def pstr(value, to=2):
-    """."""
+def pstr(value: t.Any, to: int = 2) -> str:
+    """
+    Return a percentage str of a number.
+
+    :param value: A value representing a number.
+    :type value: t.Any
+    :param to: The number of digits to round to, defaults to 2.
+    :type to: int, optional
+    :return: A `str` representing the percentage.
+    :rtype: str
+    """
     return "-" if value is None else stats_utils.round_decimal_to_str(value, to) + "%"
 
 
@@ -48,36 +73,35 @@ def pstr(value, to=2):
 class JobStatistics:
     """."""
 
-    #: Description
+    #: The name of the job.
     name: str = None
-    #: Description
+    #: The site where the job ran.
     site: str = None
-    #: Description
+    #: The actual duration of the job instance in seconds on the remote compute node.
     kickstart: float = None
-    #: Description
+    #: The multiplier factor specified by the user.
     multiplier_factor: int = None
-    #: Description
+    #: Kickstart time multiplied by the multiplier factor.
     kickstart_mult: float = None
-    #: Description
+    #: The remote cpu time computed as the stime + utime.
     remote_cpu_time: float = None
-    #: Description
+    #: The postscript time as reported by DAGMan.
     post: float = None
-    #: Description
+    #: The time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node.
     condor_delay: float = None
-    #: Description
+    #: The time between the remote Grid submission and start of remote execution. It is an estimate of the time job spent in the remote queue.
     resource: t.Optional[float] = None
-    #: Description
+    #: The time spent on the resource as seen by Condor DAGMan. Is always >= Kickstart.
     runtime: float = None
-    #: Description
-    #: Description
+    #: The stime taken for the completion of a clustered job.
     seqexec: t.Optional[float] = None
-    #: Description
+    #: The time difference between the time for the completion of a clustered job and sum of all the individual tasks Kickstart time.
     seqexec_delay: t.Optional[float] = None
-    #: Description
+    #: The job retry count.
     retry_count: int = 0
-    #: Description
+    #: The exitcode for this job.
     exitcode: int = None
-    #: Description
+    #: The name of the host where the job ran, as reported by Kickstart.
     hostname: str = None
 
     def get_formatted_statistics(self):
@@ -104,31 +128,31 @@ class JobStatistics:
 class TransformationStatistics:
     """."""
 
-    #: Description
+    #: The transformation name.
     transformation: str = None
-    #: Description
+    #: The transformation type, i.e., successful or failed
     type: str = None
-    #: Description
+    #: The number of times the invocations corresponding to the transformation was executed.
     count: int = None
-    #: Description
+    #: The minimum invocation runtime value corresponding to the transformation.
     min: float = None
-    #: Description
+    #: The maximum invocation runtime value corresponding to the transformation.
     max: float = None
-    #: Description
+    #: The mean of the invocation runtime corresponding to the transformation.
     avg: float = None
-    #: Description
+    #: The cumulative of invocation runtime corresponding to the transformation.
     sum: float = None
-    #: Description
+    #: The minimum of the max. resident set size (RSS) value corresponding to the transformation. In MB.
     min_maxrss: float = None
-    #: Description
+    #: The maximum of the max. resident set size (RSS) value corresponding to the transformation. In MB.
     max_maxrss: float = None
-    #: Description
+    #: The mean of the max. resident set size (RSS) value corresponding to the transformation. In MB.
     avg_maxrss: float = None
-    #: Description
+    #: The minimum of the average cpu utilization value corresponding to the transformation.
     min_avg_cpu: float = None
-    #: Description
+    #: The maximum of the average cpu utilization value corresponding to the transformation.
     max_avg_cpu: float = None
-    #: Description
+    #: The mean of the average cpu utilization value corresponding to the transformation.
     avg_avg_cpu: float = None
 
     def get_formatted_statistics(self):
@@ -1834,7 +1858,7 @@ class PegasusStatistics:
                 writer.writerow(content)
 
     def _cleanup(self):
-        """."""
+        """Close all open database sessions."""
         for _, ind_wf_stats in chain(self.wf_uuid_list, [(None, self.wf_stats)]):
             try:
                 if ind_wf_stats:
@@ -1885,6 +1909,8 @@ class PegasusStatistics:
             name = Path(self.output_dir) / f"{self.time_stats_file_name}.{extn}"
             click.echo("%-30s: %s" % ("Time statistics", name))
             # TODO: Add time-per-host.csv
+            # if extn == "csv":
+            #     click.echo("%-30s: %s" % ("Time statistics (per host)", name))
 
         if self.errors:
             self.log.critical(f"Failed to generate {self.errors} type(s) of statistics")
