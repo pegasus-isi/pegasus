@@ -14,8 +14,13 @@
 package edu.isi.pegasus.planner.catalog.transformation;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
@@ -310,6 +315,19 @@ public class TransformationCatalogEntry implements CatalogEntry {
             st += "NULL";
         }
         return st;
+    }
+
+    /**
+     * Returns a YAML representation of the object
+     *
+     * @return String
+     */
+    public String toYAML() throws JsonProcessingException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        return mapper.writeValueAsString(this);
     }
 
     /**

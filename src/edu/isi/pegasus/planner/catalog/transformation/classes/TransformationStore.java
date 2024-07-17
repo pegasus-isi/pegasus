@@ -469,8 +469,15 @@ public class TransformationStore {
                         .append(containerLFN)
                         .append("'")
                         .append(" ")
-                        .append("in the transformation")
-                        .append(entry);
+                        .append("in the transformation");
+
+                try {
+                    error.append(entry.toYAML());
+                    error.append("\n").append(c.toYAML());
+                } catch (JsonProcessingException ex) {
+                    // ignore exception and just revert to toString
+                    error.append(entry);
+                }
                 throw new RuntimeException(error.toString());
             }
         }
