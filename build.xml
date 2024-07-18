@@ -104,7 +104,7 @@
         <arg line="-m pip install -t ${dist.python-lib} --no-deps -U packages/@{name}"/>
       </exec>
       <mkdir dir="${dist.lib}/pegasus"/>
-      <symlink link="${dist.lib}/pegasus/python" resource="../../rpmi ${dist.python-lib.subdir}" overwrite="true"/>
+      <symlink link="${dist.lib}/pegasus/python" resource="../../${dist.python-lib.subdir}" overwrite="true"/>
     </sequential>
   </macrodef>
 
