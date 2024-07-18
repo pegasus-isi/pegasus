@@ -27,7 +27,7 @@ format_seconds = stats_utils.format_seconds
 fstr = stats_utils.round_decimal_to_str
 
 
-def remove_file(path: t.Optional[str, os.PathLike]):
+def remove_file(path: t.Union[str, os.PathLike]):
     """
     Remove a file.
 
@@ -176,6 +176,8 @@ class TransformationStatistics:
 # TODO: All compute methods to generate a dict.
 # TODO: Use utils.write_table.writetable method to write text tables, then remove col_sizes
 # TODO: Remove sys.exit and print statements
+# TODO: Add Docstrings
+# TODO: Add type hints
 
 
 class PegasusStatistics:
@@ -246,6 +248,7 @@ class PegasusStatistics:
     #: The file name for workflow time summary.
     workflow_summary_time_file_name: str = "summary-time"
     #: Legend for workflow summary time stats.
+    # TODO: Add space between `DAGMAN.In`
     workflow_summary_time_legends: str = """# Workflow wall time:
 #   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
