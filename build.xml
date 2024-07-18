@@ -79,6 +79,14 @@
   </exec>
   <echo>Python: ${dist.python}</echo>
 
+  <!-- Show pip3 version -->
+  <exec executable="${dist.python}"
+        outputproperty="dist.pip3"
+        failonerror="true">
+        <arg line="-m pip -V" />
+  </exec>
+  <echo>pip3: ${dist.pip3}</echo>
+
   <!-- Determine the system Python module location -->
   <exec executable="${basedir}/release-tools/python-modules-dir"
         outputproperty="dist.python-lib.subdir"
@@ -92,11 +100,11 @@
     <attribute name="name"/>
     <sequential>
       <mkdir dir="${dist.python-lib}"/>
-      <exec executable="${dist.python}" dir="packages/@{name}" failonerror="true">
-        <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
+      <exec executable="${dist.python}" failonerror="true">
+        <arg line="-m pip install -t ${dist.python-lib} --no-deps -U packages/@{name}"/>
       </exec>
-      <mkdir dir="${dist.lib}/pegasus/python"/>
-      <symlink link="${dist.lib}/pegasus/python/Pegasus" resource="../../../${dist.python-lib.subdir}/Pegasus" overwrite="true"/>
+      <mkdir dir="${dist.lib}/pegasus"/>
+      <symlink link="${dist.lib}/pegasus/python" resource="../../rpmi ${dist.python-lib.subdir}" overwrite="true"/>
     </sequential>
   </macrodef>
 
@@ -293,7 +301,8 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
   <target name="compile-externals" depends="setup" description="Compile external dependencies">
-    <exec executable="${make}" dir="src/externals" failonerror="true">
+    <exec executable="${dist.python}" dir="src" failonerror="true">
+      <arg line="-m pip install -t ../build/externals --no-deps -r requirements.txt"/>
     </exec>
   </target>
 
@@ -516,14 +525,14 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg value="${dist.bin}"/>
     </exec>
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
-      <fileset dir="lib/pegasus/externals/python">
-        <include name="**/boto3/**/*"/>
-        <include name="**/botocore/**/*"/>
-        <include name="**/jmespath/**/*"/>
-        <include name="**/dateutil/**/*"/>
-        <include name="**/s3transfer/**/*"/>
-        <include name="**/urllib3/**/*"/>
-        <include name="**/globus_sdk/**/*"/>
+      <fileset dir="build/externals">
+        <include name="boto3*/**/*"/>
+        <include name="botocore*/**/*"/>
+        <include name="jmespath*/**/*"/>
+        <include name="dateutil*/**/*"/>
+        <include name="s3transfer*/**/*"/>
+        <include name="urllib3*/**/*"/>
+        <include name="globus_sdk*/**/*"/>
         <include name="six"/>
         <include name="six.py"/>
       </fileset>
@@ -557,7 +566,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
     <!-- lib -->
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
-      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
+      <fileset dir="build/externals">
+        <exclude name="bin/**"/>
+      </fileset>
     </copy>
 
     <!-- share -->
@@ -694,7 +705,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
 
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
-      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
+      <fileset dir="build/externals">
+        <exclude name="bin/**"/>
+      </fileset>
     </copy>
 
     <mkdir dir="${junitreport.dir}"/>
