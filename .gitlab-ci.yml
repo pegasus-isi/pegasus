@@ -41,7 +41,7 @@ Lint:
   - env
   - \[ "${LANGUAGE}" = 'python' ] && pip3 install tox
   - apt update
-  - DEBIAN_FRONTEND=noninteractive apt install -y ant
+  - DEBIAN_FRONTEND=noninteractive apt install -y ant python3-pip
   script:
   - export bamboo_buildKey='value-irrelevant'
   - ant code-format-${LANGUAGE}
