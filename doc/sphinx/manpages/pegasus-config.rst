@@ -8,8 +8,8 @@ Can be used to find installed Pegasus tools and libraries.
 ::
 
       pegasus-config [-h] [--help] [-V] [--version] [--noeoln]
-                     [--perl-dump] [--perl-hash] [--python-dump] [--sh-dump]
-                     [--bin] [--conf] [--java] [--perl] [--python]
+                     [--python-dump] [--sh-dump]
+                     [--bin] [--conf] [--java] [--python]
                      [--python-externals] [--r] [--schema] [--classpath]
 
 
@@ -46,9 +46,6 @@ Options
 
 **--java**
    Print the directory containing the jars.
-
-**--perl**
-   Print the directory to include into your PERL5LIB.
 
 **--python**
    Print the directory to include into your PYTHONLIB.

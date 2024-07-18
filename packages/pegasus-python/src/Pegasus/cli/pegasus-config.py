@@ -14,7 +14,6 @@ def _python_hash(**kw):
         """pegasus_bin_dir = "%(bin_dir)s"
 pegasus_conf_dir = "%(conf_dir)s"
 pegasus_java_dir = "%(java_dir)s"
-pegasus_perl_dir = "%(perl_dir)s"
 pegasus_python_dir = "%(python_dir)s"
 pegasus_python_externals_dir = "%(python_externals_dir)s"
 pegasus_share_dir = "%(share_dir)s"
@@ -34,8 +33,6 @@ PEGASUS_CONF_DIR="%(conf_dir)s"
 export PEGASUS_CONF_DIR
 PEGASUS_JAVA_DIR="%(java_dir)s"
 export PEGASUS_JAVA_DIR
-PEGASUS_PERL_DIR="%(perl_dir)s"
-export PEGASUS_PERL_DIR
 PEGASUS_PYTHON_DIR="%(python_dir)s"
 export PEGASUS_PYTHON_DIR
 PEGASUS_PYTHON_EXTERNALS_DIR="%(python_externals_dir)s"
@@ -68,7 +65,6 @@ def _main(
     bin=False,
     conf=False,
     java=False,
-    perl=False,
     python=False,
     python_externals=False,
     schema=False,
@@ -93,7 +89,6 @@ def _main(
     conf_dir = join(base_dir, "etc")
     share_dir = join(base_dir, "share", "pegasus")
     java_dir = join(share_dir, "java")
-    perl_dir = join(base_dir, lib, "pegasus", "perl")
     python_dir = join(base_dir, python_lib)
     python_externals_dir = join(base_dir, lib, "pegasus", "externals", "python")
     schema_dir = join(share_dir, "schema")
@@ -129,7 +124,6 @@ def _main(
             bin_dir=bin_dir,
             conf_dir=conf_dir,
             java_dir=java_dir,
-            perl_dir=perl_dir,
             python_dir=python_dir,
             python_externals_dir=python_externals_dir,
             share_dir=share_dir,
@@ -140,7 +134,6 @@ def _main(
             bin_dir=bin_dir,
             conf_dir=conf_dir,
             java_dir=java_dir,
-            perl_dir=perl_dir,
             python_dir=python_dir,
             python_externals_dir=python_externals_dir,
             share_dir=share_dir,
@@ -153,8 +146,6 @@ def _main(
         print(conf_dir, end=eol)
     elif java:
         print(java_dir, end=eol)
-    elif perl:
-        print(perl_dir, end=eol)
     elif python:
         print(python_dir, end=eol)
     elif python_externals:
@@ -189,7 +180,9 @@ def main():
         help="Dumps all settings in python format.",
     )
     parser.add_argument(
-        "--sh-dump", action="store_true", help="Dumps all settings in shell format.",
+        "--sh-dump",
+        action="store_true",
+        help="Dumps all settings in shell format.",
     )
 
     parser.add_argument(
@@ -203,12 +196,9 @@ def main():
         help="Print the directory containing configuration files.",
     )
     parser.add_argument(
-        "--java", action="store_true", help="Print the directory containing the jars.",
-    )
-    parser.add_argument(
-        "--perl",
+        "--java",
         action="store_true",
-        help="Print the directory to include into your PERL5LIB.",
+        help="Print the directory containing the jars.",
     )
     parser.add_argument(
         "--python",
@@ -221,7 +211,9 @@ def main():
         help="Print the directory to the external Python libraries.",
     )
     parser.add_argument(
-        "--schema", action="store_true", help="Print the directory containing schemas.",
+        "--schema",
+        action="store_true",
+        help="Print the directory containing schemas.",
     )
     parser.add_argument(
         "--r",
