@@ -44,7 +44,6 @@ def find_namespace_packages(where):
                 continue
 
             pkgs.append(os.path.join(root, pkg).replace("/", "."))
-    print("--", pkgs)
     return pkgs
 
 
