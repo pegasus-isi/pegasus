@@ -19,7 +19,6 @@ RUN dnf -y install --allowerasing --nobest \
      java-11-openjdk-devel \
      langpacks-en \
      nano \
-     perl-Getopt-Long \
      python3-devel \
      python3-GitPython \
      python3-pika \

@@ -8,45 +8,6 @@ from glob import glob
 from os.path import abspath, dirname, exists, join, normpath
 
 
-def _perl_dump(**kw):
-    """."""
-    print(
-        """my $pegasus_bin_dir = "%(bin_dir)s";
-my $pegasus_conf_dir = "%(conf_dir)s";
-my $pegasus_java_dir = "%(java_dir)s";
-my $pegasus_perl_dir = "%(perl_dir)s";
-my $pegasus_python_dir = "%(python_dir)s";
-my $pegasus_python_externals_dir = "%(python_externals_dir)s";
-my $pegasus_share_dir = "%(share_dir)s";
-my $pegasus_schema_dir = "%(schema_dir)s";
-unshift(@INC, $pegasus_perl_dir);
-"""
-        % kw,
-        end="",
-    )
-
-
-def _perl_hash(**kw):
-    """."""
-    print(
-        """use vars qw(%%pegasus);
-%%pegasus =
-    ( bin => "%(conf_dir)s"
-    , conf => "%(conf_dir)s"
-    , java => "%(java_dir)s"
-    , perl => "%(perl_dir)s"
-    , python => "%(python_dir)s"
-    , pyexts => "%(python_externals_dir)s"
-    , share => "%(share_dir)s"
-    , schema => "%(schema_dir)s"
-    );
-unshift( @INC, $pegasus{perl} );
-"""
-        % kw,
-        end="",
-    )
-
-
 def _python_hash(**kw):
     """."""
     print(
@@ -102,8 +63,6 @@ def _get_bin_dir(exe):
 
 def _main(
     version=False,
-    perl_dump=False,
-    perl_hash=False,
     python_hash=False,
     sh_dump=False,
     bin=False,
@@ -165,28 +124,6 @@ def _main(
 
     if version:
         print(_version, end=eol)
-    elif perl_dump:
-        _perl_dump(
-            bin_dir=bin_dir,
-            conf_dir=conf_dir,
-            java_dir=java_dir,
-            perl_dir=perl_dir,
-            python_dir=python_dir,
-            python_externals_dir=python_externals_dir,
-            share_dir=share_dir,
-            schema_dir=schema_dir,
-        )
-    elif perl_hash:
-        _perl_hash(
-            bin_dir=bin_dir,
-            conf_dir=conf_dir,
-            java_dir=java_dir,
-            perl_dir=perl_dir,
-            python_dir=python_dir,
-            python_externals_dir=python_externals_dir,
-            share_dir=share_dir,
-            schema_dir=schema_dir,
-        )
     elif python_hash:
         _python_hash(
             bin_dir=bin_dir,
@@ -246,16 +183,6 @@ def main():
         help="Print Pegasus version information and exit.",
     )
 
-    parser.add_argument(
-        "--perl-dump",
-        action="store_true",
-        help="Dumps all settings in perl format as separate variables.",
-    )
-    parser.add_argument(
-        "--perl-hash",
-        action="store_true",
-        help="Dumps all settings in perl format as single perl hash.",
-    )
     parser.add_argument(
         "--python-hash",
         action="store_true",
