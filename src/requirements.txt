@@ -14,7 +14,7 @@ chardet==3.0.4
 click==7.1.1
 dataclasses==0.8;python_version=='3.6'
 globus-sdk==3.39.0;python_version>='3.7'
-idna==2.9
+idna==3.7
 itsdangerous==1.1.0
 jmespath==0.9.5
 pamela==1.0.0
