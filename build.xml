@@ -91,7 +91,6 @@
   <exec executable="${basedir}/release-tools/python-modules-dir"
         outputproperty="dist.python-lib.subdir"
         failonerror="true">
-    <arg value="${dist.lib.subdir}"/>
   </exec>
   <echo>Python library subdir: ${dist.python-lib.subdir}</echo>
   <property name="dist.python-lib" location="${dist.dir}/${dist.python-lib.subdir}"/>
@@ -101,10 +100,10 @@
     <sequential>
       <mkdir dir="${dist.python-lib}"/>
       <exec executable="${dist.python}" failonerror="true">
-        <arg line="-m pip install -t ${dist.python-lib} --no-deps -U packages/@{name}"/>
+        <arg line="-m pip install --prefix ${dist.dir} --no-deps packages/@{name}"/>
       </exec>
       <mkdir dir="${dist.lib}/pegasus"/>
-      <symlink link="${dist.lib}/pegasus/python" resource="../../${dist.python-lib.subdir}" overwrite="true"/>
+      <symlink link="${dist.dir}/${dist.lib.subdir}/pegasus/python" resource="../../${dist.python-lib.subdir}" overwrite="true"/>
     </sequential>
   </macrodef>
 
@@ -283,9 +282,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="compile-python" depends="compile-pegasus-common,compile-pegasus-api,compile-pegasus-worker,compile-pegasus-python">
     <!-- Update pegasus-config -->
-    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PEGASUS_VERSION@" value="${pegasus.version}" />
-    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@LIBDIR@" value="${dist.lib.subdir}" />
-    <replace file="${dist.python-lib}/Pegasus/cli/pegasus-config.py" token="@PYTHON_LIBDIR@" value="${dist.lib.subdir}/pegasus/python" />
+    <replace file="${dist.dir}/${dist.python-lib.subdir}/Pegasus/cli/pegasus-config.py" token="@PEGASUS_VERSION@" value="${pegasus.version}" />
+    <replace file="${dist.dir}/${dist.python-lib.subdir}/Pegasus/cli/pegasus-config.py" token="@LIBDIR@" value="${dist.lib.subdir}" />
+    <replace file="${dist.dir}/${dist.python-lib.subdir}/Pegasus/cli/pegasus-config.py" token="@PYTHON_LIBDIR@" value="${dist.lib.subdir}/pegasus/python" />
     <!-- replace sometimes changes permissions - make sure pegasus-config.py permissions are correct -->
     <chmod perm="0644" type="file">
       <fileset dir="${dist.python-lib}/Pegasus/cli">
