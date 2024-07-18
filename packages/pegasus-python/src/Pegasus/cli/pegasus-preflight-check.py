@@ -8,8 +8,8 @@ import sys
 
 success = True
 
-if not sys.version_info >= (3, 5):
-    sys.stderr.write("Pegasus requires Python 3.5 or above\n")
+if not sys.version_info >= (3, 6):
+    sys.stderr.write("Pegasus requires Python 3.6 or above\n")
     sys.exit(1)
 
 try:
@@ -25,6 +25,17 @@ try:
     import git  # noqa
 except Exception:
     sys.stderr.write("Pegasus requires the Python3 GitPython module to be installed\n")
+    sys.stderr.write(
+        "Please install it via your OS package manager, via pip, or activate a venv which includes the module.\n"
+    )
+    success = False
+
+try:
+    import dataclasses  # noqa
+except Exception:
+    sys.stderr.write(
+        "Pegasus requires the Python3 dataclasses module to be installed\n"
+    )
     sys.stderr.write(
         "Please install it via your OS package manager, via pip, or activate a venv which includes the module.\n"
     )
