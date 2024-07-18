@@ -32,12 +32,6 @@ Options
 **-V**; \ **--version**
    Prints Pegasus version information
 
-**--perl-dump**
-   Dumps all settings in perl format as separate variables.
-
-**--perl-hash**
-   Dumps all settings in perl format as single perl hash.
-
 **--python-dump**
    Dumps all settings in python format.
 
@@ -94,32 +88,4 @@ To set the same path inside Python:
 
    config = subprocess.Popen("pegasus-config --python-dump", stdout=subprocess.PIPE, shell=True).communicate()[0]
    exec config
-
-To set the PERL5LIB variable in your shell for using the Perl DAX API:
-
-::
-
-   export PERL5LIB=`pegasus-config --perl`
-
-To set the same path inside Perl:
-
-.. code:: perl
-
-   eval `pegasus-config --perl-dump`;
-   die("Unable to eval pegasus-config output: $@") if $@;
-
-will set variables a number of lexically local-scoped **my** variables
-with prefix "pegasus\_" and expand Perl’s search path for this script.
-
-Alternatively, you can fail early and collect all Pegasus-related
-variables into a single global ``%pegasus`` variable for convenience:
-
-.. code:: perl
-
-   BEGIN {
-       eval `pegasus-config --perl-hash`;
-       die("Unable to eval pegasus-config output: $@") if $@;
-   }
-
-
 
