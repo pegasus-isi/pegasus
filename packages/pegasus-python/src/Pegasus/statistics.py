@@ -614,7 +614,7 @@ class PegasusStatistics:
         multiple_wf: bool = False,
         is_pmc: bool = False,
         is_uuid: bool = False,
-        submit_dirs: t.Union[str, t.List[str]] = [],
+        submit_dirs: t.Sequence[str] = [],
     ):
         """."""
         self.log = logging.getLogger("pegasus-statistics")
@@ -628,8 +628,8 @@ class PegasusStatistics:
         self.multiple_wf = multiple_wf
         self.is_pmc = is_pmc
         self.is_uuid = is_uuid
-        self.submit_dirs = submit_dirs or []
-        self.wf_uuids: t.Union[str, list] = []
+        self.submit_dirs: t.Union[str, t.Sequence[str]] = submit_dirs or []
+        self.wf_uuids: t.Union[str, t.Sequence[str]] = []
 
         self.wf_uuid_list: t.Sequence[t.Tuple[str, StampedeStatistics]] = []
         self.wf_stats: t.Any = None
@@ -866,13 +866,18 @@ class PegasusStatistics:
                 sys.exit(1)
 
         self.log.info("DB URL is: %s" % self.output_db_url)
-        self.log.info("workflow UUID is: %s" % ", ".join(self.wf_uuids))
+        _uuids = (
+            self.wf_uuids
+            if isinstance(self.wf_uuids, str)
+            else ", ".join(self.wf_uuids)
+        )
+        self.log.info(f"Workflow UUID is: {_uuids}")
 
     def _initialize_output_dir(self):
         """."""
         if self.output_dir:
-            self.output_dir = Path(self.output_dir)
             delete_if_exists = False
+            self.output_dir = Path(self.output_dir)
         else:
             delete_if_exists = True
             self.output_dir = Path(self.submit_dirs, self.default_output_dir)

@@ -138,7 +138,7 @@ def pegasus_statistics(
     multiple_wf: bool = False,
     is_pmc: bool = False,
     is_uuid: bool = False,
-    submit_dirs: t.Union[str, t.List[str]] = [],
+    submit_dirs: t.Sequence[str] = [],
 ):
     """A tool to generate statistics about the workflow run."""
     s = PegasusStatistics(
