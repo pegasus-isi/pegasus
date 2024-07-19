@@ -5,6 +5,7 @@ Usage: pegasus-newstatistics [options] [[submitdir ..] | [workflow_uuid ..]]
 
 """
 
+import logging
 import typing as t
 
 import click
@@ -122,19 +123,14 @@ def _arg_split(ctx, param, value):
     is_flag=True,
     help="Set if the positional arguments are wf uuids",
 )
-@click.argument(
-    "submit-dirs",
-    required=False,
-    nargs=-1,
-    type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
-)
+@click.argument("submit-dirs", required=False, nargs=-1)
 @click.pass_context
 def pegasus_statistics(
     ctx,
     output_dir: str = PegasusStatistics.default_output_dir,
     filetype: str = PegasusStatistics.file_type_txt,
     config_properties=None,
-    statistics_level: str = "summary",
+    statistics_level: set = {"summary"},
     time_filter: str = "day",
     ignore_db_inconsistency: bool = False,
     verbose: int = 0,
@@ -161,6 +157,7 @@ def pegasus_statistics(
         s(ctx, verbose, quiet)
     except Exception as e:
         click.echo(f"Error: {e}")
+        logging.debug(e, exc_info=True)
 
 
 if __name__ == "__main__":

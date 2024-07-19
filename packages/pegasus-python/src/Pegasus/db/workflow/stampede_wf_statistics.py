@@ -2,10 +2,25 @@ __author__ = "Rajiv Mayani"
 
 import logging
 
+from sqlalchemy import orm
+from sqlalchemy.sql.expression import and_, case, cast, distinct, func, not_, or_
+from sqlalchemy.types import Float, Integer
+
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.errors import StampedeDBNotFoundError
-from Pegasus.db.schema import *
+from Pegasus.db.schema import (
+    Host,
+    IntegrityMetrics,
+    Invocation,
+    Job,
+    JobInstance,
+    Jobstate,
+    Tag,
+    Task,
+    Workflow,
+    Workflowstate,
+)
 
 
 # Main stats class.
@@ -629,6 +644,9 @@ class StampedeWorkflowStatistics:
         """
         q = self.session.query(
             Invocation.transformation,
+            case([(Invocation.exitcode == 0, "successful")], else_="failed").label(
+                "type"
+            ),
             func.count(Invocation.invocation_id).label("count"),
             cast(
                 func.min(Invocation.remote_duration * JobInstance.multiplier_factor),
@@ -652,6 +670,14 @@ class StampedeWorkflowStatistics:
                 func.sum(Invocation.remote_duration * JobInstance.multiplier_factor),
                 Float,
             ).label("sum"),
+            # maxrss
+            func.min(Invocation.maxrss).label("min_maxrss"),
+            func.max(Invocation.maxrss).label("max_maxrss"),
+            cast(func.avg(Invocation.maxrss), Float,).label("avg_maxrss"),
+            # avg_cpu
+            cast(func.min(Invocation.avg_cpu), Float,).label("min_avg_cpu"),
+            cast(func.max(Invocation.avg_cpu), Float,).label("max_avg_cpu"),
+            cast(func.avg(Invocation.avg_cpu), Float,).label("avg_avg_cpu"),
         )
         q = q.filter(Workflow.wf_id == Invocation.wf_id)
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)

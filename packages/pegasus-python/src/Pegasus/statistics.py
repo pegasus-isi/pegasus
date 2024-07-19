@@ -866,11 +866,12 @@ class PegasusStatistics:
                 sys.exit(1)
 
         self.log.info("DB URL is: %s" % self.output_db_url)
-        self.log.info("workflow UUID is: %s" % self.wf_uuids)
+        self.log.info("workflow UUID is: %s" % ", ".join(self.wf_uuids))
 
     def _initialize_output_dir(self):
         """."""
         if self.output_dir:
+            self.output_dir = Path(self.output_dir)
             delete_if_exists = False
         else:
             delete_if_exists = True
