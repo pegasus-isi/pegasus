@@ -101,7 +101,7 @@
     <sequential>
       <mkdir dir="${dist.python-lib}"/>
       <exec executable="mktemp" failonerror="true" outputproperty="target.dir">
-        <arg line="--directory"/>
+        <arg line="-d"/>
       </exec>
       <exec executable="${dist.python}" failonerror="true">
         <arg line="-m pip install --target ${target.dir} --no-deps packages/@{name}"/>
