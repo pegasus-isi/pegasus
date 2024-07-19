@@ -793,9 +793,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="${make}" dir="packages/pegasus-mpi-cluster" failonerror="false">
       <arg line="distclean"/>
     </exec>
-    <exec executable="${make}" dir="src/externals" failonerror="false">
-      <arg line="clean"/>
-    </exec>
     <exec executable="${make}" dir="doc/sphinx" failonerror="false">
       <arg line="clean"/>
     </exec>
