@@ -4,19 +4,32 @@
 # modules - note that we are using the python in /usr/bin
 # for this, and not the one in the users environment
 
-PYTHON=$($(dirname $0)/get-system-python)
+SYSLIB="$1"
 
-# pip 9.0.3 from /usr/lib/python3.6/site-packages (python 3.6)
-# Extract        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-PIP_LOCATION=$(${PYTHON} -m pip -V | awk '{print $4}')
-
-# Strip out trailing pip dir from path, if present
-echo $PIP_LOCATION | grep "pip$" --quiet
-if [ $? -eq 0 ]; then
-    PIP_LOCATION=`dirname $PIP_LOCATION`
+if [ "$(uname -s)" == "Darwin" ]; then
+    echo "$SYSLIB/python/dist-packages"
+    exit 0
 fi
 
-# Get path relative to the Python prefix
-PYTHON_PREFIX=$(${PYTHON} -c "import sys; print('${PIP_LOCATION}'.replace(sys.prefix, '').lstrip('/'))")
+PYTHON=$($(dirname $0)/get-system-python)
 
-echo ${PYTHON_PREFIX}
+VERSION=`$PYTHON -V 2>&1 | sed -e 's/^.* \([0-9]\.[0-9][0-9]\?\).*$/\1/'`
+
+# default
+FINAL_LOCATION="$SYSLIB/python$VERSION/dist-packages"
+
+for LOCATION in \
+    "/usr/$SYSLIB/python$VERSION/dist-packages" \
+    "/usr/$SYSLIB/python$VERSION/site-packages" \
+    "/Library/Python/$VERSION/site-packages" \
+; do
+    if [ -e "$LOCATION" ]; then
+        FINAL_LOCATION="$LOCATION"
+        break
+    fi
+done
+
+# remote the prefix
+FINAL_LOCATION=`echo "$FINAL_LOCATION" | sed -e 's/^\/usr//' | sed -e 's:^/*::'`
+
+echo $FINAL_LOCATION

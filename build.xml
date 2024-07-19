@@ -91,6 +91,7 @@
   <exec executable="${basedir}/release-tools/python-modules-dir"
         outputproperty="dist.python-lib.subdir"
         failonerror="true">
+    <arg value="${dist.lib.subdir}"/>
   </exec>
   <echo>Python library subdir: ${dist.python-lib.subdir}</echo>
   <property name="dist.python-lib" location="${dist.dir}/${dist.python-lib.subdir}"/>
@@ -99,11 +100,18 @@
     <attribute name="name"/>
     <sequential>
       <mkdir dir="${dist.python-lib}"/>
-      <exec executable="${dist.python}" failonerror="true">
-        <arg line="-m pip install --prefix ${dist.dir} --no-deps packages/@{name}"/>
+      <exec executable="mktemp" failonerror="true" outputproperty="target.dir">
+        <arg line="--directory"/>
       </exec>
+      <exec executable="${dist.python}" failonerror="true">
+        <arg line="-m pip install --target ${target.dir} --no-deps packages/@{name}"/>
+      </exec>
+      <copy preservelastmodified="true" todir="${dist.python-lib}">
+        <fileset dir="${target.dir}"/>
+      </copy>
+      <delete dir="${target.dir}"/>
       <mkdir dir="${dist.lib}/pegasus"/>
-      <symlink link="${dist.dir}/${dist.lib.subdir}/pegasus/python" resource="../../${dist.python-lib.subdir}" overwrite="true"/>
+      <symlink link="${dist.lib}/pegasus/python" resource="../../${dist.python-lib.subdir}" overwrite="true"/>
     </sequential>
   </macrodef>
 
