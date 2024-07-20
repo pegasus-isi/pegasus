@@ -1,6 +1,7 @@
 """Test Pegasus statistics."""
 
 import pytest
+from pathlib import Path
 from click.testing import CliRunner
 
 from Pegasus.braindump import Braindump
@@ -33,7 +34,11 @@ def test_initialize_empty(submit_dirs, multiple_wf, expected):
 
 
 @pytest.mark.parametrize(
-    "submit_dirs, multiple_wf", [(["a"], False), (["a"], True),],
+    "submit_dirs, multiple_wf",
+    [
+        (["a"], False),
+        (["a"], True),
+    ],
 )
 def test_initialize_single(caplog, submit_dirs, multiple_wf):
     p = PegasusStatistics(submit_dirs=submit_dirs, multiple_wf=multiple_wf)
@@ -49,7 +54,11 @@ def test_initialize_single(caplog, submit_dirs, multiple_wf):
 
 
 @pytest.mark.parametrize(
-    "submit_dirs, multiple_wf", [(["a", "b"], False), (["a", "b"], True),],
+    "submit_dirs, multiple_wf",
+    [
+        (["a", "b"], False),
+        (["a", "b"], True),
+    ],
 )
 def test_initialize_multiple(caplog, submit_dirs, multiple_wf):
     p = PegasusStatistics(submit_dirs=submit_dirs, multiple_wf=multiple_wf)
@@ -284,7 +293,11 @@ def test_get_clustering_type(mocker, caplog, submit_dirs, expected, expected_log
 
 
 @pytest.mark.parametrize(
-    "name, value", [("is_uuid", True), ("submit_dirs", "*"),],
+    "name, value",
+    [
+        ("is_uuid", True),
+        ("submit_dirs", "*"),
+    ],
 )
 def test_get_workflow_db_url_conf(mocker, name, value):
     mocker.patch(
@@ -299,7 +312,11 @@ def test_get_workflow_db_url_conf(mocker, name, value):
 
 
 @pytest.mark.parametrize(
-    "name, value", [("is_uuid", True), ("submit_dirs", "*"),],
+    "name, value",
+    [
+        ("is_uuid", True),
+        ("submit_dirs", "*"),
+    ],
 )
 def test_get_workflow_db_url_conf_fail(mocker, caplog, name, value):
     mocker.patch(
@@ -378,7 +395,8 @@ def test_get_workflow_db_url_conf_single_fail(mocker, caplog):
 
 
 @pytest.mark.parametrize(
-    "output_dir", ["statistics", None],
+    "output_dir",
+    ["statistics", None],
 )
 def test_initialize_output_dir(mocker, output_dir):
     m = mocker.patch("Pegasus.tools.utils.create_directory")
@@ -429,3 +447,76 @@ def test_help():
 #     runner = CliRunner()
 #     result = runner.invoke(pegasus_statistics, submit_dirs)
 #     assert result.exit_code == 0
+
+
+def test_single_uuid_workflow():
+    runner = CliRunner()
+    directory = Path(__file__).parent.parent
+    db = directory / "service/monitoring/monitoring-rest-api-master.db"
+
+    with runner.isolated_filesystem():
+        with Path("pegasus.properties").open("w") as props:
+            props.write(f"pegasus.monitord.output = sqlite:///{db}")
+
+        result = runner.invoke(
+            pegasus_statistics,
+            "-vvvvv --conf pegasus.properties -s all -o . --isuuid 9f366372-2798-4f6d-a48d-f6c94470d3ed",
+        )
+        assert result.exit_code == 0
+        assert Path("summary.txt").exists()
+        assert Path("workflow.txt").exists()
+        assert Path("jobs.txt").exists()
+        assert Path("breakdown.txt").exists()
+        assert Path("integrity.txt").exists()
+        assert Path("time.txt").exists()
+
+
+def test_multiple_uuid_workflow():
+    runner = CliRunner()
+    directory = Path(__file__).parent.parent
+    db = directory / "service/monitoring/monitoring-rest-api-master.db"
+
+    with runner.isolated_filesystem():
+        with Path("pegasus.properties").open("w") as props:
+            props.write(f"pegasus.monitord.output = sqlite:///{db}")
+
+        result = runner.invoke(
+            pegasus_statistics,
+            "-vvvvv --conf pegasus.properties -s all -o . --isuuid -f csv "
+            "3d515ced-7d44-4236-800b-4bcb6bc37da8 "
+            "41920a57-7882-4990-854e-658b7a797745 "
+            "7193de8c-a28d-4eca-b576-1b1c3c4f668b "
+            "9f366372-2798-4f6d-a48d-f6c94470d3ed "
+            "fce67b41-df67-4b3c-8fa4-d77e6e2b9769",
+        )
+        assert result.exit_code == 0
+        assert Path("summary.csv").exists()
+        assert Path("summary-time.csv").exists()
+        assert Path("workflow.csv").exists()
+        assert Path("breakdown.csv").exists()
+        assert Path("integrity.csv").exists()
+        assert Path("time.csv").exists()
+        assert Path("time-per-host.csv").exists()
+
+
+def test_multiple_wf_no_submit_dir():
+    runner = CliRunner()
+    directory = Path(__file__).parent.parent
+    db = directory / "service/monitoring/monitoring-rest-api-master.db"
+
+    with runner.isolated_filesystem():
+        with Path("pegasus.properties").open("w") as props:
+            props.write(f"pegasus.monitord.output = sqlite:///{db}")
+
+        result = runner.invoke(
+            pegasus_statistics,
+            "-vvvvv --conf pegasus.properties -s all -o . --multiple-wf -f csv",
+        )
+        assert result.exit_code == 0
+        assert Path("summary.csv").exists()
+        assert Path("summary-time.csv").exists()
+        assert Path("workflow.csv").exists()
+        assert Path("breakdown.csv").exists()
+        assert Path("integrity.csv").exists()
+        assert Path("time.csv").exists()
+        assert Path("time-per-host.csv").exists()
