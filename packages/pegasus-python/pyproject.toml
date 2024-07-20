@@ -64,6 +64,9 @@ exclude                = [
 pythonpath = ["src"]
 testpaths = ["test"]
 
+"resource-path.directory-name-tests" = "test"
+"resource-path.directory-name-test-resources" = "resources"
+
 
 [tool.coverage.run]
 

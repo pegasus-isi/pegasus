@@ -16,7 +16,9 @@ class NoAuthFlaskTestCase:
     @staticmethod
     def pre_callable():
         directory = os.path.dirname(__file__)
-        db = os.path.join(directory, "monitoring-rest-api-master.db")
+        db = os.path.join(
+            directory, "../../resources/monitoring-db/", "monitoring-rest-api-master.db"
+        )
         g.master_db_url = "sqlite:///%s" % db
         g.stampede_db_url = "sqlite:///%s" % db
 
