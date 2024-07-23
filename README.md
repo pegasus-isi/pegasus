@@ -69,16 +69,16 @@ of data used and produced, and which software was used with which parameters.
 Getting Started
 ---------------
 
-You can find more information about Pegasus on the [Pegasus Website](http://pegasus.isi.edu).
+You can find more information about Pegasus on the [Pegasus Website](https://pegasus.isi.edu).
 
-Pegasus has an extensive [User Guide](http://pegasus.isi.edu/documentation/)
+Pegasus has an extensive [User Guide](https://pegasus.isi.edu/documentation/)
 that documents how to create, plan, and monitor workflows.
 
 We recommend you start by completing the Pegasus Tutorial from [Chapter 3 of the
 Pegasus User Guide](https://pegasus.isi.edu/documentation/user-guide/tutorial.html).
 
 The easiest way to install Pegasus is to use one of the binary packages
-available on the [Pegasus downloads page](http://pegasus.isi.edu/downloads).
+available on the [Pegasus downloads page](https://pegasus.isi.edu/downloads).
 Consult [Chapter 2 of the Pegasus User Guide](https://pegasus.isi.edu/documentation/user-guide/installation.html)
 for more information about installing Pegasus from binary packages.
 
@@ -111,8 +111,7 @@ In order to build Pegasus from source, make sure you have the following installe
 
 * Git
 * Java 8 or higher
-* Python 3.5 or higher
-* R
+* Python 3.6 or higher
 * Ant
 * gcc
 * g++
