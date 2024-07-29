@@ -62,9 +62,9 @@ class JobLogRecord:
 
     def __str__(self):
         if self.job_name is not None:
-            return "{} {} {}".format(self.ts_string(), self.job_name, self.event)
+            return f"{self.ts_string()} {self.job_name} {self.event}"
         else:
-            return "{} {}".format(self.ts_string(), self.event)
+            return f"{self.ts_string()} {self.event}"
 
 
 class JobLog:
@@ -103,7 +103,7 @@ class JobLog:
 
     def parse_timestamp(self, date, hms):
         year = datetime.datetime.now().year
-        timestamp = "{}/{} {}".format(year, date, hms)
+        timestamp = f"{year}/{date} {hms}"
         return time.mktime(time.strptime(timestamp, "%Y/%m/%d %H:%M:%S"))
 
     def extract_dag_node(self, lines):

@@ -52,7 +52,7 @@ class Entity:
         return self.simulation.time()
 
     def log(self, message):
-        log.debug("{}@{:0.3f} {}".format(self.name, self.time(), message))
+        log.debug(f"{self.name}@{self.time():0.3f} {message}")
 
 
 class Simulation:

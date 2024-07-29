@@ -102,7 +102,7 @@ class Graph:
         def traverse_back_ref(dest):
             while dest in back_ref:
                 src = back_ref[dest]
-                log.debug("Back Ref: src -> dest = {} -> {}".format(src, dest))
+                log.debug(f"Back Ref: src -> dest = {src} -> {dest}")
                 joins.insert(0, (src, dest))
                 dest = src
 

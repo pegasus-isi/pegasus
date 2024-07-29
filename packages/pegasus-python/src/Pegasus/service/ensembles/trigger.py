@@ -391,7 +391,7 @@ class WebFilePatternTrigger(TriggerThread):
         workflow_script: str,
         workflow_args: Optional[List[str]] = None,
         timeout: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         TriggerThread.__init__(
             self,
@@ -443,11 +443,9 @@ class WebFilePatternTrigger(TriggerThread):
                     cp = subprocess.run(cmd, stderr=subprocess.PIPE)
 
                     if cp.returncode == 0:
-                        self.log.info("executed cmd: {}".format(cmd))
+                        self.log.info(f"executed cmd: {cmd}")
                     else:
-                        self.log.error(
-                            "encountered error executing cmd: {}".format(cmd)
-                        )
+                        self.log.error(f"encountered error executing cmd: {cmd}")
                         stderr = (
                             cp.stderr.decode()
                             if isinstance(cp.stderr, bytes)

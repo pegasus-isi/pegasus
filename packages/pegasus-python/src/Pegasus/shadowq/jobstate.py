@@ -73,9 +73,9 @@ class JSLogRecord:
 
     def __str__(self):
         if self.job_name is not None:
-            return "{} {} {}".format(self.ts, self.job_name, self.event)
+            return f"{self.ts} {self.job_name} {self.event}"
         else:
-            return "{} {}".format(self.ts, self.event)
+            return f"{self.ts} {self.event}"
 
 
 class JSLog:

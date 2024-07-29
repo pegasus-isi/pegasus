@@ -258,10 +258,10 @@ class OnlineMonitord:
         value["l1misses"] = message.get("l1misses", None)
 
         try:
-            log.debug("Sending record to DB: {} --> {}".format(event, value))
+            log.debug(f"Sending record to DB: {event} --> {value}")
             self.event_sink.send(event, value)
         except Exception as e:
-            log.error("Error sending event: {} --> {}".format(event, value))
+            log.error(f"Error sending event: {event} --> {value}")
             log.exception(e)
 
     def close(self):

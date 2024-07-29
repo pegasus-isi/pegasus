@@ -726,8 +726,7 @@ class WebFilePatternTriggerCommand(EnsembleClientCommand):
         }
 
         response = self.post(
-            "/ensembles/{e}/triggers/web_file_pattern".format(e=self.args.ensemble),
-            data=request,
+            f"/ensembles/{self.args.ensemble}/triggers/web_file_pattern", data=request,
         )
 
         print(response.json()["message"])

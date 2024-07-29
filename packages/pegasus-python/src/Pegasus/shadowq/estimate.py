@@ -30,7 +30,7 @@ def estimate_jobstate(jslog_file):
 
     for name, j in jobs.items():
         if hasattr(j, "finish"):
-            print("{} {:f}".format(name, j.finish - j.start))
+            print(f"{name} {j.finish - j.start:f}")
         else:
             print("%s not finished" % (name))
 
