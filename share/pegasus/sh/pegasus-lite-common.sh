@@ -72,6 +72,42 @@ pegasus_lite_log()
 }
 
 
+pegasus_lite_download()
+{
+    src=$1
+    dst=$2
+
+    if (which curl) >/dev/null 2>&1; then
+        curl -f -s -S --insecure -o "$dst" "$src"
+        rc=$?
+        if [ $rc != 0 ]; then
+            # if http_proxy is set, try without the proxy
+            if [ "X$http_proxy" != "X" ]; then
+                (unset http_proxy && curl -f -s -S --insecure -o "$dst" "$src")
+                rc=$?
+            fi
+        fi
+        return $rc
+    fi
+
+    if (which wget) >/dev/null 2>&1; then
+        wget -q -O "$dst" "$src"
+        rc=$?
+        if [ $rc != 0 ]; then
+            # if http_proxy is set, try without the proxy
+            if [ "X$http_proxy" != "X" ]; then
+                (unset http_proxy && wget -q -O pegasus-worker.tar.gz "$dst" "$src")
+                rc=$?
+            fi
+        fi
+        return $rc
+    fi
+
+    pegasus_lite_log "ERROR: Unable to find curl/wget"
+    return 1
+}
+
+
 pegasus_lite_worker_package()
 {
     # many ways of providing worker package
@@ -234,7 +270,7 @@ pegasus_lite_internal_wp_download()
     url="${url}-${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
     url="${url}-${system}.tar.gz"
     pegasus_lite_log "Downloading Pegasus worker package from $url"
-    curl -f -s -S --insecure -o pegasus-worker.tar.gz "$url" || wget -q -O pegasus-worker.tar.gz "$url"
+    pegasus_lite_download "$url" pegasus-worker.tar.gz
     if ! (test -e pegasus-worker.tar.gz && tar xzf pegasus-worker.tar.gz); then
         pegasus_lite_log "ERROR: Unable to download a worker package for this platform ($system)."
         pegasus_lite_log "If you want to use the same package as on the submit host, try the following setting in your properties file:"
@@ -248,7 +284,7 @@ pegasus_lite_internal_wp_download()
         url="${url}-${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
         url="${url}-${pegasus_lite_default_system}.tar.gz"
         pegasus_lite_log "Downloading Pegasus worker package from $url"
-        curl -f -s -S --insecure -o pegasus-worker.tar.gz "$url" || wget -q -O pegasus-worker.tar.gz "$url"
+        pegasus_lite_download "$url" pegasus-worker.tar.gz
         if ! (test -e pegasus-worker.tar.gz && tar xzf pegasus-worker.tar.gz); then
             pegasus_lite_log "ERROR: Unable to download the default worker package."
             return 1
