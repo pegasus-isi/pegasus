@@ -96,7 +96,7 @@ pegasus_lite_download()
         if [ $rc != 0 ]; then
             # if http_proxy is set, try without the proxy
             if [ "X$http_proxy" != "X" ]; then
-                (unset http_proxy && wget -q -O pegasus-worker.tar.gz "$dst" "$src")
+                (unset http_proxy && wget -q -O "$dst" "$src")
                 rc=$?
             fi
         fi
