@@ -96,7 +96,7 @@ pegasus_lite_download()
         if [ $rc != 0 ]; then
             # if http_proxy is set, try without the proxy
             if [ "X$http_proxy" != "X" ]; then
-                (unset http_proxy && wget -q -O pegasus-worker.tar.gz "$dst" "$src")
+                (unset http_proxy && wget -q -O "$dst" "$src")
                 rc=$?
             fi
         fi
@@ -482,12 +482,12 @@ singularity_init()
     fi
 
     if [ "X$singularity_exec" = "X" ]; then
-	pegasus_lite_log "Unable to find apptainer or singularity executable"	
+	pegasus_lite_log "Unable to find apptainer or singularity executable"
 	return 1
     fi
     pegasus_lite_log "Using $singularity_exec to run the container"
     export singularity_exec
-    
+
     container_init
 
     # for singularity we don't need to load anything like in docker.
