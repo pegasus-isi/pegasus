@@ -1,7 +1,0 @@
-name = Pegasus Publications
-description = Displays Pegasus publications from a bibtex file
-package = Pegasus
-version = 7.x-0.1
-core = 7.x
-files[] = bibtex.php
-configure = admin/pegasus/publications/settings

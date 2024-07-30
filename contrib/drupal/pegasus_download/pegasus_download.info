@@ -1,6 +1,0 @@
-name = Pegasus Download
-description = Records information about Pegasus downloads
-package = Pegasus
-version = 7.x-0.2
-configure = admin/pegasus/download/settings
-core = 7.x
