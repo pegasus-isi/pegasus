@@ -77,7 +77,7 @@ pegasus_lite_download()
     src=$1
     dst=$2
 
-    if (which curl) >/dev/null 2>&1; then
+    if (curl --version) >/dev/null 2>&1; then
         curl -f -s -S --insecure -o "$dst" "$src"
         rc=$?
         if [ $rc != 0 ]; then
@@ -90,7 +90,7 @@ pegasus_lite_download()
         return $rc
     fi
 
-    if (which wget) >/dev/null 2>&1; then
+    if (wget --version) >/dev/null 2>&1; then
         wget -q -O "$dst" "$src"
         rc=$?
         if [ $rc != 0 ]; then
