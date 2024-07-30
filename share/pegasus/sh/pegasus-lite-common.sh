@@ -361,10 +361,10 @@ pegasus_lite_setup_work_dir()
             pegasus_lite_log "  Workdir is $d - $free_human available"
 
             # PM-968 if provided, copy lof files from the HTCondor iwd to the PegasusLite work dir
-            find $pegasus_lite_start_dir -name \*.lof -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
+            find $pegasus_lite_start_dir -type d -not -readable -prune -o -name \*.lof -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
 
             # PM-1190 if provided, copy meta files from the HTCondor iwd to the PegasusLite work dir
-            find $pegasus_lite_start_dir -name \*.meta -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
+            find $pegasus_lite_start_dir -type d -not -readable -prune -o -name \*.meta -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
 
             pegasus_lite_log "Changing cwd to $pegasus_lite_work_dir"
             cd $pegasus_lite_work_dir
