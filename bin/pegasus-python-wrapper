@@ -88,6 +88,9 @@ if [ "x$PEGASUS_UPDATE_PYTHONPATH" != "x0" ]; then
         PYTHONPATH="${NEW_PYTHONPATH}${PYTHONPATH:+:}${PYTHONPATH}"
         export PYTHONPATH
     fi
+    # let the tools know we have a valid PYTHONPATH
+    PEGASUS_PYTHONPATH_SET=1
+    export PEGASUS_PYTHONPATH_SET
 else
     # make sure we carry the setting forward
     export PEGASUS_UPDATE_PYTHONPATH
