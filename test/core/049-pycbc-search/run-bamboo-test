@@ -33,9 +33,10 @@ echo
 cd pycbc/examples/search/
 
 # we are using mixed environment from our conda env
-# make sure to set PEGASUS_UPDATE_PYTHONPAT
 source /scitech/shared/projects/LIGO/test-wf/env/bin/activate
-export PEGASUS_UPDATE_PYTHONPATH=0
+
+# Not needed anymore: make sure to set PEGASUS_UPDATE_PYTHONPAT
+#export PEGASUS_UPDATE_PYTHONPATH=0
 
 chmod +x ./master.sh
 ./master.sh
