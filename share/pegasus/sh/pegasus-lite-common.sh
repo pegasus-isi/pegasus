@@ -304,20 +304,33 @@ pegasus_lite_setup_work_dir()
 {
     #check if there are any lof files to transfer
     set +e
-    ls $pegasus_lite_start_dir/*lof > /dev/null 2>&1
+    ls $pegasus_lite_start_dir/*.lof > /dev/null 2>&1
     if [ "$?" = "0" ]; then
         found_lof="true"
+    fi
+    set -e
+
+    #check if there are any meta files to transfer
+    set +e
+    ls $pegasus_lite_start_dir/*.meta > /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        found_meta="true"
     fi
     set -e
 
     if [ "x$pegasus_lite_work_dir" != "x" ]; then
         pegasus_lite_log "Not creating a new work directory as it is already set to $pegasus_lite_work_dir"
         
-        if [ "x$found_lof" != "x" ]; then 
-            if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
-                 #PM-1021 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
+        if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
+	    if [ "x$found_lof" != "x" ]; then 
+		# PM-968 PM-1021 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
                 pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
-                cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+                cp $pegasus_lite_start_dir/*.lof $pegasus_lite_work_dir
+            fi
+	    if [ "x$found_meta" != "x" ]; then 
+		# PM-1190 PM-1021 copy all meta files from Condor scratch dir to directory where pegasus lite runs the job
+                pegasus_lite_log "Copying meta files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
+                cp $pegasus_lite_start_dir/*.meta $pegasus_lite_work_dir
             fi
         fi
 
@@ -360,22 +373,21 @@ pegasus_lite_setup_work_dir()
             export pegasus_lite_work_dir_created
             pegasus_lite_log "  Workdir is $d - $free_human available"
 
-            # PM-968 if provided, copy lof files from the HTCondor iwd to the PegasusLite work dir
-            find $pegasus_lite_start_dir -type d -not -readable -prune -o -name \*.lof -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
-
-            # PM-1190 if provided, copy meta files from the HTCondor iwd to the PegasusLite work dir
-            find $pegasus_lite_start_dir -type d -not -readable -prune -o -name \*.meta -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
-
             pegasus_lite_log "Changing cwd to $pegasus_lite_work_dir"
             cd $pegasus_lite_work_dir
            
-            if [ "x$found_lof" != "x" ]; then
-                #PM-1021 make sure pegasus_lite_work_dir and start dir are not same
-                if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
-                    # copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
+            # PM-1021 make sure pegasus_lite_work_dir and start dir are not same
+            if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
+		if [ "x$found_lof" != "x" ]; then
+                    # PM-968 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
                     pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
-                    cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+                    cp $pegasus_lite_start_dir/*.lof $pegasus_lite_work_dir
                 fi
+		if [ "x$found_meta" != "x" ]; then 
+		    # PM-1190, PM-1021 copy all meta files from Condor scratch dir to directory where pegasus lite runs the job
+                    pegasus_lite_log "Copying meta files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
+                    cp $pegasus_lite_start_dir/*.meta $pegasus_lite_work_dir
+		fi
             fi
             return 0
         fi
