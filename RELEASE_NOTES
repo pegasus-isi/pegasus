@@ -1,4 +1,57 @@
 ===============================
+Release Notes for Pegasus 5.0.8
+===============================
+
+We are happy to announce the release of Pegasus 5.0.8, which is a minor
+bug fix release for Pegasus 5.0 branch. 
+
+The release can be downloaded from https://pegasus.isi.edu/downloads
+
+JIRA items
+----------------------------
+Exhaustive list of features, improvements and bug fixes can be found below.
+Pegasus JIRA is accessible at https://jira.isi.edu/
+
+New Features and Improvements
+-----------------------------
+
+1) [PM-1939] – Planner complains on http transfers if the user does not have
+               a credentials file setup
+	       
+2) [PM-1940] – NPE for planning a workflow with sub workflows, where sub
+               workflow job requires data from http endpoint
+	       
+3) [PM-1944] – Ability to specify a wrapper/launcher for containerized jobs
+               in PegasusLite
+	       
+4) [PM-1946] – Improve Auth Token Acquisition For Globus Transfers
+
+5) [PM-1948] – Document deployment options on HPC centers
+
+Bugs Fixed
+----------
+
+1) [PM-1941] – illegal state exception while using inplace cleanup
+
+2) [PM-1943] – mixed binary/conda installs broken
+
+3) [PM-1945] – transformation and container with same name causes error at runtime
+
+4) [PM-1947] – workflow restart fails because of error reading a tc file in /tmp
+
+5) [PM-1949] – NPE while planning a sub workflow
+
+6) [PM-1951] – For CLIs, factor out Pegaus Python module from system dir
+
+7) [PM-1953] – Monitord Failing with ModuleNotFoundError.
+
+8) [PM-1954] – Importing six.moves raises ModuleNotFoundError on Python 3.12
+
+9) [PM-1958] – pegasus lite jobs fail at CIT if there is a lost+found dir in
+               the condor scratch dir
+
+
+===============================
 Release Notes for Pegasus 5.0.7
 ===============================
 
