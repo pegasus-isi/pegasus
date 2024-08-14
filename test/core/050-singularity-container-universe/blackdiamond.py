@@ -27,7 +27,7 @@ TOP_DIR = Path.cwd()
 WORK_DIR = TOP_DIR / "work" / TEST_NAME
 
 try:
-    Path.mkdir(WORK_DIR)
+    Path.mkdir( WORK_DIR, parents=True)
 except FileExistsError:
     pass
 
@@ -168,7 +168,7 @@ try:
         sites=[CONDOR_POOL],
         staging_site=[STAGING],
         output_sites=[LOCAL, CONDOR_POOL],
-        cluster="horizontal",
+        cluster=["horizontal"],
         force=True,
     )
 except PegasusClientError as e:

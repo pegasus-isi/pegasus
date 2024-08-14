@@ -1,12 +1,8 @@
-pegasus.catalog.site.file=./conf/sites.yml
+pegasus.catalog.site.file=./sites.yml
 pegasus.catalog.site YAML
 pegasus.data.configuration = nonsharedfs
 
-pegasus.catalog.replica  File
-pegasus.catalog.replica.file ./conf/rc.data
-
-pegasus.catalog.transformation.file ./conf/tc.yml
-
+pegasus.catalog.transformation.file ./tc.yml
 pegasus.catalog.transformation YAML
 
 
