@@ -60,7 +60,7 @@ SiteCatalog().add_sites(
         ),
     )
     .add_pegasus_profile(clusters_num=1)
-    .add_env("SSH_PRIVATE_KEY", " /scitech/shared/home/bamboo/.ssh/workflow_id_rsa"),
+    .add_env("SSH_PRIVATE_KEY", "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"),
     Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_directories(
         Directory(Directory.SHARED_SCRATCH, str(condorpool_scratch_dir))
@@ -167,7 +167,7 @@ try:
         verbose=3,
         sites=[CONDOR_POOL],
         staging_site=[STAGING],
-        output_sites=[LOCAL, CONDOR_POOL],
+        output_sites=[LOCAL],
         cluster=["horizontal"],
         force=True,
     )
