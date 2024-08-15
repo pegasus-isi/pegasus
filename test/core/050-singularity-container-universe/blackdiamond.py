@@ -94,7 +94,7 @@ print(
 
 base_container = Container(
                   "osgvo-el7",
-                  Container.DOCKER,
+                  Container.SINGULARITY,
                   image_site="local",
                   image="scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
                   bypass_staging=False
