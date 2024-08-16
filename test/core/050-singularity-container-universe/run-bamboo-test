@@ -14,7 +14,7 @@ PLAN_OUT=$TOPDIR/$TESTNAME/plan.out
 ./blackdiamond.py $TESTNAME | tee $PLAN_OUT
 
 
-WORK_DIR=`cat $PLAN_OUT | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
+WORK_DIR=`cat $PLAN_OUT | grep -E "^pegasus-run" | sed -E 's/.*pegasus-run[ ]+//'`
 if [ "x$WORK_DIR" = "x" ]; then
     echo "Unable to determine work directory from the planner output"
     exit 1
