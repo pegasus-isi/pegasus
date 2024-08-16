@@ -11,7 +11,7 @@ echo "Running test $TOPDIR -> $TESTNAME"
 # generate the dax
 export PYTHONPATH=`pegasus-config --python`
 PLAN_OUT=$TOPDIR/$TESTNAME/plan.out
-./blackdiamond.py $TESTNAME | tee $PLAN_OUT
+./blackdiamond.py $TESTNAME 2>&1 | tee $PLAN_OUT
 
 
 WORK_DIR=`cat $PLAN_OUT | grep -E "^pegasus-run" | sed -E 's/.*pegasus-run[ ]+//'`
