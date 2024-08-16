@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+'1;95;0c#!/usr/bin/env python3
 
 import logging
 import sys
@@ -107,6 +107,7 @@ preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").ad
         is_stageable=True,
         arch=Arch.X86_64,
         os_type=OS.LINUX,
+        container=base_container
     )
 )
 
@@ -117,6 +118,7 @@ findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_s
         is_stageable=True,
         arch=Arch.X86_64,
         os_type=OS.LINUX,
+        container=base_container
     )
 )
 
