@@ -3,6 +3,7 @@
 import logging
 import sys
 import os
+import json
 
 from pathlib import Path
 from datetime import datetime
@@ -36,10 +37,18 @@ except FileExistsError:
 PEGASUS_CONF="{}/pegasusrc".format(TEST_NAME)
 print(PEGASUS_CONF)
 
+# pick the test config file
+config = json.load(open("{}/test.config".format(TEST_NAME)))
+
 # --- Sites --------------------------------------------------------------------
 LOCAL = "local"
-CONDOR_POOL = "condorpool"
-STAGING="cartman-data"
+COMPUTE = "condorpool"
+STAGING=config["STAGING"] if "STAGING" in config else "cartman-data"
+if not STAGING:
+    # empty value in test.config
+    STAGING = COMPUTE
+
+print("Staging site for the test is {}".format(STAGING))
 
 shared_scratch_dir = str(WORK_DIR / "shared-scratch")
 staging_scratch_dir= str(WORK_DIR / "staging-site" / "scratch")
@@ -61,7 +70,7 @@ SiteCatalog().add_sites(
     )
     .add_pegasus_profile(clusters_num=1)
     .add_env("SSH_PRIVATE_KEY", "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"),
-    Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
+    Site(COMPUTE, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_directories(
         Directory(Directory.SHARED_SCRATCH, str(condorpool_scratch_dir))
         .add_file_servers(FileServer("webdavs://workflow.isi.edu/" + str(condorpool_scratch_dir), Operation.ALL))
@@ -102,7 +111,7 @@ base_container = Container(
 
 preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        CONDOR_POOL,
+        COMPUTE,
         PEGASUS_LOCATION,
         is_stageable=True,
         arch=Arch.X86_64,
@@ -113,7 +122,7 @@ preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").ad
 
 findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        CONDOR_POOL,
+        COMPUTE,
         PEGASUS_LOCATION,
         is_stageable=True,
         arch=Arch.X86_64,
@@ -124,7 +133,7 @@ findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_s
 
 analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        CONDOR_POOL,
+        COMPUTE,
         PEGASUS_LOCATION,
         is_stageable=True,
         arch=Arch.X86_64,
@@ -167,7 +176,7 @@ try:
         conf=PEGASUS_CONF,
         dir="{}/dags".format(WORK_DIR),
         verbose=3,
-        sites=[CONDOR_POOL],
+        sites=[COMPUTE],
         staging_site=[STAGING],
         output_sites=[LOCAL],
         cluster=["horizontal"],
