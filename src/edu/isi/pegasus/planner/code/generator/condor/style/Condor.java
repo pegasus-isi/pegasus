@@ -188,10 +188,18 @@ public class Condor extends Abstract {
         // Karan Jan 28, 2008
         job.condorVariables.construct("universe", universe);
 
-        if (universe.equals("container")) {
+        if (universe.equals(CONTAINER_UNIVERSE)) {
             // PM-1950 container universe is same as vanilla universe
             // at this point
-            universe = "vanilla";
+            universe = VANILLA_UNIVERSE;
+
+            // PM-1950 for all auxillary jobs even if the universe is set
+            // to container (can be the case when set as a profile in the site catalog)
+            // we ensure that the job universe is set to vanilla in the
+            // condor submit file
+            if (job.getJobType() != Job.COMPUTE_JOB) {
+                job.condorVariables.construct("universe", universe);
+            }
         }
 
         if (universe.equalsIgnoreCase(Condor.VANILLA_UNIVERSE)
