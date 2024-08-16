@@ -47,7 +47,7 @@ STAGING=config["STAGING"] if "STAGING" in config else "cartman-data"
 if not STAGING:
     # empty value in test.config
     STAGING = COMPUTE
-STAGING=str(STAGING)
+
 print("Staging site for the test is {}".format(STAGING))
 
 shared_scratch_dir = str(WORK_DIR / "shared-scratch")
@@ -177,7 +177,7 @@ try:
         dir="{}/dags".format(WORK_DIR),
         verbose=3,
         sites=[COMPUTE],
-        staging_site=[STAGING],
+        staging_sites={COMPUTE: STAGING},
         output_sites=[LOCAL],
         cluster=["horizontal"],
         force=True,
