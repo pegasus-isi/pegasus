@@ -47,7 +47,7 @@ STAGING=config["STAGING"] if "STAGING" in config else "cartman-data"
 if not STAGING:
     # empty value in test.config
     STAGING = COMPUTE
-
+STAGING=str(STAGING)
 print("Staging site for the test is {}".format(STAGING))
 
 shared_scratch_dir = str(WORK_DIR / "shared-scratch")
@@ -78,7 +78,7 @@ SiteCatalog().add_sites(
     .add_pegasus_profile(style="condor")
     .add_pegasus_profile(clusters_num=1)
     .add_condor_profile(universe="container"),
-    Site(STAGING, arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
+    Site("cartman-data", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
         Directory(Directory.SHARED_SCRATCH, staging_scratch_dir).add_file_servers(
             FileServer("scp://bamboo@bamboo.isi.edu/" + staging_scratch_dir, Operation.ALL))
         ),
