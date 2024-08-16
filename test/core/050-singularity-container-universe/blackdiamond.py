@@ -1,4 +1,4 @@
-'1;95;0c#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 import logging
 import sys
