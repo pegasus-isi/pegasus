@@ -456,6 +456,8 @@ Workflow Tests:
       - 048-black-deep-condorio-local
       - 048-ligo-getenv
       - 049-pycbc-search
+      - 050-singularity-container-universe nonsharedfs
+      - 050-singularity-container-universe nonsharedfs-shared 
       - blackdiamond pl-condorio
       - blackdiamond pl-condorio-local
       - blackdiamond pl-pt
