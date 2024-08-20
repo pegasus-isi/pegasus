@@ -448,6 +448,61 @@ in the same folder as the installation above, only add ``bash``
 before ``$bls_opt_tmp_req_file >> $bls_tmp_file 2> /dev/null`` line.
 
 
+Debugging Job Submissions to local HPC
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+HTCondor translates the job description in the condor submit file
+to a local resource manager system (LRMS) specific (SLURM, SGE, PBS etc)
+job submit file when submitting the job to local HPC cluster.
+
+The best way to debug these job submissions, is to get HTCondor to save
+the generated batch scheduler specific files for your jobs.
+
+If this is your first time, you will need to create the following
+directories
+
+::
+
+    $ mkdir ~/.blah
+    $ mkdir ~/blah_debug
+
+Then, add the following to the ``user.config`` file in ~/.blah directory.
+``~/.blah/user.config``:
+
+::
+
+    blah_debug_save_submit_info=~/blah_debug
+
+
+Now for each job in your workflow, you will see a job specific
+temp directory in ~/blah_debug directory with submit.script file
+
+For example
+
+::
+
+    $ ls ~/blah_debug/bl_GYm3lL.debug/
+    $ submit.script
+
+You can inspect the above file, to make sure that correct
+scheduler specific attributes have been set for your job.
+The *submit.script* file can be submitted to the local HPC scheduler,
+using the usual job submit command such as `sbatch` for SLURM.
+
+A handy primer of various HPC scheduler specific commands can be found
+`here <https://oit.ua.edu/wp-content/uploads/2020/12/scheduler_commands_cheatsheet-2020-ally.pdf>`_.
+
+If you want to tinker, or hardcode any extra attributes to appear in your
+jobs, that cannot be expressed via Pegasus profiles in the table above, you
+can copy the ``<lrms>_local_submit_attributes.sh`` from your blahp directory
+of your HTCondor install, and place it in ``~/.blah`` directory.
+Replace <lrms> with your batch scheduler such as slurm|sge|pbs etc.
+
+::
+
+    ~/.blah/<lrms>_local_submit_attributes.sh, if it exists, replaces the main submit attributes script.
+
+
 .. _hpc_userspace:
 
 HPC Clusters - User Install
