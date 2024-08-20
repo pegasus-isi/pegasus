@@ -503,6 +503,10 @@ Replace <lrms> with your batch scheduler such as slurm|sge|pbs etc.
     ~/.blah/<lrms>_local_submit_attributes.sh, if it exists, replaces the main submit attributes script.
 
 
+The above is pretty useful, when HTCondor as been installed as system install on
+the cluster, and the users cannot edit <lrms>_local_submit_attributes.sh in the
+install.
+
 .. _hpc_userspace:
 
 HPC Clusters - User Install
