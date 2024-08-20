@@ -496,12 +496,16 @@ If you want to tinker, or hardcode any extra attributes to appear in your
 jobs, that cannot be expressed via Pegasus profiles in the table above, you
 can copy the ``<lrms>_local_submit_attributes.sh`` from your blahp directory
 of your HTCondor install, and place it in ``~/.blah`` directory.
-Replace <lrms> with your batch scheduler such as slurm|sge|pbs etc.
 
-::
 
-    ~/.blah/<lrms>_local_submit_attributes.sh, if it exists, replaces the main submit attributes script.
+The ``~/.blah/<lrms>_local_submit_attributes.sh``, if it exists, replaces
+the main submit attributes script. Replace <lrms> with your batch scheduler
+such as slurm|sge|pbs etc.
 
+
+The above is pretty useful, when HTCondor as been installed as system install on
+the cluster, and the users cannot edit <lrms>_local_submit_attributes.sh in the
+install.
 
 .. _hpc_userspace:
 
