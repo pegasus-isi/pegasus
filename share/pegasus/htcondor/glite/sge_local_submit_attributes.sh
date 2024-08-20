@@ -70,7 +70,9 @@ if [ "X${PER_PROCESS_MEMORY}" != "X" ]; then
     # (NOTE: This is memory per processor slot. So if you ask for 2 processors total memory will be 2 X hvmem_value)
     #  hard limit of the maximum amount of virtual memory available on every host assigned to the job.
     value=`strip_quotes $PER_PROCESS_MEMORY`
-    echo "#$ -l h_vmem=${value}"
+
+    # PM-1959 pegasus profile key memory is always in MB. SGE requires an explicit suffix
+    echo "#$ -l h_vmem=${value}M"
 fi
 
 #if [ "X${$TOTAL_MEMORY}" != "X" ]; then

@@ -149,6 +149,7 @@ public class GLite extends Abstract {
      * Convenience method to retrieve the batch system associated with a grid_resource entry.
      *
      * @param job
+     * @param gridResource
      * @return the batch system. If not found returns null
      */
     public static final String getBatchSystem(Job job, String gridResource) {
