@@ -9,7 +9,7 @@ from Pegasus.braindump import Braindump
 from Pegasus.db.connection import ConnectionError
 
 pegasus_statistics_pkg = __import__(
-    "Pegasus.cli.pegasus-newstatistics", fromlist=["pegasus_statistics"]
+    "Pegasus.cli.pegasus-statistics", fromlist=["pegasus_statistics"]
 )
 
 pegasus_statistics = pegasus_statistics_pkg.pegasus_statistics

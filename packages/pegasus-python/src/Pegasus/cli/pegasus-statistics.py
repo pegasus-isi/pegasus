@@ -1,7 +1,7 @@
 """
 Pegasus utility for reporting successful and failed jobs
 
-Usage: pegasus-newstatistics [options] [[submitdir ..] | [workflow_uuid ..]]
+Usage: pegasus-statistics [options] [[submitdir ..] | [workflow_uuid ..]]
 
 """
 
