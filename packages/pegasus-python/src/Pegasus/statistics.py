@@ -1005,10 +1005,8 @@ class PegasusStatistics:
     def _compute_integrity_summary_statistics(self):
         """."""
         # print_workflow_summary
-        total_failed_jobs_integrity = (
-            self.wf_stats.get_total_succeeded_failed_jobs_status(
-                classify_error=True, tag="int.error"
-            )
+        total_failed_jobs_integrity = self.wf_stats.get_total_succeeded_failed_jobs_status(
+            classify_error=True, tag="int.error"
         )
         int_metrics_summary = self.wf_stats.get_summary_integrity_metrics()
         int_error_summary = self.wf_stats.get_tag_metrics("int.error")
@@ -1552,9 +1550,11 @@ class PegasusStatistics:
                 )
 
                 for i, transformation_stat in enumerate(transformation_stats):
-                    transformation_stats[i] = transformation_stat = (
-                        transformation_stat.get_formatted_statistics()
-                    )
+                    transformation_stats[
+                        i
+                    ] = (
+                        transformation_stat
+                    ) = transformation_stat.get_formatted_statistics()
                     for i in range(13):
                         max_length[i] = max(max_length[i], len(transformation_stat[i]))
 
