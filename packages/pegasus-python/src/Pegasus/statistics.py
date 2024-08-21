@@ -199,9 +199,8 @@ class PegasusStatistics:
     #: The file name for workflow summary.
     workflow_summary_file_name: str = "summary"
     #: Legend for workflow summary stats.
-    # TODO: Change HTTP to HTTPS
     workflow_summary_legends: str = """#
-# Pegasus Workflow Management System - http://pegasus.isi.edu
+# Pegasus Workflow Management System - https://pegasus.isi.edu
 #
 # Workflow summary:
 #   Summary of the workflow execution. It shows total
@@ -248,10 +247,9 @@ class PegasusStatistics:
     #: The file name for workflow time summary.
     workflow_summary_time_file_name: str = "summary-time"
     #: Legend for workflow summary time stats.
-    # TODO: Add space between `DAGMAN.In`
     workflow_summary_time_legends: str = """# Workflow wall time:
 #   The wall time from the start of the workflow execution to the end as
-#   reported by the DAGMAN.In case of rescue dag the value is the
+#   reported by the DAGMAN. In case of rescue dag the value is the
 #   cumulative of all retries.
 # Cumulative job wall time:
 #   The sum of the wall time of all jobs as reported by kickstart.
@@ -1007,8 +1005,10 @@ class PegasusStatistics:
     def _compute_integrity_summary_statistics(self):
         """."""
         # print_workflow_summary
-        total_failed_jobs_integrity = self.wf_stats.get_total_succeeded_failed_jobs_status(
-            classify_error=True, tag="int.error"
+        total_failed_jobs_integrity = (
+            self.wf_stats.get_total_succeeded_failed_jobs_status(
+                classify_error=True, tag="int.error"
+            )
         )
         int_metrics_summary = self.wf_stats.get_summary_integrity_metrics()
         int_error_summary = self.wf_stats.get_tag_metrics("int.error")
@@ -1210,7 +1210,6 @@ class PegasusStatistics:
 
     def _write_summary_statistics_text(self):
         """."""
-        # TODO: Make Sub Workflows string consistent across code
         tasks = ("Tasks",) + self._compute_task_summary_statistics(self.wf_stats)
         jobs = ("Jobs",) + self._compute_job_summary_statistics(self.wf_stats)
         sub_wfs = ("Sub-Workflows",) + self._compute_sub_wf_summary_statistics(
@@ -1279,11 +1278,10 @@ class PegasusStatistics:
             if not int_metrics_summary:
                 return
 
-            # TODO: Remove space between `doing it. \n`
             writer.write(
                 """
 # Integrity Metrics
-# Number of files for which checksums were compared/computed along with total time spent doing it. \n"""
+# Number of files for which checksums were compared/computed along with total time spent doing it.\n"""
             )
             for result in int_metrics_summary:
                 type = result.type
@@ -1295,12 +1293,11 @@ class PegasusStatistics:
                     f"{result.count} files checksums {type} with total duration of {format_seconds(result.duration)}\n"
                 )
 
-            # TODO: Add space between `executions(including retries)`
             writer.write(
                 """
 # Integrity Errors
 # Total:
-#       Total number of integrity errors encountered across all job executions(including retries) of a workflow.
+#       Total number of integrity errors encountered across all job executions (including retries) of a workflow.
 # Failures:
 #       Number of failed jobs where the last job instance had integrity errors.
 """
@@ -1394,7 +1391,7 @@ class PegasusStatistics:
                 wf_retries = self._compute_workflow_retries(ind_wf_stats)
                 tasks = ("Tasks",) + self._compute_task_summary_statistics(ind_wf_stats)
                 jobs = ("Jobs",) + self._compute_job_summary_statistics(ind_wf_stats)
-                sub_wfs = ("Sub Workflows",) + self._compute_sub_wf_summary_statistics(
+                sub_wfs = ("Sub-Workflows",) + self._compute_sub_wf_summary_statistics(
                     ind_wf_stats
                 )
 
@@ -1454,7 +1451,7 @@ class PegasusStatistics:
                 sub_wfs = (
                     wf_uuid,
                     wf_det.dax_label,
-                    "Sub_Workflows",
+                    "Sub-Workflows",
                 ) + self._compute_sub_wf_summary_statistics(ind_wf_stats)
 
                 writer.writerow(tasks + (wf_retries,))
@@ -1555,11 +1552,9 @@ class PegasusStatistics:
                 )
 
                 for i, transformation_stat in enumerate(transformation_stats):
-                    transformation_stats[
-                        i
-                    ] = (
-                        transformation_stat
-                    ) = transformation_stat.get_formatted_statistics()
+                    transformation_stats[i] = transformation_stat = (
+                        transformation_stat.get_formatted_statistics()
+                    )
                     for i in range(13):
                         max_length[i] = max(max_length[i], len(transformation_stat[i]))
 
@@ -1917,9 +1912,8 @@ class PegasusStatistics:
         if self.calc_ti_stats:
             name = Path(self.output_dir) / f"{self.time_stats_file_name}.{extn}"
             click.echo("%-30s: %s" % ("Time statistics", name))
-            # TODO: Add time-per-host.csv
-            # if extn == "csv":
-            #     click.echo("%-30s: %s" % ("Time statistics (per host)", name))
+            if extn == "csv":
+                click.echo("%-30s: %s" % ("Time statistics (per host)", name))
 
         if self.errors:
             self.log.critical(f"Failed to generate {self.errors} type(s) of statistics")
