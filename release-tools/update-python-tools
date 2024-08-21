@@ -46,7 +46,6 @@ for TOOL in \
     pegasus-s3 \
     pegasus-service \
     pegasus-statistics \
-    pegasus-newstatistics \
     pegasus-submitdir \
     pegasus-transfer \
 ; do
