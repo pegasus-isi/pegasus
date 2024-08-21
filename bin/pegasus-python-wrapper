@@ -45,8 +45,20 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
         exit 1
     fi
 
-    # Some quick validations
-    if [ "x$BASE_NAME" != "xpegasus-preflight-check" -a "x$BASE_NAME" != "xpegasus-config" ]; then
+    # Some quick validations - but exclude worker package tools
+    PREFLIGHT=1
+    for TOOL in \
+        pegasus-config \
+        pegasus-integrity \
+        pegasus-preflight-check \
+        pegasus-s3 \
+        pegasus-transfer \
+    ; do
+        if [ "x$BASE_NAME" = "x$TOOL" ]; then
+            PREFLIGHT=0
+        fi
+    done
+    if [ "x$PREFLIGHT" = "x1" ]; then
         # this is just a warning for now
         "$PEXE" "$PEGASUS_HOME/@LIBDIR@/pegasus/python/Pegasus/cli/pegasus-preflight-check.py" || true
     fi

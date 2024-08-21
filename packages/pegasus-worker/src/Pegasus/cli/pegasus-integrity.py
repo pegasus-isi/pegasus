@@ -166,6 +166,16 @@ def read_meta_data(f):
     Reads transfers from the new JSON based input format
     """
     data = []
+
+    # don't try to load empty files
+    size = 0
+    try:
+        size = os.path.getsize(f)
+    except Exception as err:
+        logger.critical("Unable to open metadata file: " + str(err))
+    if size <= 2:
+        return data
+
     try:
         fp = open(f)
         data = json.load(fp)
