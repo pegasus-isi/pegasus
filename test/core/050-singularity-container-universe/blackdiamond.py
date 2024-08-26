@@ -14,6 +14,7 @@ from Pegasus.tools import worker_utils as utils
 logging.basicConfig(level=logging.DEBUG)
 
 PEGASUS_LOCATION=utils.backticks("which pegasus-keg").strip()
+PEGASUS_VERSION=utils.backticks("pegasus-version").strip()
 
 # figure out test name from arguments
 if len(sys.argv) != 2:
@@ -25,7 +26,7 @@ TEST_NAME=sys.argv[1]
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-5.0-" + datetime.now().strftime("%s")
 TOP_DIR = Path.cwd()
-WORK_DIR = TOP_DIR / "work" / TEST_NAME
+WORK_DIR = TOP_DIR / "work" / PEGASUS_VERSION / TEST_NAME
 
 try:
     Path.mkdir( WORK_DIR, parents=True)
@@ -53,7 +54,7 @@ print("Staging site for the test is {}".format(STAGING))
 shared_scratch_dir = str(WORK_DIR / "shared-scratch")
 staging_scratch_dir= str(WORK_DIR / "staging-site" / "scratch")
 local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
-condorpool_scratch_dir = "/webdav/scitech/shared/scratch-90-days/{}".format(TEST_NAME)
+condorpool_scratch_dir = "/webdav/scitech/shared/scratch-90-days/{}/{}".format(PEGASUS_VERSION, TEST_NAME)
 
 print("Generating site catalog at: {}".format(TOP_DIR / "sites.yml"))
 
@@ -111,7 +112,7 @@ base_container = Container(
 
 preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        COMPUTE,
+        LOCAL,
         PEGASUS_LOCATION,
         is_stageable=True,
         arch=Arch.X86_64,
@@ -122,7 +123,7 @@ preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").ad
 
 findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        COMPUTE,
+        LOCAL,
         PEGASUS_LOCATION,
         is_stageable=True,
         arch=Arch.X86_64,
@@ -133,7 +134,7 @@ findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_s
 
 analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        COMPUTE,
+        LOCAL,
         PEGASUS_LOCATION,
         is_stageable=True,
         arch=Arch.X86_64,
