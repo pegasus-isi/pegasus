@@ -79,7 +79,7 @@ Python:
   - pip3 install --upgrade pip setuptools
   - pip3 install tox
   script:
-  - cd packages/pegasus-${PACKAGE}; tox -e py${PYTHON_VERSION/./}
+  - cd packages/pegasus-${PACKAGE}; tox -e py$(echo ${PYTHON_VERSION} | sed -E 's/([0-9]*).([0-9]*).*$/\1\2/g')
   coverage: '/Total coverage: \d+\.\d+%/'
   artifacts:
     when: always
