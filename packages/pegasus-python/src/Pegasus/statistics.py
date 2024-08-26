@@ -3,7 +3,6 @@
 import atexit
 import logging
 import os
-import sys
 import typing as t
 from collections import namedtuple
 from dataclasses import dataclass
@@ -71,7 +70,7 @@ def pstr(value: t.Any, to: int = 2) -> str:
 
 @dataclass
 class JobStatistics:
-    """."""
+    """A data class to hols Job statistics data."""
 
     #: The name of the job.
     name: str = None
@@ -104,7 +103,8 @@ class JobStatistics:
     #: The name of the host where the job ran, as reported by Kickstart.
     hostname: str = None
 
-    def get_formatted_statistics(self):
+    def get_formatted_statistics(self) -> t.List[str]:
+        """Get formatted job statistics data."""
         return [
             self.name,
             str(self.retry_count),
@@ -126,7 +126,7 @@ class JobStatistics:
 
 @dataclass
 class TransformationStatistics:
-    """."""
+    """A data class to hols Transformation statistics data."""
 
     #: The transformation name.
     transformation: str = None
@@ -155,7 +155,8 @@ class TransformationStatistics:
     #: The mean of the average cpu utilization value corresponding to the transformation.
     avg_avg_cpu: float = None
 
-    def get_formatted_statistics(self):
+    def get_formatted_statistics(self) -> t.List[str]:
+        """Get formatted transformations statistics data."""
         return [
             self.transformation,
             self.type,
@@ -173,11 +174,8 @@ class TransformationStatistics:
         ]
 
 
-# TODO: All compute methods to generate a dict.
-# TODO: Use utils.write_table.writetable method to write text tables, then remove col_sizes
-# TODO: Remove sys.exit and print statements
-# TODO: Add Docstrings
-# TODO: Add type hints
+class PegasusStatisticsError(Exception):
+    """Pegasus Statistics Error"""
 
 
 class PegasusStatistics:
@@ -614,7 +612,7 @@ class PegasusStatistics:
         is_uuid: bool = False,
         submit_dirs: t.Sequence[str] = [],
     ):
-        """."""
+        """Initialize the Pegasus statistics object."""
         self.log = logging.getLogger("pegasus-statistics")
 
         self.output_dir = output_dir
@@ -634,7 +632,7 @@ class PegasusStatistics:
         self.errors: int = 0
 
     def _initialize(self, verbose: int = 0, quiet: int = 0):
-        """."""
+        """Initialize the Pegasus statistics object."""
         # Initialize logging
         utils.configure_logging(verbose, quiet)
 
@@ -674,6 +672,7 @@ class PegasusStatistics:
         atexit.register(self._cleanup)
 
     def _check_braindump(self, submit_dir):
+        """Load and return the braindump file."""
         try:
             with (Path(submit_dir) / "braindump.yml").open("r") as f:
                 braindb = braindump.load(f)
@@ -683,7 +682,7 @@ class PegasusStatistics:
         return braindb
 
     def _check_inputs(self):
-        """."""
+        """Validate the command line arguments."""
         self._check_args()
 
         # Check if the submit directory is valid
@@ -695,27 +694,24 @@ class PegasusStatistics:
         self._check_workflow_state()
 
     def _check_args(self):
-        """."""
+        """Validate the command line arguments."""
         if self.multiple_wf and self.calc_jb_stats:
-            self.log.critical(
-                "Job breakdown statistics cannot be computed over multiple workflows"
-            )
-            sys.exit(1)
+            msg = "Job breakdown statistics cannot be computed over multiple workflows"
+            self.log.critical(msg)
+            raise PegasusStatisticsError(msg)
 
         if (self.is_uuid or self.submit_dirs == "*") and not self.config_properties:
-            self.log.critical(
-                "A config file is required if either is-uuid flag is set or submit-dirs is not set or set to *"
-            )
-            sys.exit(1)
+            msg = "A config file is required if either is-uuid flag is set or submit-dirs is not set or set to *"
+            self.log.critical(msg)
+            raise PegasusStatisticsError(msg)
 
         if (self.multiple_wf or self.is_uuid) and not self.output_dir:
-            self.log.critical(
-                "Output directory option is required when calculating statistics over multiple workflows."
-            )
-            sys.exit(1)
+            msg = "Output directory option is required when calculating statistics over multiple workflows."
+            self.log.critical(msg)
+            raise PegasusStatisticsError(msg)
 
     def _check_workflow_dir(self):
-        """."""
+        """Identify the workflow directory from the braindump."""
         if self.is_uuid is True or self.submit_dirs == "*":
             return
 
@@ -730,7 +726,7 @@ class PegasusStatistics:
             self.wf_uuids = braindb.wf_uuid
 
     def _check_workflow_state(self):
-        """."""
+        """Check whether the workflow is running or not."""
 
         if self.ignore_db_inconsistency:
             self.log.warning("Ignoring db inconsistency")
@@ -749,12 +745,13 @@ class PegasusStatistics:
         def loading_complete(dir):
             if not utils.loading_completed(dir):
                 if utils.monitoring_running(dir):
-                    sys.stderr.write(
-                        "pegasus-monitord still running. Please wait for it to complete.\n"
-                    )
+                    msg = "pegasus-monitord still running. Please wait for it to complete."
+                    self.log.warning(msg)
+                    click.echo(msg, err=True)
                 else:
-                    sys.stderr.write("Please run pegasus monitord in replay mode.\n")
-                sys.exit(1)
+                    msg = "Please run pegasus monitord in replay mode."
+                    click.echo(msg, err=True)
+                raise PegasusStatisticsError(msg)
 
         if self.multiple_wf:
             for dir in self.submit_dirs:
@@ -763,7 +760,7 @@ class PegasusStatistics:
             loading_complete(self.submit_dirs)
 
     def _initialize_statistics_levels(self):
-        """."""
+        """Initialize the types of statistics to be generated."""
         sl = self.statistics_level
         self.log.info(f"Statistics level(s) are {', '.join(sl)}")
 
@@ -787,7 +784,7 @@ class PegasusStatistics:
         )
 
     def _get_clustering_type(self):
-        """."""
+        """Identify the clustering type of the workflow(s)."""
 
         def use_pmc(dir):
             braindb = self._check_braindump(dir)
@@ -822,7 +819,7 @@ class PegasusStatistics:
                 self.is_pmc = use_pmc(self.submit_dirs)
 
     def _get_workflow_db_url(self):
-        """."""
+        """Get workflow database URL."""
         if self.is_uuid or self.submit_dirs == "*":
             try:
                 # URL picked from config_properties file.
@@ -830,10 +827,9 @@ class PegasusStatistics:
                     self.config_properties, connection.DBType.WORKFLOW
                 )
             except ConnectionError:
-                self.log.error(
-                    'Unable to determine database URL. Kindly specify a value for "pegasus.monitord.output" property'
-                )
-                sys.exit(1)
+                msg = 'Unable to determine database URL. Kindly specify a value for "pegasus.monitord.output" property'
+                self.log.error(msg)
+                raise PegasusStatisticsError(msg)
         elif self.multiple_wf:
             try:
                 db_url_set = set()
@@ -845,23 +841,24 @@ class PegasusStatistics:
                     db_url_set.add(db_url)
 
                 if len(db_url_set) != 1:
-                    self.log.error(
-                        "Workflows are distributed across multiple databases, which is not supported"
-                    )
-                    sys.exit(1)
+                    msg = "Workflows are distributed across multiple databases, which is not supported"
+                    self.log.error(msg)
+                    raise PegasusStatisticsError(msg)
 
                 self.output_db_url = db_url_set.pop()
             except ConnectionError:
-                self.log.error("Unable to determine database URL.")
-                sys.exit(1)
+                msg = "Unable to determine database URL."
+                self.log.error(msg)
+                raise PegasusStatisticsError()
         else:
             try:
                 self.output_db_url = connection.url_by_submitdir(
                     self.submit_dirs, connection.DBType.WORKFLOW, self.config_properties
                 )
             except ConnectionError:
-                self.log.error("Unable to determine database URL.")
-                sys.exit(1)
+                msg = "Unable to determine database URL."
+                self.log.error(msg)
+                raise PegasusStatisticsError(msg)
 
         self.log.info("DB URL is: %s" % self.output_db_url)
         _uuids = (
@@ -872,7 +869,7 @@ class PegasusStatistics:
         self.log.info(f"Workflow UUID is: {_uuids}")
 
     def _initialize_output_dir(self):
-        """."""
+        """Initialize the output directory."""
         if self.output_dir:
             delete_if_exists = False
             self.output_dir = Path(self.output_dir)
@@ -884,7 +881,7 @@ class PegasusStatistics:
         utils.create_directory(str(self.output_dir), delete_if_exists=delete_if_exists)
 
     def _compute_statistics(self):
-        """."""
+        """Initialize database connections."""
         try:
             self.wf_stats = (
                 StampedeWorkflowStatistics(self.output_db_url)
@@ -894,12 +891,11 @@ class PegasusStatistics:
             _wf_found = self.wf_stats.initialize(self.wf_uuids)
 
             if _wf_found is False:
-                print(
-                    "Workflow {!r} not found in database {!r}".format(
-                        self.wf_uuids, self.output_db_url
-                    )
+                msg = "Workflow {!r} not found in database {!r}".format(
+                    self.wf_uuids, self.output_db_url
                 )
-                sys.exit(1)
+                click.echo(msg)
+                raise PegasusStatisticsError(msg)
 
             WorkflowDetails = namedtuple("WorkflowDetails", ["wf_uuid", "dax_label"])
             self._wf_det = WorkflowDetails("All", "")
@@ -919,36 +915,20 @@ class PegasusStatistics:
                     _wf_found = ind_wf_stats.initialize(wf_uuid)
 
                     if _wf_found is False:
-                        print(
-                            "Workflow %r not found in database %r"
-                            % (wf_uuid, self.output_db_url)
-                        )
-                        sys.exit(1)
+                        msg = f"Workflow {wf_uuid} not found in database {self.output_db_url}"
+                        click.echo(msg)
+                        raise PegasusStatisticsError(msg)
 
                     _wf_det = ind_wf_stats.get_workflow_details()[0]
                     self.wf_uuid_list.append((_wf_det, ind_wf_stats))
         except Exception:
-            self.log.error(f"Failed to load the database {self.output_db_url}")
-            self.log.debug(
-                f"Failed to load the database {self.output_db_url}", exc_info=1
-            )
-            sys.exit(1)
-
-    def _compute_summary_statistics(self):
-        """."""
-        self._compute_workflow_summary_statistics()
-        self._compute_time_summary_statistics()
-        self._compute_integrity_summary_statistics()
-
-    def _compute_workflow_summary_statistics(self):
-        self._compute_task_summary_statistics()
-        self._compute_job_summary_statistics()
-        self._compute_sub_wf_summary_statistics()
+            msg = f"Failed to load the database {self.output_db_url}"
+            self.log.error(msg)
+            self.log.debug(msg, exc_info=1)
+            raise PegasusStatisticsError(msg)
 
     def _compute_task_summary_statistics(self, ind_or_wf_stats):
-        """."""
-        # print_workflow_summary
-
+        """Get task summary data from the database."""
         # status
         ind_or_wf_stats.set_job_filter("nonsub")
 
@@ -963,10 +943,7 @@ class PegasusStatistics:
         return (succeeded, failed, unsubmitted, total, retries, tries)
 
     def _compute_job_summary_statistics(self, ind_or_wf_stats, filter="nonsub"):
-        """."""
-        # print_workflow_summary
-
-        # status
+        """Get job summary statistics data from the database."""
         ind_or_wf_stats.set_job_filter(filter)
 
         # Jobs
@@ -983,18 +960,17 @@ class PegasusStatistics:
         return (succeeded, failed, unsubmitted, total, retries, tries)
 
     def _compute_sub_wf_summary_statistics(self, ind_or_wf_stats):
-        """."""
+        """Get sub-workflow data from the database."""
         return self._compute_job_summary_statistics(ind_or_wf_stats, "subwf")
 
     def _compute_workflow_retries(self, ind_of_wf_stats):
-        """."""
+        """Get workflow retries data from the database."""
         ind_of_wf_stats.set_job_filter("all")
         total_wf_retries = ind_of_wf_stats.get_workflow_retries()
         return total_wf_retries
 
     def _compute_time_summary_statistics(self):
-        """."""
-        # print_workflow_summary
+        """Get time summary data from the database."""
         states = self.wf_stats.get_workflow_states()
         wwt = stats_utils.get_workflow_wall_time(states)
         wcjwt, wcgpt, wcbpt = self.wf_stats.get_workflow_cum_job_wall_time()
@@ -1003,10 +979,11 @@ class PegasusStatistics:
         return (wwt, wcjwt, wcgpt, wcbpt, ssjwt, ssgpt, ssbpt)
 
     def _compute_integrity_summary_statistics(self):
-        """."""
-        # print_workflow_summary
-        total_failed_jobs_integrity = self.wf_stats.get_total_succeeded_failed_jobs_status(
-            classify_error=True, tag="int.error"
+        """Get integrity summary statistics data from the database."""
+        total_failed_jobs_integrity = (
+            self.wf_stats.get_total_succeeded_failed_jobs_status(
+                classify_error=True, tag="int.error"
+            )
         )
         int_metrics_summary = self.wf_stats.get_summary_integrity_metrics()
         int_error_summary = self.wf_stats.get_tag_metrics("int.error")
@@ -1014,10 +991,9 @@ class PegasusStatistics:
         return (int_metrics_summary, int_error_summary, total_failed_jobs_integrity)
 
     def _compute_job_statistics(self, ind_wf_stats):
-        """."""
+        """Get job statistics data from the database."""
         ind_wf_stats.set_job_filter("all")
 
-        # print_individual_wf_job_stats
         wf_job_stats_list = ind_wf_stats.get_job_statistics()
 
         # Go through each job in the workflow
@@ -1053,10 +1029,9 @@ class PegasusStatistics:
         return job_stats_list
 
     def _compute_transformation_statistics(self, wf_or_ind_stats):
-        """."""
+        """Get transformation statistics data from the database."""
         wf_or_ind_stats.set_job_filter("all")
 
-        # print_wf_transformation_stats
         wf_transformation_stats_list = wf_or_ind_stats.get_transformation_statistics()
 
         # Go through each transformation in the workflow
@@ -1081,15 +1056,13 @@ class PegasusStatistics:
         return transformation_stat_list
 
     def _compute_integrity_statistics(self, wf_or_ind_stats):
-        """."""
+        """Get integrity statistics data from the database."""
         wf_or_ind_stats.set_job_filter("all")
 
-        # print_wf_integrity_stats
         return wf_or_ind_stats.get_integrity_metrics()
 
     def _compute_time_statistics(self):
-        """."""
-        # print_statistics_by_time_and_host
+        """Get time statistics data from the database."""
         self.wf_stats.set_job_filter("nonsub")
         self.wf_stats.set_time_filter("hour")
         self.wf_stats.set_transformation_filter(exclude=["condor::dagman"])
@@ -1105,7 +1078,7 @@ class PegasusStatistics:
         return jobs_by_time, invocations_by_time, jobs_per_host, invocations_per_host
 
     def _write_statistics(self):
-        """."""
+        """Generate Pegasus statistics."""
         extn = self.file_extn
 
         if self.calc_wf_summary:
@@ -1198,7 +1171,7 @@ class PegasusStatistics:
                 self.errors += 1
 
     def _write_summary_statistics(self):
-        """."""
+        """Write summary statistics data to a file."""
         if self.file_type == self.file_type_txt:
             self._write_summary_statistics_text()
         elif self.file_type == self.file_type_csv:
@@ -1207,7 +1180,7 @@ class PegasusStatistics:
             self.log.error(f"Invalid file type {self.file_type}")
 
     def _write_summary_statistics_text(self):
-        """."""
+        """Write summary statistics data to a txt file."""
         tasks = ("Tasks",) + self._compute_task_summary_statistics(self.wf_stats)
         jobs = ("Jobs",) + self._compute_job_summary_statistics(self.wf_stats)
         sub_wfs = ("Sub-Workflows",) + self._compute_sub_wf_summary_statistics(
@@ -1313,7 +1286,7 @@ class PegasusStatistics:
             )
 
     def _write_summary_statistics_csv(self):
-        """."""
+        """Write summary statistics data to a csv file."""
         tasks = ("Tasks",) + self._compute_task_summary_statistics(self.wf_stats)
         jobs = ("Jobs",) + self._compute_job_summary_statistics(self.wf_stats)
         sub_wfs = ("Sub-Workflows",) + self._compute_sub_wf_summary_statistics(
@@ -1361,7 +1334,7 @@ class PegasusStatistics:
             )
 
     def _write_workflow_statistics(self):
-        """."""
+        """Write workflow statistics data to a file."""
         if self.file_type == self.file_type_txt:
             self._write_workflow_statistics_text()
         elif self.file_type == self.file_type_csv:
@@ -1370,7 +1343,7 @@ class PegasusStatistics:
             self.log.error(f"Invalid file type {self.file_type}")
 
     def _write_workflow_statistics_text(self):
-        """."""
+        """Write workflow statistics data to a txt file."""
         with utils.write_table(
             Path(self.output_dir) / f"{self.workflow_stats_file_name}.{self.file_extn}",
             fields=self.workflow_stats_col_name_text,
@@ -1419,7 +1392,7 @@ class PegasusStatistics:
                     writer.write("\n")
 
     def _write_workflow_statistics_csv(self):
-        """."""
+        """Write workflow statistics data to a csv file."""
         with utils.write_csv(
             Path(self.output_dir) / f"{self.workflow_stats_file_name}.{self.file_extn}",
             fields=self.workflow_stats_col_name_csv,
@@ -1459,7 +1432,7 @@ class PegasusStatistics:
                     writer.write("\n")
 
     def _write_job_statistics(self):
-        """."""
+        """Write job statistics data to a file."""
         if self.file_type == self.file_type_txt:
             self._write_job_statistics_text()
         elif self.file_type == self.file_type_csv:
@@ -1468,7 +1441,7 @@ class PegasusStatistics:
             self.log.error(f"Invalid file type {self.file_type}")
 
     def _write_job_statistics_text(self):
-        """."""
+        """Write job statistics data to a txt file."""
         with utils.write_table(
             Path(self.output_dir) / f"{self.job_stats_file_name}.{self.file_extn}",
             fields=self.job_stats_col_name_text,
@@ -1498,7 +1471,7 @@ class PegasusStatistics:
                     writer.writerow(job_stats)
 
     def _write_job_statistics_csv(self):
-        """."""
+        """Write job statistics data to a csv file."""
         with utils.write_csv(
             Path(self.output_dir) / f"{self.job_stats_file_name}.{self.file_extn}",
             fields=self.job_stats_col_name_csv,
@@ -1519,7 +1492,7 @@ class PegasusStatistics:
                     writer.writerow(job_stats)
 
     def _write_transformation_statistics(self):
-        """."""
+        """Write transformation statistics data to a file."""
         if self.file_type == self.file_type_txt:
             self._write_transformation_statistics_text()
         elif self.file_type == self.file_type_csv:
@@ -1528,7 +1501,7 @@ class PegasusStatistics:
             self.log.error(f"Invalid file type {self.file_type}")
 
     def _write_transformation_statistics_text(self):
-        """."""
+        """Write transformation statistics data to a txt file."""
         with utils.write_table(
             Path(self.output_dir)
             / f"{self.transformation_stats_file_name}.{self.file_extn}",
@@ -1550,11 +1523,9 @@ class PegasusStatistics:
                 )
 
                 for i, transformation_stat in enumerate(transformation_stats):
-                    transformation_stats[
-                        i
-                    ] = (
-                        transformation_stat
-                    ) = transformation_stat.get_formatted_statistics()
+                    transformation_stats[i] = transformation_stat = (
+                        transformation_stat.get_formatted_statistics()
+                    )
                     for i in range(13):
                         max_length[i] = max(max_length[i], len(transformation_stat[i]))
 
@@ -1566,7 +1537,7 @@ class PegasusStatistics:
                     writer.writerow(transformation_stat)
 
     def _write_transformation_statistics_csv(self):
-        """."""
+        """Write transformation statistics data to a csv file."""
         with utils.write_csv(
             Path(self.output_dir)
             / f"{self.transformation_stats_file_name}.{self.file_extn}",
@@ -1600,7 +1571,7 @@ class PegasusStatistics:
                     writer.writerow(transformation_stat)
 
     def _write_integrity_statistics(self):
-        """."""
+        """Write integrity statistics data to a file."""
         if self.file_type == self.file_type_txt:
             self._write_integrity_statistics_text()
         elif self.file_type == self.file_type_csv:
@@ -1609,7 +1580,7 @@ class PegasusStatistics:
             self.log.error(f"Invalid file type {self.file_type}")
 
     def _write_integrity_statistics_text(self):
-        """."""
+        """Write integrity statistics data to a txt file."""
         with utils.write_table(
             Path(self.output_dir)
             / f"{self.integrity_stats_file_name}.{self.file_extn}",
@@ -1649,7 +1620,7 @@ class PegasusStatistics:
                     writer.writerow(integrity_stat)
 
     def _write_integrity_statistics_csv(self):
-        """."""
+        """Write integrity statistics data to a csv file."""
         with utils.write_csv(
             Path(self.output_dir)
             / f"{self.integrity_stats_file_name}.{self.file_extn}",
@@ -1687,7 +1658,7 @@ class PegasusStatistics:
                     writer.writerow(integrity_stat)
 
     def _write_time_statistics(self):
-        """."""
+        """Write time statistics data to a file."""
         if self.file_type == self.file_type_txt:
             self._write_time_statistics_text()
         elif self.file_type == self.file_type_csv:
@@ -1696,7 +1667,7 @@ class PegasusStatistics:
             self.log.error(f"Invalid file type {self.file_type}")
 
     def _write_time_statistics_text(self):
-        """."""
+        """Write time statistics data to a txt file."""
         (
             jobs_by_time,
             invocations_by_time,
@@ -1772,7 +1743,7 @@ class PegasusStatistics:
                 writer.writerow(content)
 
     def _write_time_statistics_csv(self):
-        """."""
+        """Write time statistics data to a csv file."""
         (
             jobs_by_time,
             invocations_by_time,
@@ -1872,7 +1843,8 @@ class PegasusStatistics:
                 self.log.debug("Error closing database", exc_info=1)
 
     def console_output(self, ctx):
-        """."""
+        """Print Pegasus statistics output to the console."""
+
         extn = self.file_extn
 
         if self.calc_wf_summary:
@@ -1916,11 +1888,13 @@ class PegasusStatistics:
                 click.echo("%-30s: %s" % ("Time statistics (per host)", name))
 
         if self.errors:
-            self.log.critical(f"Failed to generate {self.errors} type(s) of statistics")
-            sys.exit(1)
+            msg = f"Failed to generate {self.errors} type(s) of statistics"
+            self.log.critical(msg)
+            raise PegasusStatisticsError(msg)
 
     def __call__(self, ctx, verbose: int = 0, quiet: int = 0):
-        """."""
+        """Main method of Pegasus statistics."""
+
         # Initialize logging
         self._initialize(verbose, quiet)
 
