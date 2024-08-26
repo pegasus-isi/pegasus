@@ -68,7 +68,7 @@ def setup_logger(debug_flag):
 
 
 def prog_sigint_handler(signum, frame):
-    logger.warn("Exiting due to signal %d" % (signum))
+    logger.warning("Exiting due to signal %d" % (signum))
     if transfer_client is not None:
         cancel_task(transfer_client, task_id)
     sys.exit(1)
@@ -188,8 +188,8 @@ def mkdir(request):
                     request["endpoint"], path=base_path, query_params={"limit": 2}
                 )
             except globus_sdk.TransferAPIError as e:
-                logger.warn("Finding existing parent dir for mkdir " + f)
-                logger.warn(str(e))
+                logger.warning("Finding existing parent dir for mkdir " + f)
+                logger.warning(str(e))
                 found = False
 
         child_dirs.reverse()
@@ -204,7 +204,7 @@ def mkdir(request):
                 transfer_client.operation_mkdir(request["endpoint"], path)
             except globus_sdk.TransferAPIError as e:
                 if e.code == "ExternalError.MkdirFailed.Exists":
-                    logger.warn("Directory already exists: " + path)
+                    logger.warning("Directory already exists: " + path)
                 else:
                     raise RuntimeError(str(e))
     logger.info("Mkdir complete")

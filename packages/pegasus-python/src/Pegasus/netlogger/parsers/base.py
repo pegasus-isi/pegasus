@@ -1,6 +1,7 @@
 """
 Common code for NetLogger parsers
 """
+
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __rcsid__ = "$Id: base.py 28287 2011-08-18 03:42:53Z dang $"
 import calendar
@@ -425,7 +426,7 @@ class BaseParser(ProcessInterface, DoesLogging):
                 if self._ufile:
                     self._ufile.write(line)
                 else:
-                    self.log.warn("unparsed.event", value=line.strip(), msg=E)
+                    self.log.warning("unparsed.event", value=line.strip(), msg=E)
                 result = False
             # A skipped line means that it will never
             # be parsed, but there was no error.

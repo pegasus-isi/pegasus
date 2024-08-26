@@ -276,7 +276,7 @@ class DashboardLoader(BaseLoader):
             wf.root_wf_id = self.wf_uuid_to_id(wf.root_xwf_id)
             wf.commit_to_db(self.session)
         if wf.root_wf_id is None:
-            self.log.warn("Could not determine root_wf_id for event %s", wf)
+            self.log.warning("Could not determine root_wf_id for event %s", wf)
 
     def workflowstate(self, linedata):
         """

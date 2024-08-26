@@ -45,7 +45,7 @@ def delete_workflow(dburi, wf_uuid):
         try:
             wf = query.one()
         except orm.exc.NoResultFound as e:
-            log.warn("No workflow found with wf_uuid %s - aborting expunge", wf_uuid)
+            log.warning("No workflow found with wf_uuid %s - aborting expunge", wf_uuid)
             return
 
         # PM-1218 gather list of descendant workflows with wf_uuid
@@ -57,7 +57,7 @@ def delete_workflow(dburi, wf_uuid):
                 # not associated with workflow table
                 __delete_workflow_files__(session, desc_wf.wf_uuid, desc_wf.wf_id)
         except orm.exc.NoResultFound as e:
-            log.warn(
+            log.warning(
                 "No workflow found with root wf_id %s - aborting expunge", wf.wf_id
             )
             return
@@ -105,7 +105,7 @@ def delete_dashboard_workflow(dburi, wf_uuid):
         try:
             wf = query.one()
         except orm.exc.NoResultFound as e:
-            log.warn("No workflow found with wf_uuid %s - aborting expunge", wf_uuid)
+            log.warning("No workflow found with wf_uuid %s - aborting expunge", wf_uuid)
             return
 
         session.delete(wf)

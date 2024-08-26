@@ -399,7 +399,7 @@ class WorkflowLoader(BaseLoader):
             wf.root_wf_id = self.wf_uuid_to_id(wf.root_xwf_id)
             wf.commit_to_db(self.session)
         if wf.root_wf_id is None:
-            self.log.warn("Count not determine root_wf_id for event %s", wf)
+            self.log.warning("Count not determine root_wf_id for event %s", wf)
 
     def workflowstate(self, linedata):
         """

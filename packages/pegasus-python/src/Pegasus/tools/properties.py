@@ -107,13 +107,13 @@ if len(sys.argv) > 0:
         try:
             k, v = my_arg.split("=", 1)
         except Exception:
-            logger.warn(
+            logger.warning(
                 "cannot parse command-line option %s... continuing..." % (my_arg)
             )
             k = ""
         if len(k):
             if k == "pegasus.properties" or k == "pegasus.user.properties":
-                logger.warn(
+                logger.warning(
                     "%s is no longer supported, ignoring, please use --conf!" % (k)
                 )
             else:
@@ -246,7 +246,7 @@ class Properties:
                 my_config.update(parse_properties(config_file))
                 my_already_loaded = True
             else:
-                logger.warn(
+                logger.warning(
                     "cannot access properties file %s... continuing..." % (config_file)
                 )
 
@@ -257,7 +257,7 @@ class Properties:
                 my_config.update(parse_properties(rundir_propfile))
                 my_already_loaded = True
             else:
-                logger.warn(
+                logger.warning(
                     "cannot access properties file %s... continuing..."
                     % (rundir_propfile)
                 )
@@ -279,7 +279,7 @@ class Properties:
                     pass
 
         if not my_already_loaded:
-            logger.warn("no properties file parsed whatsoever!")
+            logger.warning("no properties file parsed whatsoever!")
 
         # Keep ordering of config before initial so that the -D CLI
         # properties can override any other properties
@@ -369,7 +369,7 @@ class Properties:
             try:
                 my_file = open(fn, "w")
             except Exception:
-                logger.warn("error opening %s !" % (fn))
+                logger.warning("error opening %s !" % (fn))
                 return None
 
         # Add header

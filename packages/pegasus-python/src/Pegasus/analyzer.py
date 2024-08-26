@@ -31,6 +31,7 @@ logger = logging.getLogger("pegasus-newanalyzer")
 
 utils.configureLogging(level=logging.WARNING)
 
+
 # --- classes -------------------------------------------------------------------------
 class WORKFLOW_STATUS(Enum):
     """Workflow Status"""
@@ -89,28 +90,43 @@ prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this pro
 dag_path = None  # Path of the dag fi
 indent = ""  # the corresponding indent string
 
+
 # ----- Data classes ------------------------------------------------------------------
 @dataclass
 class Options:
     input_dir: str = None  # Directory given in -i command line option
     debug_job: str = None  # Path of a submit file to debug
     debug_dir: str = None  # Temp directory to use while debugging a job
-    debug_job_local_executable: str = None  # the local path to user executable for debugging job
+    debug_job_local_executable: str = (
+        None  # the local path to user executable for debugging job
+    )
     workflow_type: str = None  # Type of the workflow being debugged
     run_monitord: bool = False  # Run monitord before trying to analyze the output
     output_dir: str = None  # output_dir for all files written by monitord
     top_dir: str = None  # top_dir of the main workflow, for obtaining the db location
-    quiet_mode: bool = False  # Prints out/err filenames instead of dumping their contents
+    quiet_mode: bool = (
+        False  # Prints out/err filenames instead of dumping their contents
+    )
     strict_mode: bool = False  # Gets out/err filenames from submit file
     summary_mode: bool = False  # Print just the summary output
     debug_mode: bool = False  # Mode that enables debugging a single job
-    json_mode: bool = False  # Mode that returns all info in a structured format like JSON
-    recurse_mode: bool = False  # Mode that automatically recurses into failed sub workflows.
-    traverse_all: bool = False  # Mode that automatically traverses all descendant sub workflows.
+    json_mode: bool = (
+        False  # Mode that returns all info in a structured format like JSON
+    )
+    recurse_mode: bool = (
+        False  # Mode that automatically recurses into failed sub workflows.
+    )
+    traverse_all: bool = (
+        False  # Mode that automatically traverses all descendant sub workflows.
+    )
     indent_length: int = 0  # the number of tabs to print before printing to console
     print_invocation: bool = False  # Prints invocation command for failed jobs
-    print_pre_script: bool = False  # Prints the SCRIPT PRE line for failed jobs, if present
-    workflow_base_dir: str = None  # Workflow submit_dir or dirname(jsd) from braindump file
+    print_pre_script: bool = (
+        False  # Prints the SCRIPT PRE line for failed jobs, if present
+    )
+    workflow_base_dir: str = (
+        None  # Workflow submit_dir or dirname(jsd) from braindump file
+    )
     use_files: bool = False  # mode to use AnalyzeFiles
 
 
@@ -188,7 +204,7 @@ class AnalyzerOutput:
     def as_dict(self):
         """
         Converts all data classes and returns the analyzer output as a dictionary
-        
+
         :return: A dict containing all workflow details
         :rtype: Dict[str,Dict]
         """
@@ -200,7 +216,7 @@ class AnalyzerOutput:
     def get_failed_workflows(self):
         """
         Returns a dictionary of failed workflows
-        
+
         :return: Dict of returned :class:`Pegasus.analyzer.Workflow` objects
         :rtype: Dict[str,Workflow]
         """
@@ -213,7 +229,7 @@ class AnalyzerOutput:
     def get_all_jobs(self):
         """
         Returns a dictionary of all jobs' details for the root workflow
-        
+
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
         """
@@ -222,7 +238,7 @@ class AnalyzerOutput:
     def get_jobs_counts(self):
         """
         Returns a dataclass of jobs counts
-        
+
         :return: A dataclass :class:`Pegasus.analyzer.Counts` object
         """
         jobs = self.workflows["root"].jobs
@@ -241,7 +257,7 @@ class AnalyzerOutput:
     def get_failed_jobs(self):
         """
         Returns a dictionary of all failed jobs details
-        
+
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
         """
@@ -250,7 +266,7 @@ class AnalyzerOutput:
     def get_failing_jobs(self):
         """
         Returns a dictionary of all failing jobs details
-        
+
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
         """
@@ -259,7 +275,7 @@ class AnalyzerOutput:
     def get_held_jobs(self):
         """
         Returns a dictionary of all held jobs details
-        
+
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
         """
@@ -268,7 +284,7 @@ class AnalyzerOutput:
     def get_unknown_jobs(self):
         """
         Returns a dictionary of all unknown jobs details, for AnalyzeFiles only
-        
+
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
         """
@@ -708,7 +724,7 @@ class AnalyzeDB(BaseAnalyze):
     def get_wf_details(self, wf_detail, wf_details):
         """
         Filters out workflow details to be used in the workflow structure
-        
+
         :param wf_detail: details regarding a workflow (wf_uuid, submit_dir, host etc.)
         :param wf_details: a dict of all workflows' details
         :return: returns a :class:`Pegasus.analyzer.Workflow` object
@@ -810,7 +826,7 @@ class AnalyzeDB(BaseAnalyze):
                 wf.jobs.job_details["failing_jobs_details"][
                     failing_job_id
                 ] = self.get_job_details(
-                    workflow_stats.get_job_instance_info(failing_job_id)[0], job_tasks
+                    workflow_stats.get_job_instance_info(failing_job_id)[0], job_tasks,
                 )
 
         # Now, print information about jobs that failed...
@@ -836,7 +852,7 @@ class AnalyzeDB(BaseAnalyze):
     def get_job_details(self, job_instance_info, job_tasks):
         """
         Filters out workflow details to be used in the workflow structure
-        
+
         :param job_instance_info: information regarding a job (job_name, state, site etc.)
         :param job_tasks: information regarding all tasks in a job (hostname, exitcode, etc.)
         :return: returns a :class:`Pegasus.analyzer.JobInstance` object
@@ -1039,7 +1055,7 @@ class AnalyzeFiles(BaseAnalyze):
     def get_wf_details(self, wfparams):
         """
         Gets workflow details to be used in Analyzer Output
-        
+
         :param wfparams: A Dict containing workflow attributes from braindump
         :type: Dict
         :return: returns a :class:`Pegasus.analyzer.Workflow` object
@@ -1177,7 +1193,7 @@ class AnalyzeFiles(BaseAnalyze):
                 # This is a job line, let's parse it
                 my_job = line.split()
                 if len(my_job) != 3:
-                    logger.warn("confused parsing dag line: %s" % (line))
+                    logger.warning("confused parsing dag line: %s" % (line))
                     continue
                 if not self.has_seen(my_job[1]):
                     self.add_job(my_job[1], "UNSUBMITTED")
@@ -1191,12 +1207,12 @@ class AnalyzeFiles(BaseAnalyze):
                         # Mark job as subdax
                         self.jobs[my_job[1]].is_subdax = True
                 else:
-                    logger.warn("job appears twice in dag file: %s" % (my_job[1]))
+                    logger.warning("job appears twice in dag file: %s" % (my_job[1]))
             if line.startswith("SUBDAG EXTERNAL"):
                 # This is a subdag line, parse it to get job name and directory
                 my_job = line.split()
                 if len(my_job) != 6:
-                    logger.warn("confused parsing dag line: %s" % (line))
+                    logger.warning("confused parsing dag line: %s" % (line))
                     continue
                 if not self.has_seen(my_job[2]):
                     self.add_job(my_job[2], "UNSUBMITTED")
@@ -1204,19 +1220,19 @@ class AnalyzeFiles(BaseAnalyze):
                     self.jobs[my_job[2]].dag_path = my_job[3]
                     self.jobs[my_job[2]].subdag_dir = my_job[5]
                 else:
-                    logger.warn("job appears twice in dag file: %s" % (my_job[2]))
+                    logger.warning("job appears twice in dag file: %s" % (my_job[2]))
             if line.startswith("SCRIPT PRE"):
                 # This is a SCRIPT PRE line, parse it to get the script for the job
                 my_script = BaseAnalyze.re_parse_script_pre.search(line)
                 if my_script is None:
                     # Couldn't parse line
-                    logger.warn("confused parsing dag line: %s" % (line))
+                    logger.warning("confused parsing dag line: %s" % (line))
                     continue
                 # Get job name, and check if we have it
                 my_job = my_script.group(1)
                 if not self.has_seen(my_job):
                     # Cannot find this job, ignore this line
-                    logger.warn(
+                    logger.warning(
                         "couldn't find job: %s for PRE SCRIPT line in dag file"
                         % (my_job)
                     )
@@ -1230,7 +1246,7 @@ class AnalyzeFiles(BaseAnalyze):
                     my_job = line.split()[1]
                     if not self.has_seen(my_job):
                         # Cannot find this job, ignore this line
-                        logger.warn(
+                        logger.warning(
                             "couldn't find job: %s for VARS line in dag file" % (my_job)
                         )
                         continue
@@ -1267,7 +1283,7 @@ class AnalyzeFiles(BaseAnalyze):
 
             # Add to job list if we have never seen this job before
             if not self.has_seen(jobname):
-                logger.warn("job %s not present in dag file" % (jobname))
+                logger.warning("job %s not present in dag file" % (jobname))
                 self.add_job(jobname, jobstate)
                 if jobname.startswith("pegasus-plan") or jobname.startswith("subdax_"):
                     # Mark job as subdax
@@ -1395,7 +1411,7 @@ class AnalyzeFiles(BaseAnalyze):
                             # Skip tasks with exitcode equals to zero
                             continue
                     except Exception:
-                        logger.warn("couldn't convert exitcode to integer!")
+                        logger.warning("couldn't convert exitcode to integer!")
                         continue
                 else:
                     # We must have "error" in entry
@@ -1452,7 +1468,7 @@ class AnalyzeFiles(BaseAnalyze):
                 with open(file) as file:
                     data = file.read().rstrip()
             except Exception:
-                logger.warn("*** Cannot access: %s" % (file))
+                logger.warning("*** Cannot access: %s" % (file))
         return data
 
 

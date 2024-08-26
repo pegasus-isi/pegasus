@@ -629,7 +629,7 @@ def parse_dag_file(dag_fn):
             # This is a job line, let's parse it
             my_job = line.split()
             if len(my_job) != 3:
-                logger.warn("confused parsing dag line: %s" % (line))
+                logger.warning("confused parsing dag line: %s" % (line))
                 continue
             if not has_seen(my_job[1]):
                 add_job(my_job[1], "UNSUBMITTED")
@@ -641,12 +641,12 @@ def parse_dag_file(dag_fn):
                     # Mark job as subdax
                     jobs[my_job[1]].is_subdax = True
             else:
-                logger.warn("job appears twice in dag file: %s" % (my_job[1]))
+                logger.warning("job appears twice in dag file: %s" % (my_job[1]))
         if line.startswith("SUBDAG EXTERNAL"):
             # This is a subdag line, parse it to get job name and directory
             my_job = line.split()
             if len(my_job) != 6:
-                logger.warn("confused parsing dag line: %s" % (line))
+                logger.warning("confused parsing dag line: %s" % (line))
                 continue
             if not has_seen(my_job[2]):
                 add_job(my_job[2], "UNSUBMITTED")
@@ -654,19 +654,19 @@ def parse_dag_file(dag_fn):
                 jobs[my_job[2]].dag_path = my_job[3]
                 jobs[my_job[2]].subdag_dir = my_job[5]
             else:
-                logger.warn("job appears twice in dag file: %s" % (my_job[2]))
+                logger.warning("job appears twice in dag file: %s" % (my_job[2]))
         if line.startswith("SCRIPT PRE"):
             # This is a SCRIPT PRE line, parse it to get the script for the job
             my_script = re_parse_script_pre.search(line)
             if my_script is None:
                 # Couldn't parse line
-                logger.warn("confused parsing dag line: %s" % (line))
+                logger.warning("confused parsing dag line: %s" % (line))
                 continue
             # Get job name, and check if we have it
             my_job = my_script.group(1)
             if not has_seen(my_job):
                 # Cannot find this job, ignore this line
-                logger.warn(
+                logger.warning(
                     "couldn't find job: %s for PRE SCRIPT line in dag file" % (my_job)
                 )
                 continue
@@ -679,7 +679,7 @@ def parse_dag_file(dag_fn):
                 my_job = line.split()[1]
                 if not has_seen(my_job):
                     # Cannot find this job, ignore this line
-                    logger.warn(
+                    logger.warning(
                         "couldn't find job: %s for VARS line in dag file" % (my_job)
                     )
                     continue
@@ -715,7 +715,7 @@ def parse_jobstate_log(jobstate_fn):
 
         # Add to job list if we have never seen this job before
         if not has_seen(jobname):
-            logger.warn("job %s not present in dag file" % (jobname))
+            logger.warning("job %s not present in dag file" % (jobname))
             add_job(jobname, jobstate)
             if jobname.startswith("pegasus-plan") or jobname.startswith("subdax_"):
                 # Mark job as subdax
@@ -786,7 +786,7 @@ def dump_file(file):
         try:
             OUT = open(file)
         except Exception:
-            logger.warn("*** Cannot access: %s" % (file))
+            logger.warning("*** Cannot access: %s" % (file))
             print_console()
         else:
             print_console(os.path.split(file)[1].center(80, "-"))
@@ -828,7 +828,7 @@ def print_output_error(job):
                         # Skip tasks with exitcode equals to zero
                         continue
                 except Exception:
-                    logger.warn("couldn't convert exitcode to integer!")
+                    logger.warning("couldn't convert exitcode to integer!")
                     continue
             else:
                 # We must have "error" in entry
@@ -968,13 +968,13 @@ def print_job_instance(job_instance_id, job_instance_info, job_tasks):
 
 def print_tasks_info(job_instance_id, job_instance_info, job_tasks):
     """
-       The function prints information related to one job instance retried from the
-       stampede database
-       :param job_instance_id: the job_instance_id from the job_instance table
-       :param job_instance_info: the job instance with which the tasks are associated
-       :param job_tasks: all the tasks (invocation records) for a particular condor job/job instance
-       :return:
-       """
+    The function prints information related to one job instance retried from the
+    stampede database
+    :param job_instance_id: the job_instance_id from the job_instance table
+    :param job_instance_info: the job instance with which the tasks are associated
+    :param job_tasks: all the tasks (invocation records) for a particular condor job/job instance
+    :return:
+    """
 
     # Unquote stdout and stderr
     ji_stdout_text = utils.unquote(job_instance_info.stdout_text or "").decode("UTF-8")

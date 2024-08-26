@@ -268,7 +268,7 @@ def epochdate(timestamp):
         # Split date/time and timezone information
         m = parse_iso8601.search(timestamp)
         if m is None:
-            logger.warn('unable to match "%s" to ISO 8601' % timestamp)
+            logger.warning('unable to match "%s" to ISO 8601' % timestamp)
             return None
         else:
             dt = "%04d-%02d-%02d %02d:%02d:%02d" % (
@@ -300,7 +300,7 @@ def epochdate(timestamp):
         return int(calendar.timegm(my_time.timetuple()))
 
     except Exception:
-        logger.warn('unable to parse timestamp "%s"' % timestamp)
+        logger.warning('unable to parse timestamp "%s"' % timestamp)
         return None
 
 
@@ -405,7 +405,7 @@ def _slurp_braindb(run, brain_alternate=None):
         k, v = line.split(" ", 1)
 
         if k == "run" and v != run and run != ".":
-            logger.warn("run directory mismatch, using %s" % (run))
+            logger.warning("run directory mismatch, using %s" % (run))
             my_config[k] = run
         else:
             # Remove leading and trailing whitespaces from value

@@ -113,7 +113,7 @@ class BaseLoader:
             except exc.OperationalError as e:
                 self.check_connection(sub=True)
             if not sub:
-                self.log.warn("Connection re-established")
+                self.log.warning("Connection re-established")
 
     def individual_commit(self, event, merge=False):
         """

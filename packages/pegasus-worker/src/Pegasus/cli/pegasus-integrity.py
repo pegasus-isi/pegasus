@@ -233,7 +233,7 @@ def generate_sha256(fname):
     sha256 = sha256.strip()
     sha256 = sha256[-64:]
     if len(sha256) != 64:
-        logger.warn("Unable to determine sha256 of " + fname)
+        logger.warning("Unable to determine sha256 of " + fname)
 
     return sha256
 

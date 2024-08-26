@@ -4078,7 +4078,7 @@ class Stats:
                 p = Panorama()
                 p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
             except Exception as e:
-                logger.warn("Panorama send failure: " + e)
+                logger.warning("Panorama send failure: " + e)
 
     def all_transfers_done(self):
         self._t_end_global = time.time()
@@ -4509,7 +4509,7 @@ class SimilarWorkSet:
                 else:
                     # first verify that we can actually pull the file back
                     if not handler.protocol_check(t.get_dst_proto(), "file"):
-                        logger.warn(
+                        logger.warning(
                             "Unable to pull file from "
                             + t.get_dst_proto()
                             + " to local file. Skipping integrity check."
@@ -4750,7 +4750,7 @@ def setup_logger(debug_flag):
 
 
 def prog_sigint_handler(signum, frame):
-    logger.warn("Exiting due to signal %d" % (signum))
+    logger.warning("Exiting due to signal %d" % (signum))
     myexit(1)
 
 
@@ -5152,7 +5152,7 @@ def pegasus_transfer(
     2. loads credentials
     3. starts threads to handle transfers
 
-    pegasus-transfer may be directly invoked using this as an alternative to the 
+    pegasus-transfer may be directly invoked using this as an alternative to the
     pegasus-tranfser CLI tool.
 
 
