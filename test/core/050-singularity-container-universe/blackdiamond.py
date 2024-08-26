@@ -112,7 +112,7 @@ base_container = Container(
 
 preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        COMPUTE,
+        LOCAL,
         PEGASUS_LOCATION,
         is_stageable=True,
         arch=Arch.X86_64,
@@ -123,7 +123,7 @@ preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").ad
 
 findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        COMPUTE,
+        LOCAL,
         PEGASUS_LOCATION,
         is_stageable=True,
         arch=Arch.X86_64,
@@ -134,7 +134,7 @@ findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_s
 
 analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        COMPUTE,
+        LOCAL,
         PEGASUS_LOCATION,
         is_stageable=True,
         arch=Arch.X86_64,
