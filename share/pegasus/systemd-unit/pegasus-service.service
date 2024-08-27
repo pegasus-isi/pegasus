@@ -1,0 +1,12 @@
+[Unit]
+Description=Pegasus Service
+After=network.target
+
+[Service]
+Environment=PORT=5000
+ExecStart=/usr/bin/pegasus-service --host 0.0.0.0 --port ${PORT}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

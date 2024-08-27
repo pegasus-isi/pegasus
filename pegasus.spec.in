@@ -10,7 +10,7 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 Source:         pegasus-%{version}.tar.gz
 
 BuildRequires:  gcc, gcc-c++, javapackages-tools, make, openssl-devel, ant, python3-devel, python3-pip, python3-setuptools
-Requires:       python3, condor >= 8.8, graphviz
+Requires:       python3, condor >= 8.8, graphviz, %{?systemd_requires}
 
 %global debug_package %{nil}
 
@@ -57,18 +57,22 @@ strip dist/pegasus-%{version}/bin/pegasus-keg
 mkdir -p %{buildroot}/%{_sysconfdir}/%{name}
 mkdir -p %{buildroot}/%{_bindir}
 mkdir -p %{buildroot}/%{_datadir}
+mkdir -p %{buildroot}/%{_unitdir}
 
 cp -aR dist/pegasus-%{version}/etc/* %{buildroot}/%{_sysconfdir}/%{name}/
 cp -aR dist/pegasus-%{version}/bin/* %{buildroot}/%{_bindir}/
 cp -aR dist/pegasus-%{version}/lib* %{buildroot}/usr/
 cp -aR dist/pegasus-%{version}/share/* %{buildroot}/%{_datadir}/
 
+install -m 0644 dist/%{name}-%{version}/share/pegasus/systemd-unit/pegasus-service.service %{buildroot}/%{_unitdir}/
+
 # rm unwanted files
-rm -f %{buildroot}/%{_bindir}/keg.condor
-rm -f %{buildroot}/%{_datadir}/%{name}/java/COPYING.*
-rm -f %{buildroot}/%{_datadir}/%{name}/java/EXCEPTIONS.*
-rm -f %{buildroot}/%{_datadir}/%{name}/java/LICENSE.*
-rm -f %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
+rm -f  %{buildroot}/%{_bindir}/keg.condor
+rm -f  %{buildroot}/%{_datadir}/%{name}/java/COPYING.*
+rm -f  %{buildroot}/%{_datadir}/%{name}/java/EXCEPTIONS.*
+rm -f  %{buildroot}/%{_datadir}/%{name}/java/LICENSE.*
+rm -f  %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
+rm -rf %{buildroot}/%{_datadir}/%{name}/systemd-unit
 
 %files
 %defattr(-,root,root,-)
@@ -77,7 +81,17 @@ rm -f %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
 %{_libdir}/pegasus
 %{_libdir}/python*
 %{_datadir}/%{name}
+%{_unitdir}/pegasus-service.service
 
+%post
+# Enable the systemd user service
+systemctl daemon-reload
+
+%preun
+# Disable the service before uninstalling
+systemctl stop pegasus-service.service
+systemctl disable pegasus-service.service
+systemctl daemon-reload
 
 %changelog
 * @DATE@ Pegasus Development Team <pegasus-support@isi.edu> @PEGASUS_VERSION@
@@ -86,4 +100,3 @@ rm -f %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
 * Mon Dec 02 2013 Pegasus Development Team <pegasus-support@isi.edu> 4.3.2cvs
 - Relaxed the "java" requirements in order for the package to work on plan
   CentOS machines
-
