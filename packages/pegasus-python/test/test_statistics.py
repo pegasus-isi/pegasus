@@ -25,11 +25,7 @@ def test_initialize_empty(submit_dirs, multiple_wf, expected):
 
 
 @pytest.mark.parametrize(
-    "submit_dirs, multiple_wf",
-    [
-        (["a"], False),
-        (["a"], True),
-    ],
+    "submit_dirs, multiple_wf", [(["a"], False), (["a"], True),],
 )
 def test_initialize_single(caplog, submit_dirs, multiple_wf):
     p = PegasusStatistics(submit_dirs=submit_dirs, multiple_wf=multiple_wf)
@@ -45,11 +41,7 @@ def test_initialize_single(caplog, submit_dirs, multiple_wf):
 
 
 @pytest.mark.parametrize(
-    "submit_dirs, multiple_wf",
-    [
-        (["a", "b"], False),
-        (["a", "b"], True),
-    ],
+    "submit_dirs, multiple_wf", [(["a", "b"], False), (["a", "b"], True),],
 )
 def test_initialize_multiple(caplog, submit_dirs, multiple_wf):
     p = PegasusStatistics(submit_dirs=submit_dirs, multiple_wf=multiple_wf)
@@ -284,11 +276,7 @@ def test_get_clustering_type(mocker, caplog, submit_dirs, expected, expected_log
 
 
 @pytest.mark.parametrize(
-    "name, value",
-    [
-        ("is_uuid", True),
-        ("submit_dirs", "*"),
-    ],
+    "name, value", [("is_uuid", True), ("submit_dirs", "*"),],
 )
 def test_get_workflow_db_url_conf(mocker, name, value):
     mocker.patch(
@@ -303,11 +291,7 @@ def test_get_workflow_db_url_conf(mocker, name, value):
 
 
 @pytest.mark.parametrize(
-    "name, value",
-    [
-        ("is_uuid", True),
-        ("submit_dirs", "*"),
-    ],
+    "name, value", [("is_uuid", True), ("submit_dirs", "*"),],
 )
 def test_get_workflow_db_url_conf_fail(mocker, caplog, name, value):
     mocker.patch(
@@ -386,8 +370,7 @@ def test_get_workflow_db_url_conf_single_fail(mocker, caplog):
 
 
 @pytest.mark.parametrize(
-    "output_dir",
-    ["statistics", None],
+    "output_dir", ["statistics", None],
 )
 def test_initialize_output_dir(mocker, output_dir):
     m = mocker.patch("Pegasus.tools.utils.create_directory")
