@@ -1,8 +1,0 @@
-# This tells pegasus where the site catalog is located
-pegasus.catalog.site=XML
-pegasus.catalog.site.file=sites.xml
-
-# This tells pegasus where the tc is located
-pegasus.catalog.transformation=Text
-pegasus.catalog.transformation.file=tc.data
-

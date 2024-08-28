@@ -1,6 +1,0 @@
-#!/bin/bash
-
-mpiexec //home/rcf-proj/gmj/pegasus/SOFTWARE/pegasus/default/bin/pegasus-mpi-cluster "$@"
-
-
-

@@ -1,5 +1,0 @@
-pegasus.catalog.site=XML
-pegasus.catalog.site.file=sites.xml
-pegasus.dir.storage.deep=false
-pegasus.transfer.links=true
-
