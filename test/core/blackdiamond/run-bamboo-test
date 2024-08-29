@@ -45,7 +45,7 @@ mkdir -p staging-site
 export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
 
 # build the dax generator
-export PYTHONPATH=`pegasus-config --python`
+
 ./blackdiamond.py /usr ${CONFIG} > ${DAX}
 
 # create the site catalog

@@ -26,6 +26,3 @@ for i in range(100000):
 
 # Write the DAX to stdout
 dax.writeXML(sys.stdout)
-
-
-

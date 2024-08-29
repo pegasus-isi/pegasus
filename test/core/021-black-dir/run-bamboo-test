@@ -25,7 +25,7 @@ output_dir=./output
 mkdir -p $output_dir
 
 # build the dax generator
-export CLASSPATH=$testdir:`pegasus-config --classpath`
+export CLASSPATH=$testdir:${CLASSPATH}
 javac $testdir/BlackDiamondDAX.java
 
 # generate the dax

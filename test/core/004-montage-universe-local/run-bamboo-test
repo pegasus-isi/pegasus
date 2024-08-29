@@ -14,7 +14,6 @@ DEGREES=0.5
 TOP_DIR=`pwd`
 
 export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
-export PYTHONPATH=`pegasus-config --python`
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`

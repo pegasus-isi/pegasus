@@ -23,8 +23,4 @@ if [ ! -e pdbs ]; then
 fi
 
 echo "Running Rosetta.py"
-export PYTHONPATH=`pegasus-config --python`
 python3 Rosetta.py
-
-
-

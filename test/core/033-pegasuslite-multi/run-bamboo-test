@@ -22,7 +22,7 @@ echo "This is sample input to KEG" >f.a
 mkdir -p outputs
 
 # build the dax generator
-export CLASSPATH=$testdir:`pegasus-config --classpath`
+export CLASSPATH=$testdir:${CLASSPATH}
 javac $testdir/BlackDiamondDAX.java
 
 # generate the dax
@@ -66,8 +66,8 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="memory">1G</profile>
         <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
         <profile namespace="pegasus" key="clusters.num">1</profile>
-        <profile namespace="pegasus" key="data.configuration">sharedfs</profile>	
-        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>        
+        <profile namespace="pegasus" key="data.configuration">sharedfs</profile>
+        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
     </site>
 
 

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e 
+set -e
 
 echo "Running black-diamond-setup.py"
-export PYTHONPATH=`pegasus-config --python`
 python3 black-diamond-setup.py

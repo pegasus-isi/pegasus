@@ -13,7 +13,6 @@ if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
 fi
 
 # build the dax generator
-export PYTHONPATH=.:`pegasus-config --python`
 ./blackdiamond.py $PEGASUS_BIN_DIR/.. a > one.dax
 ./blackdiamond.py $PEGASUS_BIN_DIR/.. d > two.dax
 

@@ -14,7 +14,6 @@ fi
 # Extract the ctools archive
 
 # Generate dax
-export PYTHONPATH=`pegasus-config --python`
 python3 daxgen.py dax.xml
 
 export PATH=/usr/lib64/mpich/bin:$PATH
@@ -77,5 +76,5 @@ pegasus-plan \
     --cleanup leaf \
     --cluster label \
     --submit -v \
-    dax.xml 
+    dax.xml
 

@@ -72,10 +72,7 @@ with open("f.a", "wb+") as f:
 
 fa = File("f.a")
 rc = ReplicaCatalog().add_replica(
-    LOCAL,
-    fa,
-    "file://" + str(TOP_DIR / fa.lfn),
-    checksum={"sha256": readable_hash}
+    LOCAL, fa, "file://" + str(TOP_DIR / fa.lfn), checksum={"sha256": readable_hash}
 )
 
 # --- Transformations ----------------------------------------------------------

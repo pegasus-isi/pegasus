@@ -5,7 +5,4 @@ set -e
 CONFIG=`basename $1`
 
 echo "Running cluster.py"
-export PYTHONPATH=`pegasus-config --python`
 python3 cluster.py `which pegasus-keg` $CONFIG
-
-

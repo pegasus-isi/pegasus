@@ -3,7 +3,7 @@
 set -e
 
 TOP_DIR=`pwd`
-# determine TEST_NAME to setup site catalog                                                                                                                                                                       
+# determine TEST_NAME to setup site catalog
 if [ X${testdir} = "X" ]; then
     testdir=`dirname  $0`
 fi
@@ -42,7 +42,6 @@ if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
 fi
 
 # build the dax generator
-export CLASSPATH=.:`pegasus-config --classpath`
 javac RosettaDAX.java
 
 # generate the dax
@@ -56,27 +55,27 @@ sites:
   name: "eclair"
   arch: "x86_64"
   os.type: "linux"
-  grids: 
-   - 
-    type: "batch" 
-    contact: "rynge@eclair-sub-01.isi.edu:22" 
-    scheduler: "slurm" 
-    jobtype: "compute" 
-  profiles: 
-     pegasus: 
-      # SSH is the style to use for Bosco SSH submits. 
-      style: ssh 
+  grids:
+   -
+    type: "batch"
+    contact: "rynge@eclair-sub-01.isi.edu:22"
+    scheduler: "slurm"
+    jobtype: "compute"
+  profiles:
+     pegasus:
+      # SSH is the style to use for Bosco SSH submits.
+      style: ssh
       #
       queue: scavenge
       project: scavenge
       runtime: 1800
       glite.arguments: --cpus-per-task=1
       memory: 2G
-      # Works around bug in the HTCondor GAHP, that does not 
-      # set the remote directory 
-      change.dir: 'true' 
-      # the key to use for scp transfers 
-      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa 
+      # Works around bug in the HTCondor GAHP, that does not
+      # set the remote directory
+      change.dir: 'true'
+      # the key to use for scp transfers
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
      env:
       TMPDIR: "/scratch"
  -
@@ -101,8 +100,8 @@ sites:
   profiles:
     env:
       PEGASUS_BIN_DIR: "$PEGASUS_BIN_DIR"
-    pegasus: 
-      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa 
+    pegasus:
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
  -
   name: "staging"
   arch: "x86_64"

@@ -3,7 +3,6 @@
 set -e
 
 echo "Running blackdiamond.py"
-export PYTHONPATH=`pegasus-config --python`
 python3 blackdiamond.py
 
 SUBMIT_DIR=`cat submit_dir`

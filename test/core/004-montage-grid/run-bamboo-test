@@ -5,7 +5,6 @@ set -e
 TOP_DIR=`pwd`
 
 export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
-export PYTHONPATH=`pegasus-config --python`
 
 rm -rf montage-workflow-v3
 git clone https://github.com/pegasus-isi/montage-workflow-v3.git
@@ -31,37 +30,37 @@ sites:
   arch: "x86_64"
   os.type: "linux"
   directories:
-  - 
-    type: "sharedScratch" 
-    path: "/nfs/bamboo/scratch-90-days/CCG/scratch/ptesting" 
-    fileServers: 
-     - 
-      operation: "all" 
-      url: "scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch/ptesting" 
-  grids: 
-   - 
-    type: "batch" 
-    contact: "slurm-pegasus.isi.edu" 
-    scheduler: "slurm" 
-    jobtype: "compute" 
-   - 
-    type: "batch" 
-    contact: "slurm-pegasus.isi.edu" 
-    scheduler: "slurm" 
-    jobtype: "compute" 
-  profiles: 
-    env: 
-      PEGASUS_HOME: "/opt/pegasus" 
+  -
+    type: "sharedScratch"
+    path: "/nfs/bamboo/scratch-90-days/CCG/scratch/ptesting"
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/scratch/ptesting"
+  grids:
+   -
+    type: "batch"
+    contact: "slurm-pegasus.isi.edu"
+    scheduler: "slurm"
+    jobtype: "compute"
+   -
+    type: "batch"
+    contact: "slurm-pegasus.isi.edu"
+    scheduler: "slurm"
+    jobtype: "compute"
+  profiles:
+    env:
+      PEGASUS_HOME: "/opt/pegasus"
       MONTAGE_HOME: /opt/software/montage/current
       http_proxy: "workflow.isi.edu:3128"
-    pegasus: 
-      # SSH is the style to use for Bosco SSH submits. 
-      style: ssh 
-      # Works around bug in the HTCondor GAHP, that does not 
-      # set the remote directory 
-      change.dir: 'true' 
-      # the key to use for scp transfers 
-      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa 
+    pegasus:
+      # SSH is the style to use for Bosco SSH submits.
+      style: ssh
+      # Works around bug in the HTCondor GAHP, that does not
+      # set the remote directory
+      change.dir: 'true'
+      # the key to use for scp transfers
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
 
  -
   name: "local"

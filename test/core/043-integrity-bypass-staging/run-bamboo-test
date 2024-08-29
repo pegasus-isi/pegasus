@@ -5,7 +5,6 @@ set -e
 export TOPDIR=`pwd`
 
 # generate the dax
-export PYTHONPATH=`pegasus-config --python`
 ./workflow-generator.py
 
 # plan and submit the  workflow
@@ -24,7 +23,7 @@ echo
 echo ".sh script to check is $LS_SH"
 
 if ! (grep pegasus-integrity $LS_SH) >/dev/null 2>&1; then
-    echo 
+    echo
     echo "ERROR: $LS_SH does not contain a call to pegasus-integrity" 1>&2
     exit 1
 fi

@@ -9,18 +9,17 @@ export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     echo "Please make sure pegasus-plan is in your path"
     exit 1
-fi 
+fi
 
 export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
 
 # build the dax generator
-export PYTHONPATH=`pegasus-config --python`
 ./blackdiamond.py $REMOTE_PEGASUS_HOME > blackdiamond.dax
 
 # we need a f.a file to start
 echo "Hello world!" >f.a
 
-# empty replica catalog 
+# empty replica catalog
 cat /dev/null >rc.data
 
 # site catalog
