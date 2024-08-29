@@ -592,16 +592,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <chmod perm="0755" type="file">
       <fileset dir="${dist.share}/notification" includes="*"/>
     </chmod>
-    <chmod perm="0755" type="file">
-      <fileset dir="${dist.share}/examples" includes="**/submit"/>
-      <fileset dir="${dist.share}/examples" includes="**/*.sh"/>
-      <fileset dir="${dist.share}/examples" includes="**/*.py"/>
-      <fileset dir="${dist.share}/examples" includes="**/split"/>
-      <fileset dir="${dist.share}/examples" includes="**/submit-workflow*"/>
-      <fileset dir="${dist.share}/examples" includes="**/galactic-plane/galactic-plane"/>
-      <fileset dir="${dist.share}/examples" includes="**/galactic-plane/local*"/>
-      <fileset dir="${dist.share}/examples" includes="**/galactic-plane/remote*"/>
-    </chmod>
     <chmod perm="0644" type="file">
       <fileset dir="${dist.jars}" includes="*.jar"/>
       <fileset dir="${dist.aws.jars}" includes="*.jar"/>
