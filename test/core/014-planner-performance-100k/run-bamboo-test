@@ -19,7 +19,6 @@ set -e
 
 TOPDIR=`pwd`
 
-export PYTHONPATH=`pegasus-config --python`
 ./100k.py $REMOTE_PEGASUS_HOME > 100k.dax
 
 # create the site catalog

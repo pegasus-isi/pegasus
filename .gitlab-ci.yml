@@ -485,6 +485,8 @@ Workflow Tests:
   - tar xzf pegasus-binary-*-x86_64*.tar.gz
   - cd ..
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - export CLASSPATH=".:`pegasus-config --classpath`"
+  - export PYTHONPATH="`pegasus-config --python`"
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
@@ -519,6 +521,8 @@ Performance Tests:
   - tar xzf pegasus-binary-*-x86_64*.tar.gz
   - cd ..
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - export CLASSPATH=".:`pegasus-config --classpath`"
+  - export PYTHONPATH="`pegasus-config --python`"
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'

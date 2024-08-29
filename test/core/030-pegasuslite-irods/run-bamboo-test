@@ -29,16 +29,15 @@ export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     echo "Please make sure pegasus-plan is in your path"
     exit 1
-fi 
+fi
 
 # build the dax generator
-export CLASSPATH=.:`pegasus-config --classpath`
 javac RosettaDAX.java
 
 # generate the dax
 java RosettaDAX dax.xml
 
-#empty replica catalog 
+#empty replica catalog
 touch rc.data
 
 # site catalog

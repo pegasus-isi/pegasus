@@ -7,10 +7,6 @@ TOP_DIR=`pwd`
 BIN_DIR=`pegasus-config --bin`
 CONDOR_POOL_PEGASUS_HOME=/usr
 
-# build the dax generator
-PYTHONPATH=`pegasus-config --python`
-export PYTHONPATH=".:$PYTHONPATH"
-
 # determine TEST_NAME to setup site catalog
 TESTDIR=$(cd $testdir && pwd)
 TEST_NAME=`basename $TESTDIR`
@@ -66,7 +62,7 @@ EOF
 
 #create the transformation catalog for the outer level workflow
 cat >tc.text <<EOF
-tr level1::sleep { 
+tr level1::sleep {
   site local {
     pfn "/bin/sleep"
     os "linux"
@@ -77,7 +73,7 @@ tr level1::sleep {
   }
 }
 
-tr level2::sleep {   
+tr level2::sleep {
   site CCG {
     pfn "/bin/sleep"
     os "linux"
@@ -91,7 +87,7 @@ tr level2::sleep {
 # on the nodes
 tr blackdiamond::generate{
    site local {
-    pfn "$TOP_DIR/blackdiamond.py"     
+    pfn "$TOP_DIR/blackdiamond.py"
     os "linux"
     osrelease "rhel"
     osversion "7"
@@ -107,7 +103,7 @@ EOF
 # and the nodes in the CCG.
 cat > $INNER_DAX_TC <<EOF
 
-tr level2::sleep {   
+tr level2::sleep {
   site local {
     pfn "/bin/sleep"
     os "linux"
@@ -164,7 +160,7 @@ cat >sites.xml <<EOF
         </directory>
     </site>
 
-    
+
     <site  handle="CCG" arch="x86_64" os="LINUX">
         <grid  type="batch" contact="slurm-pegasus.isi.edu:2222" scheduler="slurm" jobtype="auxillary"/>
         <grid  type="batch" contact="slurm-pegasus.isi.edu:2222" scheduler="slurm" jobtype="compute"/>
@@ -175,8 +171,8 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="scp://bamboo@slurm-pegasus.isi.edu:2222/nfs/bamboo/scratch-90-days/CCG/${TEST_NAME}/outputs"/>
         </directory>
         <profile namespace="pegasus" key="style">ssh</profile>
-        <profile namespace="pegasus" key="change.dir">true</profile>                                                                                                                     
-        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile> 
+        <profile namespace="pegasus" key="change.dir">true</profile>
+        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
 
     </site>
 

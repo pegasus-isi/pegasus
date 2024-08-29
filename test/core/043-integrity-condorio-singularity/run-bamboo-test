@@ -3,6 +3,5 @@
 set -e
 
 echo "Running blackdiamond.py"
-export PYTHONPATH=`pegasus-config --python`
 export SSH_PRIVATE_KEY='/scitech/shared/home/bamboo/.ssh/workflow_id_rsa'
 python3 blackdiamond.py

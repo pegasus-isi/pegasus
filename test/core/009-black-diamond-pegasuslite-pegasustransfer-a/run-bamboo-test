@@ -20,10 +20,9 @@ mkdir -p outputs
 mkdir -p staging-site
 
 # build the dax generator
-export PYTHONPATH=`pegasus-config --python`
 $testdir/blackdiamond.py /usr > blackdiamond.dax
 
-#set the local scratch for the jobs                                                                                                                                                        
+#set the local scratch for the jobs
 LOCALSCRATCH=/scitech/shared/scratch-90-days/bamboo/local-scratch
 mkdir -p $LOCALSCRATCH
 
@@ -43,9 +42,9 @@ cat > sites.xml <<EOF
         </directory>
 </site>
 <site handle="condorpool" arch="x86_64" os="LINUX" >
-        <directory  path="${LOCALSCRATCH}/local-scratch" type="local-scratch" free-size="" total-size=""> 
+        <directory  path="${LOCALSCRATCH}/local-scratch" type="local-scratch" free-size="" total-size="">
 	    <file-server  operation="all" url="file://${LOCALSCRATCH}/local-scratch"/>
-        </directory>            
+        </directory>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="pegasus" key="style" >condor</profile>
 </site>

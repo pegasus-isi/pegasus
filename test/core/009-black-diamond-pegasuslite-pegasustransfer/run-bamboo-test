@@ -20,7 +20,6 @@ mkdir -p outputs
 mkdir -p staging-site
 
 # build the dax generator
-export PYTHONPATH=`pegasus-config --python`
 $testdir/blackdiamond.py /usr > blackdiamond.dax
 
 # create the site catalog
@@ -37,7 +36,7 @@ cat > sites.xml <<EOF
                 <file-server  operation="all" url="file://$TOPDIR/work">
                 </file-server>
         </directory>
-	<profile namespace="pegasus" key="pegasus_lite_env_source">${TOPDIR}/job-setup.sh</profile> 
+	<profile namespace="pegasus" key="pegasus_lite_env_source">${TOPDIR}/job-setup.sh</profile>
 </site>
 <site handle="condorpool" arch="x86_64" os="LINUX" >
         <profile namespace="condor" key="universe" >vanilla</profile>

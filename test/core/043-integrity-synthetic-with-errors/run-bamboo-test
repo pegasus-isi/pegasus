@@ -5,7 +5,6 @@ set -e
 export TOPDIR=`pwd`
 
 # generate the dax
-export PYTHONPATH=`pegasus-config --python`
 ./dax-gen.py
 
 # site catalog

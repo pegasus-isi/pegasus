@@ -18,7 +18,6 @@ echo "This is sample input to KEG" > f.a
 mkdir -p outputs
 
 # build the dax generator
-export PYTHONPATH=`pegasus-config --python`
 $testdir/blackdiamond.py /usr > blackdiamond.dax
 
 # create the site catalog

@@ -10,7 +10,7 @@ fi
 
 TOPDIR=`pwd`
 
-# determine TEST_NAME to setup site catalog 
+# determine TEST_NAME to setup site catalog
 TESTDIR=$(cd $testdir && pwd)
 TEST_NAME=`basename $TESTDIR`
 
@@ -22,7 +22,7 @@ echo "This is sample input to KEG" >f.a
 mkdir -p outputs
 
 # build the dax generator
-export CLASSPATH=$testdir:`pegasus-config --classpath`
+export CLASSPATH=$testdir:${CLASSPATH}
 javac $testdir/BlackDiamondDAX.java
 
 # generate the dax

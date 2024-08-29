@@ -25,7 +25,6 @@ if [ ! -e pdbs ]; then
 fi
 
 echo "Running Rosetta.py"
-export PYTHONPATH=`pegasus-config --python`
 python3 Rosetta.py 2>&1 | tee plan.out
 
 WORK_DIR=`cat plan.out | grep submit_dir | awk '{print $NF}' | sed -e 's/[",]//g'`
@@ -48,5 +47,3 @@ echo
 echo
 echo "Starting the workflow..."
 pegasus-run $WORK_DIR
-
-

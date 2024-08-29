@@ -18,7 +18,7 @@ echo "This is sample input to KEG" >f.a
 mkdir -p outputs
 
 # build the dax generator
-export CLASSPATH=$testdir:`pegasus-config --classpath`
+export CLASSPATH=$testdir:${CLASSPATH}
 javac $testdir/BlackDiamondDAX.java
 
 # generate the dax
@@ -77,7 +77,7 @@ sites:
     pegasus:
       clusters.num: "1"
       SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
-      
+
 EOF
 
 # plan and submit the  workflow

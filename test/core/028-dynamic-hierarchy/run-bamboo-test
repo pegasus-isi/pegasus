@@ -7,10 +7,6 @@ TOP_DIR=`pwd`
 BIN_DIR=`pegasus-config --bin`
 CONDOR_POOL_PEGASUS_HOME=/usr
 
-# build the dax generator
-PYTHONPATH=`pegasus-config --python`
-export PYTHONPATH=".:$PYTHONPATH"
-
 
 # generate the dax
 ./local_hierarchy.py $CONDOR_POOL_PEGASUS_HOME  > outer.dax

@@ -18,7 +18,7 @@ UUID=`uuidgen`
 mkdir -p outputs
 
 # build the dax generator
-export CLASSPATH=$testdir:`pegasus-config --classpath`
+export CLASSPATH=$testdir:${CLASSPATH}
 javac $testdir/BlackDiamondDAX.java
 
 # generate the dax
