@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import logging
+import shutil
 
 from pathlib import Path
 from datetime import datetime
@@ -8,7 +9,7 @@ from Pegasus.api import *
 
 logging.basicConfig(level=logging.DEBUG)
 
-PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
+PEGASUS_LOCATION = shutil.which("pegasus-keg")
 
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-metadata-" + datetime.now().strftime("%s")
@@ -47,37 +48,37 @@ print(
 )
 
 preprocess = Transformation(
-                "preprocess", 
-                namespace="pegasus", 
-                version="4.0",
-                site="condorpool",
-                pfn=PEGASUS_LOCATION,
-                is_stageable=False,
-                arch=Arch.X86_64,
-                os_type=OS.LINUX
-            ).add_metadata(size=2048, transformation="preprocess")
+    "preprocess",
+    namespace="pegasus",
+    version="4.0",
+    site="condorpool",
+    pfn=PEGASUS_LOCATION,
+    is_stageable=False,
+    arch=Arch.X86_64,
+    os_type=OS.LINUX,
+).add_metadata(size=2048, transformation="preprocess")
 
 findrange = Transformation(
-                "findrange", 
-                namespace="pegasus", 
-                version="4.0",
-                site="condorpool",
-                pfn=PEGASUS_LOCATION,
-                is_stageable=False,
-                arch=Arch.X86_64,
-                os_type=OS.LINUX
-            ).add_metadata(size=2048, transformation="findrange")
+    "findrange",
+    namespace="pegasus",
+    version="4.0",
+    site="condorpool",
+    pfn=PEGASUS_LOCATION,
+    is_stageable=False,
+    arch=Arch.X86_64,
+    os_type=OS.LINUX,
+).add_metadata(size=2048, transformation="findrange")
 
 analyze = Transformation(
-                "analyze", 
-                namespace="pegasus", 
-                version="4.0",
-                site="condorpool",
-                pfn=PEGASUS_LOCATION,
-                is_stageable=False,
-                arch=Arch.X86_64,
-                os_type=OS.LINUX
-            ).add_metadata(size=2048, transformation="analyze")
+    "analyze",
+    namespace="pegasus",
+    version="4.0",
+    site="condorpool",
+    pfn=PEGASUS_LOCATION,
+    is_stageable=False,
+    arch=Arch.X86_64,
+    os_type=OS.LINUX,
+).add_metadata(size=2048, transformation="analyze")
 
 TransformationCatalog().add_transformations(preprocess, findrange, analyze).write()
 
@@ -93,29 +94,37 @@ fc1 = File("f.Ҫ1")
 fc2 = File("f.Ͻ2")
 fd = File("f.Ɗ").add_metadata(final_output=True)
 
-preprocess_job = Job(preprocess)\
-                    .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)\
-                    .add_inputs(fa)\
-                    .add_outputs(fb1, fb2, register_replica=True)\
-                    .add_metadata(time=60)
+preprocess_job = (
+    Job(preprocess)
+    .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+    .add_inputs(fa)
+    .add_outputs(fb1, fb2, register_replica=True)
+    .add_metadata(time=60)
+)
 
-findrange_1_job = Job(findrange)\
-                    .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)\
-                    .add_inputs(fb1)\
-                    .add_outputs(fc1, register_replica=True)\
-                    .add_metadata(time=60)
+findrange_1_job = (
+    Job(findrange)
+    .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
+    .add_inputs(fb1)
+    .add_outputs(fc1, register_replica=True)
+    .add_metadata(time=60)
+)
 
-findrange_2_job = Job(findrange)\
-                    .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)\
-                    .add_inputs(fb2)\
-                    .add_outputs(fc2, register_replica=True)\
-                    .add_metadata(time=60)
+findrange_2_job = (
+    Job(findrange)
+    .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
+    .add_inputs(fb2)
+    .add_outputs(fc2, register_replica=True)
+    .add_metadata(time=60)
+)
 
-analyze_job = Job(analyze)\
-                .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)\
-                .add_inputs(fc1, fc2)\
-                .add_outputs(fd, register_replica=True)\
-                .add_metadata(time=60)
+analyze_job = (
+    Job(analyze)
+    .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
+    .add_inputs(fc1, fc2)
+    .add_outputs(fd, register_replica=True)
+    .add_metadata(time=60)
+)
 
 wf.add_jobs(preprocess_job, findrange_1_job, findrange_2_job, analyze_job)
 

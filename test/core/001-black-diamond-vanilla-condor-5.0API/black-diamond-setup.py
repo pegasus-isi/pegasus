@@ -1,4 +1,5 @@
 import logging
+import shutil
 import sys
 
 from pathlib import Path
@@ -8,7 +9,7 @@ from Pegasus.api import *
 
 logging.basicConfig(level=logging.DEBUG)
 
-PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
+PEGASUS_LOCATION = shutil.which("pegasus-keg")
 
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-5.0api-" + datetime.now().strftime("%s")
@@ -21,7 +22,9 @@ except FileExistsError:
     pass
 
 # --- Output Dir Setup for condorpool Site -------------------------------------
-condorpool_local_storage_dir = Path("/scitech/shared/scratch-90-days/bamboo/outputs") / RUN_ID
+condorpool_local_storage_dir = (
+    Path("/scitech/shared/scratch-90-days/bamboo/outputs") / RUN_ID
+)
 try:
     Path.mkdir(condorpool_local_storage_dir, parents=True)
 except FileExistsError:
@@ -65,8 +68,11 @@ SiteCatalog().add_sites(
     ),
     Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_directories(
-        Directory(Directory.LOCAL_STORAGE, str(condorpool_local_storage_dir))
-        .add_file_servers(FileServer("file://" + str(condorpool_local_storage_dir), Operation.ALL))
+        Directory(
+            Directory.LOCAL_STORAGE, str(condorpool_local_storage_dir)
+        ).add_file_servers(
+            FileServer("file://" + str(condorpool_local_storage_dir), Operation.ALL)
+        )
     )
     .add_pegasus_profile(style="condor")
     .add_pegasus_profile(auxillary_local="true")
@@ -87,7 +93,9 @@ ReplicaCatalog().add_replica(LOCAL, fa, TOP_DIR / fa.lfn).write()
 # --- Transformations ----------------------------------------------------------
 
 print(
-    "Generating transformation catalog at: {}".format(TOP_DIR / "करण-transformations.yml")
+    "Generating transformation catalog at: {}".format(
+        TOP_DIR / "करण-transformations.yml"
+    )
 )
 
 preprocess = Transformation("pЯёprocess", namespace="pέgasuζ", version="4.0").add_sites(
@@ -120,8 +128,9 @@ analyze = Transformation("analyze", namespace="pέgasuζ", version="4.0").add_si
     )
 )
 
-TransformationCatalog().add_transformations(preprocess, findrage, analyze)\
-        .write("करण-transformations.yml")
+TransformationCatalog().add_transformations(preprocess, findrage, analyze).write(
+    "करण-transformations.yml"
+)
 
 # --- Workflow -----------------------------------------------------------------
 print("Generating workflow")

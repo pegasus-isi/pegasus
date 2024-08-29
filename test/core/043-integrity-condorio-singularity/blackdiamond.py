@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import shutil
 import sys
 
 from pathlib import Path
@@ -9,7 +10,7 @@ from Pegasus.api import *
 
 logging.basicConfig(level=logging.DEBUG)
 
-PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
+PEGASUS_LOCATION = shutil.which("pegasus-keg")
 
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-integrity-checking-condorio-5.0api-" + datetime.now().strftime(
@@ -71,10 +72,7 @@ with open("f.a", "wb+") as f:
 
 fa = File("f.a")
 rc = ReplicaCatalog().add_replica(
-    LOCAL,
-    fa,
-    "file://" + str(TOP_DIR / fa.lfn),
-    checksum={"sha256": readable_hash}
+    LOCAL, fa, "file://" + str(TOP_DIR / fa.lfn), checksum={"sha256": readable_hash}
 )
 
 # --- Transformations ----------------------------------------------------------
@@ -83,7 +81,10 @@ print("Generating transformation catalog")
 tc = TransformationCatalog()
 
 # compute the initial hash for the container
-with open("/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif", "rb") as f:
+with open(
+    "/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
+    "rb",
+) as f:
     readable_hash = hashlib.sha256(f.read()).hexdigest()
 
 # A container that will be used to execute the following transformations.
@@ -91,7 +92,7 @@ tools_container = Container(
     "osgvo-el7",
     Container.SINGULARITY,
     image="scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
-    checksum={"sha256": readable_hash}
+    checksum={"sha256": readable_hash},
 )
 
 tc.add_containers(tools_container)
@@ -103,7 +104,7 @@ preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").ad
         is_stageable=True,
         arch=Arch.X86_64,
         os_type=OS.LINUX,
-        container=tools_container
+        container=tools_container,
     )
 )
 
@@ -114,7 +115,7 @@ findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_s
         is_stageable=True,
         arch=Arch.X86_64,
         os_type=OS.LINUX,
-        container=tools_container
+        container=tools_container,
     )
 )
 
@@ -125,7 +126,7 @@ analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_site
         is_stageable=True,
         arch=Arch.X86_64,
         os_type=OS.LINUX,
-        container=tools_container
+        container=tools_container,
     )
 )
 

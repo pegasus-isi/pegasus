@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from Pegasus.DAX3 import *
+import shutil
 import sys
 import os
 
@@ -11,10 +12,10 @@ dax = ADAG("100k")
 a = File("f.a")
 a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
 dax.addFile(a)
-	
+
 # Add executables to the DAX-level replica catalog
 exe = Executable(name="mymodel", installed=False, arch="x86_64")
-exe.addPFN(PFN("file:///usr/bin/pegasus-keg", "local"))
+exe.addPFN(PFN("file://" + shutil.which("pegasus-keg"), "local"))
 dax.addExecutable(exe)
 
 for i in range(100000):
@@ -25,6 +26,3 @@ for i in range(100000):
 
 # Write the DAX to stdout
 dax.writeXML(sys.stdout)
-
-
-

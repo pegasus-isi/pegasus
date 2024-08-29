@@ -1,91 +1,211 @@
 #!/usr/bin/env python3
+import logging
+import shutil
 
-from Pegasus.DAX3 import *
-import sys
-import os
+from pathlib import Path
 
-if len(sys.argv) != 2:
-	print("Usage: %s PEGASUS_HOME" % (sys.argv[0]))
-	sys.exit(1)
+from Pegasus.api import *
 
-# Create a abstract dag
-diamond = ADAG("diamond")
+logging.basicConfig(level=logging.DEBUG)
 
-# Add input file to the DAX-level replica catalog
-a = File("f.a")
-a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
-diamond.addFile(a)
-	
-# Add executables to the DAX-level replica catalog
-keg = "/usr/bin/pegasus-keg"
-e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", osrelease="rhel", osversion="7", installed=False)
-e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
-diamond.addExecutable(e_preprocess)
-	
-e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", osrelease="rhel", osversion="7", installed=False)
-e_findrange.addPFN(PFN("file://" + keg, "local"))
-e_findrange.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
+# --- Configuration ------------------------------------------------------------
+props = Properties()
+props["pegasus.dir.useTimestamp"] = "true"
+props["pegasus.dir.storage.deep"] = "false"
+props["pegasus.condor.logs.symlink"] = "false"
+props["pegasus.data.configuration"] = "sharedfs"
+props["pegasus.transfer.worker.package"] = "true"
 
-diamond.addExecutable(e_findrange)
-	
-e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", osrelease="rhel", osversion="7", installed=False)
-e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
+# there are compute jobs that are not launched by kickstart, hence *disable* integrity checking
+props["pegasus.integrity.checking"] = "none"
 
-diamond.addExecutable(e_analyze)
+props.write()
 
-# Add a preprocess job
-preprocess = Job(namespace="diamond", name="preprocess", version="4.0")
-b1 = File("f.b1")
-b2 = File("f.b2")
-preprocess.addArguments("-a preprocess","-T10","-i",a,"-o",b1,b2)
-preprocess.uses(a, link=Link.INPUT)
-preprocess.uses(b1, link=Link.OUTPUT)
-preprocess.uses(b2, link=Link.OUTPUT)
-preprocess.addProfile( Profile( Namespace.CONDOR, "universe", "vanilla" ))
-preprocess.addProfile( Profile( Namespace.PEGASUS, "gridstart", "none" ))
-diamond.addJob(preprocess)
+# --- Sites --------------------------------------------------------------------
+sc = SiteCatalog()
 
-# Add left Findrange job
-frl = Job(namespace="diamond", name="findrange", version="4.0")
-c1 = File("f.c1")
-frl.addArguments("-a findrange","-T5","-i",b1,"-o",c1)
-frl.uses(b1, link=Link.INPUT)
-frl.uses(c1, link=Link.OUTPUT)
-frl.addProfile( Profile( Namespace.CONDOR, "universe", "vanilla" ))
-frl.addProfile( Profile( Namespace.PEGASUS, "gridstart", "pegasuslite" ))
-#frl.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
-diamond.addJob(frl)
+# CCG site
+ccg_site = Site(
+    name="CCG", arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7"
+)
+ccg_site.add_directories(
+    Directory(
+        directory_type=Directory.SHARED_STORAGE,
+        path="/scitech/shared/scratch-90-days/bamboo/outputs",
+    ).add_file_servers(
+        FileServer(
+            url="file:///scitech/shared/scratch-90-days/bamboo/outputs",
+            operation_type=Operation.ALL,
+        )
+    ),
+    Directory(
+        directory_type=Directory.SHARED_SCRATCH, path="/scitech/shared/scratch-90-days"
+    ).add_file_servers(
+        FileServer(
+            url="file:///scitech/shared/scratch-90-days", operation_type=Operation.ALL
+        )
+    ),
+)
+ccg_site.add_profiles(
+    Namespace.CONDOR, getenv="True", requirements='"(TARGET.FileSystemDomain =!= "")"'
+)
+ccg_site.add_profiles(Namespace.PEGASUS, style="condor")
 
-# Add right Findrange job
-frr = Job(namespace="diamond", name="findrange", version="4.0")
-c2 = File("f.c2")
-frr.addArguments("-a findrange","-T5","-i",b2,"-o",c2)
-frr.uses(b2, link=Link.INPUT)
-frr.uses(c2, link=Link.OUTPUT)
-#frr.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
-frr.addProfile( Profile( Namespace.CONDOR, "universe", "vanilla" ))
-frr.addProfile( Profile( Namespace.PEGASUS, "gridstart", "pegasuslite" ))
-diamond.addJob(frr)
+# local site
+local_site = Site(
+    name="local", arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7"
+)
+local_site.add_directories(
+    Directory(
+        directory_type=Directory.SHARED_STORAGE,
+        path="/scitech/shared/scratch-90-days/bamboo/outputs",
+    ).add_file_servers(
+        FileServer(
+            url="file:///scitech/shared/scratch-90-days/bamboo/outputs",
+            operation_type=Operation.ALL,
+        )
+    ),
+    Directory(
+        directory_type=Directory.SHARED_SCRATCH, path="/scitech/shared/scratch-90-days"
+    ).add_file_servers(
+        FileServer(
+            url="file:///scitech/shared/scratch-90-days", operation_type=Operation.ALL
+        )
+    ),
+)
+local_site.add_grids(
+    Grid(
+        grid_type=Grid.CONDOR,
+        contact="ccg-testing1.isi.edu",
+        scheduler_type=Scheduler.CONDOR,
+        job_type=SupportedJobs.COMPUTE,
+    ),
+    Grid(
+        grid_type=Grid.CONDOR,
+        contact="ccg-testing1.isi.edu",
+        scheduler_type=Scheduler.CONDOR,
+        job_type=SupportedJobs.AUXILLARY,
+    ),
+)
+local_site.add_profiles(
+    Namespace.CONDOR, getenv="True", requirements='"(TARGET.FileSystemDomain =!= "")"'
+)
+local_site.add_profiles(Namespace.PEGASUS, style="condor")
 
-# Add Analyze job
-analyze = Job(namespace="diamond", name="analyze", version="4.0")
-d = File("f.d")
-analyze.addArguments("-a analyze","-T10","-i",c1,c2,"-o",d)
-analyze.uses(c1, link=Link.INPUT)
-analyze.uses(c2, link=Link.INPUT)
-analyze.uses(d, link=Link.OUTPUT, register=True)
-analyze.addProfile( Profile( Namespace.CONDOR, "universe", "vanilla" ))
-analyze.addProfile( Profile( Namespace.PEGASUS, "gridstart", "none" ))
-diamond.addJob(analyze)
+sc.add_sites(ccg_site, local_site)
+sc.write()
 
-# Add control-flow dependencies
-diamond.addDependency(Dependency(parent=preprocess, child=frl))
-diamond.addDependency(Dependency(parent=preprocess, child=frr))
-diamond.addDependency(Dependency(parent=frl, child=analyze))
-diamond.addDependency(Dependency(parent=frr, child=analyze))
+# --- Replicas -----------------------------------------------------------------
+with open("f.a", "w") as f:
+    f.write("This is sample input to KEG\n")
 
-# Write the DAX to stdout
-diamond.writeXML(sys.stdout)
+rc = ReplicaCatalog()
+rc.add_replica("local", "f.a", Path(".").resolve() / "f.a")
+rc.write()
 
+# --- Transformations ----------------------------------------------------------
+preprocess = Transformation(
+    name="preprocess",
+    namespace="diamond",
+    version="4.0",
+    site="local",
+    pfn=shutil.which("pegasus-keg"),
+    is_stageable=True,
+    arch=Arch.X86_64,
+    os_type=OS.LINUX,
+    os_release="rhel",
+    os_version="7",
+)
 
+findrange = Transformation(
+    name="findrange",
+    namespace="diamond",
+    version="4.0",
+    site="local",
+    pfn=shutil.which("pegasus-keg"),
+    is_stageable=True,
+    arch=Arch.X86_64,
+    os_type=OS.LINUX,
+    os_release="rhel",
+    os_version="7",
+).add_pegasus_profile(style="condorc")
 
+analyze = Transformation(
+    name="analyze",
+    namespace="diamond",
+    version="4.0",
+    site="local",
+    pfn=shutil.which("pegasus-keg"),
+    is_stageable=True,
+    arch=Arch.X86_64,
+    os_type=OS.LINUX,
+    os_release="rhel",
+    os_version="7",
+)
+
+tc = TransformationCatalog()
+tc.add_transformations(preprocess, findrange, analyze)
+tc.write()
+
+# --- Workflow -----------------------------------------------------------------
+
+fa = File("f.a")
+fb1 = File("f.b1")
+fb2 = File("f.b2")
+fc1 = File("f.c1")
+fc2 = File("f.c2")
+fd = File("f.d")
+
+wf = Workflow("diamond")
+
+preprocess_job = (
+    Job(preprocess)
+    .add_args("-a", "preprocess", "-T", "10", "-i", fa, "-o", fb1, fb2)
+    .add_inputs(fa)
+    .add_outputs(fb1, fb2)
+    .add_condor_profile(universe="vanilla")
+    .add_pegasus_profile(grid_start="none")
+)
+
+findrange_1_job = (
+    Job(findrange)
+    .add_args("-a", "findrange", "-T", "5", "-i", fb1, "-o", fc1)
+    .add_inputs(fb1)
+    .add_outputs(fc1)
+    .add_condor_profile(universe="vanilla")
+    .add_pegasus_profile(grid_start="pegasuslite")
+)
+
+findrange_2_job = (
+    Job(findrange)
+    .add_args("-a", "findrange", "-T", "5", "-i", fb2, "-o", fc2)
+    .add_inputs(fb2)
+    .add_outputs(fc2)
+    .add_condor_profile(universe="vanilla")
+    .add_pegasus_profile(grid_start="pegasuslite")
+)
+
+analyze_job = (
+    Job(analyze)
+    .add_args("-a", "analyze", "-T", "10", "-i", fc1, fc2, "-o", fd)
+    .add_inputs(fc1, fc2)
+    .add_outputs(fd)
+    .add_condor_profile(universe="vanilla")
+    .add_pegasus_profile(grid_start="none")
+)
+
+wf.add_jobs(preprocess_job, findrange_1_job, findrange_2_job, analyze_job)
+
+try:
+    wf.plan(
+        dir="work",
+        verbose=3,
+        sites=["local"],
+        output_sites=["local"],
+        cluster=["horizontal"],
+        cleanup="leaf",
+        force=True,
+        submit=True,
+    )
+except PegasusClientError as e:
+    print(e)
