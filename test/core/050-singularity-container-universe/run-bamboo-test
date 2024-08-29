@@ -9,7 +9,6 @@ TESTNAME=`basename $1`
 echo "Running test $TOPDIR -> $TESTNAME"
 
 # generate the dax
-export PYTHONPATH=`pegasus-config --python`
 PLAN_OUT=$TOPDIR/$TESTNAME/plan.out
 ./blackdiamond.py $TESTNAME 2>&1 | tee $PLAN_OUT
 
