@@ -20,7 +20,7 @@ mkdir -p outputs
 mkdir -p staging-site
 
 # build the dax generator
-$testdir/blackdiamond.py /usr > blackdiamond.dax
+$testdir/blackdiamond.py "$(dirname $(dirname $(which pegasus-version)))" > blackdiamond.dax
 
 # create the site catalog
 cat > sites.xml <<EOF

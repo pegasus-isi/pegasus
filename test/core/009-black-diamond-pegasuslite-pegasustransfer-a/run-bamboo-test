@@ -20,7 +20,7 @@ mkdir -p outputs
 mkdir -p staging-site
 
 # build the dax generator
-$testdir/blackdiamond.py /usr > blackdiamond.dax
+$testdir/blackdiamond.py "$(dirname $(dirname $(which pegasus-version)))" > blackdiamond.dax
 
 #set the local scratch for the jobs
 LOCALSCRATCH=/scitech/shared/scratch-90-days/bamboo/local-scratch
