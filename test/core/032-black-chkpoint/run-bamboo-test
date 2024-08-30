@@ -24,7 +24,7 @@ export CLASSPATH=$testdir:${CLASSPATH}
 javac $testdir/BlackDiamondWorkflow.java
 
 # generate the workflow
-java BlackDiamondWorkflow /usr blackdiamond.yml
+java BlackDiamondWorkflow "$(dirname $(dirname $(which pegasus-version)))" blackdiamond.yml
 
 # create the site catalog
 cat >sites.yml <<EOF

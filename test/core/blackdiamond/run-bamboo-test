@@ -46,7 +46,7 @@ export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegas
 
 # build the dax generator
 
-./blackdiamond.py /usr ${CONFIG} > ${DAX}
+./blackdiamond.py "$(dirname $(dirname $(which pegasus-version)))" ${CONFIG} > ${DAX}
 
 # create the site catalog
 cat > sites.yml << EOF

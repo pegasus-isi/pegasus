@@ -26,7 +26,7 @@ export CLASSPATH=$testdir:${CLASSPATH}
 javac $testdir/BlackDiamondDAX.java
 
 # generate the dax
-java BlackDiamondDAX /usr blackdiamond.dax
+java BlackDiamondDAX "$(dirname $(dirname $(which pegasus-version)))" blackdiamond.dax
 
 # create the site catalog
 cat > sites.yml <<EOF

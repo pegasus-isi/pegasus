@@ -5,6 +5,7 @@ echo "Running blackdiamond.py"
 python3 blackdiamond.py
 
 SUBMIT_DIR=`cat submit_dir`
+
 # account for deep submit directory structure
 cd $SUBMIT_DIR/00/00
 

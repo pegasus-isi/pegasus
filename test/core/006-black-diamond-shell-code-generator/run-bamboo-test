@@ -20,7 +20,8 @@ mkdir -p outputs
 javac BlackDiamondDAX.java
 
 # generate the dax
-java BlackDiamondDAX /usr blackdiamond.dax
+PEGASUS_HOME="$(dirname $(dirname $(which pegasus-version)))"
+java BlackDiamondDAX "${PEGASUS_HOME}" blackdiamond.dax
 
 # create the site catalog
 cat > sites.yml <<EOF
@@ -50,7 +51,7 @@ sites:
   profiles:
     env:
       SSH_PRIVATE_KEY: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
-      PEGASUS_HOME: "/usr"
+      PEGASUS_HOME: "${PEGASUS_HOME}"
       GLOBUS_LOCATION: "/ccg/software/globus/default"
 EOF
 
