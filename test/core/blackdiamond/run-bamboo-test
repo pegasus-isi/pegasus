@@ -45,8 +45,12 @@ mkdir -p staging-site
 export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
 
 # build the dax generator
-
-./blackdiamond.py "$(dirname $(dirname $(which pegasus-version)))" ${CONFIG} > ${DAX}
+if [[ "${CONFIG}" == *"sharedfs"*  ]]; then
+    PEGASUS_HOME="/usr"
+else
+    PEGASUS_HOME="$(dirname $(dirname $(which pegasus-version)))"
+fi
+./blackdiamond.py "${PEGASUS_HOME}" ${CONFIG} > ${DAX}
 
 # create the site catalog
 cat > sites.yml << EOF

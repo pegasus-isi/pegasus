@@ -4,5 +4,11 @@ set -e
 
 CONFIG=`basename $1`
 
+if [[ "${CONFIG}" == *"-sharedfs"*  ]]; then
+    PEGASUS_KEG="/usr/bin/pegasus-keg"
+else
+    PEGASUS_KEG=`which pegasus-keg`
+fi
+
 echo "Running cluster.py"
-python3 cluster.py `which pegasus-keg` $CONFIG
+python3 cluster.py "${PEGASUS_KEG}" $CONFIG
