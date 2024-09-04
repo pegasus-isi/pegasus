@@ -1,79 +1,112 @@
 #!/usr/bin/env python3
 
-from Pegasus.DAX3 import *
-import sys
 import os
+import sys
+
+from Pegasus.api import *
 
 if len(sys.argv) != 2:
-	print("Usage: %s PEGASUS_HOME" % (sys.argv[0]))
-	sys.exit(1)
+    print("Usage: %s PEGASUS_HOME" % (sys.argv[0]))
+    sys.exit(1)
 
 # Create a abstract dag
-diamond = ADAG("diamond")
+diamond = Workflow("diamond")
+
+rc = ReplicaCatalog()
+tc = TransformationCatalog()
+diamond.add_replica_catalog(rc)
+diamond.add_transformation_catalog(tc)
 
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
-a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
-diamond.addFile(a)
-	
+rc.add_replica("local", a.lfn, "file://" + os.getcwd() + "/f.a")
+
 # Add executables to the DAX-level replica catalog
 # In this case the binary is pegasus-keg, which is shipped with Pegasus, so we use
 # the remote PEGASUS_HOME to build the path.
-e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
-e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
-diamond.addExecutable(e_preprocess)
-	
-e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=False)
-e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
-diamond.addExecutable(e_findrange)
-	
-e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=False)
-e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
-diamond.addExecutable(e_analyze)
+e_preprocess = Transformation(
+    namespace="diamond",
+    name="preprocess",
+    version="4.0",
+    os_type=OS.LINUX,
+    arch=Arch.X86_64,
+    is_stageable=True,
+    site="local",
+    pfn="file://" + sys.argv[1] + "/bin/pegasus-keg",
+)
+
+e_findrange = Transformation(
+    namespace="diamond",
+    name="findrange",
+    version="4.0",
+    os_type=OS.LINUX,
+    arch=Arch.X86_64,
+    is_stageable=True,
+    site="local",
+    pfn="file://" + sys.argv[1] + "/bin/pegasus-keg",
+)
+
+e_analyze = Transformation(
+    namespace="diamond",
+    name="analyze",
+    version="4.0",
+    os_type=OS.LINUX,
+    arch=Arch.X86_64,
+    is_stageable=True,
+    site="local",
+    pfn="file://" + sys.argv[1] + "/bin/pegasus-keg",
+)
+
+tc.add_transformations(e_preprocess, e_findrange, e_analyze)
 
 # Add a preprocess job
-preprocess = Job(namespace="diamond", name="preprocess", version="4.0")
+preprocess = Job(e_preprocess)
 b1 = File("f.b1")
 b2 = File("f.b2")
-preprocess.addArguments("-a preprocess","-T5","-i",a,"-o",b1,b2)
-preprocess.uses(a, link=Link.INPUT)
-preprocess.uses(b1, link=Link.OUTPUT)
-preprocess.uses(b2, link=Link.OUTPUT)
-diamond.addJob(preprocess)
+preprocess.add_args("-a preprocess", "-T5", "-i", a, "-o", b1, b2)
+preprocess.add_inputs(a)
+preprocess.add_outputs(
+    b1,
+)
+preprocess.add_outputs(
+    b2,
+)
+diamond.add_jobs(preprocess)
 
 # Add left Findrange job
-frl = Job(namespace="diamond", name="findrange", version="4.0")
+frl = Job(e_findrange)
 c1 = File("f.c1")
-frl.addArguments("-a findrange","-T5","-i",b1,"-o",c1)
-frl.uses(b1, link=Link.INPUT)
-frl.uses(c1, link=Link.OUTPUT)
-diamond.addJob(frl)
+frl.add_args("-a findrange", "-T5", "-i", b1, "-o", c1)
+frl.add_inputs(b1)
+frl.add_outputs(
+    c1,
+)
+diamond.add_jobs(frl)
 
 # Add right Findrange job
-frr = Job(namespace="diamond", name="findrange", version="4.0")
+frr = Job(e_findrange)
 c2 = File("f.c2")
-frr.addArguments("-a findrange","-T5","-i",b2,"-o",c2)
-frr.uses(b2, link=Link.INPUT)
-frr.uses(c2, link=Link.OUTPUT)
-diamond.addJob(frr)
+frr.add_args("-a findrange", "-T5", "-i", b2, "-o", c2)
+frr.add_inputs(b2)
+frr.add_outputs(
+    c2,
+)
+diamond.add_jobs(frr)
 
 # Add Analyze job
-analyze = Job(namespace="diamond", name="analyze", version="4.0")
+analyze = Job(e_analyze)
 d = File("f.d")
-analyze.addArguments("-a analyze","-T5","-i",c1,c2,"-o",d)
-analyze.uses(c1, link=Link.INPUT)
-analyze.uses(c2, link=Link.INPUT)
-analyze.uses(d, link=Link.OUTPUT, register=True)
-diamond.addJob(analyze)
+analyze.add_args("-a analyze", "-T5", "-i", c1, c2, "-o", d)
+analyze.add_inputs(c1)
+analyze.add_inputs(c2)
+analyze.add_outputs(d, register_replica=True)
+diamond.add_jobs(analyze)
 
 # Add control-flow dependencies
-diamond.addDependency(Dependency(parent=preprocess, child=frl))
-diamond.addDependency(Dependency(parent=preprocess, child=frr))
-diamond.addDependency(Dependency(parent=frl, child=analyze))
-diamond.addDependency(Dependency(parent=frr, child=analyze))
+diamond.add_dependency(preprocess, children=[frl])
+diamond.add_dependency(preprocess, children=[frr])
+diamond.add_dependency(frl, children=[analyze])
+diamond.add_dependency(frr, children=[analyze])
 
 # Write the DAX to stdout
-diamond.writeXML(sys.stdout)
-
-
-
+diamond.write(sys.stdout)

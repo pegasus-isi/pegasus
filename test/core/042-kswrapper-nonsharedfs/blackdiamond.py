@@ -1,98 +1,121 @@
 #!/usr/bin/env python3
-import sys
+
 import os
-from Pegasus.DAX3 import *
+import sys
+
+from Pegasus.api import *
 
 if len(sys.argv) != 2:
-        print("Usage: %s PEGASUS_BIN" % (sys.argv[0]))
-        sys.exit(1)
+    print("Usage: %s PEGASUS_BIN" % (sys.argv[0]))
+    sys.exit(1)
 
 
 # Create a DAX
-diamond = ADAG("diamond")
+diamond = Workflow("diamond")
+
+rc = ReplicaCatalog()
+tc = TransformationCatalog()
+diamond.add_replica_catalog(rc)
+diamond.add_transformation_catalog(tc)
 
 # Add some metadata
-diamond.metadata("name", "diamond")
-diamond.metadata("createdby", "Karan Vahi")
+diamond.add_metadata(name="diamond")
+diamond.add_metadata(createdby="Karan Vahi")
 
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
-a.addPFN(PFN("scp://bamboo@bamboo.isi.edu" + os.getcwd() + "/f.a", "local"))
-a.metadata("size", "1024")
-a.metadata("raw_input", "true")
-diamond.addFile(a)
+a.add_metadata(size="1024")
+a.add_metadata(raw_input="true")
+rc.add_replica("local", a.lfn, "scp://bamboo@bamboo.isi.edu" + os.getcwd() + "/f.a")
 
 # Add executables to the DAX-level replica catalog
-keg = PFN("file://" + sys.argv[1] + "/pegasus-keg", "local")
-e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
-e_preprocess.metadata("size", "2048")
-e_preprocess.metadata("transformation", "preprocess")
-e_preprocess.addPFN(keg)
-diamond.addExecutable(e_preprocess)
+e_preprocess = Transformation(
+    namespace="diamond",
+    name="preprocess",
+    version="4.0",
+    os_type=OS.LINUX,
+    arch=Arch.X86_64,
+    is_stageable=True,
+    site="local",
+    pfn="file://" + sys.argv[1] + "/pegasus-keg",
+)
+e_preprocess.add_metadata(size="2048")
+e_preprocess.add_metadata(transformation="preprocess")
 
-e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=False)
-e_findrange.metadata("size", "2048")
-e_findrange.metadata("transformation", "findrange")
-e_findrange.addPFN(keg)
-diamond.addExecutable(e_findrange)
+e_findrange = Transformation(
+    namespace="diamond",
+    name="findrange",
+    version="4.0",
+    os_type=OS.LINUX,
+    arch=Arch.X86_64,
+    is_stageable=True,
+    site="local",
+    pfn="file://" + sys.argv[1] + "/pegasus-keg",
+)
+e_findrange.add_metadata(size="2048")
+e_findrange.add_metadata(transformation="findrange")
 
-e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=False)
-e_analyze.metadata("size", "2048")
-e_analyze.metadata("transformation", "analyze")
-e_analyze.addPFN(keg)
-diamond.addExecutable(e_analyze)
+e_analyze = Transformation(
+    namespace="diamond",
+    name="analyze",
+    version="4.0",
+    os_type=OS.LINUX,
+    arch=Arch.X86_64,
+    is_stageable=True,
+    site="local",
+    pfn="file://" + sys.argv[1] + "/pegasus-keg",
+)
+e_analyze.add_metadata(size="2048")
+e_analyze.add_metadata(transformation="analyze")
+
+
+tc.add_transformations(e_preprocess, e_findrange, e_analyze)
 
 # Add a preprocess job
 preprocess = Job(e_preprocess)
-preprocess.metadata("time", "60")
+preprocess.add_metadata(time="60")
 b1 = File("f.b1")
 b2 = File("f.b2")
-preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1, "-o",b2)
-preprocess.uses(a, link=Link.INPUT)
-preprocess.uses(b1, link=Link.OUTPUT, transfer=True, register=True)
-preprocess.uses(b2, link=Link.OUTPUT, transfer=True, register=True)
-diamond.addJob(preprocess)
+preprocess.add_args("-a preprocess", "-T60", "-i", a, "-o", b1, "-o", b2)
+preprocess.add_inputs(a)
+preprocess.add_outputs(b1, stage_out=True, register_replica=True)
+preprocess.add_outputs(b2, stage_out=True, register_replica=True)
+diamond.add_jobs(preprocess)
 
 # Add left Findrange job
 frl = Job(e_findrange)
-frl.metadata("time", "60")
+frl.add_metadata(time="60")
 c1 = File("f.c1")
-frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-frl.uses(b1, link=Link.INPUT)
-frl.uses(c1, link=Link.OUTPUT, transfer=True, register=True)
-diamond.addJob(frl)
+frl.add_args("-a findrange", "-T60", "-i", b1, "-o", c1)
+frl.add_inputs(b1)
+frl.add_outputs(c1, stage_out=True, register_replica=True)
+diamond.add_jobs(frl)
 
 # Add right Findrange job
 frr = Job(e_findrange)
-frr.metadata("time", "60")
+frr.add_metadata(time="60")
 c2 = File("f.c2")
-frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-frr.uses(b2, link=Link.INPUT)
-frr.uses(c2, link=Link.OUTPUT, transfer=True, register=True)
-diamond.addJob(frr)
+frr.add_args("-a findrange", "-T60", "-i", b2, "-o", c2)
+frr.add_inputs(b2)
+frr.add_outputs(c2, stage_out=True, register_replica=True)
+diamond.add_jobs(frr)
 
 # Add Analyze job
 analyze = Job(e_analyze)
-analyze.metadata("time", "60")
+analyze.add_metadata(time="60")
 d = File("f.d")
-d.metadata("final_output", "true")
-analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-analyze.uses(c1, link=Link.INPUT)
-analyze.uses(c2, link=Link.INPUT)
-analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
-diamond.addJob(analyze)
+d.add_metadata(final_output="true")
+analyze.add_args("-a analyze", "-T60", "-i", c1, c2, "-o", d)
+analyze.add_inputs(c1)
+analyze.add_inputs(c2)
+analyze.add_outputs(d, stage_out=True, register_replica=True)
+diamond.add_jobs(analyze)
 
-# Add dependencies
-diamond.depends(parent=preprocess, child=frl)
-diamond.depends(parent=preprocess, child=frr)
-diamond.depends(parent=frl, child=analyze)
-diamond.depends(parent=frr, child=analyze)
+# Add control-flow dependencies
+diamond.add_dependency(preprocess, children=[frl])
+diamond.add_dependency(preprocess, children=[frr])
+diamond.add_dependency(frl, children=[analyze])
+diamond.add_dependency(frr, children=[analyze])
 
 # Write the DAX to stdout
-import sys
-diamond.writeXML(sys.stdout)
-
-# Write the DAX to a file
-f = open("diamond.dax","w")
-diamond.writeXML(f)
-f.close()
+diamond.write(sys.stdout)
