@@ -26,7 +26,7 @@ e_preprocess = Transformation(
     namespace="diamond",
     name="preprocess",
     version="4.0",
-    os_type="linux",
+    os_type=OS.LINUX,
     arch=Arch.X86_64,
     is_stageable=True,
 )
@@ -35,7 +35,7 @@ e_findrange = Transformation(
     namespace="diamond",
     name="findrange",
     version="4.0",
-    os_type="linux",
+    os_type=OS.LINUX,
     arch=Arch.X86_64,
     is_stageable=True,
 )
@@ -44,7 +44,7 @@ e_analyze = Transformation(
     namespace="diamond",
     name="analyze",
     version="4.0",
-    os_type="linux",
+    os_type=OS.LINUX,
     arch=Arch.X86_64,
     is_stageable=True,
 )
