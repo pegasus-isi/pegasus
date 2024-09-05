@@ -1,0 +1,48 @@
+---
+pegasus: "5.0"
+sites:
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "${TOPDIR}/CONDORPOOL/shared-scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///${TOPDIR}/CONDORPOOL/shared-scratch"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "${TOPDIR}/LOCAL/shared-storage"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///${TOPDIR}/LOCAL/shared-storage"
+   -
+    type: "sharedScratch"
+    path: "${TOPDIR}/LOCAL/shared-scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///${TOPDIR}/LOCAL/shared-scratch"
+  profiles:
+    env:
+      PEGASUS_HOME: "${PEGASUS_BIN_DIR}/.."
+    pegasus:
+      clusters.num: "1"
+

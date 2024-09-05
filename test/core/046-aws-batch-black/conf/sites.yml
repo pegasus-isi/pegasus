@@ -1,0 +1,47 @@
+---
+pegasus: "5.0"
+sites:
+ -
+  name: "aws-batch"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "${S3_BUCKET}"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://${S3_URL_PREFIX}/${S3_BUCKET}"
+  profiles:
+    pegasus:
+      clusters.num: "1"
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "${TOPDIR}/LOCAL/shared-storage"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://${TOPDIR}/LOCAL/shared-storage"
+   -
+    type: "sharedScratch"
+    path: "${TOPDIR}/LOCAL/shared-scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://${TOPDIR}/LOCAL/shared-scratch"
+  profiles:
+    env:
+      PEGASUS_HOME: "${PEGASUS_LOCAL_BIN_DIR}/.."
+    pegasus:
+      clusters.num: "1"
+

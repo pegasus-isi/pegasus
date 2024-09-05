@@ -1,0 +1,63 @@
+---
+pegasus: "5.0"
+sites:
+ -
+  name: "cartman-data"
+  arch: "x86"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "${TOPDIR}/staging-site/scratch/${TEST_NAME}"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://bamboo@bamboo.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}"
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "/scitech/shared/scratch-90-days/${TEST_NAME}"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "${TOPDIR}/LOCAL/shared-storage"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///${TOPDIR}/LOCAL/shared-storage"
+   -
+    type: "sharedScratch"
+    path: "${TOPDIR}/LOCAL/shared-scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///${TOPDIR}/LOCAL/shared-scratch"
+  profiles:
+    env:
+      PEGASUS_HOME: "${PEGASUS_BIN_DIR}/.."
+      ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
+    pegasus:
+      clusters.num: "1"
+

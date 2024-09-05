@@ -3,7 +3,7 @@
 set -e
 
 # this variable is expanded by the planner when
-# parsing in the sites.xml file in the conf directory
+# parsing in the sites.yml file in the conf directory
 TOPDIR=`pwd`
 export TOPDIR
 

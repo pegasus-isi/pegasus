@@ -1,4 +1,4 @@
-pegasus.catalog.site.file=./conf/sites.xml
+pegasus.catalog.site.file=./conf/sites.yml
 
 pegasus.data.configuration = condorio
 
