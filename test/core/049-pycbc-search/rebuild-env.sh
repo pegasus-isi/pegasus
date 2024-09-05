@@ -10,7 +10,7 @@ if [ -e $TARGETDIR ]; then
 fi
 
 cd /tmp
-#wget -nv -O conda_setup.sh https://repo.anaconda.com/miniconda/Miniconda3-py38_23.11.0-2-Linux-x86_64.sh 
+#wget -nv -O conda_setup.sh https://repo.anaconda.com/miniconda/Miniconda3-py38_23.11.0-2-Linux-x86_64.sh
 wget -nv -O conda_setup.sh https://repo.anaconda.com/miniconda/Miniconda3-py310_24.4.0-0-Linux-x86_64.sh
 bash conda_setup.sh -b -p $TARGETDIR
 rm -f conda_setup.sh
@@ -36,4 +36,7 @@ pip3 install -r companion.txt
 pip3 install  .
 
 # install the pegasus python dependencies
-pip install boto3 certifi GitPython pyjwt pyyaml s3transfer six urllib3
+pip3 install boto3 certifi GitPython pyjwt pyyaml s3transfer six urllib3
+
+# Remove Pegasus packages that get installed from PyPi so we use the ones being tested
+pip3 uninstall -y pegasus-wms.api pegasus-wms.common
