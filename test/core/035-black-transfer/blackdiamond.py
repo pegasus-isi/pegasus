@@ -23,7 +23,7 @@ a = File("f.a")
 rc.add_replica("local", a.lfn, "file://" + os.getcwd() + "/f.a")
 
 a1 = File("f.a1")
-rc.add_replica("condorpool", a1.lfn, "file://" + os.getcwd() + "/f.a1")
+rc.add_replica("condorpool", a1.lfn, "file://" + sys.argv[2] + "/f.a1")
 
 # Add executables to the DAX-level replica catalog
 # In this case the binary is pegasus-keg, which is shipped with Pegasus, so we use
