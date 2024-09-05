@@ -144,19 +144,19 @@ fd = File("f.Ɗ")
 try:
     Workflow("blÅckƊiamond㒀㑖").add_jobs(
         Job(preprocess)
-        .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+        .add_args("-a", "preprocess", "-T10", "-i", fa, "-o", fb1, fb2)
         .add_inputs(fa)
         .add_outputs(fb1, fb2, register_replica=True),
         Job(findrage)
-        .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
+        .add_args("-a", "findrange", "-T10", "-i", fb1, "-o", fc1)
         .add_inputs(fb1)
         .add_outputs(fc1, register_replica=True),
         Job(findrage)
-        .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
+        .add_args("-a", "findrange", "-T10", "-i", fb2, "-o", fc2)
         .add_inputs(fb2)
         .add_outputs(fc2, register_replica=True),
         Job(analyze)
-        .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
+        .add_args("-a", "analyze", "-T10", "-i", fc1, fc2, "-o", fd)
         .add_inputs(fc1, fc2)
         .add_outputs(fd, register_replica=True),
     ).plan(

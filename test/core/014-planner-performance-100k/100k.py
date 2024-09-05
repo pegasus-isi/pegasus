@@ -30,7 +30,7 @@ tc.add_transformations(exe)
 
 for i in range(100000):
     job = Job(exe)
-    job.add_args("-T", "5", "-i", a)
+    job.add_args("-T10", "-i", a)
     job.add_inputs(a)
     dax.add_jobs(job)
 

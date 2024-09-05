@@ -44,13 +44,19 @@ sc = SiteCatalog().add_sites(
     Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_directories(
         Directory(Directory.SHARED_SCRATCH, shared_scratch_dir).add_file_servers(
-            FileServer("scp://bamboo@bamboo.isi.edu/" + shared_scratch_dir, Operation.ALL)
+            FileServer(
+                "scp://bamboo@bamboo.isi.edu/" + shared_scratch_dir, Operation.ALL
+            )
         ),
         Directory(Directory.SHARED_STORAGE, shared_storage_dir).add_file_servers(
-            FileServer("scp://bamboo@bamboo.isi.edu/" + shared_storage_dir, Operation.ALL)
+            FileServer(
+                "scp://bamboo@bamboo.isi.edu/" + shared_storage_dir, Operation.ALL
+            )
         ),
     )
-    .add_pegasus_profile(SSH_PRIVATE_KEY='/scitech/shared/home/bamboo/.ssh/workflow_id_rsa')
+    .add_pegasus_profile(
+        SSH_PRIVATE_KEY="/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
+    )
     .add_pegasus_profile(clusters_num=1),
     Site(CONDOR_POOL, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_pegasus_profile(style="condor")
@@ -62,7 +68,9 @@ sc = SiteCatalog().add_sites(
 print("Generating replica catalog")
 
 # create initial input file and compute its hash for integrity checking
-with open("/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/f.a", "wb+") as f:
+with open(
+    "/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/f.a", "wb+"
+) as f:
     f.write(b"This is sample input to KEG\n")
     f.seek(0)
     readable_hash = hashlib.sha256(f.read()).hexdigest()
@@ -71,13 +79,17 @@ fa = File("f.a")
 rc = ReplicaCatalog().add_replica(
     LOCAL,
     fa,
-    "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/" + fa.lfn,
-    checksum={"sha256": readable_hash}
+    "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/"
+    + fa.lfn,
+    checksum={"sha256": readable_hash},
 )
 
 # --- Transformations ----------------------------------------------------------
 # compute the initial hash for the container
-with open("/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif", "rb") as f:
+with open(
+    "/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
+    "rb",
+) as f:
     readable_hash = hashlib.sha256(f.read()).hexdigest()
 
 print("Generating transformation catalog")
@@ -89,7 +101,7 @@ tools_container = Container(
     image="scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
     checksum={"sha256": readable_hash},
     mounts=["${PEGASUS_SHARED_BIN_DIR}:${PEGASUS_SHARED_BIN_DIR}"],
-    bypass_staging=True
+    bypass_staging=True,
 )
 
 tc.add_containers(tools_container)
@@ -102,7 +114,7 @@ preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").ad
         arch=Arch.X86_64,
         os_type=OS.LINUX,
         bypass_staging=True,
-        container=tools_container
+        container=tools_container,
     )
 )
 
@@ -114,7 +126,7 @@ findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_s
         arch=Arch.X86_64,
         os_type=OS.LINUX,
         bypass_staging=True,
-        container=tools_container
+        container=tools_container,
     )
 )
 
@@ -126,7 +138,7 @@ analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_site
         arch=Arch.X86_64,
         os_type=OS.LINUX,
         bypass_staging=True,
-        container=tools_container
+        container=tools_container,
     )
 )
 
@@ -145,19 +157,19 @@ fd = File("f.d")
 try:
     Workflow("blackdiamond").add_jobs(
         Job(preprocess)
-        .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+        .add_args("-a", "preprocess", "-T10", "-i", fa, "-o", fb1, fb2)
         .add_inputs(fa, bypass_staging=True)
         .add_outputs(fb1, fb2, register_replica=True),
         Job(findrage)
-        .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
+        .add_args("-a", "findrange", "-T10", "-i", fb1, "-o", fc1)
         .add_inputs(fb1)
         .add_outputs(fc1, register_replica=True),
         Job(findrage)
-        .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
+        .add_args("-a", "findrange", "-T10", "-i", fb2, "-o", fc2)
         .add_inputs(fb2)
         .add_outputs(fc2, register_replica=True),
         Job(analyze)
-        .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
+        .add_args("-a", "analyze", "-T10", "-i", fc1, fc2, "-o", fd)
         .add_inputs(fc1, fc2)
         .add_outputs(fd, register_replica=True),
     ).add_site_catalog(sc).add_replica_catalog(rc).add_transformation_catalog(tc).plan(
@@ -165,7 +177,7 @@ try:
         verbose=3,
         relative_dir=RUN_ID,
         sites=[CONDOR_POOL],
-        staging_sites={CONDOR_POOL:LOCAL},
+        staging_sites={CONDOR_POOL: LOCAL},
         output_site=LOCAL,
         force=True,
         submit=True,

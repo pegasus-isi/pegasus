@@ -12,7 +12,7 @@ steps:
             cwlVersion: v1.1
             class: CommandLineTool
             baseCommand: $PEGASUS_LOCAL_BIN_DIR/pegasus-keg
-            arguments: ["-a", "preprocess", "-T60", "-o", "f.b1", "-o", "f.b2"]
+            arguments: ["-a", "preprocess", "-T10", "-o", "f.b1", "-o", "f.b2"]
             requirements:
                 DockerRequirement:
                     dockerPull: opensciencegrid/osgvo-el7
@@ -28,7 +28,7 @@ steps:
                     type: File
                     outputBinding:
                         glob: f.b1
-                
+
                 of2:
                     type: File
                     outputBinding:
@@ -43,7 +43,7 @@ steps:
             cwlVersion: v1.1
             class: CommandLineTool
             baseCommand: $PEGASUS_LOCAL_BIN_DIR/pegasus-keg
-            arguments: ["-a", "findrange", "-T60", "-o", "f.c1"]
+            arguments: ["-a", "findrange", "-T10", "-o", "f.c1"]
             requirements:
                 DockerRequirement:
                     dockerPull: opensciencegrid/osgvo-el7
@@ -69,7 +69,7 @@ steps:
             cwlVersion: v1.1
             class: CommandLineTool
             baseCommand: $PEGASUS_LOCAL_BIN_DIR/pegasus-keg
-            arguments: ["-a", "findrange", "-T60", "-o", "f.c2"]
+            arguments: ["-a", "findrange", "-T10", "-o", "f.c2"]
             requirements:
                 DockerRequirement:
                     dockerPull: opensciencegrid/osgvo-el7
@@ -95,7 +95,7 @@ steps:
             cwlVersion: v1.1
             class: CommandLineTool
             baseCommand: $PEGASUS_LOCAL_BIN_DIR/pegasus-keg
-            arguments: ["-a", "analyze", "-T60", "-o", "f.d"]
+            arguments: ["-a", "analyze", "-T10", "-o", "f.d"]
             requirements:
                 DockerRequirement:
                     dockerPull: opensciencegrid/osgvo-el7
@@ -106,7 +106,7 @@ steps:
                         prefix: -i
                         separate: true
                         position: 0
-                
+
                 if2:
                     type: File
                     inputBinding:
@@ -116,7 +116,7 @@ steps:
                 of:
                     type: File
                     outputBinding:
-                        glob: f.d  
+                        glob: f.d
         in:
             if1: findrange1/of
             if2: findrange2/of

@@ -10,7 +10,7 @@ from Pegasus.tools import worker_utils as utils
 
 logging.basicConfig(level=logging.DEBUG)
 
-PEGASUS_LOCATION=utils.backticks("which pegasus-keg").strip()
+PEGASUS_LOCATION = utils.backticks("which pegasus-keg").strip()
 
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-5.0-" + datetime.now().strftime("%s")
@@ -23,7 +23,9 @@ except FileExistsError:
     pass
 
 # --- Output Dir Setup for condorpool Site -------------------------------------
-condorpool_local_storage_dir = Path("/scitech/shared/scratch-90-days/bamboo/outputs") / RUN_ID
+condorpool_local_storage_dir = (
+    Path("/scitech/shared/scratch-90-days/bamboo/outputs") / RUN_ID
+)
 try:
     Path.mkdir(condorpool_local_storage_dir, parents=True)
 except FileExistsError:
@@ -42,7 +44,7 @@ conf["pegasus.catalog.transformation.file"] = "transformations.yml"
 conf["pegasus.catalog.replica"] = "YAML"
 conf["pegasus.catalog.replica.file"] = "replicas.yml"
 conf["pegasus.data.configuration"] = "condorio"
-#conf["pegasus.integrity.checking"] = "none"
+# conf["pegasus.integrity.checking"] = "none"
 conf.write()
 
 # --- Sites --------------------------------------------------------------------
@@ -125,8 +127,9 @@ analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_site
     )
 )
 
-TransformationCatalog().add_transformations(preprocess, findrage, analyze)\
-        .write("transformations.yml")
+TransformationCatalog().add_transformations(preprocess, findrage, analyze).write(
+    "transformations.yml"
+)
 
 # --- Workflow -----------------------------------------------------------------
 print("Generating workflow")
@@ -140,19 +143,19 @@ fd = File("f.d")
 try:
     Workflow("blackƊiamond").add_jobs(
         Job(preprocess)
-        .add_args("-a", "preprocess", "-T", "60", "-i", fa, "-o", fb1, fb2)
+        .add_args("-a", "preprocess", "-T10", "-i", fa, "-o", fb1, fb2)
         .add_inputs(fa)
         .add_outputs(fb1, fb2, register_replica=True),
         Job(findrage)
-        .add_args("-a", "findrange", "-T", "60", "-i", fb1, "-o", fc1)
+        .add_args("-a", "findrange", "-T10", "-i", fb1, "-o", fc1)
         .add_inputs(fb1)
         .add_outputs(fc1, register_replica=True),
         Job(findrage)
-        .add_args("-a", "findrange", "-T", "60", "-i", fb2, "-o", fc2)
+        .add_args("-a", "findrange", "-T10", "-i", fb2, "-o", fc2)
         .add_inputs(fb2)
         .add_outputs(fc2, register_replica=True),
         Job(analyze)
-        .add_args("-a", "analyze", "-T", "60", "-i", fc1, fc2, "-o", fd)
+        .add_args("-a", "analyze", "-T10", "-i", fc1, fc2, "-o", fd)
         .add_inputs(fc1, fc2)
         .add_outputs(fd, register_replica=True),
     ).plan(

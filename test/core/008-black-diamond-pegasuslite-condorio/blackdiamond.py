@@ -119,28 +119,28 @@ wf = Workflow("diamond")
 
 preprocess_job = (
     Job(preprocess)
-    .add_args("-a", "preprocess", "-T", "10", "-i", fa, "-o", fb1, fb2)
+    .add_args("-a", "preprocess", "-T10", "-i", fa, "-o", fb1, fb2)
     .add_inputs(fa)
     .add_outputs(fb1, fb2)
 )
 
 findrange_1_job = (
     Job(findrange)
-    .add_args("-a", "findrange", "-T", "5", "-i", fb1, "-o", fc1)
+    .add_args("-a", "findrange", "-T10", "-i", fb1, "-o", fc1)
     .add_inputs(fb1)
     .add_outputs(fc1)
 )
 
 findrange_2_job = (
     Job(findrange)
-    .add_args("-a", "findrange", "-T", "5", "-i", fb2, "-o", fc2)
+    .add_args("-a", "findrange", "-T10", "-i", fb2, "-o", fc2)
     .add_inputs(fb2)
     .add_outputs(fc2)
 )
 
 analyze_job = (
     Job(analyze)
-    .add_args("-a", "analyze", "-T", "10", "-i", fc1, fc2, "-o", fd)
+    .add_args("-a", "analyze", "-T10", "-i", fc1, fc2, "-o", fd)
     .add_inputs(fc1, fc2)
     .add_outputs(fd)
 )

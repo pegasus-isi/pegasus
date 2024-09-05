@@ -68,7 +68,7 @@ tc.add_transformations(e_preprocess, e_findrange, e_analyze)
 preprocess = Job(e_preprocess)
 b1 = File("f.b1")
 b2 = File("f.b2")
-preprocess.add_args("-a preprocess", "-T60", "-i", a, "-o", b1, b2)
+preprocess.add_args("-a preprocess", "-T10", "-i", a, "-o", b1, b2)
 preprocess.add_inputs(a)
 preprocess.add_inputs(a1)
 preprocess.add_outputs(
@@ -92,7 +92,7 @@ diamond.add_jobs(frl)
 # Add right Findrange job
 frr = Job(e_findrange)
 c2 = File("f.c2")
-frr.add_args("-a findrange", "-T60", "-i", b2, "-o", c2)
+frr.add_args("-a findrange", "-T10", "-i", b2, "-o", c2)
 frr.add_inputs(b2)
 frr.add_outputs(
     c2,
@@ -102,7 +102,7 @@ diamond.add_jobs(frr)
 # Add Analyze job
 analyze = Job(e_analyze)
 d = File("f.d")
-analyze.add_args("-a analyze", "-T60", "-i", c1, c2, "-o", d)
+analyze.add_args("-a analyze", "-T10", "-i", c1, c2, "-o", d)
 analyze.add_inputs(c1)
 analyze.add_inputs(c2)
 analyze.add_outputs(d, register_replica=True)
