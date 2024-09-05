@@ -307,13 +307,13 @@ Docs:
 
 # Deploy packages
 
-Deploy Python:
-  stage: deploy
-  image: centos:7
-  dependencies:
-  - 'Python'
-  script:
-  - find packages -type d
+# Deploy Python:
+#   stage: deploy
+#   image: pegasus/buildenv:rhel_8
+#   dependencies:
+#   - 'Python'
+#   script:
+#   - find packages -type d
 
 Binaries:
   stage: deploy
