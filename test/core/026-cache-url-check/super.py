@@ -1,37 +1,37 @@
 #!/usr/bin/env python3
 
-from Pegasus.DAX3 import *
-import sys
 import os
+import sys
+
+from Pegasus.api import *
 
 # Create a abstract dag
-diamond = ADAG("super-diamond")
+diamond = Workflow("super-diamond")
+
+rc = ReplicaCatalog()
+tc = TransformationCatalog()
+diamond.add_replica_catalog(rc)
+diamond.add_transformation_catalog(tc)
 
 # Add input file to the DAX-level replica catalog
 a = File("one.dax")
-a.addPFN(PFN("file://" + os.getcwd() + "/one.dax", "local"))
-diamond.addFile(a)
+rc.add_replica("local", a.lfn, "file://" + os.getcwd() + "/one.dax")
 
-	
 b = File("two.dax")
-b.addPFN(PFN("file://" + os.getcwd() + "/two.dax", "local"))
-diamond.addFile(b)
+rc.add_replica("local", b.lfn, "file://" + os.getcwd() + "/two.dax")
 
 # Add DAX job 1
-one = DAX("one.dax")
-one.addArguments('--staging-site local -vvvv')
-diamond.addJob(one)
+one = SubWorkflow("one.dax")
+one.add_planner_args(staging_sites={"condor_pool": "local"}, verbose=4)
+diamond.add_jobs(one)
 
 # Add DAX job 2
-two = DAX("two.dax")
-two.addArguments('--staging-site local -vvvv')
-diamond.addJob(two)
+two = SubWorkflow("two.dax")
+two.add_planner_args(staging_sites={"condor_pool": "local"}, verbose=4)
+diamond.add_jobs(two)
 
 # Add control-flow dependencies
-diamond.addDependency(Dependency(parent=one, child=two))
+diamond.add_dependency(one, children=[two])
 
 # Write the DAX to stdout
-diamond.writeXML(sys.stdout)
-
-
-
+diamond.write(sys.stdout)
