@@ -1,0 +1,39 @@
+---
+pegasus: "5.0"
+sites:
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "$PWD"
+    freeSize: "null"
+    totalSize: "null"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$PWD"
+   -
+    type: "sharedScratch"
+    path: "$PWD"
+    freeSize: "null"
+    totalSize: "null"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$PWD"
+  profiles:
+    env:
+      GLOBUS_LOCATION: "/usr"
+    condor:
+      getenv: "True"
+      should_transfer_files: "YES"
+      when_to_transfer_output: "ON_EXIT_OR_EVICT"
+    pegasus:
+      clusters.size: "200"
+      style: "condor"
+

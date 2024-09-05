@@ -13,7 +13,7 @@ pegasus.dir.storage.mapper.replica.file=./conf/output_map.dat
 dagman.retry=3
 dagman.maxpre=1
 pegasus.condor.arguments.quote=true
-pegasus.catalog.site.file=./conf/site-local.xml
+pegasus.catalog.site.file=./conf/site-local.yml
 
 pegasus.code.generator Shell
 
