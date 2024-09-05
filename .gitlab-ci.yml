@@ -337,6 +337,9 @@ Tutorial Container:
   dependencies:
   - pre-job
   - "RHEL: [x86_64, rhel_8]"
+  needs:
+  - pre-job
+  - "RHEL: [x86_64, rhel_8]"
   tags:
   - x86_64
   - docker-cli
@@ -479,6 +482,9 @@ Workflow Tests:
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:
+  - pre-job
+  - "RHEL: [x86_64, rhel_8]"
+  needs:
   - pre-job
   - "RHEL: [x86_64, rhel_8]"
   tags:
