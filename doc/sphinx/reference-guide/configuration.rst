@@ -167,7 +167,7 @@ site catalog applies to all jobs and all application that run at the site.
 Commonly, site catalog profiles set environment settings like the
 ``LD_LIBRARY_PATH``, or globus rsl parameters like queue and project names.
 The following example illustrates the creation of a site called ``CCG``, which
-has two profiles added to it at the end. 
+has two profiles added to it at the end.
 
 .. code-block:: python
     :emphasize-lines: 17,18
@@ -176,9 +176,9 @@ has two profiles added to it at the end.
     ccg_site = Site(name="CCG", arch=Arch.X86_64, os_type=OS.LINUX)\
                 .add_grids(
                     Grid(
-                        grid_type=Grid.GT5, 
-                        contact="obelix.isi.edu/jobmanager-fork", 
-                        scheduler_type=Scheduler.FORK, 
+                        grid_type=Grid.GT5,
+                        contact="obelix.isi.edu/jobmanager-fork",
+                        scheduler_type=Scheduler.FORK,
                         job_type=SupportedJobs.AUXILLARY
                     )
                 )\
@@ -196,17 +196,17 @@ Profiles in Transformation Catalog
 
 Some profiles require a narrower scope than that of what the site catalog offers
 as they may only apply to certain applications on certain sites.
-Examples of this would be transformation specific profiles such as CPU related 
+Examples of this would be transformation specific profiles such as CPU related
 variables or job clustering options. Such profiles are best specified in the \
 transformation catalog.
 
 Profiles can be associated to a specific transformation site or the transformation
 itself (which would then be applied to all of its transformation sites).
 
-In the following example, the transformation ``keg`` resides on two sites 
+In the following example, the transformation ``keg`` resides on two sites
 (represented as TransformationSite objects). Profiles have been added to each
 site specificly as well as to ``keg`` itself. The environment variable, ``APP_HOME``
-would be applied to ``keg`` for both the ``isi`` and ``wind`` sites.  
+would be applied to ``keg`` for both the ``isi`` and ``wind`` sites.
 
 .. code-block:: python
     :emphasize-lines: 3,12,24

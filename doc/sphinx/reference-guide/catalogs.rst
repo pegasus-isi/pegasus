@@ -553,9 +553,6 @@ Pegasus supports the following implementations of the Site Catalog.
 1. **YAML** (Default) Corresponds to the schema described
    :download:`here <../../schemas/5.0/sc-5.0.yml>`.
 
-2. **XML** Corresponds to the schema described
-   :download:`here <../../schemas/sc-4.0/sc-4.0.html>`.
-
 The above two formats are functionally equivalent
 
 .. _sc-YAML:
@@ -573,7 +570,7 @@ To override this you have to set the following properties
 We recommend that users use the Python API to generate the site catalog
 
 The following illustrates how :py:class:`Pegasus.api.site_catalog.SiteCatalog`
-can be used to generate a new Site Catalog programatically.
+can be used to generate a new Site Catalog programmatically.
 
 .. tabs::
 
@@ -669,57 +666,6 @@ can be used to generate a new Site Catalog programatically.
             fileServers:
             - {url: 'scp://obelix.isi.edu/data', operation: put}
             - {url: 'http://obelix.isi.edu/data', operation: get}
-
-.. _sc-XML4:
-
-XML
-----
-
-This format allows defining filesystem of shared as well as local type
-on the head node of the remote cluster as well as on the backend nodes
-
-.. figure:: ../images/sc-4.0_p2.png
-   :alt: Schema Image of the Site Catalog XML4
-
-   Schema Image of the Site Catalog XML4
-
-Below is an example of the XML4 site catalog
-
-.. code-block:: xml
-
-   <?xml version="1.0" encoding="UTF-8"?>
-   <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-                version="4.0">
-
-       <site  handle="local" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/tmp/workflows/scratch">
-               <file-server operation="all" url="file:///tmp/workflows/scratch"/>
-           </directory>
-           <directory type="local-storage" path="/tmp/workflows/outputs">
-               <file-server operation="all" url="file:///tmp/workflows/outputs"/>
-           </directory>
-       </site>
-
-       <site  handle="condor_pool" arch="x86_64" os="LINUX">
-           <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/>
-           <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
-           <directory type="shared-scratch" path="/lustre">
-               <file-server operation="all" url="gsiftp://smarty.isi.edu/lustre"/>
-           </directory>
-           <replica-catalog type="LRC" url="rlsn://smarty.isi.edu"/>
-       </site>
-
-       <site  handle="staging_site" arch="x86_64" os="LINUX">
-           <directory type="shared-scratch" path="/data">
-               <file-server operation="put" url="scp://obelix.isi.edu/data"/>
-               <file-server operation="get" url="http://obelix.isi.edu/data"/>
-           </directory>
-       </site>
-
-   </sitecatalog>
-
 
 Site Catalog Converter pegasus-sc-converter
 -------------------------------------------

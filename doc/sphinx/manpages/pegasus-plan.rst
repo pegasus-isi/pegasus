@@ -596,10 +596,6 @@ Files
    is the suggested location of the latest YAML schema used to validate the
    replica catalog.
 
-**$PEGASUS_HOME/etc/sc-4.0.xsd**
-   is the suggested location of the latest Site Catalog schema that is
-   used to create the XML version of the site catalog
-
 **$PEGASUS_HOME/etc/sample-5.0-data/**
    is where you can find the latest sample catalog and workflow files in
    the YAML format.

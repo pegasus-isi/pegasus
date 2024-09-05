@@ -137,7 +137,7 @@ includes the following:
 
     The stdout of the executable referred in the job submit file. In
     Pegasus, most jobs are launched via kickstart. Hence, this file
-    contains the kickstart XML provenance record that captures runtime
+    contains the kickstart provenance record that captures runtime
     provenance on the remote node where the job was executed. n varies
     from 1-N where N is the JOB RETRY value in the .dag file. The
     exitpost executable is invoked on the <job>.out file and it moves
@@ -284,7 +284,7 @@ Kickstart does not work with:
 Pegasus automatically disables kickstart for the above jobs.
 
 Kickstart captures useful runtime provenance information about the job
-launched by it on the remote note, and puts in an XML record that it
+launched by it on the remote note, and puts in an YAML record that it
 writes to its own stdout. The stdout appears in the workflow submit
 directory as <job>.out.00n . The following information is captured by
 kickstart and logged:
@@ -557,115 +557,6 @@ highlighted:
                   user: ptesting
                   gid: 100
                   group: users
-
-    .. tab:: XML
-
-        .. code-block:: shell
-
-            <?xml version="1.0" encoding="ISO-8859-1"?>
-
-            <invocation xmlns="http://pegasus.isi.edu/schema/invocation" \
-                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
-                  xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.0.xsd" \
-                  version="2.0" start="2009-01-30T19:17:41.157-06:00" duration="0.321" transformation="pegasus::dirmanager"\
-                 derivation="pegasus::dirmanager:1.0" resource="cobalt" wf-label="scb" \
-                 wf-stamp="2009-01-30T17:12:55-08:00" hostaddr="141.142.30.219" hostname="co-login.ncsa.uiuc.edu"\
-                 pid="27714" uid="29548" user="vahi" gid="13872" group="bvr" umask="0022">
-
-            <mainjob start="2009-01-30T19:17:41.426-06:00" duration="0.052" pid="27783">
-
-            <usage utime="0.036" stime="0.004" minflt="739" majflt="0" nswap="0" nsignals="0" nvcsw="36" nivcsw="3"/>
-
-            <status raw="0"><regular exitcode="0"/></status>
-
-            <statcall error="0">
-            <!-- deferred flag: 0 -->
-            <file name="/u/ac/vahi/SOFTWARE/pegasus/default/bin/dirmanager">23212F7573722F62696E2F656E762070</file>
-            <statinfo mode="0100755" size="8202" inode="85904615883" nlink="1" blksize="16384" \
-               blocks="24" mtime="2008-09-22T18:52:37-05:00" atime="2009-01-30T14:54:18-06:00" \
-               ctime="2009-01-13T19:09:47-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/>
-            </statcall>
-
-            <argument-vector>
-            <arg nr="1">--create</arg>
-            <arg nr="2">--dir</arg>
-            <arg nr="3">/u/ac/vahi/globus-test/EXEC/vahi/pegasus/scb/run0001</arg>
-            </argument-vector>
-
-            </mainjob>
-
-            <cwd>/u/ac/vahi/globus-test/EXEC</cwd>
-
-            <usage utime="0.012" stime="0.208" minflt="4232" majflt="0" nswap="0" nsignals="0" nvcsw="15" nivcsw="74"/>
-            <machine page-size="16384" provider="LINUX">
-            <stamp>2009-01-30T19:17:41.157-06:00</stamp>
-            <uname system="linux" nodename="co-login" release="2.6.16.54-0.2.5-default" machine="ia64">#1 SMP Mon Jan 21\
-                    13:29:51 UTC 2008</uname>
-            <ram total="148299268096" free="123371929600" shared="0" buffer="2801664"/>
-            <swap total="1179656486912" free="1179656486912"/>
-            <boot idle="1315786.920">2009-01-15T10:19:50.283-06:00</boot>
-            <cpu count="32" speed="1600" vendor=""></cpu>
-            <load min1="3.50" min5="3.50" min15="2.60"/>
-            <proc total="841" running="5" sleeping="828" stopped="5" vmsize="10025418752" rss="2524299264"/>
-            <task total="1125" running="6" sleeping="1114" stopped="5"/>
-            </machine>
-            <statcall error="0" id="stdin">
-            <!-- deferred flag: 0 -->
-            <file name="/dev/null"/>
-            <statinfo mode="020666" size="0" inode="68697" nlink="1" blksize="16384" blocks="0" \
-                mtime="2007-05-04T05:54:02-05:00" atime="2007-05-04T05:54:02-05:00" \
-              ctime="2009-01-15T10:21:54-06:00" uid="0" user="root" gid="0" group="root"/>
-            </statcall>
-
-            <statcall error="0" id="stdout">
-            <temporary name="/tmp/gs.out.s9rTJL" descriptor="3"/>
-            <statinfo mode="0100600" size="29" inode="203420686" nlink="1" blksize="16384" blocks="128" \
-            mtime="2009-01-30T19:17:41-06:00" atime="2009-01-30T19:17:41-06:00"\
-            ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/>
-            <data>mkdir finished successfully.
-            </data>
-            </statcall>
-            <statcall error="0" id="stderr">
-            <temporary name="/tmp/gs.err.kobn3S" descriptor="5"/>
-            <statinfo mode="0100600" size="0" inode="203420689" nlink="1" blksize="16384" blocks="0" \
-            mtime="2009-01-30T19:17:41-06:00" atime="2009-01-30T19:17:41-06:00" \
-            ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/>
-            </statcall>
-
-            <statcall error="0" id="gridstart">
-            <!-- deferred flag: 0 -->
-            <file name="/u/ac/vahi/SOFTWARE/pegasus/default/bin/kickstart">7F454C46020101000000000000000000</file>
-            <statinfo mode="0100755" size="255445" inode="85904615876" nlink="1" blksize="16384" blocks="504" \
-             mtime="2009-01-30T18:06:28-06:00" atime="2009-01-30T19:17:41-06:00"\
-            ctime="2009-01-30T18:06:28-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/>
-            </statcall>
-            <statcall error="0" id="logfile">
-            <descriptor number="1"/>
-            <statinfo mode="0100600" size="0" inode="53040253" nlink="1" blksize="16384" blocks="0" \
-            mtime="2009-01-30T19:17:39-06:00" atime="2009-01-30T19:17:39-06:00" \
-            ctime="2009-01-30T19:17:39-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/>
-            </statcall>
-            <statcall error="0" id="channel">
-            <fifo name="/tmp/gs.app.Ien1m0" descriptor="7" count="0" rsize="0" wsize="0"/>
-            <statinfo mode="010640" size="0" inode="203420696" nlink="1" blksize="16384" blocks="0" \
-             mtime="2009-01-30T19:17:41-06:00" atime="2009-01-30T19:17:41-06:00" \
-            ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/>
-            </statcall>
-
-            <environment>
-            <env key="GLOBUS_GRAM_JOB_CONTACT">https://co-login.ncsa.uiuc.edu:50001/27456/1233364659/</env>
-            <env key="GLOBUS_GRAM_MYJOB_CONTACT">URLx-nexus://co-login.ncsa.uiuc.edu:50002/</env>
-            <env key="GLOBUS_LOCATION">/usr/local/prews-gram-4.0.7-r1/</env>
-            ....
-            </environment>
-
-            <resource>
-            <soft id="RLIMIT_CPU">unlimited</soft>
-            <hard id="RLIMIT_CPU">unlimited</hard>
-            <soft id="RLIMIT_FSIZE">unlimited</soft>
-            ....
-            </resource>
-            </invocation>
 
 .. note::
 

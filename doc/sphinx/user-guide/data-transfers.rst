@@ -87,20 +87,6 @@ explicitly set the stage_out flag to false for the file.
                   stageOut: false
                   registerReplica: true
 
-    .. code-tab:: xml XML
-
-         <!-- snippet of job description -->
-         <job id="ID000001" namespace="example" name="mDiffFit" version="1.0"
-              node-label="preprocess" >
-           <argument>-a top -T 3  -i <file name="f.a"/>  -o <file name="f.b1"/> -o <file name="f.b12"/></argument>
-
-            <uses name="f.a" link="input" transfer="true" register="true"/>
-            <uses name="f.b2" link="output" transfer="false" register="true" />
-            <!-- tells Pegasus to not transfer the output file f.b to the output site -->
-            <uses name="f.b2" link="output" transfer="false" register="false"  />
-            ...
-         </job>
-
 .. _ref-data-staging-configuration:
 
 Data Staging Configuration
@@ -497,7 +483,7 @@ Information on how to control the number of stagein and stageout jobs
 can be found in the `Data Movement Nodes <#data-movement-nodes>`__
 section.
 
-To control the number of threads pegasus-transfer can use in 
+To control the number of threads pegasus-transfer can use in
 standard transfer jobs and when invoked by PegasusLite,
 see the :ref:`pegasus.transfer.threads <transfer-props>` property.
 
@@ -867,8 +853,8 @@ Staging of Job Checkpoint Files
 
 Pegasus has support for transferring job checkpoint files back to the
 staging site when a job exceeds its advertised running time or fails due to some
-error. This can be done by marking file(s) as checkpoint(s) using one of the 
-workflow APIs. The following describes how to do this, using the :ref:`api-python` API. 
+error. This can be done by marking file(s) as checkpoint(s) using one of the
+workflow APIs. The following describes how to do this, using the :ref:`api-python` API.
 
 .. code-block:: python
 
@@ -885,13 +871,13 @@ consumed by the job.
 Next, we discuss how to address several common application checkpointing scenarios:
 
 1. **You would like Pegasus to signal your application to start writing out a checkpoint file.**
-   In this scenario we use the Pegasus profile, ``checkpoint.time``, to specify 
-   the time (in minutes) at which a ``SIGTERM`` is to be sent by ``pegsaus-kickstart`` 
-   to the running executable. The executable should then handle the ``SIGTERM`` 
-   by starting to write out a checkpoint file. At time 
-   ``(checkpoint.time + (maxwalltime-checkpoint.time)/2)``, a ``KILL`` signal will 
-   be sent to the job. The given formula is used to allow the application time 
-   to write the checkpoint file before being sending a ``SIGKILL``. 
+   In this scenario we use the Pegasus profile, ``checkpoint.time``, to specify
+   the time (in minutes) at which a ``SIGTERM`` is to be sent by ``pegsaus-kickstart``
+   to the running executable. The executable should then handle the ``SIGTERM``
+   by starting to write out a checkpoint file. At time
+   ``(checkpoint.time + (maxwalltime-checkpoint.time)/2)``, a ``KILL`` signal will
+   be sent to the job. The given formula is used to allow the application time
+   to write the checkpoint file before being sending a ``SIGKILL``.
 
 .. code-block:: python
 
@@ -905,10 +891,10 @@ Next, we discuss how to address several common application checkpointing scenari
 
 .. figure:: ../images/checkpoint-time.png
    :alt: Use of SIGTERM and SIGKILL when checkpointing a file
-   
+
    What ``pegasus-kickstart`` will do based on
    the profiles ``checkpoint.time`` and ``maxwalltime``, and how your application
-   should respond. 
+   should respond.
 
 2. **The application is expected to run for a very long time and you would like to periodically save checkpoint files.**
    Pegasus currently does not provide the means to asynchrounsly send checkpoint
@@ -918,14 +904,14 @@ Next, we discuss how to address several common application checkpointing scenari
    follow the steps outlined above, and ensure that the Pegasus property
    ``dagman.retry`` is set to some value high enough to allow your application
    to run to completion. Another way to intentionlly kill the job is to have it
-   write out a checkpoint file, then return nonzero if it is not complete, at 
+   write out a checkpoint file, then return nonzero if it is not complete, at
    which point it will be restarted automatically by Pegasus.
 
 .. note::
 
       When using the ``condorio`` data staging configuration, an empty checkpoint
       file (placeholder) must be created and referenced in the replica catalog prior to submitting
-      the workflow. 
+      the workflow.
 
 
 .. caution::

@@ -48,16 +48,6 @@ Some examples of variable expansion are illustrated below:
           profiles:
             globus: {project: ${PROJECT}}
 
-    .. code-tab:: xml XML Snippet
-
-        <job id="ID0000001" namespace="diamond" name="preprocess" version="4.0">
-                <argument>-a preprocess -T60 -i <file name="f.a"/> -o <file name="f.b1"/> <file name="f.b2"/></argument>
-                <uses name="f.a" link="input"/>
-                <uses name="f.b1" link="output"/>
-                <uses name="f.b2" link="output"/>
-                <profile namespace="globus" key="project">${PROJECT}</profile>
-        </job>
-
 -  **Site Catalog**
 
    In the site catalog, the site catalog entries are templated, where
@@ -82,21 +72,6 @@ Some examples of variable expansion are illustrated below:
             path: ${PWD}/LOCAL/shared-storage
             fileServers:
             - {url: 'file://${PWD}/LOCAL/shared-storage', operation: all}
-
-    .. code-tab:: xml  XML Snippet
-
-      <site  handle="local" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
-         <directory  path="${PWD}/LOCAL/shared-scratch" type="shared-scratch" free-size="" total-size="">
-            <file-server  operation="all" url="file:///${PWD}/LOCAL/shared-scratch">
-            </file-server>
-         </directory>
-         <directory  path="${PWD}/LOCAL/shared-storage" type="shared-storage" free-size="" total-size="">
-            <file-server  operation="all" url="file:///${PWD}/LOCAL/shared-storage">
-            </file-server>
-         </directory>
-         <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
-         <profile namespace="pegasus" key="clusters.num" >1</profile>
-      </site>
 
 -  **Replica Catalog**
 
