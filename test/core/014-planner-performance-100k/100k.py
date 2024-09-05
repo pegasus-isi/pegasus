@@ -1,28 +1,38 @@
 #!/usr/bin/env python3
 
-from Pegasus.DAX3 import *
+import os
 import shutil
 import sys
-import os
+
+from Pegasus.api import *
 
 # Create a abstract dag
-dax = ADAG("100k")
+dax = Workflow("100k")
+
+rc = ReplicaCatalog()
+tc = TransformationCatalog()
+dax.add_replica_catalog(rc)
+dax.add_transformation_catalog(tc)
 
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
-a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
-dax.addFile(a)
+rc.add_replica("local", a.lfn, "file://" + os.getcwd() + "/f.a")
 
 # Add executables to the DAX-level replica catalog
-exe = Executable(name="mymodel", installed=False, arch="x86_64")
-exe.addPFN(PFN("file://" + shutil.which("pegasus-keg"), "local"))
-dax.addExecutable(exe)
+exe = Transformation(
+    name="mymodel",
+    is_stageable=True,
+    arch=Arch.X86_64,
+    site="local",
+    pfn="file://" + shutil.which("pegasus-keg"),
+)
+tc.add_transformations(exe)
 
 for i in range(100000):
-    job = Job(name="mymodel")
-    job.addArguments("-T", "5", "-i", a)
-    job.uses(a, link=Link.INPUT)
-    dax.addJob(job)
+    job = Job(exe)
+    job.add_args("-T", "5", "-i", a)
+    job.add_inputs(a)
+    dax.add_jobs(job)
 
 # Write the DAX to stdout
-dax.writeXML(sys.stdout)
+dax.write(sys.stdout)

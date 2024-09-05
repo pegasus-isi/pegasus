@@ -1,25 +1,32 @@
 #!/usr/bin/env python3
 
-from Pegasus.DAX3 import *
-import sys
 import os
-import math
+
+from Pegasus.api import *
 
 base_dir = os.getcwd()
 
-dax = ADAG("test")
+dax = Workflow("test")
+
+rc = ReplicaCatalog()
+tc = TransformationCatalog()
+dax.add_replica_catalog(rc)
+dax.add_transformation_catalog(tc)
 
 # Add executables to the DAX-level replica catalog
-exe = Executable(name = "test.sh", arch = "x86_64", installed = False)
-exe.addPFN(PFN("file://" + base_dir + "/test.sh", "local"))
-dax.addExecutable(exe)
+exe = Transformation(
+    "test.sh",
+    arch=Arch.X86_64,
+    is_stageable=True,
+    site="local",
+    pfn="file://" + base_dir + "/test.sh",
+)
+tc.add_transformations(exe)
 
-j = Job(name = "test.sh")
-dax.addJob(j)
+j = Job(exe)
+dax.add_jobs(j)
 
 # Write the DAX
 f = open("dax.xml", "w")
-dax.writeXML(f)
+dax.write(f)
 f.close()
-
-

@@ -1,44 +1,62 @@
-import os
+#!/usr/bin/env python3
+
 import sys
-from Pegasus.DAX3 import *
+
+from Pegasus.api import *
 
 if len(sys.argv) != 2:
     print("Usage: python daxgen.py DAXFILE")
-    exit(1)
+    sys.exit(1)
 
 daxfile = sys.argv[1]
 
+
 def create_job(cluster):
-    j = Job(name="sleep")
-    j.addArguments("1")
-    j.profile(namespace="pegasus", key="label", value="dag_%d" % cluster)
-    j.profile(namespace="pegasus", key="pmc_request_memory", value="1")
-    j.profile(namespace="pegasus", key="pmc_request_cpus", value="2")
-    j.profile(namespace="pegasus", key="pmc_priority", value="1")
-    j.profile(namespace="pegasus", key="pmc_task_arguments", value="--tries 3")
+    j = Job("sleep")
+    j.add_args("1")
+    j.add_pegasus_profile(label="dag_%d" % cluster)
+    j.add_pegasus_profile(pmc_request_memory="1")
+    j.add_pegasus_profile(pmc_request_cpus="2")
+    j.add_pegasus_profile(pmc_priority="1")
+    j.add_pegasus_profile(pmc_task_arguments="--tries 3")
     return j
 
-dax = ADAG("mpi-cluster")
 
-sleep = Executable(name="sleep", os="linux", arch="x86_64", osrelease="rhel", osversion="7", installed=True)
-sleep.PFN("file:///bin/sleep", "local")
-dax.addExecutable(sleep)
+dax = Workflow("mpi-cluster")
+
+rc = ReplicaCatalog()
+tc = TransformationCatalog()
+dax.add_replica_catalog(rc)
+dax.add_transformation_catalog(tc)
+
+sleep = Transformation(
+    name="sleep",
+    os_type=OS.LINUX,
+    arch=Arch.X86_64,
+    os_release="rhel",
+    os_version="7",
+    is_stageable=False,
+    site="local",
+    pfn="file:///bin/sleep",
+)
+
+tc.add_transformations(sleep)
 
 # Create 48 jobs in 4 clusters of 12
 for i in range(4):
     parent = create_job(i)
-    dax.addJob(parent)
-    
+    dax.add_jobs(parent)
+
     child = create_job(i)
-    dax.addJob(child)
-    
-    for j in range(10):    
+    dax.add_jobs(child)
+
+    for j in range(10):
         j = create_job(i)
-        dax.addJob(j)
-        
-        dax.depends(parent=parent, child=j)
-        dax.depends(parent=j, child=child)
+        dax.add_jobs(j)
+
+        dax.add_dependency(parent, children=[j])
+        dax.add_dependency(j, children=[child])
 
 f = open(daxfile, "w")
-dax.writeXML(f)
+dax.write(f)
 f.close()

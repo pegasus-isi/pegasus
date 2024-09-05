@@ -1,24 +1,35 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
-from Pegasus.DAX3 import *
-import sys
 import os
 
+from Pegasus.api import *
+
 # globals
-wf = ADAG("synthetic", auto=True)
+wf = Workflow("synthetic", infer_dependencies=True)
+
+rc = ReplicaCatalog()
+tc = TransformationCatalog()
+wf.add_replica_catalog(rc)
+wf.add_transformation_catalog(tc)
 
 # keg is an input
-keg = File(name="keg")
-keg.addPFN(PFN("file://" + os.getcwd() + "/keg", "local"))
-keg.metadata("checksum.type", "sha256")
-keg.metadata("checksum.value", "d21f06ba2dfb7fe80ff13d5e0d3d4ef3eaa41b1a4941b8947859bce3164eb223")
-wf.addFile(keg)
+keg = File("keg")
+keg.add_metadata({"checksum.type": "sha256"})
+keg.add_metadata(
+    {
+        "checksum.value": "d21f06ba2dfb7fe80ff13d5e0d3d4ef3eaa41b1a4941b8947859bce3164eb223"
+    }
+)
+rc.add_replica("local", keg.lfn, "file://" + os.getcwd() + "/keg")
 
 
-def add_file_checksum(f, path):
+def add_file_checksum(f):
     # TODO
     f.metadata("checksum.type", "sha256")
-    f.metadata("checksum.value", "630408689fceb0d34f68ab5b47a8be5ca554d4e257055c4829479f5de886970a")
+    f.metadata(
+        "checksum.value",
+        "630408689fceb0d34f68ab5b47a8be5ca554d4e257055c4829479f5de886970a",
+    )
 
 
 def add_level(level_id, num_jobs, input_files, final_outputs):
@@ -28,31 +39,36 @@ def add_level(level_id, num_jobs, input_files, final_outputs):
 
     print("Level " + str(level_id) + ": " + str(inputs_per_job) + " inputs per job")
 
-    exe = Executable(name="level" + str(level_id), installed=False, arch="x86_64")
-    exe.addPFN(PFN("file://" + os.getcwd() + "/job.sh", "local"))
-    wf.addExecutable(exe)
+    exe = Transformation(
+        name="level" + str(level_id),
+        is_stageable=True,
+        arch=Arch.X86_64,
+        site="local",
+        pfn="file://" + os.getcwd() + "/job.sh",
+    )
+    tc.add_transformations(exe)
 
     for i in range(num_jobs):
-        job = Job(name="level" + str(level_id))
+        job = Job(exe)
 
         # executable
-        job.uses(keg, link=Link.INPUT)
+        job.add_inputs(keg)
 
         # inputs
         for j in range(inputs_per_job):
-            job.uses(input_files.pop(0), link=Link.INPUT)
+            job.add_inputs(input_files.pop(0))
 
-        f = File("%d-%d-1.data" %(level_id, i))
-        job.uses(f, link=Link.OUTPUT, register=final_outputs)
-        job.addArguments(f)
+        f = File("%d-%d-1.data" % (level_id, i))
+        job.add_outputs(f, register_replica=final_outputs)
+        job.add_args(f)
         output_files.append(f)
 
-        f = File("%d-%d-2.data" %(level_id, i))
-        job.uses(f, link=Link.OUTPUT, register=final_outputs)
-        job.addArguments(f)
+        f = File("%d-%d-2.data" % (level_id, i))
+        job.add_outputs(f, register_replica=final_outputs)
+        job.add_args(f)
         output_files.append(f)
 
-        wf.addJob(job)
+        wf.add_jobs(job)
 
     return output_files
 
@@ -62,5 +78,5 @@ l2_outputs = add_level(2, 10, l1_outputs, False)
 l2_outputs = add_level(3, 20, l2_outputs, True)
 
 f = open("dax.xml", "w")
-wf.writeXML(f)
+wf.write(f)
 f.close()
