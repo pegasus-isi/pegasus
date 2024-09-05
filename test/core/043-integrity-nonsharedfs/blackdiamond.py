@@ -22,7 +22,7 @@ diamond.add_replica_catalog(rc)
 diamond.add_transformation_catalog(tc)
 
 # Add executables to the DAX-level replica catalog
-keg = "file://" + sys.argv[1] + "/pegasus-keg", "local"
+keg = "file://" + sys.argv[1] + "/pegasus-keg"
 e_preprocess = Transformation(
     namespace="diamond",
     name="preprocess",
