@@ -1,9 +1,8 @@
 import hashlib
 import logging
 import sys
-
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 from Pegasus.api import *
 

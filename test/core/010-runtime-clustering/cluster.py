@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import os
 import argparse
 import configparser
 import logging
-import sys
-import logging
+import os
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
+
 from Pegasus.api import *
 
 logging.basicConfig(level=logging.DEBUG)

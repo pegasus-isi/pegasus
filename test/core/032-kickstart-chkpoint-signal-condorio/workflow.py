@@ -7,7 +7,6 @@ Additionally, tests that checkpoint files are handled correctly for condorio.
 """
 
 import logging
-
 from pathlib import Path
 
 from Pegasus.api import *

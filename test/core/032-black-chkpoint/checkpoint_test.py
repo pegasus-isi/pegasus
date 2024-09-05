@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
+import optparse
 import os
 import shutil
 import sys
-import optparse
 
 checkpoint_file="test.checkpoint"
 max_value=4 # the max value on which the script exits with status 0

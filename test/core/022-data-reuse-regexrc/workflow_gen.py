@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import logging
 import sys
-
 from pathlib import Path
 
 from Pegasus.api import *

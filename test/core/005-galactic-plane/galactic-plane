@@ -23,19 +23,19 @@ Usage: galactic-plane [options]
 #  limitations under the License.
 ##
 
-import os
-import re
-import sys
+import configparser
 import errno
 import logging
-import optparse
-import tempfile
-import subprocess
 import math
-import time
+import optparse
+import os
+import re
 import socket
 import string
-import configparser 
+import subprocess
+import sys
+import tempfile
+import time
 
 # set PEGASUS_HOME - transition from Pegasus 2.4
 pegasus_home = None

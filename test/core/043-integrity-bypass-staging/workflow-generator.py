@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import sys
 import os
+import sys
 from pathlib import Path
+
 from Pegasus.api import *
 
 TOP_DIR = Path(Path.cwd())

@@ -5,8 +5,8 @@ import signal
 import sys
 import time
 import traceback
-
 from pathlib import Path
+
 
 def parse_args(args):
     parser = argparse.ArgumentParser(
