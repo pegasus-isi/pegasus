@@ -95,9 +95,9 @@ for i in range(3):
 	a2 = File("fax")
 	a3 = File("dir/file.x")
 	a4 = File("dir/file.y")
-	b = File("f.b{}".format(i)) 
+	b = File(f"f.b{i}") 
 
-	hello_job = Job(hello_tr, _id="ID_hello_{}".format(i))\
+	hello_job = Job(hello_tr, _id=f"ID_hello_{i}")\
 					.add_args(b)\
 					.add_inputs(a1, a2, a3, a4)\
 					.add_outputs(b, stage_out=False)
@@ -106,8 +106,8 @@ for i in range(3):
 
 	for j in range(3):
 		# add world jobs (which depends on hello job)
-		c = File("f.c{}{}".format(i,j))
-		world_job = Job(world_tr, _id="ID_world_{}_{}".format(i,j))\
+		c = File(f"f.c{i}{j}")
+		world_job = Job(world_tr, _id=f"ID_world_{i}_{j}")\
 						.add_args(c)\
 						.add_inputs(b)\
 						.add_outputs(c)

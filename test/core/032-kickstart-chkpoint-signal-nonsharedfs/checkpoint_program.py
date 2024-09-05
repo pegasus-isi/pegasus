@@ -36,18 +36,18 @@ if __name__=="__main__":
         
         # use checkpoint file if it exists
         try:
-            with open(CHECKPOINT_FILE, mode="r") as f:
+            with open(CHECKPOINT_FILE) as f:
                 i = int(f.read())
                 
                 # with nonsharedfs, we don't need a placeholder file
                 # but have this here as an example anyway
                 if i == -1:
                     i = 0
-                    print("placed holder file: {} found, starting with i = 0".format(CHECKPOINT_FILE))
+                    print(f"placed holder file: {CHECKPOINT_FILE} found, starting with i = 0")
                 else:
-                    print("{} found, starting with i = {}".format(CHECKPOINT_FILE, i))
+                    print(f"{CHECKPOINT_FILE} found, starting with i = {i}")
         except FileNotFoundError as e:
-            print("{} not found, starting with i = 0".format(CHECKPOINT_FILE))
+            print(f"{CHECKPOINT_FILE} not found, starting with i = 0")
 
         # define SIGTERM handler
         def SIGTERM_handler(signum, frame):
@@ -62,7 +62,7 @@ if __name__=="__main__":
         signal.signal(signal.SIGTERM, SIGTERM_handler)
 
         # start computation 
-        print("pid: {}".format(os.getpid()))
+        print(f"pid: {os.getpid()}")
         for _ in range(NUM_ITERATIONS):
             print(i)
 
@@ -80,4 +80,4 @@ if __name__=="__main__":
         with open(CHECKPOINT_FILE, mode="w") as f:
             f.write(str(i))
             
-        print("writing checkpoint file: {} with state {}".format(CHECKPOINT_FILE, i))
+        print(f"writing checkpoint file: {CHECKPOINT_FILE} with state {i}")

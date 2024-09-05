@@ -34,7 +34,7 @@ def main():
         print("reading checkpoint file %s" % checkpoint_file)
 
         #read in the last value from the checkpoint file
-        with open(checkpoint_file, "r") as CHECKPOINT_FILE:
+        with open(checkpoint_file) as CHECKPOINT_FILE:
             for my_line in CHECKPOINT_FILE:
                 #print my_line
                 contents = my_line.split()
@@ -44,12 +44,12 @@ def main():
     last_value = last_value + 1
     with open(checkpoint_file,"a") as CHECKPOINT_FILE:
         CHECKPOINT_FILE.write( "%d \n" % last_value  )
-        print("Written value %s to file %s " % ( last_value, checkpoint_file))
+        print(f"Written value {last_value} to file {checkpoint_file} ")
 
     if( last_value == max_value ):
         #rename the test.checkpoint file to the output file
         for file in options.output_files:
-            print("Copying checkpoint file %s to output file %s " % (  checkpoint_file, file))
+            print(f"Copying checkpoint file {checkpoint_file} to output file {file} ")
             shutil.copy2( checkpoint_file, file)
 
         #delete the checkpoint file

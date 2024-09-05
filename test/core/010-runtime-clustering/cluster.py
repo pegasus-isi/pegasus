@@ -37,7 +37,7 @@ def write_sc(top_dir: Path, run_id: str):
     )
     if cp.returncode != 0:
         raise RuntimeError(
-            "unable to call pegasus-version: {}".format(cp.stderr.decode().strip())
+            f"unable to call pegasus-version: {cp.stderr.decode().strip()}"
         )
 
     REMOTE_PEGASUS_HOME = "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-{}".format(
@@ -164,7 +164,7 @@ def write_tc(config: configparser.ConfigParser, pegasus_keg_path: str):
     for i in range(1, 3):
         sleep = Transformation(
             namespace="cluster",
-            name="level{}".format(i),
+            name=f"level{i}",
             version="1.0",
             site=config.get("all", "executable_site"),
             pfn=config.get("all", "executable_url") + pegasus_keg_path,
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     config_dir = Path(__file__).parent / args.config_dir
     if not config_dir.is_dir():
         raise ValueError(
-            "config_dir: {} does not a directory or does not exist".format(config_dir)
+            f"config_dir: {config_dir} does not a directory or does not exist"
         )
 
     config_file = config_dir / "test.config"

@@ -45,7 +45,7 @@ for i in range(20):
     f.close()
 
     # Register mapping for input file
-    rc.add_replica("local", input.lfn, "file://%s/inputs/%s" % (os.getcwd(), input.lfn))
+    rc.add_replica("local", input.lfn, f"file://{os.getcwd()}/inputs/{input.lfn}")
 
     parent = Job(test)
     parent.add_args(input, inter)

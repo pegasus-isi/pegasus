@@ -35,11 +35,11 @@ except FileExistsError:
 
 
 # --- Configuration ------------------------------------------------------------
-PEGASUS_CONF = "{}/pegasusrc".format(TEST_NAME)
+PEGASUS_CONF = f"{TEST_NAME}/pegasusrc"
 print(PEGASUS_CONF)
 
 # pick the test config file
-config = json.load(open("{}/test.config".format(TEST_NAME)))
+config = json.load(open(f"{TEST_NAME}/test.config"))
 
 # --- Sites --------------------------------------------------------------------
 LOCAL = "local"
@@ -49,7 +49,7 @@ if not STAGING:
     # empty value in test.config
     STAGING = COMPUTE
 
-print("Staging site for the test is {}".format(STAGING))
+print(f"Staging site for the test is {STAGING}")
 
 shared_scratch_dir = str(WORK_DIR / "shared-scratch")
 staging_scratch_dir = str(WORK_DIR / "staging-site" / "scratch")
@@ -186,7 +186,7 @@ try:
         .add_outputs(fd, register_replica=True),
     ).plan(
         conf=PEGASUS_CONF,
-        dir="{}/dags".format(WORK_DIR),
+        dir=f"{WORK_DIR}/dags",
         verbose=3,
         sites=[COMPUTE],
         staging_sites={COMPUTE: STAGING},
