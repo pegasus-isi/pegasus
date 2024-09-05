@@ -86,7 +86,9 @@ sites:
   profiles:
     env:
       PEGASUS_BIN_DIR: "{pegasus_bin_dir}"
-""".format(work_dir=str(WORK_DIR), pegasus_bin_dir=PEGASUS_BIN_DIR)
+""".format(
+    work_dir=str(WORK_DIR), pegasus_bin_dir=PEGASUS_BIN_DIR
+)
 
 with (TOP_DIR / "sites.yml").open(mode="w") as f:
     f.write(sites)

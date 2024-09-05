@@ -20,30 +20,34 @@ props["dagman.retry"] = "2"
 props.write()
 
 # Replicas
-rc = ReplicaCatalog()\
-        .add_replica("local", "saved_state.txt", Path(".").resolve() / "saved_state.txt")\
-        .write()
+rc = (
+    ReplicaCatalog()
+    .add_replica("local", "saved_state.txt", Path(".").resolve() / "saved_state.txt")
+    .write()
+)
 
 
 # Transformation
 exe = Transformation(
-        "checkpoint_program.py",
-        site="local",
-        pfn=Path(".").resolve() / "checkpoint_program.py",
-        is_stageable=True
-    )
+    "checkpoint_program.py",
+    site="local",
+    pfn=Path(".").resolve() / "checkpoint_program.py",
+    is_stageable=True,
+)
 
 tc = TransformationCatalog().add_transformations(exe).write()
 
 # Workflow
-job = Job(exe)\
-        .add_args(180)\
-        .add_checkpoint(File("saved_state.txt"), stage_out=True)\
-        .set_stdout("output.txt")\
-        .add_profiles(Namespace.PEGASUS, key="checkpoint.time", value=1)\
-        .add_profiles(Namespace.PEGASUS, key="maxwalltime", value=2)
+job = (
+    Job(exe)
+    .add_args(180)
+    .add_checkpoint(File("saved_state.txt"), stage_out=True)
+    .set_stdout("output.txt")
+    .add_profiles(Namespace.PEGASUS, key="checkpoint.time", value=1)
+    .add_profiles(Namespace.PEGASUS, key="maxwalltime", value=2)
+)
 
-'''
+"""
 KILL signal is sent at (checkpoint.time + (maxwalltime-checkpoint.time)/2) minutes. (hence -K 30)
 .add_profiles(Namespace.PEGASUS, key="checkpoint.time", value=1)\
 .add_profiles(Namespace.PEGASUS, key="maxwalltime", value=2)
@@ -60,7 +64,7 @@ pegasus-kickstart \\
     -k 60 \
     -K 30 \
     ./checkpoint_program_py 180
-'''
+"""
 try:
     Workflow("checkpoint-wf").add_jobs(job).plan(submit=True)
 except PegasusClientError as e:

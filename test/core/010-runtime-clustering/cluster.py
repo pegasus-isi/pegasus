@@ -40,8 +40,10 @@ def write_sc(top_dir: Path, run_id: str):
             f"unable to call pegasus-version: {cp.stderr.decode().strip()}"
         )
 
-    REMOTE_PEGASUS_HOME = "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-{}".format(
-        cp.stdout.decode().strip()
+    REMOTE_PEGASUS_HOME = (
+        "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-{}".format(
+            cp.stdout.decode().strip()
+        )
     )
 
     sc = SiteCatalog()
@@ -54,7 +56,8 @@ def write_sc(top_dir: Path, run_id: str):
             top_dir / "staging-site/scratch",
         ).add_file_servers(
             FileServer(
-                "webdavs://workflow.isi.edu/webdav/scratch-90-days/" + str(top_dir / "staging-site/scratch"),
+                "webdavs://workflow.isi.edu/webdav/scratch-90-days/"
+                + str(top_dir / "staging-site/scratch"),
                 Operation.ALL,
             )
         )
@@ -93,13 +96,19 @@ def write_sc(top_dir: Path, run_id: str):
 
     sharedfs_dir2 = Directory(
         Directory.SHARED_SCRATCH,
-        Path("/scitech/shared/scratch-90-days") / os.getenv("USER") / "scratch" / run_id,
+        Path("/scitech/shared/scratch-90-days")
+        / os.getenv("USER")
+        / "scratch"
+        / run_id,
     )
     sharedfs_dir2.add_file_servers(
         FileServer(
             "file://"
             + str(
-                Path("/scitech/shared/scratch-90-days") / os.getenv("USER") / "scratch" / run_id
+                Path("/scitech/shared/scratch-90-days")
+                / os.getenv("USER")
+                / "scratch"
+                / run_id
             ),
             Operation.ALL,
         )
@@ -129,7 +138,7 @@ def write_sc(top_dir: Path, run_id: str):
         FileServer(local_site_url + str(top_dir / "work"), Operation.ALL)
     )
     local.add_directories(local_dir2)
-    
+
     local.add_env(SSH_PRIVATE_KEY="/scitech/shared/home/bamboo/.ssh/workflow_id_rsa")
 
     sc.add_sites(local)

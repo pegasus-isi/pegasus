@@ -21,7 +21,7 @@ except FileExistsError:
 
 # --- Properties ---------------------------------------------------------------
 props = Properties()
-#props["pegasus.catalog.replica.file"] = "replicas.yml"
+# props["pegasus.catalog.replica.file"] = "replicas.yml"
 props.write()
 
 # --- Replicas ---------------------------------------------------------------
@@ -29,10 +29,16 @@ with open("input.txt", "w") as f:
     f.write("test input file\n")
 
 rc = ReplicaCatalog()
-rc.add_replica(site="local", lfn="input.txt", pfn=Path(__file__).parent.resolve() / "input.txt")
-rc.add_replica(site="local", lfn="subwf1.yml", pfn=Path(__file__).parent.resolve() / "subwf1.yml")
-rc.add_replica(site="local", lfn="subwf2.yml", pfn=Path(__file__).parent.resolve() / "subwf2.yml")
-#rc.write()
+rc.add_replica(
+    site="local", lfn="input.txt", pfn=Path(__file__).parent.resolve() / "input.txt"
+)
+rc.add_replica(
+    site="local", lfn="subwf1.yml", pfn=Path(__file__).parent.resolve() / "subwf1.yml"
+)
+rc.add_replica(
+    site="local", lfn="subwf2.yml", pfn=Path(__file__).parent.resolve() / "subwf2.yml"
+)
+# rc.write()
 
 
 # --- Transformations ---------------------------------------------------------------
@@ -49,25 +55,12 @@ PEGASUS_BIN_DIR = pegasus_config.stdout.decode().strip()
 
 tc = TransformationCatalog()
 keg = Transformation(
-            "keg",
-            site="local",
-            pfn=PEGASUS_BIN_DIR + "/pegasus-keg",
-            is_stageable=True
-        )
+    "keg", site="local", pfn=PEGASUS_BIN_DIR + "/pegasus-keg", is_stageable=True
+)
 
-ls = Transformation(
-            "ls",
-            site="condorpool",
-            pfn="/bin/ls",
-            is_stageable=False
-        )
+ls = Transformation("ls", site="condorpool", pfn="/bin/ls", is_stageable=False)
 
-cat = Transformation(
-            "cat",
-            site="condorpool",
-            pfn="/bin/cat",
-            is_stageable=False
-        )
+cat = Transformation("cat", site="condorpool", pfn="/bin/cat", is_stageable=False)
 
 tc.add_transformations(keg, ls, cat)
 tc.write()
@@ -76,13 +69,14 @@ tc.write()
 input_file = File("input.txt")
 k1_out = File("k1.txt")
 wf1 = Workflow("subworkflow-1")
-k1 = Job(keg)\
-        .add_args("-i", input_file, "-o", k1_out, "-T", 5)\
-        .add_inputs(input_file)\
-        .add_outputs(k1_out)
+k1 = (
+    Job(keg)
+    .add_args("-i", input_file, "-o", k1_out, "-T", 5)
+    .add_inputs(input_file)
+    .add_outputs(k1_out)
+)
 
-ls1 = Job(ls)\
-        .add_args("-alh")
+ls1 = Job(ls).add_args("-alh")
 
 wf1.add_jobs(k1, ls1)
 wf1.write("subwf1.yml")
@@ -90,10 +84,12 @@ wf1.write("subwf1.yml")
 # --- SubWorkflow2 ---------------------------------------------------------------
 k2_out = File("k2.txt")
 wf2 = Workflow("subworkflow-2")
-k2 = Job(keg)\
-        .add_args("-i", k1_out, "-o", k2_out, "-T", 5)\
-        .add_inputs(k1_out)\
-        .add_outputs(k2_out)
+k2 = (
+    Job(keg)
+    .add_args("-i", k1_out, "-o", k2_out, "-T", 5)
+    .add_inputs(k1_out)
+    .add_outputs(k2_out)
+)
 
 wf2.add_jobs(k2)
 wf2.write("subwf2.yml")
@@ -105,15 +101,19 @@ root_wf = Workflow("root")
 # by the sub workflow, or specify the location to it in the propoerties file
 root_wf.add_replica_catalog(rc)
 
-j1 = SubWorkflow("subwf1.yml", _id="subwf1")\
-        .add_planner_args(verbose=3)\
-        .add_inputs(input_file)\
-        .add_outputs(k1_out)
+j1 = (
+    SubWorkflow("subwf1.yml", _id="subwf1")
+    .add_planner_args(verbose=3)
+    .add_inputs(input_file)
+    .add_outputs(k1_out)
+)
 
-j2 = SubWorkflow("subwf2.yml", _id="subwf2")\
-        .add_planner_args(verbose=3)\
-        .add_inputs(k1_out)\
-        .add_outputs(k2_out)
+j2 = (
+    SubWorkflow("subwf2.yml", _id="subwf2")
+    .add_planner_args(verbose=3)
+    .add_inputs(k1_out)
+    .add_outputs(k2_out)
+)
 
 root_wf.add_jobs(j1, j2)
 
