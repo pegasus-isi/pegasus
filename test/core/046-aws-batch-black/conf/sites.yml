@@ -13,7 +13,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "file://${S3_URL_PREFIX}/${S3_BUCKET}"
+      url: "${S3_URL_PREFIX}/${S3_BUCKET}"
   profiles:
     pegasus:
       clusters.num: "1"
