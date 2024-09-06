@@ -37,6 +37,3 @@ pip3 install  .
 
 # install the pegasus python dependencies
 pip3 install boto3 certifi GitPython pyjwt pyyaml s3transfer six urllib3
-
-# Remove Pegasus packages that get installed from PyPi so we use the ones being tested
-pip3 uninstall -y pegasus-wms.api pegasus-wms.common
