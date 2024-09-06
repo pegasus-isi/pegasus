@@ -84,7 +84,7 @@ c1 = File("f.c1")
 frl.add_args("-a findrange", "-T10", "-i", b1, "-o", c1)
 frl.add_inputs(b1)
 frl.add_outputs(c1, stage_out=False, register_replica=True)
-frl.add_pegasus_profile(grid_start="none")
+frl.add_pegasus_profile(grid_start="PegasusLite.None")
 diamond.add_jobs(frl)
 
 # Add right Findrange job
@@ -94,7 +94,7 @@ c2 = File("f.c2")
 frr.add_args("-a findrange", "-T10", "-i", b2, "-o", c2)
 frr.add_inputs(b2)
 frr.add_outputs(c2, stage_out=False, register_replica=True)
-frr.add_pegasus_profile(grid_start="none")
+frr.add_pegasus_profile(grid_start="PegasusLite.None")
 diamond.add_jobs(frr)
 
 # Add Analyze job
