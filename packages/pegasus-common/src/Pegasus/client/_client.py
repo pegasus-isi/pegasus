@@ -8,7 +8,7 @@ import time
 from functools import partial
 from os import path
 from pathlib import Path
-from typing import BinaryIO, Dict, List, Union
+from typing import BinaryIO, Dict, List, Optional, Union
 
 from Pegasus import braindump, yaml
 from Pegasus.client import status
@@ -40,6 +40,174 @@ def from_env(pegasus_home: str = None):
         pegasus_home = path.dirname(path.dirname(pegasus_version_path))
 
     return Client(pegasus_home)
+
+
+def get_planner_args(
+    basename: Optional[str] = None,
+    job_prefix: Optional[str] = None,
+    conf: Optional[Union[str, Path]] = None,
+    cluster: Optional[List[str]] = None,
+    sites: Optional[List[str]] = None,
+    output_sites: Optional[List[str]] = None,
+    staging_sites: Optional[Dict[str, str]] = None,
+    cache: Optional[List[Union[str, Path]]] = None,
+    input_dirs: Optional[List[Union[str, Path]]] = None,
+    output_dir: Optional[Union[str, Path]] = None,
+    transformations_dir: Optional[Union[str, Path]] = None,
+    dir: Optional[Union[str, Path]] = None,
+    relative_dir: Optional[Union[str, Path]] = None,
+    relative_submit_dir: Optional[Union[str, Path]] = None,
+    random_dir: Union[bool, str, Path] = False,
+    inherited_rc_files: Optional[List[Union[str, Path]]] = None,
+    cleanup: Optional[str] = None,
+    reuse: Optional[List[Union[str, Path]]] = None,
+    verbose: int = 0,
+    quiet: int = 0,
+    force: bool = False,
+    force_replan: bool = False,
+    forward: Optional[List[str]] = None,
+    submit: bool = False,
+    java_options: Optional[List[str]] = None,
+    **properties: Dict[str, str],
+):
+    """."""
+    cmd = []
+
+    for k, v in properties.items():
+        cmd.append(f"-D{k}={v}")
+
+    if basename:
+        cmd.extend(("--basename", basename))
+
+    if job_prefix:
+        cmd.extend(("--job-prefix", job_prefix))
+
+    if conf:
+        cmd.extend(("--conf", str(conf)))
+
+    if cluster:
+        if not isinstance(cluster, list):
+            raise TypeError(f"invalid cluster: {cluster}; list of str must be given")
+
+        cmd.extend(("--cluster", ",".join(cluster)))
+
+    if sites:
+        if not isinstance(sites, list):
+            raise TypeError(f"invalid sites: {sites}; list of str must be given")
+        cmd.extend(("--sites", ",".join(sites)))
+
+    if output_sites:
+        if not isinstance(output_sites, list):
+            raise TypeError(
+                "invalid output_sites: {}; list of str must be given".format(
+                    output_sites
+                )
+            )
+
+        cmd.extend(("--output-sites", ",".join(output_sites)))
+
+    if staging_sites:
+        if not isinstance(staging_sites, dict):
+            raise TypeError(
+                "invalid staging_sites: {}; dict<str, str> must be given".format(
+                    staging_sites
+                )
+            )
+
+        cmd.extend(
+            (
+                "--staging-site",
+                ",".join(f"{s}={ss}" for s, ss in staging_sites.items()),
+            )
+        )
+
+    if cache:
+        if not isinstance(cache, list):
+            raise TypeError(f"invalid cache: {cache}; list of str must be given")
+
+        cmd.extend(("--cache", ",".join(str(c) for c in cache)))
+
+    if input_dirs:
+        if not isinstance(input_dirs, list):
+            raise TypeError(
+                f"invalid input_dirs: {input_dirs}; list of str must be given"
+            )
+
+        cmd.extend(("--input-dir", ",".join(str(_id) for _id in input_dirs)))
+
+    if output_dir:
+        cmd.extend(("--output-dir", str(output_dir)))
+
+    if transformations_dir:
+        cmd.extend(("--transformations-dir", str(transformations_dir)))
+
+    if dir:
+        cmd.extend(("--dir", str(dir)))
+
+    if relative_dir:
+        cmd.extend(("--relative-dir", str(relative_dir)))
+
+    if relative_submit_dir:
+        cmd.extend(("--relative-submit-dir", str(relative_submit_dir)))
+
+    if random_dir:
+        if random_dir == True:
+            cmd.append("--randomdir")
+        else:
+            cmd.append(f"--randomdir={random_dir}")
+
+    if inherited_rc_files:
+        if not isinstance(inherited_rc_files, list):
+            raise TypeError(
+                "invalid inherited_rc_files: {}; list of str must be given".format(
+                    inherited_rc_files
+                )
+            )
+
+        cmd.extend(
+            ("--inherited-rc-files", ",".join(str(f) for f in inherited_rc_files))
+        )
+
+    if cleanup:
+        cmd.extend(("--cleanup", cleanup))
+
+    if reuse:
+        cmd.extend(("--reuse", ",".join(str(p) for p in reuse)))
+
+    if verbose > 0:
+        cmd.append("-" + ("v" * verbose))
+
+    if quiet > 0:
+        cmd.append("-" + ("q" * quiet))
+
+    if force:
+        cmd.append("--force")
+
+    if force_replan:
+        cmd.append("--force-replan")
+
+    if forward:
+        if not isinstance(forward, list):
+            raise TypeError(f"invalid forward: {forward}; list of str must be given")
+
+        for opt in forward:
+            cmd.extend(("--forward", opt))
+
+    if submit:
+        cmd.append("--submit")
+
+    if java_options:
+        if not isinstance(java_options, list):
+            raise TypeError(
+                "invalid java_options: {}; list of str must be given".format(
+                    java_options
+                )
+            )
+
+        for opt in java_options:
+            cmd.append(f"-X{opt}")
+
+    return cmd
 
 
 class Client:
@@ -98,144 +266,36 @@ class Client:
         **kwargs,
     ):
         cmd = [self._plan]
-
-        for k, v in kwargs.items():
-            cmd.append(f"-D{k}={v}")
-
-        if basename:
-            cmd.extend(("--basename", basename))
-
-        if job_prefix:
-            cmd.extend(("--job-prefix", job_prefix))
-
-        if conf:
-            cmd.extend(("--conf", conf))
-
-        if cluster:
-            if not isinstance(cluster, list):
-                raise TypeError(
-                    f"invalid cluster: {cluster}; list of str must be given"
-                )
-
-            cmd.extend(("--cluster", ",".join(cluster)))
-
-        if sites:
-            if not isinstance(sites, list):
-                raise TypeError(f"invalid sites: {sites}; list of str must be given")
-            cmd.extend(("--sites", ",".join(sites)))
-
-        if output_sites:
-            if not isinstance(output_sites, list):
-                raise TypeError(
-                    "invalid output_sites: {}; list of str must be given".format(
-                        output_sites
-                    )
-                )
-
-            cmd.extend(("--output-sites", ",".join(output_sites)))
-
-        if staging_sites:
-            if not isinstance(staging_sites, dict):
-                raise TypeError(
-                    "invalid staging_sites: {}; dict<str, str> must be given".format(
-                        staging_sites
-                    )
-                )
-
-            cmd.extend(
-                (
-                    "--staging-site",
-                    ",".join(s + "=" + ss for s, ss in staging_sites.items()),
-                )
+        cmd.extend(
+            get_planner_args(
+                basename=basename,
+                job_prefix=job_prefix,
+                conf=conf,
+                cluster=cluster,
+                sites=sites,
+                output_sites=output_sites,
+                staging_sites=staging_sites,
+                cache=cache,
+                input_dirs=input_dirs,
+                output_dir=output_dir,
+                transformations_dir=transformations_dir,
+                dir=dir,
+                relative_dir=relative_dir,
+                relative_submit_dir=relative_submit_dir,
+                random_dir=random_dir,
+                inherited_rc_files=inherited_rc_files,
+                cleanup=cleanup,
+                reuse=reuse,
+                verbose=verbose,
+                quiet=quiet,
+                force=force,
+                force_replan=force_replan,
+                forward=forward,
+                submit=submit,
+                java_options=java_options,
+                **kwargs,
             )
-
-        if cache:
-            if not isinstance(cache, list):
-                raise TypeError(f"invalid cache: {cache}; list of str must be given")
-
-            cmd.extend(("--cache", ",".join(cache)))
-
-        if input_dirs:
-            if not isinstance(input_dirs, list):
-                raise TypeError(
-                    "invalid input_dirs: {}; list of str must be given".format(
-                        input_dirs
-                    )
-                )
-
-            cmd.extend(("--input-dir", ",".join(input_dirs)))
-
-        if output_dir:
-            cmd.extend(("--output-dir", output_dir))
-
-        if transformations_dir:
-            cmd.extend(("--transformations-dir", transformations_dir))
-
-        if dir:
-            cmd.extend(("--dir", dir))
-
-        if relative_dir:
-            cmd.extend(("--relative-dir", relative_dir))
-
-        if relative_submit_dir:
-            cmd.extend(("--relative-submit-dir", relative_submit_dir))
-
-        if random_dir:
-            if random_dir == True:
-                cmd.append("--randomdir")
-            else:
-                cmd.append(f"--randomdir={random_dir}")
-
-        if inherited_rc_files:
-            if not isinstance(inherited_rc_files, list):
-                raise TypeError(
-                    "invalid inherited_rc_files: {}; list of str must be given".format(
-                        inherited_rc_files
-                    )
-                )
-
-            cmd.extend(("--inherited-rc-files", ",".join(inherited_rc_files)))
-
-        if cleanup:
-            cmd.extend(("--cleanup", cleanup))
-
-        if reuse:
-            cmd.extend(("--reuse", ",".join(reuse)))
-
-        if verbose > 0:
-            cmd.append("-" + "v" * verbose)
-
-        if quiet > 0:
-            cmd.append("-" + "q" * quiet)
-
-        if force:
-            cmd.append("--force")
-
-        if force_replan:
-            cmd.append("--force-replan")
-
-        if forward:
-            if not isinstance(forward, list):
-                raise TypeError(
-                    f"invalid forward: {forward}; list of str must be given"
-                )
-
-            for opt in forward:
-                cmd.extend(("--forward", opt))
-
-        if submit:
-            cmd.append("--submit")
-
-        if java_options:
-            if not isinstance(java_options, list):
-                raise TypeError(
-                    "invalid java_options: {}; list of str must be given".format(
-                        java_options
-                    )
-                )
-
-            for opt in java_options:
-                cmd.append(f"-X{opt}")
+        )
 
         # pegasus-plan will look for "workflow.yml" in cwd by default if
         # it is not given as last positional argument

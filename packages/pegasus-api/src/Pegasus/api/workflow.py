@@ -14,7 +14,7 @@ from .site_catalog import SiteCatalog
 from .transformation_catalog import Transformation, TransformationCatalog
 from .writable import Writable, _CustomEncoder, _filter_out_nones
 
-from Pegasus.client._client import from_env
+from Pegasus.client._client import from_env, get_planner_args
 from Pegasus.client.status import Status
 
 PEGASUS_VERSION = "5.0.4"
@@ -374,21 +374,27 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                     ("uses", [use for use in self.uses]),
                     (
                         "profiles",
-                        OrderedDict(sorted(self.profiles.items(), key=lambda _: _[0]))
-                        if len(self.profiles) > 0
-                        else None,
+                        (
+                            OrderedDict(
+                                sorted(self.profiles.items(), key=lambda _: _[0])
+                            )
+                            if len(self.profiles) > 0
+                            else None
+                        ),
                     ),
                     ("metadata", self.metadata if len(self.metadata) > 0 else None),
                     (
                         "hooks",
-                        OrderedDict(
-                            [
-                                (hook_name, [hook for hook in values])
-                                for hook_name, values in self.hooks.items()
-                            ]
-                        )
-                        if len(self.hooks) > 0
-                        else None,
+                        (
+                            OrderedDict(
+                                [
+                                    (hook_name, [hook for hook in values])
+                                    for hook_name, values in self.hooks.items()
+                                ]
+                            )
+                            if len(self.hooks) > 0
+                            else None
+                        ),
                     ),
                 ]
             )
@@ -560,9 +566,9 @@ class SubWorkflow(AbstractJob):
     def add_planner_args(
         self,
         *,
-        conf: Optional[Union[str, Path]] = None,
         basename: Optional[str] = None,
         job_prefix: Optional[str] = None,
+        conf: Optional[Union[str, Path]] = None,
         cluster: Optional[List[str]] = None,
         sites: Optional[List[str]] = None,
         output_sites: Optional[List[str]] = None,
@@ -573,8 +579,8 @@ class SubWorkflow(AbstractJob):
         transformations_dir: Optional[Union[str, Path]] = None,
         dir: Optional[Union[str, Path]] = None,
         relative_dir: Optional[Union[str, Path]] = None,
-        random_dir: Union[bool, str, Path] = False,
         relative_submit_dir: Optional[Union[str, Path]] = None,
+        random_dir: Union[bool, str, Path] = False,
         inherited_rc_files: Optional[List[Union[str, Path]]] = None,
         cleanup: Optional[str] = None,
         reuse: Optional[List[Union[str, Path]]] = None,
@@ -593,12 +599,12 @@ class SubWorkflow(AbstractJob):
         :code:`is_planned=False` is set in :py:class:`~Pegasus.api.workflow.SubWorkflow` and
         may only be invoked once.
 
-        :param conf:  the path to the properties file to use for planning, defaults to None
-        :type conf: Optional[Union[str, Path]]
         :param basename: the basename prefix while constructing the per workflow files like .dag etc., defaults to None
         :type basename: Optional[str]
         :param job_prefix: the prefix to be applied while construction job submit filenames, defaults to None
         :type job_prefix: Optional[str]
+        :param conf:  the path to the properties file to use for planning, defaults to None
+        :type conf: Optional[Union[str, Path]]
         :param cluster: comma separated list of clustering techniques to be applied to the workflow to cluster jobs in to larger jobs, to avoid scheduling overheads., defaults to None
         :type cluster: Optional[List[str]]
         :param sites: list of execution sites on which to map the workflow, defaults to None
@@ -619,10 +625,10 @@ class SubWorkflow(AbstractJob):
         :type dir: Optional[Union[str, Path]]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
         :type relative_dir: Optional[Union[str, Path]]
-        :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`pathlib.Path`, then that will be used as the basename of the directory that is to be created, defaults to False
-        :type random_dir: Union[bool, str, Path], optional
         :param relative_submit_dir: the relative submit directory where to generate the concrete workflow. Overrides relative_dir, defaults to None
         :type relative_submit_dir: Optional[Union[str, Path]]
+        :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`pathlib.Path`, then that will be used as the basename of the directory that is to be created, defaults to False
+        :type random_dir: Union[bool, str, Path], optional
         :param inherited_rc_files: comma separated list of replica files, defaults to None
         :type inherited_rc_files: Optional[List[Union[str, Path]]]
         :param cleanup: the cleanup strategy to use. Can be a :code:`str` :code:`none|inplace|leaf|constraint`, defaults to None (internally, pegasus-plan will use the default :code:`inplace` if :code:`None` is given)
@@ -663,143 +669,36 @@ class SubWorkflow(AbstractJob):
 
         self._planner_args_already_set = True
 
-        for k, v in properties.items():
-            self.add_args(f"-D{k}={v}")
-
-        if basename:
-            self.add_args("--basename", basename)
-
-        if job_prefix:
-            self.add_args("--job-prefix", job_prefix)
-
-        if conf:
-            self.add_args("--conf", str(conf))
-
-        if cluster:
-            if not isinstance(cluster, list):
-                raise TypeError(
-                    f"invalid cluster: {cluster}; list of str must be given"
-                )
-
-            self.add_args("--cluster", ",".join(cluster))
-
-        if sites:
-            if not isinstance(sites, list):
-                raise TypeError(f"invalid sites: {sites}; list of str must be given")
-            self.add_args("--sites", ",".join(sites))
-
-        if output_sites:
-            if not isinstance(output_sites, list):
-                raise TypeError(
-                    "invalid output_sites: {}; list of str must be given".format(
-                        output_sites
-                    )
-                )
-
-            self.add_args("--output-sites", ",".join(output_sites))
-
-        if staging_sites:
-            if not isinstance(staging_sites, dict):
-                raise TypeError(
-                    "invalid staging_sites: {}; dict<str, str> must be given".format(
-                        staging_sites
-                    )
-                )
-
-            self.add_args(
-                "--staging-site",
-                ",".join(f"{s}={ss}" for s, ss in staging_sites.items()),
+        self.add_args(
+            *get_planner_args(
+                basename=basename,
+                job_prefix=job_prefix,
+                conf=conf,
+                cluster=cluster,
+                sites=sites,
+                output_sites=output_sites,
+                staging_sites=staging_sites,
+                cache=cache,
+                input_dirs=input_dirs,
+                output_dir=output_dir,
+                transformations_dir=transformations_dir,
+                dir=dir,
+                relative_dir=relative_dir,
+                relative_submit_dir=relative_submit_dir,
+                random_dir=random_dir,
+                inherited_rc_files=inherited_rc_files,
+                cleanup=cleanup,
+                reuse=reuse,
+                verbose=verbose,
+                quiet=quiet,
+                force=force,
+                force_replan=force_replan,
+                forward=forward,
+                submit=submit,
+                java_options=java_options,
+                **properties,
             )
-
-        if cache:
-            if not isinstance(cache, list):
-                raise TypeError(f"invalid cache: {cache}; list of str must be given")
-
-            self.add_args("--cache", ",".join(str(c) for c in cache))
-
-        if input_dirs:
-            if not isinstance(input_dirs, list):
-                raise TypeError(
-                    "invalid input_dirs: {}; list of str must be given".format(
-                        input_dirs
-                    )
-                )
-
-            self.add_args("--input-dir", ",".join(str(_id) for _id in input_dirs))
-
-        if output_dir:
-            self.add_args("--output-dir", str(output_dir))
-
-        if transformations_dir:
-            self.add_args("--transformations-dir", str(transformations_dir))
-
-        if dir:
-            self.add_args("--dir", str(dir))
-
-        if relative_dir:
-            self.add_args("--relative-dir", str(relative_dir))
-
-        if relative_submit_dir:
-            self.add_args("--relative-submit-dir", str(relative_submit_dir))
-
-        if random_dir:
-            if random_dir == True:
-                self.add_args("--randomdir")
-            else:
-                self.add_args(f"--randomdir={random_dir}")
-
-        if inherited_rc_files:
-            if not isinstance(inherited_rc_files, list):
-                raise TypeError(
-                    "invalid inherited_rc_files: {}; list of str must be given".format(
-                        inherited_rc_files
-                    )
-                )
-
-            self.add_args(
-                "--inherited-rc-files", ",".join(str(f) for f in inherited_rc_files)
-            )
-
-        if cleanup:
-            self.add_args("--cleanup", cleanup)
-
-        if reuse:
-            self.add_args("--reuse", ",".join(str(p) for p in reuse))
-
-        if verbose > 0:
-            self.add_args("-" + ("v" * verbose))
-
-        if quiet > 0:
-            self.add_args("-" + ("q" * quiet))
-
-        if force:
-            self.add_args("--force")
-
-        if force_replan:
-            self.add_args("--force-replan")
-
-        if forward:
-            if not isinstance(forward, list):
-                raise TypeError(
-                    f"invalid forward: {forward}; list of str must be given"
-                )
-
-            for opt in forward:
-                self.add_args("--forward", opt)
-
-        if submit:
-            self.add_args("--submit")
-
-        if java_options:
-            if not isinstance(java_options, list):
-                raise TypeError(
-                    "invalid java_options: {}; list of str must be given".format(
-                        java_options
-                    )
-                )
-
-            for opt in java_options:
-                self.add_args(f"-X{opt}")
+        )
 
     def __json__(self):
         # error should only be raised internally if SubWorkflow was given a Workflow
@@ -1273,17 +1172,17 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             staging_sites=staging_sites,
             input_dirs=[str(_dir) for _dir in input_dirs] if input_dirs else None,
             output_dir=str(output_dir) if output_dir else None,
-            transformations_dir=str(transformations_dir)
-            if transformations_dir
-            else None,
+            transformations_dir=(
+                str(transformations_dir) if transformations_dir else None
+            ),
             dir=str(dir) if dir else None,
             relative_dir=str(relative_dir) if relative_dir else None,
-            relative_submit_dir=str(relative_submit_dir)
-            if relative_submit_dir
-            else None,
-            inherited_rc_files=[str(p) for p in inherited_rc_files]
-            if inherited_rc_files
-            else None,
+            relative_submit_dir=(
+                str(relative_submit_dir) if relative_submit_dir else None
+            ),
+            inherited_rc_files=(
+                [str(p) for p in inherited_rc_files] if inherited_rc_files else None
+            ),
             random_dir=random_dir if isinstance(random_dir, bool) else str(random_dir),
             cleanup=cleanup,
             reuse=[str(submit_dir) for submit_dir in reuse] if reuse else None,
@@ -1335,10 +1234,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
         status(self, long: bool = False, json:bool=False, dirs:bool=False, legend:bool=False, noqueue:bool=False, debug:bool=False)
         Monitor the workflow by quering Condor and directories.
-        
+
         Also returns current status information of the workflow as a dict in the
         following format:
-        
+
         .. code-block:: python
 
             {
@@ -1400,7 +1299,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type legend: bool, optional
         :param noqueue: turns off the output from parsing Condor Q, defaults to False
         :type noqueue: bool, optional
-        :param debug: 
+        :param debug:
         :type debug: bool, optional
         :raises PegasusClientError: pegasus-status encountered an error
         :return: self, current status information
@@ -1517,7 +1416,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
         analyze(self, verbose: int = 0, json_mode: bool = False, traverse_all: bool = False)
         Debug a workflow.
-        
+
         Also returns all info from AnalyzerOutput as a json strucuture in the
         following format:
 
