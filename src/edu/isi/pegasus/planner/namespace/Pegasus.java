@@ -344,12 +344,6 @@ public class Pegasus extends Namespace {
      */
     public static final String CHECKPOINT_TIME_KEY = "checkpoint.time";
 
-    /**
-     * Key indicating indicating time in seconds after which kickstart sends out a TERM signal to a
-     * job indicating that is should create a checkpoint file.
-     */
-    public static final String DEPRECATED_CHECKPOINT_TIME_KEY = "checkpoint_time";
-
     /** Key indicating max walltime for a job in minutes */
     public static final String MAX_WALLTIME = "maxwalltime";
 
@@ -569,7 +563,6 @@ public class Pegasus extends Namespace {
                         || (key.compareTo(CREATE_AND_CHANGE_DIR_KEY) == 0)
                         || (key.compareTo(CORES_KEY) == 0)
                         || (key.compareTo(Pegasus.CHECKPOINT_TIME_KEY) == 0)
-                        || (key.compareTo(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0)
                         || (key.compareTo(Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY) == 0)
                         || (key.compareTo(Pegasus.CONTAINER_ARGUMENTS_KEY) == 0)
                         || (key.compareTo(Pegasus.CONTAINER_LAUNCHER_KEY) == 0)

@@ -1497,28 +1497,6 @@ public class Kickstart implements GridStart {
             return time;
         }
 
-        // check for deprecated value
-        key = Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY;
-        if (job.vdsNS.containsKey(key)) {
-            // means there is expectation of timeout functionality
-            time = job.vdsNS.getLongValue(key, Long.MAX_VALUE);
-            if (time == Long.MAX_VALUE) {
-                // malformed value
-                throw new RuntimeException(
-                        "Malformed Pegasus Profile "
-                                + key
-                                + " value "
-                                + job.vdsNS.getStringValue(key)
-                                + " for job "
-                                + job.getID());
-            }
-            // log deprecated value
-            mLogger.log(
-                    "Deprecated Pegasus profile key " + key + " found for job " + job.getID(),
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-            return time;
-        }
-
         // PM-1967 if the checkpoint time is not specified for the job
         // we compute our own based on maxwalltime
         if (maxwalltime == Long.MAX_VALUE) {
