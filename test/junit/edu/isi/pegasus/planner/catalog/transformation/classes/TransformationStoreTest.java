@@ -111,6 +111,8 @@ public class TransformationStoreTest {
                         () -> {
                             store.sanityCheck(entry);
                         });
-        assertTrue(e.getMessage().contains("matches associated container's computed LFN"));
+        assertTrue(
+                e.getMessage().contains("matches associated container's computed LFN"),
+                "Exception thrown was " + e);
     }
 }
