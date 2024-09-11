@@ -88,6 +88,7 @@ public class TransformationStoreTest {
         entry.setContainer(c);
         TransformationStore store = new TransformationStore();
         store.sanityCheck(entry);
+        assertTrue(containerName.contentEquals(c.getLFN()));
     }
 
     @ParameterizedTest
