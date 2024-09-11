@@ -1415,7 +1415,7 @@ public class Kickstart implements GridStart {
      * @param job the job.
      * @return
      */
-    private String getKickstartTimeoutOptions(Job job) {
+    protected String getKickstartTimeoutOptions(Job job) {
         StringBuilder sb = new StringBuilder();
 
         long max = getMaxWalltimeForJobInSeconds(job);
@@ -1474,7 +1474,7 @@ public class Kickstart implements GridStart {
      * @return job checkpointime in seconds, else Long.MAX_VALUE if not specified
      * @throws RuntimeException for malformed values
      */
-    private long getJobCheckpointTimeInSeconds(Job job, long maxwalltime, long minDiff) {
+    protected long getJobCheckpointTimeInSeconds(Job job, long maxwalltime, long minDiff) {
         long time = Long.MAX_VALUE;
 
         // check for checkpoint.time that is specified in minutes.
@@ -1550,6 +1550,9 @@ public class Kickstart implements GridStart {
             // PM-962 last fallback to pegasus profile runtime which is in seconds
             max = job.vdsNS.getIntValue(Pegasus.RUNTIME_KEY, Integer.MAX_VALUE);
             multiplier = 1;
+        } else {
+            // nothing is specified. pass the max value
+            return max;
         }
         // maxwalltime is specified in minutes, while pegasus runtime
         // is in seconds. convert to seconds for kickstart
