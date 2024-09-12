@@ -101,6 +101,11 @@ public class InPlace extends AbstractCleanupStrategy {
             pQA[gN.getDepth()].add(gN);
         }
 
+        // PM-1950, PM-1974 track if the site is localC . that indicates
+        // only cleanup the container image from the submit directory
+        boolean cleanupOnlyContainerInSubmitDir =
+                site.equals(AbstractCleanupStrategy.DUMMY_LOCAL_CONTAINER_SITE);
+
         List<GraphNode> wfCleanupNodes =
                 new LinkedList(); // stores all the cleanup nodes added for the workflow
         // start the breadth first cleanup job addition
@@ -139,6 +144,18 @@ public class InPlace extends AbstractCleanupStrategy {
                         continue;
                     }
 
+                    if (cleanupOnlyContainerInSubmitDir) {
+                        // PM-1950, PM-1974 container for container universe jobs is staged
+                        // via the submit directory on the local site.
+                        // so keep the file only  if the site is matches localC, else remove
+                        if (pf.isContainerFile() && curGN_SI.runsInContainerUniverse()) {
+                            continue;
+                        } else {
+                            it.remove();
+                            continue;
+                        }
+                    }
+
                     // PM-1918 additional filtering for sub workflow input file
                     // ensure only those input files, whose source site matches
                     // the site id have to be considered. In case of sub workflow jobs,
@@ -159,19 +176,17 @@ public class InPlace extends AbstractCleanupStrategy {
                             it.remove();
                             continue;
                         }
-                    } else if (pf.isContainerFile() && curGN_SI.runsInContainerUniverse()) {
-                        // PM-1950 container for container universe jobs is staged
-                        // via the submit directory on the local site.
-                        // so keep the file only  if the site is matches local, else remove
-                        if (!site.equals("local")) {
-                            it.remove();
-                            continue;
-                        }
                     }
                 } // end of traversal through job input files
 
                 for (Object obj : curGN_SI.getOutputFiles()) {
                     PegasusFile pf = (PegasusFile) obj;
+                    if (cleanupOnlyContainerInSubmitDir) {
+                        // PM-1950, PM-1974 we are not concerned for output files
+                        // for this
+                        break;
+                    }
+
                     if (pf.canBeCleanedup()) {
                         // PM-739 only add if the cleanup flag is set to true
                         fileSet.add(pf);
@@ -277,14 +292,20 @@ public class InPlace extends AbstractCleanupStrategy {
                 } else {
                     computeJob = curGN_SI;
                 }
+                String stagingSiteForCleanupJob =
+                        cleanupOnlyContainerInSubmitDir
+                                ? "local"
+                                : // PM-1950, PM-1975 the container is in the submit directory
+                                computeJob instanceof DAXJob // PM-1918 is job a sub workflow
+                                        ? site
+                                        : computeJob.getStagingSiteHandle();
+
                 Job cleanupJob =
                         mImpl.createCleanupJob(
                                 cleanupNode.getID(),
                                 cleanupJobContent.getListOfFilesToDelete(),
                                 computeJob,
-                                computeJob instanceof DAXJob // PM-1918 is job a sub workflow
-                                        ? site
-                                        : computeJob.getStagingSiteHandle());
+                                stagingSiteForCleanupJob);
 
                 // add the job as a content to the graphnode
                 // and the cleanupNode itself to the Graph

@@ -2310,7 +2310,9 @@ public class Job extends Data implements GraphNodeContent {
     public boolean runsInContainerUniverse() {
         String universe = (String) this.condorVariables.get(Condor.UNIVERSE_KEY);
         // PM-1950 check if a job runs in container universe
+        // only a compute job can run in container universe
         return this.getContainer() != null
+                && this.getJobType() == Job.COMPUTE_JOB
                 && universe != null
                 && universe.equals(Condor.CONTAINER_UNIVERSE);
     }

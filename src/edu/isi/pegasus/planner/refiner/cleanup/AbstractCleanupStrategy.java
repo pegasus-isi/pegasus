@@ -115,6 +115,8 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
 
     protected PegasusBag mBag;
 
+    protected static final String DUMMY_LOCAL_CONTAINER_SITE = "localC";
+
     /**
      * Intializes the class.
      *
@@ -373,10 +375,11 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
         } else if (job.getJobType() == Job.COMPUTE_JOB) {
             // for compute jobs we refer to the staging site
             sites.add(job.getStagingSiteHandle());
-            // PM-1950 if a job is set to run in container universe
-            // then add local site too?
+            // PM-1950, PM-1974 if a job is set to run in container universe
+            // then add local site but with special tag to indicate it cleans
+            // only the container file in question
             if (job.runsInContainerUniverse()) {
-                sites.add("local");
+                sites.add(DUMMY_LOCAL_CONTAINER_SITE);
             }
         } else if (job.getJobType() == Job.DAX_JOB) {
             return this.getSitesForCleanup((DAXJob) job);
