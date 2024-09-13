@@ -13,14 +13,21 @@
  */
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * An implementation that leverages
@@ -33,6 +40,8 @@ public class CondorSingularity extends AbstractContainer {
     public static final String CONTAINER_WORKING_DIRECTORY = "/srv";
 
     private static String WORKER_PACKAGE_SETUP_SNIPPET = null;
+
+    private PlannerCache mPlannerCache;
 
     /**
      * Initiailizes the Container shell wrapper
@@ -47,6 +56,7 @@ public class CondorSingularity extends AbstractContainer {
         // happen outside the container from Pegasus perspective
         // Condor will launch the PegasusLite job inside the container only
         this.mTransfersOnHostOS = true;
+        mPlannerCache = bag.getHandleToPlannerCache();
     }
 
     /**
@@ -108,9 +118,7 @@ public class CondorSingularity extends AbstractContainer {
 
         // now add some extra stuff
         job.condorVariables.construct("universe", Condor.CONTAINER_UNIVERSE);
-        job.condorVariables.construct(
-                "container_image",
-                this.mPOptions.getSubmitDirectory() + File.separator + job.getContainer().getLFN());
+        job.condorVariables.construct("container_image", determineContainerImageURL(job));
 
         return sb.toString();
     }
@@ -286,5 +294,90 @@ public class CondorSingularity extends AbstractContainer {
     @Override
     public String getContainerWorkingDirectory() {
         return CondorSingularity.CONTAINER_WORKING_DIRECTORY;
+    }
+
+    /**
+     * Determine the the container image url to put into the condor class ad container_image, taking
+     * into account whether the container has bypass turned ON or not.
+     *
+     * @param job
+     * @return the image url
+     */
+    protected String determineContainerImageURL(Job job) {
+        Container c = job.getContainer();
+        if (c == null) {
+            throw new RuntimeException("Container is null for job-" + job.getID());
+        }
+        StringBuilder url = new StringBuilder();
+        String containerLFN = c.getLFN();
+
+        // PM-1975 traverse through job input files to get PegasusFile matching container lfn
+        // to get true determination for whether the container has to be bypassed or not
+        // since container bypass can be set via properties or on the container object
+        PegasusFile containerPF = null;
+        for (PegasusFile pf : job.getInputFiles()) {
+            if (pf.getLFN().equals(containerLFN)) {
+                containerPF = pf;
+                break;
+            }
+        }
+
+        if (containerPF == null) {
+            throw new RuntimeException(
+                    "Unable to find PegasusFile in the job input files for job-" + job.getID());
+        }
+
+        if (containerPF.doBypassStaging()) {
+            Collection<ReplicaCatalogEntry> cacheLocations =
+                    mPlannerCache.lookupAllEntries(
+                            containerLFN, job.getSiteHandle(), FileServerType.OPERATION.get);
+            if (cacheLocations.isEmpty()) {
+                mLogger.log(
+                        constructMessage(
+                                job,
+                                containerLFN,
+                                "Unable to find location of lfn in planner(get) cache with input staging bypassed"),
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            }
+            // construct the URL wrt to the planner cache location
+            // PM-1975 go through all the candidates returned from the planner cache
+            for (ReplicaCatalogEntry cacheLocation : cacheLocations) {
+                url.append(cacheLocation.getPFN());
+                break;
+            }
+        } else {
+            url.append(mPOptions.getSubmitDirectory()).append(File.separator).append(containerLFN);
+        }
+        return url.toString();
+    }
+
+    /**
+     * Helper message to construct a log message
+     *
+     * @param job
+     * @param lfn
+     * @param message
+     * @return
+     */
+    private String constructMessage(Job job, String lfn, String message) {
+        return this.constructMessage(job.getID(), lfn, message);
+    }
+
+    /**
+     * Helper message to construct a log message
+     *
+     * @param jobID
+     * @param lfn
+     * @param message
+     * @return
+     */
+    private String constructMessage(String jobID, String lfn, String message) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("For").append(" ").append("(").append(jobID);
+        if (lfn != null) {
+            sb.append(",").append(lfn).append(")");
+        }
+        sb.append(" ").append(message);
+        return sb.toString();
     }
 }
