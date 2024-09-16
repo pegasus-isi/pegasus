@@ -433,24 +433,11 @@ public class PegasusAWSBatch {
                         .addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"));
         builder.add(console);
         builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("log")));
-        LoggerContext ctx = Configurator.initialize(builder.build());
+
+        // PM-1976 reconfigure instead of initializing a new one
+        // LoggerContext ctx = Configurator.initialize(builder.build());
+        Configurator.reconfigure(builder.build(true));
         mLogger = org.apache.logging.log4j.LogManager.getLogger(PegasusAWSBatch.class);
         Configurator.setLevel(PegasusAWSBatch.class.getName(), Level.INFO);
-        /*
-        if ((mLogger = Logger.getRootLogger()) != null) {
-            mLogger.removeAllAppenders(); // clean house only once
-            try {
-                mLogger.addAppender(
-                        new FileAppender(
-                                new PatternLayout("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"),
-                                log.getAbsolutePath()));
-            } catch (IOException ex) {
-                System.err.println("Unable to set logging to file " + log);
-            }
-            mLogger.setLevel(Level.INFO);
-            // reset logger to class specific
-            mLogger = Logger.getLogger(PegasusAWSBatch.class.getName());
-        }
-        */
     }
 }
