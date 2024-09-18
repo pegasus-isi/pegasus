@@ -259,9 +259,11 @@ class Status:
         d = defaultdict(list)
         root_wf_uuids = set()
         for job in condor_jobs:
-            d[job["pegasus_wf_uuid"]].append(
-                {k: v for k, v in job.items() if k in self.job_attr_set}
-            )
+            # exclude non-Pegasus jobs in the queue
+            if "pegasus_wf_uuid" in job:
+                d[job["pegasus_wf_uuid"]].append(
+                    {k: v for k, v in job.items() if k in self.job_attr_set}
+                )
             root_wf_uuids.add(job["pegasus_root_wf_uuid"])
 
         def print_q(wf_uuid, prefix: str = ""):
