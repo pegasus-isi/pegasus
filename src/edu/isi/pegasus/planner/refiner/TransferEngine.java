@@ -523,12 +523,15 @@ public class TransferEngine extends Engine {
                 String outFile = pf.getLFN();
 
                 if (job.getInputFiles().contains(pf)) {
-
                     // PM-833 figure out the addOn component just once per lfn
                     String lfn = pf.getLFN();
                     File addOn = mStagingMapper.mapToRelativeDirectory(job, destSite, lfn);
                     String thirdPartyDestPutURL =
                             this.getURLOnSharedScratch(destSite, job, OPERATION.put, addOn, lfn);
+
+                    // PM-1977 relative dir on the staging site where the parent job ran
+                    File parentAddon =
+                            mStagingMapper.getRelativeDirectory(pJob.getStagingSiteHandle(), lfn);
 
                     // definite inconsitency as url prefix and mount point
                     // are not picked up from the same server
@@ -621,8 +624,15 @@ public class TransferEngine extends Engine {
                                     mSiteStore.getExternalWorkDirectory(
                                             server, pJob.getSiteHandle());
 
+                            // PM-1977 the relative add on path (like 00/23 etc) needs to
+                            // be the one retrieved from the parent job that generated
+                            // the source file
                             sourceURL =
-                                    sourceURI + File.separator + addOn + File.separator + outFile;
+                                    sourceURI
+                                            + File.separator
+                                            + parentAddon
+                                            + File.separator
+                                            + outFile;
 
                             if (job instanceof DAXJob) {
                                 // Case 3 PM-1766 DAX job has some input files that are produced by
