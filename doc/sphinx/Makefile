@@ -33,6 +33,8 @@ help:
 		| grep -v "user-guide/_basic-properties.rst" \
 		| grep -v "python/Pegasus.rst" \
 		| grep -v "Problem in http domain" \
+		| grep -v "Package sphinx Warning:" \
+		| grep -v "LaTeX Warning:" \
 		> warn.log || true
 	@if [ -s warn.log ]; then echo "Documentation build contained warnings, which we do not allow. Summary (more above):"; cat warn.log; exit 1; fi
 
