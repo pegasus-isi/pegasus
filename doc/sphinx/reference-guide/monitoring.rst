@@ -1964,7 +1964,7 @@ what we use in production. The figure below illustrates the processes involved
 in the pipeline and how they are connected to one another. For more information
 regarding setup and usage, please visit the link referenced above.
 
-.. figure:: ../images/data-collection-pipeline.svg
+.. figure:: ../images/data-collection-pipeline.png
    :alt: Data Collection/Visualization Pipeline
    :width: 100.0%
 
