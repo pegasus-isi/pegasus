@@ -35,6 +35,8 @@ help:
 		| grep -v "Problem in http domain" \
 		| grep -v "Package sphinx Warning:" \
 		| grep -v "LaTeX Warning:" \
+		| grep -v "Package rerunfilecheck Warning:" \
+		| grep -v "Generating output file PegasusWMS" \
 		> warn.log || true
 	@if [ -s warn.log ]; then echo "Documentation build contained warnings, which we do not allow. Summary (more above):"; cat warn.log; exit 1; fi
 
