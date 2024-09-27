@@ -454,6 +454,11 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <fileset dir="doc/sphinx/_build/html" includes="**/*"/>
     </copy>
 
+    <!-- Copy PDF -->
+    <copy preservelastmodified="true" todir="${dist.doc}/wordpress">
+      <fileset dir="doc/sphinx/_build/latex" includes="**/*.pdf"/>
+    </copy>
+
     <!-- Copy manpages -->
     <copy preservelastmodified="true" todir="${dist.data}/man/man1">
       <fileset dir="doc/sphinx/_build/man" includes="*"/>
