@@ -219,7 +219,7 @@ def get_s3_client(config, uri):
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
         region_name=region_name,
-    )
+    ), region_name
 
 
 def is_bucket_available(s3_client, bucket):
@@ -341,7 +341,7 @@ def ls(args):
     config = get_config(args)
     uri = parse_uri(args.url)
 
-    s3 = get_s3_client(config, uri)
+    s3, region_name = get_s3_client(config, uri)
 
     if uri.bucket:
         # list keys in bucket
@@ -417,7 +417,7 @@ def cp(args):
 
     # using the first source (from the checks above, it is garuanteed that
     # identities all match)
-    s3 = get_s3_client(config, srcs[0])
+    s3, region_name = get_s3_client(config, srcs[0])
 
     # Create the bucket if the user requested it and it does not exist
     if args.create:
@@ -503,7 +503,7 @@ def mkdir(args):
         raise Exception("URL for mkdir cannot contain a key: %s" % arg)
 
     config = get_config(args)
-    s3 = get_s3_client(config, uri)
+    s3, region_name = get_s3_client(config, uri)
 
     can_create = True
     try:
@@ -573,7 +573,7 @@ def rm(args):
         log.info("Deleting keys from bucket %s" % bucket)
         uri, keys = buckets[bucket]
         try:
-            s3 = get_s3_client(config, uri)
+            s3, region_name = get_s3_client(config, uri)
 
             keys_to_delete = {k.key for k in keys}
 
@@ -692,7 +692,7 @@ def put(args):
     config = get_config(args)
 
     # get s3 client with associated endpoint
-    s3 = get_s3_client(config, uri)
+    s3, region_name = get_s3_client(config, uri)
 
     # Create the bucket if the user requested it and it does not exist
     if args.create_bucket:
@@ -764,7 +764,7 @@ def get(args):
     log.info("Downloading %s" % uri)
 
     config = get_config(args)
-    s3 = get_s3_client(config, uri)
+    s3, region_name = get_s3_client(config, uri)
 
     try:
         s3.download_file(Bucket=uri.bucket, Key=uri.key, Filename=output)
