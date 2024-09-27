@@ -24,6 +24,8 @@ from argparse import ArgumentParser
 from six.moves.configparser import ConfigParser
 from six.moves.urllib.parse import urlsplit
 
+from Pegasus.tools.worker_utils import logger
+
 try:
     import boto3
     import botocore
@@ -207,17 +209,41 @@ def get_s3_client(config, uri):
         raise Exception("Config file has no section for identity '%s'" % uri.ident)
 
     endpoint = config.get(uri.site, "endpoint")
+    region_name = config.get(uri.site, "region", fallback=None)
     aws_access_key_id = config.get(uri.ident, "access_key")
     aws_secret_access_key = config.get(uri.ident, "secret_key")
 
+    # PM-1978 make sure endpoint in the config file is
+    # consistent with region for AWS endpoints only
+    if region_name is not None and "amazonaws.com" in endpoint:
+        kwargs, endpoint_region = parse_endpoint(endpoint)
+        if endpoint_region != region_name:
+            # KV: maybe should be an error?
+            logger.warning(
+                "Inconsistency between AWS endpoint {} and region {} specified in the config file".format(
+                    endpoint, region_name
+                )
+            )
+
     # what about s3s????
 
-    return boto3.client(
-        "s3",
-        endpoint_url=endpoint,
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
+    return (
+        boto3.client(
+            "s3",
+            endpoint_url=endpoint,
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=region_name,
+        ),
+        region_name,
     )
+
+
+def get_create_bucket_configuration(region_name):
+    config = {}
+    if region_name is not None:
+        config["LocationConstraint"] = region_name
+    return config
 
 
 def is_bucket_available(s3_client, bucket):
@@ -339,7 +365,7 @@ def ls(args):
     config = get_config(args)
     uri = parse_uri(args.url)
 
-    s3 = get_s3_client(config, uri)
+    s3, region_name = get_s3_client(config, uri)
 
     if uri.bucket:
         # list keys in bucket
@@ -415,7 +441,7 @@ def cp(args):
 
     # using the first source (from the checks above, it is garuanteed that
     # identities all match)
-    s3 = get_s3_client(config, srcs[0])
+    s3, region_name = get_s3_client(config, srcs[0])
 
     # Create the bucket if the user requested it and it does not exist
     if args.create:
@@ -441,7 +467,10 @@ def cp(args):
                 raise e
 
         if can_create:
-            s3.create_bucket(Bucket=dest.bucket)
+            s3.create_bucket(
+                Bucket=dest.bucket,
+                CreateBucketConfiguration=get_create_bucket_configuration(region_name),
+            )
 
     # ensure that none of the keys in srcs exist in dest
     if not args.force:
@@ -501,8 +530,7 @@ def mkdir(args):
         raise Exception("URL for mkdir cannot contain a key: %s" % arg)
 
     config = get_config(args)
-    s3 = get_s3_client(config, uri)
-
+    s3, region_name = get_s3_client(config, uri)
     can_create = True
     try:
         s3.head_bucket(Bucket=uri.bucket)
@@ -525,7 +553,10 @@ def mkdir(args):
             raise e
 
     if can_create:
-        s3.create_bucket(Bucket=uri.bucket)
+        s3.create_bucket(
+            Bucket=uri.bucket,
+            CreateBucketConfiguration=get_create_bucket_configuration(region_name),
+        )
     else:
         log.warning(
             "Bucket: {} exists and is already owned by user: {}".format(
@@ -571,7 +602,7 @@ def rm(args):
         log.info("Deleting keys from bucket %s" % bucket)
         uri, keys = buckets[bucket]
         try:
-            s3 = get_s3_client(config, uri)
+            s3, region_name = get_s3_client(config, uri)
 
             keys_to_delete = {k.key for k in keys}
 
@@ -690,7 +721,7 @@ def put(args):
     config = get_config(args)
 
     # get s3 client with associated endpoint
-    s3 = get_s3_client(config, uri)
+    s3, region_name = get_s3_client(config, uri)
 
     # Create the bucket if the user requested it and it does not exist
     if args.create_bucket:
@@ -708,7 +739,10 @@ def put(args):
                 raise e
 
         if can_create:
-            s3.create_bucket(Bucket=uri.bucket)
+            s3.create_bucket(
+                Bucket=uri.bucket,
+                CreateBucketConfiguration=get_create_bucket_configuration(region_name),
+            )
 
     if not args.force:
         # check if all keys do not yet exist
@@ -760,7 +794,7 @@ def get(args):
     log.info("Downloading %s" % uri)
 
     config = get_config(args)
-    s3 = get_s3_client(config, uri)
+    s3, region_name = get_s3_client(config, uri)
 
     try:
         s3.download_file(Bucket=uri.bucket, Key=uri.key, Filename=output)
@@ -936,3 +970,7 @@ def main():
                 print(e)
 
             sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
