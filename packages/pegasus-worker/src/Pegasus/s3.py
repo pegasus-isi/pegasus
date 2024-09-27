@@ -24,6 +24,8 @@ from argparse import ArgumentParser
 from six.moves.configparser import ConfigParser
 from six.moves.urllib.parse import urlsplit
 
+from Pegasus.tools.worker_utils import logger
+
 try:
     import boto3
     import botocore
@@ -210,6 +212,18 @@ def get_s3_client(config, uri):
     region_name = config.get(uri.site, "region", fallback=None)
     aws_access_key_id = config.get(uri.ident, "access_key")
     aws_secret_access_key = config.get(uri.ident, "secret_key")
+
+    # PM-1978 make sure endpoint in the config file is
+    # consistent with region for AWS endpoints only
+    if region_name is not None and "amazonaws.com" in endpoint:
+        kwargs, endpoint_region = parse_endpoint(endpoint)
+        if endpoint_region != region_name:
+            # KV: maybe should be an error?
+            logger.warning(
+                "Inconsistency between AWS endpoint {} and region {} specified in the config file".format(
+                    endpoint, region_name
+                )
+            )
 
     # what about s3s????
 
