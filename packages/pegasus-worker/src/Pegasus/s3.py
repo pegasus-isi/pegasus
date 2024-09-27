@@ -213,13 +213,23 @@ def get_s3_client(config, uri):
 
     # what about s3s????
 
-    return boto3.client(
-        "s3",
-        endpoint_url=endpoint,
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        region_name=region_name,
-    ), region_name
+    return (
+        boto3.client(
+            "s3",
+            endpoint_url=endpoint,
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=region_name,
+        ),
+        region_name,
+    )
+
+
+def get_create_bucket_configuration(region_name):
+    config = {}
+    if region_name is not None:
+        config["LocationConstraint"] = region_name
+    return config
 
 
 def is_bucket_available(s3_client, bucket):
@@ -443,7 +453,10 @@ def cp(args):
                 raise e
 
         if can_create:
-            s3.create_bucket(Bucket=dest.bucket)
+            s3.create_bucket(
+                Bucket=dest.bucket,
+                CreateBucketConfiguration=get_create_bucket_configuration(region_name),
+            )
 
     # ensure that none of the keys in srcs exist in dest
     if not args.force:
@@ -504,7 +517,6 @@ def mkdir(args):
 
     config = get_config(args)
     s3, region_name = get_s3_client(config, uri)
-
     can_create = True
     try:
         s3.head_bucket(Bucket=uri.bucket)
@@ -527,7 +539,10 @@ def mkdir(args):
             raise e
 
     if can_create:
-        s3.create_bucket(Bucket=uri.bucket)
+        s3.create_bucket(
+            Bucket=uri.bucket,
+            CreateBucketConfiguration=get_create_bucket_configuration(region_name),
+        )
     else:
         log.warning(
             "Bucket: {} exists and is already owned by user: {}".format(
@@ -710,7 +725,10 @@ def put(args):
                 raise e
 
         if can_create:
-            s3.create_bucket(Bucket=uri.bucket)
+            s3.create_bucket(
+                Bucket=uri.bucket,
+                CreateBucketConfiguration=get_create_bucket_configuration(region_name),
+            )
 
     if not args.force:
         # check if all keys do not yet exist
