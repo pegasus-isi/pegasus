@@ -207,6 +207,7 @@ def get_s3_client(config, uri):
         raise Exception("Config file has no section for identity '%s'" % uri.ident)
 
     endpoint = config.get(uri.site, "endpoint")
+    region_name = config.get(uri.site, "region", fallback=None)
     aws_access_key_id = config.get(uri.ident, "access_key")
     aws_secret_access_key = config.get(uri.ident, "secret_key")
 
@@ -217,6 +218,7 @@ def get_s3_client(config, uri):
         endpoint_url=endpoint,
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
+        region_name=region_name,
     )
 
 
@@ -938,3 +940,7 @@ def main():
                 print(e)
 
             sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
