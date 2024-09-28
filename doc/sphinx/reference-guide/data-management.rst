@@ -714,12 +714,27 @@ is just an arbitrary name with an endpoint entry. Example:
     # specific options, and then one or more user specific
     # entries with a key @ matching the cloud one (for
     # example, [amazon] and [joe@amazon] below)
+    # Refer to https://docs.aws.amazon.com/general/latest/gr/s3.html
+    # for a mapping of amazon endpoints to regions.
+    # It is highly recommended that you specify the amazon
+    # region in the following sections that is consistent
+    # with the endpoint specified in the [amazon] section
 
     [amazon]
-    endpoint = https://s3.amazonaws.com/
+    endpoint = https://s3.us-west-2.amazonaws.com/
 
     [joe@amazon]
+    region    = us-west-2
     access_key = 90c4143642cb097c88fe2ec66ce4ad4e
+    secret_key = abababababababababababababababab
+
+    # For Open Storage Network (OSN) access. OSN provides
+    # S3 like compatible interface to get and put files
+    [osn]
+    endpoint = https://sdsc.osn.xsede.org
+
+    [joe@osn]
+    access_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     secret_key = abababababababababababababababab
 
     # If you want to retrieve protected data using a token
