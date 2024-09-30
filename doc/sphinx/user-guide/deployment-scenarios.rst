@@ -1421,6 +1421,11 @@ following roles need to be created
    Example <https://aws.amazon.com/blogs/compute/creating-a-simple-fetch-and-run-aws-batch-job/>`__
    to create a IAM role named batchJobRole.
 
+   After creating the role, you should log into the IAM role in the AWS webconsole,
+   and make sure that in the **Trust Relationships** tab you both *ecs-tasks.amazonaws.com*
+   and *ecs.amazonaws.com*. If not specified, you might see an error in launching jobs.
+   `More details here <https://repost.aws/knowledge-center/ecs-unable-to-assume-role/>`__.
+
    .. note::
 
       batchJobRole should have full write access to S3 i.e have the
