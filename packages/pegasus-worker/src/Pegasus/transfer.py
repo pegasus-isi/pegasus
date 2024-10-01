@@ -1380,8 +1380,8 @@ class HttpHandler(TransferHandlerBase):
             return ""
         # determine if there is an specific entry for the URL, or generic one
         section = None
-        if credentials.has_section(f"{proto}://{host}"):
-            section = f"{proto}://{host}"
+        if credentials.has_section("%s://%s" % (proto, host)):
+            section = "%s://%s" % (proto, host)
         elif credentials.has_section(host):
             section = host
         if not section:
@@ -1391,9 +1391,9 @@ class HttpHandler(TransferHandlerBase):
             if key.startswith("header."):
                 realkey = key.replace("header.", "")
                 if tool == "wget":
-                    options += f" --header='{realkey}: {value}'"
+                    options += " --header='%s: %s'" % (realkey, value)
                 else:
-                    options += f" --header '{realkey}: {value}'"
+                    options += " --header '%s: %s'" % (realkey, value)
         return options
 
 
