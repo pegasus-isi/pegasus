@@ -20,6 +20,7 @@ import edu.isi.pegasus.aws.batch.classes.AWSJob;
 import edu.isi.pegasus.aws.batch.classes.Tuple;
 import edu.isi.pegasus.aws.batch.common.AWSJobstateWriter;
 import edu.isi.pegasus.aws.batch.common.CloudWatchLog;
+import edu.isi.pegasus.aws.batch.common.PegasusAWSBatchException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -199,110 +200,158 @@ public class Synch {
      *
      * @param entities entitites to be setup
      * @param allRequired whether all entities should be present
+     * @throws PegasusAWSBatchException in case of errors while setting up the entities.
      */
-    public void setup(EnumMap<BATCH_ENTITY_TYPE, String> entities, boolean allRequired) {
+    public void setup(EnumMap<BATCH_ENTITY_TYPE, String> entities, boolean allRequired)
+            throws PegasusAWSBatchException {
         boolean delete = true;
 
-        String value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_definition, allRequired);
-        if (value != null) {
-            if (!isFile(value)) {
-                mJobDefinitionARN =
-                        value.startsWith(ARN_PREFIX)
-                                ? value
-                                : constructDefaultARN(BATCH_ENTITY_TYPE.job_definition, value);
+        String value = null;
+        PegasusAWSBatchException abe = null;
+        try {
+            value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_definition, allRequired);
+            if (value != null) {
+                if (!isFile(value)) {
+                    mJobDefinitionARN =
+                            value.startsWith(ARN_PREFIX)
+                                    ? value
+                                    : constructDefaultARN(BATCH_ENTITY_TYPE.job_definition, value);
 
-                mLogger.info("Using existing Job Definition " + mJobDefinitionARN);
-                delete = false;
-            } else {
-                mLogger.info("Attempting to create Job Definition from file " + new File(value));
-                mJobDefinitionARN =
-                        createJobDefinition(
-                                new File(value), constructDefaultName(Synch.JOB_DEFINITION_SUFFIX));
-                mLogger.info("Created Job Definition " + mJobDefinitionARN);
+                    mLogger.info("Using existing Job Definition " + mJobDefinitionARN);
+                    delete = false;
+                } else {
+                    mLogger.info(
+                            "Attempting to create Job Definition from file " + new File(value));
+                    mJobDefinitionARN =
+                            createJobDefinition(
+                                    new File(value),
+                                    constructDefaultName(Synch.JOB_DEFINITION_SUFFIX));
+                    mLogger.info("Created Job Definition " + mJobDefinitionARN);
+                }
+                mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_definition, delete);
             }
-            mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_definition, delete);
+        } catch (Exception e) {
+            if (abe == null) {
+                abe = new PegasusAWSBatchException("Unable to create job definition", e);
+            } else {
+                abe.setNextException(
+                        new PegasusAWSBatchException("Unable to create job definition", e));
+            }
         }
 
-        value = getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, allRequired);
         delete = true;
-        if (value != null) {
-            if (!isFile(value)) {
-                mComputeEnvironmentARN =
-                        value.startsWith(ARN_PREFIX)
-                                ? value
-                                : constructDefaultARN(BATCH_ENTITY_TYPE.compute_environment, value);
-                mLogger.info("Using existing Compute Environment " + mComputeEnvironmentARN);
-                delete = false;
+        try {
+            value = getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, allRequired);
+            if (value != null) {
+                if (!isFile(value)) {
+                    mComputeEnvironmentARN =
+                            value.startsWith(ARN_PREFIX)
+                                    ? value
+                                    : constructDefaultARN(
+                                            BATCH_ENTITY_TYPE.compute_environment, value);
+                    mLogger.info("Using existing Compute Environment " + mComputeEnvironmentARN);
+                    delete = false;
+                } else {
+                    mLogger.info(
+                            "Attempting to create Compute Environment from file "
+                                    + new File(value));
+                    mComputeEnvironmentARN =
+                            createComputeEnvironment(
+                                    new File(value),
+                                    constructDefaultName(Synch.COMPUTE_ENV_SUFFIX));
+                    mLogger.info("Created Compute Environment " + mComputeEnvironmentARN);
+                }
+                mDeleteOnExit.put(BATCH_ENTITY_TYPE.compute_environment, delete);
+            }
+        } catch (Exception e) {
+            if (abe == null) {
+                abe = new PegasusAWSBatchException("Unable to create compute environment", e);
             } else {
+                abe.setNextException(
+                        new PegasusAWSBatchException("Unable to create compute environment", e));
+            }
+        }
+
+        delete = true;
+        try {
+            if (value != null) {
+                value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_queue, allRequired);
+                if (!isFile(value)) {
+                    mJobQueueARN =
+                            value.startsWith(ARN_PREFIX)
+                                    ? value
+                                    : constructDefaultARN(BATCH_ENTITY_TYPE.job_queue, value);
+                    delete = false;
+                    mLogger.info("Using existing Job Queue " + mJobQueueARN);
+                } else {
+                    mLogger.info("Attempting to create Job Queue from file " + new File(value));
+                    mJobQueueARN =
+                            this.createQueue(
+                                    (value.equalsIgnoreCase(Synch.NULL_VALUE))
+                                            ? null
+                                            : new File(value),
+                                    mComputeEnvironmentARN,
+                                    constructDefaultName(Synch.JOB_QUEUE_SUFFIX));
+                    mLogger.info("Created Job Queue " + mJobQueueARN);
+                }
+                mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_queue, delete);
+            }
+        } catch (Exception e) {
+            if (abe == null) {
+                abe = new PegasusAWSBatchException("Unable to create job queue", e);
+            } else {
+                abe.setNextException(new PegasusAWSBatchException("Unable to create job queue", e));
+            }
+        }
+
+        delete = true;
+        try {
+            value = getEntityValue(entities, BATCH_ENTITY_TYPE.s3_bucket, allRequired);
+            if (value != null) {
+                String name =
+                        (value.startsWith(S3_PREFIX))
+                                ? // strip out s3 prefix
+                                value.substring(S3_PREFIX.length())
+                                : // construct a default name
+                                constructDefaultName(Synch.S3_BUCKET_SUFFIX);
+
+                // determine key addon
+                if (name.contains(File.separator)) {
+                    int index = name.indexOf(File.separator);
+                    mS3Bucket = name.substring(0, index);
+                    mS3BucketKeyPrefix = name.substring(index);
+                    if (mS3BucketKeyPrefix.startsWith(File.separator)) {
+                        mS3BucketKeyPrefix = mS3BucketKeyPrefix.substring(1);
+                    }
+                    if (!mS3BucketKeyPrefix.endsWith(File.separator)) {
+                        mS3BucketKeyPrefix = mS3BucketKeyPrefix + File.separator;
+                    }
+                } else {
+                    mS3BucketKeyPrefix = "";
+                    mS3Bucket = name;
+                }
                 mLogger.info(
-                        "Attempting to create Compute Environment from file " + new File(value));
-                mComputeEnvironmentARN =
-                        createComputeEnvironment(
-                                new File(value), constructDefaultName(Synch.COMPUTE_ENV_SUFFIX));
-                mLogger.info("Created Compute Environment " + mComputeEnvironmentARN);
+                        "S3 bucket name - " + mS3Bucket + " key add on - " + mS3BucketKeyPrefix);
+                if (this.createS3Bucket(mS3Bucket)) {
+                    mLogger.info("Created S3 bucket " + mS3Bucket);
+                } else {
+                    // bucket already exists. we wont delete it
+                    mLogger.info("Using existing S3 bucket that is already owned " + mS3Bucket);
+                    delete = false;
+                }
+                mDeleteOnExit.put(BATCH_ENTITY_TYPE.s3_bucket, delete);
             }
-            mDeleteOnExit.put(BATCH_ENTITY_TYPE.compute_environment, delete);
+        } catch (Exception e) {
+            if (abe == null) {
+                abe = new PegasusAWSBatchException("Unable to create the s3 bucket", e);
+            } else {
+                abe.setNextException(
+                        new PegasusAWSBatchException("Unable to create the s3 bucket", e));
+            }
         }
 
-        value = getEntityValue(entities, BATCH_ENTITY_TYPE.job_queue, allRequired);
-        delete = true;
-        if (value != null) {
-            if (!isFile(value)) {
-                mJobQueueARN =
-                        value.startsWith(ARN_PREFIX)
-                                ? value
-                                : constructDefaultARN(BATCH_ENTITY_TYPE.job_queue, value);
-                delete = false;
-                mLogger.info("Using existing Job Queue " + mJobQueueARN);
-            } else {
-                mLogger.info("Attempting to create Job Queue from file " + new File(value));
-                mJobQueueARN =
-                        this.createQueue(
-                                (value.equalsIgnoreCase(Synch.NULL_VALUE)) ? null : new File(value),
-                                mComputeEnvironmentARN,
-                                constructDefaultName(Synch.JOB_QUEUE_SUFFIX));
-                mLogger.info("Created Job Queue " + mJobQueueARN);
-            }
-            mDeleteOnExit.put(BATCH_ENTITY_TYPE.job_queue, delete);
-        }
-
-        value = getEntityValue(entities, BATCH_ENTITY_TYPE.s3_bucket, allRequired);
-        delete = true;
-        if (value != null) {
-            String name =
-                    (value.startsWith(S3_PREFIX))
-                            ?
-                            // strip out s3 prefix
-                            value.substring(S3_PREFIX.length())
-                            :
-                            // construct a default name
-                            constructDefaultName(Synch.S3_BUCKET_SUFFIX);
-
-            // determine key addon
-            if (name.contains(File.separator)) {
-                int index = name.indexOf(File.separator);
-                mS3Bucket = name.substring(0, index);
-                mS3BucketKeyPrefix = name.substring(index);
-                if (mS3BucketKeyPrefix.startsWith(File.separator)) {
-                    mS3BucketKeyPrefix = mS3BucketKeyPrefix.substring(1);
-                }
-                if (!mS3BucketKeyPrefix.endsWith(File.separator)) {
-                    mS3BucketKeyPrefix = mS3BucketKeyPrefix + File.separator;
-                }
-            } else {
-                mS3BucketKeyPrefix = "";
-                mS3Bucket = name;
-            }
-            mLogger.info("S3 bucket name - " + mS3Bucket + " key add on - " + mS3BucketKeyPrefix);
-            if (this.createS3Bucket(mS3Bucket)) {
-                mLogger.info("Created S3 bucket " + mS3Bucket);
-            } else {
-                // bucket already exists. we wont delete it
-                mLogger.info("Using existing S3 bucket that is already owned " + mS3Bucket);
-                delete = false;
-            }
-
-            mDeleteOnExit.put(BATCH_ENTITY_TYPE.s3_bucket, delete);
+        if (abe != null) {
+            throw abe;
         }
     }
 
