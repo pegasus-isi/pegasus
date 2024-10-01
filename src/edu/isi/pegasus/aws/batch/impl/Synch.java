@@ -214,6 +214,7 @@ public class Synch {
                 mLogger.info("Using existing Job Definition " + mJobDefinitionARN);
                 delete = false;
             } else {
+                mLogger.info("Attempting to create Job Definition from file " + new File(value));
                 mJobDefinitionARN =
                         createJobDefinition(
                                 new File(value), constructDefaultName(Synch.JOB_DEFINITION_SUFFIX));
@@ -233,6 +234,8 @@ public class Synch {
                 mLogger.info("Using existing Compute Environment " + mComputeEnvironmentARN);
                 delete = false;
             } else {
+                mLogger.info(
+                        "Attempting to create Compute Environment from file " + new File(value));
                 mComputeEnvironmentARN =
                         createComputeEnvironment(
                                 new File(value), constructDefaultName(Synch.COMPUTE_ENV_SUFFIX));
@@ -252,6 +255,7 @@ public class Synch {
                 delete = false;
                 mLogger.info("Using existing Job Queue " + mJobQueueARN);
             } else {
+                mLogger.info("Attempting to create Job Queue from file " + new File(value));
                 mJobQueueARN =
                         this.createQueue(
                                 (value.equalsIgnoreCase(Synch.NULL_VALUE)) ? null : new File(value),
