@@ -381,30 +381,72 @@ public class Synch {
      */
     public boolean deleteSetup(EnumMap<BATCH_ENTITY_TYPE, String> entities) {
         boolean deleted = true;
-        String value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_queue, false);
-        if (value != null) {
-            mLogger.info("Attempting to delete job queue " + value);
-            deleted = deleteQueue(value);
+        String value = null;
+        PegasusAWSBatchException abe = null;
+        try {
+            value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_queue, false);
+            if (value != null) {
+                mLogger.info("Attempting to delete job queue " + value);
+                deleted = this.deleteQueue(value);
+                mLogger.info("Deleted job queue " + value);
+            }
+        } catch (Exception e) {
+            if (abe == null) {
+                abe = new PegasusAWSBatchException("Unable to delete job queue", e);
+            } else {
+                abe.setNextException(new PegasusAWSBatchException("Unable to delete job queue", e));
+            }
         }
 
-        value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, false);
-        if (deleted && value != null) {
-            // compute environment can only be deleted if job queue has been
-            mLogger.info("Attempting to delete compute environment " + value);
-            deleted = this.deleteComputeEnvironment(value);
-        }
-        value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_definition, false);
-        if (value != null) {
-            mLogger.info("Attempting to delete job definition " + value);
-            deleted = this.deleteJobDefinition(value);
-        }
-        value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.s3_bucket, false);
-        if (value != null) {
-            if (value.startsWith(S3_PREFIX)) {
-                value = value.substring(S3_PREFIX.length());
+        try {
+            value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, false);
+            if (deleted && value != null) {
+                // compute environment can only be deleted if job queue has been
+                mLogger.info("Attempting to delete compute environment " + value);
+                deleted = this.deleteComputeEnvironment(value);
+                mLogger.info("Deleted compute environment " + value);
             }
-            mLogger.info("Attempting to delete S3 bucket " + value);
-            deleted = this.deleteS3Bucket(value);
+        } catch (Exception e) {
+            if (abe == null) {
+                abe = new PegasusAWSBatchException("Unable to delete compute environment", e);
+            } else {
+                abe.setNextException(
+                        new PegasusAWSBatchException("Unable to delete compute environment", e));
+            }
+        }
+
+        try {
+            value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_definition, false);
+            if (value != null) {
+                mLogger.info("Attempting to delete job definition " + value);
+                deleted = this.deleteJobDefinition(value);
+                mLogger.info("Deleted job definition " + value);
+            }
+        } catch (Exception e) {
+            if (abe == null) {
+                abe = new PegasusAWSBatchException("Unable to delete job definition", e);
+            } else {
+                abe.setNextException(
+                        new PegasusAWSBatchException("Unable to delete job definition", e));
+            }
+        }
+
+        try {
+            value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.s3_bucket, false);
+            if (value != null) {
+                if (value.startsWith(S3_PREFIX)) {
+                    value = value.substring(S3_PREFIX.length());
+                }
+                mLogger.info("Attempting to delete S3 bucket " + value);
+                deleted = this.deleteS3Bucket(value);
+                mLogger.info("Deleted S3 bucket " + value);
+            }
+        } catch (Exception e) {
+            if (abe == null) {
+                abe = new PegasusAWSBatchException("Unable to delete S3 bucket", e);
+            } else {
+                abe.setNextException(new PegasusAWSBatchException("Unable to delete S3 bucket", e));
+            }
         }
         mLogger.info("Deleted Setup - " + deleted);
         return deleted;

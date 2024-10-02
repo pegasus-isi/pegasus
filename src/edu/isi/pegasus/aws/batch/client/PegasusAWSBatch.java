@@ -322,7 +322,15 @@ public class PegasusAWSBatch {
             sc.initialze(props, logLevel, jsonMap);
 
             if (options.has("delete")) {
-                sc.deleteSetup(jsonMap);
+                // PM-1982 better error handling
+                try {
+                    sc.deleteSetup(jsonMap);
+                } catch (PegasusAWSBatchException abe) {
+                    for (; abe != null; abe = abe.getNextException()) {
+                        mLogger.error(abe, abe);
+                        exitcode += 1;
+                    }
+                }
                 return exitcode;
             } else {
                 // we do setup both in case of running jobs or just doing setup
