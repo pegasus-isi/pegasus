@@ -264,7 +264,7 @@ class Status:
                 d[job["pegasus_wf_uuid"]].append(
                     {k: v for k, v in job.items() if k in self.job_attr_set}
                 )
-            root_wf_uuids.add(job["pegasus_root_wf_uuid"])
+                root_wf_uuids.add(job["pegasus_root_wf_uuid"])
 
         def print_q(wf_uuid, prefix: str = ""):
             space = "  "
