@@ -707,11 +707,12 @@ public class Synch {
                 mLogger.debug(numDone + " jobs done of total of " + total);
                 if (numDone < total) {
                     // still total is not done
-                    mLogger.debug("Sleeping before querying for status of remaining jobs ");
+                    mLogger.debug("Sleeping before querying for status of remaining jobs. Remaining " + awsJobIDs.size());
                     Thread.sleep(sleepTime);
                     // now we query current state for jobs
                     DescribeJobsRequest jobsRequest =
                             DescribeJobsRequest.builder().jobs(awsJobIDs).build();
+                    mLogger.debug("Created jobs request is of size " + jobsRequest.jobs().size());
                     DescribeJobsResponse jobsResponse = batchClient.describeJobs(jobsRequest);
                     for (JobDetail jobDetail : jobsResponse.jobs()) {
                         mLogger.debug(
