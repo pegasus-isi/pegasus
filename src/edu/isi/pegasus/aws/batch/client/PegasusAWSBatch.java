@@ -18,6 +18,7 @@ import static java.util.Arrays.asList;
 
 import edu.isi.pegasus.aws.batch.builder.Job;
 import edu.isi.pegasus.aws.batch.classes.AWSJob;
+import edu.isi.pegasus.aws.batch.common.PegasusAWSBatchException;
 import edu.isi.pegasus.aws.batch.impl.Synch;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
@@ -325,9 +326,16 @@ public class PegasusAWSBatch {
                 return exitcode;
             } else {
                 // we do setup both in case of running jobs or just doing setup
-                sc.setup(jsonMap, allEntitiesRequired);
+                // PM-1982 better error handling
+                try {
+                    sc.setup(jsonMap, allEntitiesRequired);
+                } catch (PegasusAWSBatchException abe) {
+                    for (; abe != null; abe = abe.getNextException()) {
+                        mLogger.error(abe, abe);
+                        exitcode += 1;
+                    }
+                }
             }
-
             if (options.has("create")) {
                 return exitcode;
             }
