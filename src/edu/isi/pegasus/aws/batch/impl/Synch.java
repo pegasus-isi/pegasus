@@ -663,6 +663,9 @@ public class Synch {
                             mJobstateWriter.log(
                                     summary.jobName(), summary.jobId(), AWSJob.JOBSTATE.succeeded);
                             doneJobs.add(summary.jobId());
+                            // PM-1983 when a job succeeds it should be removed
+                            // from the active set that is being monitored
+                            awsJobIDs.remove(summary.jobId());
                             numDone++;
                             succeeded++;
                             mLogger.debug("Querying for succeeded job details " + succeededJobID);
