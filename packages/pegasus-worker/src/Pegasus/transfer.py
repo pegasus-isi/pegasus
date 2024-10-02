@@ -1380,8 +1380,8 @@ class HttpHandler(TransferHandlerBase):
             return ""
         # determine if there is an specific entry for the URL, or generic one
         section = None
-        if credentials.has_section("%s://%s" % (proto, host)):
-            section = "%s://%s" % (proto, host)
+        if credentials.has_section(f"{proto}://{host}"):
+            section = f"{proto}://{host}"
         elif credentials.has_section(host):
             section = host
         if not section:
@@ -1391,9 +1391,9 @@ class HttpHandler(TransferHandlerBase):
             if key.startswith("header."):
                 realkey = key.replace("header.", "")
                 if tool == "wget":
-                    options += " --header='%s: %s'" % (realkey, value)
+                    options += f" --header='{realkey}: {value}'"
                 else:
-                    options += " --header '%s: %s'" % (realkey, value)
+                    options += f" --header '{realkey}: {value}'"
         return options
 
 
@@ -3368,14 +3368,21 @@ class GSIScpHandler(TransferHandlerBase):
         return env_override
 
 
-class StashHandler(TransferHandlerBase):
+class OSDFHandler(TransferHandlerBase):
     """
-    Uses the OSG stashcp command to trasfer from/to stash
+    Uses the OSG pelican/stashcp command to trasfer from/to OSDF
     """
 
-    _name = "StashHandler"
-    _mkdir_cleanup_protocols = ["osdf", "stash"]
-    _protocol_map = ["osdf->file", "stash->file", "file->osdf", "file->stash"]
+    _name = "OSDFHandler"
+    _mkdir_cleanup_protocols = ["osdf", "pelican", "stash"]
+    _protocol_map = [
+        "osdf->file",
+        "pelican->file",
+        "stash->file",
+        "file->osdf",
+        "file->pelican",
+        "file->stash",
+    ]
 
     def do_mkdirs(self, transfers):
 
@@ -3383,8 +3390,13 @@ class StashHandler(TransferHandlerBase):
         return [transfers, []]
 
         tools = utils.Tools()
-        if tools.find("stashcp") is None:
-            logger.error("Unable to do Stash mkdir because stashcp could not be found")
+        if (
+            tools.find("pelican", "--version", r"([0-9]+\.[0-9]+\.[0-9]+)") is None
+            and tools.find("stashcp", "--version", r"([0-9]+\.[0-9]+\.[0-9]+)") is None
+        ):
+            logger.error(
+                "Unable to do OSDF mkdir because pelican/stashcp could not be found"
+            )
             return [[], transfers_l]
 
         successful_l = []
@@ -3392,9 +3404,11 @@ class StashHandler(TransferHandlerBase):
         for t in transfers:
 
             # copy a 0-byte file to create the dir
-            cmd = "{} /dev/null '{}/.create'".format(
-                tools.full_path("stashcp"), t.get_url(),
-            )
+            if tools.full_path("pelican") is not None:
+                cmd = "{} object copy".format(tools.full_path("pelican"))
+            else:
+                cmd = tools.full_path("stashcp")
+            cmd = f"{cmd} /dev/null '{t.get_url()}/.create'"
             try:
                 tc = utils.TimedCommand(cmd)
                 tc.run()
@@ -3408,9 +3422,12 @@ class StashHandler(TransferHandlerBase):
     def do_transfers(self, transfers_l):
 
         tools = utils.Tools()
-        if tools.find("stashcp") is None:
+        if (
+            tools.find("pelican", "--version", r"([0-9]+\.[0-9]+\.[0-9]+)") is None
+            and tools.find("stashcp", "--version", r"([0-9]+\.[0-9]+\.[0-9]+)") is None
+        ):
             logger.error(
-                "Unable to do Stash transfers because stashcp could not be found"
+                "Unable to do OSDF transfers because pelican/stashcp could not be found"
             )
             return [[], transfers_l]
 
@@ -3418,14 +3435,19 @@ class StashHandler(TransferHandlerBase):
         if "http_proxy" in os.environ:
             os.environ["http_proxy"] = ""
 
+        if tools.full_path("pelican") is not None:
+            base_cmd = "{} object copy".format(tools.full_path("pelican"))
+        else:
+            base_cmd = tools.full_path("stashcp")
+
         successful_l = []
         failed_l = []
         for t in transfers_l:
             self._pre_transfer_attempt(t)
             t_start = time.time()
 
-            if t.get_dst_proto() in ["osdf", "stash"]:
-                # write file:// to stash:// or osdf://
+            if t.get_dst_proto() in ["osdf", "pelican", "stash"]:
+                # write file:// to osdf://
 
                 # src has to exist and be readable
                 if not verify_local_file(t.get_src_path()):
@@ -3433,56 +3455,13 @@ class StashHandler(TransferHandlerBase):
                     failed_l.append(t)
                     continue
 
-                if os.path.exists("/mnt/stash/ospool"):
-                    # uw.osg-htc.org hack for now (we don't have a scitoken
-                    # locally) local cp
-                    src_path = t.get_src_path()
-                    dst_path = re.sub("^/ospool", "/mnt/stash/ospool", t.get_dst_path())
-
-                    prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = f"/bin/cp '{src_path}' '{dst_path}'"
-                elif os.path.exists("/mnt/ceph/osg"):
-                    # OSG Connect hack for now (we don't have a scitoken
-                    # locally) local cp
-                    src_path = t.get_src_path()
-                    dst_path = re.sub("^/osgconnect", "", t.get_dst_path())
-
-                    prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = f"/bin/cp '{src_path}' '{dst_path}'"
-                else:
-                    cmd = "{} '{}' '{}'".format(
-                        tools.full_path("stashcp"), t.get_src_path(), t.dst_url(),
-                    )
+                cmd = f"{base_cmd} '{t.get_src_path()}' '{t.dst_url()}'"
             else:
                 # read
 
-                if os.path.exists("/mnt/stash/ospool"):
-                    # uw.osg-htc.org hack for now (we don't have a scitoken
-                    # locally) local cp
-                    src_path = re.sub("^/ospool", "/mnt/stash/ospool", t.get_src_path())
-                    dst_path = t.get_dst_path()
-
-                    prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = f"/bin/cp '{src_path}' '{dst_path}'"
-                elif os.path.exists("/mnt/ceph/osg"):
-                    # OSG Connect hack for now (we don't have a scitoken
-                    # locally) local cp
-                    src_path = re.sub("^/osgconnect", "", t.get_src_path())
-                    dst_path = t.get_dst_path()
-
-                    prepare_local_dir(os.path.dirname(dst_path))
-                    cmd = f"/bin/cp '{src_path}' '{dst_path}'"
-                else:
-                    # stashcp wants just the path with a single leading slash
-                    src_path = t.src_url()
-                    src_path = re.sub("^(osdf|stash):", "", src_path)
-                    src_path = re.sub("^/+", "/", src_path)
-
-                    local_dir = os.path.dirname(t.get_dst_path())
-                    prepare_local_dir(local_dir)
-                    cmd = "{} '{}' '{}'".format(
-                        tools.full_path("stashcp"), src_path, t.get_dst_path()
-                    )
+                local_dir = os.path.dirname(t.get_dst_path())
+                prepare_local_dir(local_dir)
+                cmd = f"{base_cmd} '{t.src_url()}' '{t.get_dst_path()}'"
 
             try:
                 tc = utils.TimedCommand(cmd)
@@ -3499,14 +3478,36 @@ class StashHandler(TransferHandlerBase):
         return [successful_l, failed_l]
 
     def do_removes(self, transfers_l):
-        # local rm for now
+
+        tools = utils.Tools()
+        if (
+            tools.find("pelican", "--version", r"([0-9]+\.[0-9]+\.[0-9]+)") is None
+            and tools.find("stashcp", "--version", r"([0-9]+\.[0-9]+\.[0-9]+)") is None
+        ):
+            logger.error(
+                "Unable to do OSDF transfers because pelican/stashcp could not be found"
+            )
+            return [[], transfers_l]
+
+        # ensure we do not use http_proxy for curl
+        if "http_proxy" in os.environ:
+            os.environ["http_proxy"] = ""
+
+        if tools.full_path("pelican") is not None:
+            base_cmd = "{} object copy".format(tools.full_path("pelican"))
+        else:
+            base_cmd = tools.full_path("stashcp")
+
         successful_l = []
         failed_l = []
         for t in transfers_l:
-            cmd = "/bin/rm -f"
+
             if t.get_recursive():
-                cmd += " -r "
-            cmd += " '/stash%s' " % (t.get_path())
+                # unsupported
+                continue
+
+            cmd = f"{base_cmd} '/dev/null' '{t.get_url()}'"
+
             try:
                 tc = utils.TimedCommand(cmd)
                 tc.run()
@@ -4300,7 +4301,7 @@ class SimilarWorkSet:
         self._available_handlers.append(GFALHandler())
         self._available_handlers.append(ScpHandler())
         self._available_handlers.append(GSIScpHandler())
-        self._available_handlers.append(StashHandler())
+        self._available_handlers.append(OSDFHandler())
         self._available_handlers.append(SymlinkHandler())
         self._available_handlers.append(MovetoHandler())
         self._available_handlers.append(DockerHandler())
@@ -5051,6 +5052,8 @@ def json_object_decoder(obj):
         r.set_url(obj["target"]["site_label"], obj["target"]["url"])
         if "recursive" in obj["target"]:
             r.set_recursive(obj["target"]["recursive"])
+        else:
+            r.set_recursive(False)
         return r
     return obj
 
