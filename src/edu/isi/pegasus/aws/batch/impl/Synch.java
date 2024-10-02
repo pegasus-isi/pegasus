@@ -707,7 +707,9 @@ public class Synch {
                 mLogger.debug(numDone + " jobs done of total of " + total);
                 if (numDone < total) {
                     // still total is not done
-                    mLogger.debug("Sleeping before querying for status of remaining jobs. Remaining " + awsJobIDs.size());
+                    mLogger.debug(
+                            "Sleeping before querying for status of remaining jobs. Remaining "
+                                    + awsJobIDs.size());
                     Thread.sleep(sleepTime);
                     // now we query current state for jobs
                     DescribeJobsRequest jobsRequest =
