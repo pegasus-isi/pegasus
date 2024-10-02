@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
+import static edu.isi.pegasus.planner.namespace.Condor.CONTAINER_IMAGE_KEY;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
@@ -118,7 +120,7 @@ public class CondorSingularity extends AbstractContainer {
 
         // now add some extra stuff
         job.condorVariables.construct("universe", Condor.CONTAINER_UNIVERSE);
-        job.condorVariables.construct("container_image", determineContainerImageURL(job));
+        job.condorVariables.construct(CONTAINER_IMAGE_KEY, determineContainerImageURL(job));
 
         return sb.toString();
     }

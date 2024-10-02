@@ -181,6 +181,9 @@ public class Condor extends Namespace {
     /** The condor universe key value for container universe. */
     public static String CONTAINER_UNIVERSE = "container";
 
+    /** The container image key that specifies container image to use in the submit file. */
+    public static String CONTAINER_IMAGE_KEY = "container_image";
+
     /** The preserve_relative_paths key for condor file io */
     public static final String PRESERVE_RELATIVE_PATHS_KEY = "preserve_relative_paths";
 
@@ -557,9 +560,11 @@ public class Condor extends Namespace {
                 break;
 
             case 'c':
-                if (key.compareTo("copy_to_spool") == 0) {
+                if (key.compareTo(Condor.CONTAINER_IMAGE_KEY) == 0) {
                     res = VALID_KEY;
                 } else if (key.compareTo("concurrency_limits") == 0) {
+                    res = VALID_KEY;
+                } else if (key.compareTo("copy_to_spool") == 0) {
                     res = VALID_KEY;
                 } else if (key.compareTo("cream_attributes") == 0) {
                     res = VALID_KEY;
