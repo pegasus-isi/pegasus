@@ -727,7 +727,8 @@ public class Synch {
                             DescribeJobsRequest jobsRequest =
                                     DescribeJobsRequest.builder().jobs(chunkedAWSJobIDs).build();
                             mLogger.debug(
-                                    "Created jobs request is of size " + jobsRequest.jobs().size());
+                                    "Describe jobs request is of size "
+                                            + jobsRequest.jobs().size());
                             DescribeJobsResponse jobsResponse =
                                     batchClient.describeJobs(jobsRequest);
                             for (JobDetail jobDetail : jobsResponse.jobs()) {
