@@ -76,6 +76,9 @@ public class Synch {
     /** Exitcode to exit with in case AWS Batch related issues or internal errrors */
     public static final int NON_TASK_FAILURE_EXITCODE = 2;
 
+    /** The max jobs that can be passed for certain batch api calls, such as describeJobs etc */
+    public static final int AWS_BATCH_MAX_JOBS_SUPPORTED_IN_API = 100;
+
     public enum BATCH_ENTITY_TYPE {
         compute_environment,
         job_definition,
@@ -714,24 +717,37 @@ public class Synch {
                             "Sleeping before querying for status of remaining jobs. Remaining "
                                     + awsJobIDs.size());
                     Thread.sleep(sleepTime);
-                    // now we query current state for jobs
-                    DescribeJobsRequest jobsRequest =
-                            DescribeJobsRequest.builder().jobs(awsJobIDs).build();
-                    mLogger.debug("Created jobs request is of size " + jobsRequest.jobs().size());
-                    DescribeJobsResponse jobsResponse = batchClient.describeJobs(jobsRequest);
-                    for (JobDetail jobDetail : jobsResponse.jobs()) {
-                        mLogger.debug(
-                                "Current Status of Job "
-                                        + jobDetail.jobId()
-                                        + "->"
-                                        + jobDetail.status()
-                                        + " with reason "
-                                        + jobDetail.statusReason());
-                        mJobstateWriter.log(
-                                jobDetail.jobName(),
-                                jobDetail.jobId(),
-                                AWSJob.JOBSTATE.valueOf(jobDetail.status().toLowerCase()));
-                        mLogger.debug("Detailed Job detail " + jobDetail);
+
+                    int count = 1;
+                    Collection<String> chunkedAWSJobIDs = new HashSet();
+                    for (Iterator<String> it = awsJobIDs.iterator(); it.hasNext(); count++) {
+                        chunkedAWSJobIDs.add(it.next());
+                        if (count == Synch.AWS_BATCH_MAX_JOBS_SUPPORTED_IN_API || !it.hasNext()) {
+                            // now we query current state for jobs
+                            DescribeJobsRequest jobsRequest =
+                                    DescribeJobsRequest.builder().jobs(chunkedAWSJobIDs).build();
+                            mLogger.debug(
+                                    "Created jobs request is of size " + jobsRequest.jobs().size());
+                            DescribeJobsResponse jobsResponse =
+                                    batchClient.describeJobs(jobsRequest);
+                            for (JobDetail jobDetail : jobsResponse.jobs()) {
+                                mLogger.debug(
+                                        "Current Status of Job "
+                                                + jobDetail.jobId()
+                                                + "->"
+                                                + jobDetail.status()
+                                                + " with reason "
+                                                + jobDetail.statusReason());
+                                mJobstateWriter.log(
+                                        jobDetail.jobName(),
+                                        jobDetail.jobId(),
+                                        AWSJob.JOBSTATE.valueOf(jobDetail.status().toLowerCase()));
+                                mLogger.debug("Detailed Job detail " + jobDetail);
+                            }
+                            // reset the chunk
+                            count = 1;
+                            chunkedAWSJobIDs = new HashSet();
+                        }
                     }
                 } else {
                     if (receivedSignalToExitAfterJobsComplete()) {
