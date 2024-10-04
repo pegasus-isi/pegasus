@@ -668,7 +668,7 @@ public class Synch {
                             doneJobs.add(summary.jobId());
                             // PM-1983 when a job succeeds it should be removed
                             // from the active set that is being monitored
-                            awsJobIDs.remove(summary.jobId());
+                            // awsJobIDs.remove(summary.jobId());
                             numDone++;
                             succeeded++;
                             mLogger.debug("Querying for succeeded job details " + succeededJobID);
@@ -678,7 +678,8 @@ public class Synch {
                     }
                 }
 
-                mLogger.debug("Sleeping before querying for failure ");
+                mLogger.debug(
+                        "Sleeping for " + sleepTime + " milliseconds before querying for failure ");
                 Thread.sleep(sleepTime);
                 if (numDone < total) {
                     // check for failed jobs
@@ -714,7 +715,9 @@ public class Synch {
                 if (numDone < total) {
                     // still total is not done
                     mLogger.debug(
-                            "Sleeping before querying for status of remaining jobs. Remaining "
+                            "Sleeping for "
+                                    + sleepTime
+                                    + " milliseconds before querying for status of remaining jobs. Remaining "
                                     + awsJobIDs.size());
                     Thread.sleep(sleepTime);
 
