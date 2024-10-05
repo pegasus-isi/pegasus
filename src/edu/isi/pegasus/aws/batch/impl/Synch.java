@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.aws.batch.impl;
 
+import static edu.isi.pegasus.aws.batch.classes.AWSJob.JOBSTATE.succeeded;
+
 import edu.isi.pegasus.aws.batch.builder.ComputeEnvironment;
 import edu.isi.pegasus.aws.batch.builder.JobDefinition;
 import edu.isi.pegasus.aws.batch.builder.JobQueue;
@@ -645,7 +647,7 @@ public class Synch {
             }
             // now query AWS Batch for the jobs
             try {
-
+                /*
                 ListJobsRequest listSucceededJobsRequest =
                         createListJobRequest(this.mJobQueueARN, JobStatus.SUCCEEDED);
                 ListJobsRequest listFailedJobsRequest =
@@ -668,7 +670,7 @@ public class Synch {
                             doneJobs.add(summary.jobId());
                             // PM-1983 when a job succeeds it should be removed
                             // from the active set that is being monitored
-                            // awsJobIDs.remove(summary.jobId());
+                            awsJobIDs.remove(summary.jobId());
                             numDone++;
                             succeeded++;
                             mLogger.debug("Querying for succeeded job details " + succeededJobID);
@@ -678,8 +680,7 @@ public class Synch {
                     }
                 }
 
-                mLogger.debug(
-                        "Sleeping for " + sleepTime + " milliseconds before querying for failure ");
+                mLogger.debug("Sleeping before querying for failure ");
                 Thread.sleep(sleepTime);
                 if (numDone < total) {
                     // check for failed jobs
@@ -710,17 +711,14 @@ public class Synch {
                         }
                     }
                 }
-
+                */
                 mLogger.debug(numDone + " jobs done of total of " + total);
                 if (numDone < total) {
                     // still total is not done
                     mLogger.debug(
-                            "Sleeping for "
-                                    + sleepTime
-                                    + " milliseconds before querying for status of remaining jobs. Remaining "
+                            "Sleeping before querying for status of remaining jobs. Remaining "
                                     + awsJobIDs.size());
                     Thread.sleep(sleepTime);
-
                     int count = 1;
                     Collection<String> chunkedAWSJobIDs = new HashSet();
                     for (Iterator<String> it = awsJobIDs.iterator(); it.hasNext(); count++) {
@@ -735,6 +733,11 @@ public class Synch {
                             DescribeJobsResponse jobsResponse =
                                     batchClient.describeJobs(jobsRequest);
                             for (JobDetail jobDetail : jobsResponse.jobs()) {
+                                AWSJob.JOBSTATE jobState =
+                                        AWSJob.JOBSTATE.valueOf(jobDetail.status().toLowerCase());
+                                AWSJob j = this.getJob(jobDetail.jobName());
+                                String jobId = jobDetail.jobId();
+                                j.setState(jobState);
                                 mLogger.debug(
                                         "Current Status of Job "
                                                 + jobDetail.jobId()
@@ -743,10 +746,45 @@ public class Synch {
                                                 + " with reason "
                                                 + jobDetail.statusReason());
                                 mJobstateWriter.log(
-                                        jobDetail.jobName(),
-                                        jobDetail.jobId(),
-                                        AWSJob.JOBSTATE.valueOf(jobDetail.status().toLowerCase()));
+                                        jobDetail.jobName(), jobDetail.jobId(), jobState);
+
                                 mLogger.debug("Detailed Job detail " + jobDetail);
+                                switch (jobState) {
+                                    case succeeded:
+                                        if (!doneJobs.contains(jobId)) {
+                                            mLogger.info("Job Succeeded " + jobId);
+                                            doneJobs.add(jobId);
+                                            numDone++;
+                                            succeeded++;
+                                            mLogger.debug(
+                                                    "Querying for succeeded job details "
+                                                            + jobDetail.jobId());
+                                            Tuple<File, File> log = cwl.retrieve(j);
+                                            mLogger.debug(
+                                                    "Logs retreived for "
+                                                            + jobDetail.jobId()
+                                                            + " to "
+                                                            + log);
+                                        }
+                                        break;
+
+                                    case failed:
+                                        if (!doneJobs.contains(jobId)) {
+                                            mLogger.info("Job Failed " + jobId);
+                                            doneJobs.add(jobId);
+                                            numDone++;
+                                            failed++;
+                                            mLogger.debug(
+                                                    "Querying for failed job details " + jobId);
+                                            Tuple<File, File> log = cwl.retrieve(j);
+                                            mLogger.debug(
+                                                    "Logs retreived for " + jobId + " to " + log);
+                                        }
+                                        break;
+
+                                    default:
+                                        break;
+                                }
                             }
                             // reset the chunk
                             count = 1;
