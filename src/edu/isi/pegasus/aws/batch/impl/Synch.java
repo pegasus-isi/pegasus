@@ -790,6 +790,19 @@ public class Synch {
                             count = 1;
                             chunkedAWSJobIDs = new HashSet();
                         }
+                    } // end of traversal of aws job ids
+
+                    // do some cleanup so that we query for lesser number of jobs
+                    // in the next iteration
+                    for (String doneJobId : doneJobs) {
+                        if (!awsJobIDs.remove(doneJobId)) {
+                            // unable to remove. something is amiss
+                            mLogger.error(
+                                    "Done Job ID"
+                                            + doneJobId
+                                            + " not found in list of awsJobs being tracked "
+                                            + awsJobIDs);
+                        }
                     }
                 } else {
                     if (receivedSignalToExitAfterJobsComplete()) {
