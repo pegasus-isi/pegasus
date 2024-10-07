@@ -795,14 +795,7 @@ public class Synch {
                     // do some cleanup so that we query for lesser number of jobs
                     // in the next iteration
                     for (String doneJobId : doneJobs) {
-                        if (!awsJobIDs.remove(doneJobId)) {
-                            // unable to remove. something is amiss
-                            mLogger.error(
-                                    "Done Job ID"
-                                            + doneJobId
-                                            + " not found in list of awsJobs being tracked "
-                                            + awsJobIDs);
-                        }
+                        awsJobIDs.remove(doneJobId);
                     }
                 } else {
                     if (receivedSignalToExitAfterJobsComplete()) {
