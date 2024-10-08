@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.aws.batch.impl;
 
+import static edu.isi.pegasus.aws.batch.classes.AWSJob.JOBSTATE.succeeded;
+
 import edu.isi.pegasus.aws.batch.builder.ComputeEnvironment;
 import edu.isi.pegasus.aws.batch.builder.JobDefinition;
 import edu.isi.pegasus.aws.batch.builder.JobQueue;
@@ -75,6 +77,9 @@ public class Synch {
 
     /** Exitcode to exit with in case AWS Batch related issues or internal errrors */
     public static final int NON_TASK_FAILURE_EXITCODE = 2;
+
+    /** The max jobs that can be passed for certain batch api calls, such as describeJobs etc */
+    public static final int AWS_BATCH_MAX_JOBS_SUPPORTED_IN_API = 100;
 
     public enum BATCH_ENTITY_TYPE {
         compute_environment,
@@ -642,7 +647,7 @@ public class Synch {
             }
             // now query AWS Batch for the jobs
             try {
-
+                /*
                 ListJobsRequest listSucceededJobsRequest =
                         createListJobRequest(this.mJobQueueARN, JobStatus.SUCCEEDED);
                 ListJobsRequest listFailedJobsRequest =
@@ -663,6 +668,9 @@ public class Synch {
                             mJobstateWriter.log(
                                     summary.jobName(), summary.jobId(), AWSJob.JOBSTATE.succeeded);
                             doneJobs.add(summary.jobId());
+                            // PM-1983 when a job succeeds it should be removed
+                            // from the active set that is being monitored
+                            awsJobIDs.remove(summary.jobId());
                             numDone++;
                             succeeded++;
                             mLogger.debug("Querying for succeeded job details " + succeededJobID);
@@ -703,7 +711,7 @@ public class Synch {
                         }
                     }
                 }
-
+                */
                 mLogger.debug(numDone + " jobs done of total of " + total);
                 if (numDone < total) {
                     // still total is not done
@@ -711,24 +719,83 @@ public class Synch {
                             "Sleeping before querying for status of remaining jobs. Remaining "
                                     + awsJobIDs.size());
                     Thread.sleep(sleepTime);
-                    // now we query current state for jobs
-                    DescribeJobsRequest jobsRequest =
-                            DescribeJobsRequest.builder().jobs(awsJobIDs).build();
-                    mLogger.debug("Created jobs request is of size " + jobsRequest.jobs().size());
-                    DescribeJobsResponse jobsResponse = batchClient.describeJobs(jobsRequest);
-                    for (JobDetail jobDetail : jobsResponse.jobs()) {
-                        mLogger.debug(
-                                "Current Status of Job "
-                                        + jobDetail.jobId()
-                                        + "->"
-                                        + jobDetail.status()
-                                        + " with reason "
-                                        + jobDetail.statusReason());
-                        mJobstateWriter.log(
-                                jobDetail.jobName(),
-                                jobDetail.jobId(),
-                                AWSJob.JOBSTATE.valueOf(jobDetail.status().toLowerCase()));
-                        mLogger.debug("Detailed Job detail " + jobDetail);
+                    int count = 1;
+                    Collection<String> chunkedAWSJobIDs = new HashSet();
+                    for (Iterator<String> it = awsJobIDs.iterator(); it.hasNext(); count++) {
+                        chunkedAWSJobIDs.add(it.next());
+                        if (count == Synch.AWS_BATCH_MAX_JOBS_SUPPORTED_IN_API || !it.hasNext()) {
+                            // now we query current state for jobs
+                            DescribeJobsRequest jobsRequest =
+                                    DescribeJobsRequest.builder().jobs(chunkedAWSJobIDs).build();
+                            mLogger.debug(
+                                    "Describe jobs request is of size "
+                                            + jobsRequest.jobs().size());
+                            DescribeJobsResponse jobsResponse =
+                                    batchClient.describeJobs(jobsRequest);
+                            for (JobDetail jobDetail : jobsResponse.jobs()) {
+                                AWSJob.JOBSTATE jobState =
+                                        AWSJob.JOBSTATE.valueOf(jobDetail.status().toLowerCase());
+                                AWSJob j = this.getJob(jobDetail.jobName());
+                                String jobId = jobDetail.jobId();
+                                j.setState(jobState);
+                                mLogger.debug(
+                                        "Current Status of Job "
+                                                + jobDetail.jobId()
+                                                + "->"
+                                                + jobDetail.status()
+                                                + " with reason "
+                                                + jobDetail.statusReason());
+                                mJobstateWriter.log(
+                                        jobDetail.jobName(), jobDetail.jobId(), jobState);
+
+                                mLogger.debug("Detailed Job detail " + jobDetail);
+                                switch (jobState) {
+                                    case succeeded:
+                                        if (!doneJobs.contains(jobId)) {
+                                            mLogger.info("Job Succeeded " + jobId);
+                                            doneJobs.add(jobId);
+                                            numDone++;
+                                            succeeded++;
+                                            mLogger.debug(
+                                                    "Querying for succeeded job details "
+                                                            + jobDetail.jobId());
+                                            Tuple<File, File> log = cwl.retrieve(j);
+                                            mLogger.debug(
+                                                    "Logs retreived for "
+                                                            + jobDetail.jobId()
+                                                            + " to "
+                                                            + log);
+                                        }
+                                        break;
+
+                                    case failed:
+                                        if (!doneJobs.contains(jobId)) {
+                                            mLogger.info("Job Failed " + jobId);
+                                            doneJobs.add(jobId);
+                                            numDone++;
+                                            failed++;
+                                            mLogger.debug(
+                                                    "Querying for failed job details " + jobId);
+                                            Tuple<File, File> log = cwl.retrieve(j);
+                                            mLogger.debug(
+                                                    "Logs retreived for " + jobId + " to " + log);
+                                        }
+                                        break;
+
+                                    default:
+                                        break;
+                                }
+                            }
+                            // reset the chunk
+                            count = 1;
+                            chunkedAWSJobIDs = new HashSet();
+                        }
+                    } // end of traversal of aws job ids
+
+                    // do some cleanup so that we query for lesser number of jobs
+                    // in the next iteration
+                    for (String doneJobId : doneJobs) {
+                        awsJobIDs.remove(doneJobId);
                     }
                 } else {
                     if (receivedSignalToExitAfterJobsComplete()) {
