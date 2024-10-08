@@ -717,14 +717,14 @@ is just an arbitrary name with an endpoint entry. Example:
     # Refer to https://docs.aws.amazon.com/general/latest/gr/s3.html
     # for a mapping of amazon endpoints to regions.
     # It is highly recommended that you specify the amazon
-    # region in the following sections that is consistent
-    # with the endpoint specified in the [amazon] section
+    # region key in the amazon section that is consisten with
+    # the endpoint.
 
     [amazon]
     endpoint = https://s3.us-west-2.amazonaws.com/
+    region    = us-west-2
 
     [joe@amazon]
-    region    = us-west-2
     access_key = 90c4143642cb097c88fe2ec66ce4ad4e
     secret_key = abababababababababababababababab
 

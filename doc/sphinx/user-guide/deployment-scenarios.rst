@@ -1352,8 +1352,11 @@ To use AWS Batch for your workflows, we need two credential files
 
       $ cat ~/.pegasus/credentials.conf
       [amazon]
-      # end point has to be consistent with the EC2 region you are using. Here we are referring to us-west-2 region.
+      # end point has to be consistent with the EC2 region you are using.
+      # Here we are referring to us-west-2 region.
+      # Important to also list the region in case of amazon.
       endpoint = http://s3-us-west-2.amazonaws.com
+      region = us-west-2
 
 
       # Amazon now allows 5TB uploads
