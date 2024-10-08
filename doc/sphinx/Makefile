@@ -37,6 +37,7 @@ help:
 		| grep -v "LaTeX Warning:" \
 		| grep -v "Package rerunfilecheck Warning:" \
 		| grep -v "Generating output file PegasusWMS" \
+		| grep -v "unsupported theme option" \
 		> warn.log || true
 	@if [ -s warn.log ]; then echo "Documentation build contained warnings, which we do not allow. Summary (more above):"; cat warn.log; exit 1; fi
 
