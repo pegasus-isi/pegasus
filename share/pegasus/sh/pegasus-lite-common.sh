@@ -30,7 +30,7 @@ if [ "X$PATH" = "X" ]; then
 fi
 
 # a default used if no other worker packages can be found
-pegasus_lite_default_system="x86_64_rhel_7"
+pegasus_lite_default_system="x86_64_rhel_9"
 
 # remember where we started from
 pegasus_lite_start_dir=`pwd`
@@ -250,7 +250,7 @@ pegasus_lite_internal_wp_download()
     system=$(pegasus_lite_get_system)
     if [ $? != 0 ]; then
         # not sure what system we are on - try the default package
-        system="x86_64_rhel_7"
+        system="x86_64_rhel_9"
     fi
 
     # Before we download from the Pegasus server, see if we can find a version
@@ -730,7 +730,7 @@ pegasus_lite_get_system()
             
             case $osname in
                 "debian") osname="deb" ;;
-                "centos"|"rocky"|"scientific") osname="rhel" ;;
+                "centos"|"rocky"|"almalinux"|"scientific") osname="rhel" ;;
                 "fedora") osname="fc" ;;
                 "sles"|"opensuse-leap") osname="suse" ;;
                 *) osname="$osname" ;;
