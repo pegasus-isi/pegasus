@@ -262,8 +262,10 @@ def get_s3_client(config, uri):
 
 def get_create_bucket_configuration(region_name):
     config = {}
-    if region_name is not None:
-        config["LocationConstraint"] = region_name
+    # don't set any create bucket configuration for us-east-1
+    # https://github.com/aws/aws-sdk-js/issues/3647
+    if region_name is not None and region_name != "us-east-1":
+        config["CreateBucketConfiguration"] = {"LocationConstraint": region_name}
     return config
 
 
@@ -489,8 +491,7 @@ def cp(args):
 
         if can_create:
             s3.create_bucket(
-                Bucket=dest.bucket,
-                CreateBucketConfiguration=get_create_bucket_configuration(region_name),
+                Bucket=dest.bucket, **get_create_bucket_configuration(region_name),
             )
 
     # ensure that none of the keys in srcs exist in dest
@@ -575,8 +576,7 @@ def mkdir(args):
 
     if can_create:
         s3.create_bucket(
-            Bucket=uri.bucket,
-            CreateBucketConfiguration=get_create_bucket_configuration(region_name),
+            Bucket=uri.bucket, **get_create_bucket_configuration(region_name),
         )
     else:
         log.warning(
@@ -761,8 +761,7 @@ def put(args):
 
         if can_create:
             s3.create_bucket(
-                Bucket=uri.bucket,
-                CreateBucketConfiguration=get_create_bucket_configuration(region_name),
+                Bucket=uri.bucket, **get_create_bucket_configuration(region_name),
             )
 
     if not args.force:
