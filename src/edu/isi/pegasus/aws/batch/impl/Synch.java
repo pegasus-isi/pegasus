@@ -238,10 +238,9 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to create job definition", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to create job definition", e));
             }
+            abe.setNextException(
+                    new PegasusAWSBatchException("Unable to create job definition", e));
         }
 
         delete = true;
@@ -271,10 +270,9 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to create compute environment", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to create compute environment", e));
             }
+            abe.setNextException(
+                    new PegasusAWSBatchException("Unable to create compute environment", e));
         }
 
         delete = true;
@@ -304,9 +302,8 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to create job queue", e);
-            } else {
-                abe.setNextException(new PegasusAWSBatchException("Unable to create job queue", e));
             }
+            abe.setNextException(new PegasusAWSBatchException("Unable to create job queue", e));
         }
 
         delete = true;
@@ -349,10 +346,9 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to create the s3 bucket", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to create the s3 bucket", e));
             }
+
+            abe.setNextException(new PegasusAWSBatchException("Unable to create the s3 bucket", e));
         }
 
         if (abe != null) {
