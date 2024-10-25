@@ -394,7 +394,7 @@ public class Synch {
             if (value != null) {
                 mLogger.info("Attempting to delete job queue " + value);
                 deleted = this.deleteQueue(value);
-                mLogger.info("Deleted job queue " + value);
+                mLogger.info("Able to delete job queue: " + value + " - " + deleted);
             }
         } catch (Exception e) {
             if (abe == null) {
@@ -410,7 +410,7 @@ public class Synch {
                 // compute environment can only be deleted if job queue has been
                 mLogger.info("Attempting to delete compute environment " + value);
                 deleted = this.deleteComputeEnvironment(value);
-                mLogger.info("Deleted compute environment " + value);
+                mLogger.info("Able to delete compute environment " + value + " - " + deleted);
             }
         } catch (Exception e) {
             if (abe == null) {
@@ -427,7 +427,7 @@ public class Synch {
             if (value != null) {
                 mLogger.info("Attempting to delete job definition " + value);
                 deleted = this.deleteJobDefinition(value);
-                mLogger.info("Deleted job definition " + value);
+                mLogger.info("Able to delete job definition " + value + " - " + deleted);
             }
         } catch (Exception e) {
             if (abe == null) {
@@ -447,7 +447,7 @@ public class Synch {
                 }
                 mLogger.info("Attempting to delete S3 bucket " + value);
                 deleted = this.deleteS3Bucket(value);
-                mLogger.info("Deleted S3 bucket " + value);
+                mLogger.info("Able to delete S3 bucket " + value + " - " + deleted);
             }
         } catch (Exception e) {
             if (abe == null) {
