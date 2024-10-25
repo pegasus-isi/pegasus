@@ -380,9 +380,13 @@ public class Synch {
      *
      * @param entities
      * @return
+     * @throws PegasusAWSBatchException in case of any exception thrown by AWSBatch while deleting
+     *     an entity
      */
-    public boolean deleteSetup(EnumMap<BATCH_ENTITY_TYPE, String> entities) {
+    public boolean deleteSetup(EnumMap<BATCH_ENTITY_TYPE, String> entities)
+            throws PegasusAWSBatchException {
         boolean deleted = true;
+        boolean result = true;
         String value = null;
         PegasusAWSBatchException abe = null;
         try {
@@ -398,6 +402,7 @@ public class Synch {
             }
             abe.setNextException(new PegasusAWSBatchException("Unable to delete job queue", e));
         }
+        result = result && deleted;
 
         try {
             value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, false);
@@ -415,6 +420,7 @@ public class Synch {
                     new PegasusAWSBatchException("Unable to delete compute environment", e));
             deleted = false;
         }
+        result = result && deleted;
 
         try {
             value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_definition, false);
@@ -431,6 +437,7 @@ public class Synch {
                     new PegasusAWSBatchException("Unable to delete job definition", e));
             deleted = false;
         }
+        result = result && deleted;
 
         try {
             value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.s3_bucket, false);
@@ -449,12 +456,13 @@ public class Synch {
             abe.setNextException(new PegasusAWSBatchException("Unable to delete S3 bucket", e));
             deleted = false;
         }
+        result = result && deleted;
         mLogger.info("Deleted Setup - " + deleted);
 
         if (abe != null) {
             throw abe;
         }
-        return deleted;
+        return result;
     }
 
     public AWSJob.JOBSTATE getJobState(String id) {
