@@ -1227,6 +1227,7 @@ public class Synch {
         // first we update queue to disable it
         boolean deleted = false;
         int retry = 0;
+        int max_disable_retries = 10;
         long sleepTime = 2 * 1000;
 
         // update it's state
@@ -1240,7 +1241,7 @@ public class Synch {
         mLogger.debug("Updated Compute Environment to " + updateComputeEnvResponse.toString());
 
         boolean disabled = false;
-        while (!disabled && retry < 5) {
+        while (!disabled && retry < max_disable_retries) {
             DescribeComputeEnvironmentsRequest describeCE =
                     DescribeComputeEnvironmentsRequest.builder().computeEnvironments(arn).build();
             DescribeComputeEnvironmentsResponse describeCEResponse =
@@ -1261,6 +1262,11 @@ public class Synch {
             }
             retry++;
         }
+        mLogger.info(
+                "Compute Environment disabled - "
+                        + disabled
+                        + " after following number of retries "
+                        + retry);
 
         retry = 0;
         if (disabled) {
@@ -1298,6 +1304,11 @@ public class Synch {
                 retry++;
                 sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
             }
+        } else {
+            mLogger.info(
+                    "Compute Environment was not deleted as it was not disabled after following number of retries "
+                            + max_disable_retries);
+            return deleted;
         }
 
         mLogger.info("Compute Environment deleted  after " + retry + " retries - " + arn);
