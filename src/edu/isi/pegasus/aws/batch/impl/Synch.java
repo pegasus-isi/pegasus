@@ -375,7 +375,8 @@ public class Synch {
     }
 
     /**
-     * Does the setup of the various associated entitites for AWS Batch to accept jobs.
+     * Removes the various entitites required for submitting jobs to AWSBatch such as - job queue -
+     * job definition - compute environment
      *
      * @param entities
      * @return
@@ -412,6 +413,7 @@ public class Synch {
             }
             abe.setNextException(
                     new PegasusAWSBatchException("Unable to delete compute environment", e));
+            deleted = false;
         }
 
         try {
@@ -427,6 +429,7 @@ public class Synch {
             }
             abe.setNextException(
                     new PegasusAWSBatchException("Unable to delete job definition", e));
+            deleted = false;
         }
 
         try {
@@ -444,8 +447,13 @@ public class Synch {
                 abe = new PegasusAWSBatchException("Unable to delete S3 bucket", e);
             }
             abe.setNextException(new PegasusAWSBatchException("Unable to delete S3 bucket", e));
+            deleted = false;
         }
         mLogger.info("Deleted Setup - " + deleted);
+
+        if (abe != null) {
+            throw abe;
+        }
         return deleted;
     }
 
