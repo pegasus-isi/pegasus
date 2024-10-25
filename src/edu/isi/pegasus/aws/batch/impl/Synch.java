@@ -238,10 +238,9 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to create job definition", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to create job definition", e));
             }
+            abe.setNextException(
+                    new PegasusAWSBatchException("Unable to create job definition", e));
         }
 
         delete = true;
@@ -271,10 +270,9 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to create compute environment", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to create compute environment", e));
             }
+            abe.setNextException(
+                    new PegasusAWSBatchException("Unable to create compute environment", e));
         }
 
         delete = true;
@@ -304,9 +302,8 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to create job queue", e);
-            } else {
-                abe.setNextException(new PegasusAWSBatchException("Unable to create job queue", e));
             }
+            abe.setNextException(new PegasusAWSBatchException("Unable to create job queue", e));
         }
 
         delete = true;
@@ -349,10 +346,9 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to create the s3 bucket", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to create the s3 bucket", e));
             }
+
+            abe.setNextException(new PegasusAWSBatchException("Unable to create the s3 bucket", e));
         }
 
         if (abe != null) {
@@ -379,13 +375,18 @@ public class Synch {
     }
 
     /**
-     * Does the setup of the various associated entitites for AWS Batch to accept jobs.
+     * Removes the various entitites required for submitting jobs to AWSBatch such as - job queue -
+     * job definition - compute environment
      *
      * @param entities
      * @return
+     * @throws PegasusAWSBatchException in case of any exception thrown by AWSBatch while deleting
+     *     an entity
      */
-    public boolean deleteSetup(EnumMap<BATCH_ENTITY_TYPE, String> entities) {
+    public boolean deleteSetup(EnumMap<BATCH_ENTITY_TYPE, String> entities)
+            throws PegasusAWSBatchException {
         boolean deleted = true;
+        boolean result = true;
         String value = null;
         PegasusAWSBatchException abe = null;
         try {
@@ -393,15 +394,15 @@ public class Synch {
             if (value != null) {
                 mLogger.info("Attempting to delete job queue " + value);
                 deleted = this.deleteQueue(value);
-                mLogger.info("Deleted job queue " + value);
+                mLogger.info("Able to delete job queue: " + value + " - " + deleted);
             }
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to delete job queue", e);
-            } else {
-                abe.setNextException(new PegasusAWSBatchException("Unable to delete job queue", e));
             }
+            abe.setNextException(new PegasusAWSBatchException("Unable to delete job queue", e));
         }
+        result = result && deleted;
 
         try {
             value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.compute_environment, false);
@@ -409,32 +410,34 @@ public class Synch {
                 // compute environment can only be deleted if job queue has been
                 mLogger.info("Attempting to delete compute environment " + value);
                 deleted = this.deleteComputeEnvironment(value);
-                mLogger.info("Deleted compute environment " + value);
+                mLogger.info("Able to delete compute environment " + value + " - " + deleted);
             }
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to delete compute environment", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to delete compute environment", e));
             }
+            abe.setNextException(
+                    new PegasusAWSBatchException("Unable to delete compute environment", e));
+            deleted = false;
         }
+        result = result && deleted;
 
         try {
             value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.job_definition, false);
             if (value != null) {
                 mLogger.info("Attempting to delete job definition " + value);
                 deleted = this.deleteJobDefinition(value);
-                mLogger.info("Deleted job definition " + value);
+                mLogger.info("Able to delete job definition " + value + " - " + deleted);
             }
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to delete job definition", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to delete job definition", e));
             }
+            abe.setNextException(
+                    new PegasusAWSBatchException("Unable to delete job definition", e));
+            deleted = false;
         }
+        result = result && deleted;
 
         try {
             value = this.getEntityValue(entities, BATCH_ENTITY_TYPE.s3_bucket, false);
@@ -444,17 +447,22 @@ public class Synch {
                 }
                 mLogger.info("Attempting to delete S3 bucket " + value);
                 deleted = this.deleteS3Bucket(value);
-                mLogger.info("Deleted S3 bucket " + value);
+                mLogger.info("Able to delete S3 bucket " + value + " - " + deleted);
             }
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to delete S3 bucket", e);
-            } else {
-                abe.setNextException(new PegasusAWSBatchException("Unable to delete S3 bucket", e));
             }
+            abe.setNextException(new PegasusAWSBatchException("Unable to delete S3 bucket", e));
+            deleted = false;
         }
-        mLogger.info("Deleted Setup - " + deleted);
-        return deleted;
+        result = result && deleted;
+        mLogger.info("Deleted Setup - " + result);
+
+        if (abe != null) {
+            throw abe;
+        }
+        return result;
     }
 
     public AWSJob.JOBSTATE getJobState(String id) {
@@ -1227,6 +1235,7 @@ public class Synch {
         // first we update queue to disable it
         boolean deleted = false;
         int retry = 0;
+        int max_disable_retries = 10;
         long sleepTime = 2 * 1000;
 
         // update it's state
@@ -1240,7 +1249,7 @@ public class Synch {
         mLogger.debug("Updated Compute Environment to " + updateComputeEnvResponse.toString());
 
         boolean disabled = false;
-        while (!disabled && retry < 5) {
+        while (!disabled && retry < max_disable_retries) {
             DescribeComputeEnvironmentsRequest describeCE =
                     DescribeComputeEnvironmentsRequest.builder().computeEnvironments(arn).build();
             DescribeComputeEnvironmentsResponse describeCEResponse =
@@ -1261,6 +1270,11 @@ public class Synch {
             }
             retry++;
         }
+        mLogger.info(
+                "Compute Environment disabled - "
+                        + disabled
+                        + " after following number of retries "
+                        + retry);
 
         retry = 0;
         if (disabled) {
@@ -1298,6 +1312,11 @@ public class Synch {
                 retry++;
                 sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
             }
+        } else {
+            mLogger.info(
+                    "Compute Environment was not deleted as it was not disabled after following number of retries "
+                            + max_disable_retries);
+            return deleted;
         }
 
         mLogger.info("Compute Environment deleted  after " + retry + " retries - " + arn);
