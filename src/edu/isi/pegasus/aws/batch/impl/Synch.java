@@ -457,7 +457,7 @@ public class Synch {
             deleted = false;
         }
         result = result && deleted;
-        mLogger.info("Deleted Setup - " + deleted);
+        mLogger.info("Deleted Setup - " + result);
 
         if (abe != null) {
             throw abe;
