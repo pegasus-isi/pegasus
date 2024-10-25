@@ -394,9 +394,8 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to delete job queue", e);
-            } else {
-                abe.setNextException(new PegasusAWSBatchException("Unable to delete job queue", e));
             }
+            abe.setNextException(new PegasusAWSBatchException("Unable to delete job queue", e));
         }
 
         try {
@@ -410,10 +409,9 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to delete compute environment", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to delete compute environment", e));
             }
+            abe.setNextException(
+                    new PegasusAWSBatchException("Unable to delete compute environment", e));
         }
 
         try {
@@ -426,10 +424,9 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to delete job definition", e);
-            } else {
-                abe.setNextException(
-                        new PegasusAWSBatchException("Unable to delete job definition", e));
             }
+            abe.setNextException(
+                    new PegasusAWSBatchException("Unable to delete job definition", e));
         }
 
         try {
@@ -445,9 +442,8 @@ public class Synch {
         } catch (Exception e) {
             if (abe == null) {
                 abe = new PegasusAWSBatchException("Unable to delete S3 bucket", e);
-            } else {
-                abe.setNextException(new PegasusAWSBatchException("Unable to delete S3 bucket", e));
             }
+            abe.setNextException(new PegasusAWSBatchException("Unable to delete S3 bucket", e));
         }
         mLogger.info("Deleted Setup - " + deleted);
         return deleted;
