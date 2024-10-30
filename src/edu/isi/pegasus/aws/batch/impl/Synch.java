@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Collection;
@@ -80,6 +81,8 @@ public class Synch {
 
     /** The max jobs that can be passed for certain batch api calls, such as describeJobs etc */
     public static final int AWS_BATCH_MAX_JOBS_SUPPORTED_IN_API = 100;
+
+    public static final String US_EAST_1_REGION = "us-east-1";
 
     public enum BATCH_ENTITY_TYPE {
         compute_environment,
@@ -1052,18 +1055,14 @@ public class Synch {
      * @throws S3Exception in case unable to create bucket
      */
     public boolean createS3Bucket(String name) {
-        S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
+        // S3Client s3Client =
+        // S3Client.builder().region(mAWSRegion).endpointOverride(URI.create("http://s3.us-east-1.amazonaws.com")).build();
+        // S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
+        S3Client s3Client = this.getS3Client(mAWSRegion);
         boolean created = true;
         try {
             CreateBucketResponse cbr =
-                    s3Client.createBucket(
-                            CreateBucketRequest.builder()
-                                    .bucket(name)
-                                    .createBucketConfiguration(
-                                            CreateBucketConfiguration.builder()
-                                                    .locationConstraint(mAWSRegion.value())
-                                                    .build())
-                                    .build());
+                    s3Client.createBucket(getCreateBucketRequest(mAWSRegion, name));
         } catch (S3Exception ex) {
             if (ex.getErrorCode().equals("BucketAlreadyOwnedByYou")) {
                 created = false;
@@ -1087,7 +1086,7 @@ public class Synch {
         ListObjectsV2Request listObjectsV2Request =
                 ListObjectsV2Request.builder().bucket(name).build();
         ListObjectsV2Response listObjectsV2Response;
-        S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
+        S3Client s3Client = this.getS3Client(mAWSRegion);
         do {
             listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
             if (listObjectsV2Response.contents() != null) {
@@ -1134,7 +1133,7 @@ public class Synch {
      * @param files
      */
     public void transferInputFiles(String bucket, String keyPrefix, List<String> files) {
-        S3Client s3Client = S3Client.builder().region(mAWSRegion).build();
+        S3Client s3Client = this.getS3Client(mAWSRegion);
         for (String f : files) {
             File file = new File(f);
             if (file.exists()) {
@@ -1462,7 +1461,7 @@ public class Synch {
         }
 
         if (value == null) {
-            throw new RuntimeException(
+            throw new PegasusAWSBatchException(
                     "Please specify the following property in the properties " + property);
         }
 
@@ -1559,6 +1558,44 @@ public class Synch {
                 mLogger.error("Unable to find job " + name);
             }
         }
+    }
+
+    /**
+     * Returns a S3 client for a particular AWS Region
+     *
+     * @param region
+     * @return S3 Client
+     */
+    protected S3Client getS3Client(Region region) {
+        StringBuffer endpoint = new StringBuffer();
+        endpoint.append("http://s3.").append(region.toString()).append("amazonaws.com");
+        mLogger.debug(
+                "Getting S3 client for region " + region.value() + " with endpoint " + endpoint);
+        return S3Client.builder()
+                .region(region)
+                .endpointOverride(URI.create(endpoint.toString()))
+                .build();
+    }
+
+    /**
+     * Returns the create bucket request taking into account the region value
+     *
+     * @param region
+     * @param bucketName
+     * @return
+     */
+    protected CreateBucketRequest getCreateBucketRequest(Region region, String bucketName) {
+        if (region.value().equals(US_EAST_1_REGION)) {
+
+            return CreateBucketRequest.builder().bucket(bucketName).build();
+        }
+        return CreateBucketRequest.builder()
+                .bucket(bucketName)
+                .createBucketConfiguration(
+                        CreateBucketConfiguration.builder()
+                                .locationConstraint(region.value())
+                                .build())
+                .build();
     }
 
     /** @param args the command line arguments */
