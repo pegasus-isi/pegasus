@@ -1568,7 +1568,7 @@ public class Synch {
      */
     protected S3Client getS3Client(Region region) {
         StringBuffer endpoint = new StringBuffer();
-        endpoint.append("http://s3.").append(region.toString()).append("amazonaws.com");
+        endpoint.append("http://s3.").append(region.value()).append("amazonaws.com");
         mLogger.debug(
                 "Getting S3 client for region " + region.value() + " with endpoint " + endpoint);
         return S3Client.builder()
