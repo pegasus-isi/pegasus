@@ -1589,6 +1589,7 @@ public class Synch {
 
             return CreateBucketRequest.builder().bucket(bucketName).build();
         }
+        mLogger.debug("Creating bucket with location constraint for region " + region.value());
         return CreateBucketRequest.builder()
                 .bucket(bucketName)
                 .createBucketConfiguration(
