@@ -344,7 +344,7 @@ public class Synch {
                     mLogger.info("Using existing S3 bucket that is already owned " + mS3Bucket);
                     delete = false;
                 }
-                mLogger.debug("Delete s3 bucket on exit" + delete);
+                mLogger.debug("Delete s3 bucket on exit " + delete);
                 mDeleteOnExit.put(BATCH_ENTITY_TYPE.s3_bucket, delete);
             }
         } catch (Exception e) {
@@ -375,6 +375,7 @@ public class Synch {
         if (mDeleteOnExit.get(BATCH_ENTITY_TYPE.s3_bucket)) {
             entities.put(BATCH_ENTITY_TYPE.s3_bucket, mS3Bucket);
         }
+        mLogger.info("Will attempt to delete " + entities);
         return this.deleteSetup(entities);
     }
 
