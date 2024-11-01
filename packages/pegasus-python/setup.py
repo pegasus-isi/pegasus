@@ -14,6 +14,7 @@ install_requires = [
     "GitPython>1.0",
     "pamela>=1.0,<1.1.0",
     "pika>=1.1.0",
+    "werkzeug<3.1.0",
     "Flask>1.1,<2.3",
     "Flask-Caching>1.8",
     "requests>2.23",
