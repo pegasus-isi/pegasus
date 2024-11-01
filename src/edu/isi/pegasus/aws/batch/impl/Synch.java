@@ -344,6 +344,16 @@ public class Synch {
                     mLogger.info("Using existing S3 bucket that is already owned " + mS3Bucket);
                     delete = false;
                 }
+                // PM-1991 for us-east-1 we always have delete s3 bucket on exit
+                // to be false. since if the bucket already exists, us-east-1
+                // does not throw an error. Instead returns 200 OK code
+                if (this.mAWSRegion.value().equals(Synch.US_EAST_1_REGION)) {
+                    mLogger.info(
+                            "For bucket in "
+                                    + this.mAWSRegion.value()
+                                    + " we always disable deletion of s3 bucket on exit");
+                    delete = false;
+                }
                 mLogger.debug("Delete s3 bucket on exit " + delete);
                 mDeleteOnExit.put(BATCH_ENTITY_TYPE.s3_bucket, delete);
             }
