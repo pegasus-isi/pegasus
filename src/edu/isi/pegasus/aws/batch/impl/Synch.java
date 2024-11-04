@@ -939,7 +939,7 @@ public class Synch {
                 DeregisterJobDefinitionRequest.builder().jobDefinition(arn).build();
         DeregisterJobDefinitionResponse response = mBatchClient.deregisterJobDefinition(request);
 
-        mLogger.info("Deleted job definition " + response.toString() + "  - " + arn);
+        mLogger.info("Dereigstered job definition " + response.toString() + "  - " + arn);
 
         return true;
     }
@@ -1280,6 +1280,7 @@ public class Synch {
                 mLogger.error((String) null, ex);
             }
             retry++;
+            sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
         }
         mLogger.info(
                 "Compute Environment disabled - "
@@ -1288,6 +1289,7 @@ public class Synch {
                         + retry);
 
         retry = 0;
+        sleepTime = 2 * 1000;
         if (disabled) {
             DeleteComputeEnvironmentRequest request =
                     DeleteComputeEnvironmentRequest.builder().computeEnvironment(arn).build();
