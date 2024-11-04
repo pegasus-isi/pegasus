@@ -939,7 +939,7 @@ public class Synch {
                 DeregisterJobDefinitionRequest.builder().jobDefinition(arn).build();
         DeregisterJobDefinitionResponse response = mBatchClient.deregisterJobDefinition(request);
 
-        mLogger.info("Dereigstered job definition " + response.toString() + "  - " + arn);
+        mLogger.info("Deregistered job definition " + response.toString() + "  - " + arn);
 
         return true;
     }
