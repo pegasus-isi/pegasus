@@ -1275,6 +1275,7 @@ public class Synch {
                 disabled = !detail.status().equals(CEStatus.UPDATING.toString());
             }
             try {
+                mLogger.debug("Sleeping for " + sleepTime);
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ex) {
                 mLogger.error((String) null, ex);
