@@ -948,9 +948,10 @@ public class Synch {
         // PM-1991 poll and make sure it gets deregistered
         while (!deregister && retry < max_dergister_retries) {
             DescribeJobDefinitionsRequest describeJD =
-                    DescribeJobDefinitionsRequest.builder().jobDefinitionName(arn).build();
+                    DescribeJobDefinitionsRequest.builder().jobDefinitions(arn).build();
             DescribeJobDefinitionsResponse describeJDResponse =
                     mBatchClient.describeJobDefinitions(describeJD);
+
             for (software.amazon.awssdk.services.batch.model.JobDefinition jd :
                     describeJDResponse.jobDefinitions()) {
                 mLogger.debug(jd.jobDefinitionName() + "," + jd.revision() + "," + jd.status());
