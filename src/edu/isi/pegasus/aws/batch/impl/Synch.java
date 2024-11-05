@@ -934,10 +934,42 @@ public class Synch {
     }
 
     public boolean deleteJobDefinition(String arn) {
+        boolean deregister = false;
+        int retry = 0;
+        int max_dergister_retries = 10;
+        long sleepTime = 2 * 1000;
 
         DeregisterJobDefinitionRequest request =
                 DeregisterJobDefinitionRequest.builder().jobDefinition(arn).build();
         DeregisterJobDefinitionResponse response = mBatchClient.deregisterJobDefinition(request);
+
+        mLogger.debug("Deregister Job Definition Response " + response);
+
+        // PM-1991 poll and make sure it gets deregistered
+        while (!deregister && retry < max_dergister_retries) {
+            DescribeJobDefinitionsRequest describeJD =
+                    DescribeJobDefinitionsRequest.builder().jobDefinitionName(arn).build();
+            DescribeJobDefinitionsResponse describeJDResponse =
+                    mBatchClient.describeJobDefinitions(describeJD);
+            for (software.amazon.awssdk.services.batch.model.JobDefinition jd :
+                    describeJDResponse.jobDefinitions()) {
+                mLogger.debug(jd.jobDefinitionName() + "," + jd.revision() + "," + jd.status());
+                deregister = jd.status().equals("INACTIVE");
+            }
+            try {
+                mLogger.debug("Sleeping for " + sleepTime);
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException ex) {
+                mLogger.error((String) null, ex);
+            }
+            retry++;
+            sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
+        }
+        mLogger.info(
+                "Job Definition deregistered - "
+                        + deregister
+                        + " after following number of retries "
+                        + retry);
 
         mLogger.info("Deregistered job definition " + response.toString() + "  - " + arn);
 
