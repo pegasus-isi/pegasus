@@ -966,15 +966,21 @@ public class Synch {
             retry++;
             sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
         }
-        mLogger.info(
-                "Job Definition deregistered - "
-                        + deregister
-                        + " after following number of retries "
-                        + retry);
+        if (deregister) {
+            mLogger.info(
+                    "Job Definition deregistered - "
+                            + arn
+                            + " after following number of retries "
+                            + retry);
+        } else {
+            mLogger.error(
+                    "Job Definition not deregistered - "
+                            + arn
+                            + " after following number of retries "
+                            + retry);
+        }
 
-        mLogger.info("Deregistered job definition " + response.toString() + "  - " + arn);
-
-        return true;
+        return deregister;
     }
 
     /**
@@ -1235,9 +1241,9 @@ public class Synch {
             }
             retry++;
         }
-        mLogger.debug("Job Queue disabled " + arn);
         retry = 0;
         if (disabled) {
+            mLogger.info("Job Queue disabled " + arn);
             DeleteJobQueueRequest deleteJQ = DeleteJobQueueRequest.builder().jobQueue(arn).build();
             DeleteJobQueueResponse deleteJQResponse = mBatchClient.deleteJobQueue(deleteJQ);
             mLogger.debug(deleteJQResponse);
@@ -1269,9 +1275,16 @@ public class Synch {
                 retry++;
                 sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
             }
+        } else {
+            mLogger.error("Job Queue was not disabled. Hence it was not deleted" + arn);
+            return deleted;
         }
 
-        mLogger.info("Job Queue deleted after " + retry + " retries - " + arn);
+        if (deleted) {
+            mLogger.info("Job Queue deleted after " + retry + " retries - " + arn);
+        } else {
+            mLogger.error("Job Queue not deleted after " + retry + " retries - " + arn);
+        }
         return deleted;
     }
 
@@ -1316,15 +1329,15 @@ public class Synch {
             retry++;
             sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
         }
-        mLogger.info(
-                "Compute Environment disabled - "
-                        + disabled
-                        + " after following number of retries "
-                        + retry);
 
         retry = 0;
         sleepTime = 2 * 1000;
         if (disabled) {
+            mLogger.info(
+                    "Compute Environment disabled - "
+                            + disabled
+                            + " after following number of retries "
+                            + retry);
             DeleteComputeEnvironmentRequest request =
                     DeleteComputeEnvironmentRequest.builder().computeEnvironment(arn).build();
             DeleteComputeEnvironmentResponse response =
@@ -1360,13 +1373,17 @@ public class Synch {
                 sleepTime = (sleepTime < MAX_SLEEP_TIME) ? sleepTime + sleepTime : sleepTime;
             }
         } else {
-            mLogger.info(
+            mLogger.error(
                     "Compute Environment was not deleted as it was not disabled after following number of retries "
                             + max_disable_retries);
             return deleted;
         }
 
-        mLogger.info("Compute Environment deleted  after " + retry + " retries - " + arn);
+        if (deleted) {
+            mLogger.info("Compute Environment deleted after " + retry + " retries - " + arn);
+        } else {
+            mLogger.error("Compute Environment not deleted after " + retry + " retries - " + arn);
+        }
         return deleted;
     }
 
