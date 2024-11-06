@@ -945,8 +945,8 @@ public class Synch {
             // example  remotehost-20241105220118703492-job-definition:2
             if (!arn.contains(":")) {
                 throw new PegasusAWSBatchException(
-                        "Malformed arn for job definition passed. Should be of form name:revision . " + 
-                         "Please make sure revision number is included in the job definition passed "
+                        "Malformed arn for job definition passed. Should be of form name:revision . "
+                                + "Please make sure revision number is included in the job definition passed "
                                 + arn);
             }
         }
