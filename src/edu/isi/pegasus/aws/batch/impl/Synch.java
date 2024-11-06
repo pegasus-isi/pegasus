@@ -939,6 +939,18 @@ public class Synch {
         int max_dergister_retries = 10;
         long sleepTime = 2 * 1000;
 
+        // PM-1992 sanity check on the arn or name passed
+        if (!arn.startsWith("arn:")) {
+            // the name has to be of form name:revision
+            // example  remotehost-20241105220118703492-job-definition:2
+            if (!arn.contains(":")) {
+                throw new PegasusAWSBatchException(
+                        "Malformed arn for job definition passed. Should be of form name:revision . " + 
+                         "Please make sure revision number is included in the job definition passed "
+                                + arn);
+            }
+        }
+
         DeregisterJobDefinitionRequest request =
                 DeregisterJobDefinitionRequest.builder().jobDefinition(arn).build();
         DeregisterJobDefinitionResponse response = mBatchClient.deregisterJobDefinition(request);
