@@ -126,7 +126,8 @@ public class StagedTest {
         Container c = new Container("montage");
         c.setImageURL("/scratch/montage.simg");
         t.setContainer(c);
-        assertFalse(this.mMapper.match(t, "isi", s));
+        // should be true after PM-1997
+        assertTrue(this.mMapper.match(t, "isi", s));
     }
 
     @Test
