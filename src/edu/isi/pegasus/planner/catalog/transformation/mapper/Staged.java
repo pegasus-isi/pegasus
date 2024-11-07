@@ -14,7 +14,6 @@
 package edu.isi.pegasus.planner.catalog.transformation.mapper;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
@@ -143,12 +142,17 @@ public class Staged extends Mapper {
                 match = true;
             } else if (c != null) {
                 // PM-1530 check if job has a container associated with it
-                // check for a non file URL since siteid don't match
+                // PM-1997 no longer do a tighter check on the image URL, whether
+                // it is a file url or not
+                match = true;
+                /*
+                 *check for a non file URL since siteid don't match
                 PegasusURL url = c.getImageURL();
                 if (url != null && !url.getProtocol().equals(PegasusURL.FILE_PROTOCOL)) {
                     // non file URL means can be staged remotely
                     match = true;
                 }
+                */
             }
         }
         return match;
