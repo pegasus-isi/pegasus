@@ -854,7 +854,7 @@ public class Synch {
         shutdown();
         mLogger.info("Thread Executor Shutdown successfully ");
         // log tasks completed etc
-        mLogger.info(getTaskSummaryRecory(total, succeeded, failed));
+        mLogger.info(getTaskSummaryRecord(total, succeeded, failed));
     }
 
     public synchronized void signalToExitAfterJobsComplete() {
@@ -1420,7 +1420,7 @@ public class Synch {
      * @param failed
      * @return
      */
-    private String getTaskSummaryRecory(int total, int succeeded, int failed) {
+    private String getTaskSummaryRecord(int total, int succeeded, int failed) {
         //// [cluster-summary stat="ok", lines=6, tasks=3, succeeded=3, failed=0, extra=0,
         // duration=31.174, start="2018-01-19T06:42:46.879-08:00", pid=69505,
         // app="/usr/bin/pegasus-cluster"]
@@ -1434,7 +1434,8 @@ public class Synch {
                 .append(", ")
                 .append("failed=")
                 .append(failed)
-                .append(" ")
+                .append(", ")
+                .append("app=pegasus-aws-batch")
                 .append("]");
         return sb.toString();
     }
