@@ -157,7 +157,7 @@ public class AWSJob {
         // duration=1.110, status=0, app="kickstart", hostname="colo-vm63.isi.edu", slot=1, cpus=1,
         // memory=0]
         StringBuffer summary = new StringBuffer();
-        summary.append("[")
+        summary.append("[cluster-task")
                 .append(snippet("id", this.getSequenceID()))
                 .append(",")
                 .append(snippet("name", this.getID()))
