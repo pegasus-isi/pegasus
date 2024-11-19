@@ -381,7 +381,7 @@ public class PegasusAWSBatch {
 
             PrintWriter pw = null;
             try {
-                pw = new PrintWriter(new BufferedWriter(new FileWriter(stdout)));
+                pw = new PrintWriter(new BufferedWriter(new FileWriter(stdout, true)));
                 pw.println(this.getTaskSummaryRecord(sc.getRunMetrics()));
                 pw.close();
             } catch (IOException ex) {
