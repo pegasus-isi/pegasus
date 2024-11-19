@@ -35,6 +35,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -164,6 +165,10 @@ public class Synch {
 
     private AWSJobstateWriter mJobstateWriter;
 
+    private Map<String, Integer> mRunMetrics;
+
+    /** The cluster summary record */
+
     /** The exitcode with which client should exit */
     private int mExitCode;
 
@@ -197,6 +202,7 @@ public class Synch {
         mJobstateWriter.initialze(new File("."), mPrefix, mLogger);
 
         mJobMap = new HashMap();
+        mRunMetrics = new LinkedHashMap<String, Integer>();
         mExecutorService = Executors.newFixedThreadPool(2);
         mBatchClient = BatchClient.builder().region(mAWSRegion).build();
         mDoneWithJobSubmits = false;
@@ -790,6 +796,16 @@ public class Synch {
         mLogger.info("Thread Executor Shutdown successfully ");
         // log tasks completed etc
         mLogger.info(getTaskSummaryRecord(total, succeeded, failed));
+
+        synchronized (this.mRunMetrics) {
+            mRunMetrics.put("total", total);
+            mRunMetrics.put("succeeded", succeeded);
+            mRunMetrics.put("failed", failed);
+        }
+    }
+
+    public synchronized Map<String, Integer> getRunMetrics() {
+        return this.mRunMetrics;
     }
 
     public synchronized void signalToExitAfterJobsComplete() {

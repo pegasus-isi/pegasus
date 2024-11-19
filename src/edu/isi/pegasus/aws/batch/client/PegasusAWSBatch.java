@@ -21,8 +21,11 @@ import edu.isi.pegasus.aws.batch.classes.AWSJob;
 import edu.isi.pegasus.aws.batch.common.PegasusAWSBatchException;
 import edu.isi.pegasus.aws.batch.impl.Synch;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
@@ -30,6 +33,7 @@ import java.util.Date;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -374,9 +378,49 @@ public class PegasusAWSBatch {
             File stderr = new File(prefix + ".err");
             mLogger.info("Merging Tasks stdout to  " + stdout + " and stderr to " + stderr);
             sc.mergeLogs(stdout, stderr);
+
+            PrintWriter pw = null;
+            try {
+                pw = new PrintWriter(new BufferedWriter(new FileWriter(stdout)));
+                pw.println(this.getTaskSummaryRecord(sc.getRunMetrics()));
+                pw.close();
+            } catch (IOException ex) {
+                mLogger.error("While writing out sumamry metrics to " + stdout, ex);
+                exitcode = 3;
+            } finally {
+                if (pw != null) {
+                    pw.close();
+                }
+            }
         }
 
         return exitcode;
+    }
+
+    /**
+     * Constructs the task summary record
+     *
+     * @return
+     */
+    private String getTaskSummaryRecord(Map<String, Integer> metrics) {
+        //// [cluster-summary stat="ok", lines=6, tasks=3, succeeded=3, failed=0, extra=0,
+        // duration=31.174, start="2018-01-19T06:42:46.879-08:00", pid=69505,
+        // app="/usr/bin/pegasus-cluster"]
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("[cluster-summary").append(" ");
+        if (metrics.containsKey("total")) {
+            sb.append("tasks=").append(metrics.get("total")).append(", ");
+        }
+        if (metrics.containsKey("succeeded")) {
+            sb.append("succeeded=").append(metrics.get("succeeded")).append(", ");
+        }
+        if (metrics.containsKey("succeeded")) {
+            sb.append("failed=").append(metrics.get("failed")).append(", ");
+        }
+
+        sb.append("app=pegasus-aws-batch").append("]");
+        return sb.toString();
     }
 
     /**
