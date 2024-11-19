@@ -20,6 +20,7 @@ import edu.isi.pegasus.aws.batch.builder.Job;
 import edu.isi.pegasus.aws.batch.classes.AWSJob;
 import edu.isi.pegasus.aws.batch.common.PegasusAWSBatchException;
 import edu.isi.pegasus.aws.batch.impl.Synch;
+import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -221,6 +222,9 @@ public class PegasusAWSBatch {
      * @return exit code with which to exit
      */
     protected int executeCommand(OptionSet options) {
+        double starttime = new Date().getTime();
+        double execTime = -1;
+
         Level logLevel = Level.INFO;
         int exitcode = 0;
         if (options.has("log-file")) {
@@ -378,11 +382,12 @@ public class PegasusAWSBatch {
             File stderr = new File(prefix + ".err");
             mLogger.info("Merging Tasks stdout to  " + stdout + " and stderr to " + stderr);
             sc.mergeLogs(stdout, stderr);
-
             PrintWriter pw = null;
             try {
                 pw = new PrintWriter(new BufferedWriter(new FileWriter(stdout, true)));
-                pw.println(this.getTaskSummaryRecord(sc.getRunMetrics()));
+                pw.println(
+                        this.getTaskSummaryRecord(
+                                sc.getRunMetrics(), starttime, new Date().getTime()));
                 pw.close();
             } catch (IOException ex) {
                 mLogger.error("While writing out sumamry metrics to " + stdout, ex);
@@ -400,13 +405,18 @@ public class PegasusAWSBatch {
     /**
      * Constructs the task summary record
      *
+     * @param metrics
+     * @param starttime
+     * @param endtime
      * @return
      */
-    private String getTaskSummaryRecord(Map<String, Integer> metrics) {
+    private String getTaskSummaryRecord(
+            Map<String, Integer> metrics, double starttime, double endtime) {
         //// [cluster-summary stat="ok", lines=6, tasks=3, succeeded=3, failed=0, extra=0,
         // duration=31.174, start="2018-01-19T06:42:46.879-08:00", pid=69505,
         // app="/usr/bin/pegasus-cluster"]
-
+        double duration = (endtime - starttime) / 1000;
+        Currently d = new Currently();
         StringBuilder sb = new StringBuilder();
         sb.append("[cluster-summary").append(" ");
         if (metrics.containsKey("total")) {
@@ -418,8 +428,12 @@ public class PegasusAWSBatch {
         if (metrics.containsKey("succeeded")) {
             sb.append("failed=").append(metrics.get("failed")).append(", ");
         }
-
-        sb.append("app=pegasus-aws-batch").append("]");
+        sb.append("duration=").append(duration).append(", ");
+        sb.append("start=\"")
+                .append(Currently.iso8601(false, true, false, new Date((long) starttime)))
+                .append("\"")
+                .append(", ");
+        sb.append("app=\"pegasus-aws-batch\"").append("]");
         return sb.toString();
     }
 
