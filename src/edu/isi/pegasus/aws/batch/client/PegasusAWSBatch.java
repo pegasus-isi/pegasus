@@ -384,11 +384,13 @@ public class PegasusAWSBatch {
             sc.mergeLogs(stdout, stderr);
             PrintWriter pw = null;
             try {
-                pw = new PrintWriter(new BufferedWriter(new FileWriter(stdout, true)));
-                pw.println(
+                String summary =
                         this.getTaskSummaryRecord(
-                                sc.getRunMetrics(), starttime, new Date().getTime()));
+                                sc.getRunMetrics(), starttime, new Date().getTime());
+                pw = new PrintWriter(new BufferedWriter(new FileWriter(stdout, true)));
+                pw.println(summary);
                 pw.close();
+                mLogger.info("Written tasks summary record  " + summary + " to " + stdout);
             } catch (IOException ex) {
                 mLogger.error("While writing out sumamry metrics to " + stdout, ex);
                 exitcode = 3;
