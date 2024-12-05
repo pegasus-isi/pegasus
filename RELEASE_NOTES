@@ -1,4 +1,56 @@
 ===============================
+Release Notes for Pegasus 5.0.9
+===============================
+
+
+We are happy to announce the release of Pegasus 5.0.9, which is a minor
+bug fix release for Pegasus 5.0 branch. The release has a variety of
+improvements and bug fixes to Pegasus support for AWS Batch.
+
+The release can be downloaded from https://pegasus.isi.edu/downloads
+
+ JIRA items
+----------------------------
+Exhaustive list of features, improvements and bug fixes can be found below.
+Pegasus JIRA is accessible at https://jira.isi.edu/
+
+New Features and Improvements
+-----------------------------
+
+1) [PM-1960] – Document debugging job submissions to HPC cluster
+
+2) [PM-1982] – pegasus-aws-batch setup/delete options should not fail at
+               first error
+
+3) [PM-1983] – AWS Batch Error: ClientException: Maximum number of jobs
+               supported is 100
+
+4) [PM-1991] – pegasus-aws-batch fails while interacting with a bucket in us-east-1
+
+5) [PM-1992] – AWS Batch Compute Environments and job definitions are not
+   	       deleted reliably
+
+
+Bugs Fixed
+----------
+
+
+1) [PM-1959] – SGE memory parameter need a unit suffix to be
+   	       added to remote_ce_requirements
+
+2) [PM-1976] – pegasus-aws-batch –log-file option
+
+3) [PM-1978] – amazon region is not being picked up correctly when
+               creating a s3 bucket
+
+4) [PM-1997] – site selection for containerized executables should not
+               consider container image url (whether file or not)
+
+5) [PM-1998] – pegasus-statistics lists incomplete jobs in a successful
+   	       aws batch wf run
+
+
+===============================
 Release Notes for Pegasus 5.0.8
 ===============================
 
