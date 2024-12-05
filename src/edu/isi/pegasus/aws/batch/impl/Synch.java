@@ -35,6 +35,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -164,6 +165,10 @@ public class Synch {
 
     private AWSJobstateWriter mJobstateWriter;
 
+    private Map<String, Integer> mRunMetrics;
+
+    /** The cluster summary record */
+
     /** The exitcode with which client should exit */
     private int mExitCode;
 
@@ -197,6 +202,7 @@ public class Synch {
         mJobstateWriter.initialze(new File("."), mPrefix, mLogger);
 
         mJobMap = new HashMap();
+        mRunMetrics = new LinkedHashMap<String, Integer>();
         mExecutorService = Executors.newFixedThreadPool(2);
         mBatchClient = BatchClient.builder().region(mAWSRegion).build();
         mDoneWithJobSubmits = false;
@@ -670,71 +676,6 @@ public class Synch {
             }
             // now query AWS Batch for the jobs
             try {
-                /*
-                ListJobsRequest listSucceededJobsRequest =
-                        createListJobRequest(this.mJobQueueARN, JobStatus.SUCCEEDED);
-                ListJobsRequest listFailedJobsRequest =
-                        createListJobRequest(this.mJobQueueARN, JobStatus.FAILED);
-
-                // first query for succeeded
-                mLogger.debug("Querying for successful jobs " + listSucceededJobsRequest);
-                ListJobsResponse listJobsResponse = batchClient.listJobs(listSucceededJobsRequest);
-                mLogger.debug(
-                        "Retrieved  " + listJobsResponse.jobSummaryList().size() + " responses ");
-                for (JobSummary summary : listJobsResponse.jobSummaryList()) {
-                    String succeededJobID = summary.jobId();
-                    if (awsJobIDs.contains(succeededJobID)) {
-                        if (!doneJobs.contains(succeededJobID)) {
-                            mLogger.info("Job Succeeded " + succeededJobID);
-                            AWSJob j = this.getJob(summary.jobName());
-                            j.setState(AWSJob.JOBSTATE.succeeded);
-                            mJobstateWriter.log(
-                                    summary.jobName(), summary.jobId(), AWSJob.JOBSTATE.succeeded);
-                            doneJobs.add(summary.jobId());
-                            // PM-1983 when a job succeeds it should be removed
-                            // from the active set that is being monitored
-                            awsJobIDs.remove(summary.jobId());
-                            numDone++;
-                            succeeded++;
-                            mLogger.debug("Querying for succeeded job details " + succeededJobID);
-                            Tuple<File, File> log = cwl.retrieve(j);
-                            mLogger.debug("Logs retreived for " + succeededJobID + " to " + log);
-                        }
-                    }
-                }
-
-                mLogger.debug("Sleeping before querying for failure ");
-                Thread.sleep(sleepTime);
-                if (numDone < total) {
-                    // check for failed jobs
-                    mLogger.debug("Querying for failed jobs " + listFailedJobsRequest);
-                    listJobsResponse = batchClient.listJobs(listFailedJobsRequest);
-                    mLogger.debug(
-                            "Retrieved  "
-                                    + listJobsResponse.jobSummaryList().size()
-                                    + " responses ");
-                    for (JobSummary summary : listJobsResponse.jobSummaryList()) {
-                        String failedJobID = summary.jobId();
-                        if (awsJobIDs.contains(failedJobID)) {
-                            if (!doneJobs.contains(failedJobID)) {
-                                mLogger.info("Job Failed " + failedJobID);
-                                AWSJob j = this.getJob(summary.jobName());
-                                j.setState(AWSJob.JOBSTATE.failed);
-                                mJobstateWriter.log(
-                                        summary.jobName(), summary.jobId(), AWSJob.JOBSTATE.failed);
-                                doneJobs.add(summary.jobId());
-                                // remove the job so that we don't query for detail
-                                awsJobIDs.remove(failedJobID);
-                                numDone++;
-                                failed++;
-                                mLogger.debug("Querying for failed job details " + failedJobID);
-                                Tuple<File, File> log = cwl.retrieve(j);
-                                mLogger.debug("Logs retreived for " + failedJobID + " to " + log);
-                            }
-                        }
-                    }
-                }
-                */
                 mLogger.debug(numDone + " jobs done of total of " + total);
                 if (numDone < total) {
                     // still total is not done
@@ -854,7 +795,17 @@ public class Synch {
         shutdown();
         mLogger.info("Thread Executor Shutdown successfully ");
         // log tasks completed etc
-        mLogger.info(getTaskSummaryRecory(total, succeeded, failed));
+        mLogger.info(getTaskSummaryRecord(total, succeeded, failed));
+
+        synchronized (this.mRunMetrics) {
+            mRunMetrics.put("total", total);
+            mRunMetrics.put("succeeded", succeeded);
+            mRunMetrics.put("failed", failed);
+        }
+    }
+
+    public synchronized Map<String, Integer> getRunMetrics() {
+        return this.mRunMetrics;
     }
 
     public synchronized void signalToExitAfterJobsComplete() {
@@ -1420,7 +1371,7 @@ public class Synch {
      * @param failed
      * @return
      */
-    private String getTaskSummaryRecory(int total, int succeeded, int failed) {
+    private String getTaskSummaryRecord(int total, int succeeded, int failed) {
         //// [cluster-summary stat="ok", lines=6, tasks=3, succeeded=3, failed=0, extra=0,
         // duration=31.174, start="2018-01-19T06:42:46.879-08:00", pid=69505,
         // app="/usr/bin/pegasus-cluster"]
@@ -1434,7 +1385,8 @@ public class Synch {
                 .append(", ")
                 .append("failed=")
                 .append(failed)
-                .append(" ")
+                .append(", ")
+                .append("app=pegasus-aws-batch")
                 .append("]");
         return sb.toString();
     }
