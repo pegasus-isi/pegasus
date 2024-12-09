@@ -443,7 +443,7 @@ class Status:
                 # MM/DD/YY HH:MM:SS Of 10 nodes total:
 
                 jobs_progress_line = re.match(
-                    r"\d\d/\d\d/\d\d\ \d\d:\d\d:\d\d\ (\s*([0-9])){7}", line
+                    r"\d\d/\d\d/\d\d\ \d\d:\d\d:\d\d(\s+([0-9]+)){7}", line
                 )
                 #    0        1       2       3       4        5      6        7          8    <-- indices
                 # MM/DD/YY hh:mm:ss  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
