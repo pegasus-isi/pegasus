@@ -48,7 +48,7 @@ setup(
         "Documentation": "https://pegasus.isi.edu/documentation/",
         "Changes": "https://pegasus.isi.edu/blog/?category_name=Release",
         "Source Code": "https://github.com/pegasus-isi/pegasus",
-        "Issue Tracker": "https://jira.isi.edu/projects/PM/issues",
+        "Issue Tracker": "https://github.com/pegasus-isi/pegasus/issues",
     },
     python_requires=">=2.6,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*",
     keywords=["scientific workflows"],
