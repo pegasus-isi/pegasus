@@ -693,6 +693,21 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       <arg line="setup.py sdist --dist-dir ../../dist"/>
     </exec>
     <replace file="packages/pegasus-worker/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
+    <!-- Rename files to be PEP-625 compliant -->
+    <move todir="dist">
+      <fileset dir="dist">
+        <include name="pegasus-wms-*.tar.gz"/>
+      </fileset>
+      <regexpmapper from="pegasus-wms-(.*).tar.gz" to="pegasus_wms-\1.tar.gz"/>
+    </move>
+
+    <move todir="dist">
+      <fileset dir="dist">
+        <include name="pegasus-wms.*-*.tar.gz"/>
+      </fileset>
+      <regexpmapper from="pegasus-wms.(.*)-(.*).tar.gz" to="pegasus_wms_\1-\2.tar.gz"/>
+    </move>
   </target>
 
   <target name="dist-rpm" depends="dist-source,setup" description="Build RPM package">
