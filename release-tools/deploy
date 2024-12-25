@@ -28,9 +28,8 @@ mv pegasus-worker-*.tar.gz $DOWNLOADS/
 mv pegasus-doc-*.tar.gz $DOWNLOADS/
 mv *.deb $DOWNLOADS/
 mv *.rpm $DOWNLOADS/
-mv pegasus-wms*.tar.gz $DOWNLOADS/
-mv pegasus-r-pegasus*.tar.gz $DOWNLOADS/
 mv pegasus_wms*.tar.gz $DOWNLOADS/
+mv pegasus-r-pegasus*.tar.gz $DOWNLOADS/
 
 # debian / ubuntu
 for TARGET in \
