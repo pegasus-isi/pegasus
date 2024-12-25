@@ -11,10 +11,11 @@
     <dependencies>
         <!--
             Unit Testing
-            JUnit 5:  https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
-            Hamcrest: https://mvnrepository.com/artifact/org.hamcrest/hamcrest
-            Mockito:  https://mvnrepository.com/artifact/org.mockito/mockito-core
-            Spring:   https://mvnrepository.com/artifact/org.springframework/spring-test
+            JUnit 5:        https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
+            JUnit Pioneer:  https://mvnrepository.com/artifact/org.junit-pioneer/junit-pioneer
+            Hamcrest:       https://mvnrepository.com/artifact/org.hamcrest/hamcrest
+            Mockito:        https://mvnrepository.com/artifact/org.mockito/mockito-core
+            Spring:         https://mvnrepository.com/artifact/org.springframework/spring-test
         -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -37,6 +38,12 @@
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-commons</artifactId>
             <version>1.10.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit-pioneer</groupId>
+            <artifactId>junit-pioneer</artifactId>
+            <version>2.3.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
