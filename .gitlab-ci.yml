@@ -141,6 +141,7 @@ Source:
   artifacts:
     paths:
     - dist/pegasus-*.tar.gz
+    - dist/pegasus_wms*.tar.gz
   dependencies: []
   tags:
   - docker
