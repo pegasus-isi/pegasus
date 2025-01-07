@@ -15,6 +15,7 @@ stages:
 - test
 - build
 - deploy
+- release
 - e2e-tests
 - performance-tests
 
@@ -355,6 +356,61 @@ Tutorial Container:
   tags:
   - x86_64
   - docker-cli
+
+# Release
+
+Release:
+  stage: release
+  image: rockylinux:9
+  before_script:
+  - env
+  - curl -fsSL https://cli.github.com/packages/rpm/gh-cli.repo | tee /etc/yum.repos.d/github-cli.repo
+  - dnf install -y gh python3.12 python3.12-pip
+  - pip3.12 install twine
+  - |
+    cat > ~/.pypirc <<EOT
+    [distutils]
+      index-servers=
+        pypi
+        test-pypi
+
+    [pypi]
+      username = __token__
+      password = ${PYPI_TOKEN}
+
+    [test-pypi]
+      repository = https://test.pypi.org/legacy/
+      username = __token__
+      password = ${TEST_PYPI_TOKEN}
+    EOT
+  script:
+  # TODO: See how version names, like beta etc. work with PyPI and Pegasus build scripts. 5.0.0dev becomes 5.0.0dev0 for Python source distribution packages.
+
+  # Publish to PyPI
+  - |
+    twine upload \
+      --repository $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "test-pypi" || echo "pypi") \
+      dist/pegasus_wms*.tar.gz
+
+  # Publish to GitHub releases
+  # Token is read from the GITHUB_TOKEN environment variable.
+  - |
+    gh release create \
+      --repo pegasus-isi/pegasus \
+      --verify-tag \
+      --title "${PEGASUS_VERSION}" \
+      --notes-file RELEASE_NOTES \
+      --discussion-category "announcements" \
+      $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "--prerelease") \
+      ${PEGASUS_VERSION} \
+      dist/*.rpm dist/*.deb dist/pegasus-binary-*.tar.gz dist/pegasus-worker-*.tar.gz
+  rules:
+  - if: $CI_COMMIT_TAG
+  dependencies:
+  - pre-job
+  tags:
+  - docker
+  retry: 0
 
 # End-to-End tests
 
