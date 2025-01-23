@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
@@ -1581,7 +1582,7 @@ public class DeployWorkerPackage extends Engine {
      * @param site the site for which the default entry is required.
      * @return the default entry.
      */
-    private TransformationCatalogEntry defaultUntarTCEntry(SiteCatalogEntry site) {
+    protected TransformationCatalogEntry defaultUntarTCEntry(SiteCatalogEntry site) {
         TransformationCatalogEntry defaultTCEntry = null;
 
         mLogger.log(
@@ -1592,10 +1593,9 @@ public class DeployWorkerPackage extends Engine {
                 LogManager.DEBUG_MESSAGE_LEVEL);
 
         // construct the path to the executable
-        StringBuffer path = new StringBuffer();
-        path.append("/bin/tar");
-
-        mLogger.log("Remote Path set is " + path.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
+        String path = defaultUntarPath(site.getSiteHandle());
+        mLogger.log(
+                "Remote Path for tar executable is set to " + path, LogManager.DEBUG_MESSAGE_LEVEL);
 
         defaultTCEntry =
                 new TransformationCatalogEntry(
@@ -1667,5 +1667,31 @@ public class DeployWorkerPackage extends Engine {
         }
 
         return fileServer;
+    }
+
+    protected String defaultUntarPath(String site) {
+        StringBuilder path = new StringBuilder();
+        String executable = "tar";
+        if (site.equals(
+                "local")) { // might need an or condition to let pegasus know any other site is
+            // local
+            File localPath = FindExecutable.findExec(executable);
+            if (localPath == null) {
+                mLogger.log(
+                        "Unable to determine local path to executable "
+                                + executable
+                                + " "
+                                + "for site"
+                                + site,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            } else {
+                path.append(localPath.getAbsolutePath());
+            }
+        }
+        if (path.isEmpty()) {
+            // if path is still empty default to linux path
+            path.append("/bin/tar");
+        }
+        return path.toString();
     }
 }
