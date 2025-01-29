@@ -28,6 +28,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.SetEnvironmentVariable;
 
 // import org.junit.jupiter.api.Test;
 
@@ -76,10 +77,14 @@ public class DeployWorkerPackageTest {
     public void tearDown() {}
 
     @Test
+    @SetEnvironmentVariable(key = "PATH", value = "/bin/:/usr/bin")
     public void testDefaultUntarPathWithPATH() {
+
         File expectedPath = FindExecutable.findExec("tar");
         if (expectedPath == null) {
-            fail("Unable to find executable tar in PATH");
+            fail(
+                    "Unable to find executable tar in PATH. PATH is set to - "
+                            + System.getenv("PATH"));
         }
         DeployWorkerPackage dwp = new DeployWorkerPackage(this.mBag);
 
