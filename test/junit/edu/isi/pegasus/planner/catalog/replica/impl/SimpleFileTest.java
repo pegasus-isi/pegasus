@@ -20,16 +20,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
-import edu.isi.pegasus.planner.test.EnvSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junitpioneer.jupiter.SetEnvironmentVariable;
 
 /**
  * Test class to test File based replica catalog.
@@ -39,6 +37,7 @@ import org.junit.jupiter.api.TestMethodOrder;
  * @author Karan Vahi
  */
 @TestMethodOrder(MethodOrderer.Alphanumeric.class)
+@SetEnvironmentVariable(key = "USER", value = SimpleFileTest.EXPANDED_USER)
 public class SimpleFileTest {
 
     /** * track across insert and delete methods */
@@ -48,16 +47,12 @@ public class SimpleFileTest {
 
     private TestSetup mTestSetup;
 
-    private static final String EXPANDED_USER = "bamboo";
+    protected static final String EXPANDED_USER = "bamboo";
 
     public SimpleFileTest() {}
 
     @BeforeAll
     public static void setUpClass() throws IOException {
-        Map<String, String> testEnvVariables = new HashMap();
-        testEnvVariables.put("USER", "bamboo");
-        EnvSetup.setEnvironmentVariables(testEnvVariables);
-
         // create a temp file for some tests
         // that is not tracked in git
         mTempRC = File.createTempFile("replica", ".txt");
@@ -65,10 +60,6 @@ public class SimpleFileTest {
 
     @BeforeEach
     public void setUp() throws IOException {
-        Map<String, String> testEnvVariables = new HashMap();
-        testEnvVariables.put("USER", EXPANDED_USER);
-        EnvSetup.setEnvironmentVariables(testEnvVariables);
-
         mTestSetup = new DefaultTestSetup();
         mTestSetup.setInputDirectory(this.getClass());
     }

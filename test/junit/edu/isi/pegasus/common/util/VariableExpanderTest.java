@@ -18,17 +18,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
-import edu.isi.pegasus.planner.test.EnvSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.SetEnvironmentVariable;
 
 /** @author Karan Vahi */
+@SetEnvironmentVariable(key = "USER", value = "bamboo")
 public class VariableExpanderTest {
 
     private int mTestNumber = 1;
@@ -40,11 +39,7 @@ public class VariableExpanderTest {
     public VariableExpanderTest() {}
 
     @BeforeAll
-    public static void setUpClass() {
-        Map<String, String> testEnvVariables = new HashMap();
-        testEnvVariables.put("USER", "bamboo");
-        EnvSetup.setEnvironmentVariables(testEnvVariables);
-    }
+    public static void setUpClass() {}
 
     @AfterAll
     public static void tearDownClass() {}
