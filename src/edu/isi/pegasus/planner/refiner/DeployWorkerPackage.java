@@ -1688,7 +1688,7 @@ public class DeployWorkerPackage extends Engine {
                 path.append(localPath.getAbsolutePath());
             }
         }
-        if (path.isEmpty()) {
+        if (path.length() == 0) {
             // if path is still empty default to linux path
             path.append("/bin/tar");
         }
