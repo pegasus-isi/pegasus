@@ -19,8 +19,9 @@ siteCatalog:
 replicaCatalog:
   replicas:
     - lfn: f.a
-      pfn: file:///lfs/voeckler/src/svn/pegasus/trunk/examples/grid-blackdiamond-perl/f.a
-      site: local
+      pfns:
+      - pfn: "file:///lfs/voeckler/src/svn/pegasus/trunk/examples/grid-blackdiamond-perl/f.a"
+        site: "local"
 
 transformationCatalog:
   transformations:
@@ -83,7 +84,8 @@ jobDependencies:
       - ID000004
 
 jobs:
-  - id: ID000001
+  - type: job
+    id: ID000001
     name: preprocess
     namespace: diamond
     version: "2.0"
@@ -106,7 +108,8 @@ jobs:
       - lfn: f.a
         type: input
 
-  - id: ID000002
+  - type: job
+    id: ID000002
     name: findrange
     namespace: diamond
     version: "2.0"
@@ -119,7 +122,8 @@ jobs:
         registerReplica: false
         stageOut: true
 
-  - id: ID000003
+  - type: job
+    id: ID000003
     name: findrange
     namespace: diamond
     version: "2.0"
@@ -132,7 +136,8 @@ jobs:
         registerReplica: false
         stageOut: true
 
-  - id: ID000004
+  - type: job
+    id: ID000004
     name: analyze
     namespace: diamond
     version: "2.0"
