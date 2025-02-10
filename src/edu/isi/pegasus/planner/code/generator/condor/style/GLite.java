@@ -204,7 +204,7 @@ public class GLite extends Abstract {
         String styleKey = Pegasus.STYLE_KEY;
         if (pegasusProfiles.containsKey(styleKey)) {
             String style = (String) pegasusProfiles.get(styleKey);
-            if (style.equals(Pegasus.GLITE_STYLE)) {
+            if (style.equals(Pegasus.GLITE_STYLE) || style.equals(Pegasus.SSH_STYLE)) {
                 // add change.dir key for it always
                 String key = Pegasus.CHANGE_DIR_KEY;
                 this.setProfileIfNotPresent(pegasusProfiles, key, "true");
