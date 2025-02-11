@@ -124,7 +124,7 @@ def console_select_site():
     else:
         shared_scratch = os.getcwd()
     if site in Sites.SitesRequireStorage:
-        shared_scratch = click.prompt(
+        storage_dir = click.prompt(
             "What's the storage space on the cluster that you want to use"
         )
     else:
