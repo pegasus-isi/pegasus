@@ -116,7 +116,21 @@ def console_select_site():
             show_default=True,
         )
 
-    return (site, project_name, queue_name, pegasus_home)
+    #### Insert scratch dir and storage dir ####
+    if site in Sites.SitesRequireScratch:
+        shared_scratch = click.prompt(
+            "What's the shared scratch space on the cluster that you want to use"
+        )
+    else:
+        shared_scratch = os.getcwd()
+    if site in Sites.SitesRequireStorage:
+        shared_scratch = click.prompt(
+            "What's the storage space on the cluster that you want to use"
+        )
+    else:
+        storage_dir = os.getcwd()
+
+    return (site, project_name, queue_name, pegasus_home, shared_scratch, storage_dir)
 
 
 def print_sites(sites_available):
@@ -252,7 +266,16 @@ def create_generate_script(commands):
     return
 
 
-def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_home):
+def create_workflow(
+    wf_dir,
+    workflow,
+    site,
+    project_name,
+    queue_name,
+    pegasus_home,
+    shared_scratch,
+    storage_dir,
+):
     commands = []
     pegasushub_config = read_pegasushub_config(wf_dir, workflow)
 
@@ -274,8 +297,8 @@ def create_workflow(wf_dir, workflow, site, project_name, queue_name, pegasus_ho
     os.chdir(wf_dir)
 
     exec_site = Sites.MySite(
-        os.getcwd(),
-        os.getcwd(),
+        shared_scratch,
+        storage_dir,
         site,
         project_name=project_name,
         queue_name=queue_name,
@@ -416,7 +439,14 @@ def main(directory, workflow_gallery):
     if workflow_gallery == os.path.expanduser("~/.pegasus/pegasushub/workflows.yml"):
         update_workflow_list(workflow_gallery)
 
-    (site, project_name, queue_name, pegasus_home) = console_select_site()
+    (
+        site,
+        project_name,
+        queue_name,
+        pegasus_home,
+        shared_scratch,
+        storage_dir,
+    ) = console_select_site()
     workflows_available = read_workflows(workflow_gallery, site)
 
     if not workflows_available:
@@ -428,7 +458,16 @@ def main(directory, workflow_gallery):
 
     clone_workflow(directory, workflow)
 
-    create_workflow(directory, workflow, site, project_name, queue_name, pegasus_home)
+    create_workflow(
+        directory,
+        workflow,
+        site,
+        project_name,
+        queue_name,
+        pegasus_home,
+        shared_scratch,
+        storage_dir,
+    )
 
     return
 
