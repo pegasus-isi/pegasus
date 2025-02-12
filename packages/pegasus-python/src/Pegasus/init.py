@@ -400,8 +400,8 @@ def create_workflow(
         str(project_name),
         queue_name,
         pegasus_home,
-        os.getcwd(),
-        os.getcwd(),
+        shared_scratch,
+        storage_dir,
     )
     commands.append(generate_sites_cmd)
 
