@@ -81,6 +81,8 @@ def console_select_site():
     project_name = ""
     queue_name = ""
     pegasus_home = ""
+    login_host = ""
+    transfer_endpoint = ""
 
     #### Select Site ####
     sites_available = {
@@ -130,7 +132,24 @@ def console_select_site():
     else:
         storage_dir = os.getcwd()
 
-    return (site, project_name, queue_name, pegasus_home, shared_scratch, storage_dir)
+    if site in Sites.SitesAreRemote:
+        login_host = click.prompt(
+            "What is the login host of the remote cluster that you want to submit jobs to"
+        )
+        transfer_endpoint = click.prompt(
+            "What is the file transfer endpoint to use for transferring data to the scratch space on the cluster you want to use"
+        )
+
+    return (
+        site,
+        project_name,
+        queue_name,
+        pegasus_home,
+        shared_scratch,
+        storage_dir,
+        login_host,
+        transfer_endpoint,
+    )
 
 
 def print_sites(sites_available):
@@ -275,6 +294,8 @@ def create_workflow(
     pegasus_home,
     shared_scratch,
     storage_dir,
+    login_host,
+    transfer_endpoint,
 ):
     commands = []
     pegasushub_config = read_pegasushub_config(wf_dir, workflow)
@@ -293,6 +314,11 @@ def create_workflow(
     if pegasus_home:
         click.echo(f'The PEGASUS_HOME location is "{pegasus_home}"')
 
+    if transfer_endpoint:
+        click.echo(
+            f'The workflow will use "{transfer_endpoint}" to stage data to the cluster'
+        )
+
     old_dir = os.getcwd()
     os.chdir(wf_dir)
 
@@ -303,6 +329,8 @@ def create_workflow(
         project_name=project_name,
         queue_name=queue_name,
         pegasus_home=pegasus_home,
+        login_host=login_host,
+        transfer_endpoint=transfer_endpoint,
     )
 
     pre_scripts = [x for x in pegasushub_config["scripts"] if x.startswith("pre-")]
@@ -446,6 +474,8 @@ def main(directory, workflow_gallery):
         pegasus_home,
         shared_scratch,
         storage_dir,
+        login_host,
+        transfer_endpoint,
     ) = console_select_site()
     workflows_available = read_workflows(workflow_gallery, site)
 
@@ -467,6 +497,8 @@ def main(directory, workflow_gallery):
         pegasus_home,
         shared_scratch,
         storage_dir,
+        login_host,
+        transfer_endpoint,
     )
 
     return
