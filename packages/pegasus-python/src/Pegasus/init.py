@@ -125,7 +125,8 @@ def console_select_site():
         )
 
         share_filesystem_with_submit_node = click.prompt(
-            "Does the remote cluster share a filesystem with from your submit node",
+            "Does the remote cluster share a filesystem with from your submit node?",
+            type=bool,
             default=False,
             show_default=True,
         )
