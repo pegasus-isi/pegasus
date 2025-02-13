@@ -127,7 +127,7 @@ def console_select_site():
         share_filesystem_with_submit_node = click.prompt(
             "Does the remote cluster share a filesystem with from your submit node?",
             type=bool,
-            default=False,
+            default="no",
             show_default=True,
         )
 
@@ -137,18 +137,34 @@ def console_select_site():
             transfer_endpoint = click.prompt(
                 "What is the file transfer endpoint to use for transferring data to the scratch space on the cluster you want to use"
             )
+    # end of sites are remote
 
     #### Insert scratch dir and storage dir ####
     if site in Sites.SitesRequireScratch:
-        shared_scratch = click.prompt(
-            "What's the shared scratch space on the cluster that you want to use"
+        kwargs = dict(
+            text="What's the shared scratch space on the cluster that you want to use",
+            type=click.Path(),
         )
+
+        if share_filesystem_with_submit_node:
+            kwargs["default"] = os.getcwd()
+            kwargs["show_default"] = True
+
+        shared_scratch = click.prompt(**kwargs)
     else:
         shared_scratch = os.getcwd()
+
     if site in Sites.SitesRequireStorage:
-        storage_dir = click.prompt(
-            "What's the storage space on the cluster that you want to use"
+        kwargs = dict(
+            text="What's the storage space on the cluster that you want to use",
+            type=click.Path(),
         )
+
+        if share_filesystem_with_submit_node:
+            kwargs["default"] = os.getcwd()
+            kwargs["show_default"] = True
+
+        storage_dir = click.prompt(**kwargs)
     else:
         storage_dir = os.getcwd()
 
