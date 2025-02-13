@@ -83,6 +83,7 @@ def console_select_site():
     pegasus_home = ""
     login_host = ""
     transfer_endpoint = ""
+    share_filesystem_with_submit_node = False
 
     #### Select Site ####
     sites_available = {
@@ -118,6 +119,24 @@ def console_select_site():
             show_default=True,
         )
 
+    if site in Sites.SitesAreRemote:
+        login_host = click.prompt(
+            "What is the login host of the remote cluster that you want to submit jobs to"
+        )
+
+        share_filesystem_with_submit_node = click.prompt(
+            "Does the remote cluster share a filesystem with from your submit node",
+            default=False,
+            show_default=True,
+        )
+
+        if share_filesystem_with_submit_node:
+            transfer_endpoint = "file://"
+        else:
+            transfer_endpoint = click.prompt(
+                "What is the file transfer endpoint to use for transferring data to the scratch space on the cluster you want to use"
+            )
+
     #### Insert scratch dir and storage dir ####
     if site in Sites.SitesRequireScratch:
         shared_scratch = click.prompt(
@@ -131,14 +150,6 @@ def console_select_site():
         )
     else:
         storage_dir = os.getcwd()
-
-    if site in Sites.SitesAreRemote:
-        login_host = click.prompt(
-            "What is the login host of the remote cluster that you want to submit jobs to"
-        )
-        transfer_endpoint = click.prompt(
-            "What is the file transfer endpoint to use for transferring data to the scratch space on the cluster you want to use"
-        )
 
     return (
         site,
