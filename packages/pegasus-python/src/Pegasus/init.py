@@ -421,6 +421,8 @@ def create_workflow(
     --project-name \"{}\" \\
     --queue-name \"{}\" \\
     --pegasus-home \"{}\" \\
+    --login-host \"{}\" \\
+    --transfer-endpoint \"{}\" \\
     --scratch-parent-dir {} \\
     --storage-parent-dir {}""".format(
         wf_sites,
@@ -428,6 +430,8 @@ def create_workflow(
         str(project_name),
         queue_name,
         pegasus_home,
+        login_host,
+        transfer_endpoint,
         shared_scratch,
         storage_dir,
     )
