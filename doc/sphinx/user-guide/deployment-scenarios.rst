@@ -653,25 +653,27 @@ Remote HPC Clusters
 
 .. _bosco:
 
-Bosco
------
+Job Submission via SSH
+----------------------
 
-`Bosco <https://osg-bosco.github.io/docs/>`__ enables HTCondor to
-submit jobs to remote clusters using SSH, and the *glite* job
-translation layer in HTCondor.
+HTCondor has a tool called *condor_remote_cluster* that allows you to
+`submit jobs using ssh. <https://htcondor.readthedocs.io/en/latest/grid-computing/grid-universe.html#remote-batch-job-submission-via-ssh>`__
+This uses the *glite* job translation layer in HTCondor.
 
-The requirements for Bosco is that you have your own submit host.
-To install Bosco, we recommend that you choose the *Bosco Multiuser*
-option as it will enable Bosco for all users the host. However,
-Pegasus will work fine with a single user installation as well.
+For example; to add a remote cluster bridges2.psc.edu for submission via ssh;
+on your workflow submit node run
 
-We also recommended to have the submit node configured either as a Bosco
-submit node or a vanilla HTCondor node. You cannot have HTCondor
-configured both as a Bosco install and a traditional HTCondor submit
-node at the same time as Bosco will override the traditional HTCondor
-pool in the user environment.
+::
 
-You will need to configure the glite installed for Bosco
+    condor_remote_cluster --add [remoteuser]@bridges2.psc.edu slurm
+
+Substitute [remoteuser] with your username at the remote cluster.
+
+When used for the first time, *condor_remote_cluster* will create a RSA key
+named ``~/.ssh/bosco_key.rsa`` in your ``~/.ssh`` directory. You need to make sure
+the corresponding public key is in authorized keys on the remote cluster.
+
+You will also need to configure the glite installed for Bosco
 on the *remote* system for the mapping of Pegasus profiles to local
 scheduler job requirements to work. In particular, you will need
 to install the ``slurm_local_submit_attributes.sh`` script
@@ -680,6 +682,7 @@ glite ``bin`` directory on the remote cluster, usually in the directory
 ``~/bosco/glite/bin/`` . See :ref:`glite-mappings` for a full list
 of available attributes. An example of this file can be found in
 ``/usr/share/pegasus/htcondor/glite/slurm_local_submit_attributes.sh``
+
 
 Long Term SSH Connnection against 2FA Clusters (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
