@@ -76,7 +76,7 @@ def console_select_workflow(workflows_available):
     return workflow
 
 
-def console_select_site():
+def console_select_site(wf_dir):
     site = None
     project_name = ""
     queue_name = ""
@@ -84,6 +84,11 @@ def console_select_site():
     login_host = ""
     transfer_endpoint = ""
     share_filesystem_with_submit_node = False
+
+    # default base directories for scratch and storage space
+    # rooted in the wf dir where the example is created
+    default_shared_scratch = os.path.join(os.getcwd(), wf_dir)
+    default_shared_storage = default_shared_scratch
 
     #### Select Site ####
     sites_available = {
@@ -147,12 +152,12 @@ def console_select_site():
         )
 
         if share_filesystem_with_submit_node:
-            kwargs["default"] = os.getcwd()
+            kwargs["default"] = default_shared_scratch
             kwargs["show_default"] = True
 
         shared_scratch = click.prompt(**kwargs)
     else:
-        shared_scratch = os.getcwd()
+        shared_scratch = default_shared_scratch
 
     if site in Sites.SitesRequireStorage:
         kwargs = dict(
@@ -161,12 +166,12 @@ def console_select_site():
         )
 
         if share_filesystem_with_submit_node:
-            kwargs["default"] = os.getcwd()
+            kwargs["default"] = default_shared_storage
             kwargs["show_default"] = True
 
         storage_dir = click.prompt(**kwargs)
     else:
-        storage_dir = os.getcwd()
+        storage_dir = default_shared_storage
 
     return (
         site,
@@ -508,7 +513,7 @@ def main(directory, workflow_gallery):
         storage_dir,
         login_host,
         transfer_endpoint,
-    ) = console_select_site()
+    ) = console_select_site(directory)
     workflows_available = read_workflows(workflow_gallery, site)
 
     if not workflows_available:
