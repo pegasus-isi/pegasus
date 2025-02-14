@@ -351,6 +351,11 @@ def create_workflow(
         click.echo(
             f'The workflow will use "{transfer_endpoint}" to stage data to the cluster'
         )
+        if not transfer_endpoint.startswith("file://"):
+            click.echo(
+                """You may need to associate credentials for this transfer endpoint in the generated site catalog.
+Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/reference-guide/data-management.html#credentials-management"""
+            )
 
     old_dir = os.getcwd()
     os.chdir(wf_dir)
