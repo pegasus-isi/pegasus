@@ -339,6 +339,8 @@ public class StageIn extends Abstract {
 
             // PM-1950 reinitialize always
             stagingSiteHandle = job.getStagingSiteHandle();
+            // used to track if the ftx is for transferring container to the submit directory
+            boolean ftForContainerToSubmitHost = false;
 
             String lfn = pf.getLFN();
             NameValue<String, String> nv = null;
@@ -395,6 +397,7 @@ public class StageIn extends Abstract {
                     // PM-1950 only transfer the container to the submit directory of the workfow
                     // and turn off integrity checking for the container since HTCondor
                     // is managing it
+                    ftForContainerToSubmitHost = true;
                     destPutURL =
                             scheme
                                     + "://"
@@ -696,8 +699,16 @@ public class StageIn extends Abstract {
                                             + job.getID());
                         }
                     }
-                    // all symlink transfers and user specified remote transfers
-                    remoteFileTransfers.add(ft);
+
+                    if (ftForContainerToSubmitHost) {
+                        // PM-1950  all symlink transfers and user specified remote transfers;
+                        // unless this particluar file tx is for transferring
+                        // the container for the job to the submit host directory
+                        localFileTransfers.add(ft);
+                    } else {
+                        // all symlink transfers and user specified remote transfers
+                        remoteFileTransfers.add(ft);
+                    }
                 } else {
                     localFileTransfers.add(ft);
                 }
