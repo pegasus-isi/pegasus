@@ -680,18 +680,13 @@ public class StageIn extends Abstract {
                 // data stage in nodes for the lfn
                 boolean runTransferRemotely =
                         this.mTransferJobPlacer.runTransferRemotely(
-                                stagingSite, ft, symLinkSelectedLocation, runTransferOnLocalSite);
+                                ft,
+                                stagingSite,
+                                ftForContainerToSubmitHost,
+                                symLinkSelectedLocation,
+                                runTransferOnLocalSite);
 
-                if (ftForContainerToSubmitHost || !runTransferRemotely) {
-                    // PM-1950  if this particluar file tx is for transferring
-                    // the container for the job to the submit host directory, then always run
-                    // locally
-                    // runTransferRemotely can return true ft for transferring container to submit
-                    // host; if user has turned symlinking
-                    // OR
-                    // tx flagged to be run locally
-                    localFileTransfers.add(ft);
-                } else {
+                if (runTransferRemotely) {
                     if (removeFileURLFromSource(job, ft, stagingSiteHandle)) {
                         // PM-1082 remote transfers ft can still have file url's
                         // not matching the staging site
@@ -704,9 +699,10 @@ public class StageIn extends Abstract {
                                             + job.getID());
                         }
                     }
-
                     // all symlink transfers and user specified remote transfers
                     remoteFileTransfers.add(ft);
+                } else {
+                    localFileTransfers.add(ft);
                 }
             }
 

@@ -85,11 +85,33 @@ public class JobPlacer {
         return result;
     }
 
+    /**
+     * Returns a boolean indicating whether a particular file transfer should be placed to run
+     * remotely.
+     *
+     * @param ft the file transfer
+     * @param stagingSite the staging site entry associated
+     * @param ftForContainerToSubmitHost boolean indicating whether this transfer is transferring
+     *     container to submit host
+     * @param forSymlink boolean indicating if this tx is flagged for symlinking
+     * @param isLocalTransfer boolean indicating initial determination if tx can be run locally
+     * @return
+     */
     public boolean runTransferRemotely(
-            SiteCatalogEntry stagingSite,
             FileTransfer ft,
+            SiteCatalogEntry stagingSite,
+            boolean ftForContainerToSubmitHost,
             boolean forSymlink,
             boolean isLocalTransfer) {
+
+        if (ftForContainerToSubmitHost) {
+            // PM-1950  if this particluar file tx is for transferring
+            // the container for the job to the submit host directory, then always run
+            // locally
+            // runTransferRemotely can return true ft for transferring container to submit
+            // host; if user has turned symlinking
+            return false;
+        }
 
         return (forSymlink // symlinks can run only on staging site
                 || !isLocalTransfer // already determined when checking for local transfer, that it
