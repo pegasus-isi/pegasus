@@ -678,14 +678,20 @@ public class StageIn extends Abstract {
             if (!bypassFirstLevelStagingPossible) {
                 // no bypass of input file staging. we need to add
                 // data stage in nodes for the lfn
-                if (symLinkSelectedLocation
-                        || // symlinks can run only on staging site
-                        !runTransferOnLocalSite
-                        || this.mTransferJobPlacer.runTransferRemotely(
-                                stagingSite,
-                                ft)) { // check on the basis of constructed source URL whether to
-                    // run remotely
+                boolean runTransferRemotely =
+                        this.mTransferJobPlacer.runTransferRemotely(
+                                stagingSite, ft, symLinkSelectedLocation, runTransferOnLocalSite);
 
+                if (ftForContainerToSubmitHost || !runTransferRemotely) {
+                    // PM-1950  if this particluar file tx is for transferring
+                    // the container for the job to the submit host directory, then always run
+                    // locally
+                    // runTransferRemotely can return true ft for transferring container to submit
+                    // host; if user has turned symlinking
+                    // OR
+                    // tx flagged to be run locally
+                    localFileTransfers.add(ft);
+                } else {
                     if (removeFileURLFromSource(job, ft, stagingSiteHandle)) {
                         // PM-1082 remote transfers ft can still have file url's
                         // not matching the staging site
@@ -699,17 +705,8 @@ public class StageIn extends Abstract {
                         }
                     }
 
-                    if (ftForContainerToSubmitHost) {
-                        // PM-1950  all symlink transfers and user specified remote transfers;
-                        // unless this particluar file tx is for transferring
-                        // the container for the job to the submit host directory
-                        localFileTransfers.add(ft);
-                    } else {
-                        // all symlink transfers and user specified remote transfers
-                        remoteFileTransfers.add(ft);
-                    }
-                } else {
-                    localFileTransfers.add(ft);
+                    // all symlink transfers and user specified remote transfers
+                    remoteFileTransfers.add(ft);
                 }
             }
 

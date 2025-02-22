@@ -85,6 +85,21 @@ public class JobPlacer {
         return result;
     }
 
+    public boolean runTransferRemotely(
+            SiteCatalogEntry stagingSite,
+            FileTransfer ft,
+            boolean forSymlink,
+            boolean isLocalTransfer) {
+
+        return (forSymlink // symlinks can run only on staging site
+                || !isLocalTransfer // already determined when checking for local transfer, that it
+                // should run remotely
+                || this.runTransferRemotely(
+                        stagingSite,
+                        ft)); // check on the basis of constructed source URL whether to
+        // run remotely
+    }
+
     /**
      * Determines a particular created transfer pair has to be binned for remote transfer or local.
      *
