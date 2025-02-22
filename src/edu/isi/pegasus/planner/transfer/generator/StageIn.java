@@ -682,7 +682,6 @@ public class StageIn extends Abstract {
                         || // symlinks can run only on staging site
                         !runTransferOnLocalSite
                         || this.mTransferJobPlacer.runTransferRemotely(
-                                job,
                                 stagingSite,
                                 ft)) { // check on the basis of constructed source URL whether to
                     // run remotely

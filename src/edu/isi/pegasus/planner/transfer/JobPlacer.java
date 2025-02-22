@@ -17,7 +17,6 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
 
 /**
@@ -89,12 +88,11 @@ public class JobPlacer {
     /**
      * Determines a particular created transfer pair has to be binned for remote transfer or local.
      *
-     * @param job the associated compute job
      * @param ft the file transfer created
      * @param stagingSite the staging site for the job
      * @return
      */
-    public boolean runTransferRemotely(Job job, SiteCatalogEntry stagingSite, FileTransfer ft) {
+    public boolean runTransferRemotely(SiteCatalogEntry stagingSite, FileTransfer ft) {
         boolean remote = false;
 
         NameValue<String, String> destTX = ft.getDestURL();
