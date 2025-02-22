@@ -14,7 +14,11 @@
 package edu.isi.pegasus.planner.transfer;
 
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.NameValue;
 
 /**
  * A class that determines whether a transfer job for a File Transfer executes locally or not
@@ -80,5 +84,49 @@ public class JobPlacer {
         }
 
         return result;
+    }
+
+    /**
+     * Determines a particular created transfer pair has to be binned for remote transfer or local.
+     *
+     * @param job the associated compute job
+     * @param ft the file transfer created
+     * @param stagingSite the staging site for the job
+     * @return
+     */
+    public boolean runTransferRemotely(Job job, SiteCatalogEntry stagingSite, FileTransfer ft) {
+        boolean remote = false;
+
+        NameValue<String, String> destTX = ft.getDestURL();
+        for (String sourceSite : ft.getSourceSites()) {
+            // traverse through all the URL's on that site
+            for (ReplicaCatalogEntry rce : ft.getSourceURLs(sourceSite)) {
+                String sourceURL = rce.getPFN();
+                // if the source URL is a FILE URL and
+                // source site matches the destination site
+                // then has to run remotely
+                if (sourceURL != null && sourceURL.startsWith(PegasusURL.FILE_URL_SCHEME)) {
+                    // sanity check to make sure source site
+                    // matches destination site
+                    if (sourceSite.equalsIgnoreCase(destTX.getKey())) {
+
+                        if (sourceSite.equalsIgnoreCase(stagingSite.getSiteHandle())
+                                && stagingSite.isVisibleToLocalSite()) {
+                            // PM-1024 if the source also matches the job staging site
+                            // then we do an extra check if the staging site is the same
+                            // as the sourceSite, then we consider the auxillary.local attribute
+                            // for the staging site
+                            remote = false;
+                        } else {
+                            remote = true;
+                            break;
+                        }
+                    } else if (sourceSite.equals("local")) {
+                        remote = false;
+                    }
+                }
+            }
+        }
+        return remote;
     }
 }
