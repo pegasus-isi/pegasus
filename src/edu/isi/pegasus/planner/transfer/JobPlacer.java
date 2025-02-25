@@ -104,6 +104,30 @@ public class JobPlacer {
             boolean forSymlink,
             boolean isLocalTransfer) {
 
+        return this.runTransferRemotely(
+                ftForContainerToSubmitHost,
+                forSymlink,
+                isLocalTransfer,
+                this.runTransferRemotely(stagingSite, ft));
+    }
+
+    /**
+     * Returns a boolean indicating whether a particular file transfer should be placed to run
+     * remotely.
+     *
+     * @param ftForContainerToSubmitHost boolean indicating whether this transfer is transferring
+     *     container to submit host
+     * @param forSymlink boolean indicating if this tx is flagged for symlinking
+     * @param isLocalTransfer boolean indicating initial determination if tx can be run locally
+     * @param isRemoteTransfer boolen indicating whether the tx can be run remotely
+     * @return
+     */
+    public boolean runTransferRemotely(
+            boolean ftForContainerToSubmitHost,
+            boolean forSymlink,
+            boolean isLocalTransfer,
+            boolean isRemoteTransfer) {
+
         if (ftForContainerToSubmitHost) {
             // PM-1950  if this particluar file tx is for transferring
             // the container for the job to the submit host directory, then always run
@@ -116,9 +140,7 @@ public class JobPlacer {
         return (forSymlink // symlinks can run only on staging site
                 || !isLocalTransfer // already determined when checking for local transfer, that it
                 // should run remotely
-                || this.runTransferRemotely(
-                        stagingSite,
-                        ft)); // check on the basis of constructed source URL whether to
+                || isRemoteTransfer); // check on the basis of constructed source URL whether to
         // run remotely
     }
 

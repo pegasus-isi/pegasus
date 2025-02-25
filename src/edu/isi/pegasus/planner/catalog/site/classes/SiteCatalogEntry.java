@@ -820,6 +820,16 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
+     * Set whether the filesystem for this site is visible to the local site or not
+     *
+     * @param visible
+     */
+    public void setIsVisibleToLocalSite(boolean visible) {
+        Pegasus pegasusProfiles = (Pegasus) this.getProfiles().get(NAMESPACES.pegasus);
+        pegasusProfiles.checkKeyInNS(Pegasus.LOCAL_VISIBLE_KEY, Boolean.toString(visible));
+    }
+
+    /**
      * Returns a boolean indicating whether the shared scratch space is accessible to the worker
      * nodes via a shared filesystem.
      *
