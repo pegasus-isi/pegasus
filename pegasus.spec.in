@@ -10,7 +10,7 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 Source:         pegasus-%{version}.tar.gz
 
 BuildRequires:  gcc, gcc-c++, javapackages-tools, make, openssl-devel, ant, python3-devel, python3-pip, python3-setuptools
-Requires:       which, python3, condor >= 8.8, graphviz, %{?systemd_requires}
+Requires:       which, python3, condor >= 10.0, graphviz, %{?systemd_requires}
 
 %global debug_package %{nil}
 
@@ -19,12 +19,21 @@ BuildRequires:  java-11-openjdk-devel, python3-setuptools_scm
 Requires:       java-11-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython, python3-dataclasses
 %endif
 
-%if 0%{?rhel} >= 9
+%if 0%{?rhel} == 9
 BuildRequires:  ant-apache-regexp, java-11-openjdk-devel
 Requires:       java-11-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
 %endif
 
+%if 0%{?rhel} == 10
+BuildRequires:  ant-apache-regexp, java-21-openjdk-devel
+Requires:       java-21-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
+%endif
+
 %define sourcedir %{name}-%{version}
+
+# Disables the automatic dependency generator, which will include
+# Python deps on packages we include inside our package
+%{?python_disable_dependency_generator}
 
 # Turn off automatic python bytecompilation
 # Will bytecompile manually with Python 2 and 3 separately
