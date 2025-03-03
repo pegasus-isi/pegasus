@@ -1,6 +1,13 @@
+GCCVERSION := $(shell gcc -dumpversion)
+GCCMAJOR := $(shell echo $(GCCVERSION) | cut -d. -f1)
 CC = gcc
 LOADLIBES = -lm
 CFLAGS = -Wall -O2 -ggdb -std=gnu99
+
+# use PIE on newer gccs
+ifeq ($(shell expr $(GCCMAJOR) \>= 14), 1)
+    CFLAGS += -fpie
+endif
 
 ifndef ${prefix}
     prefix = $(CURDIR)/../../../
