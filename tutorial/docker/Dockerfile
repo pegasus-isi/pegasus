@@ -53,7 +53,7 @@ RUN dnf -y install https://research.cs.wisc.edu/htcondor/repo/24.x/htcondor-rele
     sed -i 's/condor@/scitech@/g' /etc/condor/config.d/00-minicondor
 
 RUN usermod -a -G condor scitech
-RUN chmod -R g+w /var/{lib,log,lock,run}/condor
+#RUN chmod -R g+w /var/{lib,log,lock,run}/condor
 ADD ./config/10-dynamic-slots /etc/condor/config.d/10-dynamic-slots
 
 # Pegasus -- rebuild everything below here

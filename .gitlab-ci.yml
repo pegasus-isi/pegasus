@@ -193,6 +193,31 @@ RHEL:
   - ${ARCH}
   - docker
 
+RHEL_v3:
+  <<: *retry-and-timeout
+  stage: build
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64_v3
+      - arm64
+      OS:
+      - rhel_10
+  image: pegasus/buildenv:${OS}
+  script:
+  - ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
+  artifacts:
+    paths:
+    - dist/pegasus-binary*.tar.gz
+    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus-*.rpm
+  dependencies: []
+  tags:
+  - ${ARCH}
+  - docker
+
+# multiarch needed until we figure out the v3 microarch issues
+
 SUSE:
   <<: *retry-and-timeout
   stage: build
