@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import typing
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Dict
@@ -30,6 +31,9 @@ from Pegasus.tools import kickstart_parser, utils
 logger = logging.getLogger("pegasus-newanalyzer")
 
 utils.configureLogging(level=logging.WARNING)
+
+if sys.version_info > (3, 6):
+    setattr(typing, "_ClassVar", typing.ClassVar)
 
 
 # --- classes -------------------------------------------------------------------------

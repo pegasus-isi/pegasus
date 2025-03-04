@@ -3,6 +3,7 @@
 import atexit
 import logging
 import os
+import sys
 import typing as t
 from collections import namedtuple
 from dataclasses import dataclass
@@ -18,6 +19,9 @@ from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
 from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.tools import utils
+
+if sys.version_info > (3, 6):
+    setattr(t, "_ClassVar", t.ClassVar)
 
 log = logging.getLogger("pegasus-statistics")
 

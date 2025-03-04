@@ -13,6 +13,8 @@ Basic Usage::
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
+import sys
+import typing
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional, TextIO
@@ -26,6 +28,10 @@ __all__ = (
     "dumps",
     "Braindump",
 )
+
+
+if sys.version_info > (3, 6):
+    setattr(typing, "_ClassVar", typing.ClassVar)
 
 
 @dataclass()
