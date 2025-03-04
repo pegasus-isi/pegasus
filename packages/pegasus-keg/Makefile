@@ -7,6 +7,8 @@ CXX	= g++ -ffor-scope
 CXXFLAGS += -O -Wall
 LD      = $(CXX)
 LOADLIBES = -lm
+GCCVERSION := $(shell gcc -dumpversion)
+GCCMAJOR := $(shell echo $(GCCVERSION) | cut -d. -f1)
 SYSTEM  = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 VERSION = $(shell uname -r)
 MARCH	= $(shell uname -m | tr '[A-Z]' '[a-z]')
@@ -15,7 +17,6 @@ SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
 EXTRA_OBJ = basic.o
 EXTRA_INC = version.h
 MUSLLIBC = $(shell gcc -dumpmachine | grep musl | wc -l)
-
 
 ifndef ${prefix}
   prefix = $(PEGASUS_HOME)
@@ -36,6 +37,10 @@ else
     EXTRA_INC += linux.hh
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
+    # use PIE on newer gccs
+    ifeq ($(shell expr $(GCCMAJOR) \>= 14), 1)
+      CFLAGS += -fpie
+    endif
   else
     ifeq (GNUKFREEBSD,${SYSTEM})
       CXXFLAGS = -Wall -O2 -ggdb -DMACHINE_SPECIFIC=gnukfreebsd

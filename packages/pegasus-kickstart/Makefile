@@ -4,10 +4,17 @@ CC = gcc
 CFLAGS = -Wall -O2 -ggdb -std=gnu99
 LD = $(CC)
 LDLIBS = -lm
+GCCVERSION := $(shell gcc -dumpversion)
+GCCMAJOR := $(shell echo $(GCCVERSION) | cut -d. -f1)
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 ARCH = $(shell uname -m)
 MUSLLIBC = $(shell gcc -dumpmachine | grep musl | wc -l)
 TARGET = pegasus-kickstart
+
+# use PIE on newer gccs
+ifeq ($(shell expr $(GCCMAJOR) \>= 14), 1)
+    CFLAGS += -fpie
+endif
 
 ifndef ${prefix}
     prefix = $(CURDIR)/../../../
