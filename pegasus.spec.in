@@ -15,13 +15,13 @@ Requires:       which, python3, condor >= 10.0, graphviz, %{?systemd_requires}
 %global debug_package %{nil}
 
 %if 0%{?rhel} == 8
-BuildRequires:  java-11-openjdk-devel, python3-setuptools_scm
-Requires:       java-11-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython, python3-dataclasses
+BuildRequires:  java-17-openjdk-devel, python3-setuptools_scm
+Requires:       java-17-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython, python3-dataclasses
 %endif
 
 %if 0%{?rhel} == 9
-BuildRequires:  ant-apache-regexp, java-11-openjdk-devel
-Requires:       java-11-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
+BuildRequires:  ant-apache-regexp, java-21-openjdk-devel
+Requires:       java-21-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
 %endif
 
 %if 0%{?rhel} == 10
