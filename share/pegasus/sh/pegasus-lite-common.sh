@@ -72,6 +72,28 @@ pegasus_lite_log()
 }
 
 
+pegasus_lite_location()
+{
+    # try ipv4 first - it provides more accurate results in the geoip lookup
+
+    if (curl --version) >/dev/null 2>&1; then
+        location=$(curl -s -S --insecure --max-time 20 --ipv4 https://location.scitech.group/v1/ 2>/dev/null || \
+                   curl -s -S --insecure --max-time 20 https://location.scitech.group/v1/ 2>/dev/null)
+    fi
+
+    if [ "x$location" = "x" ]; then
+        if (wget --version) >/dev/null 2>&1; then
+            location=$(wget -q -O - --inet4-only https://location.scitech.group/v1/ 2>/dev/null || \
+                       wget -q -O - https://location.scitech.group/v1/ 2>/dev/null)
+        fi
+    fi
+
+    if [ "x$location" != "x" ]; then
+        echo "$location" >$PEGASUS_MULTIPART_DIR/location.yaml || true
+    fi
+}
+
+
 pegasus_lite_download()
 {
     src=$1
@@ -527,6 +549,10 @@ pegasus_lite_init()
     # setup pegasus lite log
     pegasus_lite_setup_log
 
+    # multipart is where other tools can drop in extra data for the ks record
+    export PEGASUS_MULTIPART_DIR=`pwd`/.pegasus.mulitpart.d
+    mkdir -p $PEGASUS_MULTIPART_DIR
+
     if [ "X$pegasus_lite_inside_container" != "Xtrue" ]; then
         # announce version - we do this so pegasus-exitcode and other tools
         # can tell the job was a PegasusLite job
@@ -560,6 +586,8 @@ pegasus_lite_init()
             out="$out GLIDEIN_ResourceName=${GLIDEIN_ResourceName}"
         fi
         pegasus_lite_log "$out"
+
+        pegasus_lite_location
     fi
 
     # for staged credentials, expand the paths and set strict permissions
@@ -587,8 +615,6 @@ pegasus_lite_init()
         done
     done
 
-    export PEGASUS_MULTIPART_DIR=`pwd`/.pegasus.mulitpart.d
-    mkdir -p $PEGASUS_MULTIPART_DIR
 }
 
 
