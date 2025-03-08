@@ -104,12 +104,14 @@ class Parser:
 
     def is_multipart_record(self, buffer=""):
         """
-        Returns True if buffer contains an invocation record either xml or invocation
+        Returns True if buffer contains a multipart record such as
+        integrity_verification_attempts; integrity_summary and
+        location records
         """
         if self.is_invocation_record(buffer):
             return False
         else:
-            return buffer.find("- ") == 0
+            return buffer.find("- ") == 0 or buffer.find("location:") == 0
 
     def is_task_record(self, buffer=""):
         """
@@ -477,7 +479,9 @@ class YAMLParser(Parser):
                 # back track file pointer
                 self._fh.seek(file_ptr)
                 break
-            elif line[0] in [" ", "-", "\n"]:
+            elif line[0] in [" ", "-", "l", "\n"]:
+                # for #2096 not clear if we need to check the first char of the line.
+                # l is for location multipart record
                 buffer.append(line)
 
         record = "".join(buffer)
@@ -662,6 +666,12 @@ class YAMLParser(Parser):
                 "KICKSTART-PARSE-ERROR --> yaml error in multipart record %s : %s"
                 % (self._kickstart_output_file, str(e))
             )
+
+        # for integrity multipart a list of dict is returned as entries
+        # However, for location record (which is just one) a dict is returned
+        if type(entries) is dict:
+            # for #2096 in case of location record; convert it to a list
+            entries = [entries]
 
         for index, entry in enumerate(entries):
             entries[index]["multipart"] = True
