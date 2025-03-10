@@ -39,6 +39,8 @@ yaml.constructor.SafeConstructor.yaml_constructors[
     "tag:yaml.org,2002:timestamp"
 ] = yaml.constructor.SafeConstructor.yaml_constructors["tag:yaml.org,2002:str"]
 
+PEGASUS_MULTIPART_MARKER = "---------------pegasus-multipart\n"
+
 # Regular expressions used in the kickstart parser
 re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
 re_parse_quoted_props = re.compile(r'(\S+)\s*=\s*"([^"]+)"')
@@ -111,7 +113,7 @@ class Parser:
         if self.is_invocation_record(buffer):
             return False
         else:
-            return buffer.find("- ") == 0 or buffer.find("location:") == 0
+            return buffer.find(PEGASUS_MULTIPART_MARKER) == 0
 
     def is_task_record(self, buffer=""):
         """
@@ -408,7 +410,7 @@ class YAMLParser(Parser):
                 # deprecated token
                 token = "[seqexec-summary"
                 break
-            if line.find("---------------pegasus-multipart") == 0:
+            if line.find(PEGASUS_MULTIPART_MARKER) == 0:
                 # token
                 token = "pegasus-multipart"
                 break
@@ -421,7 +423,7 @@ class YAMLParser(Parser):
             # Check if we have everything in a single line
             # Not clear what to do for that for YAML records
         elif token == "pegasus-multipart":
-            buffer = ""
+            buffer = line[0:]
         elif token == "[cluster-summary" or token == "[seqexec-summary":
             # Found line with cluster jobs summary
             start = line.find(token)
@@ -467,10 +469,7 @@ class YAMLParser(Parser):
                 # End of file
                 break
 
-            if (
-                line.find("[cluster-") == 0
-                or line.find("---------------pegasus-multipart") == 0
-            ):
+            if line.find("[cluster-") == 0 or line.find(PEGASUS_MULTIPART_MARKER) == 0:
                 # this is to trigger end of parsing of a single kickstart record
                 logger.debug(
                     "Hit end of invocation record in file %s: "
@@ -659,6 +658,11 @@ class YAMLParser(Parser):
         :return: a list of yaml objects
         """
         entries = {}
+
+        # strip off the marker if present
+        if buffer.find(PEGASUS_MULTIPART_MARKER) == 0:
+            buffer = buffer[len(PEGASUS_MULTIPART_MARKER) :]
+
         try:
             entries = yaml.safe_load(buffer)
         except Exception as e:
