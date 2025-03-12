@@ -9,6 +9,7 @@ import logging
 import re
 import sys
 import traceback
+from enum import Enum
 from pprint import pprint
 from xml.parsers import expat
 
@@ -283,6 +284,18 @@ class Parser:
         return self.parse(stdout_stderr_elements, tasks=False, clustered=False)
 
 
+class _YAMLParserToken(Enum):
+    """Internal class defining different tokens parser looks for"""
+
+    UNDEFINED = ""
+    INVOCATION = "invocation"  # - invocation:
+    CLUSTER_TASK = "cluster-task"  # [cluster-task
+    CLUSTER_SUMMARY = "cluster-summary"  # [cluster-summary
+    SEQEXEC_TASK = "seqexec-task"  # [seqexec-task
+    SEQEXEC_SUMMARY = "seqexec-summary"  # [seqexec-summary
+    PEGASUS_MULTIPART = "pegasus-multipart"
+
+
 class YAMLParser(Parser):
     """
     Represents the parser that parses the kickstart xml records
@@ -379,7 +392,7 @@ class YAMLParser(Parser):
         buffer = ""
 
         # valid token that is parsed
-        token = ""
+        token = _YAMLParserToken.UNDEFINED
 
         self._record_number += 1
         logger.debug(
@@ -394,39 +407,47 @@ class YAMLParser(Parser):
                 # End of file, record not found
                 return None
             if line.find("- invocation:") != -1:
-                token = "- invocation:"
+                # token = "- invocation:"
+                token = _YAMLParserToken.INVOCATION
                 break
             if line.find("[cluster-task") != -1:
-                token = "[cluster-task"
+                # token = "[cluster-task"
+                token = _YAMLParserToken.CLUSTER_TASK
                 break
             if line.find("[cluster-summary") != -1:
-                token = "[cluster-summary"
+                # token = "[cluster-summary"
+                token = _YAMLParserToken.CLUSTER_SUMMARY
                 break
             if line.find("[seqexec-task") != -1:
                 # deprecated token
-                token = "[seqexec-task"
+                token = _YAMLParserToken.SEQEXEC_TASK
                 break
             if line.find("[seqexec-summary") != -1:
                 # deprecated token
-                token = "[seqexec-summary"
+                token = _YAMLParserToken.SEQEXEC_SUMMARY
                 break
             if line.find(PEGASUS_MULTIPART_MARKER) == 0:
                 # token
-                token = "pegasus-multipart"
+                token = _YAMLParserToken.PEGASUS_MULTIPART
                 break
 
         # Found something!
-        if token == "- invocation:":
+        if token == _YAMLParserToken.INVOCATION:
             # Found invocation record
             start = line.find("- invocation:")
             buffer = line[start:]
             # Check if we have everything in a single line
             # Not clear what to do for that for YAML records
-        elif token == "pegasus-multipart":
+        elif token == _YAMLParserToken.PEGASUS_MULTIPART:
             buffer = line[0:]
-        elif token == "[cluster-summary" or token == "[seqexec-summary":
+        elif (
+            token == _YAMLParserToken.CLUSTER_SUMMARY
+            or token == _YAMLParserToken.SEQEXEC_SUMMARY
+        ):
             # Found line with cluster jobs summary
-            start = line.find(token)
+            start = (
+                line.find(token.value) - 1
+            )  # -1 to account for [ in [cluster-summary and [seqexec-summary
             buffer = line[start:]
             end = buffer.find("]")
 
@@ -440,10 +461,15 @@ class YAMLParser(Parser):
                 % (self._kickstart_output_file, token)
             )
             return ""
-        elif token == "[cluster-task" or token == "[seqexec-task":
+        elif (
+            token == _YAMLParserToken.CLUSTER_TASK
+            or token == _YAMLParserToken.SEQEXEC_TASK
+        ):
             # Found line with task information
-            start = line.find(token)
-            buffer = line[start:]
+            start = line.find(token.value)
+            buffer = (
+                line[start:] - 1
+            )  # -1 to account for [ in [cluster-task and [seqexec-task
             end = buffer.find("]")
 
             if end >= 0:
