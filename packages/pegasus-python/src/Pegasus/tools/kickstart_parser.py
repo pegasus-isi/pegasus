@@ -288,12 +288,12 @@ class _YAMLParserToken(Enum):
     """Internal class defining different tokens parser looks for"""
 
     UNDEFINED = ""
-    INVOCATION = "invocation"  # - invocation:
-    CLUSTER_TASK = "cluster-task"  # [cluster-task
-    CLUSTER_SUMMARY = "cluster-summary"  # [cluster-summary
-    SEQEXEC_TASK = "seqexec-task"  # [seqexec-task
-    SEQEXEC_SUMMARY = "seqexec-summary"  # [seqexec-summary
-    PEGASUS_MULTIPART = "pegasus-multipart"
+    INVOCATION = "- invocation:"  # - invocation:
+    CLUSTER_TASK = "[cluster-task"  # [cluster-task
+    CLUSTER_SUMMARY = "[cluster-summary"  # [cluster-summary
+    SEQEXEC_TASK = "[seqexec-task"  # [seqexec-task
+    SEQEXEC_SUMMARY = "[seqexec-summary"  # [seqexec-summary
+    PEGASUS_MULTIPART = PEGASUS_MULTIPART_MARKER
 
 
 class YAMLParser(Parser):
@@ -406,27 +406,27 @@ class YAMLParser(Parser):
             if line == "":
                 # End of file, record not found
                 return None
-            if line.find("- invocation:") != -1:
+            if line.find(_YAMLParserToken.INVOCATION.value) != -1:
                 # token = "- invocation:"
                 token = _YAMLParserToken.INVOCATION
                 break
-            if line.find("[cluster-task") != -1:
+            if line.find(_YAMLParserToken.CLUSTER_TASK.value) != -1:
                 # token = "[cluster-task"
                 token = _YAMLParserToken.CLUSTER_TASK
                 break
-            if line.find("[cluster-summary") != -1:
+            if line.find(_YAMLParserToken.CLUSTER_SUMMARY.value) != -1:
                 # token = "[cluster-summary"
                 token = _YAMLParserToken.CLUSTER_SUMMARY
                 break
-            if line.find("[seqexec-task") != -1:
+            if line.find(_YAMLParserToken.SEQEXEC_TASK.value) != -1:
                 # deprecated token
                 token = _YAMLParserToken.SEQEXEC_TASK
                 break
-            if line.find("[seqexec-summary") != -1:
+            if line.find(_YAMLParserToken.SEQEXEC_SUMMARY.value) != -1:
                 # deprecated token
                 token = _YAMLParserToken.SEQEXEC_SUMMARY
                 break
-            if line.find(PEGASUS_MULTIPART_MARKER) == 0:
+            if line.find(_YAMLParserToken.PEGASUS_MULTIPART.value) == 0:
                 # token
                 token = _YAMLParserToken.PEGASUS_MULTIPART
                 break
@@ -445,14 +445,16 @@ class YAMLParser(Parser):
             or token == _YAMLParserToken.SEQEXEC_SUMMARY
         ):
             # Found line with cluster jobs summary
-            start = (
-                line.find(token.value) - 1
-            )  # -1 to account for [ in [cluster-summary and [seqexec-summary
+            start = line.find(token.value)
             buffer = line[start:]
             end = buffer.find("]")
 
             if end >= 0:
                 end = end + len("]")
+                logger.debug(
+                    "Finished reading record number %d from kickstart file %s"
+                    % (self._record_number, self._kickstart_output_file)
+                )
                 return buffer[:end]
 
             # clustered record should be in a single line!
@@ -467,13 +469,15 @@ class YAMLParser(Parser):
         ):
             # Found line with task information
             start = line.find(token.value)
-            buffer = (
-                line[start:] - 1
-            )  # -1 to account for [ in [cluster-task and [seqexec-task
+            buffer = line[start:]
             end = buffer.find("]")
 
             if end >= 0:
                 end = end + len("]")
+                logger.debug(
+                    "Finished reading record number %d from kickstart file %s"
+                    % (self._record_number, self._kickstart_output_file)
+                )
                 return buffer[:end]
 
             # task record should be in a single line!
@@ -495,7 +499,11 @@ class YAMLParser(Parser):
                 # End of file
                 break
 
-            if line.find("[cluster-") == 0 or line.find(PEGASUS_MULTIPART_MARKER) == 0:
+            if (
+                line.find("[cluster-") == 0
+                or line.find(PEGASUS_MULTIPART_MARKER) == 0
+                or line.find("[seqexec-") == 0
+            ):
                 # this is to trigger end of parsing of a single kickstart record
                 logger.debug(
                     "Hit end of invocation record in file %s: "
