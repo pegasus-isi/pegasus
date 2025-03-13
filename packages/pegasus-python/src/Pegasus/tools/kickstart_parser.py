@@ -303,6 +303,7 @@ class YAMLParser(Parser):
 
     def __init__(self, filename):
         super().__init__(filename)
+        self._record_number = 0
 
     def parse(self, keys_dict, tasks=True, clustered=True):
         """
@@ -328,7 +329,6 @@ class YAMLParser(Parser):
             % (self._kickstart_output_file)
         )
 
-        self._record_number = 0
         # Read first record
         record = self.read_record()
 
