@@ -17,14 +17,14 @@ Prerequisites
 
 Pegasus has a few dependencies:
 
--  **Java 1.8 or higher**. Check with:
+-  **JDK 17 or higher**. Check with:
 
    ::
 
       # java -version
-      java version "1.8.0"
+      openjdk 17.0.14
 
--  **Python 3.5 or higher**. Check with:
+-  **Python 3.6 or higher**. Check with:
 
    ::
 
@@ -34,9 +34,9 @@ Pegasus has a few dependencies:
    Python3 package ``yaml`` is also required, but it
    will be installed automatically if you use the RPM/DEB packages.
 
--  **HTCondor (formerly Condor) 9.0 or higher**. See
+-  **HTCondor 23.X or higher**. See
    http://www.cs.wisc.edu/htcondor/ for more information. You should be
-   able to run ``condor_q`` and ``condor_status``.
+   able to run ``condor_q`` and get queue information.
 
 .. _optional:
 
@@ -45,8 +45,6 @@ Optional Software
 
 -  **mysqlclient**. Python module for MySQL access. Only needed if you
    want to store the runtime database in MySQL (default is SQLite).
-   On server side, MySQL server 5.7 or higher is required, as Pegasus
-   creates databases encoded in *utf8mb4* charset.
 
 -  **psycopg2**. Python module for PostgreSQL access. Only needed if you
    want to store the runtime database in PostgreSQL (default is SQLite)
@@ -82,31 +80,31 @@ If you want to use the API to generate workflows (:ref:`api-reference`), you mig
 RHEL / CentOS / Rocky / Alma / SL
 =================================
 
-Binary packages provided for: RHEL 7 x86_64 and RHEL 8 x86_64 (including OSes
+Binary packages provided for: RHEL 8, RHEL 9 and RHEL 10 (including OSes
 derived from RHEL: CentOS, Rocky, AlmaLinux, SL)
 
 .. tabs::
 
-   .. code-tab:: bash CentOS 9
+   .. code-tab:: bash EL 10
+
+      curl --output /etc/yum.repos.d/pegasus.repo \
+            https://download.pegasus.isi.edu/pegasus/rhel/10/pegasus.repo
+      dnf install epel-release
+      dnf install --enablerepo devel pegasus
+
+   .. code-tab:: bash EL 9
 
       curl --output /etc/yum.repos.d/pegasus.repo \
             https://download.pegasus.isi.edu/pegasus/rhel/9/pegasus.repo
       dnf install epel-release
       dnf install --enablerepo devel pegasus
 
-   .. code-tab:: bash CentOS 8
+   .. code-tab:: bash EL 8
 
       curl --output /etc/yum.repos.d/pegasus.repo \
             https://download.pegasus.isi.edu/pegasus/rhel/8/pegasus.repo
       dnf install epel-release
       dnf install --enablerepo powertools pegasus
-
-   .. code-tab:: bash CentOS 7
-
-      curl --output /etc/yum.repos.d/pegasus.repo \
-            https://download.pegasus.isi.edu/pegasus/rhel/7/pegasus.repo
-      yum install epel-release
-      yum install pegasus
 
 
 Ubuntu
@@ -128,18 +126,18 @@ Ubuntu
       apt-get update
       apt-get install pegasus
 
-   .. code-tab:: bash 18.04 LTS (Bionic Beaver)
-
-      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu bionic main' >/etc/apt/sources.list.d/pegasus.list
-      apt-get update
-      apt-get install pegasus
-
 
 Debian
 ======
 
 .. tabs::
+
+   .. code-tab:: bash Debian 12 (Bookworm)
+
+      wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/debian bookworm main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
+      apt-get install pegasus
 
    .. code-tab:: bash Debian 11 (Bullseye)
 
@@ -148,12 +146,6 @@ Debian
       apt-get update
       apt-get install pegasus
 
-   .. code-tab:: bash Debian 10 (Buster)
-
-      wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-      echo 'deb https://download.pegasus.isi.edu/pegasus/debian buster main' >/etc/apt/sources.list.d/pegasus.list
-      apt-get update
-      apt-get install pegasus
 
 
 .. _macosx:
