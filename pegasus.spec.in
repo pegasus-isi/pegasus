@@ -22,8 +22,8 @@ Requires:       python3, condor >= 10.0, graphviz, perl-Getopt-Long
 # byte compile errors
 %global __python %{python3}
 
-BuildRequires:  ant-apache-regexp, java-17-openjdk-devel
-Requires:       java-17-openjdk-headless, python36-cryptography, python36-PyYAML, python36-GitPython
+BuildRequires:  ant-apache-regexp, java-1.8.0-openjdk-devel
+Requires:       java-1.8.0-openjdk-headless, python36-cryptography, python36-PyYAML, python36-GitPython
 %endif
 
 %if 0%{?rhel} == 8
