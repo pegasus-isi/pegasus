@@ -81,6 +81,11 @@ public class Metrics {
     /** The logger object */
     private LogManager mLogger;
 
+    public static final boolean ENABLE_METRICS_REPORTING() {
+        String value = System.getenv(COLLECT_METRICS_ENV_VARIABLE);
+        return Boolean.parse(value, true);
+    }
+
     public Metrics() {
         mSendMetricsToServer = true;
         mMetricsServers = new LinkedList();
@@ -92,10 +97,9 @@ public class Metrics {
      * @param bag bag of pegasus objects
      */
     public void initialize(PegasusBag bag) {
-        String value = System.getenv(COLLECT_METRICS_ENV_VARIABLE);
-        mSendMetricsToServer = Boolean.parse(value, true);
+        mSendMetricsToServer = Metrics.ENABLE_METRICS_REPORTING();
 
-        value = System.getenv(PRIMARY_METRICS_SERVER_URL_ENV_VARIABLE);
+        String value = System.getenv(PRIMARY_METRICS_SERVER_URL_ENV_VARIABLE);
         if (value != null) {
             String[] urls = value.split(",");
             for (int i = 0; i < urls.length; i++) {

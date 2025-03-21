@@ -38,6 +38,7 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.GridStart;
+import edu.isi.pegasus.planner.code.generator.Metrics;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapperFactory;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
@@ -105,6 +106,9 @@ public class PegasusLite implements GridStart {
     public static final char SEPARATOR_CHAR = '#';
     public static final String MESSAGE_PREFIX = "[Pegasus Lite]";
     public static final int MESSAGE_STRING_LENGTH = 80;
+
+    public static final String PEGASUS_METRICS_SHELL_VARIABLE =
+            Metrics.COLLECT_METRICS_ENV_VARIABLE.toLowerCase();
 
     /**
      * The basename of the class that is implmenting this. Could have been determined by reflection.
@@ -246,6 +250,9 @@ public class PegasusLite implements GridStart {
 
     protected PegasusProperties.PEGASUS_MODE mPegasusMode;
 
+    /** boolean tracking whether metrics reporting is enabled or not. */
+    private boolean mMetricsReportingEnabled;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -317,6 +324,8 @@ public class PegasusLite implements GridStart {
         mSetupScriptOnTheSubmitHost =
                 (String) localSitePegasusProfiles.get(Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY);
         mPegasusMode = mProps.getPegasusMode();
+
+        mMetricsReportingEnabled = Metrics.ENABLE_METRICS_REPORTING();
     }
 
     /**
@@ -773,6 +782,11 @@ public class PegasusLite implements GridStart {
                     .append('\n');
             sb.append("pegasus_lite_version_allow_wp_auto_download=\"")
                     .append(this.mAllowWPDownloadFromWebsite)
+                    .append("\"")
+                    .append('\n');
+            sb.append(PEGASUS_METRICS_SHELL_VARIABLE)
+                    .append("=\"")
+                    .append(this.mMetricsReportingEnabled)
                     .append("\"")
                     .append('\n');
 

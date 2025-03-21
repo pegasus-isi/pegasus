@@ -587,7 +587,9 @@ pegasus_lite_init()
         fi
         pegasus_lite_log "$out"
 
-        pegasus_lite_location
+	if [ "X$pegasus_metrics" = "Xtrue" ]; then
+            pegasus_lite_location
+	fi
     fi
 
     # for staged credentials, expand the paths and set strict permissions
