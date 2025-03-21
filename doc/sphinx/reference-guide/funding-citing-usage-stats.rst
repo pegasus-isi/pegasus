@@ -33,7 +33,7 @@ software.
 Overview
 --------
 
-We plan to instrument and augment the following clients in our
+We instrument and augment the following clients in our
 distribution to report the metrics.
 
 -  pegasus-plan
@@ -41,6 +41,8 @@ distribution to report the metrics.
 -  pegasus-transfer
 
 -  pegasus-monitord
+
+-  pegasus lite wrapped jobs
 
 For the Pegasus WMS 4.2 release, only the pegasus-plan client has been
 instrumented to send metrics.
@@ -148,3 +150,27 @@ fields listed above.
    pegasus-plan leaves a copy of the metrics sent in the workflow submit
    directory in the file ending with ".metrics" extension. As a user you
    will always have access to the metrics sent.
+
+.. _usage-pegasuslite-metrics:
+
+Pegasus Lite Metrics
+~~~~~~~~~~~~~~~~~~~~
+
+Starting Pegasus 5.1.0 release, PegasusLite wrapped jobs send a location record
+that enables us to figure out what resource a job runs on.
+
+The location record can be found toward the end of the job .out file as a pegasus multipart record.
+
+Example below
+
+.. code-block:: yaml
+
+        location:
+            geohash: s000
+            ip: 10.101.104.66
+            latitude: 0
+            longitude: 0
+            organization: N/A
+            subdomain: ads.isi.edu
+
+

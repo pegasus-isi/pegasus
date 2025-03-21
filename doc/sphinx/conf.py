@@ -30,9 +30,9 @@ copyright = "2019, Pegasus Team"
 author = "Pegasus Team"
 
 # The short X.Y version
-version = "5.0.0dev"
+version = "5.1.0dev"
 # The full version, including alpha/beta/rc tags
-release = "5.0.0dev"
+release = "5.1.0dev"
 
 
 
