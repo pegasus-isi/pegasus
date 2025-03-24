@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+#  - name: Security issue
+#    url: https://github.com/pegasus-isi/pegasus/security/advisories/new
+#    about: Do not report security issues publicly. Create a private advisory.
+  - name: Questions on GitHub Discussions
+    url: https://github.com/pegasus-isi/pegasus/discussions/
+    about: Ask questions about your own workflows on the Discussions tab.
+  - name: Questions on Slack
+    url: https://pegasus-users.slack.com
+    about: Ask questions about your own workflows on our Slack.
