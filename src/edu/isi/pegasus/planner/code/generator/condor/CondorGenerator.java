@@ -22,6 +22,8 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.CondorVersion;
+import edu.isi.pegasus.common.util.FindExecutable;
+import edu.isi.pegasus.common.util.ShellCommand;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -519,10 +521,6 @@ public class CondorGenerator extends Abstract {
                     this.getCondorLogInTmpDirectory(), this.getCondorLogInSubmitDirectory(dag));
         }
 
-        // write out the DOT file
-        mLogger.log("Writing out the DOT file ", LogManager.DEBUG_MESSAGE_LEVEL);
-        this.writeDOTFile(getDAGFilename(dag, ".dot"), dag);
-
         this.writeMetadataFile(getDAGFilename(dag, ".metadata"), dag);
 
         /*
@@ -556,6 +554,10 @@ public class CondorGenerator extends Abstract {
 
         // write out the dag.condor.sub file
         this.writeOutDAGManSubmitFile(dag, orgDAGFile);
+
+        // write out the DOT and the png file
+        mLogger.log("Writing out the DOT file and visualizing it ", LogManager.DEBUG_MESSAGE_LEVEL);
+        this.writeDOTFile(dag, orgDAGFile, getDAGFilename(dag, ".dot"));
 
         // we are donedirectory
         mDone = true;
@@ -1072,15 +1074,60 @@ public class CondorGenerator extends Abstract {
     /**
      * Writes out the DOT file in the submit directory.
      *
-     * @param filename basename of dot file to be written .
      * @param dag the <code>ADag</code> object.
+     * @param dagFile
+     * @param filename basename of dot file to be written .
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected void writeDOTFile(String filename, ADag dag) throws CodeGeneratorException {
+    protected void writeDOTFile(ADag dag, File dagFile, String filename)
+            throws CodeGeneratorException {
         // initialize file handler
 
-        filename = mSubmitFileDir + File.separator + filename;
+        String dagFileName = dagFile.getAbsolutePath();
+        File dir = dagFile.getParentFile();
+        String output = new File(dir, filename).getAbsolutePath();
 
+        ShellCommand c = ShellCommand.getInstance(mLogger);
+        if (c.execute("pegasus-graphviz", "-l label -o " + output + " " + dagFileName) == 0) {
+            mLogger.log("Written out dot file " + filename, LogManager.DEBUG_MESSAGE_LEVEL);
+        } else {
+            mLogger.log(
+                    "Unable to generate dot file " + c.getSTDOut() + "\n" + c.getSTDErr(),
+                    LogManager.ERROR_MESSAGE_LEVEL);
+            return;
+        }
+
+        // try to visualize the dot file only if the executable workflow is of
+        // certain size and the dot program is installed
+        if (dag.getNoOfJobs() <= 100) {
+            File exec = FindExecutable.findExec("dot");
+            if (exec != null) {
+                String pngFilename =
+                        new File(dir, this.getDAGFilename(dag, ".png")).getAbsolutePath();
+                if (c.execute("pegasus-graphviz", "-l label -o " + pngFilename + " " + dagFileName)
+                        == 0) {
+                    mLogger.log(
+                            "Written out png file " + pngFilename, LogManager.DEBUG_MESSAGE_LEVEL);
+                } else {
+                    mLogger.log(
+                            "Unable to generate png file out of the dot file "
+                                    + c.getSTDOut()
+                                    + "\n"
+                                    + c.getSTDErr(),
+                            LogManager.ERROR_MESSAGE_LEVEL);
+                }
+            }
+        } else {
+            mLogger.log(
+                    "Not generating the png file as the dag file has more than"
+                            + dag.getNoOfJobs()
+                            + " "
+                            + "nodes",
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        }
+
+        return;
+        /*
         try {
             Writer stream = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
             dag.toDOT(stream, null);
@@ -1089,8 +1136,18 @@ public class CondorGenerator extends Abstract {
         } catch (Exception e) {
             throw new CodeGeneratorException("While writing to DOT FILE " + filename, e);
         }
+        */
+
     }
 
+    /**
+     * Writes out the metadata file, containing the metadata associated with the jobs in the submit
+     * directory in JSON
+     *
+     * @param filename basename of medatadata file to be written .
+     * @param dag the <code>ADag</code> object.
+     * @throws CodeGeneratorException in case of any error occuring code generation.
+     */
     /**
      * Writes out the metadata file, containing the metadata associated with the jobs in the submit
      * directory in JSON
