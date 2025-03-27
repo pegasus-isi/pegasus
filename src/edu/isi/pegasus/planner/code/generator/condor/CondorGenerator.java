@@ -556,8 +556,9 @@ public class CondorGenerator extends Abstract {
         this.writeOutDAGManSubmitFile(dag, orgDAGFile);
 
         // write out the DOT and the png file
-        mLogger.log("Writing out the DOT file and visualizing it ", LogManager.DEBUG_MESSAGE_LEVEL);
-        this.writeDOTFile(dag, orgDAGFile, getDAGFilename(dag, ".dot"));
+        if (this.writeDOTFile(dag, orgDAGFile, getDAGFilename(dag, ".dot"))) {
+            this.writePNGile(dag, orgDAGFile, getDAGFilename(dag, ".png"));
+        }
 
         // we are donedirectory
         mDone = true;
@@ -1072,14 +1073,15 @@ public class CondorGenerator extends Abstract {
     }
 
     /**
-     * Writes out the DOT file in the submit directory.
+     * Writes out the DOT file in the same directory where the dag file is
      *
      * @param dag the <code>ADag</code> object.
-     * @param dagFile
+     * @param dagFile the dag file created
      * @param filename basename of dot file to be written .
+     * @return
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected void writeDOTFile(ADag dag, File dagFile, String filename)
+    protected boolean writeDOTFile(ADag dag, File dagFile, String filename)
             throws CodeGeneratorException {
         // initialize file handler
 
@@ -1089,25 +1091,42 @@ public class CondorGenerator extends Abstract {
 
         ShellCommand c = ShellCommand.getInstance(mLogger);
         if (c.execute("pegasus-graphviz", "-l label -o " + output + " " + dagFileName) == 0) {
-            mLogger.log("Written out dot file " + filename, LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log("Written out dot file to: " + filename, LogManager.DEBUG_MESSAGE_LEVEL);
         } else {
             mLogger.log(
                     "Unable to generate dot file " + c.getSTDOut() + "\n" + c.getSTDErr(),
                     LogManager.ERROR_MESSAGE_LEVEL);
-            return;
+            return false;
         }
+        return true;
+    }
 
+    /**
+     * Writes out the DOT file in the same directory where the dag file is
+     *
+     * @param dag the <code>ADag</code> object.
+     * @param dagFile the dag file created
+     * @param filename basename of dot file to be written .
+     * @return
+     * @throws CodeGeneratorException in case of any error occuring code generation.
+     */
+    protected boolean writePNGile(ADag dag, File dagFile, String filename)
+            throws CodeGeneratorException {
+        String dagFileName = dagFile.getAbsolutePath();
+        File dir = dagFile.getParentFile();
+        boolean generated = false;
         // try to visualize the dot file only if the executable workflow is of
         // certain size and the dot program is installed
         if (dag.getNoOfJobs() <= 100) {
             File exec = FindExecutable.findExec("dot");
             if (exec != null) {
-                String pngFilename =
-                        new File(dir, this.getDAGFilename(dag, ".png")).getAbsolutePath();
+                String pngFilename = new File(dir, filename).getAbsolutePath();
+                ShellCommand c = ShellCommand.getInstance(mLogger);
                 if (c.execute("pegasus-graphviz", "-l label -o " + pngFilename + " " + dagFileName)
                         == 0) {
                     mLogger.log(
-                            "Written out png file " + pngFilename, LogManager.DEBUG_MESSAGE_LEVEL);
+                            "Written out png file to: " + filename, LogManager.DEBUG_MESSAGE_LEVEL);
+                    generated = true;
                 } else {
                     mLogger.log(
                             "Unable to generate png file out of the dot file "
@@ -1126,18 +1145,7 @@ public class CondorGenerator extends Abstract {
                     LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
-        return;
-        /*
-        try {
-            Writer stream = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
-            dag.toDOT(stream, null);
-            stream.close();
-
-        } catch (Exception e) {
-            throw new CodeGeneratorException("While writing to DOT FILE " + filename, e);
-        }
-        */
-
+        return generated;
     }
 
     /**
