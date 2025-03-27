@@ -557,7 +557,7 @@ public class CondorGenerator extends Abstract {
 
         // write out the DOT and the png file
         if (this.writeDOTFile(dag, orgDAGFile, getDAGFilename(dag, ".dot"))) {
-            this.writePNGile(dag, orgDAGFile, getDAGFilename(dag, ".png"));
+            this.writePNGFile(dag, orgDAGFile, getDAGFilename(dag, ".png"));
         }
 
         // we are donedirectory
@@ -1091,7 +1091,9 @@ public class CondorGenerator extends Abstract {
 
         ShellCommand c = ShellCommand.getInstance(mLogger);
         if (c.execute("pegasus-graphviz", "-l label -o " + output + " " + dagFileName) == 0) {
-            mLogger.log("Written out dot file to: " + filename, LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log(
+                    "Written out dot file for the executable workflow to: " + filename,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
         } else {
             mLogger.log(
                     "Unable to generate dot file " + c.getSTDOut() + "\n" + c.getSTDErr(),
@@ -1110,7 +1112,7 @@ public class CondorGenerator extends Abstract {
      * @return
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected boolean writePNGile(ADag dag, File dagFile, String filename)
+    protected boolean writePNGFile(ADag dag, File dagFile, String filename)
             throws CodeGeneratorException {
         String dagFileName = dagFile.getAbsolutePath();
         File dir = dagFile.getParentFile();
@@ -1125,7 +1127,9 @@ public class CondorGenerator extends Abstract {
                 if (c.execute("pegasus-graphviz", "-l label -o " + pngFilename + " " + dagFileName)
                         == 0) {
                     mLogger.log(
-                            "Written out png file to: " + filename, LogManager.DEBUG_MESSAGE_LEVEL);
+                            "Written out pnf file visualizing the executable workflow to: "
+                                    + filename,
+                            LogManager.INFO_MESSAGE_LEVEL);
                     generated = true;
                 } else {
                     mLogger.log(
@@ -1142,7 +1146,7 @@ public class CondorGenerator extends Abstract {
                             + dag.getNoOfJobs()
                             + " "
                             + "nodes",
-                    LogManager.DEBUG_MESSAGE_LEVEL);
+                    LogManager.INFO_MESSAGE_LEVEL);
         }
 
         return generated;
