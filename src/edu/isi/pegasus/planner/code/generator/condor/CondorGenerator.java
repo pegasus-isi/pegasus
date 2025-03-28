@@ -134,6 +134,12 @@ public class CondorGenerator extends Abstract {
     /** The default priority key associated with the cleanup jobs. */
     public static final int DEFAULT_CLEANUP_PRIORITY_KEY = 1000;
 
+    /** limit to use for visualizing the abstract wf */
+    public static final int ABSTRACT_WF_VISUALIZE_LIMIT = 100;
+
+    /** limit to use for visualizing the concrete wf */
+    public static final int CONCRETE_WF_VISUALIZE_LIMIT = 150;
+
     /**
      * the environment variable key populated with all jobs to have the condor job id set in the
      * environment.
@@ -557,7 +563,16 @@ public class CondorGenerator extends Abstract {
 
         // write out the DOT and the png file
         if (this.writeDOTFile(dag, orgDAGFile, getDAGFilename(dag, ".dot"))) {
-            this.writePNGFile(dag, orgDAGFile, getDAGFilename(dag, ".png"));
+            // visualize the abstract workflow first
+            File abstractWF = new File(this.mPOptions.getDAX());
+            File outputPNG = new File(this.mSubmitFileDir, getDAGFilename(dag, "-abstract.png"));
+            this.visualize(dag, abstractWF, outputPNG, true, false);
+            outputPNG = new File(this.mSubmitFileDir, getDAGFilename(dag, "-abstract-files.png"));
+            this.visualize(dag, abstractWF, outputPNG, true, true);
+
+            // the concrete workflow
+            outputPNG = new File(this.mSubmitFileDir, getDAGFilename(dag, "-concrete.png"));
+            this.visualize(dag, orgDAGFile, outputPNG, false, false);
         }
 
         // we are donedirectory
@@ -1106,49 +1121,82 @@ public class CondorGenerator extends Abstract {
     /**
      * Writes out the DOT file in the same directory where the dag file is
      *
-     * @param dag the <code>ADag</code> object.
-     * @param dagFile the dag file created
-     * @param filename basename of dot file to be written .
+     * @param dag
+     * @param file the dax or dag file to.
+     * @param outputFile
+     * @param isAbstract whether the wf is abstract/dax or not.
+     * @param withFiles boolean indicating whether files should be vizualized
      * @return
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected boolean writePNGFile(ADag dag, File dagFile, String filename)
+    protected boolean visualize(
+            ADag dag, File file, File outputFile, boolean isAbstract, boolean withFiles)
             throws CodeGeneratorException {
-        String dagFileName = dagFile.getAbsolutePath();
-        File dir = dagFile.getParentFile();
+        String dagFileName = file.getAbsolutePath();
         boolean generated = false;
-        // try to visualize the dot file only if the executable workflow is of
-        // certain size and the dot program is installed
-        if (dag.getNoOfJobs() <= 100) {
-            File exec = FindExecutable.findExec("dot");
-            if (exec != null) {
-                String pngFilename = new File(dir, filename).getAbsolutePath();
-                ShellCommand c = ShellCommand.getInstance(mLogger);
-                if (c.execute("pegasus-graphviz", "-l label -o " + pngFilename + " " + dagFileName)
-                        == 0) {
-                    mLogger.log(
-                            "Written out pnf file visualizing the executable workflow to: "
-                                    + filename,
-                            LogManager.INFO_MESSAGE_LEVEL);
-                    generated = true;
-                } else {
-                    mLogger.log(
-                            "Unable to generate png file out of the dot file "
-                                    + c.getSTDOut()
-                                    + "\n"
-                                    + c.getSTDErr(),
-                            LogManager.ERROR_MESSAGE_LEVEL);
-                }
-            }
+
+        int limit = 1;
+        int count = 0;
+        // different limits for abstract and executable workflows
+        if (isAbstract) {
+            limit = ABSTRACT_WF_VISUALIZE_LIMIT;
+            count = dag.getWorkflowMetrics().getTaskCount(Job.COMPUTE_JOB);
         } else {
+            limit = CONCRETE_WF_VISUALIZE_LIMIT;
+            count = dag.getNoOfJobs();
+        }
+        if (count > limit) {
             mLogger.log(
-                    "Not generating the png file as the dag file has more than"
-                            + dag.getNoOfJobs()
+                    "Not generating the png file as the"
                             + " "
-                            + "nodes",
+                            + (isAbstract ? "abstract" : "concrete")
+                            + " "
+                            + "workflow has job count of "
+                            + count
+                            + " which exceeds the limit of "
+                            + limit,
                     LogManager.INFO_MESSAGE_LEVEL);
+            return false;
         }
 
+        File exec = FindExecutable.findExec("dot");
+        if (exec != null) {
+            String pngFilename = outputFile.getAbsolutePath();
+            ShellCommand c = ShellCommand.getInstance(mLogger);
+            StringBuilder args = new StringBuilder();
+            if (isAbstract) {
+                args.append("-l xform");
+            } else {
+                args.append("-l label");
+            }
+            args.append(" ");
+            args.append("-o").append(" ").append(pngFilename);
+            if (withFiles) {
+                args.append(" ").append("--files");
+            }
+            args.append(" ").append(dagFileName);
+            if (c.execute("pegasus-graphviz", args.toString()) == 0) {
+                mLogger.log(
+                        "Written out png file visualizing the"
+                                + " "
+                                + (isAbstract ? "abstract" : "concrete")
+                                + " "
+                                + "workflow"
+                                + (withFiles ? " (files included)" : "")
+                                + " to: "
+                                + pngFilename,
+                        LogManager.INFO_MESSAGE_LEVEL);
+                generated = true;
+            } else {
+                mLogger.log(
+                        "Unable to generate png file out of the file "
+                                + file
+                                + c.getSTDOut()
+                                + "\n"
+                                + c.getSTDErr(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            }
+        }
         return generated;
     }
 
