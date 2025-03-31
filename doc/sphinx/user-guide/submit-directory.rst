@@ -113,6 +113,31 @@ includes the following:
     to the .dag file. This can be used to visualize the executable
     workflow using the dot program.
 
+#.  **<wflabel-wfindex>-concrete.png**
+
+    Pegasus creates a png file visualizing the the output executable workflow,
+    using the program `pegasus-graphviz`. The png file is created as long as
+    the `dot` program is installed and the number of jobs in the executable
+    workflow are less than or equal to 150. This png file is consistent with
+    the dot file created for the workflow.
+
+#.  **<wflabel-wfindex>-abstract.png**
+
+    Pegasus creates a png file visualizing the the input abstract workflow,
+    using the program `pegasus-graphviz`. The image only lists the jobs
+    making up the workflow and does not include files. The png file is created
+    as long as the `dot` program is installed and the number of jobs in
+    the absract workflow are less than or equal to 100.
+
+
+#.  **<wflabel-wfindex>-files.png**
+
+    Pegasus creates a png file visualizing the the input abstract workflow,
+    using the program `pegasus-graphviz`. The image includes both the jobs
+    and the files making up the workflow. The png file is created
+    as long as the `dot` program is installed and the number of jobs in
+    the abstract workflow are less than or equal to 100.
+
 #. **jobstate.log**
 
     The jobstate.log file is written out by the pegasus-monitord daemon
