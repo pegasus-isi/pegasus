@@ -1108,7 +1108,7 @@ public class CondorGenerator extends Abstract {
         if (c.execute("pegasus-graphviz", "-l label -o " + output + " " + dagFileName) == 0) {
             mLogger.log(
                     "Written out dot file for the executable workflow to: " + filename,
-                    LogManager.DEBUG_MESSAGE_LEVEL);
+                    LogManager.INFO_MESSAGE_LEVEL);
         } else {
             mLogger.log(
                     "Unable to generate dot file " + c.getSTDOut() + "\n" + c.getSTDErr(),
@@ -1149,7 +1149,7 @@ public class CondorGenerator extends Abstract {
             mLogger.log(
                     "Not generating the png file as the"
                             + " "
-                            + (isAbstract ? "abstract" : "concrete")
+                            + (isAbstract ? "abstract" : "executable")
                             + " "
                             + "workflow has job count of "
                             + count
