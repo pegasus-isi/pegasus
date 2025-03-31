@@ -1161,7 +1161,6 @@ public class CondorGenerator extends Abstract {
 
         File exec = FindExecutable.findExec("dot");
         if (exec != null) {
-            String pngFilename = outputFile.getAbsolutePath();
             ShellCommand c = ShellCommand.getInstance(mLogger);
             StringBuilder args = new StringBuilder();
             if (isAbstract) {
@@ -1170,7 +1169,7 @@ public class CondorGenerator extends Abstract {
                 args.append("-l label");
             }
             args.append(" ");
-            args.append("-o").append(" ").append(pngFilename);
+            args.append("-o").append(" ").append(outputFile.getAbsolutePath());
             if (withFiles) {
                 args.append(" ").append("--files");
             }
@@ -1184,7 +1183,7 @@ public class CondorGenerator extends Abstract {
                                 + "workflow"
                                 + (withFiles ? " (files included)" : "")
                                 + " to: "
-                                + pngFilename,
+                                + outputFile.getName(),
                         LogManager.INFO_MESSAGE_LEVEL);
                 generated = true;
             } else {
