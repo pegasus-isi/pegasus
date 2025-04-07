@@ -45,7 +45,7 @@ fi
 javac RosettaDAX.java
 
 # generate the dax
-java RosettaDAX dax.xml
+java RosettaDAX dax.yml
 
 # site catalog
 cat > sites.yml <<EOF
@@ -125,6 +125,6 @@ pegasus-plan \
     --sites eclair \
     --staging-site staging \
     --output-sites local \
-    --submit dax.xml | tee $TOP_DIR/plan.out
+    --submit dax.yml | tee $TOP_DIR/plan.out
 
 
