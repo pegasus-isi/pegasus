@@ -176,4 +176,8 @@ public class FileDetector {
 
         return isYAML;
     }
+
+    public static void main(String[] args) {
+        System.err.println("XML Parsing Regex is " + FileDetector.mXMLPattern);
+    }
 }

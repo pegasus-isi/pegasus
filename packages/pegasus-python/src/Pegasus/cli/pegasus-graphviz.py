@@ -2,6 +2,7 @@
 
 import colorsys
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -41,6 +42,10 @@ COLORS = [
     "#22bbcc",
     "#d9dbb5",
 ]
+
+re_parse_xml_header = re.compile(
+    r"<\?xml\s*version=\"[\d\.\d]*\"\s*encoding=\"[\w\W]*\"\?>"
+)
 
 
 def rgb2hex(r, g, b):
@@ -403,6 +408,25 @@ def parse_yamlfile(fname, include_files):
     return dag
 
 
+def dax_file_is_xml(fname):
+    """
+    whether a dax file is xml or not
+    :param fname:
+    :return: boolean returning True if xml
+    """
+
+    f = open(fname)
+    header = ""
+    for line in f.readlines():
+        header = line.strip()
+        break
+
+    if re_parse_xml_header.search(header) is not None:
+        return True
+
+    return False
+
+
 def remove_xforms(dag, xforms):
     """
     Remove transformations in the DAG by name
@@ -694,8 +718,13 @@ dot representation is output.""",
     dagfile = args[0]
     if dagfile.endswith(".dag"):
         dag = parse_dagfile(dagfile)
-    elif dagfile.endswith(".dax") or dagfile.endswith(".xml"):
+    elif dagfile.endswith(".xml"):
         dag = parse_daxfile(dagfile, options.files)
+    elif dagfile.endswith(".dax"):
+        if dax_file_is_xml(dagfile):
+            dag = parse_daxfile(dagfile, options.files)
+        else:
+            dag = parse_yamlfile(dagfile, options.files)
     elif dagfile.lower().endswith(".yml"):
         dag = parse_yamlfile(dagfile, options.files)
     else:
