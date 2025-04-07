@@ -45,4 +45,4 @@ pegasus-plan \
     --staging-site staging_site \
     --output-sites local \
     --submit \
-    dax.xml
+    dax.yml

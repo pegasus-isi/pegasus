@@ -77,6 +77,6 @@ l1_outputs = add_level(1, 50, [], False)
 l2_outputs = add_level(2, 10, l1_outputs, False)
 l2_outputs = add_level(3, 20, l2_outputs, True)
 
-f = open("dax.xml", "w")
+f = open("dax.yml", "w")
 wf.write(f)
 f.close()
