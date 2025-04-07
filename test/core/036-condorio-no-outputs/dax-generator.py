@@ -27,6 +27,6 @@ j = Job(exe)
 dax.add_jobs(j)
 
 # Write the DAX
-f = open("dax.xml", "w")
+f = open("dax.yml", "w")
 dax.write(f)
 f.close()

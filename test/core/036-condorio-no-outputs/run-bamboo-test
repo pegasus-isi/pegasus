@@ -48,7 +48,7 @@ pegasus-plan \
     --sites condorpool \
     --dir work/dags \
     --cleanup none \
-    dax.xml \
+    dax.yml \
      | tee $TOPDIR/plan.out
 
 
