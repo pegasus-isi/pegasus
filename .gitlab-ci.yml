@@ -544,6 +544,7 @@ Workflow Tests:
       - 049-pycbc-search
       - 050-singularity-container-universe nonsharedfs
       - 050-singularity-container-universe nonsharedfs-shared
+      - 050-singularity-container-universe nonsharedfs-symlink
       - blackdiamond pl-condorio
       - blackdiamond pl-condorio-local
       - blackdiamond pl-pt

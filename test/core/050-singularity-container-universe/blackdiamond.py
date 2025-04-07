@@ -44,6 +44,7 @@ config = json.load(open(f"{TEST_NAME}/test.config"))
 LOCAL = "local"
 COMPUTE = "condorpool"
 STAGING = config["STAGING"] if "STAGING" in config else "cartman-data"
+SHARED  = config["SHARED"] if "SHARED" in config else False
 if not STAGING:
     # empty value in test.config
     STAGING = COMPUTE
@@ -53,10 +54,12 @@ print(f"Staging site for the test is {STAGING}")
 shared_scratch_dir = str(WORK_DIR / "shared-scratch")
 staging_scratch_dir = str(WORK_DIR / "staging-site" / "scratch")
 local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
-condorpool_scratch_dir = "/webdav/scitech/shared/scratch-90-days/{}/{}".format(
+condorpool_scratch_dir = "/webdav/scitech/shared/scratch-90-days/{}/{}/scratch".format(
     PEGASUS_VERSION, TEST_NAME
 )
-
+condorpoool_shared_dir = "/scitech/shared/scratch-90-days/{}/{}/shared".format(
+    PEGASUS_VERSION, TEST_NAME
+)
 print("Generating site catalog at: {}".format(TOP_DIR / "sites.yml"))
 
 SiteCatalog().add_sites(
@@ -99,11 +102,13 @@ SiteCatalog().add_sites(
 print("Generating replica catalog at: {}".format(TOP_DIR / "replicas.yml"))
 
 # create initial input file
+INPUT_DIR = Path(condorpoool_shared_dir) if SHARED else TOP_DIR
+    
 with open("f.a", "w") as f:
     f.write("This is sample input to KEG\n")
 
 fa = File("f.a").add_metadata({"㐦": "㒦"})
-ReplicaCatalog().add_replica(LOCAL, fa, TOP_DIR / fa.lfn).write()
+ReplicaCatalog().add_replica(COMPUTE if SHARED else LOCAL, fa, INPUT_DIR / fa.lfn).write()
 
 # --- Transformations ----------------------------------------------------------
 
