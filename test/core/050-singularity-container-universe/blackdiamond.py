@@ -43,7 +43,7 @@ config = json.load(open(f"{TEST_NAME}/test.config"))
 # --- Sites --------------------------------------------------------------------
 LOCAL = "local"
 COMPUTE = "condorpool"
-STAGING = config["STAGING"] if "STAGING" in config else "cartman-data"
+STAGING = config["STAGING"] if "STAGING" in config else "workflow-webdav"
 SHARED = config["SHARED"] if "SHARED" in config else False
 if not STAGING:
     # empty value in test.config
@@ -92,7 +92,7 @@ SiteCatalog().add_sites(
     .add_pegasus_profile(style="condor")
     .add_pegasus_profile(clusters_num=1)
     .add_condor_profile(universe="container"),
-    Site("cartman-data", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
+    Site("workflow-webdav", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
         Directory(Directory.SHARED_SCRATCH, staging_scratch_dir).add_file_servers(
             FileServer(
                 "scp://bamboo@bamboo.isi.edu/" + staging_scratch_dir, Operation.ALL
