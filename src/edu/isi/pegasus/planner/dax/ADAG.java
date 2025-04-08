@@ -1337,6 +1337,9 @@ public class ADAG {
                 }
 
                 gen.writeEndArray();
+            } else {
+                gen.writeArrayFieldStart("jobDependencies");
+                gen.writeEndArray();
             }
 
             gen.writeEndObject();
@@ -1349,7 +1352,7 @@ public class ADAG {
      * @param args main args
      */
     public static void main(String[] args) {
-        String dax = "diamond.dax";
+        String dax = "wf.dax";
         if (args.length > 0) {
             dax = args[0];
             Diamond().writeToFile(dax);
@@ -1502,6 +1505,24 @@ public class ADAG {
         dax.addDependency("j1", "j3", "1-3");
         dax.addDependency("j2", "j4");
         dax.addDependency("j3", "j4");
+        return dax;
+    }
+
+    private static ADAG SingleJob() {
+        ADAG dax = new ADAG("test");
+
+        File fa = new File("f.a");
+        File fb1 = new File("f.b1");
+        File fb2 = new File("f.b2");
+
+        Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");
+        j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
+        j1.addArgument("-o ").addArgument(fb1).addArgument(fb2);
+        j1.uses(fa, File.LINK.INPUT);
+        j1.uses(fb1, File.LINK.OUTPUT);
+        j1.uses("f.b2", File.LINK.OUTPUT);
+        dax.addJob(j1);
+
         return dax;
     }
 }
