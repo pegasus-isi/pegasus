@@ -103,8 +103,8 @@ logging.info("Generating replica catalog at: {}".format(TOP_DIR / "replicas.yml"
 
 # create initial input file
 INPUT_DIR = Path(condorpoool_shared_dir) if SHARED else TOP_DIR
-    
-with open("f.a", "w") as f:
+os.makedirs(INPUT_DIR, exist_ok=True)
+with open("{}/f.a".format(INPUT_DIR), "w") as f:
     f.write("This is sample input to KEG\n")
 
 fa = File("f.a").add_metadata({"㐦": "㒦"})
