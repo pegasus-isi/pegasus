@@ -26,6 +26,7 @@ TEST_NAME = sys.argv[1]
 RUN_ID = "black-diamond-5.0-" + datetime.now().strftime("%s")
 TOP_DIR = Path.cwd()
 WORK_DIR = TOP_DIR / "work" / PEGASUS_VERSION / TEST_NAME
+SUBMIT_DIR = TOP_DIR / TEST_NAME / "submit"
 
 try:
     Path.mkdir(WORK_DIR, parents=True)
@@ -57,7 +58,7 @@ local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
 condorpool_scratch_dir = "/webdav/scitech/shared/scratch-90-days/{}/{}/scratch".format(
     PEGASUS_VERSION, TEST_NAME
 )
-condorpoool_shared_dir = "/scitech/shared/scratch-90-days/{}/{}/shared".format(
+condorpool_shared_dir = "/scitech/shared/scratch-90-days/{}/{}/shared".format(
     PEGASUS_VERSION, TEST_NAME
 )
 logging.info("Generating site catalog at: {}".format(TOP_DIR / "sites.yml"))
@@ -102,7 +103,7 @@ SiteCatalog().add_sites(
 logging.info("Generating replica catalog at: {}".format(TOP_DIR / "replicas.yml"))
 
 # create initial input file
-INPUT_DIR = Path(condorpoool_shared_dir) if SHARED else TOP_DIR
+INPUT_DIR = Path(condorpool_shared_dir) if SHARED else TOP_DIR
 os.makedirs(INPUT_DIR, exist_ok=True)
 with open("{}/f.a".format(INPUT_DIR), "w") as f:
     f.write("This is sample input to KEG\n")
@@ -190,7 +191,7 @@ try:
         .add_outputs(fd, register_replica=True),
     ).plan(
         conf=PEGASUS_CONF,
-        dir=f"{WORK_DIR}/dags",
+        dir=f"{SUBMIT_DIR}",
         verbose=3,
         sites=[COMPUTE],
         staging_sites={COMPUTE: STAGING},
