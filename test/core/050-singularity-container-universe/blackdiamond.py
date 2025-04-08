@@ -33,7 +33,6 @@ try:
 except FileExistsError:
     pass
 
-
 # --- Configuration ------------------------------------------------------------
 PEGASUS_CONF = f"{TEST_NAME}/pegasusrc"
 print(PEGASUS_CONF)
@@ -45,7 +44,7 @@ config = json.load(open(f"{TEST_NAME}/test.config"))
 LOCAL = "local"
 COMPUTE = "condorpool"
 STAGING = config["STAGING"] if "STAGING" in config else "cartman-data"
-SHARED  = config["SHARED"] if "SHARED" in config else False
+SHARED = config["SHARED"] if "SHARED" in config else False
 if not STAGING:
     # empty value in test.config
     STAGING = COMPUTE
@@ -61,7 +60,11 @@ condorpool_scratch_dir = "/webdav/scitech/shared/scratch-90-days/{}/{}/scratch".
 condorpool_shared_dir = "/scitech/shared/scratch-90-days/{}/{}/shared".format(
     PEGASUS_VERSION, TEST_NAME
 )
-logging.info("Generating site catalog at: {}".format(TOP_DIR / "sites.yml"))
+
+cmd_properties = {}
+site_catalog_file = TOP_DIR / TEST_NAME / "sites.yml"
+logging.info("Generating site catalog at: {}".format(site_catalog_file))
+cmd_properties["pegasus.catalog.site.file"] = site_catalog_file
 
 SiteCatalog().add_sites(
     Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
@@ -96,11 +99,12 @@ SiteCatalog().add_sites(
             )
         )
     ),
-).write()
+).write(str(site_catalog_file))
 
 # --- Replicas -----------------------------------------------------------------
-
-logging.info("Generating replica catalog at: {}".format(TOP_DIR / "replicas.yml"))
+replica_catalog_file = TOP_DIR / TEST_NAME / "replicas.yml"
+logging.info("Generating site catalog at: {}".format(replica_catalog_file))
+cmd_properties["pegasus.catalog.replica.file"] = replica_catalog_file
 
 # create initial input file
 INPUT_DIR = Path(condorpool_shared_dir) if SHARED else TOP_DIR
@@ -109,13 +113,14 @@ with open("{}/f.a".format(INPUT_DIR), "w") as f:
     f.write("This is sample input to KEG\n")
 
 fa = File("f.a").add_metadata({"㐦": "㒦"})
-ReplicaCatalog().add_replica(COMPUTE if SHARED else LOCAL, fa, INPUT_DIR / fa.lfn).write()
+ReplicaCatalog().add_replica(COMPUTE if SHARED else LOCAL, fa, INPUT_DIR / fa.lfn).write(str(replica_catalog_file))
 
 # --- Transformations ----------------------------------------------------------
 
-logging.info(
-    "Generating transformation catalog at: {}".format(TOP_DIR / "transformations.yml")
-)
+transformation_catalog_file = TOP_DIR / TEST_NAME / "transformations.yml"
+logging.info("Generating transformation catalog at: {}".format(transformation_catalog_file))
+cmd_properties["pegasus.catalog.transformation.file"] = transformation_catalog_file
+logging.info("Generating replica catalog at: {}".format(transformation_catalog_file))
 
 base_container = Container(
     "osgvo-el7",
@@ -160,7 +165,7 @@ analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_site
 
 TransformationCatalog().add_containers(base_container).add_transformations(
     preprocess, findrage, analyze
-).write("transformations.yml")
+).write(str(transformation_catalog_file))
 
 # --- Workflow -----------------------------------------------------------------
 logging.info("Generating workflow")
@@ -198,6 +203,7 @@ try:
         output_sites=[LOCAL],
         cluster=["horizontal"],
         force=True,
+        **cmd_properties
     )
 except PegasusClientError as e:
     logging.error(e.output)
