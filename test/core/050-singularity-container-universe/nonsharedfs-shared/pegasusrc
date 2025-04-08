@@ -4,4 +4,4 @@ pegasus.data.configuration = nonsharedfs
 
 pegasus.catalog.transformation YAML
 pegasus.catalog.transformation.file ./transformations.yml
-pegasus.transfer.links = true
+
