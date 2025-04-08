@@ -545,6 +545,7 @@ Workflow Tests:
       - 050-singularity-container-universe nonsharedfs
       - 050-singularity-container-universe nonsharedfs-shared
       - 050-singularity-container-universe nonsharedfs-symlink
+      - 050-singularity-container-universe condorio
       - blackdiamond pl-condorio
       - blackdiamond pl-condorio-local
       - blackdiamond pl-pt
