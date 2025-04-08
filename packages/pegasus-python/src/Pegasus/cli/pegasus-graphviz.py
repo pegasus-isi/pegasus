@@ -400,10 +400,11 @@ def parse_yamlfile(fname, include_files):
                 else:
                     raise Exception(f"Unrecognized link value: {link_type}")
 
-    for dep in wf["jobDependencies"]:
-        for child in dep["children"]:
-            dag.nodes[dep["id"]].children.append(dag.nodes[child])
-            dag.nodes[child].parents.append(dag.nodes[dep["id"]])
+    if "jobDependencies" in wf.keys():
+        for dep in wf["jobDependencies"]:
+            for child in dep["children"]:
+                dag.nodes[dep["id"]].children.append(dag.nodes[child])
+                dag.nodes[child].parents.append(dag.nodes[dep["id"]])
 
     return dag
 

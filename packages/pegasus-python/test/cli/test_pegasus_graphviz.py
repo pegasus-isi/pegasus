@@ -12,6 +12,21 @@ graph_node = pegasus_graphviz.Node
 
 
 @pytest.fixture(scope="module")
+def single_job_wf_file():
+    fa = File("f.a")
+    fb1 = File("f.b1")
+    fb2 = File("f.b2")
+
+    Workflow("single-job").add_jobs(
+        Job("preprocess", node_label="level1").add_inputs(fa).add_outputs(fb1, fb2)
+    ).write("single.yml")
+
+    yield "single.yml"
+
+    Path("single.yml").unlink()
+
+
+@pytest.fixture(scope="module")
 def diamond_wf_file():
     fa = File("f.a")
     fb1 = File("f.b1")
@@ -130,6 +145,31 @@ def test_transitivereduction(wf, expected_node_children):
 
 
 class TestEmitDot:
+    def test_emit_dot_singe_job_wf_yaml_file(self, single_job_wf_file):
+        # target dot file
+        dot_file = Path("wf.dot")
+
+        # invoke emit_dot on the single_job_wf_file
+        dag = pegasus_graphviz.parse_yamlfile(single_job_wf_file, include_files=False)
+        dag = pegasus_graphviz.transitivereduction(dag)
+        pegasus_graphviz.emit_dot(dag, outfile=str(dot_file), label_type="label-xform")
+
+        with dot_file.open("r") as f:
+            result = f.read()
+
+        # check that correct dot file written
+        assert result == (
+            "digraph dag {\n"
+            "    ratio=fill\n"
+            '    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n'
+            "    edge [arrowhead=normal,arrowsize=1.0]\n\n"
+            '    "ID0000001" [shape=ellipse,color="#000000",fillcolor="#1b9e77",label="level1\\npreprocess"]\n'
+            "}\n"
+        )
+
+        # cleanup
+        dot_file.unlink()
+
     def test_emit_dot_diamond_wf_yaml_file(self, diamond_wf_file):
         # target dot file
         dot_file = Path("wf.dot")
