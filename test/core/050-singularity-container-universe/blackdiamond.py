@@ -17,7 +17,7 @@ PEGASUS_VERSION = utils.backticks("pegasus-version").strip()
 
 # figure out test name from arguments
 if len(sys.argv) != 2:
-    print("ERROR: worflow generator requires testname to invoke as an argument")
+    logging.error("ERROR: worflow generator requires testname to invoke as an argument")
     sys.exit(1)
 
 TEST_NAME = sys.argv[1]
@@ -49,7 +49,7 @@ if not STAGING:
     # empty value in test.config
     STAGING = COMPUTE
 
-print(f"Staging site for the test is {STAGING}")
+logging.debug(f"Staging site for the test is {STAGING}")
 
 shared_scratch_dir = str(WORK_DIR / "shared-scratch")
 staging_scratch_dir = str(WORK_DIR / "staging-site" / "scratch")
@@ -60,7 +60,7 @@ condorpool_scratch_dir = "/webdav/scitech/shared/scratch-90-days/{}/{}/scratch".
 condorpoool_shared_dir = "/scitech/shared/scratch-90-days/{}/{}/shared".format(
     PEGASUS_VERSION, TEST_NAME
 )
-print("Generating site catalog at: {}".format(TOP_DIR / "sites.yml"))
+logging.info("Generating site catalog at: {}".format(TOP_DIR / "sites.yml"))
 
 SiteCatalog().add_sites(
     Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
@@ -99,7 +99,7 @@ SiteCatalog().add_sites(
 
 # --- Replicas -----------------------------------------------------------------
 
-print("Generating replica catalog at: {}".format(TOP_DIR / "replicas.yml"))
+logging.info("Generating replica catalog at: {}".format(TOP_DIR / "replicas.yml"))
 
 # create initial input file
 INPUT_DIR = Path(condorpoool_shared_dir) if SHARED else TOP_DIR
@@ -112,7 +112,7 @@ ReplicaCatalog().add_replica(COMPUTE if SHARED else LOCAL, fa, INPUT_DIR / fa.lf
 
 # --- Transformations ----------------------------------------------------------
 
-print(
+logging.info(
     "Generating transformation catalog at: {}".format(TOP_DIR / "transformations.yml")
 )
 
@@ -162,7 +162,7 @@ TransformationCatalog().add_containers(base_container).add_transformations(
 ).write("transformations.yml")
 
 # --- Workflow -----------------------------------------------------------------
-print("Generating workflow")
+logging.info("Generating workflow")
 
 fb1 = File("f.b1")
 fb2 = File("f.b2")
@@ -199,4 +199,4 @@ try:
         force=True,
     )
 except PegasusClientError as e:
-    print(e.output)
+    logging.error(e.output)
