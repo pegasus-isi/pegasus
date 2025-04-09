@@ -58,7 +58,9 @@ public class ADAGTest {
                         + "    type: \"input\"\n"
                         + "    stageOut: true\n"
                         + "    registerReplica: true\n"
-                        + "    forPlanning: true\n";
+                        + "    forPlanning: true\n"
+                        + "jobDependencies: []\n";
+        ;
 
         // use a fixed "createdOn" value for test
         String createdOn = "\"today\"";
@@ -107,7 +109,8 @@ public class ADAGTest {
                         + "   - \"--force\"\n"
                         + "   - \"-q\"\n"
                         + "   - \"--cleanup none\"\n"
-                        + "  uses: []\n";
+                        + "  uses: []\n"
+                        + "jobDependencies: []\n";
 
         // use a fixed "createdOn" value for test
         String createdOn = "\"today\"";
