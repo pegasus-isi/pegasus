@@ -525,10 +525,10 @@ Workflow Tests:
       - 044-docker inside/nonsharedfs
       - 044-docker inside/nonsharedfs-shared
       - 044-docker inside/nonsharedfs-symlink
-      - 044-singularity-nonsharedfs
-      - 044-singularity-nonsharedfs-shared
-      - 044-singularity-nonsharedfs-symlink
-      - 044-singularity-nonsharedfs-symlink-cvmfs
+      - 044-singularity inside/nonsharedfs
+      - 044-singularity inside/nonsharedfs-shared
+      - 044-singularity inside/nonsharedfs-symlink
+      - 044-singularity inside/nonsharedfs-symlink-cvmfs
       - 044-singularity-nonsharedfs-minimal
       - 045-hierarchy-sharedfs
       - 045-hierarchy-sharedfs-b
