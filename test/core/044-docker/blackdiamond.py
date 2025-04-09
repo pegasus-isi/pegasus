@@ -45,6 +45,7 @@ LOCAL = "local"
 COMPUTE = "condorpool"
 STAGING = config["STAGING"] if "STAGING" in config else "workflow-webdav"
 SHARED = config["SHARED"] if "SHARED" in config else False
+SYMLINK = config["SYMLINK"] if "SYMLINK" in config else False
 if not STAGING:
     # empty value in test.config
     STAGING = COMPUTE
@@ -123,15 +124,21 @@ logging.info("Generating transformation catalog at: {}".format(transformation_ca
 cmd_properties["pegasus.catalog.transformation.file"] = transformation_catalog_file
 logging.info("Generating replica catalog at: {}".format(transformation_catalog_file))
 
+container_mounts = {}
+if SYMLINK:
+    # mount the shared dir where the raw input is
+    container_mounts["mounts"] = ["{}:/existing/data:ro".format(condorpool_shared_dir)]
 base_container = Container(
     "centos-osgvo-el8",
     Container.DOCKER,
     image_site="local",
     image="docker:///hub.opensciencegrid.org/opensciencegrid/osgvo-el8:latest",
     bypass_staging=False,
+    **container_mounts
 )
 base_container.add_env("APP_HOME", "/tmp/myscratch")
 base_container.add_env("JAVA_HOME", "/bin/java.1.8")
+
 
 preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
