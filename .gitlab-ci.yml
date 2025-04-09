@@ -522,11 +522,11 @@ Workflow Tests:
       - 043-integrity-condorio-5.0API
       - 043-integrity-condorio-singularity
       - 043-integrity-bypass-staging-b
-      - 044-docker-nonsharedfs
-      - 044-docker-nonsharedfs-shared
+      - 044-docker inside/nonsharedfs
+      - 044-docker inside/nonsharedfs-shared
+      - 044-docker inside/nonsharedfs-symlink
       - 044-singularity-nonsharedfs
       - 044-singularity-nonsharedfs-shared
-      - 044-docker-nonsharedfs-symlink
       - 044-singularity-nonsharedfs-symlink
       - 044-singularity-nonsharedfs-symlink-cvmfs
       - 044-singularity-nonsharedfs-minimal
