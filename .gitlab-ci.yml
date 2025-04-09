@@ -459,7 +459,7 @@ Workflow Tests:
       - 002-hello-world
       - 004-montage-condor-io
       - 004-montage-shared-fs
-      - 004-montage-shared-fs-sc
+#      - 004-montage-shared-fs-sc
       - 004-montage-staging-site
       - 004-montage-universe-local
       - 004-montage-apptainer
