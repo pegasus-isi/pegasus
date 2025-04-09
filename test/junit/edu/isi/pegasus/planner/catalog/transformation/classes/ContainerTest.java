@@ -142,7 +142,7 @@ public class ContainerTest {
     public void testSimpleMountPoint() {
         this.testMountPoint(
                 "/scitech/shared/scratch-90-days/:/existing/data",
-                "/scitech/shared/scratch-90-days/",
+                "/scitech/shared/scratch-90-days",
                 "/existing/data",
                 null);
     }
@@ -152,16 +152,16 @@ public class ContainerTest {
     public void testSimpleMountPointWithDotInName() {
         this.testMountPoint(
                 "/shared/pegasus-5.0.6dev/:/shared/pegasus-5.0.6dev/",
-                "/shared/pegasus-5.0.6dev/",
-                "/shared/pegasus-5.0.6dev/",
+                "/shared/pegasus-5.0.6dev",
+                "/shared/pegasus-5.0.6dev",
                 null);
     }
 
     @Test
     public void testSimpleMountPointWithOptions() {
         this.testMountPoint(
-                "/scitech/shared/scratch-90-days/:/existing/data:ro",
-                "/scitech/shared/scratch-90-days/",
+                "/scitech/shared/scratch-90-days:/existing/data:ro",
+                "/scitech/shared/scratch-90-days",
                 "/existing/data",
                 "ro");
     }
@@ -170,6 +170,15 @@ public class ContainerTest {
     public void testSimpleMountPointWithShellVariable() {
         this.testMountPoint(
                 "/scitech/shared/scratch-90-days/${TEST_NAME}:/existing/data:ro",
+                "/scitech/shared/scratch-90-days/${TEST_NAME}",
+                "/existing/data",
+                "ro");
+    }
+
+    @Test
+    public void testSimpleMountPointWithExtraSlashesinPath() {
+        this.testMountPoint(
+                "/scitech/shared/scratch-90-days///${TEST_NAME}:/existing/data:ro",
                 "/scitech/shared/scratch-90-days/${TEST_NAME}",
                 "/existing/data",
                 "ro");
@@ -325,8 +334,8 @@ public class ContainerTest {
                         + "image.site: \"dockerhub\"\n"
                         + "bypass: false\n"
                         + "mounts:\n"
-                        + " - \"/Volumes/Work/lfs1:/shared-data/:ro\"\n"
-                        + " - \"/Volumes/Work/lfs12:/shared-data1/:ro\"\n"
+                        + " - \"/Volumes/Work/lfs1:/shared-data:ro\"\n"
+                        + " - \"/Volumes/Work/lfs12:/shared-data1:ro\"\n"
                         + "profiles:\n"
                         + "  env:\n"
                         + "    JAVA_HOME: \"/opt/java/1.6\"\n";

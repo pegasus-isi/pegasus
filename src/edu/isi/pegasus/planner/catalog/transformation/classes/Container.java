@@ -659,12 +659,13 @@ public class Container implements Cloneable {
         }
 
         /**
-         * Set the source directory
+         * Set the source directory. It is internally set to the absolute path to the directory
+         * passed.
          *
          * @param dir the source directory
          */
         public void setSourceDirectory(String dir) {
-            mSourceDirectory = dir;
+            mSourceDirectory = new File(dir).getAbsolutePath();
         }
 
         /**
@@ -677,12 +678,14 @@ public class Container implements Cloneable {
         }
 
         /**
-         * Set the destination directory
+         * Set the destination directory. It is internally set to the absolute path to the directory
+         * passed.
          *
          * @param dir the destination directory
          */
         public void setDestinationDirectory(String dir) {
-            mDestDirectory = dir;
+            mDestDirectory = new File(dir).getAbsolutePath();
+            ;
         }
 
         /**
