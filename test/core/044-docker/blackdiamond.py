@@ -105,7 +105,7 @@ SiteCatalog().add_sites(
 
 # --- Replicas -----------------------------------------------------------------
 replica_catalog_file = TOP_DIR / TEST_NAME / "replicas.yml"
-logging.info("Generating site catalog at: {}".format(replica_catalog_file))
+logging.info("Generating replica catalog at: {}".format(replica_catalog_file))
 cmd_properties["pegasus.catalog.replica.file"] = replica_catalog_file
 
 # create initial input file
@@ -122,7 +122,6 @@ ReplicaCatalog().add_replica(COMPUTE if SHARED else LOCAL, fa, INPUT_DIR / fa.lf
 transformation_catalog_file = TOP_DIR / TEST_NAME / "transformations.yml"
 logging.info("Generating transformation catalog at: {}".format(transformation_catalog_file))
 cmd_properties["pegasus.catalog.transformation.file"] = transformation_catalog_file
-logging.info("Generating replica catalog at: {}".format(transformation_catalog_file))
 
 container_mounts = {}
 if SYMLINK:
