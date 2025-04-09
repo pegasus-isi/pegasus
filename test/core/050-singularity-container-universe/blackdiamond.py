@@ -66,6 +66,19 @@ site_catalog_file = TOP_DIR / TEST_NAME / "sites.yml"
 logging.info("Generating site catalog at: {}".format(site_catalog_file))
 cmd_properties["pegasus.catalog.site.file"] = site_catalog_file
 
+compute_site = Site(COMPUTE, arch=Arch.X86_64, os_type=OS.LINUX).add_pegasus_profile(
+    style="condor").add_pegasus_profile(clusters_num=1).add_condor_profile(universe="container")
+if SHARED:
+    compute_site.add_directories(
+        Directory(
+            Directory.SHARED_SCRATCH, str(condorpool_scratch_dir), shared_file_system=SHARED
+        ).add_file_servers(
+            FileServer(
+                "scp://bamboo@bamboo.isi.edu/" + staging_scratch_dir, Operation.ALL
+            )
+        )
+    )
+
 SiteCatalog().add_sites(
     Site(LOCAL, arch=Arch.X86_64, os_type=OS.LINUX, os_release="rhel", os_version="7")
     .add_directories(
@@ -78,20 +91,7 @@ SiteCatalog().add_sites(
     )
     .add_pegasus_profile(clusters_num=1)
     .add_env("SSH_PRIVATE_KEY", "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"),
-    Site(COMPUTE, arch=Arch.X86_64, os_type=OS.LINUX)
-    .add_directories(
-        Directory(
-            Directory.SHARED_SCRATCH, str(condorpool_scratch_dir), shared_file_system=SHARED
-        ).add_file_servers(
-            FileServer(
-                "webdavs://workflow.isi.edu/webdav" + str(condorpool_scratch_dir),
-                Operation.ALL,
-            )
-        )
-    )
-    .add_pegasus_profile(style="condor")
-    .add_pegasus_profile(clusters_num=1)
-    .add_condor_profile(universe="container"),
+    compute_site,
     Site("workflow-webdav", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
         Directory(Directory.SHARED_SCRATCH, staging_scratch_dir).add_file_servers(
             FileServer(
