@@ -196,12 +196,48 @@ follows:
 
 .. note::
 
-   Starting in Pegasus 4.9.1, the container data transfer model has been
-   changed. Instead of data transfers for the job occurring outside the
-   container in the PegasusLite wrapper, they now happen when the user
-   job starts in the container.
+   Starting in Pegasus 5.1.0 release, the default for the  container data transfer
+   model has been changed back to the default that was for 5.0.0 release. The data
+   transfers for the job occurring outside the container in the PegasusLite wrapper,
+   instead happening inside the container, when the user job starts in the container.
+   However, this behavior can be controlled by setting the property
+   **pegasus.transfer.container.onhost** in the properties file.
 
-In versions of Pegasus >= 4.9.1 the transfers are handled from within
+
+
+Data Transfers for Jobs when running in Container
+=================================================
+
+
+When a job is specified to run in an application container such as Docker or
+Singularity, Pegasus has two options in PegasusLite on how data transfers
+for the job occur. The transfers can happen either
+
+* on the HOST OS before the container in which the job has to execute is
+  invoked OR
+* inside the application container, before the user code is invoked.
+
+You can control the behavior by setting the Boolean property
+**pegasus.transfer.container.onhost** in your properties file.
+
+HOST OS Container Transfers
+---------------------------
+By default, Pegasus will set up the data transfers to happen on the HOST OS
+in the PegasusLite wrapper before the application container is launched.
+Benefits of this approach is that, it does not require Python3 to be
+installed in the container. Python3 is required to run the pegasus
+data transfer tools such as `pegasus-transfer`.
+
+Data Transfers inside the Container
+-----------------------------------
+If the property **pegasus.transfer.container.onhost** is set to false, then
+the data transfers for the job happen inside the container before user code
+is invoked. In this case, the container must have Python3 available.
+This approach does have the benefit of you installing your own
+data transfer tools in the container that are not available on the HostOS
+and to use them for data transfers.
+
+Since in this case, the transfers are handled from within
 the container, and thus container recipes require some extra attention.
 A Dockerfile example that prepares a container for GridFTP transfers is
 provided below.

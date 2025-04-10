@@ -2412,7 +2412,7 @@ Data Staging Configuration Properties
     |                                                       |    pegasus.transfer.worker.package      true           |
     |                                                       |                                                        |
     +-------------------------------------------------------+--------------------------------------------------------+
-    | | Property Key: pegasus.transfer.bypass.input.staging | | When executiing in a non shared filesystem setup     |
+    | | Property Key: pegasus.transfer.bypass.input.staging | | When executing in a non shared filesystem setup      |
     | | Profile Key:N/A                                     | | i.e data configuration set to nonsharedfs or         |
     | | Scope : Properties                                  | | condorio, Pegasus always stages the input files      |
     | | Since : 4.3.0                                       | | through the staging site i.e the stage-in job        |
@@ -2431,6 +2431,19 @@ Data Staging Configuration Properties
     |                                                       | | large number of compute jobs start at the same       |
     |                                                       | | time in a workflow, the input server will see        |
     |                                                       | | a connection from each job.                          |
+    +-------------------------------------------------------+--------------------------------------------------------+
+    | | Property Key: pegasus.transfer.container.onhost     | | When a job is specified to run in an application     |
+    | | Profile Key:N/A                                     | | container such as docker or singularity, Pegasus     |
+    | | Scope : Properties                                  | | has two options in PegasusLite on how data transfers |
+    | | Since : 5.1.0                                       | | for the job occur. The transfers can happen either   |
+    | | Type :Boolean                                       | | on the HOST OS before the container in which the job |
+    | | Default : true                                      | | has to execute OR                                    |
+    | | See Also : pegasus.data.configuration               | | inside the application container, before the user    |
+    |                                                       | | code is invoked.                                     |
+    |                                                       | | This property can be used to control this behavior.  |
+    |                                                       | | Prior to Pegasus 5.1.0 release, the default value    |
+    |                                                       | | for this was false i.e. the data transfers happened  |
+    |                                                       | | inside the application container.                    |
     +-------------------------------------------------------+--------------------------------------------------------+
 
 .. _transfer-props:
