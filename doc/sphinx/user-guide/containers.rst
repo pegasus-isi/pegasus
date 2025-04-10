@@ -171,26 +171,35 @@ follows:
 4. Mounts the job directory into the container as ``/scratch`` for Docker
    containers and as ``/srv`` for Apptainer/Singularity containers
 
-5. Container will run a job specific script created by
+5. If the data transfers for the job are set to happen on the
+   host os (which is the default), pulls in all the relevant input
+   data and executables required by the job in a directory on the
+   HOST OS, that gets mounted in the container.
+
+6. Container will run a job specific script created by
    PegasusLite that does the following:
 
    a. Figures the appropriate Pegasus worker to use in the container if
-      not already installed
+      not already installed.
 
    b. Sets up the job environment to use including transfer and setup of
-      any credentials transferred as part of PegasusLite
+      any credentials transferred as part of PegasusLite.
 
-   c. Pulls in all the relevant input data and executables required by the
-      job
+   c. If the data transfers for the job are set to happen inside the
+      container; pulls in all the relevant input data and executables
+      required by the job.
 
    d. Launches the user application using **pegasus-kickstart**.
 
-6. Optionally, shuts down the container (only applicable for Docker
+   e. If the data transfers for the job are set to happen inside the
+      container; stages out the output data to the staging site.
+
+7. Optionally, shuts down the container (only applicable for Docker
    containers)
 
-7. Ships out the output data to the staging site
+8. Ships out the output data to the staging site
 
-8. Cleans up the directory on the worker node
+9. Cleans up the directory on the worker node
 
 ..
 
@@ -228,6 +237,12 @@ Benefits of this approach is that, it does not require Python3 to be
 installed in the container. Python3 is required to run the pegasus
 data transfer tools such as `pegasus-transfer`.
 
+.. figure:: ../images/containers-datatx-host.png
+   :name: container-datatx-host
+   :align: center
+
+   Figure 1: Data Transfers setup to be on the HOST OS
+
 Data Transfers inside the Container
 -----------------------------------
 If the property **pegasus.transfer.container.onhost** is set to false, then
@@ -236,6 +251,12 @@ is invoked. In this case, the container must have Python3 available.
 This approach does have the benefit of you installing your own
 data transfer tools in the container that are not available on the HostOS
 and to use them for data transfers.
+
+.. figure:: ../images/containers-inside-host.png
+   :name: container-inside-host
+   :align: center
+
+   Figure 1: Data Transfers setup to be inside the Container
 
 Since in this case, the transfers are handled from within
 the container, and thus container recipes require some extra attention.
