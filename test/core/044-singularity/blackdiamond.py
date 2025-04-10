@@ -76,7 +76,7 @@ if SHARED:
             Directory.SHARED_SCRATCH, str(condorpool_scratch_dir), shared_file_system=SHARED
         ).add_file_servers(
             FileServer(
-                "scp://bamboo@bamboo.isi.edu/" + staging_scratch_dir, Operation.ALL
+                "scp://bamboo@bamboo.isi.edu/" + condorpool_scratch_dir, Operation.ALL
             )
         )
     )
