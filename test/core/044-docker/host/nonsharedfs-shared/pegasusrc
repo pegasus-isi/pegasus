@@ -1,0 +1,7 @@
+pegasus.catalog.site.file=./sites.yml
+pegasus.catalog.site YAML
+pegasus.data.configuration = nonsharedfs
+
+pegasus.catalog.transformation YAML
+pegasus.catalog.transformation.file ./transformations.yml
+
