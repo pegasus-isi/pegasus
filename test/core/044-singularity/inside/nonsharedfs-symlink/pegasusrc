@@ -7,3 +7,6 @@ pegasus.catalog.transformation.file ./transformations.yml
 
 pegasus.transfer.links = true
 pegasus.transfer.bypass.input.staging=true
+
+# make the transfers happen inside the container for a job
+pegasus.transfer.container.onhost = false

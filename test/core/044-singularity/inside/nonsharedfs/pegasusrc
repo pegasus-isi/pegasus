@@ -4,3 +4,6 @@ pegasus.data.configuration = nonsharedfs
 
 pegasus.catalog.transformation.file ./transformations.yml
 pegasus.catalog.transformation YAML
+
+# make the transfers happen inside the container for a job
+pegasus.transfer.container.onhost = false
