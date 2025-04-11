@@ -252,7 +252,7 @@ This approach does have the benefit of you installing your own
 data transfer tools in the container that are not available on the HostOS
 and to use them for data transfers.
 
-.. figure:: ../images/containers-inside-host.png
+.. figure:: ../images/containers-datatx-inside.png
    :name: container-inside-host
    :align: center
 
