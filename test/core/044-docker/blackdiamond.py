@@ -25,6 +25,7 @@ TEST_NAME = sys.argv[1]
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-5.0-" + datetime.now().strftime("%s")
 TOP_DIR = Path.cwd()
+BASE_TEST = TOP_DIR.name
 WORK_DIR = TOP_DIR / "work" / PEGASUS_VERSION / TEST_NAME
 SUBMIT_DIR = TOP_DIR / TEST_NAME / "submit"
 
@@ -55,11 +56,11 @@ logging.debug(f"Staging site for the test is {STAGING}")
 shared_scratch_dir = str(WORK_DIR / "shared-scratch")
 staging_scratch_dir = str(WORK_DIR / "staging-site" / "scratch")
 local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
-condorpool_scratch_dir = "/scitech/shared/scratch-90-days/{}/{}/scratch".format(
-    PEGASUS_VERSION, TEST_NAME
+condorpool_scratch_dir = "/scitech/shared/scratch-90-days/{}/{}/{}/scratch".format(
+    PEGASUS_VERSION, BASE_TEST, TEST_NAME
 )
-condorpool_shared_dir = "/scitech/shared/scratch-90-days/{}/{}/shared".format(
-    PEGASUS_VERSION, TEST_NAME
+condorpool_shared_dir = "/scitech/shared/scratch-90-days/{}/{}/{}/shared".format(
+    PEGASUS_VERSION, BASE_TEST, TEST_NAME
 )
 
 cmd_properties = {}
