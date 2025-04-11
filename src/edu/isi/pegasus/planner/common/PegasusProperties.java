@@ -1429,7 +1429,7 @@ public class PegasusProperties implements Cloneable {
      * @see #PEGASUS_TRANSFER_CONTAINER_ON_HOST
      */
     public boolean containerTransfersOnHOSTOS() {
-        return Boolean.parse(mProps.getProperty(PEGASUS_TRANSFER_CONTAINER_ON_HOST), false);
+        return Boolean.parse(mProps.getProperty(PEGASUS_TRANSFER_CONTAINER_ON_HOST), true);
     }
 
     // REPLICA SELECTOR FUNCTIONS
