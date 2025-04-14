@@ -54,10 +54,13 @@ logging.debug(f"Staging site for the test is {STAGING}")
 shared_scratch_dir = str(WORK_DIR / "shared-scratch")
 staging_scratch_dir = str(WORK_DIR / "staging-site" / "scratch")
 local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
-condorpool_scratch_dir = "/scitech/shared/scratch-90-days/{}/{}/scratch".format(
+
+# /scitech/shared/scratch-90-days/bamboo/050-container-universe/ is mounted via
+# SINGULARITY_BIND_EXPR in the condor config of the test pool
+condorpool_scratch_dir = "/scitech/shared/scratch-90-days/bamboo/050-container-universe/{}/{}/scratch".format(
     PEGASUS_VERSION, TEST_NAME
 )
-condorpool_shared_dir = "/scitech/shared/scratch-90-days/{}/{}/shared".format(
+condorpool_shared_dir = "/scitech/shared/scratch-90-days/bamboo/050-container-universe/{}/{}/shared".format(
     PEGASUS_VERSION, TEST_NAME
 )
 
