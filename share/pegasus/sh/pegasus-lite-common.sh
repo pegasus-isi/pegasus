@@ -77,14 +77,14 @@ pegasus_lite_location()
     # try ipv4 first - it provides more accurate results in the geoip lookup
 
     if (curl --version) >/dev/null 2>&1; then
-        location=$(curl -s -S --insecure --max-time 20 --ipv4 https://location.scitech.group/v1/ 2>/dev/null || \
-                   curl -s -S --insecure --max-time 20 https://location.scitech.group/v1/ 2>/dev/null)
+        location=$(curl -s -S --insecure --max-time 60 --retry 0 --ipv4 https://location.scitech.group/v1/ 2>/dev/null || \
+                   curl -s -S --insecure --max-time 60 --retry 0 https://location.scitech.group/v1/ 2>/dev/null)
     fi
 
     if [ "x$location" = "x" ]; then
         if (wget --version) >/dev/null 2>&1; then
-            location=$(wget -q -O - --inet4-only https://location.scitech.group/v1/ 2>/dev/null || \
-                       wget -q -O - https://location.scitech.group/v1/ 2>/dev/null)
+            location=$(wget -q --timeout=60 --tries=1 -O - --inet4-only https://location.scitech.group/v1/ 2>/dev/null || \
+                       wget -q --timeout=60 --tries=1 -O - https://location.scitech.group/v1/ 2>/dev/null)
         fi
     fi
 
