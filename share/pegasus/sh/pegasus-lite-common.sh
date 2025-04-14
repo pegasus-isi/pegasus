@@ -91,6 +91,7 @@ pegasus_lite_location()
     if [ "x$location" != "x" ]; then
         echo "$location" >$PEGASUS_MULTIPART_DIR/location.yaml || true
     fi
+    return 0
 }
 
 
@@ -587,9 +588,9 @@ pegasus_lite_init()
         fi
         pegasus_lite_log "$out"
 
-	if [ "X$pegasus_metrics" = "Xtrue" ]; then
-            pegasus_lite_location
-	fi
+        if [ "X$pegasus_metrics" = "Xtrue" ]; then
+            pegasus_lite_location || true
+        fi
     fi
 
     # for staged credentials, expand the paths and set strict permissions
