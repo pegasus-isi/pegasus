@@ -114,6 +114,57 @@ should be hosted somewhere and made accessible via a protocol such as HTTP.
    tc.add_transformations(preprocess, process_text_2nd_pass)
 
 
+.. _containers-container-universe:
+
+Configuring Workflows To Use HTCondor Container Universe
+--------------------------------------------------------
+
+Pegasus introduced support for containers in 4.8.0 in 2017. At that time, HTCondor
+did not have first class support for containers. In addition, any support for
+containers was tied to when running in pure HTCondor environments, and not available
+for example when running in grid universe (used for submitting jobs to local HPC clusters).
+Keeping this in mind, and also to have the most flexibility we decided to manage
+the staging of the application container for the job in the PegasusLite job wrapper
+that gets invoked when a job is launched in the worker node.
+This allowed us to bring container support to all the environments Pegasus supports.
+
+While these limitations still exist, HTCondor support for containers has greatly
+improved in pure HTCondor environments such as Path and OSPool.
+Keeping this in mind, Pegasus now has support for *container* universe in Pegasus
+whereby we delegate the container management (invoking the container, launching the user job,
+stopping the container) to HTCondor for those environments.
+In order to enable this, you would need to add a condor profile with
+key universe and value set to “container” for your execution site in the Site Catalog.
+
+A sample YAML snippet is included below
+
+.. code-block:: yaml
+
+    - name: condorpool
+      arch: x86_64
+      os.type: linux
+      directories: []
+      profiles:
+        condor: {universe: container}
+        pegasus: {style: condor, clusters.num: 1}
+
+. note::
+
+    We only support Apptainer/Singularity containers to be launched in the container universe.
+    When enabled, Pegasus will stage-in the container as part of the data stage-in nodes in the
+    executable workflow, and place them in the user submit directory. The container then gets
+    transferred to the worker node where the user job is launched using in-built
+    HTCondor file transfers.
+
+**Symlinking of Data**
+
+In case you are symlinking of data or using the shared filesystem for data staging and want
+those directories to be mounted in the container, you need to update the EP (Execution Point)
+condor configuration to specify the variable SINGULARITY_BIND_EXPR .
+More details can be found in the HTCondor documentation
+`here <https://htcondor.readthedocs.io/en/latest/admin-manual/ep-policy-configuration.html#apptainer-and-singularity-support>`__  .
+
+
 .. _containers-osg:
 
 Containers on OSG
