@@ -309,9 +309,14 @@ public class Transfer implements SLS {
         // PM-1197 check to see if a job is to be launched in a container
         Container c = job.getContainer();
         String containerLFN = null;
+        boolean jobRunsInContainerUniverse = job.runsInContainerUniverse();
         if (c != null) {
             containerLFN = c.getLFN();
-            if (symlinkingEnabledForJob && c.getMountPoints().isEmpty()) {
+            if (!jobRunsInContainerUniverse
+                    && // PM-1950 we do enable symlinking for container universe jobs
+                    // mount points are added via condor config of the execute points
+                    symlinkingEnabledForJob
+                    && c.getMountPoints().isEmpty()) {
                 mLogger.log(
                         "Symlink of data files will be disabled because job "
                                 + job.getID()
@@ -320,8 +325,6 @@ public class Transfer implements SLS {
                         LogManager.DEBUG_MESSAGE_LEVEL);
             }
         }
-
-        boolean jobRunsInContainerUniverse = job.runsInContainerUniverse();
 
         String computeSite = job.getSiteHandle();
         SiteCatalogEntry computeSiteEntry = this.mSiteStore.lookup(computeSite);
@@ -443,7 +446,9 @@ public class Transfer implements SLS {
                 if (symlink) {
                     // the file is candidate for symlinking
                     // however extra checks when a jobs runs inside a container
-                    symlink = symlinkingEnabled(c, pf, sources, job.getID());
+                    symlink =
+                            symlinkingEnabled(
+                                    c, pf, sources, job.getID(), jobRunsInContainerUniverse);
                     if (symlink && !lfn.equals(containerLFN)) {
                         // we don't want pegasus-transfer to fail in PegasusLite
                         // on the missing source path that is only visible in the container
@@ -899,10 +904,16 @@ public class Transfer implements SLS {
      * @param pf the PegasusFile object
      * @param sources the sources from where it has to be retrieved
      * @param jobID the id of the job
+     * @param runsInContainerUniverse boolean indicating whether a job is set to run in container
+     *     universe
      * @return boolean
      */
     protected boolean symlinkingEnabled(
-            Container c, PegasusFile pf, Collection<ReplicaCatalogEntry> sources, String jobID) {
+            Container c,
+            PegasusFile pf,
+            Collection<ReplicaCatalogEntry> sources,
+            String jobID,
+            boolean runsInContainerUniverse) {
         if (c == null) {
             throw new IllegalArgumentException("Container cannot be null");
         }
@@ -914,6 +925,14 @@ public class Transfer implements SLS {
         // container image.
         if (!lfn.equals(containerLFN)) {
             symlink = false;
+
+            // PM-1950 if a job is being run in container universe, then
+            // mount points are specified in condor config of execution points
+            // nothing Pegasus can do on extra checks
+            if (runsInContainerUniverse) {
+                return true;
+            }
+
             // PM-1298 check if source file directory is mounted
             for (ReplicaCatalogEntry source : sources) {
                 String sourceURL = source.getPFN();
