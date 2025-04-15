@@ -449,9 +449,10 @@ public class Transfer implements SLS {
                     symlink =
                             symlinkingEnabled(
                                     c, pf, sources, job.getID(), jobRunsInContainerUniverse);
-                    if (symlink && !lfn.equals(containerLFN)) {
+                    if (symlink && !lfn.equals(containerLFN) && this.mTransfersOnHostOS) {
                         // we don't want pegasus-transfer to fail in PegasusLite
                         // on the missing source path that is only visible in the container
+                        // GH-2104 we only set it to false if transfers are happening on the HOST OS
                         ft.setVerifySymlinkSource(false);
                     }
 

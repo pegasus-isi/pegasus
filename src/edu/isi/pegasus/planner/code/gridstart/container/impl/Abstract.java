@@ -186,10 +186,10 @@ public abstract class Abstract implements ContainerShellWrapper {
 
             // PM-1321 , PM-1298 commented because transfers are inside
             // the container. We should fail if symlink does not exist
-            /*if( !ft.verifySymlinkSource() ){
+            // GH-2104 when tx runs inside container, this will be set to true
+            if (!ft.verifySymlinkSource()) {
                 sb.append("   \"verify_symlink_source\": false").append(",\n");
             }
-            */
 
             sb.append("   \"src_urls\": [");
 
