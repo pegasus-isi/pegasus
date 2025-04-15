@@ -148,7 +148,7 @@ A sample YAML snippet is included below
         condor: {universe: container}
         pegasus: {style: condor, clusters.num: 1}
 
-. note::
+.. note::
 
     We only support Apptainer/Singularity containers to be launched in the container universe.
     When enabled, Pegasus will stage-in the container as part of the data stage-in nodes in the
