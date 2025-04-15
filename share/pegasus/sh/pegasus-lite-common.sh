@@ -166,7 +166,7 @@ pegasus_lite_internal_wp_shipped()
 
         # determine the path of the worker package - this might not match the planner/lite versions
         # as the user might have specified a different worker package
-        worker_package_dir=$(tar tzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz | head | sed 's;/.*;;' | sort | uniq)
+        worker_package_dir=$(tar tzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz 2>/dev/null | head | sed 's;/.*;;' | sort | uniq)
 
         mv ${worker_package_dir} ${worker_package_dir}-${system}
         unset PEGASUS_HOME
