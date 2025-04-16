@@ -74,6 +74,12 @@ public class Condor implements SLS {
      */
     private Transfer mTransferSLSHandle;
 
+    /**
+     * Boolean indicating whether transfers have to happen on the HOST OS or not, if a job is set to
+     * run inside a container.
+     */
+    private boolean mTransfersOnHostOS;
+
     /** The default constructor. */
     public Condor() {}
 
@@ -90,6 +96,7 @@ public class Condor implements SLS {
         mPlannerCache = bag.getHandleToPlannerCache();
         mTransferSLSHandle = new Transfer();
         mTransferSLSHandle.initialize(bag);
+        mTransfersOnHostOS = mProps.containerTransfersOnHOSTOS();
     }
 
     /**
@@ -194,6 +201,11 @@ public class Condor implements SLS {
         String destDir = workerNodeDirectory;
 
         Container c = job.getContainer();
+
+        // GH-2105 PM-1875 we escape varialbe if job run in container AND
+        // data tx is inside the container
+        boolean escapeEnvVariable = (job.getContainer() != null && this.mTransfersOnHostOS);
+
         String containerLFN = c == null ? null : c.getLFN();
         boolean jobRunsInContainerUniverse = job.runsInContainerUniverse();
         for (Iterator it = files.iterator(); it.hasNext(); ) {
@@ -233,11 +245,7 @@ public class Condor implements SLS {
             // before PegasusLitejob starts
             result.add(
                     fileTransferForMoveOfInputs(
-                            pf,
-                            job.getSiteHandle(),
-                            destDir,
-                            // PM-1875 we expand escape varialbe if job run in container
-                            job.getContainer() != null));
+                            pf, job.getSiteHandle(), destDir, escapeEnvVariable));
         }
 
         if (!bypassTXs.isEmpty()) {
