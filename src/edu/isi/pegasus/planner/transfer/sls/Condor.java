@@ -204,7 +204,7 @@ public class Condor implements SLS {
 
         // GH-2105 PM-1875 we escape varialbe if job run in container AND
         // data tx is inside the container
-        boolean escapeEnvVariable = (job.getContainer() != null && this.mTransfersOnHostOS);
+        boolean escapeEnvVariable = (job.getContainer() != null && !this.mTransfersOnHostOS);
 
         String containerLFN = c == null ? null : c.getLFN();
         boolean jobRunsInContainerUniverse = job.runsInContainerUniverse();
