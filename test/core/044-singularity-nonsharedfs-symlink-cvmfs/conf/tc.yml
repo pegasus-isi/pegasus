@@ -41,7 +41,7 @@ transformations:
             foo: bar
 
 containers:
-  - image: file:///cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-el7:latest
+  - image: file:///cvmfs/singularity.opensciencegrid.org/htc/rocky:9
     image.site: condorpool
     profiles:
       env:
