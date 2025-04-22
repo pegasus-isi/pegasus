@@ -132,7 +132,7 @@ if SYMLINK:
 base_container = Container(
     "centos-osgvo-el7",
     Container.SINGULARITY,
-    image_site="local",
+    image_site="condorpool" if CONTAINER_ON_CVMFS else "local",
     image="file:///cvmfs/singularity.opensciencegrid.org/htc/rocky:9"
     if CONTAINER_ON_CVMFS else
     "scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
