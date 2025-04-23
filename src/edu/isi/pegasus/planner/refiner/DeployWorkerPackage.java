@@ -205,6 +205,7 @@ public class DeployWorkerPackage extends Engine {
     private static Set<String> supportedOSReleaseAndVersions() {
         if (mSupportedOSReleaseVersions == null) {
             mSupportedOSReleaseVersions = new HashSet();
+            mSupportedOSReleaseVersions.add("alpine_3");
             mSupportedOSReleaseVersions.add("rhel_8");
             mSupportedOSReleaseVersions.add("rhel_9");
             mSupportedOSReleaseVersions.add("rhel_10");
