@@ -588,6 +588,11 @@ pegasus_lite_init()
         fi
         pegasus_lite_log "$out"
 
+        # temp debugging
+        echo 1>&2
+        env 1>&2
+        echo 1>&2
+
         if [ "X$pegasus_metrics" = "Xtrue" ]; then
             pegasus_lite_location || true
         fi
