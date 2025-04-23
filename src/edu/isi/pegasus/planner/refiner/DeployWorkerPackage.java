@@ -205,15 +205,15 @@ public class DeployWorkerPackage extends Engine {
     private static Set<String> supportedOSReleaseAndVersions() {
         if (mSupportedOSReleaseVersions == null) {
             mSupportedOSReleaseVersions = new HashSet();
-            mSupportedOSReleaseVersions.add("rhel_7");
             mSupportedOSReleaseVersions.add("rhel_8");
-            mSupportedOSReleaseVersions.add("deb_8");
-            mSupportedOSReleaseVersions.add("deb_9");
-            mSupportedOSReleaseVersions.add("deb_10");
-            mSupportedOSReleaseVersions.add("ubuntu_16");
-            mSupportedOSReleaseVersions.add("ubuntu_18");
-            mSupportedOSReleaseVersions.add("ubuntu_20");
-            mSupportedOSReleaseVersions.add("macos_10");
+            mSupportedOSReleaseVersions.add("rhel_9");
+            mSupportedOSReleaseVersions.add("rhel_10");
+            mSupportedOSReleaseVersions.add("deb_11");
+            mSupportedOSReleaseVersions.add("deb_12");
+            mSupportedOSReleaseVersions.add("ubuntu_22");
+            mSupportedOSReleaseVersions.add("ubuntu_24");
+            mSupportedOSReleaseVersions.add("macos_14");
+            mSupportedOSReleaseVersions.add("macos_15");
         }
         return mSupportedOSReleaseVersions;
     }
