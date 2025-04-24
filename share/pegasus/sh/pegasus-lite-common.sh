@@ -30,7 +30,7 @@ if [ "X$PATH" = "X" ]; then
 fi
 
 # a default used if no other worker packages can be found
-pegasus_lite_default_system="x86_64_rhel_9"
+pegasus_lite_default_system="x86_64_rhel_8"
 
 # remember where we started from
 pegasus_lite_start_dir=`pwd`
@@ -273,7 +273,7 @@ pegasus_lite_internal_wp_download()
     system=$(pegasus_lite_get_system)
     if [ $? != 0 ]; then
         # not sure what system we are on - try the default package
-        system="x86_64_rhel_9"
+        system="x86_64_rhel_8"
     fi
 
     # Before we download from the Pegasus server, see if we can find a version
