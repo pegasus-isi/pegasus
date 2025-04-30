@@ -565,11 +565,11 @@ This section describes the dependencies between the jobs.
 
 .. code-block:: yaml
 
-jobDependencies:
-- id: ID0000001
-   children:
-      - ID0000002
-      - ID0000003
+    jobDependencies:
+    - id: ID0000001
+       children:
+          - ID0000002
+          - ID0000003
 
 
 Under *jobDependencies* you can list an array of job *id* elements.
