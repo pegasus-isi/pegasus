@@ -190,7 +190,7 @@ public class DeployWorkerPackage extends Engine {
         // singleton access
         if (mOSToNMIOSReleaseAndVersion == null) {
             mOSToNMIOSReleaseAndVersion = new HashMap();
-            mOSToNMIOSReleaseAndVersion.put(SysInfo.OS.linux, "rhel_9");
+            mOSToNMIOSReleaseAndVersion.put(SysInfo.OS.linux, "rhel_8");
             mOSToNMIOSReleaseAndVersion.put(SysInfo.OS.macosx, "macos_14");
         }
         return mOSToNMIOSReleaseAndVersion;
