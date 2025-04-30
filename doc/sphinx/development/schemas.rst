@@ -320,11 +320,11 @@ be omitted). The *name* is a mandatory attribute.
 Graph Nodes
 ~~~~~~~~~~~
 
-The nodes in the DAX comprise regular job nodes, already instantiated
-sub-workflows as dag nodes, and still to be instantiated dax nodes. Each
-of the graph nodes can has a mandatory *id* attribute. The *id*
-attribute is currently a restriction of type *NodeIdentifierPattern*
-type, which is a restriction of the ``xs:NMTOKEN`` type to letters,
+The nodes in the abstract workflow comprise regular job nodes, already
+instantiated sub-workflows as dag nodes, and still to be instantiated
+abstract workflow nodes. Each of the graph nodes can has a mandatory
+*id* attribute. The *id* attribute is currently a restriction of type
+*NodeIdentifierPattern* type, which restricts the id to letters,
 digits, hyphen and underscore.
 
 The *level* attribute is deprecated, as the planner will trust its own
@@ -343,7 +343,7 @@ defined in the *AbstractJobType* declaration in the schema definition:
 -  0 or 1 *argument* element to declare the command-line of the job's
    invocation.
 
--  0 or more *profile* elements to abstract away site-specific or
+-  0 or more *profile* array to abstract away site-specific or
    job-specific details.
 
 -  0 or 1 *stdin* element to link a logical file the the job's standard
@@ -355,10 +355,10 @@ defined in the *AbstractJobType* declaration in the schema definition:
 -  0 or 1 *stderr* element to link a logical file to the job's standard
    error.
 
--  0 or more *uses* elements to declare consumed data files and produced
+-  0 or more *uses* array to declare consumed data files and produced
    data files.
 
--  0 or more *invoke* elements to solicit
+-  0 or more *hooks* array to solicit
    `notifications <#notifications>`__ whence a job reaches a certain
    state in its life-cycle.
 
@@ -397,11 +397,48 @@ transformation catalog.
        <invoke when="at_end"><![CDATA[/path/to arg arg]]></invoke>
      </job>
 
-The *argument* element contains the complete command-line that is needed
+.. code-block:: yaml
+
+    jobs:
+      - type: job
+        name: preprocess
+        id: ID0000001
+        arguments: [-a, preprocess, -T, "3", -i, f.a, -o, f.b1, f.b2]
+        uses:
+            - lfn: f.a
+            metadata:
+               creator: vahi
+            type: input
+            - lfn: f.b1
+              type: output
+              stageOut: true
+              registerReplica: true
+            - lfn: f.b2
+              type: output
+              stageOut: true
+              registerReplica: true
+         profiles:
+                env: {APP_HOME: /tmp/myscratch, JAVA_HOME: /opt/java/1.6}
+         metadata:
+            time: "60"
+         hooks:
+            shell:
+            - _on: start
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+            - _on: end
+               cmd: /pegasus/libexec/notification/email -t notify@example.com
+
+The *type* attribute indicates whether it is a
+
+* job: compute job in the worflow
+* pegasusWorklfow: an abstract workflow embedded as a node in the workflow.
+* condorWorkflow: a condor dag workflow embedded as a node in the workflow.
+
+The *argument* array element contains the complete command-line that is needed
 to invoke the executable. The only variable components are logical
 filenames, as included *file* elements.
 
-The *profile* argument lets you encapsulate site-specific knowledge .
+The *profiles* array lets you encapsulate profiles for various namespaces.
 
 The *stdin*, *stdout* and *stderr* element permits you to connect a
 stdio file descriptor to a logical filename. Note that you will still
@@ -413,10 +450,11 @@ appear on the command-line, it is imperative that you declare even
 hidden files that your task requires in this section, so that the proper
 ancilliary staging- and clean-up tasks can be generated during planning.
 
-The *invoke* element may be specified multiple times, as needed. It has
-a mandatory when attribute with the following value set:
+The *hooks* array may be specified multiple times, as needed. The currently
+supported *shell* hooks have a mandatory _on attribute with the
+following value set:
 
-.. table:: invoke element attributes
+.. table:: shell element attributes
 
    ========== ==================== =====================================================================================================
    keyword    job life-cycle state meaning
@@ -436,11 +474,11 @@ a mandatory when attribute with the following value set:
    In clustered jobs, a notification can only be sent at the start or
    end of the clustered job, not for each member.
 
-Each *invoke* is a simple local invocation of an executable or script
+Each *shell* hook is a simple local invocation of an executable or script
 with the specified arguments. The executable inside the invoke body will
 see the following environment variables:
 
-.. table:: invoke/executable environment variables
+.. table:: shell hook environment variables
 
    ================== ==================== =========================================================================================================================================================
    variable           job life-cycle state meaning
@@ -453,31 +491,31 @@ see the following environment variables:
    PEGASUS_STDERR     always               The filename where *stderr* goes. Empty and possibly non-existent at submit time (though we still have the filename).
    ================== ==================== =========================================================================================================================================================
 
-Generators should use CDATA encapsulated values to the invoke element to
-minimize interference. Unfortunately, CDATA cannot be nested, so if the
-user invocation contains a CDATA section, we suggest that they use
-careful XML-entity escaped strings. The `notifications
-section <#notifications>`__ describes these in further detail.
 
-DAG Nodes
-^^^^^^^^^
+Condor Workflows Nodes
+^^^^^^^^^^^^^^^^^^^^^^
 
 A workflow that has already been concretized, either by an earlier run
 of Pegasus, or otherwise constructed for DAGMan execution, can be
 included into the current workflow using the *dag* element.
 
-::
+.. code-block:: yaml
 
-     <dag id="ID000003" name="black.dag" node-label="foo" >
-       <profile namespace="dagman" key="DIR">/dag-dir/test</profile>
-       <invoke> <!-- optional, should be possible --> </invoke>
-       <uses file="sites.xml" link="input" register="false" transfer="true" type="data"/>
-     </dag>
+    jobs:
+        - type: condorWorkflow
+          file: black.dag
+          id: ID0000001
+          arguments: []
+          uses:
+          - {lfn: black.dag, type: input}
+          profiles:
+            dagman: {MAXJOBS: '10', dir: /dag-dir/test}
+
 
 The *id* and *node-label* attributes were described
-`previously <#api-graph-nodes>`__. The *name* attribute refers to a file
+`previously <#api-graph-nodes>`__. The *file* attribute refers to a file
 from the File Catalog that provides the actual DAGMan DAG as data
-content. The *dag* element features optional *profile* elements. These
+content. The *condorWorkflow* job features optional *profile* elements. These
 would most likely pertain to the ``dagman`` and ``env`` profile
 namespaces. It should be possible to have the optional *notify* element
 in the same manner as for jobs.
@@ -486,21 +524,25 @@ A graph node that is a dag instead of a job would just use a different
 submit file generator to create a DAGMan invocation. There can be an
 *argument* element to modify the command-line passed to DAGMan.
 
-DAX Nodes
-^^^^^^^^^
+Pegasus Workflow Nodes
+^^^^^^^^^^^^^^^^^^^^^^
 
 A still to be planned workflow incurs an invocation of the Pegasus
 planner as part of the workflow. This still abstract sub-workflow uses
 the *dax* element.
 
-::
+.. code-block:: yaml
 
-     <dax id="ID000002" name="black.dax" node-label="bar" >
-       <profile namespace="env" key="foo">bar</profile>
-       <argument>-Xmx1024 -Xms512 -Dpegasus.dir.storage=storagedir  -Dpegasus.dir.exec=execdir -o local --dir ./datafind -vvvvv --force -s dax_site </argument>
-       <invoke> <!-- optional, may not be possible here --> </invoke>
-       <uses file="sites.xml" link="input" register="false" transfer="true" type="data" />
-     </dax>
+    jobs:
+    - type: pegasusWorkflow
+      file: blackdiamond.yml
+      id: ID0000001
+      arguments: [--input-dir, input, --output-sites, local, -vvv, --force]
+      uses:
+      - {lfn: blackdiamond.yml, type: input}
+      - {lfn: f.d, type: output, stageOut: true, registerReplica: true}
+      profiles:
+        dagman: {MAXJOBS: '10'}
 
 In addition to the *id* and *node-label* attributes, See `Graph
 Nodes <#api-graph-nodes>`__. The *name* attribute refers to a file from
@@ -510,135 +552,150 @@ These would most likely pertain to the ``pegasus``, ``dagman`` and
 ``env`` profile namespaces. It may be possible to have the optional
 *notify* element in the same manner as for jobs.
 
-A graph node that is a *dax* instead of a job would just use yet another
-submit file and pre-script generator to create a DAGMan invocation. The
-*argument* string pertains to the command line of the to-be-generated
-DAGMan invocation.
+A graph node that is a job of type *pegasusWorkflow* instead of a job would
+just use yet another submit file and pre-script generator to create a DAGMan invocation.
+The *argument* string pertains to the command line of the to-be-generated
+**pegasus-plan** invocation.
 
-Inner ADAG Nodes
-^^^^^^^^^^^^^^^^
-
-While completeness would argue to have a recursive nesting of *adag*
-elements, such recursive nestings are currently not supported, not even
-in the schema. If you need to nest workflows, please use the *dax* or
-*dag* element to achieve the same goal.
 
 The Dependency Section
 ~~~~~~~~~~~~~~~~~~~~~~
 
 This section describes the dependencies between the jobs.
 
-::
+.. code-block:: yaml
 
-     <!-- part 3: list of control-flow dependencies -->
-     <child ref="ID000002">
-       <parent ref="ID000001" edge-label="edge1" />
-     </child>
-     <child ref="ID000003">
-       <parent ref="ID000001" edge-label="edge2" />
-     </child>
-     <child ref="ID000004">
-       <parent ref="ID000002" edge-label="edge3" />
-       <parent ref="ID000003" edge-label="edge4" />
-     </child>
+jobDependencies:
+- id: ID0000001
+   children:
+      - ID0000002
+      - ID0000003
 
-Each *child* element contains one or more *parent* element. Either
-element refers to a *job*, *dag* or *dax* element id attribute using the
-*ref* attribute. In this version, we relaxed the ``xs:IDREF`` constraint
-in favor of a restriction on the ``xs:NMTOKEN`` type to permit a larger
-set of identifiers.
 
-The *parent* element has an optional *edge-label* attribute.
+Under *jobDependencies* you can list an array of job *id* elements.
+For each *id* you can specify a children sub-array that lists the
+ids of the dependent job *ids*
 
-   **Warning**
 
-   The *edge-label* attribute is currently unused.
+Abstract Workflow YAML Schema Example
+-------------------------------------
 
-Its goal is to annotate edges when drawing workflow graphs.
-
-Closing
-~~~~~~~
-
-As any XML element, the root element needs to be closed.
-
-::
-
-   </adag>
-
-DAX XML Schema Example
-----------------------
-
-The following code example shows the XML instance document representing
+The following code example shows the yaml instance document representing
 the diamond workflow.
 
-::
+.. code-block:: yaml
 
-   <?xml version="1.0" encoding="UTF-8"?>
-   <adag xmlns="http://pegasus.isi.edu/schema/DAX"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd"
-    version="3.6" name="diamond" index="0" count="1">
-     <!-- part 1.1: invocations -->
-     <invoke when="on_error">/bin/mailx -s &apos;diamond failed&apos; use@some.domain</invoke>
+    x-pegasus:
+    apiLang: python
+    createdBy: ryantanaka
+    createdOn: 07-24-20T10:08:48Z
+    pegasus: "5.0"
+    name: diamond
+    hooks:
+    shell:
+       - _on: start
+          cmd: /pegasus/libexec/notification/email -t notify@example.com
+       - _on: end
+          cmd: /pegasus/libexec/notification/email -t notify@example.com
+    jobs:
+    - type: job
+       name: preprocess
+       id: ID0000001
+       arguments: [-a, preprocess, -T, "3", -i, f.a, -o, f.b1, f.b2]
+       uses:
+          - lfn: f.a
+          metadata:
+             creator: ryan
+          type: input
+          - lfn: f.b1
+            type: output
+            stageOut: true
+            registerReplica: true
+          - lfn: f.b2
+            type: output
+            stageOut: true
+            registerReplica: true
+       metadata:
+          time: "60"
+       hooks:
+          shell:
+          - _on: start
+             cmd: /pegasus/libexec/notification/email -t notify@example.com
+          - _on: end
+             cmd: /pegasus/libexec/notification/email -t notify@example.com
+    - type: job
+       name: findrange
+       id: ID0000002
+       arguments: [-a, findrange, -T, "3", -i, f.b1, -o, f.c1]
+       uses:
+          - lfn: f.b1
+          type: input
+          - lfn: f.c1
+          type: output
+          stageOut: true
+          registerReplica: true
+       metadata:
+          time: "60"
+       hooks:
+          shell:
+          - _on: start
+             cmd: /pegasus/libexec/notification/email -t notify@example.com
+          - _on: end
+             cmd: /pegasus/libexec/notification/email -t notify@example.com
+    - type: job
+       name: findrange
+       id: ID0000003
+       arguments: [-a, findrange, -T, "3", -i, f.b2, -o, f.c2]
+       uses:
+          - lfn: f.c2
+          type: output
+          stageOut: true
+          registerReplica: true
+          - lfn: f.b2
+          type: input
+       metadata:
+          time: "60"
+       hooks:
+          shell:
+          - _on: start
+             cmd: /pegasus/libexec/notification/email -t notify@example.com
+          - _on: end
+             cmd: /pegasus/libexec/notification/email -t notify@example.com
+    - type: job
+       name: analyze
+       id: ID0000004
+       arguments: [-a, analyze, -T, "3", -i, f.c1, f.c2, -o, f.d]
+       uses:
+          - lfn: f.d
+          metadata:
+             final_output: "true"
+          type: output
+          stageOut: true
+          registerReplica: true
+          - lfn: f.c2
+          type: input
+          - lfn: f.c1
+          type: input
+       metadata:
+          time: "60"
+       hooks:
+          shell:
+          - _on: start
+             cmd: /pegasus/libexec/notification/email -t notify@example.com
+          - _on: end
+             cmd: /pegasus/libexec/notification/email -t notify@example.com
+    jobDependencies:
+    - id: ID0000001
+       children:
+          - ID0000002
+          - ID0000003
+    - id: ID0000002
+       children:
+          - ID0000004
+    - id: ID0000003
+       children:
+          - ID0000004
 
-     <!-- part 1.2: included replica catalog -->
-     <file name="f.a">
-       <pfn url="file:///lfs/voeckler/src/svn/pegasus/trunk/examples/grid-blackdiamond-perl/f.a" site="local" />
-     </file>
-
-     <!-- part 1.3: included transformation catalog -->
-     <executable namespace="diamond" name="preprocess" version="2.0" arch="x86_64" os="linux" installed="false">
-       <profile namespace="globus" key="maxtime">2</profile>
-       <profile namespace="dagman" key="RETRY">3</profile>
-       <pfn url="file:///opt/pegasus/latest/bin/keg" site="local" />
-     </executable>
-     <executable namespace="diamond" name="analyze" version="2.0" arch="x86_64" os="linux" installed="false">
-       <profile namespace="globus" key="maxtime">2</profile>
-       <profile namespace="dagman" key="RETRY">3</profile>
-       <pfn url="file:///opt/pegasus/latest/bin/keg" site="local" />
-     </executable>
-     <executable namespace="diamond" name="findrange" version="2.0" arch="x86_64" os="linux" installed="false">
-       <profile namespace="globus" key="maxtime">2</profile>
-       <profile namespace="dagman" key="RETRY">3</profile>
-       <pfn url="file:///opt/pegasus/latest/bin/keg" site="local" />
-     </executable>
-
-     <!-- part 2: definition of all jobs (at least one) -->
-     <job namespace="diamond" name="preprocess" version="2.0" id="ID000001">
-       <argument>-a preprocess -T60 -i <file name="f.a" /> -o <file name="f.b1" /> <file name="f.b2" /></argument>
-       <uses name="f.b2" link="output" register="false" transfer="true" />
-       <uses name="f.b1" link="output" register="false" transfer="true" />
-       <uses name="f.a" link="input" />
-     </job>
-     <job namespace="diamond" name="findrange" version="2.0" id="ID000002">
-       <argument>-a findrange -T60 -i <file name="f.b1" /> -o <file name="f.c1" /></argument>
-       <uses name="f.b1" link="input" register="false" transfer="true" />
-       <uses name="f.c1" link="output" register="false" transfer="true" />
-     </job>
-     <job namespace="diamond" name="findrange" version="2.0" id="ID000003">
-       <argument>-a findrange -T60 -i <file name="f.b2" /> -o <file name="f.c2" /></argument>
-       <uses name="f.b2" link="input" register="false" transfer="true" />
-       <uses name="f.c2" link="output" register="false" transfer="true" />
-     </job>
-     <job namespace="diamond" name="analyze" version="2.0" id="ID000004">
-       <argument>-a analyze -T60 -i <file name="f.c1" /> <file name="f.c2" /> -o <file name="f.d" /></argument>
-       <uses name="f.c2" link="input" register="false" transfer="true" />
-       <uses name="f.d" link="output" register="false" transfer="true" />
-       <uses name="f.c1" link="input" register="false" transfer="true" />
-     </job>
-
-     <!-- part 3: list of control-flow dependencies -->
-     <child ref="ID000002">
-       <parent ref="ID000001" />
-     </child>
-     <child ref="ID000003">
-       <parent ref="ID000001" />
-     </child>
-     <child ref="ID000004">
-       <parent ref="ID000002" />
-       <parent ref="ID000003" />
-     </child>
-   </adag>
 
 The above workflow defines the black diamond from the abstract workflow
 section of the `Introduction <#about>`__ chapter. It will require
@@ -648,7 +705,7 @@ necessary declarations.
 The file element defines the location of the required input file in
 terms of the local machine. Please note that
 
--  The **file** element declares the required input file "f.a" in terms
+-  The **uses** element declares the required input file "f.a" in terms
    of the local machine. Please note that if you plan the workflow for a
    remote site, the has to be some way for the file to be staged from
    the local site to the remote site. While Pegasus will augment the
@@ -656,14 +713,7 @@ terms of the local machine. Please note that
    and remote site have to be set up properlyl. For a locally run
    workflow you don't need to do anything.
 
--  The **executable** elements declare the same executable keg that is
-   to be run for each the logical transformation in terms of the remote
-   site *futuregrid*. To declare it for a local site, you would have to
-   adjust the *site* attribute's value to ``local``. This section also
-   shows that the same executable may come in different guises as
-   transformation.
-
--  The **job** elements define the workflow's logical constituents, the
+-  The **jobs** array define the workflow's logical constituents, the
    way to invoke the ``keg`` command, where to put filenames on the
    commandline, and what files are consumed or produced. In addition to
    the direction of files, further attributes determine whether to
@@ -673,6 +723,6 @@ terms of the local machine. Please note that
    intermediary files. Typically, you would also want to register the
    data products in the replica catalog, especially in larger scenarios.
 
--  The **child** elements define the control flow between the jobs.
+-  The **jobDependencies** elements define the control flow between the jobs.
 
 
