@@ -360,18 +360,31 @@ public class GridStartFactory {
             // String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
 
             if ((conf.equalsIgnoreCase(PegasusConfiguration.CONDOR_CONFIGURATION_VALUE)
-                            || conf.equalsIgnoreCase(
-                                    PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE))
-                    && propValue == null) {
+                    || conf.equalsIgnoreCase(
+                            PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE))) {
 
-                if (job instanceof AggregatedJob
-                        && job.getTXName().equals(AWSBatch.COLLAPSE_LOGICAL_NAME)) {
-                    return PegasusAWSBatchGS.CLASSNAME;
+                if (propValue == null) {
+                    if (job instanceof AggregatedJob
+                            && job.getTXName().equals(AWSBatch.COLLAPSE_LOGICAL_NAME)) {
+                        return PegasusAWSBatchGS.CLASSNAME;
+                    }
+
+                    // PegasusLite for condorio and nonsharedfs mode
+                    // as long as user did not specify explicilty in the properties file
+                    return "PegasusLite";
+                } else {
+                    // GH-2074 PM-1968 in the PegasusLite mode, the grid start wrapper
+                    // has to be PegasusLite. sanity check to ensure that
+                    if (job.getJobType() == Job.COMPUTE_JOB
+                            && !propValue.equalsIgnoreCase("PegasusLite")) {
+
+                        throw new GridStartFactoryException(
+                                "Invalid Gridstart value of "
+                                        + propValue
+                                        + " specified for job to be launched via PegasusLite: "
+                                        + job.getID());
+                    }
                 }
-
-                // PegasusLite for condorio and nonsharedfs mode
-                // as long as user did not specify explicilty in the properties file
-                return "PegasusLite";
             }
         }
 
