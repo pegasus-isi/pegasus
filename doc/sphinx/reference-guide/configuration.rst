@@ -871,6 +871,9 @@ understands.
     |                                            | |   run in a nonshared file system environment and is responsible   |
     |                                            | |   for staging in the input data and staging out the output data   |
     |                                            | |   back to a remote staging site for the job.                      |
+    |                                            | | - **PegasusLite.None**                                            |
+    |                                            | |   This value if set, forces PegasusLite to not launch the job via |
+    |                                            | |   Kickstart.                                                      |
     |                                            | | - **Distribute**                                                  |
     |                                            | |   This wrapper is a HubZero specfiic wrapper that allows compute  |
     |                                            | |   jobs that are scheduled for a local PBS cluster to be run       |
