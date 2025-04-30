@@ -4,21 +4,18 @@
 Schemas
 =======
 
-DAX XML Schema
-==============
+Workflow YAML Schema
+====================
 
-The DAX format is described by the XML schema instance document
-:download:`dax-3.6.xsd <../../schemas/dax-3.6/dax-3.6.xsd>`. A local copy of the
-schema definition is provided in the “etc” directory. The documentation
-of the XML schema and its elements can be found in
-:download:`dax-3.6.html <../../schemas/dax-3.6/dax-3.6.html>` as well as locally in
-``doc/schemas/dax-3.6/dax-3.6.html`` in your Pegasus distribution.
+The workflow (erstwhile called DAX) format is described by the YAML
+schema instance document
+:download:`wf-5.0.yml <../../schemas/5.0/wf-5.0.yml>`.
 
-DAX XML Schema In Detail
-------------------------
+Workflow YAML Schema In Detail
+------------------------------
 
-The DAX file format has four major sections, with the second section
-divided into more sub-sections. The DAX format works on the abstract or
+The abstract workflow file format has four major sections, with the second section
+divided into more sub-sections. The abstract workflow format works on the abstract or
 logical level, letting you focus on the shape of the workflows, what to
 do and what to work upon.
 
@@ -36,8 +33,8 @@ do and what to work upon.
 
    The first section deals with included catalogs. While we do recommend
    to use external replica- and transformation catalogs, it is possible
-   to include some replicas and transformations into the DAX file
-   itself. Any DAX-included entry takes precedence over regular replica
+   to include some replicas and transformations into the abstract workflow file
+   itself. Any workflow-included entry takes precedence over regular replica
    catalog (RC) and transformation catalog (TC) entries.
 
    The first section (and any of its sub-sections) is completely
@@ -87,24 +84,20 @@ do and what to work upon.
 
    Dependencies are directed edges in the workflow graph.
 
-XML Intro
-~~~~~~~~~
+YAML Intro
+~~~~~~~~~~
 
-If you have seen the DAX schema before, not a lot of new items in the
-root element. *However*, we did retire the (old) attributes ending in
-*Count*.
+The Workflow API generated abstract workflows always list the following
+optional attributes under the x-pegasus extensions.
 
-::
+.. code-block:: yaml
 
-   <?xml version="1.0" encoding="UTF-8"?>
-   <!-- generated: 2011-07-28T18:29:57Z -->
-   <adag xmlns="http://pegasus.isi.edu/schema/DAX"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd"
-         version="3.6"
-         name="diamond"
-         index="0"
-         count="1">
+   x-pegasus:
+     apiLang: python
+     createdBy: vahi
+     createdOn: 07-24-20T10:08:48Z
+     pegasus: "5.0"
+     name: diamond
 
 The following attributes are supported for the root element *adag*.
 
@@ -113,13 +106,11 @@ The following attributes are supported for the root element *adag*.
    ========== ========= ================== ======================================================
    attribute  optional? type               meaning
    ========== ========= ================== ======================================================
-   version    required  *VersionPattern*   Version number of DAX instance document. Must be 3.6.
-   name       required  string             name of this DAX (or set of DAXes).
-   count      optional  positiveInteger    size of list of DAXes with this *name*. Defaults to 1.
-   index      optional  nonNegativeInteger current index of DAX with same *name*. Defaults to 0.
-   fileCount  removed   nonNegativeInteger Old 2.1 attribute, removed, do not use.
-   jobCount   removed   positiveInteger    Old 2.1 attribute, removed, do not use.
-   childCount removed   nonNegativeInteger Old 2.1 attribute, removed, do not use.
+   pegasus    required  *VersionPattern*   Version number of YAML instance document. Must be 5.0.
+   name       required  string             name of this abstract workflow
+   apiLang    optional  string             the language of the workflow api used to generate this
+   createdBy  optional  string             the user who created this
+   createdOn  optional  string             the timestamp when it was created
    ========== ========= ================== ======================================================
 
 The *version* attribute is restricted to the regular expression
@@ -139,10 +130,10 @@ Workflow-level Metadata
 
 Metadata associated with the whole workflow.
 
-::
+.. code-block:: yaml
 
-      <metadata key="name">diamond</metadata>
-      <metadata key="createdBy">Karan Vahi</metadata>
+   metadata:
+     creator: vahi
 
 The workflow level metadata maybe used to control the Pegasus Mapper
 behaviour at planning time or maybe propogated to external services
@@ -153,10 +144,14 @@ Workflow-level Notifications
 
 Notifications that are generated when workflow level events happened.
 
-::
+.. code-block:: yaml
 
-     <!-- part 1.1: invocations -->
-     <invoke when="at_end">/bin/date -Ins &gt;&gt; my.log</invoke>
+   hooks:
+   shell:
+     - _on: start
+        cmd: /pegasus/libexec/notification/email -t notify@example.com
+     - _on: end
+        cmd: /pegasus/libexec/notification/email -t notify@example.com
 
 The above snippet will append the current time to a log file in the
 current directory. This is with regards to the pegasus-monitord instance
@@ -182,91 +177,29 @@ The file section acts as in in-file replica catalog (RC). Any files
 declared in this section take precedence over files in external replica
 catalogs during planning.
 
-::
+.. code-block:: yaml
 
-     <!-- part 1.2: included replica catalog -->
-     <file name="example.a" >
-       <!-- profiles are optional -->
-       <!-- The "stat" namespace is ONLY AN EXAMPLE -->
-       <profile namespace="stat" key="size">/* integer to be defined */</profile>
-       <profile namespace="stat" key="md5sum">/* 32 char hex string */</profile>
-       <profile namespace="stat" key="mtime">/* ISO-8601 timestamp */</profile>
+     replicaCatalog:
+        replicas:
+          - lfn: input.txt
+            pfns:
+              - {site: local, pfn: 'http://example.com/pegasus/input/input.txt'}
+            checksum: {sha256: 66a42b4be204c824a7533d2c677ff7cc5c44526300ecd6b450602e06128063f9}
 
-       <!-- Metadata will be supported 4.6 onwards-->
-       <metadata key="timestamp" >/* ISO-8601 *or* 20100417134523:int */</metadata>
-       <metadata key="origin" >ocean</metadata>
-
-       <!-- PFN to by-pass replica catalog -->
-       <!-- The "site attribute is optional -->
-       <pfn url="file:///tmp/example.a" site="local">
-         <profile namespace="stat" key="owner">voeckler</profile>
-       </pfn>
-       <pfn url="file:///storage/funky.a" site="local"/>
-     </file>
-
-     <!-- a more typical example from the black diamond -->
-     <file name="f.a">
-       <pfn url="file:///Users/voeckler/f.a" site="local"/>
-     </file>
-
-The first *file* entry above is an example of a data file with two
-replicas. The *file* element requires a logical file *name*. Each
+The first *replicas* entry above is an example of a data file with single
+replica. The *lfn* attribute signifies logical file *name*. Each
 logical filename may have additional information associated with it,
-enumerated by *profile* elements. Each file entry may have 0 or more
-*metadata* associated with it. Each piece of metadata has a *key* string
-and *type* attribute describing the element's value.
+enumerated by *profile* elements. Each entry in the *replicas* section
+may have 0 or more *metadata* associated with it.
 
-   **Warning**
-
-   The *metadata* element is not support as of this writing! Details may
-   change in the future.
-
-The *file* element can provide 0 or more *pfn* locations, taking
-precedence over the replica catalog. A *file* element that does not name
-any *pfn* children-elements will still require look-ups in external
-replica catalogs. Each *pfn* element names a concrete location of a
-file. Multiple locations constitute replicas of the same file, and are
-assumed to be usable interchangably. The *url* attribute is mandatory,
-and typically would use a file schema URL. The *site* attribute is
-optional, and defaults to value *local* if missing. A *pfn* element may
-have *profile* children-elements, which refer to attributes of the
-physical file. The file-level profiles refer to attributes of the
+Each entry in the *replicas* section can provide 0 or more *pfn* locations,
+taking precedence over the replica catalog. Multiple locations constitute
+replicas of the same file, and are assumed to be usable interchangably.
+The *pfn* attribute is mandatory, and typically would use a file schema URL.
+The *site* attribute is optional, and defaults to value *local* if missing.
+A *pfns* entri may have *profile* children-elements, which refer to attributes
+of the physical file. The file-level profiles refer to attributes of the
 logical file.
-
-.. note::
-
-   The ``stat`` profile namespace is ony an example, and details about
-   stat are not yet implemented. The proper namespaces ``pegasus``,
-   ``condor``, ``dagman``, ``env``, ``hints``, ``globus`` and
-   ``selector`` enjoy full support.
-
-The second *file* entry above shows a usage example from the
-black-diamond example workflow that you are more likely to encouter or
-write.
-
-The presence of an in-file replica catalog lets you declare a couple of
-interesting advanced features. The DAG and DAX file declarations are
-just files for all practical purposes. For deferred planning, the
-location of the site catalog (SC) can be captured in a file, too, that
-is passed to the job dealing with the deferred planning as logical
-filename.
-
-::
-
-     <file name="black.dax" >
-       <!-- specify the location of the DAX file -->
-       <pfn url="file:///Users/vahi/Pegasus/work/dax-3.0/blackdiamond_dax.xml" site="local"/>
-     </file>
-
-     <file name="black.dag" >
-       <!-- specify the location of the DAG file -->
-       <pfn url="file:///Users/vahi/Pegasus/work/dax-3.0/blackdiamond.dag" site="local"/>
-     </file>
-
-     <file name="sites.xml" >
-       <!-- specify the location of a site catalog to use for deferred planning -->
-       <pfn url="file:///Users/vahi/Pegasus/work/dax-3.0/conf/sites.xml" site="local"/>
-     </file>
 
 .. _dax-transformation-catalog:
 
@@ -277,60 +210,26 @@ The executable section acts as an in-file transformation catalog (TC).
 Any transformations declared in this section take precedence over the
 external transformation catalog during planning.
 
-::
+.. code-block:: yaml
 
-     <!-- part 1.3: included transformation catalog -->
-     <executable namespace="example" name="mDiffFit" version="1.0"
-                 arch="x86_64" os="linux" installed="true" >
-       <!-- profiles are optional -->
-       <!-- The "stat" namespace is ONLY AN EXAMPLE! -->
-       <profile namespace="stat" key="size">5000</profile>
-       <profile namespace="stat" key="md5sum">AB454DSSDA4646DS</profile>
-       <profile namespace="stat" key="mtime">2010-11-22T10:05:55.470606000-0800</profile>
-
-       <!-- metadata will be supported in 4.6 -->
-       <metadata key="timestamp" >/* see above */</metadata>
-       <metadata key="origin">ocean</metadata>
-
-       <!-- PFN to by-pass transformation catalog -->
-       <!-- The "site" attribute is optional -->
-       <pfn url="file:///tmp/mDiffFit"          site="local"/>
-       <pfn url="file:///tmp/storage/mDiffFit"  site="local"/>
-     </executable>
-
-     <!-- to be used in compound transformation later -->
-     <executable namespace="example" name="mDiff" version="1.0"
-                 arch="x86_64" os="linux" installed="true" >
-       <pfn url="file:///tmp/mDiff" site="local"/>
-     </executable>
-
-     <!-- to be used in compound transformation later -->
-     <executable namespace="example" name="mFitplane" version="1.0"
-                 arch="x86_64" os="linux" installed="true" >
-       <pfn url="file:///tmp/mDiffFitplane"  site="local">
-         <profile namespace="stat" key="md5sum">0a9c38b919c7809cb645fc09011588a6</profile>
-       </pfn>
-       <invoke when="at_end">/path/to/my_send_email some args</invoke>
-     </executable>
-
-     <!-- a more likely example from the black diamond -->
-     <executable namespace="diamond" name="preprocess" version="2.0"
-                 arch="x86_64"
-                 os="linux"
-                 osversion="2.6.18">
-       <pfn url="file:///opt/pegasus/default/bin/keg" site="local" />
-     </executable>
+     transformationCatalog
+       transformations:
+          - name: keg
+            sites:
+            - {name: condorpool, pfn: /usr/bin/pegasus-keg, type: installed}
+            profiles:
+              env: {APP_HOME: /tmp/myscratch, JAVA_HOME: /opt/java/1.6}
 
 Logical filenames pertaining to a single executables in the
-transformation catalog use the *executable* element. Any *executable*
-element features the optional *namespace* attribute, a mandatory *name*
+transformation catalog use the *transformations* element. Any *transformation*
+entry features the optional *namespace* attribute, a mandatory *name*
 attribute, and an optional *version* attribute. The *version* attribute
 defaults to "1.0" when absent. An executable typically needs additional
 attributes to describe it properly, like the architecture, OS release
-and other flags typically seen with transformations, or found in the
-transformation catalog.
+and other flags typically seen with transformations. They are described
+in the *sites* entries under each *transformations* entry.
 
-.. table:: executable element attributes
+.. table:: transformations entry attributes
 
    ========= ========= ============== =============================================================
    attribute optional? type           meaning
@@ -338,40 +237,40 @@ transformation catalog.
    name      required  string         logical transformation name
    namespace optional  string         namespace of logical transformation, default to *null* value.
    version   optional  VersionPattern version of logical transformation, defaults to "1.0".
-   installed optional  boolean        whether to stage the file (false), or not (true, default).
-   arch      optional  Architecture   restricted set of tokens, see schema definition file.
-   os        optional  OSType         restricted set of tokens, see schema definition file.
-   osversion optional  VersionPattern kernel version as beginning of \`uname -r`.
-   glibc     optional  VersionPattern version of libc.
+   sites     required  yaml array     details about where the transformation resides on 1 or more
+                                      sites.
+   profiles  optional  yaml array     details about the profiles associated with the transformation.
+   hooks     optional  yaml array     details about the shell hooks to be invoked.
+   requires  optional  yaml array     details about dependent transformations required.
    ========= ========= ============== =============================================================
 
-The rationale for giving these flags in the *executable* element header
-is that PFNs are just identical replicas or instances of a given LFN. If
-you need a different 32/64 bit-ed-ness or OS release, the underlying PFN
-would be different, and thus the LFN for it should be different, too.
 
-.. note::
+.. table:: sites entry attributes
 
-   We are still discussing some details and implications of this
-   decision.
+   ========== ========= ============== =============================================================
+   attribute  optional? type           meaning
+   ========== ========= ============== =============================================================
+   name       required  string         the site on which the transformation resides.
+   type       required  string         whether the executable is installed or stageable.
+   pfn        required  string         the pfn of where it is.
+   arch       optional  Architecture   restricted set of tokens such as x86, x86_64 etc.
+   os.type    optional  OSType         restricted set of tokens, such as linux, macosx etc.
+   os.release optional  string         the os release such deb, rhel etc.
+   os.version optional  VersionPattern os version.
+   bypass     optional  boolean        boolean attribute indicate whether to bypass staging.
+   profiles   optional  yaml           details about the profiles associated with the sites entry
+   metadata   optional  yaml           details about the profiles associated with the sites entry
+   container  optional  string         the name of the container in which the job should run.
+   ========== ========= ============== =============================================================
 
-The initial examples come with the same caveats as for the included
-replica catalog.
 
-   **Warning**
-
-   The *metadata* element is not support as of this writing! Details may
-   change in the future.
-
-Similar to the replica catalog, each *executable* element may have 0 or
+Similar to the replica catalog, each *sites* entry may have 0 or
 more *profile* elements abstracting away site-specific details, zero or
-more *metadata* elements, and zero or more *pfn* elements. If there are
-no *pfn* elements, the transformation must still be searched for in the
-external transformation catalog. As before, the *pfn* element may have
-*profile* children-elements, referring to attributes of the physical
-filename itself.
+more *metadata* elements, and a required *pfn* entry. If there are
+no *sites* entry, the transformation must still be searched for in the
+external transformation catalog.
 
-Each *executable* element may also feature *invoke* elements. These
+Each *transformations* entry may also feature *hooks* entry. These
 enable notifications at the appropriate point when every job that uses
 this executable reaches the point of notification. Please refer to the
 `notification section <#notifications>`__ for details and caveats.
@@ -391,16 +290,17 @@ interpreter and the script passed to it. The compound transformation
 helps Pegasus to properly deal with this case, especially when it needs
 to stage executables.
 
-::
+.. code-block:: yaml
 
-     <transformation namespace="example" version="1.0" name="mDiffFit" >
-       <uses name="mDiffFit" />
-       <uses name="mDiff" namespace="example" version="2.0" />
-       <uses name="mFitPlane" />
-       <uses name="mDiffFit.config" executable="false" />
-     </transformation>
+     transformationCatalog
+       transformations:
+          - name: mDiffFit
+            namespace: montage
+            version: 2.0
+            requires: [mDiff, mFitplane]
 
-A *transformation* element declares a set of purely logical entities,
+
+A *transformations* entry declares a set of purely logical entities,
 executables and config (data) files, that are all required together for
 the same job. Being purely logical entities, the lookup happens only
 when the transformation element is referenced (or instantiated) by a job
@@ -410,22 +310,10 @@ The *namespace* and *version* attributes of the transformation element
 are optional, and provide the defaults for the inner uses elements. They
 are also essential for matching the transformation with a job.
 
-The *transformation* is made up of 1 or more *uses* element. Each *uses*
-has a boolean attribute *executable*, ``true`` by default, or ``false``
-to indicate a data file. The *name* is a mandatory attribute, refering
-to an LFN declared previously in the File Catalog (*executable* is
-``false``), Executable Catalog (*executable* is ``true``), or to be
-looked up as necessary at instantiation time. The lookup catalog is
-determined by the *executable* attribute.
-
-After *uses* elements, any number of *invoke* elements may occur to add
-a `notification <#notifications>`__ each whenever this transformation is
-instantiated.
-
-The *namespace* and *version* attributes' default values inside *uses*
-elements are inherited from the *transformation* attributes of the same
-name. There is no such inheritance for *uses* elements with *executable*
-attribute of ``false``.
+The *transformations* entry can have a *requires* element indicating
+0 or more required executable. Each entry in *requires* list a string
+of the format Namespace::Name:Version (Namespace:: and :Version may
+be omitted). The *name* is a mandatory attribute.
 
 .. _api-graph-nodes:
 
