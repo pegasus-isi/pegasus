@@ -135,7 +135,10 @@ public class Condor implements SLS {
     public boolean needsSLSInputTransfers(Job job) {
         for (PegasusFile pf : job.getInputFiles()) {
             String lfn = pf.getLFN();
-            if (lfn.contains(File.separator)) {
+            // PM-1952 need to make sure that if a file is being bypassed
+            // then also return true, to ensure the pegasus lite script
+            // the transfer invocation to do the transfer for this file
+            if (pf.doBypassStaging() || lfn.contains(File.separator)) {
                 return true;
             }
         }
