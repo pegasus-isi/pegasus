@@ -31,9 +31,11 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.SLS;
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -211,6 +213,9 @@ public class Condor implements SLS {
 
         String containerLFN = c == null ? null : c.getLFN();
         boolean jobRunsInContainerUniverse = job.runsInContainerUniverse();
+
+        // maps pfn to lfn at a job scope
+        Map<String, String> wawDetectionMap = new HashMap();
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
@@ -246,9 +251,18 @@ public class Condor implements SLS {
             }
             // In CondorIO case, condor file io has already  gotten the job the compute site
             // before PegasusLitejob starts
-            result.add(
+            FileTransfer ft =
                     fileTransferForMoveOfInputs(
-                            pf, job.getSiteHandle(), destDir, escapeEnvVariable));
+                            pf, job.getSiteHandle(), destDir, escapeEnvVariable);
+            // GH-2106 track source url to lfn mapping
+            // and throw error if exists in waw map
+            String sourcePFN = ft.getSourceURL().getValue();
+            if (wawDetectionMap.containsKey(sourcePFN)) {
+                complainForWAWConflict(job, wawDetectionMap.get(sourcePFN), lfn, sourcePFN);
+            }
+            wawDetectionMap.put(sourcePFN, lfn);
+
+            result.add(ft);
         }
 
         if (!bypassTXs.isEmpty()) {
@@ -558,5 +572,33 @@ public class Condor implements SLS {
                 .append(lfn);
         ft.addDestination(siteHandle, destURL.toString());
         return ft;
+    }
+
+    /**
+     * throw an exception for the waw conflict
+     *
+     * @param job
+     * @param existingLFN
+     * @param lfn
+     * @param sourcePFN
+     */
+    private void complainForWAWConflict(Job job, String existingLFN, String lfn, String sourcePFN) {
+        StringBuilder error = new StringBuilder();
+        error.append("WAW conflict for job")
+                .append(" ")
+                .append(job.getID())
+                .append(" ")
+                .append("detected. Files with LFNs")
+                .append(" ")
+                .append(existingLFN)
+                .append(" ")
+                .append("and")
+                .append(" ")
+                .append(lfn)
+                .append(" ")
+                .append("get retrieved from same location in the job PegasusLite script")
+                .append(" ")
+                .append(sourcePFN);
+        throw new RuntimeException(error.toString());
     }
 }

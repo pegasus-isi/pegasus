@@ -39,6 +39,8 @@ import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -142,6 +144,42 @@ public class CondorTest {
         this.testStageIn("local", expectedOutput);
     }
 
+    /**
+     * GH-2106 For deep LFN's with the same basename, in case of HTCondor/CEDAR overwriting of files
+     * happen
+     */
+    @Test
+    public void testStageInForDeepLFNWAWConflict() {
+        String[] lfns = new String[2];
+        lfns[0] = "saved_models/timevae2/TimeVAE_encoder_wts.h5";
+        lfns[1] = "saved_models/timevae_sampled/TimeVAE_encoder_wts.h5";
+
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+
+        PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
+        // reset the input files
+        job.setInputFiles(new LinkedHashSet());
+
+        LinkedList<FileTransfer> expectedOutputs = new LinkedList();
+        for (String lfn : lfns) {
+            PegasusFile pf = (PegasusFile) inputFile.clone();
+            pf.setLFN(lfn);
+            job.addInputFile(pf);
+
+            FileTransfer expectedOutput = new FileTransfer();
+            expectedOutput.setLFN(lfn);
+            expectedOutput.setRegisterFlag(true);
+            expectedOutput.setTransferFlag(true);
+            expectedOutput.addSource(
+                    "compute", "file://$pegasus_lite_work_dir/" + new File(lfn).getName());
+            expectedOutput.addDestination("compute", "moveto://$PWD/" + lfn);
+
+            expectedOutputs.add(expectedOutput);
+        }
+
+        this.testStageIn("local", expectedOutputs);
+    }
+
     /** PM-1885 */
     @Test
     public void testStageInForBypassLFN() {
@@ -239,6 +277,50 @@ public class CondorTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         testFileTransfer(expected, (FileTransfer) result.toArray()[0]);
+        mLogger.logEventCompletion();
+    }
+
+    private void testStageIn(String stagingSite, LinkedList<FileTransfer> expectedFTs) {
+
+        mLogger.logEventStart("test.transfer.sls.condor", "set", Integer.toString(mTestNumber++));
+        Condor cTX = new Condor();
+        cTX.initialize(mBag);
+
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        job.setStagingSiteHandle(stagingSite);
+        job.vdsNS.checkKeyInNS(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE);
+
+        PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
+        FileServer stagingSiteServer = null;
+        String stagingSiteDirectory = null;
+
+        SiteStore store = this.mBag.getHandleToSiteStore();
+        SiteCatalogEntry stagingSiteEntry = store.lookup(job.getStagingSiteHandle());
+        stagingSiteDirectory = stagingSiteEntry.getInternalMountPointOfWorkDirectory();
+        stagingSiteServer =
+                stagingSiteEntry.selectHeadNodeScratchSharedFileServer(FileServer.OPERATION.get);
+
+        Collection<FileTransfer> result =
+                cTX.determineSLSInputTransfers(
+                        job, null, stagingSiteServer, stagingSiteDirectory, "$PWD");
+
+        /**
+         * fixme: not doing it for the mix case?? if (expected.getDestURL() == null &&
+         * result.isEmpty()) { // indicates we peek into transfer_input_files // that is constructed
+         * when the job is modified for worker node // execution
+         * cTX.modifyJobForWorkerNodeExecution( job, stagingSiteServer.getURLPrefix(),
+         * stagingSiteDirectory, "$PWD"); assertEquals( expected.getSourceURL().getValue(),
+         * job.condorVariables.getIPFilesForTransfer()); return; }
+         */
+        assertNotNull(result);
+        assertEquals(expectedFTs.size(), result.size());
+
+        Object[] resultArray = result.toArray();
+        Object[] expectedArray = expectedFTs.toArray();
+        for (int i = 0; i < expectedArray.length; i++) {
+            // System.err.println("**DEBUG**" + resultArray[i]);
+            testFileTransfer((FileTransfer) expectedArray[i], (FileTransfer) resultArray[i]);
+        }
         mLogger.logEventCompletion();
     }
 
