@@ -584,11 +584,13 @@ public class Condor implements SLS {
      */
     private void complainForWAWConflict(Job job, String existingLFN, String lfn, String sourcePFN) {
         StringBuilder error = new StringBuilder();
-        error.append("WAW conflict for job")
+        // File A and B conflict due to same basename, which is not allowed in CondorIO transfer
+        // mode.
+        error.append("Conflict for job")
                 .append(" ")
                 .append(job.getID())
                 .append(" ")
-                .append("detected. Files with LFNs")
+                .append("detected. File")
                 .append(" ")
                 .append(existingLFN)
                 .append(" ")
@@ -596,9 +598,8 @@ public class Condor implements SLS {
                 .append(" ")
                 .append(lfn)
                 .append(" ")
-                .append("get retrieved from same location in the job PegasusLite script")
-                .append(" ")
-                .append(sourcePFN);
+                .append(
+                        "conflict due to same basename, which is not allowed in CondorIO transfer mode.");
         throw new RuntimeException(error.toString());
     }
 }

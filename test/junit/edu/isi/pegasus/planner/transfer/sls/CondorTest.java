@@ -181,7 +181,7 @@ public class CondorTest {
         RuntimeException thrown =
                 Assertions.assertThrows(
                         RuntimeException.class, () -> this.testStageIn("local", expectedOutputs));
-        assertTrue(thrown.getMessage().contains("WAW conflict for job preprocess_ID1 detected"));
+        assertTrue(thrown.getMessage().contains("Conflict for job preprocess_ID1 detected."));
     }
 
     /** PM-1885 */
