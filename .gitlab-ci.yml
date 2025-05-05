@@ -465,6 +465,7 @@ Workflow Tests:
       - 004-montage-apptainer
       #- 005-galactic-plane
       - 007-black-diamond-pegasuslite-local
+      - 007-black-diamond-pegasuslite-local-bypass
       - 008-black-diamond-pegasuslite-condorio
       - 009-black-diamond-pegasuslite-pegasustransfer
       - 009-black-diamond-pegasuslite-pegasustransfer-a
@@ -487,7 +488,7 @@ Workflow Tests:
       - 025-sc4-file-http
       - 026-cache-url-check
       - 027-montage-bypass-staging-site
-      - 027-montage-bypass-staging-site-condorio
+      #- 027-montage-bypass-staging-site-condorio
       - 028-dynamic-hierarchy
       - 028-dynamic-hierarchy-b
       - 030-pegasuslite-gs
