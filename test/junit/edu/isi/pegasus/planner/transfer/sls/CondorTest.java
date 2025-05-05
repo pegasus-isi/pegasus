@@ -222,7 +222,7 @@ public class CondorTest {
 
         Collection<FileTransfer> result =
                 cTX.determineSLSInputTransfers(
-                        job, inputFile.getLFN(), stagingSiteServer, stagingSiteDirectory, "$PWD");
+                        job, null, stagingSiteServer, stagingSiteDirectory, "$PWD");
 
         if (expected.getDestURL() == null && result.isEmpty()) {
             // indicates we peek into transfer_input_files
