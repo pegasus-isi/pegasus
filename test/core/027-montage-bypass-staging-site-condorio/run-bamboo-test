@@ -6,11 +6,11 @@ TOP_DIR=`pwd`
 
 export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
-rm -rf montage-workflow-v2
-git clone https://github.com/pegasus-isi/montage-workflow-v2.git
+rm -rf montage-workflow-v3
+git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
-cd montage-workflow-v2
+cd montage-workflow-v3
 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.2 \
                       --band 2mass:j:green \
