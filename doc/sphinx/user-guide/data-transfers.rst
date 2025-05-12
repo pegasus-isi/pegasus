@@ -401,6 +401,47 @@ To do is you need to:
    Also when jobs are launched via application containers, Pegasus will ensure
    that the shared filesystem directory is mounted into the container.
 
+Below is a code snippet that you can use to create an entry for a local slurm
+cluster that can be used for running containerized jobs and in general
+PegasusLite jobs on a HPC cluster
+
+.. tabs::
+
+    .. code-tab:: python Pegasus.api
+
+        from Pegasus.api import *
+
+        ...
+
+        compute_site = Site("slurm", arch=Arch.X86_64, os_type=OS.LINUX).add_pegasus_profile(
+            style="glite")
+        compute_site.add_directories(
+            Directory(
+                Directory.SHARED_SCRATCH, "/cluster/shared/wf-runs", shared_file_system=SHARED
+            ).add_file_servers(
+                FileServer(
+                    "file:///" + "/cluster/shared/wf-runs", Operation.ALL
+                )
+            )
+        )
+        compute_site.add_pegasus_profile(queue="default")
+        compute_site.add_pegasus_profile(project="PROJXXX")
+
+
+    .. code-tab:: yaml YAML
+
+        sites:
+        - name: slurm
+          arch: x86_64
+          os.type: linux
+          directories:
+          - type: sharedScratch
+            path: /cluster/shared/wf-runs
+            sharedFileSystem: true
+            fileServers:
+            - {url: 'file:////cluster/shared/wf-runs', operation: all}
+          profiles:
+            pegasus: {style: glite, queue: default, project: PROJXXX}
 
 
 .. _local-vs-remote-transfers:

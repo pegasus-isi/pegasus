@@ -202,6 +202,30 @@ the site:
                )\
          .add_profiles(Namespace.CONDOR, key="+SingularityImage", value="/cvmfs/singularity.opensciencegrid.org/pegasus/osg-el7:latest")
 
+
+
+.. _containers-sharedfs-hpc:
+
+Containers on HPC Clusters
+==========================
+
+Support for containers in Pegasus is available as long as the jobs are
+launched via PegasusLite i.e. the data configuration is either
+:ref:`nonsharedfs <ref-data-staging-nonsharedfs>`  or
+:ref:`condorio <ref-data-staging-condorio>` .
+
+However, when running on a HPC cluster a user may prefer to use the sharedfs
+data configuration that does not wrap a job with PegasusLite. A side
+effect of this configuration is that you can also not run jobs using
+a container in the sharedfs mode.
+
+For this case, we recommend using a hybrid data staging configuration
+whereby you run the workflows in the nonsharedfs mode, but for your
+compute site you use the shared filesystem as the data staging location.
+Details on this configuration can be found
+:ref:`here <ref-data-staging-nonsharedfs-shared>`.
+
+
 .. _containers-exec-model:
 
 Container Execution Model
