@@ -164,7 +164,7 @@ def cli(app):
 @pytest.fixture()
 def runner():
     """Return click test runner."""
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     return runner
 
 
