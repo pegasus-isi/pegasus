@@ -105,6 +105,13 @@ scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* bamboo@
 # also update shared install on our cluster for workflow tests
 mkdir -p /scitech/shared/scratch-90-days/bamboo/installs
 cd /scitech/shared/scratch-90-days/bamboo/installs
-rm -rf pegasus-${VERSION}
-tar xzf $TOPDIR/dist/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
+
+NOW=$(date +'%s')
+tar -xz --transform="s/^pegasus-$VERSION/pegasus-$VERSION-$NOW/" -f $TOPDIR/dist/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
+
+# update symlink
+ln -s -n -f pegasus-$VERSION-$NOW pegasus-$VERSION
+
+# only keep so many installs
+find . -maxdepth 1 -type d -mtime +10 -exec rm -rf {} \;
 
