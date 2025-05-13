@@ -63,7 +63,7 @@ Example for bourne shells:
 
 ::
 
-   $ export PATH=/some/install/pegasus-5.0.X/bin:$PATH
+   $ export PATH=/some/install/pegasus-1.X/bin:$PATH
 
 ..
 
@@ -72,7 +72,6 @@ If you want to use the API to generate workflows (:ref:`api-reference`), you mig
 ::
 
    $ export PYTHONPATH=`pegasus-config --python`
-   $ export PERL5LIB=`pegasus-config --perl`
    $ export CLASSPATH=`pegasus-config --classpath`
 
 .. _rhel:
@@ -112,17 +111,17 @@ Ubuntu
 
 .. tabs::
 
+   .. code-tab:: bash 24.04 LTS (Noble Numbat)
+
+      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu noble main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
+      apt-get install pegasus
+
    .. code-tab:: bash 22.04 LTS (Jammy Jellyfish)
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
       echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu jammy main' >/etc/apt/sources.list.d/pegasus.list
-      apt-get update
-      apt-get install pegasus
-
-   .. code-tab:: bash 20.04 LTS (Focal Fossa)
-
-      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu focal main' >/etc/apt/sources.list.d/pegasus.list
       apt-get update
       apt-get install pegasus
 
@@ -150,8 +149,8 @@ Debian
 
 .. _macosx:
 
-Mac OS X
-========
+macOS
+=====
 
 The easiest way to install Pegasus on Mac OS is to use Homebrew. You
 will need to install XCode and the XCode command-line tools, as well as
@@ -244,7 +243,7 @@ Mixing Environments (system/venv/conda/...)
 If you need to mix a Pegasus install with other environments, such as using
 the Pegasus command line tools from a system install, but use the Python
 install and libraries from Conda, you can tell Pegasus to leave the
-environment alone. Note that by doing this, you will need to supply the 
+environment alone. Note that by doing this, you will need to supply the
 requirements in your own environment. Set the environemnt variable:
 
    ::
