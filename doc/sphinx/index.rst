@@ -27,6 +27,13 @@ Welcome to Pegasus WMS's documentation!
     user-guide/glossary.rst
 
 .. toctree::
+    :caption: Release Notes
+    :numbered:
+    :maxdepth: 2
+
+    release-notes/release_5.0.x.rst
+       
+.. toctree::
     :caption: Reference Guide
     :numbered:
     :maxdepth: 2
