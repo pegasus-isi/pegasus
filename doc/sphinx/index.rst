@@ -30,9 +30,10 @@ Welcome to Pegasus WMS's documentation!
     :caption: Release Notes
     :numbered:
     :maxdepth: 2
-
-    release-notes/release_5.0.x.rst
-       
+ 
+    release-notes/release_5.0.x.md
+    release-notes/release_4.9.x.md
+    
 .. toctree::
     :caption: Reference Guide
     :numbered:

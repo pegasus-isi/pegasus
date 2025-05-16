@@ -38,6 +38,8 @@ help:
 		| grep -v "Package rerunfilecheck Warning:" \
 		| grep -v "Generating output file PegasusWMS" \
 		| grep -v "unsupported theme option" \
+                | grep -v "Container node skipped: type={0}\".format(mdnode.t)" \
+                | grep -v "UserWarning: Container node skipped: type=document" \
 		> warn.log || true
 	@if [ -s warn.log ]; then echo "Documentation build contained warnings, which we do not allow. Summary (more above):"; cat warn.log; exit 1; fi
 
