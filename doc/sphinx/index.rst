@@ -55,6 +55,11 @@ Welcome to Pegasus WMS's documentation!
     release-notes/release_4.7.x.md
     release-notes/release_4.6.x.md
     release-notes/release_4.5.x.md
+    release-notes/release_4.4.x.md
+    release-notes/release_4.3.x.md
+    release-notes/release_4.2.x.md
+    release-notes/release_4.1.x.md
+    release-notes/release_4.0.x.md
 
 .. toctree::
     :caption: Pegasus Development
