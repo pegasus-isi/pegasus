@@ -57,8 +57,7 @@ a minor release, that has minor enhancements and fixes bugs to Pegasus
    settings while determining the java heap memory for the planner. 
  
  
-Bugs Fixed
---------------
+#### Bugs Fixed
 
 1) Symlinking in PegasusLite against SRM server
 
