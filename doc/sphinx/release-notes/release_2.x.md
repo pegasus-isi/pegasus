@@ -27,18 +27,19 @@ has improvements to the Data Reuse Algorithm and pegasus-analyzer.
    existing  output files of the workflow found in the Replica
    Catalog. The algorithm works in two passes.
 
-   In the first pass , we determine all the jobs whose output files
+   1) In the first pass , we determine all the jobs whose output files
    exist  in the Replica Catalog. An output file with the transfer
    flag set to false is treated equivalent to the file existing in the
    Replica Catalog , if
 
    the output file is not an input to any of the children of the job X
 
-   In the second pass, we remove the job whose output files exist in
+   2) In the second pass, we remove the job whose output files exist in
    the Replica Catalog and try to cascade the deletion upwards to the
    parent jobs. We start the breadth first traversal of the workflow
    bottom up. 
 
+```
    A node is marked for deletion if -
 
      ( It is already marked for deletion in pass 1
@@ -48,7 +49,7 @@ has improvements to the Data Reuse Algorithm and pegasus-analyzer.
            Node's output files have transfer flags set to false
       	 )
      )
-
+```
 
 3)  Workflow with NOOP Job is created when workflow is reduced fully
 
