@@ -60,6 +60,8 @@ Welcome to Pegasus WMS's documentation!
     release-notes/release_4.2.x.md
     release-notes/release_4.1.x.md
     release-notes/release_4.0.x.md
+    release-notes/release_3.x.md
+    release-notes/release_2.x.md
 
 .. toctree::
     :caption: Pegasus Development
