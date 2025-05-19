@@ -1,6 +1,6 @@
 ## Pegasus 4.5.x Series
 
-### PEGASUS 4.5.4
+### Pegasus 4.5.4
 
 We are happy to announce the release of Pegasus 4.5.4. Pegasus 4.5.4
 is a minor release, which contains minor enhancements and fixes
@@ -137,7 +137,7 @@ that reports timestamps from condor user log
     version. 
 
 
-### PEGASUS 4.5.3
+### Pegasus 4.5.3
 
 We are happy to annouce the release of Pegasus 4.5.3. Pegasus 4.5.3 is
 a minor release, which contains minor enhancements and fixes bugs in
@@ -188,7 +188,7 @@ in the Pegasus Jira (https://jira.isi.edu/)
 2. [PM-986] - input-dir option to pegasus-plan should be a comma
              separated list
 
-### PEGASUS 4.5.2
+### Pegasus 4.5.2
 
 
 We are happy to annouce the release of Pegasus 4.5.2. Pegasus 4.5.2 is
@@ -244,7 +244,7 @@ are planned to run remotely
     https://jira.isi.edu/browse/PM-971
 
 
-### PEGASUS 4.5.1
+### Pegasus 4.5.1
 
 We are happy to annouce the release of Pegasus 4.5.1. Pegasus 4.5.1 is
 a minor release, which contains minor enhancements and fixes bugs to
@@ -488,7 +488,7 @@ listing the traceback
      https://jira.isi.edu/browse/PM-936
 
 
-###  PEGASUS 4.5.0
+###  Pegasus 4.5.0
 
 We are happy to announce the release of Pegasus 4.5.0.  Pegasus 4.5.0
 is a major release of Pegasus and includes all the bug fixes and

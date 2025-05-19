@@ -113,7 +113,7 @@ as architecture type
 8) [PM-1113] - make planner directory options behavior more consistent
 
 
-### PEGASUS 4.6.1
+### Pegasus 4.6.1
 
 We are happy to announce the release of Pegasus 4.6.1.  Pegasus 4.6.1
 is a minor release of Pegasus and includes improvements and bug fixes
@@ -349,7 +349,7 @@ New features and Improvements in 4.6.1 are
     executables now. 
  
 
-### PEGASUS 4.6.0
+### Pegasus 4.6.0
 
  We are happy to announce the release of Pegasus 4.6.0.  Pegasus 4.6.0
  is a major release of Pegasus and includes all the bug fixes and

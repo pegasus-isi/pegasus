@@ -27,16 +27,6 @@ Welcome to Pegasus WMS's documentation!
     user-guide/glossary.rst
 
 .. toctree::
-    :caption: Release Notes
-    :numbered:
-    :maxdepth: 2
- 
-    release-notes/release_5.0.x.md
-    release-notes/release_4.9.x.md
-    release-notes/release_4.8.x.md
-    release-notes/release_4.7.x.md
-
-.. toctree::
     :caption: Reference Guide
     :numbered:
     :maxdepth: 2
@@ -53,6 +43,18 @@ Welcome to Pegasus WMS's documentation!
     reference-guide/variable-expansion.rst
     reference-guide/cli.rst
     reference-guide/funding-citing-usage-stats.rst
+
+.. toctree::
+    :caption: Release Notes
+    :numbered:
+    :maxdepth: 2
+ 
+    release-notes/release_5.0.x.md
+    release-notes/release_4.9.x.md
+    release-notes/release_4.8.x.md
+    release-notes/release_4.7.x.md
+    release-notes/release_4.6.x.md
+    release-notes/release_4.5.x.md
 
 .. toctree::
     :caption: Pegasus Development
