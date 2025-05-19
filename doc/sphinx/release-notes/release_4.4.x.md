@@ -2,6 +2,8 @@
 
 ### Pegasus 4.4.2
 
+**Release Date:** March 16, 2015
+
 We are happy to annouce the release of Pegasus 4.4.2. Pegasus 4.4.2 is
 a minor release, which contains minor enhancements and fixes bugs to
 Pegasus 4.4.1 release.  
@@ -103,6 +105,8 @@ pegasus.catalog.site.file property
    More details at https://jira.isi.edu/browse/PM-816
 
 ### Pegasus  4.4.1
+
+**Release Date:** December 19, 2014
 
 We are happy to annouce the release of Pegasus 4.4.1. Pegasus 4.4.1 is
 a minor release, which contains minor enhancements and fixes bugs to
@@ -263,6 +267,8 @@ dax job may require
 
 
 ### Pegasus 4.4.0
+
+**Release Date:** July 9, 2014
 
 We are happy to announce the release of Pegasus 4.4.0
  

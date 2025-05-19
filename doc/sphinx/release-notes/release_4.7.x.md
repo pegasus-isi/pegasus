@@ -2,6 +2,8 @@
 
 ### Pegasus 4.7.5
 
+**Release Date:** September 5, 2017
+
 We are happy to announce the release of Pegasus 4.7.5 . Pegasus 4.7.5
 is a minor release, which contains minor enhancements and fixes
 bugs. This will most likely be the last release in the 4.7 series, and
@@ -81,6 +83,8 @@ in the Pegasus Jira (https://jira.isi.edu/)
 
 ### Pegasus 4.7.4
 
+**Release Date:**  February 27, 2017
+
 We are pleased to announce Pegasus 4.7.4. Pegasus 4.7.4 is a minor
 release of Pegasus and includes improvements and bug fixes to the
 4.7.4 release. 
@@ -98,6 +102,8 @@ the executable is missing
 workflow run  
 
 ### Pegasus 4.7.3
+
+**Release Date:** February 6, 2017
 
 We are happy to announce the release of Pegasus 4.7.3. Pegasus 4.7.3
 is a minor release of Pegasus and includes improvements and bug fixes
@@ -178,6 +184,8 @@ break for users running with HTCondor 8.5.8 or higher.
 
 ### Pegasus 4.7.2
 
+**Release Date:** November 22, 2016
+
 We are happy to announce the release of Pegasus 4.7.2. Pegasus 4.7.2
 is a minor release of Pegasus and includes improvements and bug fixes
 to the 4.7.1 release.
@@ -194,6 +202,8 @@ to the 4.7.1 release.
 
 ###  Pegasus 4.7.1
 
+**Release Date:** November 7, 2016
+
 We are happy to announce the release of Pegasus 4.7.1. Pegasus 4.7.1
 is a minor release of Pegasus and includes improvements and bug fixes
 to the 4.7.0 release.
@@ -208,6 +218,8 @@ to the 4.7.0 release.
 - Added ability to check CVMFS for worker package
 
 ### Pegasus 4.7.0
+
+**Release Date:** October 14, 2016
 
 We are happy to announce the release of Pegasus 4.7.0.  Pegasus 4.7.0
 is a major release of Pegasus and includes all the bug fixes and

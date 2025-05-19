@@ -2,6 +2,8 @@
 
 ### Pegasus 4.5.4
 
+**Release Date:** January 27, 2016
+
 We are happy to announce the release of Pegasus 4.5.4. Pegasus 4.5.4
 is a minor release, which contains minor enhancements and fixes
 bugs. This will most likely be the last release in the 4.5 series, and
@@ -139,6 +141,8 @@ that reports timestamps from condor user log
 
 ### Pegasus 4.5.3
 
+**Release Date:** November 4, 2015
+
 We are happy to annouce the release of Pegasus 4.5.3. Pegasus 4.5.3 is
 a minor release, which contains minor enhancements and fixes bugs in
 the Pegasus 4.5.2 release.
@@ -189,6 +193,8 @@ in the Pegasus Jira (https://jira.isi.edu/)
              separated list
 
 ### Pegasus 4.5.2
+
+**Release Date:** October 15, 2015
 
 
 We are happy to annouce the release of Pegasus 4.5.2. Pegasus 4.5.2 is
@@ -245,6 +251,8 @@ are planned to run remotely
 
 
 ### Pegasus 4.5.1
+
+**Release Date:** August 10, 2015
 
 We are happy to annouce the release of Pegasus 4.5.1. Pegasus 4.5.1 is
 a minor release, which contains minor enhancements and fixes bugs to
@@ -489,6 +497,8 @@ listing the traceback
 
 
 ###  Pegasus 4.5.0
+
+**Release Date:** May 5, 2015
 
 We are happy to announce the release of Pegasus 4.5.0.  Pegasus 4.5.0
 is a major release of Pegasus and includes all the bug fixes and

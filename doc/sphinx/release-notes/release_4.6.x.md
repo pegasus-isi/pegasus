@@ -351,6 +351,8 @@ New features and Improvements in 4.6.1 are
 
 ### Pegasus 4.6.0
 
+**Release Date:** January 27, 2016
+
  We are happy to announce the release of Pegasus 4.6.0.  Pegasus 4.6.0
  is a major release of Pegasus and includes all the bug fixes and
  improvements in the 4.5.4 release 

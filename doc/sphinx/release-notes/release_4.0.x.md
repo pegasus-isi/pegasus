@@ -2,6 +2,8 @@
 
 ### Pegasus 4.0.1
 
+**Release Date:** June 01, 2012
+
 This is a minor release, that fixes some bugs and has minor enhancements. 
 
 
@@ -134,6 +136,8 @@ GLOBUS_SUBMIT events.
    https://jira.isi.edu/browse/PM-595
 
 ### Pegasus 4.0.0
+
+**Release Date:** March 1, 2012
 
 This is a major release of Pegasus that introduces new advanced data
 handling capabilities, and contains improved support for running

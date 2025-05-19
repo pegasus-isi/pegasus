@@ -2,6 +2,8 @@
 
 ### Pegasus 4.2.2
 
+**Release Date:**  May 1, 2013
+
 Pegasus 4.2.2 is a minor release, that has minor enhancements and
 fixes some bugs to Pegasus 4.2.0 release.  Improvements include  
 
@@ -183,6 +185,8 @@ fixes some bugs to Pegasus 4.2.0 release.  Improvements include
 
 ### Pegasus 4.2.1
 
+**Release Date:** April 27, 2013
+
 Pegasus 4.2.1 was tagged but never officially released. Users are advised to use
 4.2.2 instead.  The difference between 4.2.2 and 4.2.1 is that it does not have
 the fix for 
@@ -193,6 +197,8 @@ the fix for
   exitcode on it's contents.
 
 ### Pegasus 4.2.0
+
+**Release Date:** January 29, 2013
 
 This a major release of Pegasus which contains
 

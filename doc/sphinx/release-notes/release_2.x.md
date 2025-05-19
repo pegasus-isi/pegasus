@@ -2,6 +2,8 @@
 
 ### Pegasus 2.4.3
 
+**Release Date:** August 24, 2010
+
 This is minor release, that fixes some RPM and DEB packaging bugs. It
 has improvements to the Data Reuse Algorithm and pegasus-analyzer.
 
@@ -130,6 +132,8 @@ has improvements to the Data Reuse Algorithm and pegasus-analyzer.
 
 ### Pegasus 2.4.2
 
+**Release Date:** May 12, 2010
+
 This is minor release, that has some feature enhancements to pegasus-status
 and pegasus-analyzer for working with Condor SUBDAG's.
 
@@ -153,6 +157,8 @@ and pegasus-analyzer for working with Condor SUBDAG's.
    of pegasus-analyzer for SUBDAGS have the --strict option included.
 
 ### Pegasus 2.4.1
+
+**Release Date:** March 28, 2010
 
 This is minor release, that fixes some critical bugs discovered 
 after 2.4.0 release and some feature enhancements.
@@ -274,6 +280,8 @@ after 2.4.0 release and some feature enhancements.
 
 
 ### Pegasus 2.4.0
+
+**Release Date:** FEBRUARY 14, 2010
  
 #### NEW FEATURES
 
@@ -863,6 +871,8 @@ launched on the remote node.
 
 
 ### Pegasus 2.3.0
+
+**Release Date:** April 22, 2009
  
 #### NEW FEATURES
 
@@ -1161,6 +1171,8 @@ launched on the remote node.
 2) Property Document was updated with the new properties introduced.
 
 ### Pegasus 2.2.0
+
+**Release Date:** January 11, 2009
  
 #### NEW FEATURES
 
@@ -1743,6 +1755,8 @@ with jobs. For the above example, it will look as follows
    http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=33
 
 ### Pegasus 2.1.0
+
+**Release Date:** May 6, 2008
  
 #### NEW FEATURES
 
@@ -2017,6 +2031,8 @@ with jobs. For the above example, it will look as follows
 
 ### Pegasus 2.0.1
 
+**Release Date:** July 19, 2007
+
 There is new documentation in the form of a quick start guide and glossary
 in the docs directory. More documentation will be coming soon and will be available
 in the release as well as on the pegasus website under documentation.
@@ -2066,6 +2082,8 @@ in the release as well as on the pegasus website under documentation.
 
 
 ### Pegasus 2.0.0
+
+**Release Date:** July 19, 2007
 
 #### NEW FEATURES
 

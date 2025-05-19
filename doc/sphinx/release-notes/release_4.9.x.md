@@ -2,6 +2,8 @@
 
 ### Pegasus 4.9.3
 
+**Release Date:**  January 31, 2020
+
 
 We are happy to announce the release of Pegasus 4.9.3. Pegasus 4.9.3 is a
 minor bug fix release after Pegasus 4.9.2.   
@@ -51,6 +53,8 @@ found in the guide at https://pegasus.isi.edu/docs/monitoring_amqp.php.
 
 
 ### Pegasus 4.9.2
+
+**Release Date:** August 7, 2019
 
 
 We are happy to announce the release of Pegasus 4.9.2 . Pegasus 4.9.2
@@ -134,6 +138,8 @@ discontinued. Packages for Debian 10 Buster have been added.
 
 ### Pegasus 4.9.1
 
+**Release Date:** March 6, 2019
+
 We are happy to announce the release of Pegasus 4.9.1 . Pegasus 4.9.1
 is a minor bug fix release and includes a major change to how
 transfers are handled for containerized jobs. Pegasus 4.9.1 also
@@ -209,6 +215,9 @@ https://pegasus.isi.edu/docs/4.9.1dev/container-exec-model.php
 
 
 ###  Pegasus 4.9.0
+
+**Release Date:** October 31, 2018
+
 We are pleased to announce release of Pegasus 4.9.0
 
 Pegasus 4.9.0 is be a major release of Pegasus. Highlights of new

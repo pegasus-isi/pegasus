@@ -3,6 +3,8 @@
 
 ### Pegasus 5.0.9
 
+**Release Date:**  December 17, 2024
+
 We are happy to announce the release of Pegasus 5.0.9, which is a minor
 bug fix release for Pegasus 5.0 branch. The release has a variety of
 improvements and bug fixes to Pegasus support for AWS Batch.
@@ -45,16 +47,12 @@ The release can be downloaded from https://pegasus.isi.edu/downloads
 
 ### Pegasus 5.0.8
 
+**Release Date:**  August 16, 2024
+
 We are happy to announce the release of Pegasus 5.0.8, which is a minor
 bug fix release for Pegasus 5.0 branch. 
 
 The release can be downloaded from https://pegasus.isi.edu/downloads
-
-#### JIRA items
-
-
-Exhaustive list of features, improvements and bug fixes can be found below.
-Pegasus JIRA is accessible at https://jira.isi.edu/
 
 #### New Features and Improvements
 
@@ -95,6 +93,8 @@ Pegasus JIRA is accessible at https://jira.isi.edu/
 
 ### Pegasus 5.0.7
 
+**Release Date:** February 21, 2024
+
 We are happy to announce the release of Pegasus 5.0.7, which is a minor
 bug fix release for Pegasus 5.0 branch.
 
@@ -131,6 +131,8 @@ This release included improvements such as
 
 ### Pegasus 5.0.6
 
+**Release Date:** June 30, 2023
+
 We are happy to announce the release of Pegasus 5.0.6, which is a minor bug
 fix release for Pegasus 5.0 branch.
 
@@ -162,6 +164,8 @@ https://pegasus.isi.edu/downloads
 
 ### Pegasus 5.0.5
 
+**Release Date:** February 17, 2023
+
 We are happy to announce the release of Pegasus 5.0.5, which is a minor bug
 fix release for Pegasus 5.0 branch. This release corrects a build/packaging
 problem in 5.0.4, resulting in the planner not finding all classes.
@@ -178,6 +182,8 @@ https://pegasus.isi.edu/downloads
 
 
 ### Pegasus 5.0.4
+
+**Release Date:** February 9, 2023
 
 We are happy to announce the release of Pegasus 5.0.4, which is a minor bug
 fix release for Pegasus 5.0 branch.  This release has some importan
@@ -222,6 +228,8 @@ https://pegasus.isi.edu/downloads
 5)  [PM-1897]  update pegasus-configure-glite to use BLAHPD_LOCATION
 
 ### Pegasus 5.0.3
+
+**Release Date:** October 25, 2022
 
 
 We are happy to announce the release of Pegasus 5.0.3, which is a minor bug fix release for Pegasus 5.0
@@ -280,6 +288,8 @@ https://pegasus.isi.edu/downloads
 
 
 ### Pegasus 5.0.2
+
+**Release Date:** April 22, 2022
 
 We are happy to announce the release of Pegasus 5.0.2, which is a minor bug
 fix release for Pegasus 5.0 branch.  This release has some important updates
@@ -362,6 +372,8 @@ https://pegasus.isi.edu/downloads
     	        to source pegasus-lite-common.sh
 
 ### Pegasus 5.0.1
+
+**Release Date:** October 7, 2021
 
 We are happy to announce the release of Pegasus 5.0.1. Pegasus 5.0.1 is a
 minor bug fix release after Pegasus 5.0. We invite our users to give it
@@ -534,6 +546,8 @@ https://pegasus.isi.edu/downloads
 
 
 ### Pegasus 5.0.0
+
+**Release Date:** November 12, 2020
 
 We are happy to announce the release of Pegasus 5.0.  Pegasus 5.0
 is be a major release of Pegasus and builds upon the beta version
@@ -1409,6 +1423,8 @@ https://pegasus.isi.edu/docs/5.0.0/user-guide/migration.html#migrating-from-pega
 42) [PM-1705] - priorities are not propagated correctly
 
 ### Pegasus 5.0.0beta1
+
+**Release Date:** July 27, 2020
 
 We are happy to announce the beta1 release of Pegasus 5.0.  Pegasus
 5.0 will be a major release of pegasus and this beta version has most

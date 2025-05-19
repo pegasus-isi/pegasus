@@ -2,6 +2,8 @@
 
 ### Pegasus 4.8.5
 
+**Release Date:** October 31, 2018
+
 We are happy to announce the release of Pegasus 4.8.5 . Pegasus 4.8.5
 is a minor bug fix release and the last release in the 4.8 series.
 
@@ -24,6 +26,9 @@ is a minor bug fix release and the last release in the 4.8 series.
 4) [PM-1317] – Pegasus plan fails on container task clustering
 
 ### Pegasus 4.8.4
+
+**Release Date:** August 31, 2018
+
 We are happy to announce the release of Pegasus 4.8.4 . Pegasus 4.8.4
 is a minor bug fix release.
 
@@ -50,6 +55,8 @@ submissions
    	       failure for sub workflows 
 
 ### Pegasus 4.8.3
+
+**Release Date:** August 6, 2018
 
 We are happy to announce the release of Pegasus 4.8.3 . Pegasus 4.8.3
 is a minor bug fix release
@@ -85,6 +92,8 @@ same technique
    	       automatically and complain if re-mounting
 
 ### Pegasus 4.8.2
+
+**Release Date:** May 3, 2018
 
 We are happy to announce the release of Pegasus 4.8.2 . Pegasus 4.8.2 
 is a minor bug fix release.
@@ -125,6 +134,8 @@ is a minor bug fix release.
 
 ### Pegasus 4.8.1
 
+**Release Date:** January 16, 2018
+
 We are pleased to announce release of Pegasus 4.8.1
 
 Pegasus 4.8.1 is be a minor bug fix release 
@@ -150,6 +161,8 @@ Pegasus 4.8.1 is be a minor bug fix release
 6) [PM-1230] – The pegasus python install fails on CentOS 7
 
 ### Pegasus 4.8.0
+
+**Release Date:** September 5, 2017
 
 We are pleased to announce release of Pegasus 4.8.0
 

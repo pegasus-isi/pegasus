@@ -2,6 +2,8 @@
 
 ### Pegasus 3.1.1
 
+**Release Date:** February 14, 2012
+
 This is a minor release, that fixes some bugs and has minor enhancements. 
 
 
@@ -115,6 +117,8 @@ population of certain pre and post script events.
 
 
 ### Pegasus 3.1.0
+
+**Release Date:** August 22, 2011
 
 This is a major release of Pegasus with support for notifications and
 a redesigned backend database to store information about workflows and  jobs.
@@ -317,6 +321,8 @@ Catalog
 
 ### Pegasus 3.0.3
 
+**Release Date:** July 21, 2011
+
 This is a minor release, that fixes some bugs and has minor
 enhancements. 
 
@@ -388,6 +394,8 @@ enhancements.
 
 ### Pegasus 3.0.2
 
+**Release Date:** March 31, 2011
+
 This is a minor release, that fixes some bugs and has minor
 enhancements. 
 
@@ -441,6 +449,8 @@ enhancements.
 
 
 ### Pegasus 3.0.1
+
+**Release Date:** December 24, 2010
 
 This is minor release, that fixes some bugs discovered after 3.0
 release and some  enhancements. 
@@ -497,6 +507,8 @@ release and some  enhancements.
    More details at This is related to JIRA issue PM-300.
 
 ### Pegasus 3.0
+
+**Release Date:** November 29, 2010
 
 This is a major release that attempts to simplify configuration and
 running workflows through Pegasus. 

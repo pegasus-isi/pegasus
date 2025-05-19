@@ -2,6 +2,8 @@
 
 ### Pegasus 4.1.0
 
+**Release Date:** August 29, 2012
+
 This a major release of Pegasus that has support for PMC
 (pegasus-mpi-cluster ) that can be used to run the tasks in a
 clustered job in parallel on remote machines using MPI. As part of

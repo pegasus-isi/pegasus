@@ -2,6 +2,8 @@
 
 ### Pegasus 4.3.2
 
+**Release Date:** March 18, 2014
+
 We are happy to annouce the release of Pegasus 4.3.2. Pegasus 4.3.2 is
 a minor release, that has minor enhancements and fixes bugs to Pegasus
 4.3.1 release.  
@@ -120,6 +122,8 @@ sub workflows
 
 ### Pegasus 4.3.1
 
+**Release Date:** November 25, 2013
+
 We are happy to announce the release of Pegasus 4.3.1 .  
 
 Pegasus 4.3.1 is a minor release, that has minor enhancements and fixes bugs to Pegasus 4.3.0 release. 
@@ -183,6 +187,8 @@ postscript is associated with the job
    2.5. This is now fixed.
 
 ### Pegasus 4.3
+
+**Release Date:** October 25, 2013
 
 We are happy to announce the release of Pegasus 4.3.  
 
