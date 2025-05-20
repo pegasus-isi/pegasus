@@ -26,9 +26,7 @@ simplify workflows and minimize the overhead associated with customizing contain
     data transfer utilities like curl, ftp, or globus-online. Users preferring this method
     can set the property pegasus.transfer.container.onhost to false in their configuration files.
 
-More details can be found in the
-[documentation](https://pegasus.isi.edu/docs/5.1.0/user-guide/containers.html#data-transfers-for-jobs-when-running-in-container).
-
+More details can be found at :ref:`containers-data-transfers`.
 
 .. _migrating-from-49-to-50:
 
