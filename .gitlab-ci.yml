@@ -413,6 +413,7 @@ Release:
       --repo pegasus-isi/pegasus \
       --verify-tag \
       --title "${PEGASUS_VERSION}" \
+      --notes RELEASE_NOTES \
       --discussion-category "announcements" \
       $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "--prerelease") \
       ${PEGASUS_VERSION} \
