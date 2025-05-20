@@ -2,6 +2,8 @@
 
 ### Pegasus 4.6.2
 
+**Release Date:** August 17, 2016
+
 
 We are happy to announce the release of Pegasus 4.6.2.  Pegasus 4.6.2
 is a minor release of Pegasus and includes improvements and bug fixes
@@ -114,6 +116,8 @@ as architecture type
 
 
 ### Pegasus 4.6.1
+
+**Release Date:** April 21, 2016
 
 We are happy to announce the release of Pegasus 4.6.1.  Pegasus 4.6.1
 is a minor release of Pegasus and includes improvements and bug fixes
