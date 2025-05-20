@@ -15,7 +15,7 @@ https://pegasus.isi.edu/downloads
 
 If you are an existing user, please carefully follow these
 instructions to upgrade at
-https://pegasus.isi.edu/docs/5.0.0/user-guide/migration.html#migrating-from-pegasus-4-9-x-to-pegasus-5-0 
+https://pegasus.isi.edu/docs/5.1.0/user-guide/migration.html#migrating-from-pegasus-5-0-x-to-pegasus-5-1 
 
 #### Highlights of the Release
 
@@ -35,7 +35,7 @@ https://pegasus.isi.edu/docs/5.0.0/user-guide/migration.html#migrating-from-pega
         can set the property pegasus.transfer.container.onhost to false in their configuration files.
 
     More details can be found in the 
-    [documentation](https://pegasus.isi.edu/documentation/user-guide/containers.html#data-transfers-for-jobs-when-running-in-container).
+    [documentation](https://pegasus.isi.edu/docs/5.1.0/user-guide/containers.html#data-transfers-for-jobs-when-running-in-container).
 
    
 2) Integration with HTCondor’s Container Universe
@@ -49,7 +49,7 @@ https://pegasus.isi.edu/docs/5.0.0/user-guide/migration.html#migrating-from-pega
     version 4.8.0, reflecting ongoing efforts to improve compatibility and user experience.
 
     More details can be found in the 
-    [documentation](https://pegasus.isi.edu/documentation/user-guide/containers.html#configuring-workflows-to-use-containers).
+    [documentation](https://pegasus.isi.edu/docs/5.1.0/user-guide/containers.html#configuring-workflows-to-use-containers).
 
 3) pegasus-status command line tool was rewritten in python, removing Pegasus perl
    dependency. The new *pegasus-status* command has better support for showing status of
