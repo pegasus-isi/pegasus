@@ -2,7 +2,7 @@
 
 ### Pegasus 5.1.0
 
-**Release Date:**  May xx, 2025
+**Release Date:**  May 27, 2025
 
 
 We are happy to announce the release of Pegasus 5.1.  Pegasus 5.10
