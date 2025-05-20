@@ -5,17 +5,17 @@
 **Release Date:**  May 27, 2025
 
 
-We are happy to announce the release of Pegasus 5.1.  Pegasus 5.10
+We are happy to announce the release of Pegasus 5.1.  Pegasus 5.1.0
 is  a major release of Pegasus  It also includes all features and
 bug fixes from the 5.0 branch. We invite our users to give it a
 try.    
 
 The release can be downloaded from:
-https://pegasus.isi.edu/downloads
+<https://pegasus.isi.edu/downloads>
 
 If you are an existing user, please carefully follow these
-instructions to upgrade at
-https://pegasus.isi.edu/docs/5.1.0/user-guide/migration.html#migrating-from-pegasus-5-0-x-to-pegasus-5-1 
+instructions to upgrade at 
+<https://pegasus.isi.edu/docs/5.1.0/user-guide/migration.html#migrating-from-pegasus-5-0-x-to-pegasus-5-1> 
 
 #### Highlights of the Release
 
