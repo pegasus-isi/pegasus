@@ -82,7 +82,7 @@ available on the [Pegasus downloads page](https://pegasus.isi.edu/downloads).
 Consult [Chapter 2 of the Pegasus User Guide](https://pegasus.isi.edu/documentation/user-guide/installation.html)
 for more information about installing Pegasus from binary packages.
 
-Release notes are also incorporated in the documentation can be found in
+Release notes are also incorporated in the user guide and can be accessed from
 the Table of Contents below the Reference Guide. The sources for it can
 be found in `./doc/sphinx/release-notes` directory.
 
