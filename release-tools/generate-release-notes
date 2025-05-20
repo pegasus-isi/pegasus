@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+VERSION=$1
+GITHUB_TOKEN=$2
+OUTPUT="changelog.md"
+
+if [ "x$VERSION" = "x" ]; then
+    echo "Please specify a version in form of major.minor.patch e.g. 5.1.0"
+    exit 1
+fi
+
+if [ "x$GITHUB_TOKEN" = "x" ]; then
+    echo "Please specify a GITHUB TOKEN to query the repo"
+    exit 1
+fi
+
+# make sure we are in a source dir
+if [ ! -e build.xml ]; then
+    echo "This does not look a like a source directory. Exiting..."
+    exit 1
+fi
+
+
+# github_changelog_generator version is important.
+#gem install github_changelog_generator -v 1.15.2
+
+github_changelog_generator  -t $GITHUB_TOKEN --since-tag 5.0.0 -u pegasus-isi -p pegasus --include-labels fix-$VERSION --output $OUTPUT
+
+echo "Release notes for $VERSION generated in $OUTPUT. Please incorporate them the release notes in the relevant doc/sphinx/release-notes/"
