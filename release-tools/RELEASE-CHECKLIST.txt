@@ -16,32 +16,37 @@ NOTE: Do not copy and paste the commands below without double checking.
        vim build.properties
        git commit -a -m "Setting version for tag"
 
-3.  Tag. Example:
+3.  Update the Release Date in the release notes doc:
+
+       vim ./doc/sphinx/release-notes/release_N.M.x.md
+       git commit -a -m "Setting Release Date for release"
+
+4.  Tag. Example:
 
         git tag -a -m "Created tag for N.M.O" N.M.O
 
-4.  Open branch for new checkins with new version:
+5.  Open branch for new checkins with new version:
 
        vim build.properties
        git commit -a -m "Branch reopen for checkins"
 
-5.  Bring the branch back to master, but ignore the commits.
+6.  Bring the branch back to master, but ignore the commits.
 
        git checkout master
        git merge --no-commit N.M
     (edit build.properties)
        git commit -a -m "Merged N.M"
 
-6.  git push --tags
+7.  git push --tags
 
-7.  Build with Bamboo
+8.  Build with Bamboo
 
-8.  Build dnf/apt repos. First copy the debs and rpms into
+9.  Build dnf/apt repos. First copy the debs and rpms into
     their final place in the debian/rhel/ubuntu top level
     trees, and then run pegasus-update-prod-repos as the
     bamboo user on download.pegasus.isi.edu
 
-9.  Publish Python packages to PypI
+10.  Publish Python packages to PypI
 
 ```bash
 # Install Twine (Once)
@@ -62,11 +67,11 @@ $ cat ~/.pypirc
 $ twine upload <python-package>
 ```
 
-10. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
+11. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
 
-11. Change the symbolic link for the latest documentation to point
+12. Change the symbolic link for the latest documentation to point
     to latest stable release
     https://pegasus.isi.edu/documentation/
 
-12. Send annouce email to pegasus-announce@mailman.isi.edu
+13. Send annouce email to pegasus-announce@mailman.isi.edu
 
