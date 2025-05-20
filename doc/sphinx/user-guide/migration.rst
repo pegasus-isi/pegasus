@@ -4,6 +4,32 @@
 Migration Notes
 ===============
 
+.. _migrating-from-50-to-51:
+
+Migrating From Pegasus 5.0.x to Pegasus 5.1
+===========================================
+The Pegasus 5.1 Release is a major release of Pegasus. While there
+are no database changes in 5.1 release, there is a change in the
+default manner of how the data transfers for jobs running in a
+container are managed.
+
+PegasusLite now offers two distinct approaches for handling data transfers in
+containerized jobs. The shift to host-based transfers as the default aims to
+simplify workflows and minimize the overhead associated with customizing container images.
+
+*   **Host-Based Transfers (Default in 5.1.0):** Input and output data are staged on the
+    host operating system before launching the container. This method utilizes pre-installed
+    data transfer tools on the host, reducing the need for additional configurations within
+    the container.
+*   **Container-Based Transfers:** Data transfers occur within the container prior to
+    executing user code. This approach requires the container image to include necessary
+    data transfer utilities like curl, ftp, or globus-online. Users preferring this method
+    can set the property pegasus.transfer.container.onhost to false in their configuration files.
+
+More details can be found in the
+[documentation](https://pegasus.isi.edu/docs/5.1.0/user-guide/containers.html#data-transfers-for-jobs-when-running-in-container).
+
+
 .. _migrating-from-49-to-50:
 
 Migrating From Pegasus 4.9.X to Pegasus 5.0
