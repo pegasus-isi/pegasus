@@ -245,7 +245,7 @@ after 2.4.0 release and some feature enhancements.
    that was to be symlinked in the remote execution directory already existed
    ( accd to the entry in the replica catalog )
 
-   More details at PM-125 [\#246](https://github.com/pegasus-isi/pegasus/issues/246) 
+   More details at PM-125 [\#246](https://github.com/pegasus-isi/pegasus/issues/246)
 
 2) symlink jobs were not launched correctly via kickstart
 
@@ -254,7 +254,7 @@ after 2.4.0 release and some feature enhancements.
 
    This is now fixed.
 
-   More details at PM-124 [\#245](https://github.com/pegasus-isi/pegasus/issues/245) 
+   More details at PM-124 [\#245](https://github.com/pegasus-isi/pegasus/issues/245)
 
 3) Determining Condor Version
 
@@ -369,9 +369,9 @@ after 2.4.0 release and some feature enhancements.
    </site>
 
    Relevant JIRA links
--   http://jira.pegasus.isi.edu/browse/PM-68
--   http://jira.pegasus.isi.edu/browse/PM-20
--   http://jira.pegasus.isi.edu/browse/PM-85
+-    PM-68 [\#189](https://github.com/pegasus-isi/pegasus/issues/189)
+-    PM-20 [\#141](https://github.com/pegasus-isi/pegasus/issues/141)
+-    PM-85 [\#206](https://github.com/pegasus-isi/pegasus/issues/206)
 
 
 
@@ -750,7 +750,7 @@ launched on the remote node.
    inserts and deletes
 
    Details at
-   http://jira.pegasus.isi.edu/browse/PM-75
+    PM-75 [\#196](https://github.com/pegasus-isi/pegasus/issues/196)
 
 19) Additions to show-job workflow visualization script
 
@@ -820,15 +820,15 @@ launched on the remote node.
    This affected the rc-client lookup command option.
 
    Details at
-   http://jira.pegasus.isi.edu/browse/PM-74
+    PM-74 [\#195](https://github.com/pegasus-isi/pegasus/issues/195)
 
 7) Running clustered jobs on the cloud in directory other than /tmp
    There was a bug whereby the clustered jobs executing in worker node
    execution mode did not honor the wntmp environment variable
    specified in the Site Catalog for the site.
 
-   The bug fix was tracked through JIRA at PM-83 [\#204](https://github.com/pegasus-isi/pegasus/issues/204) 
-    
+   The bug fix was tracked through JIRA at PM-83 [\#204](https://github.com/pegasus-isi/pegasus/issues/204)
+
 
 8) Bug Fix for worker package deployment
    The regex employed to determine the pegasus version from a URL to a
@@ -850,7 +850,7 @@ launched on the remote node.
    package deployment job is actually run in third party mode.
    In push-pull mode, the destination URL's are file URLs
 
-   Tracked in JIRA at PM-89 [\#207](https://github.com/pegasus-isi/pegasus/issues/207)   
+   Tracked in JIRA at PM-89 [\#207](https://github.com/pegasus-isi/pegasus/issues/207)
 
 #### Documentation
 
