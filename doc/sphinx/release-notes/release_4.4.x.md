@@ -446,7 +446,7 @@ New features and Improvements in 4.4.0 include
    complete rules for determining failure are described in the man
    page for pegasus-exitcode.
 
-   More details at http://jira.isi.edu/browse/PM-737
+   More details at PM-737 [\#855](https://github.com/pegasus-isi/pegasus/issues/855)
 
 12) Updated examples for Glite submission directly to local PBS
 
