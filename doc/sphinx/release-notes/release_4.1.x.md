@@ -9,12 +9,12 @@ This a major release of Pegasus that has support for PMC
 clustered job in parallel on remote machines using MPI. As part of
 this release, the support for submitting workflows using CondorC has
 been updated. The Pegasus Tutorial has also been updated and is
-available to run on  
+available to run on
 
    - Amazon EC2
    - Futuregrid
    - Local machine using Virtual Box
- 
+
 
 #### NEW FEATURES
 
@@ -40,16 +40,16 @@ available to run on
    and in the clustering chapter
 
    https://pegasus.isi.edu/wms/docs/4.1/reference.php#job_clustering
-    
+
     There is a XSEDE example in the examples directory that shows how
     to use PMC on XSEDE
 
 2) Use of new client pegasus-gridftp in pegasus-create-dir and
-pegasus-cleanup 
+pegasus-cleanup
 
     Starting with release 4.1, the pegasus create dir and cleanup
     clients use a java based client called pegasus-gridftp to create
-    directories and remove files from against a gridftp server. 
+    directories and remove files from against a gridftp server.
 
     Pegasus by default now adds a dagman category named cleanup for
     all cleanup jobs in the workflow. The maxjobs for this category is
@@ -73,7 +73,7 @@ pegasus-cleanup
 
    Example snippet with relevant entries  below
     <site handle="isi-condorc" arch="x86" os="LINUX">
-   
+
 	 <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="compute" total-nodes="50"/>
   	   <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="auxillary" total-nodes="50"/>
     ....
@@ -89,22 +89,22 @@ pegasus-cleanup
    used to cluster stagein jobs per workflow and the stageout jobs per
    level of the workflow.
 
-   More details can be found at 
+   More details can be found at
 
    https://pegasus.isi.edu/wms/docs/4.1/reference.php#id645300
 
 5) Updated the Pegasus Tutorial
 
    The Pegasus Tutorial has now been updated and is available to run
-   on 
+   on
    - Amazon EC2
    - Futuregrid
    - Local machine using Virtual Box
 
     https://pegasus.isi.edu/wms/docs/4.1/tutorial_vm.php
-   
+
 6) pegasus-statistics has a new -f option
-   
+
    The -f option can be used to specify the output format for
    pegasus-statistics. Valid supported formats are txt and csv
 
@@ -113,24 +113,24 @@ pegasus-cleanup
    Earlier, Pegasus used to set default periodic_release and
    periodic_remove expressions as follows
 
-   periodic_release = (NumSystemHolds <= 3) 
-   periodic_remove = (NumSystemHolds > 3) 
+   periodic_release = (NumSystemHolds <= 3)
+   periodic_remove = (NumSystemHolds > 3)
 
    This had the effect of removing the jobs as soon as they went to
    held state.
 
-   Starting 4.1 the expressions have been updated to 
-   periodic_release = False 
+   Starting 4.1 the expressions have been updated to
+   periodic_release = False
    periodic_remove = (JobStatus == 5) && ((CurrentTime -
-   EnteredCurrentStatus) > 14400) 
-   
+   EnteredCurrentStatus) > 14400)
+
    With this, the job remains in held state for 4 hours before being
-   removed. The idea is that it is a long enough time for users to 
+   removed. The idea is that it is a long enough time for users to
    debug held jobs.
-   
+
    If users wish to use the previous expressions, they can do it by
    specifying the condor profile keys periodic_release and
-   periodic_remove. 
+   periodic_remove.
 
 8) Property to turn off registration jobs
 
@@ -145,10 +145,10 @@ pegasus-cleanup
    entries in the site catalog.
 
    More details at
-   https://jira.isi.edu/browse/PM-590
+    PM-590 [\#708](https://github.com/pegasus-isi/pegasus/issues/708)
 
 10) Change in DAX schema
-   
+
    The dax schema version is now 3.4. The schema now allows for
    specifying filesizes as a size attribute in the uses element that
    lists the input and output files for a job.
@@ -159,21 +159,21 @@ pegasus-cleanup
    specific research use cases.
 
 11) Prototype support for Shiwa bundles
-   
+
    pegasus-plan has a new option --shiwa-bundle that allows users to
    pass a pegasus SHIWA bundle for execution.  A Pegasus shiwa bundle,
    is a bundle that has been generated using the Pegasus Plugin for
    the Shiwa Desktop.
 
 12) Improved performance for the expunge operation in against mysql
-database 
+database
 
     When monitord is run in a replay mode, the database is first
     expunged of all the information related to that workflow. In case,
     of mysql backend where the same database maybe used to track
     multiple hierarchal workflows, the expunge operation has to be
     careful to delete only the relevant entries for the various
-    tables. 
+    tables.
 
     In earlier versions, this expunge operation was implemented at OR
     level in SQLAlchemy that led to lots of select and delete
@@ -181,19 +181,19 @@ database
     memory footprint for monitord and prevented the workflow
     population in case of large databases. For 4.1, we changed the
     schema to add cascaded delete clauses, and set the passive delete
-    option to true in SQLAlchemy.  
+    option to true in SQLAlchemy.
 
     More details
-    https://jira.isi.edu/browse/PM-646
+     PM-646 [\#764](https://github.com/pegasus-isi/pegasus/issues/764)
 
 13 ) Runtime Clustering picks up pegasus profile key named runtime
-   
+
    Starting 4.1, the runtime clustering  in Pegasus picks up  pegasus
-   profile key runtime instead of job.runtime .  
+   profile key runtime instead of job.runtime .
 
    job.runtime is deprecated and a message is logged if a user has
    that specified. The planner picks up job.runtime only if runtime is
-   not specified for a job. 
+   not specified for a job.
 
 
 #### BUGS FIXED
@@ -204,28 +204,28 @@ database
    runs in local universe made assumption on PATH variable to
    determine the pegasus tools.
 
-   This is now fixed. More details at 
-   https://jira.isi.edu/browse/PM-636
-   
+   This is now fixed. More details at
+    PM-636 [\#754](https://github.com/pegasus-isi/pegasus/issues/754)
+
 2) Overwriting of entries with file based replica catalog
 
-   pegasus-rc-client lfn pfn pool="local" # Inserts new entry in RC file 
-   pegasus-rc-client lfn pfn pool="usc" # Overwrites pool="local" to pool="usc" 
+   pegasus-rc-client lfn pfn pool="local" # Inserts new entry in RC file
+   pegasus-rc-client lfn pfn pool="usc" # Overwrites pool="local" to pool="usc"
 
    The uniqueness constraint in the File RC has been updated to
    consider the site attribute also.
-   
+
    More details at
-   https://jira.isi.edu/browse/PM-634
+    PM-634 [\#752](https://github.com/pegasus-isi/pegasus/issues/752)
 
 3) pegasus-statistics failed on workflows with large number of sub
-workflows 
+workflows
 
    pegasus-statistics failed if a workflow had more 1000 sub
    workflows. This was due to a SQL Alchemy issue
 
-   More details at 
-   https://jira.isi.edu/browse/PM-616
+   More details at
+    PM-616 [\#734](https://github.com/pegasus-isi/pegasus/issues/734)
 
 4) Properties propogation for sub workflows
 
@@ -234,4 +234,4 @@ workflows
    sharedfs for others
 
    This is partially fixed.
-   https://jira.isi.edu/browse/PM-624
+    PM-624 [\#742](https://github.com/pegasus-isi/pegasus/issues/742)

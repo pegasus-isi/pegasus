@@ -4,13 +4,13 @@
 
 **Release Date:** June 01, 2012
 
-This is a minor release, that fixes some bugs and has minor enhancements. 
+This is a minor release, that fixes some bugs and has minor enhancements.
 
 
 #### NEW FEATURES
 
 1) pegasus lite local wrapper is now used for local universe jobs in
-   shared fs mode also, if condor io is detected. 
+   shared fs mode also, if condor io is detected.
 
    Also  remote_initialdir is not implemented consistently across
    universes in Condor.  For vanilla universe condor file io does not
@@ -24,89 +24,89 @@ This is a minor release, that fixes some bugs and has minor enhancements.
 
 
 3) pegasus-monitord sets PEGASUS_BIN_DIR while calling out notfication
-scripts . 
-	
-   https://jira.isi.edu/browse/PM-598
+scripts .
+
+    PM-598 [\#716](https://github.com/pegasus-isi/pegasus/issues/716)
 
 4) the default notification script can send out emails to multiple
-recipients. 
+recipients.
 
-5) Support for new condor keys 
+5) Support for new condor keys
 
    Pegasus allows users to specify the following condor keys as
    profiles in the Condor namespace. The new keys have been introduced
    in Condor 7.8.0
 
-   request_cpus 
-   request_memory 
-   request_disk 
-   
-   https://jira.isi.edu/browse/PM-600
+   request_cpus
+   request_memory
+   request_disk
+
+    PM-600 [\#718](https://github.com/pegasus-isi/pegasus/issues/718)
 
 
 #### BUGS FIXED
 
 1) pegasus-kickstart does not collect procs and tasks statistics on kernels >= 3.0
-   
+
    When kickstart is executed on a Linux kernel >= 3.0, logic in the
    machine extensions prevented the proc statistics gathering, because
    it was a reasonable assumption that the API might have changed (it
    did between 2.4 and 2.6). This is now fixed, as it is supported for
    kernels 3.0 through 3.2
 
-   https://jira.isi.edu/browse/PM-571
+    PM-571 [\#689](https://github.com/pegasus-isi/pegasus/issues/689)
 
 2) scp transfer mode did not create remote directories
-   
+
    When transferring to a scp endpoint, pegasus-transfer failed unless
    the remote directory already existed. This broke deep LFNs and
    staging to output sites.  This is now fixed.
 
-   https://jira.isi.edu/browse/PM-579
+    PM-579 [\#697](https://github.com/pegasus-isi/pegasus/issues/697)
 
 3) Incorrect resolution of PEGASUS_HOME path in the site catalog for
 remote sites  in some cases
-       
+
    If a user specified a path to PEGASUS_HOME for remote sites in the
    site catalog and the directory also existed on the submit machine,
    the path was resolved locally. Hence if the local directory was a
    symlink, the symlink was resolved and that path was used for the
    remote site's PEGASUS_HOME.
 
-   https://jira.isi.edu/browse/PM-577
+    PM-577 [\#695](https://github.com/pegasus-isi/pegasus/issues/695)
 
 4) pegasus-analyzer did not work correctly against the MySQL Stampede
 DB
-	
+
    pegasus-analyzer had problems querying MySQL stampede database
    because of a query aliasing error in the API underneath. This is
    now fixed.
 
-   https://jira.isi.edu/browse/PM-580
+    PM-580 [\#698](https://github.com/pegasus-isi/pegasus/issues/698)
 
-5) Wrong timezone offsets for ISO timestamps 
+5) Wrong timezone offsets for ISO timestamps
 
    Pegasus python library was generating the wrong time zone offset
    for ISO 8601 time stamps. This was because of an underlying bug in
    python where %z does not work correctly across all platforms.
 
-   https://jira.isi.edu/browse/PM-576
+    PM-576 [\#694](https://github.com/pegasus-isi/pegasus/issues/694)
 
 6) pegasus-analyzer warns about "exitcode not an integer!"
- 
+
    pegasus-analyzer throwed a warning if a long value for an exitcode
    was detected.
- 
-    https://jira.isi.edu/browse/PM-584
+
+     PM-584 [\#702](https://github.com/pegasus-isi/pegasus/issues/702)
 
 7) Perl DAX generator uses 'out' instead of 'output' for stderr and
-stdout linkage 
+stdout linkage
 
   The perl DAX generator API generated the wrong link attribute for
   stdout files. Instead of having link = output it generated link =
   out.
 
-  https://jira.isi.edu/browse/PM-585
+   PM-585 [\#703](https://github.com/pegasus-isi/pegasus/issues/703)
 
 8) Updated Stampede Queries to handle both GRID_SUBMIT and
 GLOBUS_SUBMIT events.
@@ -132,8 +132,8 @@ GLOBUS_SUBMIT events.
    binary to the submit directory for the workflow before launching
    the workflow.
 
-   More details at 
-   https://jira.isi.edu/browse/PM-595
+   More details at
+    PM-595 [\#713](https://github.com/pegasus-isi/pegasus/issues/713)
 
 ### Pegasus 4.0.0
 
@@ -157,7 +157,7 @@ and Debian packages conform to the Filesystem Hierarchy Standard
 
    Pegasus 4.0 has improved support for running workflows in a non
    shared fileysystem setup . This is useful for running in cloud
-   environments and allows for more dynamic placement of jobs. 
+   environments and allows for more dynamic placement of jobs.
    Pegasus 4.0 introduces the concept of a staging site for the
    worklfows, that can be different from an execution site. The
    planner places the data on the staging site for the workflow. When
@@ -170,13 +170,13 @@ and Debian packages conform to the Filesystem Hierarchy Standard
    Users can now setup Pegasus for different environments by setting
    the property
 
-   pegasus.data.configuration 
+   pegasus.data.configuration
 
    More details can be found here
 
-   http://pegasus.isi.edu/wms/docs/trunk/running_workflows.php#data_staging_configuration 
+   http://pegasus.isi.edu/wms/docs/trunk/running_workflows.php#data_staging_configuration
 
-   
+
 
 2) Move to FHS layout
 
@@ -195,11 +195,11 @@ and Debian packages conform to the Filesystem Hierarchy Standard
      - Shell
 
 3) Improved Credential Handling
-   
+
    Pegasus 4.0 has improved credential handling. The planner while
    planning the worklfow automatically associates the jobs with the
    credentials it may require. This is done by inspecting the URL's
-   for the files a job requires. 
+   for the files a job requires.
 
    More details on how the credentials are set can be found here
    http://pegasus.isi.edu/wms/docs/4.0/reference.php#cred_staging
@@ -222,7 +222,7 @@ and Debian packages conform to the Filesystem Hierarchy Standard
 
     More details about the clients can be found in the transfers
     chapter
-    
+
     http://pegasus.isi.edu/wms/docs/trunk/reference.php#transfer
 
 5) Runtime based clustering
@@ -232,10 +232,10 @@ and Debian packages conform to the Filesystem Hierarchy Standard
    pegasus profile key job.runtime ) , then Pegasus can horizontally
    cluster the jobs in such a way that the clustered job will not run
    more than a maxruntime ( specified by use of profile
-   clusters.maxruntime). 
+   clusters.maxruntime).
 
    More details can be found in the clustering chapter of the online
-   guide. 
+   guide.
    http://pegasus.isi.edu/wms/docs/4.0/reference.php#job_clustering
 
 6) pegasus-analyzer works with stampede database
@@ -246,13 +246,13 @@ and Debian packages conform to the Filesystem Hierarchy Standard
    submit directory , use the --files option.
 
 7) CSV formatted output files for pegasus statistcs
-   
+
    pegasus-statistics now generates it's output in a csv formatted
    file also, in addition to the txt files it creates. This is useful,
    for importing statistics in tools like Mircrosoft Excel.
 
 8) Tracking of job exitcode in the stampede schema
-   
+
    The stampede database schema was updated to associate a job
    exitcode field with the job_instance table. This makes it easier
    for the user and the mining tools to determine whether a job
@@ -264,9 +264,9 @@ and Debian packages conform to the Filesystem Hierarchy Standard
    The updated stampede schema can be found here
 
    http://pegasus.isi.edu/wms/docs/4.0/monitoring_debugging_stats.php#monitoring_pegasus-monitord
-   
+
 9) Change to how exitcode is stored in the stampede database
-   
+
    Kickstart records capture raw status in addition to the exitcode
    . The exitcode is derived from the raw status. Starting with
    Pegasus 4.0 release, all exitcode columns ( i.e invocation and job
@@ -307,18 +307,18 @@ and Debian packages conform to the Filesystem Hierarchy Standard
    generated by pegasus-plots was broken. This is now fixed.
 
    More details at
-   https://jira.isi.edu/browse/PM-566
+    PM-566 [\#684](https://github.com/pegasus-isi/pegasus/issues/684)
 
 2) UUID devices confuse pegasus-keg
 
    It is possible with Linux to describe devices in /etc/fstab with
    their UUID instead of the device name, i.e.
 
-   UUID=xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx / ext3 defaults 1 1 
-   instead of 
-   /dev/sda1 / ext3 default 1 1 
-   
+   UUID=xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx / ext3 defaults 1 1
+   instead of
+   /dev/sda1 / ext3 default 1 1
+
    However, some logic in keg relies on the device starting with a
-   slash to recognize a true-file device. 
+   slash to recognize a true-file device.
    This is now fixed.
-   
+
