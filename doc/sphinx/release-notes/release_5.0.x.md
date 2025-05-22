@@ -16,33 +16,26 @@ The release can be downloaded from https://pegasus.isi.edu/downloads
 
 1) [PM-1960] – Document debugging job submissions to HPC cluster [\#2072](https://github.com/pegasus-isi/pegasus/issues/2072)
 
-2) [PM-1982] – pegasus-aws-batch setup/delete options should not fail at [\#2085](https://github.com/pegasus-isi/pegasus/issues/2085)
-               first error
+2) [PM-1982] – pegasus-aws-batch setup/delete options should not fail at first error [\#2085](https://github.com/pegasus-isi/pegasus/issues/2085) 
 
-3) [PM-1983] – AWS Batch Error: ClientException: Maximum number of jobs [\#2086](https://github.com/pegasus-isi/pegasus/issues/2086)
-               supported is 100
+3) [PM-1983] – AWS Batch Error: ClientException: Maximum number of jobs supported is 100 [\#2086](https://github.com/pegasus-isi/pegasus/issues/2086)
 
 4) [PM-1991] – pegasus-aws-batch fails while interacting with a bucket in us-east-1 [\#2087](https://github.com/pegasus-isi/pegasus/issues/2087)
 
-5) [PM-1992] – AWS Batch Compute Environments and job definitions are not [\#2088](https://github.com/pegasus-isi/pegasus/issues/2088)
-               deleted reliably
+5) [PM-1992] – AWS Batch Compute Environments and job definitions are not deleted reliably [\#2088](https://github.com/pegasus-isi/pegasus/issues/2088)
 
 
 #### Bugs Fixed
 
-1) [PM-1959] – SGE memory parameter need a unit suffix to be [\#2071](https://github.com/pegasus-isi/pegasus/issues/2071)
-               added to remote_ce_requirements
+1) [PM-1959] – SGE memory parameter need a unit suffix to be added to remote_ce_requirements [\#2071](https://github.com/pegasus-isi/pegasus/issues/2071)
 
 2) [PM-1976] – pegasus-aws-batch –log-file option [\#2082](https://github.com/pegasus-isi/pegasus/issues/2082)
 
-3) [PM-1978] – amazon region is not being picked up correctly when [\#2084](https://github.com/pegasus-isi/pegasus/issues/2084)
-               creating a s3 bucket
+3) [PM-1978] – amazon region is not being picked up correctly when creating a s3 bucket [\#2084](https://github.com/pegasus-isi/pegasus/issues/2084)
 
-4) [PM-1997] – site selection for containerized executables should not [\#2089](https://github.com/pegasus-isi/pegasus/issues/2089)
-               consider container image url (whether file or not)
+4) [PM-1997] – site selection for containerized executables should not consider container image url (whether file or not) [\#2089](https://github.com/pegasus-isi/pegasus/issues/2089)
 
-5) [PM-1998] – pegasus-statistics lists incomplete jobs in a successful [\#2090](https://github.com/pegasus-isi/pegasus/issues/2090)
-               aws batch wf run
+5) [PM-1998] – pegasus-statistics lists incomplete jobs in a successful aws batch wf run [\#2090](https://github.com/pegasus-isi/pegasus/issues/2090)
 
 
 ### Pegasus 5.0.8
@@ -56,14 +49,11 @@ The release can be downloaded from https://pegasus.isi.edu/downloads
 
 #### New Features and Improvements
 
-1) [PM-1939] – Planner complains on http transfers if the user does not have a credentials file setup [\#2052](https://github.com/pegasus-isi/pegasus/issues/2052)
-               
+1) [PM-1939] – Planner complains on http transfers if the user does not have a credentials file setup [\#2052](https://github.com/pegasus-isi/pegasus/issues/2052) 
 
-2) [PM-1940] – NPE for planning a workflow with sub workflows, where sub workflow job requires data from http endpoint [\#2053](https://github.com/pegasus-isi/pegasus/issues/2053)
-               
+2) [PM-1940] – NPE for planning a workflow with sub workflows, where sub workflow job requires data from http endpoint [\#2053](https://github.com/pegasus-isi/pegasus/issues/2053) 
 
 3) [PM-1944] – Ability to specify a wrapper/launcher for containerized jobs in PegasusLite [\#2057](https://github.com/pegasus-isi/pegasus/issues/2057)
-               
 
 4) [PM-1946] – Improve Auth Token Acquisition For Globus Transfers [\#2059](https://github.com/pegasus-isi/pegasus/issues/2059)
 
