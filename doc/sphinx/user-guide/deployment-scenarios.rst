@@ -228,6 +228,7 @@ in their properties
    pegasus.data.configuration    condorio
 
 
+.. _hpc_system:
 
 HPC Clusters - System Install
 =============================
@@ -325,7 +326,6 @@ complete the installation, run:
 
     $ pegasus-configure-glite
 
-..
 
 Running Workflows under Glite
 -----------------------------
@@ -565,6 +565,81 @@ to your ``~/.bashrc``:
     gets killed by the system, please examine the configured 
     ulimits by running ``ulimits -a``, and discuss with your system
     administrator.
+
+.. _openondemand:
+
+HPC Clusters - Open OnDemand
+============================
+
+It is possible to launch Pegasus workflows on HPC clusters via an Open OnDemand (OOD).
+This enables users submit, manage, and collaborate on workflows using only a web browser.
+As with any OOD/Jupyter environment, this approach is also particularly valuable for
+onboarding new users and for use in classroom settings.
+
+While Open OnDemand and Jupyter are not required to run Pegasus workflows, integrating
+them offers a significant usability boost.
+
+This section provides a step-by-step guide to configuring your Open OnDemand (OOD)
+instance to enable the submission of Pegasus workflows to your HPC cluster directly
+from Jupyter Notebooks.
+
+The first step in this process is to configure a dedicated workflow management node
+(typically an interactive submit node or a worker node) to which the Jupyter Notebook
+sessions will be scheduled. This workflow management node must have HTCondor installed
+to support workflow execution, and HTCondor would translate Pegasus workflow jobs to SLURM.
+
+Workflow Management Node
+------------------------
+
+Before making any changes to your OOD instance, you need to set up a workflow
+management node where Pegasus and HTCondor are installed. For the purposes of
+this post, let's assume the hostname for this node is *workflows.cluster.edu*.
+
+The node should have the following capabilities:
+
+1) Have a system install of HTCondor and Pegasus. See instructions at :ref:`hpc_system`
+2) Interact with the local batch scheduler using the standard command line tools
+   such as squeue, sbatch - that is being able to submit jobs to the local scheduler.
+3) Be schedulable in the local batch system, to start the Jupyter Notebooks
+
+Configuring Open OnDemand and SLURM
+-----------------------------------
+Open OnDemand allows users to launch a Jupyter Notebook server on a node
+in the HPC cluster by submitting a SLURM job to the cluster.
+
+.. figure:: ../images/openondemand-jupyter.png
+   :name: openondemand-jupyter
+   :align: center
+
+It is important that the notebook is scheduled onto the workflow management node.
+In other words, the SLURM job that gets submitted via Open OnDemand needs to be
+mapped on to the workflow submit node by the SLURM scheduler.  The way to achieve
+this is to configure a SLURM partition named *pegasus* in the cluster's
+SLURM configuration that consists of only one node i.e. workflows.cluster.edu
+(the workflow management node).
+
+For example, configuration of the pegasus partition in your cluster’s
+*slurm.conf* will look something like this
+
+::
+
+    PartitionName=pegasus Nodes=pegasus.cluster.edu Default=YES MaxTime=168:00:00 OverSubscribe=FORCE:50 State=UP
+
+.. note::
+
+    Note the OverSubscribe setting. This allows for SLURM to oversubscribe the node, and allow 50
+    Jupyter notebooks to be launched on the workflow submit node across all users.
+
+Running test workflows to verify install
+----------------------------------------
+
+The best way to test this installation, is to run some Pegasus workflows through the
+Jupyter notebooks launched via your local Open OnDemand instance.
+
+For this, we have made this repository available that walks users through a
+Pegasus tutorial and also submit a workflow against the local SLURM cluster.
+
+https://github.com/pegasus-isi/hpc-examples
 
 
 HPC Clusters - Specific Systems
