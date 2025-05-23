@@ -302,36 +302,18 @@ end, unless explicitly disabled at the time of running pegasus-plan.
 
 Kickstart does not work with:
 
-1. Condor Standard Universe Jobs
+1. HTCondor Standard Universe Jobs
 
 2. MPI Jobs
 
-Pegasus automatically disables kickstart for the above jobs.
+Pegasus automatically disables kickstart for the above jobs. In those
+cases, the dagman.out and log can be used for higher level
+job duration and usage.
 
 Kickstart captures useful runtime provenance information about the job
 launched by it on the remote note, and puts in an YAML record that it
 writes to its own stdout. The stdout appears in the workflow submit
-directory as <job>.out.00n . The following information is captured by
-kickstart and logged:
-
-1. The exitcode with which the job it launched exited.
-
-2. The duration of the job
-
-3. The start time for the job
-
-4. The node on which the job ran
-
-5. The stdout and stderr of the job
-
-6. The arguments with which it launched the job
-
-7. The environment that was set for the job before it was launched.
-
-8. The machine information about the node that the job ran on
-
-Amongst the above information, the dagman.out file gives a coarser
-grained estimate of the job duration and start time.
+directory as <job>.out.0NN, rotated for each job retry.
 
 Reading a Kickstart Output File
 -------------------------------
@@ -343,245 +325,255 @@ highlighted:
 
 1. The host on which the job executed and the ipaddress of that host
 
-2. The duration and start time of the job. The time here is in reference
+2. The `duration` (*seconds*) and start time of the job. Start time is in reference
    to the clock on the remote node where the job is executed.
 
-3. The exitcode with which the job executed
+3. The `exitcode` with which the job executed
 
 4. The arguments with which the job was launched.
 
 5. The directory in which the job executed on the remote site
 
-6. The stdout of the job
+6. The `stdout` of the job
 
-7. The stderr of the job
+7. The `stderr` of the job
 
-8. The environment of the job
+8. The `environment` of the job
 
-.. tabs::
+9. Resource usage
 
-   .. tab:: YAML
+   a. Time: `utime` (user space CPU time, *seconds*) and `stime` (system CPU time, *seconds*)
 
-      .. code-block:: yaml
-            :emphasize-lines: 3,4,11-12,55-64,167-201
+   b. Memory: `maxrss` (maximum resident set size, *KB*)
 
-            - invocation: True
-              version: 3.0
-              start: 2020-06-12T22:25:51.876-07:00
-              duration: 60.039
-              transformation: "diamond::preprocess:4.0"
-              derivation: "ID0000001"
-              resource: "CCG"
-              wf-label: "blackdiamond"
-              wf-stamp: "2020-06-12T22:24:09-07:00"
-              interface: eth0
-              hostaddr: 128.9.36.72
-              hostname: compute-2.isi.edu
-              pid: 10187
-              uid: 579
-              user: ptesting
-              gid: 100
-              group: users
-              umask: 0o0022
-              mainjob:
-                start: 2020-06-12T22:25:51.913-07:00
-                duration: 60.002
-                pid: 10188
-                usage:
-                  utime: 59.993
-                  stime: 0.002
-                  maxrss: 1312
-                  minflt: 394
-                  majflt: 0
-                  nswap: 0
-                  inblock: 0
-                  outblock: 16
-                  msgsnd: 0
-                  msgrcv: 0
-                  nsignals: 0
-                  nvcsw: 2
-                  nivcsw: 326
-                status:
-                  raw: 0
-                  regular_exitcode: 0
-                executable:
-                  file_name: /var/lib/condor/execute/dir_9997/pegasus.nInvqOjMu/diamond-preprocess-4_0
-                  mode: 0o100755
-                  size: 82976
-                  inode: 369207696
-                  nlink: 1
-                  blksize: 4096
-                  blocks: 168
-                  mtime: 2020-06-12T22:25:51-07:00
-                  atime: 2020-06-12T22:25:51-07:00
-                  ctime: 2020-06-12T22:25:51-07:00
-                  uid: 579
-                  user: ptesting
-                  gid: 100
-                  group: users
-                argument_vector:
-                  - -a
-                  - preprocess
-                  - -T
-                  - 60
-                  - -i
-                  - f.a
-                  - -o
-                  - f.b1
-                  - f.b2
-                procs:
-              jobids:
-                condor: 9774913.0
-                gram: https://obelix.isi.edu:49384/16866322196481424206/5750061617434002842/
-              cwd: /var/lib/condor/execute/dir_9997/pegasus.nInvqOjMu
-              usage:
-                utime: 0.004
-                stime: 0.034
-                maxrss: 816
-                minflt: 1358
-                majflt: 1
-                nswap: 0
-                inblock: 544
-                outblock: 0
-                msgsnd: 0
-                msgrcv: 0
-                nsignals: 0
-                nvcsw: 4
-                nivcsw: 3
-              machine:
-                page-size: 4096
-                uname_system: linux
-                uname_nodename: compute-2.isi.edu
-                uname_release: 3.10.0-1062.4.1.el7.x86_64
-                uname_machine: x86_64
-                ram_total: 7990140
-                ram_free: 3355064
-                ram_shared: 0
-                ram_buffer: 0
-                swap_total: 0
-                swap_free: 0
-                cpu_count: 4
-                cpu_speed: 2600
-                cpu_vendor: GenuineIntel
-                cpu_model: Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz
-                load_min1: 0.02
-                load_min5: 0.06
-                load_min15: 0.06
-                procs_total: 215
-                procs_running: 1
-                procs_sleeping: 214
-                procs_vmsize: 42446148
-                procs_rss: 1722380
-                task_total: 817
-                task_running: 1
-                task_sleeping: 816
-              files:
-                f.b2:
-                  lfn: "f.b2"
-                  file_name: /var/lib/condor/execute/dir_9997/pegasus.nInvqOjMu/f.b2
-                  mode: 0o100644
-                  size: 114
-                  inode: 369207699
-                  nlink: 1
-                  blksize: 4096
-                  blocks: 8
-                  mtime: 2020-06-12T22:25:51-07:00
-                  atime: 2020-06-12T22:25:51-07:00
-                  ctime: 2020-06-12T22:25:51-07:00
-                  uid: 579
-                  user: ptesting
-                  gid: 100
-                  group: users
-                  output: True
-                  sha256: deac67f380112ecfa4b65879846a5f27abd64c125c25f8958cb1be44decf567f
-                  checksum_timing: 0.019
+10. File statistics
 
-                f.b1:
-                  lfn: "f.b1"
-                  file_name: /var/lib/condor/execute/dir_9997/pegasus.nInvqOjMu/f.b1
-                  mode: 0o100644
-                  size: 114
-                  inode: 369207698
-                  nlink: 1
-                  blksize: 4096
-                  blocks: 8
-                  mtime: 2020-06-12T22:25:51-07:00
-                  atime: 2020-06-12T22:25:51-07:00
-                  ctime: 2020-06-12T22:25:51-07:00
-                  uid: 579
-                  user: ptesting
-                  gid: 100
-                  group: users
-                  output: True
-                  sha256: deac67f380112ecfa4b65879846a5f27abd64c125c25f8958cb1be44decf567f
-                  checksum_timing: 0.018
+    a. Filesize: `size` (B)
 
-                stdin:
-                  file_name: /dev/null
-                  mode: 0o20666
-                  size: 0
-                  inode: 1034
-                  nlink: 1
-                  blksize: 4096
-                  blocks: 0
-                  mtime: 2019-10-29T08:35:24-07:00
-                  atime: 2019-10-29T08:35:24-07:00
-                  ctime: 2019-10-29T08:35:24-07:00
-                  uid: 0
-                  user: root
-                  gid: 0
-                  group: root
-                stdout:
-                  temporary_name: /var/lib/condor/execute/dir_9997/ks.out.1uMt3U
-                  descriptor: 3
-                  mode: 0o100600
-                  size: 0
-                  inode: 302035961
-                  nlink: 1
-                  blksize: 4096
-                  blocks: 0
-                  mtime: 2020-06-12T22:25:51-07:00
-                  atime: 2020-06-12T22:25:51-07:00
-                  ctime: 2020-06-12T22:25:51-07:00
-                  uid: 579
-                  user: ptesting
-                  gid: 100
-                  group: users
-                data_truncated: false
-                data: |
-                     Tue Oct  6 15:25:25 PDT 2020
-                stderr:
-                  temporary_name: /var/lib/condor/execute/dir_9997/ks.err.ict5LD
-                  descriptor: 4
-                  mode: 0o100600
-                  size: 0
-                  inode: 302035962
-                  nlink: 1
-                  blksize: 4096
-                  blocks: 0
-                  mtime: 2020-06-12T22:25:51-07:00
-                  atime: 2020-06-12T22:25:51-07:00
-                  ctime: 2020-06-12T22:25:51-07:00
-                  uid: 579
-                  user: ptesting
-                  gid: 100
-                  group: users
-                metadata:
-                  temporary_name: /var/lib/condor/execute/dir_9997/ks.meta.TplHum
-                  descriptor: 5
-                  mode: 0o100600
-                  size: 0
-                  inode: 302035963
-                  nlink: 1
-                  blksize: 4096
-                  blocks: 0
-                  mtime: 2020-06-12T22:25:51-07:00
-                  atime: 2020-06-12T22:25:51-07:00
-                  ctime: 2020-06-12T22:25:51-07:00
-                  uid: 579
-                  user: ptesting
-                  gid: 100
-                  group: users
+    b. Checksum: `sha256`
+
+
+.. code-block:: yaml
+      :emphasize-lines: 3,4,11-12,24-26,55-64,116,129,167-201
+
+      - invocation: True
+        version: 3.0
+        start: 2020-06-12T22:25:51.876-07:00
+        duration: 60.039
+        transformation: "diamond::preprocess:4.0"
+        derivation: "ID0000001"
+        resource: "CCG"
+        wf-label: "blackdiamond"
+        wf-stamp: "2020-06-12T22:24:09-07:00"
+        interface: eth0
+        hostaddr: 128.9.36.72
+        hostname: compute-2.isi.edu
+        pid: 10187
+        uid: 579
+        user: ptesting
+        gid: 100
+        group: users
+        umask: 0o0022
+        mainjob:
+          start: 2020-06-12T22:25:51.913-07:00
+          duration: 60.002
+          pid: 10188
+          usage:
+            utime: 59.993
+            stime: 0.002
+            maxrss: 1312
+            minflt: 394
+            majflt: 0
+            nswap: 0
+            inblock: 0
+            outblock: 16
+            msgsnd: 0
+            msgrcv: 0
+            nsignals: 0
+            nvcsw: 2
+            nivcsw: 326
+          status:
+            raw: 0
+            regular_exitcode: 0
+          executable:
+            file_name: /var/lib/condor/execute/dir_9997/pegasus.nInvqOjMu/diamond-preprocess-4_0
+            mode: 0o100755
+            size: 82976
+            inode: 369207696
+            nlink: 1
+            blksize: 4096
+            blocks: 168
+            mtime: 2020-06-12T22:25:51-07:00
+            atime: 2020-06-12T22:25:51-07:00
+            ctime: 2020-06-12T22:25:51-07:00
+            uid: 579
+            user: ptesting
+            gid: 100
+            group: users
+          argument_vector:
+            - -a
+            - preprocess
+            - -T
+            - 60
+            - -i
+            - f.a
+            - -o
+            - f.b1
+            - f.b2
+          procs:
+        jobids:
+          condor: 9774913.0
+          gram: https://obelix.isi.edu:49384/16866322196481424206/5750061617434002842/
+        cwd: /var/lib/condor/execute/dir_9997/pegasus.nInvqOjMu
+        usage:
+          utime: 0.004
+          stime: 0.034
+          maxrss: 816
+          minflt: 1358
+          majflt: 1
+          nswap: 0
+          inblock: 544
+          outblock: 0
+          msgsnd: 0
+          msgrcv: 0
+          nsignals: 0
+          nvcsw: 4
+          nivcsw: 3
+        machine:
+          page-size: 4096
+          uname_system: linux
+          uname_nodename: compute-2.isi.edu
+          uname_release: 3.10.0-1062.4.1.el7.x86_64
+          uname_machine: x86_64
+          ram_total: 7990140
+          ram_free: 3355064
+          ram_shared: 0
+          ram_buffer: 0
+          swap_total: 0
+          swap_free: 0
+          cpu_count: 4
+          cpu_speed: 2600
+          cpu_vendor: GenuineIntel
+          cpu_model: Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz
+          load_min1: 0.02
+          load_min5: 0.06
+          load_min15: 0.06
+          procs_total: 215
+          procs_running: 1
+          procs_sleeping: 214
+          procs_vmsize: 42446148
+          procs_rss: 1722380
+          task_total: 817
+          task_running: 1
+          task_sleeping: 816
+        files:
+          f.b2:
+            lfn: "f.b2"
+            file_name: /var/lib/condor/execute/dir_9997/pegasus.nInvqOjMu/f.b2
+            mode: 0o100644
+            size: 114
+            inode: 369207699
+            nlink: 1
+            blksize: 4096
+            blocks: 8
+            mtime: 2020-06-12T22:25:51-07:00
+            atime: 2020-06-12T22:25:51-07:00
+            ctime: 2020-06-12T22:25:51-07:00
+            uid: 579
+            user: ptesting
+            gid: 100
+            group: users
+            output: True
+            sha256: deac67f380112ecfa4b65879846a5f27abd64c125c25f8958cb1be44decf567f
+            checksum_timing: 0.019
+
+          f.b1:
+            lfn: "f.b1"
+            file_name: /var/lib/condor/execute/dir_9997/pegasus.nInvqOjMu/f.b1
+            mode: 0o100644
+            size: 114
+            inode: 369207698
+            nlink: 1
+            blksize: 4096
+            blocks: 8
+            mtime: 2020-06-12T22:25:51-07:00
+            atime: 2020-06-12T22:25:51-07:00
+            ctime: 2020-06-12T22:25:51-07:00
+            uid: 579
+            user: ptesting
+            gid: 100
+            group: users
+            output: True
+            sha256: deac67f380112ecfa4b65879846a5f27abd64c125c25f8958cb1be44decf567f
+            checksum_timing: 0.018
+
+          stdin:
+            file_name: /dev/null
+            mode: 0o20666
+            size: 0
+            inode: 1034
+            nlink: 1
+            blksize: 4096
+            blocks: 0
+            mtime: 2019-10-29T08:35:24-07:00
+            atime: 2019-10-29T08:35:24-07:00
+            ctime: 2019-10-29T08:35:24-07:00
+            uid: 0
+            user: root
+            gid: 0
+            group: root
+          stdout:
+            temporary_name: /var/lib/condor/execute/dir_9997/ks.out.1uMt3U
+            descriptor: 3
+            mode: 0o100600
+            size: 0
+            inode: 302035961
+            nlink: 1
+            blksize: 4096
+            blocks: 0
+            mtime: 2020-06-12T22:25:51-07:00
+            atime: 2020-06-12T22:25:51-07:00
+            ctime: 2020-06-12T22:25:51-07:00
+            uid: 579
+            user: ptesting
+            gid: 100
+            group: users
+          data_truncated: false
+          data: |
+               Tue Oct  6 15:25:25 PDT 2020
+          stderr:
+            temporary_name: /var/lib/condor/execute/dir_9997/ks.err.ict5LD
+            descriptor: 4
+            mode: 0o100600
+            size: 0
+            inode: 302035962
+            nlink: 1
+            blksize: 4096
+            blocks: 0
+            mtime: 2020-06-12T22:25:51-07:00
+            atime: 2020-06-12T22:25:51-07:00
+            ctime: 2020-06-12T22:25:51-07:00
+            uid: 579
+            user: ptesting
+            gid: 100
+            group: users
+          metadata:
+            temporary_name: /var/lib/condor/execute/dir_9997/ks.meta.TplHum
+            descriptor: 5
+            mode: 0o100600
+            size: 0
+            inode: 302035963
+            nlink: 1
+            blksize: 4096
+            blocks: 0
+            mtime: 2020-06-12T22:25:51-07:00
+            atime: 2020-06-12T22:25:51-07:00
+            ctime: 2020-06-12T22:25:51-07:00
+            uid: 579
+            user: ptesting
+            gid: 100
+            group: users
+
 
 .. note::
 
