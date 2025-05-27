@@ -186,6 +186,9 @@ public class PegasusProperties implements Cloneable {
     /** The default value to be assigned for dagman.maxpre . */
     public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "1";
 
+    /** the default value in MB for the size of documents that can be parsed * */
+    private static final String DEFAULT_DOCUMENT_PARSER_SIZE = "100";
+
     /** Various modes pegasus can be run in. */
     public static enum PEGASUS_MODE {
         production,
@@ -2081,6 +2084,26 @@ public class PegasusProperties implements Cloneable {
      */
     public boolean treatDAXLocationsAsRC() {
         return Boolean.parse(mProps.getProperty("pegasus.catalog.replica.dax.asrc"), false);
+    }
+
+    /**
+     * Returns the maximum size in MB for the yaml document parsing.
+     *
+     * <p>Referred to by the "pegasus.parser.document.size" property.
+     *
+     * @return the timeout value if specified else, DEFAULT_DOCUMENT_PARSER_SIZE.
+     * @see #DEFAULT_DOCUMENT_PARSER_SIZE
+     */
+    public int getMaxSupportedYAMLDocSize() {
+        String prop =
+                mProps.getProperty("pegasus.parser.document.size", DEFAULT_DOCUMENT_PARSER_SIZE);
+        int val;
+        try {
+            val = Integer.parseInt(prop);
+        } catch (Exception e) {
+            return Integer.parseInt(DEFAULT_DOCUMENT_PARSER_SIZE);
+        }
+        return val;
     }
 
     /**

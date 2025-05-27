@@ -49,6 +49,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.yaml.snakeyaml.LoaderOptions;
 
 /** @author Karan Vahi */
 @JsonDeserialize(using = DAXParser5.YAMLStreamingDeserializer.class)
@@ -69,6 +70,8 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
     /** File object of the schema.. */
     private final File SCHEMA_FILENAME;
 
+    private int mMAXParsedDocSize;
+
     /**
      * The overloaded constructor. The schema version passed is determined in the DAXFactory
      *
@@ -81,6 +84,10 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
         File schemaDir = this.mProps.getSchemaDir();
         File yamlSchemaDir = new File(schemaDir, "yaml");
         SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
+        mMAXParsedDocSize = bag.getPegasusProperties().getMaxSupportedYAMLDocSize();
+        mLogger.log(
+                "Maximum supported size for parsing abstract workflow " + mMAXParsedDocSize + " MB",
+                LogManager.CONFIG_MESSAGE_LEVEL);
     }
 
     /**
@@ -124,7 +131,12 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
         } catch (IOException ioe) {
             throw new RuntimeException("Exception while reading file " + file, ioe);
         }
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+        LoaderOptions loaderOptions = new LoaderOptions();
+        loaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // 20 MB
+        YAMLFactory yamlFactory = YAMLFactory.builder().loaderOptions(loaderOptions).build();
+        ObjectMapper mapper = new ObjectMapper(yamlFactory);
+
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         mapper.setInjectableValues(injectCallback());
         try {
