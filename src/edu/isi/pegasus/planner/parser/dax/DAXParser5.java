@@ -133,7 +133,7 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
         }
 
         LoaderOptions loaderOptions = new LoaderOptions();
-        loaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // 20 MB
+        loaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // in MB
         YAMLFactory yamlFactory = YAMLFactory.builder().loaderOptions(loaderOptions).build();
         ObjectMapper mapper = new ObjectMapper(yamlFactory);
 
