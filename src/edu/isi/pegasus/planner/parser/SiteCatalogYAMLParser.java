@@ -78,6 +78,10 @@ public class SiteCatalogYAMLParser extends YAMLParser {
         File schemaDir = this.mProps.getSchemaDir();
         File yamlSchemaDir = new File(schemaDir, "yaml");
         SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
+
+        mLogger.log(
+                "Maximum supported size for parsing site catalog " + mMAXParsedDocSize + " MB",
+                LogManager.CONFIG_MESSAGE_LEVEL);
     }
 
     /**
@@ -117,7 +121,13 @@ public class SiteCatalogYAMLParser extends YAMLParser {
             if (validate(f, SCHEMA_FILENAME, "site")) {
                 // validation succeeded. load.
                 Reader reader = new VariableExpansionReader(new FileReader(f));
-                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+                // GH-2113 load the yaml factory with the right loader option
+                // as picked up from properties
+                YAMLFactory yamlFactory =
+                        YAMLFactory.builder().loaderOptions(mLoaderOptions).build();
+
+                ObjectMapper mapper = new ObjectMapper(yamlFactory);
                 mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                 SiteStore store = mapper.readValue(reader, SiteStore.class);
                 for (Iterator<SiteCatalogEntry> it = store.entryIterator(); it.hasNext(); ) {

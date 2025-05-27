@@ -34,6 +34,7 @@ import java.io.Reader;
 import java.util.List;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * An abstract base class for YAML Parser invoked from catalog implementations
@@ -63,9 +64,17 @@ public abstract class YAMLParser {
         }
     }
 
+    protected final int mMAXParsedDocSize;
+    protected final LoaderOptions mLoaderOptions;
+
     public YAMLParser(PegasusBag bag) {
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();
+        mMAXParsedDocSize = mProps.getMaxSupportedYAMLDocSize();
+        // GH-2113 load the yaml factory with the right loader option
+        // as picked up from properties
+        mLoaderOptions = new LoaderOptions();
+        mLoaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // in MB
     }
 
     /**
