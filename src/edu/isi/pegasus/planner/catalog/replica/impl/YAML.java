@@ -256,7 +256,7 @@ public class YAML implements ReplicaCatalog {
         if (props.containsKey(YAML.READ_ONLY_KEY)) {
             m_readonly = Boolean.parse(props.getProperty(YAML.READ_ONLY_KEY), false);
         }
-        if (props.contains(ReplicaCatalog.PARSER_DOCUMENT_SIZE_PROPERTY_KEY)) {
+        if (props.containsKey(ReplicaCatalog.PARSER_DOCUMENT_SIZE_PROPERTY_KEY)) {
             // GH-2113
             mMAXParsedDocSize =
                     Integer.parseInt(
