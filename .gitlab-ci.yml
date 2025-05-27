@@ -378,6 +378,7 @@ Release:
   image: rockylinux:9
   before_script:
   - env
+  - find .
   - curl -fsSL https://cli.github.com/packages/rpm/gh-cli.repo | tee /etc/yum.repos.d/github-cli.repo
   - dnf install -y gh python3.12 python3.12-pip
   - pip3.12 install twine
@@ -402,14 +403,14 @@ Release:
 
   # Publish to PyPI
   - |
-    twine upload \
+    echo twine upload \
       --repository $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "test-pypi" || echo "pypi") \
       dist/pegasus_wms*.tar.gz
 
   # Publish to GitHub releases
   # Token is read from the GITHUB_TOKEN environment variable.
   - |
-    gh release create \
+    echo gh release create \
       --repo pegasus-isi/pegasus \
       --verify-tag \
       --title "${PEGASUS_VERSION}" \
@@ -418,8 +419,8 @@ Release:
       $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "--prerelease") \
       ${PEGASUS_VERSION} \
       dist/*.rpm dist/*.deb dist/pegasus-binary-*.tar.gz dist/pegasus-worker-*.tar.gz
-  rules:
-  - if: $CI_COMMIT_TAG
+  # rules:
+  # - if: $CI_COMMIT_TAG
   dependencies:
   - pre-job
   tags:
