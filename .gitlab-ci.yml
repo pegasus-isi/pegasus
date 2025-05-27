@@ -423,6 +423,7 @@ Release:
   # - if: $CI_COMMIT_TAG
   dependencies:
   - pre-job
+  - Binaries
   tags:
   - docker
   retry: 0
