@@ -94,7 +94,10 @@ public abstract class YAMLParser {
             mLogger.log("IO Error :" + ioe.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
         }
 
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        // GH-2113 load the yaml factory with the right loader option
+        // as picked up from properties
+        YAMLFactory yamlFactory = YAMLFactory.builder().loaderOptions(mLoaderOptions).build();
+        ObjectMapper mapper = new ObjectMapper(yamlFactory);
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         JsonNode root = null;
         try {
@@ -107,7 +110,8 @@ public abstract class YAMLParser {
         }
         if (root != null) {
             YAMLSchemaValidationResult result =
-                    YAMLSchemaValidator.getInstance().validate(root, schemaFile, catalogType);
+                    YAMLSchemaValidator.getInstance(mLoaderOptions)
+                            .validate(root, schemaFile, catalogType);
 
             // schema validation is done here.. in case of any validation error we throw the
             // result..
