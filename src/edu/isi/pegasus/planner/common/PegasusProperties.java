@@ -187,7 +187,7 @@ public class PegasusProperties implements Cloneable {
     public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "1";
 
     /** the default value in MB for the size of documents that can be parsed * */
-    private static final String DEFAULT_DOCUMENT_PARSER_SIZE = "100";
+    private static final String DEFAULT_DOCUMENT_PARSER_SIZE = "500";
 
     /** Various modes pegasus can be run in. */
     public static enum PEGASUS_MODE {
