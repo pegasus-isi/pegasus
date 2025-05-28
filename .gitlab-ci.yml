@@ -16,8 +16,9 @@ stages:
 - build
 - deploy
 - release
-- e2e-tests
 - performance-tests
+- e2e-tests
+
 
 pre-job:
   stage: .pre
@@ -422,6 +423,14 @@ Release:
   - if: $CI_COMMIT_TAG
   dependencies:
   - pre-job
+  - Source
+  - Alpine
+  - RHEL
+  - RHEL_v3
+  - SUSE
+  - Debian
+  - Ubuntu
+  - macOS
   tags:
   - docker
   retry: 0
@@ -576,9 +585,6 @@ Workflow Tests:
   dependencies:
   - pre-job
   - "RHEL: [x86_64, rhel_8]"
-  needs:
-  - pre-job
-  - "RHEL: [x86_64, rhel_8]"
   tags:
   - bamboo
   retry: 0
@@ -613,6 +619,9 @@ Performance Tests:
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:
+  - pre-job
+  - "RHEL: [x86_64, rhel_8]"
+  needs:
   - pre-job
   - "RHEL: [x86_64, rhel_8]"
   tags:

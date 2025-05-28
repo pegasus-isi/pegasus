@@ -1355,7 +1355,7 @@ public class ADAG {
         String dax = "wf.dax";
         if (args.length > 0) {
             dax = args[0];
-            Diamond().writeToFile(dax);
+            Performance().writeToFile(dax);
 
             Callback c = new DAX2CDAG();
             PegasusBag bag = new PegasusBag();
@@ -1367,8 +1367,56 @@ public class ADAG {
             System.err.println("Validation of file " + parser.validate(dax));
 
         } else {
-            Diamond().writeToSTDOUT(FORMAT.yaml);
+            // Performance().writeToSTDOUT(FORMAT.yaml);
+            System.out.println("Writing dax to " + dax);
+            Performance().writeToFile(dax);
+            System.out.println("Finished writing dax to " + dax);
         }
+    }
+
+    private static ADAG Performance() {
+        ADAG dax = new ADAG("test");
+
+        Executable preprocess = new Executable("pegasus", "preproces", "1.0");
+        preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        preprocess.setInstalled(false);
+        preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg", "local"));
+        preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
+        preprocess.addMetaData("project", "pegasus");
+
+        for (int i = 0; i <= 1000000; i++) {
+            File fa = new File("f.a" + i);
+            fa.addMetaData("foo", "bar");
+            fa.addMetaData("num", "1");
+            fa.addProfile("env", "FOO", "/usr/bar");
+            fa.addProfile("globus", "walltime", "40");
+            fa.addPhysicalFile("file:///scratch/f.a", "local");
+            dax.addFile(fa);
+
+            File fb1 = new File("f.b1" + i);
+            File fb2 = new File("f.b2" + i);
+            fb1.addMetaData("foo", "bar");
+            fb1.addMetaData("num", "2");
+            fb1.addProfile("env", "GOO", "/usr/foo");
+            fb1.addProfile("globus", "walltime", "40");
+            dax.addFile(fb1);
+
+            Job j1 = new Job("j1" + i, "pegasus", "preprocess", "1.0", "j1");
+            j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
+            j1.addArgument("-o ").addArgument(fb1).addArgument(fb2);
+            j1.uses(fa, File.LINK.INPUT);
+            j1.uses(fb1, File.LINK.OUTPUT);
+            j1.uses(fb2, File.LINK.OUTPUT);
+            j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
+            j1.addInvoke(
+                    WHEN.start,
+                    "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+            j1.addInvoke(
+                    WHEN.at_end,
+                    "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+            dax.addJob(j1);
+        }
+        return dax;
     }
 
     private static ADAG Diamond() {

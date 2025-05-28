@@ -3460,3 +3460,11 @@ Miscellaneous Properties
     | | Type :Boolean                                   | | the planner will automatically add an edge between        |
     | | Default : true                                  | | JobA and JobB.                                            |
     +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.parser.document.size      | | For parsing YAML documents, this property controls the    |
+    | |                                                 | | behavior of the snakeyaml library in terms of the maximum |
+    | | Profile Key: N/A                                | | size in MB of a document that can be parsed.              |
+    | | Scope : Properties                              | |                                                           |
+    | | Since : 5.1.1                                   | |                                                           |
+    | | Type : Integer in MB                            | |                                                           |
+    | | Default : 500                                   | |                                                           |
+    +---------------------------------------------------+-------------------------------------------------------------+

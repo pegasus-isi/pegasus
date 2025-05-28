@@ -108,6 +108,12 @@ public class TransformationCatalogYAMLParser extends YAMLParser {
         super(bag);
         File yamlSchemaDir = new File(schemaDir, "yaml");
         SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
+
+        mLogger.log(
+                "Maximum supported size for parsing transformation catalog "
+                        + mMAXParsedDocSize
+                        + " MB",
+                LogManager.CONFIG_MESSAGE_LEVEL);
     }
 
     /**
@@ -134,7 +140,13 @@ public class TransformationCatalogYAMLParser extends YAMLParser {
             if (validate(f, SCHEMA_FILENAME, "transformation")) {
                 // validation succeeded. load.
                 Reader reader = new VariableExpansionReader(new FileReader(f));
-                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+                // GH-2113 load the yaml factory with the right loader option
+                // as picked up from properties
+                YAMLFactory yamlFactory =
+                        YAMLFactory.builder().loaderOptions(mLoaderOptions).build();
+
+                ObjectMapper mapper = new ObjectMapper(yamlFactory);
                 mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                 store = mapper.readValue(reader, TransformationStore.class);
                 for (TransformationCatalogEntry entry : store.getAllEntries()) {

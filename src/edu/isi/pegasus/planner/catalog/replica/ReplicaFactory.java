@@ -158,7 +158,9 @@ public class ReplicaFactory {
             // check if file is specified in properties
             if (connectProps.containsKey("file")) {
                 // PM-1518 check for type of file
-                if (FileDetector.isTypeYAML(connectProps.getProperty("file"))) {
+                if (FileDetector.isTypeYAML(
+                        connectProps.getProperty("file"),
+                        properties.getMaxSupportedYAMLDocSize())) {
                     catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
                 } else {
                     catalogImplementor = FILE_CATALOG_IMPLEMENTOR;
@@ -220,6 +222,13 @@ public class ReplicaFactory {
         if (logger == null) {
             throw new NullPointerException("Invalid Logger passed");
         }
+
+        // GH-2113
+        int maXParsedDocSize = bag.getPegasusProperties().getMaxSupportedYAMLDocSize();
+        connectProps.setProperty(
+                ReplicaCatalog.PARSER_DOCUMENT_SIZE_PROPERTY_KEY,
+                Integer.toString(maXParsedDocSize));
+
         logger.log(
                 "[Replica Factory] Connect properties detected for implementor "
                         + catalogImplementor

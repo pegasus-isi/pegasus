@@ -54,6 +54,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * This class implements a replica catalog backend populated by parsing the meta files that are
@@ -116,6 +117,8 @@ public class Meta implements ReplicaCatalog {
     /** A boolean indicating whether the catalog is read only or not. */
     boolean m_readonly;
 
+    private final int mMAXParsedDocSize;
+
     /**
      * Default empty constructor creates an object that is not yet connected to any database. You
      * must use support methods to connect before this instance becomes usable.
@@ -129,6 +132,8 @@ public class Meta implements ReplicaCatalog {
         m_readonly = false;
 
         PegasusProperties props = PegasusProperties.getInstance();
+
+        mMAXParsedDocSize = props.getMaxSupportedYAMLDocSize();
     }
 
     /**
@@ -151,7 +156,14 @@ public class Meta implements ReplicaCatalog {
             Reader reader = null;
             try {
                 reader = new VariableExpansionReader(new FileReader(filename));
-                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                // GH-2113 load the yaml factory with the right loader option
+                // as picked up from properties
+                LoaderOptions loaderOptions = new LoaderOptions();
+                loaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // in MB
+                YAMLFactory yamlFactory =
+                        YAMLFactory.builder().loaderOptions(loaderOptions).build();
+
+                ObjectMapper mapper = new ObjectMapper(yamlFactory);
                 mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                 // inject instance of this class to be used for deserialization
                 mapper.setInjectableValues(injectCallback());

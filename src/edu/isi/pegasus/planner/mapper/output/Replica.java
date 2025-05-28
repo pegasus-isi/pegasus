@@ -133,7 +133,8 @@ public class Replica implements OutputMapper {
             String key = "file";
             if (props.containsKey(key)) {
                 String fileBackend = props.getProperty(key);
-                if (FileDetector.isTypeYAML(fileBackend)) {
+                if (FileDetector.isTypeYAML(
+                        fileBackend, bag.getPegasusProperties().getMaxSupportedYAMLDocSize())) {
                     catalogImplementor = ReplicaFactory.YAML_CATALOG_IMPLEMENTOR;
                 }
             }

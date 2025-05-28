@@ -245,7 +245,8 @@ public class TransformationFactory {
             // check if file is specified in properties
             if (props.containsKey("file")) {
                 // PM-1518 check for type of file
-                if (FileDetector.isTypeYAML(props.getProperty("file"))) {
+                if (FileDetector.isTypeYAML(
+                        props.getProperty("file"), properties.getMaxSupportedYAMLDocSize())) {
                     catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
                 } else {
                     catalogImplementor = TEXT_CATALOG_IMPLEMENTOR;

@@ -34,6 +34,7 @@ import java.io.Reader;
 import java.util.List;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * An abstract base class for YAML Parser invoked from catalog implementations
@@ -63,9 +64,17 @@ public abstract class YAMLParser {
         }
     }
 
+    protected final int mMAXParsedDocSize;
+    protected final LoaderOptions mLoaderOptions;
+
     public YAMLParser(PegasusBag bag) {
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();
+        mMAXParsedDocSize = mProps.getMaxSupportedYAMLDocSize();
+        // GH-2113 load the yaml factory with the right loader option
+        // as picked up from properties
+        mLoaderOptions = new LoaderOptions();
+        mLoaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // in MB
     }
 
     /**
@@ -85,7 +94,10 @@ public abstract class YAMLParser {
             mLogger.log("IO Error :" + ioe.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
         }
 
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        // GH-2113 load the yaml factory with the right loader option
+        // as picked up from properties
+        YAMLFactory yamlFactory = YAMLFactory.builder().loaderOptions(mLoaderOptions).build();
+        ObjectMapper mapper = new ObjectMapper(yamlFactory);
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         JsonNode root = null;
         try {
@@ -98,7 +110,8 @@ public abstract class YAMLParser {
         }
         if (root != null) {
             YAMLSchemaValidationResult result =
-                    YAMLSchemaValidator.getInstance().validate(root, schemaFile, catalogType);
+                    YAMLSchemaValidator.getInstance(mLoaderOptions)
+                            .validate(root, schemaFile, catalogType);
 
             // schema validation is done here.. in case of any validation error we throw the
             // result..

@@ -28,6 +28,7 @@ import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * This class if used to yaml object against the specified schema..
@@ -36,12 +37,23 @@ import java.util.Set;
  */
 public class YAMLSchemaValidator {
 
-    private static final YAMLSchemaValidator INSTANCE = new YAMLSchemaValidator();
+    private static YAMLSchemaValidator INSTANCE = null;
 
-    private YAMLSchemaValidator() {}
+    private LoaderOptions mLoaderOptions;
 
-    /** Singleton Class */
-    public static YAMLSchemaValidator getInstance() {
+    private YAMLSchemaValidator(LoaderOptions loaderOptions) {
+        mLoaderOptions = loaderOptions;
+    }
+
+    /**
+     * Singleton Class
+     *
+     * @param loaderOptions yaml loader options
+     */
+    public static YAMLSchemaValidator getInstance(LoaderOptions loaderOptions) {
+        if (INSTANCE == null) {
+            INSTANCE = new YAMLSchemaValidator(loaderOptions);
+        }
         return INSTANCE;
     }
 
@@ -58,7 +70,11 @@ public class YAMLSchemaValidator {
             JsonNode jsonNode, File schemaFile, String catalogType) {
         // need to pass URI path to ensure common.json gets resolved correctly
         URI schemaUri = schemaFile.toURI();
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+        // GH-2113 load the yaml factory with the right loader option
+        // as picked up from properties
+        YAMLFactory yamlFactory = YAMLFactory.builder().loaderOptions(mLoaderOptions).build();
+        ObjectMapper mapper = new ObjectMapper(yamlFactory);
         JsonSchemaFactory factory =
                 JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
                         .objectMapper(mapper)

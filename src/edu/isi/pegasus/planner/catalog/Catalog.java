@@ -27,6 +27,8 @@ public interface Catalog {
     /** The default DB Driver properties prefix. */
     public static final String DB_ALL_PREFIX = "pegasus.catalog.*.db";
 
+    public static final String PARSER_DOCUMENT_SIZE_PROPERTY_KEY = "parser.document.size";
+
     /**
      * Establishes a link between the implementation and the thing the implementation is build upon.
      *

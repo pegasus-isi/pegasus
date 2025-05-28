@@ -70,6 +70,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * This class implements a replica catalog on top of a simple file with regular expression based
@@ -167,6 +168,8 @@ public class YAML implements ReplicaCatalog {
     /** The version for the Replica Catalog */
     private String mVersion;
 
+    private int mMAXParsedDocSize;
+
     /**
      * Default empty constructor creates an object that is not yet connected to any database. You
      * must use support methods to connect before this instance becomes usable.
@@ -187,6 +190,7 @@ public class YAML implements ReplicaCatalog {
         File schemaDir = props.getSchemaDir();
         File yamlSchemaDir = new File(schemaDir, "yaml");
         SCHEMA_FILE = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
+        mMAXParsedDocSize = props.getMaxSupportedYAMLDocSize();
     }
 
     /**
@@ -211,7 +215,13 @@ public class YAML implements ReplicaCatalog {
             Reader reader = null;
             try {
                 reader = new VariableExpansionReader(new FileReader(filename));
-                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+                // GH-2113 set loader options correctly
+                LoaderOptions loaderOptions = new LoaderOptions();
+                loaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // in MB
+                YAMLFactory yamlFactory =
+                        YAMLFactory.builder().loaderOptions(loaderOptions).build();
+                ObjectMapper mapper = new ObjectMapper(yamlFactory);
                 mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                 // inject instance of this class to be used for deserialization
                 mapper.setInjectableValues(injectCallback());
@@ -252,6 +262,12 @@ public class YAML implements ReplicaCatalog {
         if (props.containsKey(YAML.READ_ONLY_KEY)) {
             m_readonly = Boolean.parse(props.getProperty(YAML.READ_ONLY_KEY), false);
         }
+        if (props.containsKey(ReplicaCatalog.PARSER_DOCUMENT_SIZE_PROPERTY_KEY)) {
+            // GH-2113
+            mMAXParsedDocSize =
+                    Integer.parseInt(
+                            props.getProperty(ReplicaCatalog.PARSER_DOCUMENT_SIZE_PROPERTY_KEY));
+        }
         if (props.containsKey("file")) return connect(props.getProperty("file"));
         return false;
     }
@@ -272,7 +288,11 @@ public class YAML implements ReplicaCatalog {
             throw new ReplicaCatalogException(ioe);
         }
 
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        // GH-2113 set loader options correctly
+        LoaderOptions loaderOptions = new LoaderOptions();
+        loaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // in MB
+        YAMLFactory yamlFactory = YAMLFactory.builder().loaderOptions(loaderOptions).build();
+        ObjectMapper mapper = new ObjectMapper(yamlFactory);
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
         JsonNode root = null;
         try {
@@ -284,7 +304,8 @@ public class YAML implements ReplicaCatalog {
         }
         if (root != null) {
             YAMLSchemaValidationResult result =
-                    YAMLSchemaValidator.getInstance().validate(root, SCHEMA_FILE, "replica");
+                    YAMLSchemaValidator.getInstance(loaderOptions)
+                            .validate(root, SCHEMA_FILE, "replica");
 
             // schema validation is done here.. in case of any validation error we throw the
             // result..
