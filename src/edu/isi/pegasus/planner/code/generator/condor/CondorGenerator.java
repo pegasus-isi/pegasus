@@ -36,6 +36,7 @@ import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.WorkflowMetrics;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
@@ -136,6 +137,9 @@ public class CondorGenerator extends Abstract {
 
     /** limit to use for visualizing the abstract wf */
     public static final int ABSTRACT_WF_VISUALIZE_LIMIT = 100;
+
+    /** limit to use for visualizing the abstract wf */
+    public static final int ABSTRACT_WF_VISUALIZE_FILE_LIMIT = 300;
 
     /** limit to use for visualizing the concrete wf */
     public static final int CONCRETE_WF_VISUALIZE_LIMIT = 150;
@@ -1147,7 +1151,7 @@ public class CondorGenerator extends Abstract {
         }
         if (count > limit) {
             mLogger.log(
-                    "Not generating the png file as the"
+                    "Not generating the png file for the workflow as the"
                             + " "
                             + (isAbstract ? "abstract" : "executable")
                             + " "
@@ -1157,6 +1161,29 @@ public class CondorGenerator extends Abstract {
                             + limit,
                     LogManager.INFO_MESSAGE_LEVEL);
             return false;
+        }
+
+        // second limit on number of files if the withFiles option is enabled
+        if (isAbstract && withFiles) {
+            int fileCount =
+                    dag.getWorkflowMetrics().getNumDAXFiles(WorkflowMetrics.FILE_TYPE.total);
+            if (fileCount > CondorGenerator.ABSTRACT_WF_VISUALIZE_FILE_LIMIT) {
+                mLogger.log(
+                        "Not generating the png file visualizing the abstract workflow with files as the"
+                                + " "
+                                + (isAbstract ? "abstract" : "executable")
+                                + " "
+                                + "workflow has a file count of"
+                                + " "
+                                + fileCount
+                                + " which exceeds the limit of"
+                                + " "
+                                + ABSTRACT_WF_VISUALIZE_FILE_LIMIT
+                                + " "
+                                + "files.",
+                        LogManager.INFO_MESSAGE_LEVEL);
+                return false;
+            }
         }
 
         File exec = FindExecutable.findExec("dot");

@@ -28,6 +28,28 @@ simplify workflows and minimize the overhead associated with customizing contain
 
 More details can be found at :ref:`containers-data-transfers`.
 
+
+RPM Upgrades
+------------
+
+Please note that RPM packaging for 5.1.x series is not compatible with the 5.0.x series.
+If you try to update an existing 5.0.x install you will see an error similar to the trace below
+
+::
+
+    dnf update pegasus
+
+    Running transaction check
+    Transaction check succeeded.
+    Running transaction test
+    The downloaded packages were saved in cache until the next successful transaction.
+    You can remove cached packages by executing 'dnf clean packages'.
+    Error: Transaction test error:
+     file /usr/lib64/pegasus/python from install of pegasus-5.1.0-1.el8.x86_64 conflicts with file from package pegasus-5.0.9-1.el8.x86_64
+
+The recommended way is to first remove the 5.0.x install and then do the install.
+
+
 .. _migrating-from-49-to-50:
 
 Migrating From Pegasus 4.9.X to Pegasus 5.0

@@ -1,14 +1,17 @@
 ## Pegasus 5.1.x Series
 
-### Pegasus 5.1.0
+### Pegasus 5.1.1 and 5.1.0
 
-**Release Date:**  May 27, 2025
+**Release Date:**  May 29, 2025
 
 
-We are happy to announce the release of Pegasus 5.1.  Pegasus 5.1.0
-is  a major release of Pegasus  It also includes all features and
+We are happy to announce the release of Pegasus 5.1.1. It is a minor release on top of
+Pegasus 5.1.0 which is a major release of Pegasus. It also includes all features and
 bug fixes from the 5.0 branch. We invite our users to give it a
-try.    
+try. 
+
+We recommend that users upgrade to 5.1.1 and not 5.1.0 because 5.1.1 has a fix for
+[\#2113](https://github.com/pegasus-isi/pegasus/issues/2113) .
 
 The release can be downloaded from:
 <https://pegasus.isi.edu/downloads>
@@ -62,7 +65,23 @@ instructions to upgrade at
    More details can be found in the 
    [documentation](https://pegasus.isi.edu/documentation/reference-guide/funding-citing-usage-stats.html#pegasus-lite-metrics).
  
- 
+5) Please note that RPM packaging for 5.1.x series is not compatible with the 5.0.x series.
+   If you try to update an existing 5.0.x install you will see an error similar to the trace below 
+
+``` 
+dnf update pegasus
+...
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+The downloaded packages were saved in cache until the next successful transaction.
+You can remove cached packages by executing 'dnf clean packages'.
+Error: Transaction test error:
+ file /usr/lib64/pegasus/python from install of pegasus-5.1.0-1.el8.x86_64 conflicts with file from package pegasus-5.0.9-1.el8.x86_64
+```
+
+   The recommended way is to first remove the 5.0.x install and then do the install.
+
 #### New Features and Improvements 
 
 1) update deployment scenarios documentation to include Open OnDemand configuration [\#2112](https://github.com/pegasus-isi/pegasus/issues/2112)
@@ -107,17 +126,18 @@ instructions to upgrade at
 
 #### Bugs Fixed
 
-1) pegasus aws batch test failing because of urllib3 incompatibility [\#2107](https://github.com/pegasus-isi/pegasus/issues/2107)
-2) Planner should catch deep lfn common name problem when using CEDAR [\#2106](https://github.com/pegasus-isi/pegasus/issues/2106)
-3) support for condorio deep LFN broke after move to host OS based transfers [\#2105](https://github.com/pegasus-isi/pegasus/issues/2105)
-4) when parsing container mount points in the TC, normalize the path to ensure any duplicate / in directory paths are removed [\#2103](https://github.com/pegasus-isi/pegasus/issues/2103)
-5) pegasus-graphviz fails on a wf generated with java dax api that has no jobs [\#2101](https://github.com/pegasus-isi/pegasus/issues/2101)
-6) \[PM-1954\] Importing six.moves raises ModuleNotFoundError on Python 3.12 [\#2067](https://github.com/pegasus-isi/pegasus/issues/2067)
-7) \[PM-1968\] pegasus.gridstart allows values that are not documented [\#2074](https://github.com/pegasus-isi/pegasus/issues/2074)
-8) \[PM-1952\] Local universe job fail with pegasus.transfer.bypass.input.staging = true [\#2065](https://github.com/pegasus-isi/pegasus/issues/2065)
-9)  \[PM-1924\] API submit still drops debug info to stdout [\#2037](https://github.com/pegasus-isi/pegasus/issues/2037)
-10) \[PM-1902\] Pika problem on RHEL 9 - Bump the version to 1.2.1 also [\#2015](https://github.com/pegasus-isi/pegasus/issues/2015)
-11)  \[PM-1923\] download form does not send metrics to metric server [\#2036](https://github.com/pegasus-isi/pegasus/issues/2036)
+1) snakeyaml version version 1.32, used by Jackson 2.14 has an in-built circuit breaker that breaks parsing for large yaml documents [\#2113](https://github.com/pegasus-isi/pegasus/issues/2113)
+2) pegasus aws batch test failing because of urllib3 incompatibility [\#2107](https://github.com/pegasus-isi/pegasus/issues/2107)
+3) Planner should catch deep lfn common name problem when using CEDAR [\#2106](https://github.com/pegasus-isi/pegasus/issues/2106)
+4) support for condorio deep LFN broke after move to host OS based transfers [\#2105](https://github.com/pegasus-isi/pegasus/issues/2105)
+5) when parsing container mount points in the TC, normalize the path to ensure any duplicate / in directory paths are removed [\#2103](https://github.com/pegasus-isi/pegasus/issues/2103)
+6) pegasus-graphviz fails on a wf generated with java dax api that has no jobs [\#2101](https://github.com/pegasus-isi/pegasus/issues/2101)
+7) \[PM-1954\] Importing six.moves raises ModuleNotFoundError on Python 3.12 [\#2067](https://github.com/pegasus-isi/pegasus/issues/2067)
+8) \[PM-1968\] pegasus.gridstart allows values that are not documented [\#2074](https://github.com/pegasus-isi/pegasus/issues/2074)
+9) \[PM-1952\] Local universe job fail with pegasus.transfer.bypass.input.staging = true [\#2065](https://github.com/pegasus-isi/pegasus/issues/2065)
+10) \[PM-1924\] API submit still drops debug info to stdout [\#2037](https://github.com/pegasus-isi/pegasus/issues/2037)
+11) \[PM-1902\] Pika problem on RHEL 9 - Bump the version to 1.2.1 also [\#2015](https://github.com/pegasus-isi/pegasus/issues/2015)
+12) \[PM-1923\] download form does not send metrics to metric server [\#2036](https://github.com/pegasus-isi/pegasus/issues/2036)
 
 
 #### Merged pull requests
