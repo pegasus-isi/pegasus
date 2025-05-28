@@ -1174,6 +1174,9 @@ public class CondorGenerator extends Abstract {
                 args.append(" ").append("--files");
             }
             args.append(" ").append(dagFileName);
+            mLogger.log(
+                    "Executing command to vizualize wf: pegasus-graphviz" + " " + args.toString(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
             if (c.execute("pegasus-graphviz", args.toString()) == 0) {
                 mLogger.log(
                         "Written out png file visualizing the"
