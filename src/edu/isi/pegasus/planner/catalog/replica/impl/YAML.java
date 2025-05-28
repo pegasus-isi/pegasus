@@ -215,7 +215,13 @@ public class YAML implements ReplicaCatalog {
             Reader reader = null;
             try {
                 reader = new VariableExpansionReader(new FileReader(filename));
-                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+                // GH-2113 set loader options correctly
+                LoaderOptions loaderOptions = new LoaderOptions();
+                loaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // in MB
+                YAMLFactory yamlFactory =
+                        YAMLFactory.builder().loaderOptions(loaderOptions).build();
+                ObjectMapper mapper = new ObjectMapper(yamlFactory);
                 mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
                 // inject instance of this class to be used for deserialization
                 mapper.setInjectableValues(injectCallback());
@@ -282,6 +288,7 @@ public class YAML implements ReplicaCatalog {
             throw new ReplicaCatalogException(ioe);
         }
 
+        // GH-2113 set loader options correctly
         LoaderOptions loaderOptions = new LoaderOptions();
         loaderOptions.setCodePointLimit(mMAXParsedDocSize * 1024 * 1024); // in MB
         YAMLFactory yamlFactory = YAMLFactory.builder().loaderOptions(loaderOptions).build();
