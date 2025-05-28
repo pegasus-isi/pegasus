@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.regex.Pattern;
+import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * Helper Class to detect type of a file.
@@ -113,19 +114,21 @@ public class FileDetector {
      * Returns whether type of file is type YAML or not
      *
      * @param file path to the file
+     * @param maxParsedDocSize the size in MB as to max parsed document size
      * @return boolean indicating whether file is yaml formatted or not.
      */
-    public static boolean isTypeYAML(String file) {
-        return FileDetector.isTypeYAML(new File(file));
+    public static boolean isTypeYAML(String file, int maxParsedDocSize) {
+        return FileDetector.isTypeYAML(new File(file), maxParsedDocSize);
     }
 
     /**
      * Returns whether type of file is type YAML or not
      *
      * @param file the file
+     * @param maxParsedDocSize the size in MB as to max parsed document size
      * @return boolean indicating whether file is yaml formatted or not.
      */
-    public static boolean isTypeYAML(File file) {
+    public static boolean isTypeYAML(File file, int maxParsedDocSize) {
         boolean isYAML = false;
         if (!(file.exists() && file.canRead())) {
             throw new RuntimeException(
@@ -137,8 +140,14 @@ public class FileDetector {
             return true;
         }
 
+        // GH-2113 load the yaml factory with the right loader option
+        // as picked up from properties
+        LoaderOptions loaderOptions = new LoaderOptions();
+        loaderOptions.setCodePointLimit(maxParsedDocSize * 1024 * 1024); // in MB
+        YAMLFactory yamlFactory = YAMLFactory.builder().loaderOptions(loaderOptions).build();
+
         // first try to parse in directly to a YAML parser
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = new ObjectMapper(yamlFactory);
         JsonNode root = null;
         try {
             root = mapper.readTree(new FileReader(file));

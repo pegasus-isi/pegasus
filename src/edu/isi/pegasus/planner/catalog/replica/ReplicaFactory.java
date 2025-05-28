@@ -158,7 +158,9 @@ public class ReplicaFactory {
             // check if file is specified in properties
             if (connectProps.containsKey("file")) {
                 // PM-1518 check for type of file
-                if (FileDetector.isTypeYAML(connectProps.getProperty("file"))) {
+                if (FileDetector.isTypeYAML(
+                        connectProps.getProperty("file"),
+                        properties.getMaxSupportedYAMLDocSize())) {
                     catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
                 } else {
                     catalogImplementor = FILE_CATALOG_IMPLEMENTOR;

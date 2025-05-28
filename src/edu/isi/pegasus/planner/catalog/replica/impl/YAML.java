@@ -297,7 +297,8 @@ public class YAML implements ReplicaCatalog {
         }
         if (root != null) {
             YAMLSchemaValidationResult result =
-                    YAMLSchemaValidator.getInstance().validate(root, SCHEMA_FILE, "replica");
+                    YAMLSchemaValidator.getInstance(loaderOptions)
+                            .validate(root, SCHEMA_FILE, "replica");
 
             // schema validation is done here.. in case of any validation error we throw the
             // result..

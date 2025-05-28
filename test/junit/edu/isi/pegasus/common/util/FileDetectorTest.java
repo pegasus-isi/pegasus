@@ -42,7 +42,7 @@ public class FileDetectorTest {
             writer = new BufferedWriter(new FileWriter(mTestFile));
             writer.write("pegasus: 5.0\n");
             writer.close();
-            assertTrue(FileDetector.isTypeYAML(mTestFile));
+            assertTrue(FileDetector.isTypeYAML(mTestFile, 10));
         } catch (IOException ex) {
         } finally {
             mTestFile.delete();
@@ -60,7 +60,7 @@ public class FileDetectorTest {
             writer.write("pegasus: '5.0'\n");
             writer.write("name: blackdiamond");
             writer.close();
-            assertTrue(FileDetector.isTypeYAML(mTestFile));
+            assertTrue(FileDetector.isTypeYAML(mTestFile, 10));
         } catch (IOException ex) {
         } finally {
             mTestFile.delete();
@@ -78,7 +78,7 @@ public class FileDetectorTest {
             writer.write(" ted: { name: ted, age: 32, email: ted@tedtalks.com }\n");
 
             writer.close();
-            assertTrue(FileDetector.isTypeYAML(mTestFile));
+            assertTrue(FileDetector.isTypeYAML(mTestFile, 10));
         } catch (IOException ex) {
         } finally {
 
@@ -97,7 +97,7 @@ public class FileDetectorTest {
             writer.write("     jobs: \n");
             writer.write(" ted: { name: ted, age: 32, email: ted@tedtalks.com }\n");
             writer.close();
-            assertTrue(FileDetector.isTypeYAML(mTestFile));
+            assertTrue(FileDetector.isTypeYAML(mTestFile, 10));
         } catch (IOException ex) {
         } finally {
             mTestFile.delete();
@@ -112,7 +112,7 @@ public class FileDetectorTest {
             writer = new BufferedWriter(new FileWriter(mTestFile));
             writer.write("david.f.a gsiftp://hellboy.isi.edu/tmp/david.test pool=\"local\"n");
             writer.close();
-            assertFalse(FileDetector.isTypeYAML(mTestFile));
+            assertFalse(FileDetector.isTypeYAML(mTestFile, 10));
         } catch (IOException ex) {
         } finally {
             mTestFile.delete();
@@ -146,7 +146,7 @@ public class FileDetectorTest {
                             + "   }\n"
                             + "}\n");
             writer.close();
-            assertFalse(FileDetector.isTypeYAML(mTestFile));
+            assertFalse(FileDetector.isTypeYAML(mTestFile, 10));
         } catch (IOException ex) {
         } finally {
 
@@ -177,7 +177,7 @@ public class FileDetectorTest {
                             + "\n"
                             + "</sitecatalog>");
             writer.close();
-            assertFalse(FileDetector.isTypeYAML(mTestFile));
+            assertFalse(FileDetector.isTypeYAML(mTestFile, 10));
         } catch (IOException ex) {
         } finally {
 
@@ -191,7 +191,7 @@ public class FileDetectorTest {
         try {
             mTestFile = File.createTempFile("pegasus", ".txt");
             writer = new BufferedWriter(new FileWriter(mTestFile));
-            assertFalse(FileDetector.isTypeYAML(mTestFile));
+            assertFalse(FileDetector.isTypeYAML(mTestFile, 10));
             writer.close();
         } catch (IOException ex) {
         } finally {
