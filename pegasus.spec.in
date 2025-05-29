@@ -83,6 +83,13 @@ rm -f  %{buildroot}/%{_datadir}/%{name}/java/LICENSE.*
 rm -f  %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
 rm -rf %{buildroot}/%{_datadir}/%{name}/systemd-unit
 
+%pre
+# Handle previous install where /usr/lib64/pegasus/python was a directory
+if [ -d /usr/lib64/pegasus/python ] && [ ! -L /usr/lib64/pegasus/python ]; then
+    echo "Removing old /usr/lib64/pegasus/python directory to allow symlink install"
+    rm -rf /usr/lib64/pegasus/python
+fi
+
 %files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/%{name}/
