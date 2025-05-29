@@ -130,13 +130,14 @@ includes the following:
     the absract workflow are less than or equal to 100.
 
 
-#.  **<wflabel-wfindex>-files.png**
+#.  **<wflabel-wfindex>-abstract-files.png**
 
     Pegasus creates a png file visualizing the the input abstract workflow,
     using the program `pegasus-graphviz`. The image includes both the jobs
     and the files making up the workflow. The png file is created
     as long as the `dot` program is installed and the number of jobs in
-    the abstract workflow are less than or equal to 100.
+    the abstract workflow are less than or equal to 100 and the number of
+    files referred in the workflow is less than or equal to 300.
 
 #. **jobstate.log**
 
