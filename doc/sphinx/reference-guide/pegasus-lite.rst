@@ -44,7 +44,18 @@ it performs the following actions:
 .. note::
 
    If you are using containers for your workflow, then Steps 3-6
-   will occur inside the container.
+   will occur inside the container dependant on how transfers for
+   containers are configured.
+
+Below is a sequence diagram that illustrates how a job in an abstract
+workflow after being mapped to an executable workflow, gets executed
+on a remote slurm cluster using PegasusLite
+
+.. figure:: ../images/pegasuslite-job-sequence.png
+   :alt: Job Sequence for a job executed via PegasusLite
+   :width: 100.0%
+
+   Job Sequence for a job executed via PegasusLite
 
 .. _worker-node-directory-pegasuslite:
 
