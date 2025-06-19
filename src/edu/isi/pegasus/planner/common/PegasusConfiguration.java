@@ -754,7 +754,7 @@ public class PegasusConfiguration {
     private Directory constructFileServerDirectory(Directory.TYPE type, File dir) {
         Map<FileServer.OPERATION, List<FileServer>> m = new HashMap();
         List<FileServer> servers = new LinkedList();
-        servers.add(new FileServer("file", "file:///", dir.getAbsolutePath()));
+        servers.add(new FileServer("file", "file://", dir.getAbsolutePath()));
         m.put(FileServerType.OPERATION.all, servers);
         return new Directory(
                 new SharedDirectory(m, new InternalMountPoint(dir.getAbsolutePath())), type);
