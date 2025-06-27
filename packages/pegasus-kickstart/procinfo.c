@@ -585,14 +585,13 @@ int printYAMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
         }
 #endif
         if ( ! (i->cmd == NULL && i->files == NULL && i->sockets == NULL)) {
-            fprintf(out, ">\n");
             if (i->cmd != NULL) {
-                fprintf(out, "%*s<cmd>", indent+2, "");
+                fprintf(out, "%*scmd:\n", indent+4, "");
                 yamlquote(out, i->cmd, strlen(i->cmd));
-                fprintf(out, "</cmd>\n");
+                fprintf(out, "\n");
             }
-            printXMLFileInfo(out, indent+2, i->files);
-            printXMLSockInfo(out, indent+2, i->sockets);
+            printXMLFileInfo(out, indent+4, i->files);
+            printXMLSockInfo(out, indent+4, i->sockets);
         }
     }
     return 0;
