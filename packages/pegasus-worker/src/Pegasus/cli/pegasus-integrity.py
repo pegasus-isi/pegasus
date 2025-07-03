@@ -55,6 +55,7 @@ except AttributeError:
     def iteritems(d):
         return iter(d.items())
 
+
 else:
     # Python 2
     def itervalues(d):
@@ -260,8 +261,7 @@ def generate_yaml(lfn, pfn):
     ts_end = time.time()
 
     return "      sha256: {}\n      checksum_timing: {:.3f}\n".format(
-        sha256,
-        ts_end - ts_start,
+        sha256, ts_end - ts_start,
     )
 
 
@@ -325,8 +325,7 @@ def generate_fullstat_yaml(lfn, pfn):
         )
     )
     yaml += "      sha256: {}\n      checksum_timing: {:.3f}\n".format(
-        sha256,
-        ts_end - ts_start,
+        sha256, ts_end - ts_start,
     )
     return yaml
 
