@@ -15,6 +15,7 @@ import pprint
 import sys
 import time
 from datetime import datetime
+from shlex import quote
 
 from Pegasus.tools import worker_utils as utils
 
@@ -99,7 +100,6 @@ total_timing = 0.0
 
 
 def setup_logger(debug_flag):
-
     # log to the console
     console = logging.StreamHandler()
 
@@ -199,6 +199,9 @@ def generate_sha256(fname):
     """
     Generates a sha256 hash for the given file
     """
+    # quote the filename to handle space character in LFNs. Possible edge case is if the LFN has a ~user
+    # then shlex.quote will quote it as '~user' which is not what we want
+    fname = quote(fname)
 
     tools = utils.Tools()
     tools.find("openssl", "version", r"([0-9]+\.[0-9]+\.[0-9]+)")
@@ -321,9 +324,8 @@ def generate_fullstat_yaml(lfn, pfn):
             gname,
         )
     )
-    yaml += "      sha256: %s\n" "      checksum_timing: %.3f\n" % (
-        sha256,
-        ts_end - ts_start,
+    yaml += "      sha256: {}\n      checksum_timing: {:.3f}\n".format(
+        sha256, ts_end - ts_start,
     )
     return yaml
 
@@ -415,7 +417,7 @@ def check_info_yaml(lfn, pfn, sha256, expected_sha256, success):
     prints stats for monitord
     """
     multipart_out(
-        ('  - lfn: "%s"\n' '    pfn: "%s"\n' "    sha256: %s\n" "    success: %s\n")
+        ('  - lfn: "%s"\n    pfn: "%s"\n    sha256: %s\n    success: %s\n')
         % (lfn, pfn, sha256, str(success))
     )
     if not success:
@@ -572,7 +574,6 @@ def main():
                 print(results)
 
     elif options.verify_files:
-
         if options.print_timings:
             multipart_out("- integrity_verification_attempts:\n")
 
