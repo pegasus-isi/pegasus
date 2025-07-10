@@ -140,6 +140,27 @@ public class PegasusURLTest {
         mLogger.logEventCompletion();
     }
 
+    @Test
+    public void testHTTPURLWithSpace() {
+        mLogger.logEventStart(
+                "test.common.util.PegasusURL", "set", Integer.toString(mTestNumber++));
+        testURL(
+                "http://pegasus.isi.edu/data/f a",
+                "http",
+                "pegasus.isi.edu",
+                "/data/f a",
+                "http://pegasus.isi.edu");
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testFileURLWithSpace() {
+        mLogger.logEventStart(
+                "test.common.util.PegasusURL", "set", Integer.toString(mTestNumber++));
+        testURL("file:///tmp/test/f a", "file", "", "/tmp/test/f a", "file://");
+        mLogger.logEventCompletion();
+    }
+
     @AfterEach
     public void tearDown() {
         mLogger = null;
