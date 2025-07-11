@@ -59,7 +59,7 @@ public class PegasusURL {
      * Stores the regular expressions necessary to parse a PegasusURL into 3 components protocol,
      * host and path
      */
-    private static final String mRegexExpression = "([\\w]+)://([\\w\\.\\-:@#]*)(/?[\\S]*)";
+    private static final String mRegexExpression = "([\\w]+)://([\\w\\.\\-:@#]*)(/?[\\S \\t]*)";
 
     /** Stores compiled patterns at first use, quasi-Singleton. */
     private static Pattern mPattern = null;
