@@ -627,4 +627,4 @@ Performance Tests:
   tags:
   - bamboo
   retry: 0
-  timeout: 30 minutes
+  timeout: 45 minutes
