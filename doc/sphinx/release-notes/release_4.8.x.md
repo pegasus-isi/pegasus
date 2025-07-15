@@ -188,7 +188,7 @@ Pegasus 4.8.0 Release has support for
     level https://pegasus.isi.edu/docs/4.8.0/data_transfers.php
 
 The following issues were addressed and more information can be found
-in the Pegasus Jira (https://jira.isi.edu/)
+in the Pegasus Jira 
 
 #### New Features and Improvements
 

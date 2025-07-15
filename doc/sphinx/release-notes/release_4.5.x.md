@@ -148,7 +148,7 @@ a minor release, which contains minor enhancements and fixes bugs in
 the Pegasus 4.5.2 release.
 
 The following issues were addressed and more information can be found
-in the Pegasus Jira (https://jira.isi.edu/)
+in the Pegasus Jira
 
 #### Bug Fixes
 

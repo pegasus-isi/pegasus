@@ -11,7 +11,7 @@ unless you have specific reasons to stay with the 4.7.x series, we
 recommend to upgrade to 4.8.0.
 
 The following issues were addressed and more information can be found
-in the Pegasus Jira (https://jira.isi.edu/)
+in the Pegasus Jira
 
 
 
