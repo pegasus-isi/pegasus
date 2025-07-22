@@ -882,37 +882,9 @@ pegasus_lite_section_end()
 
     if [ "X$start_ts" != "X" ]; then
         duration=$(($ts - $start_ts))
-        pegasus_lite_chirp Chirp_pegasus_${section}_start $start_ts
-        pegasus_lite_chirp Chirp_pegasus_${section}_duration $duration
     fi
 }
 
 
-pegasus_lite_chirp()
-{
-    key=$1
-    value=$2
-
-    # find/test chirp once here
-    if [ "X$pegasus_lite_chirp_path" = "X" ]; then
-        condor_libexec=`condor_config_val LIBEXEC 2>/dev/null || true`
-        pegasus_lite_chirp_path=`(export PATH=$condor_libexec:$PATH ; which condor_chirp) 2>/dev/null || true`
-        if [ "X$pegasus_lite_chirp_path" = "X" ]; then
-            pegasus_lite_log "Unable to find condor_chirp - disabling chirping"
-            pegasus_lite_chirp_path="none"
-            return
-        fi
-    fi
-    if [ "X$pegasus_lite_chirp_path" = "Xnone" ]; then
-        # chirp fails - do nothing
-        return
-    fi
-
-    #pegasus_lite_log "Chirping: $pegasus_lite_chirp_path set_job_attr_delayed $key $value"
-    if ! $pegasus_lite_chirp_path set_job_attr_delayed $key $value ; then
-        pegasus_lite_log "condor_chirp test failed - disabling chirping"
-        pegasus_lite_chirp_path="none"
-    fi
-}
 
 
