@@ -199,9 +199,9 @@ struct cpuinfo get_host_cpuinfo() {
 
 
 #endif
+    // make sure we allow for hybrid CPU archs (#2119)
     if (c.threads == 0 || c.cores == 0 || c.sockets == 0 ||
-            c.cores > c.threads || c.sockets > c.cores ||
-            c.threads % c.cores > 0 || c.cores % c.sockets > 0) {
+            c.cores > c.threads || c.sockets > c.cores) {
         myfailure("Invalid cpuinfo: %" PRIcpu_t " %" PRIcpu_t " %" PRIcpu_t, c.threads, c.cores, c.sockets);
     }
     return c;
