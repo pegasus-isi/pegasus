@@ -1828,6 +1828,17 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Completely disable checking for dag correctness using condor_dag_checker.
+     *
+     * <p>Referred to by the "pegasus.condor.dag.checker" property.
+     *
+     * @return value specified by the property. Defaults to true.
+     */
+    public boolean checkDAGWithCondorDAGChecker() {
+        return Boolean.parse(mProps.getProperty("pegasus.condor.dag.checker"), true);
+    }
+
+    /**
      * Whether Pegasus should associate condor concurrency limits or not
      *
      * <p>Referred to by the "pegasus.condor.concurrency.limits" property.

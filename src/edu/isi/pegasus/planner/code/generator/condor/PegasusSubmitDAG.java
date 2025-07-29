@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.code.generator.condor;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.FindExecutable;
+import edu.isi.pegasus.common.util.ShellCommand;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
@@ -190,6 +191,79 @@ public class PegasusSubmitDAG {
         }
 
         return result;
+    }
+
+    /**
+     * Invokes condor_dag_checker on the dag file to check for the correctness of the dag file per
+     * condor
+     *
+     * @param dag the dag object
+     * @param dagFile the file where the dag object is serialized to
+     * @return exitcode indicating the following
+     *     <pre>     *
+     *          -1="unable to locate condor_dag_checker"
+     *          0="success"
+     *          1="invalid dag"
+     *          2="Tool failure"
+     *          </pre>
+     */
+    public int condorDagCheck(ADag dag, File dagFile) {
+        String tool = "condor_dag_checker";
+        File condorDagCheck = FindExecutable.findExec(tool);
+        if (condorDagCheck == null) {
+            mLogger.log(
+                    "Unable to find path to"
+                            + " "
+                            + tool
+                            + ". Disabling checking dag for correctness",
+                    LogManager.INFO_MESSAGE_LEVEL);
+            return -1;
+        }
+
+        // construct arguments for condor_dag_checker
+        StringBuilder args = new StringBuilder();
+        args.append("-json")
+                .append(" ")
+                .append("-usedagdir")
+                .append(" ")
+                // .append( "-statistics").append(" ")
+                .append(dagFile.getAbsolutePath());
+
+        ShellCommand c = ShellCommand.getInstance(mLogger);
+        int exitcode = c.execute(condorDagCheck.getAbsolutePath(), args.toString());
+        switch (exitcode) {
+            case 0:
+                mLogger.log(
+                        "Successfully checked generated dag for correctness  " + dagFile,
+                        LogManager.INFO_MESSAGE_LEVEL);
+                mLogger.log(
+                        "Statistics returned are \n " + c.getSTDOut(),
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+                break;
+            case 1:
+                mLogger.log(
+                        tool + " determined dag to be invalid " + dagFile,
+                        LogManager.INFO_MESSAGE_LEVEL);
+                break;
+
+            case 2:
+                mLogger.log(
+                        tool + " encountered failure while checking " + dagFile,
+                        LogManager.INFO_MESSAGE_LEVEL);
+                break;
+
+            default:
+                mLogger.log(
+                        tool
+                                + " returned unknown exitcode of "
+                                + exitcode
+                                + "when checking "
+                                + dagFile,
+                        LogManager.INFO_MESSAGE_LEVEL);
+                break;
+        }
+
+        return exitcode;
     }
 
     /**
