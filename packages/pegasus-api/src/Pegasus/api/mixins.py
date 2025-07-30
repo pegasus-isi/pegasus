@@ -552,15 +552,15 @@ class ProfileMixin:
     ):
         """Add Pegasus profile(s).
 
-        :param clusters_num: Determines the total number of clusters per level, jobs are evenly spread across clusters (see `Pegasus Clustering Guide <https://pegasus.isi.edu/documentation/job_clustering.php#horizontal_clustering>`_ for more information), defaults to None
+        :param clusters_num: Determines the total number of clusters per level, jobs are evenly spread across clusters (see `Pegasus Clustering Guide <https://pegasus.isi.edu/documentation/user-guide/optimization.html>`_ for more information), defaults to None
         :type clusters_num: int, optional
-        :param clusters_size: Determines the number of jobs in each cluster (see `Pegasus Clustering Guide <https://pegasus.isi.edu/documentation/job_clustering.php#horizontal_clustering>`_ for more information), defaults to None
+        :param clusters_size: Determines the number of jobs in each cluster (see `Pegasus Clustering Guide <https://pegasus.isi.edu/documentation/user-guide/optimization.html>`_ for more information), defaults to None
         :type clusters_size: int, optional
         :param job_aggregator: Indicates the clustering executable that is used to run the clustered job on the remote site, defaults to None
         :type job_aggregator: int, optional
         :param job_aggregator_arguments: Additional arguments with which a clustering executable should be invoked, defaults to None
         :type job_aggregator_arguments: str, optional
-        :param grid_start: Determines the executable for launching a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`__ for more information), defaults to None
+        :param grid_start: Determines the executable for launching a job (see `docs <https://pegasus.isi.edu/documentation/reference-guide/configuration.html>`__ for more information), defaults to None
         :type grid_start: int, optional
         :param grid_start_path: Sets the path to the gridstart . This profile is best set in the Site Catalog, defaults to None
         :type grid_start_path: str, optional
@@ -678,7 +678,7 @@ class ProfileMixin:
         :type execution_site: str, optional
         :param pfn: the physical file name to the main executable that a job refers to. Overrides any entries specified in the transformation catalog, defaults to None
         :type pfn: Union[str, Path], optional
-        :param grid_job_type: This profile is usually used to ensure that a compute job executes on another job manager (see `docs <https://pegasus.isi.edu/documentation/profiles.php#hints_profiles>`__ for more information), defaults to None
+        :param grid_job_type: This profile is usually used to ensure that a compute job executes on another job manager (see `docs <https://pegasus.isi.edu/documentation/reference-guide/configuration.html>`__ for more information), defaults to None
         :type grid_job_type: str, optional
         :return: self
         """
@@ -731,7 +731,7 @@ class ProfileMixin:
         :type pre: Union[str, Path], optional
         :param pre_arguments: are command-line arguments for the pre-script, if any, defaults to None
         :type pre_arguments: str, optional
-        :param post: is the postscript type/mode that a user wants to associate with a job (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`__ for more information), defaults to None
+        :param post: is the postscript type/mode that a user wants to associate with a job (see `docs <https://pegasus.isi.edu/documentation/reference-guide/configuration.html>`__ for more information), defaults to None
         :type post: str, optional
         :param post_arguments: are the command line arguments for the post script, if any, defaults to None
         :type post_arguments: str, optional
@@ -751,7 +751,7 @@ class ProfileMixin:
         :type max_jobs: str, optional
         :param max_idle: Sets the maximum number of idle jobs allowed before HTCondor DAGMan stops submitting more jobs. Once idle jobs start to run, HTCondor DAGMan will resume submitting jobs. If the option is omitted, the number of idle jobs is unlimited, defaults to None
         :type max_idle: str, optional
-        :param post_scope: can be "all", "none" or "essential" (see `docs <https://pegasus.isi.edu/documentation/profiles.php>`__ for more information), defaults to None
+        :param post_scope: can be "all", "none" or "essential" (see `docs <https://pegasus.isi.edu/documentation/reference-guide/configuration.html>`__ for more information), defaults to None
         :type post_scope: str, optional
         :return: self
         """
