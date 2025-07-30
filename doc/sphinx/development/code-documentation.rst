@@ -14,4 +14,4 @@ Java
 ====
 
 The Java interfaces are described in the 
-`Javadocs <javadoc/index.html>`__ .
+`Javadocs <../javadoc/index.html>`__ .

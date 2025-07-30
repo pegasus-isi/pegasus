@@ -227,7 +227,7 @@ class Properties:
     @staticmethod
     def ls(prop: Optional[str] = None):
         """List property keys. Refer to
-        `Configuration docs <https://pegasus.isi.edu/documentation/configuration.php>`_
+        `Configuration docs <https://pegasus.isi.edu/documentation/reference-guide/configuration.html>`_
         for additional information. If :code:`prop` is given, all properties
         containing prop will be printed, else all properties will be printed.
 
