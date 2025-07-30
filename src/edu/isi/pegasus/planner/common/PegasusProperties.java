@@ -188,8 +188,10 @@ public class PegasusProperties implements Cloneable {
 
     /** the default value in MB for the size of documents that can be parsed * */
     private static final String DEFAULT_DOCUMENT_PARSER_SIZE = "500";
-    
-    /** the maximum number of jobs in the executable wf on which the condor dag checker is invoked **/
+
+    /**
+     * the maximum number of jobs in the executable wf on which the condor dag checker is invoked *
+     */
     private static final String DEFAULT_CONDOR_DAG_CHECKER_MAX_JOBS = "50000";
 
     /** Various modes pegasus can be run in. */
@@ -1840,7 +1842,8 @@ public class PegasusProperties implements Cloneable {
      */
     public int getMaxJobsForCondorDAGChecker() {
         String prop =
-                mProps.getProperty("pegasus.condor.dag.checker.jobs", DEFAULT_CONDOR_DAG_CHECKER_MAX_JOBS);
+                mProps.getProperty(
+                        "pegasus.condor.dag.checker.jobs", DEFAULT_CONDOR_DAG_CHECKER_MAX_JOBS);
         int val;
         try {
             val = Integer.parseInt(prop);
