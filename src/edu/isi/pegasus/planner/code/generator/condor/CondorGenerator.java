@@ -563,7 +563,7 @@ public class CondorGenerator extends Abstract {
                 "Renamed temporary dag file to : " + orgDAGFile, LogManager.DEBUG_MESSAGE_LEVEL);
 
         // GH-2116 sanity check on the dag file
-        if (this.mProps.checkDAGWithCondorDAGChecker()) {
+        if (dag.getNoOfJobs() <= this.mProps.getMaxJobsForCondorDAGChecker()) {
             this.condorDagCheck(dag, orgDAGFile);
         }
 
