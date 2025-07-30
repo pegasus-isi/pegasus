@@ -24,6 +24,7 @@ help:
 	set -o pipefail; $(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) 2>&1 | tee build.log
 	@cat build.log \
 		| grep -i warn \
+		| grep -v "UserWarning: pkg_resources is deprecated as an API." \
 		| grep -v "Not copying tabs assets" \
 		| grep -v "build succeeded" \
 		| grep -v "The app.add_javascript() is deprecated" \
