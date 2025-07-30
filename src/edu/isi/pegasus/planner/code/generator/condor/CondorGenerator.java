@@ -562,6 +562,11 @@ public class CondorGenerator extends Abstract {
         mLogger.log(
                 "Renamed temporary dag file to : " + orgDAGFile, LogManager.DEBUG_MESSAGE_LEVEL);
 
+        // GH-2116 sanity check on the dag file
+        if (this.mProps.checkDAGWithCondorDAGChecker()) {
+            this.condorDagCheck(dag, orgDAGFile);
+        }
+
         // write out the dag.condor.sub file
         this.writeOutDAGManSubmitFile(dag, orgDAGFile);
 
@@ -1345,6 +1350,18 @@ public class CondorGenerator extends Abstract {
         PegasusSubmitDAG psd = new PegasusSubmitDAG();
         psd.intialize(mBag);
         psd.generateCode(dag, dagFile);
+    }
+
+    /**
+     * Invokes condor_dag_checker on the dag file.
+     *
+     * @param dag
+     * @param dagFile
+     */
+    protected void condorDagCheck(ADag dag, File dagFile) throws CodeGeneratorException {
+        PegasusSubmitDAG psd = new PegasusSubmitDAG();
+        psd.intialize(mBag);
+        int status = psd.condorDagCheck(dag, dagFile);
     }
 
     /**
