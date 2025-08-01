@@ -1869,81 +1869,24 @@ public class PegasusProperties implements Cloneable {
      *
      * <p>Referred to by the "pegasus.condor.arguments.quote" property.
      *
-     * @return boolean
+     * @return boolean indicating value in properties file, defaults to True
      */
     public boolean useCondorQuotingForArguments() {
         return Boolean.parse(mProps.getProperty("pegasus.condor.arguments.quote"), true);
     }
 
-    /**
-     * Returns the number of times Condor should retry running a job in case of failure. The retry
-     * ends up reinvoking the prescript, that can change the site selection decision in case of
-     * failure.
-     *
-     * <p>Referred to by the "pegasus.dagman.retry" property.
-     *
-     * @return an int denoting the number of times to retry. null if not specified or invalid entry.
-     */
-    /*    public String getCondorRetryValue() {
-            String prop = mProps.getProperty( "pegasus.dagman.retry" );
-            int val = -1;
-
-            try {
-                val = Integer.parseInt( prop );
-            } catch ( Exception e ) {
-                return null;
-            }
-
-            return Integer.toString( val );
-        }
-    */
+    // some credential properties
 
     /**
-     * Tells whether to stream condor output or not. By default it is true , meaning condor streams
-     * the output from the remote hosts back to the submit hosts, instead of staging it. This helps
-     * in saving filedescriptors at the jobmanager end.
+     * Returns a boolean indicating whether we want to encrypt credentials when transferring use
+     * HTCondor file transfers.
      *
-     * <p>If it is set to false, output is not streamed back. The line "stream_output = false"
-     * should be added in the submit files for kickstart jobs.
+     * <p>Referred to by the "pegasus.credential.encrypt" property.
      *
-     * <p>Referred to by the "pegasus.condor.output.stream" property.
-     *
-     * @return the boolean value specified by the property, else false in case of invalid value or
-     *     property not being specified.
+     * @return boolean indicating value in properties file, defaults to True
      */
-    /*    public boolean streamCondorOutput() {
-            return Boolean.parse(mProps.getProperty( "pegasus.condor.output.stream"),
-                                 false );
-        }
-    */
-    /**
-     * Tells whether to stream condor error or not. By default it is true , meaning condor streams
-     * the error from the remote hosts back to the submit hosts instead of staging it in. This helps
-     * in saving filedescriptors at the jobmanager end.
-     *
-     * <p>Referred to by the "pegasus.condor.error.stream" property.
-     *
-     * <p>If it is set to false, output is not streamed back. The line "stream_output = false"
-     * should be added in the submit files for kickstart jobs.
-     *
-     * @return the boolean value specified by the property, else false in case of invalid value or
-     *     property not being specified.
-     */
-    /*    public boolean streamCondorError() {
-            return Boolean.parse(mProps.getProperty( "pegasus.condor.error.stream"),
-                                 false );
-        }
-    */
-    // PROPERTIES RELATED TO STORK
-    /**
-     * Returns the credential name to be used for the stork transfer jobs.
-     *
-     * <p>Referred to by the "pegasus.transfer.stork.cred" property.
-     *
-     * @return the credential name if specified by the property, else null.
-     */
-    public String getCredName() {
-        return mProps.getProperty("pegasus.transfer.stork.cred");
+    public boolean encryptCredentialsForFileTX() {
+        return Boolean.parse(mProps.getProperty("pegasus.credential.encrypt"), true);
     }
 
     // SOME LOGGING PROPERTIES
