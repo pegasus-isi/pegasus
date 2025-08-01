@@ -83,7 +83,7 @@ public abstract class Abstract implements CondorStyle {
         mLogger = bag.getLogger();
         mCredentialFactory = credentialFactory;
         mMountUnderScratchDirs = new LinkedList();
-        mEncryptCredentialForFileTX = true;
+        mEncryptCredentialForFileTX = mProps.encryptCredentialsForFileTX();
         ShellCommand c = ShellCommand.getInstance(mLogger);
         if (c.execute("condor_config_val", "MOUNT_UNDER_SCRATCH") == 0) {
             String stdout = c.getSTDOut();
