@@ -3468,3 +3468,11 @@ Miscellaneous Properties
     | | Type : Integer in MB                            | |                                                           |
     | | Default : 500                                   | |                                                           |
     +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.credential.encrypt        | | If this property is set to true, then the planner         |
+    | |                                                 | | will turn ON the encryption of credential when            |
+    | | Profile Key: N/A                                | | transferring the credential using HTCondor while          |
+    | | Scope : Properties                              | | transfers.                                                |
+    | | Since : 5.1.2                                   | |                                                           |
+    | | Type :Boolean                                   | | Defaults to true.                                         |
+    | | Default : true                                  | |                                                           |
+    +---------------------------------------------------+-------------------------------------------------------------+
