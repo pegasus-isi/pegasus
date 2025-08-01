@@ -42,7 +42,7 @@ conf["pegasus.catalog.transformation.file"] = "करण-transformations.yml"
 conf["pegasus.catalog.replica"] = "YAML"
 conf["pegasus.catalog.replica.file"] = "replicas.yml"
 conf["pegasus.data.configuration"] = "condorio"
-conf["pegasus.integrity.checking"] = "none"
+
 conf.write()
 
 # --- Sites --------------------------------------------------------------------
