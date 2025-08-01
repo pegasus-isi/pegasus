@@ -201,7 +201,8 @@ def generate_sha256(fname):
     """
     # quote the filename to handle space character in LFNs. Possible edge case is if the LFN has a ~user
     # then shlex.quote will quote it as '~user' which is not what we want
-    fname = quote(fname)
+
+    quoted_fname = quote(fname)
 
     tools = utils.Tools()
     tools.find("openssl", "version", r"([0-9]+\.[0-9]+\.[0-9]+)")
@@ -213,14 +214,16 @@ def generate_sha256(fname):
             cmd += " sha -sha256"
         else:
             cmd += " sha256"
-        cmd += " " + fname
+        cmd += " " + quoted_fname
     elif tools.full_path("sha256sum"):
         cmd = tools.full_path("sha256sum")
-        cmd += " " + fname + " | sed 's/ .*//'"
+        cmd += " " + quoted_fname + " | sed 's/ .*//'"
     else:
         logger.error("openssl or sha256sum not found!")
         return None
 
+    # GH-2117 we cannot pass the quoted name. os.path.exists() handles
+    # whitespaces correctly without requiring any quoting
     if not os.path.exists(fname):
         logger.error("File " + fname + " does not exist")
         return None
@@ -236,7 +239,7 @@ def generate_sha256(fname):
     sha256 = sha256.strip()
     sha256 = sha256[-64:]
     if len(sha256) != 64:
-        logger.warning("Unable to determine sha256 of " + fname)
+        logger.warning("Unable to determine sha256 of " + quoted_fname)
 
     return sha256
 
