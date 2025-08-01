@@ -108,6 +108,18 @@ public class Condor extends Namespace {
     /** The name of the key that specifies whether to stream stderr or not */
     public static final String STREAM_STDOUT_KEY = "stream_output";
 
+    /** The name of the key specifies list of input files that should be encrypted for transfer */
+    public static final String ENCRYPT_IP_FILES_KEY = "encrypt_input_files";
+
+    /**
+     * The name of the key specifies list of output files that should be encrypted when transferring
+     * using HTCondor file transfer mechanism.
+     */
+    public static final String ENCRYPT_OP_FILES_KEY = "encrypt_op_files";
+
+    /** The name of the key that indicates execute directory should be encrypted. */
+    public static final String ENCRYPT_EXECUTE_DIRECTORY = "encrypt_execute_directory";
+
     /** The name of the key that specifies transfer of input files. */
     public static final String TRANSFER_IP_FILES_KEY = "transfer_input_files";
 
@@ -314,7 +326,7 @@ public class Condor extends Namespace {
      * Transfer Mechanism. It also sets the associated condor keys like when_to_transfer and
      * should_transfer_files.
      *
-     * @param file the path to the file on the submit host.
+     * @param files the path to the file on the submit host.
      */
     public void addIPFileForTransfer(Collection<String> files) {
         this.addFilesForTransfer(files, Condor.TRANSFER_IP_FILES_KEY);
@@ -329,6 +341,28 @@ public class Condor extends Namespace {
      */
     public void addIPFileForTransfer(String file) {
         this.addFilesForTransfer(file, Condor.TRANSFER_IP_FILES_KEY);
+    }
+
+    /**
+     * Adds multiple files that are to be encrypted before transferred from the submit host via the
+     * Condor File Transfer Mechanism. It also sets the associated condor keys like when_to_transfer
+     * and should_transfer_files.
+     *
+     * @param files the path to the file on the submit host.
+     */
+    public void addEncryptIPFileForTransfer(Collection<String> files) {
+        this.addFilesForTransfer(files, Condor.ENCRYPT_IP_FILES_KEY);
+    }
+
+    /**
+     * Adds an input file that are to be encrypted before transferred from the submit host via the
+     * Condor File Transfer Mechanism. It also sets the associated condor keys like when_to_transfer
+     * and should_transfer_files.
+     *
+     * @param file the path to the file on the submit host.
+     */
+    public void addEncryptIPFileForTransfer(String file) {
+        this.addFilesForTransfer(file, Condor.ENCRYPT_IP_FILES_KEY);
     }
 
     /**
@@ -576,7 +610,11 @@ public class Condor extends Namespace {
                 break;
 
             case 'e':
-                if (key.compareTo("environment") == 0 || key.compareTo("executable") == 0) {
+                if (key.compareTo("environment") == 0
+                        || key.compareTo("executable") == 0
+                        || key.compareTo(Condor.ENCRYPT_IP_FILES_KEY) == 0
+                        || key.compareTo(Condor.ENCRYPT_OP_FILES_KEY) == 0
+                        || key.compareTo(Condor.ENCRYPT_EXECUTE_DIRECTORY) == 0) {
                     res = NOT_PERMITTED_KEY;
                 } else {
                     res = UNKNOWN_KEY;
