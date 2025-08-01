@@ -56,6 +56,12 @@ public abstract class Abstract implements CondorStyle {
 
     protected List<String> mMountUnderScratchDirs;
 
+    /**
+     * boolean indicating whether to enable encryption on credential when it is transferred by
+     * HTCondor file tx mechanism.
+     */
+    protected boolean mEncryptCredentialForFileTX;
+
     /** The default constructor. */
     public Abstract() {
         // mLogger = LogManager.getInstance();
@@ -77,6 +83,7 @@ public abstract class Abstract implements CondorStyle {
         mLogger = bag.getLogger();
         mCredentialFactory = credentialFactory;
         mMountUnderScratchDirs = new LinkedList();
+        mEncryptCredentialForFileTX = true;
         ShellCommand c = ShellCommand.getInstance(mLogger);
         if (c.execute("condor_config_val", "MOUNT_UNDER_SCRATCH") == 0) {
             String stdout = c.getSTDOut();
@@ -240,6 +247,11 @@ public abstract class Abstract implements CondorStyle {
         }
         // PM-1489 add credentials for job at end ensuring no duplicates
         job.condorVariables.addIPFileForTransfer(credentialsForCondorFileTransfer);
+
+        if (mEncryptCredentialForFileTX) {
+            // GH-1212 set credential to be encrypted before being transferred
+            job.condorVariables.addEncryptIPFileForTransfer(credentialsForCondorFileTransfer);
+        }
     }
 
     /**
