@@ -541,6 +541,7 @@ public class CondorTest {
         condorVar.construct(
                 edu.isi.pegasus.planner.namespace.Condor.SHOULD_TRANSFER_FILES_KEY, "YES");
         condorVar.construct(edu.isi.pegasus.planner.namespace.Condor.TRANSFER_IP_FILES_KEY, file);
+        condorVar.construct(edu.isi.pegasus.planner.namespace.Condor.ENCRYPT_IP_FILES_KEY, file);
         return condorVar;
     }
 
