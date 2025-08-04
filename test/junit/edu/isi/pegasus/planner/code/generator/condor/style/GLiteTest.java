@@ -21,6 +21,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.util.regex.Matcher;
@@ -48,6 +49,7 @@ public class GLiteTest {
         LogManager logger = LogManagerFactory.loadSingletonInstance();
         logger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
         logger.logEventStart("glite-test", "key", "value");
         gs.initialize(bag, null);
     }
