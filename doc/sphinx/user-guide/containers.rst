@@ -129,7 +129,38 @@ that gets invoked when a job is launched in the worker node.
 This allowed us to bring container support to all the environments Pegasus supports.
 
 While these limitations still exist, HTCondor support for containers has greatly
-improved in pure HTCondor environments such as Path and OSPool.
+improved in pure HTCondor environments such as PATh and OSPool; or if you are running
+in your local condor pool or launching condor pilots on remote resources (cloud or hpc)
+to overlay a condor pool.
+
+It is important to note that *container* universe in HTCondor does not work when
+you are using HTCondor to submit jobs to another resource manager such as SLURM.
+For deployments, where you are submitting jobs directly to a local HPC resource,
+or using SSH/BOSCO to submit to a remote HPC resource, you should let Pegasus
+manage the container deployment on the worker nodes. The table below summarizes it.
+
+.. table:: Use of Container Universe in Execution Environments
+
+    +-----------------------------------------------+----------------------------+
+    | **Execution Environments**                    | **Use Container Universe** |
+    +===============================================+============================+
+    | Local HTCondor Pool on a desktop.             | YES                        |
+    +-----------------------------------------------+----------------------------+
+    || HTCondor pool provisioned by launching       | YES                        |
+    || pilots on HPC or Cloud resources.            |                            |
+    +-----------------------------------------------+----------------------------+
+    || HTCondor managed distributed computing       | YES                        |
+    || infrastructure such as OSG/OSPool/PATh.      |                            |
+    +-----------------------------------------------+----------------------------+
+    | Local HPC Cluster.                            | NO                         |
+    +-----------------------------------------------+----------------------------+
+    || Remote HPC Cluster with direct job           | NO                         |
+    || submission using SSH/BOSCO.                  |                            |
+    +-----------------------------------------------+----------------------------+
+    | Cloud resources such as AWS Batch.            | NO                         |
+    +-----------------------------------------------+----------------------------+
+
+
 Keeping this in mind, Pegasus now has support for *container* universe in Pegasus
 whereby we delegate the container management (invoking the container, launching the user job,
 stopping the container) to HTCondor for those environments.
@@ -167,42 +198,13 @@ More details can be found in the HTCondor documentation
 
 .. _containers-osg:
 
-Containers on OSG
-=================
+Containers on OSG / PATh
+========================
 
-OSG has it's own way of handling container deployments for jobs that is
-hidden from the user and hence Pegasus. They don't allow a user to run
-an image directly by invoking ``docker run`` or ``singluarity exec``. Instead
-the condor job wrappers deployed on OSG do it for you based on the
-classads associated with the job. As a result, for a workflow to run on
-OSG, one cannot specify or describe the container in the transformation
-catalog. **Instead you catalog the executables without a container
-reference, and the path to the executable is the path in the container
-you want to use.** To specify the container, that needs to be setup you
-instead specify the following Condor profiles:
-
-* ``requirements``
-* ``+SingularityImage``
-
-
-For example you can specify the following in the :py:class:`~Pegasus.api.site_catalog.SiteCatalog` for OSG
-the site:
-
-.. code-block:: python
-
-   osg = Site("OSG", arch=Arch.X86_64, os_type=OS.LINUX)\
-         .add_profiles(Namespace.PEGASUS, style="condor")\
-         .add_profiles(
-                  Namespace.CONDOR,
-                  universe="vanilla",
-                  requirements="HAS_SINGULARITY == True",
-                  request_cpus="1",
-                  request_memory="1 GB",
-                  request_disk="1 GB"
-               )\
-         .add_profiles(Namespace.CONDOR, key="+SingularityImage", value="/cvmfs/singularity.opensciencegrid.org/pegasus/osg-el7:latest")
-
-
+If you are running worklfows on OSG or PATh, we now recommend you to use
+*container* universe to let HTCondor manage the deployment of the containers
+your job requires. More details can be found in the previous section
+about use of  ref:`container universe <ref-containers-container-universe>`.
 
 .. _containers-sharedfs-hpc:
 
