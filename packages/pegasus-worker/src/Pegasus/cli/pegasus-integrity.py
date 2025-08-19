@@ -540,14 +540,14 @@ def main():
         sys.exit(1)
 
     if options.generate_files:
-        for f in str.split(options.generate_files, ":"):
+        for f in str.split(options.generate_files, ";;;"):
             results = generate_sha256(f)
             if not results:
                 myexit(1)
             print(results + "  " + f)
 
     elif options.generate_yaml:
-        for f in str.split(options.generate_yaml, ":"):
+        for f in str.split(options.generate_yaml, ";;;"):
             # lfn can be encoded in the file name in the format lfn=pfn
             lfn = None
             pfn = f
@@ -559,7 +559,7 @@ def main():
             print(results)
 
     elif options.generate_fullstat_yaml:
-        for f in str.split(options.generate_fullstat_yaml, ":"):
+        for f in str.split(options.generate_fullstat_yaml, ";;;"):
             # lfn can be encoded in the file name in the format lfn=pfn
             lfn = None
             pfn = f
@@ -600,7 +600,7 @@ def main():
 
         # now check the files
         exit_code = 0
-        for f in str.split(files, ":"):
+        for f in str.split(files, ";;;"):
             # lfn can be encoded in the file name in the format lfn=pfn
             lfn = None
             pfn = f
