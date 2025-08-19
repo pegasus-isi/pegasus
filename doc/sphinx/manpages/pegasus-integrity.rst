@@ -38,7 +38,7 @@ Options
    Prints a usage summary with all the available command-line options.
 
 **--generate** *files*
-   Generates a sha256 checksum for a set of files, separated by :
+   Generates a sha256 checksum for a set of files, separated by ;;;
 
 **--generate-yaml** *files*
    Generate hashes for the given files, output to kickstart yaml.
