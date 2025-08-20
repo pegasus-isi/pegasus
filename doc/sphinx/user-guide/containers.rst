@@ -204,7 +204,8 @@ Containers on OSG / PATh
 If you are running worklfows on OSG or PATh, we now recommend you to use
 *container* universe to let HTCondor manage the deployment of the containers
 your job requires. More details can be found in the previous section
-about use of  ref:`container universe <ref-containers-container-universe>`.
+about use of
+:ref:`container universe <containers-container-universe>`.
 
 .. _containers-sharedfs-hpc:
 
