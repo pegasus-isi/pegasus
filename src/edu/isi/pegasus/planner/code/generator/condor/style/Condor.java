@@ -416,7 +416,10 @@ public class Condor extends Abstract {
                     // make sure workdir is not null
                     if (workdir == null) {
                         throw new CondorStyleException(
-                                "Condor initialdir not set for job " + job.getID());
+                                "Condor initialdir not set for job "
+                                        + job.getID()
+                                        + " and files need to be transferred using Condor File tx "
+                                        + ipFiles);
                     }
                     value.append(f);
                 }
