@@ -100,7 +100,7 @@ public class Integrity {
 
                 if (generate) {
                     if (flist.length() > 0) {
-                        flist.append(":");
+                        flist.append(";;;");
                     }
                     flist.append(file.getLFN());
                 }
