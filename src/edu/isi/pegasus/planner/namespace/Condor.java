@@ -191,10 +191,10 @@ public class Condor extends Namespace {
     public static final String PARALLEL_UNIVERSE = "parallel";
 
     /** The condor universe key value for container universe. */
-    public static String CONTAINER_UNIVERSE = "container";
+    public static final String CONTAINER_UNIVERSE = "container";
 
     /** The container image key that specifies container image to use in the submit file. */
-    public static String CONTAINER_IMAGE_KEY = "container_image";
+    public static final String CONTAINER_IMAGE_KEY = "container_image";
 
     /** The preserve_relative_paths key for condor file io */
     public static final String PRESERVE_RELATIVE_PATHS_KEY = "preserve_relative_paths";
@@ -203,6 +203,9 @@ public class Condor extends Namespace {
     public static String CONCURRENCY_LIMITS_KEY = "concurrency_limits";
 
     public String USE_USER_X509_USER_PROXY = "use_x509userproxy";
+
+    /** the workflow submit directory key** */
+    public static final String WF_SUBMIT_DIR_KEY = "wf_submit_dir";
 
     /**
      * The name of the implementing namespace. It should be one of the valid namespaces always.
@@ -467,6 +470,11 @@ public class Condor extends Namespace {
         if (file == null || file.length() == 0) {
             return;
         }
+
+        // GH-2120 check if the path to the file can update with the variable
+        // wf_submit_dir
+        file = updateFilePath(file, Condor.WF_SUBMIT_DIR_KEY);
+
         String files;
         // check if the key is already set.
         if (this.containsKey(key)) {
@@ -951,5 +959,29 @@ public class Condor extends Namespace {
      */
     public Object clone() {
         return new Condor(this.mProfileMap);
+    }
+
+    /**
+     * Updates a file path with with classad variable name; if the path starts with the value of the
+     * classad.
+     *
+     * @param path the path
+     * @param ClassAdKey the classad key
+     * @return updated path
+     */
+    public String updateFilePath(String path, String ClassAdKey) {
+        if (this.containsKey(ClassAdKey)) {
+            String wfSubmitDir = (String) this.get(ClassAdKey);
+            if (path.startsWith(wfSubmitDir)) {
+                // update path to be like $(wf_submit_dir)/00/00/job.meta
+                StringBuilder newPath = new StringBuilder();
+                newPath.append("$(")
+                        .append(ClassAdKey)
+                        .append(")")
+                        .append(path.substring(wfSubmitDir.length()));
+                path = newPath.toString();
+            }
+        }
+        return path;
     }
 }
