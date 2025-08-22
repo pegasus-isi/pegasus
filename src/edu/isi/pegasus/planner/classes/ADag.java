@@ -20,7 +20,6 @@ import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.dax.Invoke;
-import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -327,8 +326,6 @@ public class ADag extends Data implements Graph {
      * @param job the new job that is to be added to the ADag.
      */
     public void add(Job job) {
-        // GH-2120 add the base submit dir as a varible in the job condor variables
-        job.condorVariables.construct(Condor.WF_SUBMIT_DIR_KEY, this.mSubmitDirectory);
         this.addNode(new GraphNode(job.getID(), job));
     }
 
