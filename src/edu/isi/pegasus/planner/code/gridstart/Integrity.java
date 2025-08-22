@@ -141,7 +141,7 @@ public class Integrity {
 
         if (file != null) {
             // associate the file.
-            job.condorVariables.addIPFileForTransfer(file.getAbsolutePath());
+            job.condorVariables.addIPFileForTransferFromWFSubmitDir(file.getAbsolutePath());
         }
 
         // try and get hold of the parents
@@ -167,7 +167,7 @@ public class Integrity {
                         .append(File.separator)
                         .append(parent.getID())
                         .append(".meta");
-                job.condorVariables.addIPFileForTransfer(metaFile.toString());
+                job.condorVariables.addIPFileForTransferFromWFSubmitDir(metaFile.toString());
             }
         }
 

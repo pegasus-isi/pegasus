@@ -358,6 +358,24 @@ public class Condor extends Namespace {
     }
 
     /**
+     * Adds an input file that is to be transferred from the submit host via the Condor File
+     * Transfer Mechanism. The path of the file, gets updated to refer to wf_submit_dir classad key.
+     * So a path like /nfs/submit/diamond-wf/submit/run0001/00/00/test.meta will get shortened to
+     * $(wf_submit_dir)/00/00/test.meta
+     *
+     * <p>It also sets the associated condor keys like when_to_transfer and should_transfer_files.
+     *
+     * @param file the path to the file on the submit host.
+     * @see #WF_SUBMIT_DIR_KEY
+     */
+    public void addIPFileForTransferFromWFSubmitDir(String file) {
+        // GH-2120 check if the path to the file can update with the variable
+        // wf_submit_dir
+        file = updateFilePath(file, Condor.WF_SUBMIT_DIR_KEY);
+        this.addFilesForTransfer(file, Condor.TRANSFER_IP_FILES_KEY);
+    }
+
+    /**
      * Adds an input file that are to be encrypted before transferred from the submit host via the
      * Condor File Transfer Mechanism. It also sets the associated condor keys like when_to_transfer
      * and should_transfer_files.
@@ -470,10 +488,6 @@ public class Condor extends Namespace {
         if (file == null || file.length() == 0) {
             return;
         }
-
-        // GH-2120 check if the path to the file can update with the variable
-        // wf_submit_dir
-        file = updateFilePath(file, Condor.WF_SUBMIT_DIR_KEY);
 
         String files;
         // check if the key is already set.
