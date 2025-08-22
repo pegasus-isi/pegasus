@@ -100,6 +100,9 @@ public class Condor extends Abstract {
     /** Whether to connect stdin or not */
     public static final String PEGASUS_CONNECT_STDIN_KEY = "_PEGASUS_CONNECT_STDIN";
 
+    /** the workflow submit dir env variable that is set to classad value $(wf_submit_dir) */
+    public static final String PEGASUS_WF_SUBMIT_DIR = "_PEGASUS_WF_SUBMIT_DIR";
+
     /** A boolean indicating whether pegasus lite mode is picked up or not. */
     // private boolean mPegasusLiteEnabled;
     /** Handle to Pegasus Configuration */
@@ -367,6 +370,20 @@ public class Condor extends Abstract {
             return;
         }
 
+        // GH-2120 always check for workflow submit dir classad key
+        String wfSumitDirClassAd =
+                (String)
+                        job.condorVariables.get(
+                                edu.isi.pegasus.planner.namespace.Condor.WF_SUBMIT_DIR_KEY);
+        if (wfSumitDirClassAd == null) {
+            throw new CondorStyleException(
+                    "Condor classad "
+                            + edu.isi.pegasus.planner.namespace.Condor.WF_SUBMIT_DIR_KEY
+                            + " not set for job "
+                            + job.getID());
+        }
+        job.envVariables.construct(Condor.PEGASUS_WF_SUBMIT_DIR, wfSumitDirClassAd);
+
         String ipFiles = job.condorVariables.getIPFilesForTransfer();
         String opFiles = job.condorVariables.getOutputFilesForTransfer();
         String opRemaps = job.condorVariables.getOutputRemapsForTransfer();
@@ -407,7 +424,7 @@ public class Condor extends Abstract {
         // check if any transfer_input_files is transferred
         if (ipFiles != null) {
             String[] files = ipFiles.split(",");
-            StringBuffer value = new StringBuffer();
+            StringBuilder value = new StringBuilder();
             for (String f : files) {
                 if (f.startsWith(File.separator) || f.startsWith("$(")) {
                     // absolute path to file specified OR
