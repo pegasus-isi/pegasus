@@ -409,14 +409,15 @@ public class Condor extends Abstract {
             String[] files = ipFiles.split(",");
             StringBuffer value = new StringBuffer();
             for (String f : files) {
-                if (f.startsWith(File.separator)) {
-                    // absolute path to file specified
+                if (f.startsWith(File.separator) || f.startsWith("$(")) {
+                    // absolute path to file specified OR
+                    // GH-2120 starts with a classad variable
                     value.append(f);
                 } else {
                     // make sure workdir is not null
                     if (workdir == null) {
                         throw new CondorStyleException(
-                                "Condor initialdir not set for job "
+                                "Condor classad initialdir not set for job "
                                         + job.getID()
                                         + " and files need to be transferred using Condor File tx "
                                         + ipFiles);
