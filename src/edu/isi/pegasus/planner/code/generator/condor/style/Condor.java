@@ -101,7 +101,7 @@ public class Condor extends Abstract {
     public static final String PEGASUS_CONNECT_STDIN_KEY = "_PEGASUS_CONNECT_STDIN";
 
     /** the workflow submit dir env variable that is set to classad value $(wf_submit_dir) */
-    public static final String PEGASUS_WF_SUBMIT_DIR = "_PEGASUS_WF_SUBMIT_DIR";
+    public static final String PEGASUS_WF_SUBMIT_DIR_KEY = "_PEGASUS_WF_SUBMIT_DIR";
 
     /** A boolean indicating whether pegasus lite mode is picked up or not. */
     // private boolean mPegasusLiteEnabled;
@@ -382,7 +382,7 @@ public class Condor extends Abstract {
                             + " not set for job "
                             + job.getID());
         }
-        job.envVariables.construct(Condor.PEGASUS_WF_SUBMIT_DIR, wfSumitDirClassAd);
+        job.envVariables.construct(Condor.PEGASUS_WF_SUBMIT_DIR_KEY, wfSumitDirClassAd);
 
         String ipFiles = job.condorVariables.getIPFilesForTransfer();
         String opFiles = job.condorVariables.getOutputFilesForTransfer();

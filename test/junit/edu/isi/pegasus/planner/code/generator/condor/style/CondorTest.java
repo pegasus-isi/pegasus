@@ -400,7 +400,7 @@ public class CondorTest {
             String testName)
             throws CondorStyleException, IOException {
 
-        expectedEnv.construct(Condor.PEGASUS_WF_SUBMIT_DIR, TEST_WF_SUBMIT_DIR);
+        expectedEnv.construct(Condor.PEGASUS_WF_SUBMIT_DIR_KEY, TEST_WF_SUBMIT_DIR);
 
         this.testForCredential(
                 expectedEnv,
