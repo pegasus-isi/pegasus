@@ -27,10 +27,15 @@ set -e
 
 check_predefined_variables() {
     #purpose: checks for variables that need to be predefined.
-    #         The variables are PEGASUS_SUBMIT_DIR and JOBSTATE_LOG
+    #         The variables are _CONDOR_SCRATCH_DIR and _PEGASUS_WF_SUBMIT_DIR
 
     if [ "X${_CONDOR_SCRATCH_DIR}" = "X" ]; then
 	echo "ERROR: _CONDOR_SCRATCH_DIR was not set" 1>&2
+	exit 1
+    fi
+
+    if [ "X${_PEGASUS_WF_SUBMIT_DIR}" = "X" ]; then
+	echo "ERROR: _PEGASUS_WF_SUBMIT_DIR was not set" 1>&2
 	exit 1
     fi
     
@@ -47,6 +52,7 @@ check_predefined_variables() {
 check_predefined_variables
 
 dir=$_CONDOR_SCRATCH_DIR
+wf_submit_dir=$_PEGASUS_WF_SUBMIT_DIR
 
 if [ "${_PEGASUS_EXECUTE_IN_INITIAL_DIR}" = "true" ];then
     dir=$_PEGASUS_INITIAL_DIR

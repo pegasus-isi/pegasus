@@ -444,7 +444,7 @@ public class PegasusLite implements GridStart {
                                             + job.getID());
                         }
                         workerPackageStagingForJob = true;
-                        job.condorVariables.addIPFileForTransfer(location);
+                        job.condorVariables.addIPFileForTransferFromWFSubmitDir(location);
                     } else {
                         mLogger.log(
                                 "No worker package staging for job "
@@ -485,7 +485,8 @@ public class PegasusLite implements GridStart {
 
             // the job wrapper requires the common functions file
             // from the submit host
-            job.condorVariables.addIPFileForTransfer(this.mLocalPathToPegasusLiteCommon);
+            job.condorVariables.addIPFileForTransferFromWFSubmitDir(
+                    this.mLocalPathToPegasusLiteCommon);
 
             // the .sh file is set as the executable for the job
             // in addition to setting transfer_executable as true

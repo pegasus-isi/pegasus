@@ -1132,7 +1132,7 @@ public class Kickstart implements GridStart {
             job.setDirectory(null);
         }
 
-        job.condorVariables.addIPFileForTransfer(argFile.getAbsolutePath());
+        job.condorVariables.addIPFileForTransferFromWFSubmitDir(argFile.getAbsolutePath());
 
         // add the -I argument to kickstart
         args.append(" -I ").append(inputBaseName).append(" ");
@@ -1254,7 +1254,7 @@ public class Kickstart implements GridStart {
                     lof = generateListofFilenamesFile(job.getInputFiles(), job, ".in.lof");
                     if (lof != null) {
                         File file = new File(lof);
-                        job.condorVariables.addIPFileForTransfer(lof);
+                        job.condorVariables.addIPFileForTransferFromWFSubmitDir(lof);
                         // arguments just need basename . no path component
                         args.append(" -S @").append(file.getName()).append(" ");
                         files.add(file.getName());
@@ -1267,7 +1267,7 @@ public class Kickstart implements GridStart {
                         lof = generateListofFilenamesFile(job.getOutputFiles(), job, ".out.lof");
                         if (lof != null) {
                             File file = new File(lof);
-                            job.condorVariables.addIPFileForTransfer(lof);
+                            job.condorVariables.addIPFileForTransferFromWFSubmitDir(lof);
                             // arguments just need basename . no path component
                             args.append(" -s @").append(file.getName()).append(" ");
                             files.add(file.getName());

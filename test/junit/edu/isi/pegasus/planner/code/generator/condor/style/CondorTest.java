@@ -72,6 +72,9 @@ public class CondorTest {
     private PegasusProperties mProps;
     private PegasusBag mBag;
 
+    // the workflow submit dir associated with the job
+    private static final String TEST_WF_SUBMIT_DIR = ".";
+
     public CondorTest() {}
 
     @BeforeEach
@@ -397,6 +400,8 @@ public class CondorTest {
             String testName)
             throws CondorStyleException, IOException {
 
+        expectedEnv.construct(Condor.PEGASUS_WF_SUBMIT_DIR_KEY, TEST_WF_SUBMIT_DIR);
+
         this.testForCredential(
                 expectedEnv,
                 expectedCondorVariables,
@@ -431,6 +436,8 @@ public class CondorTest {
         mCS.initialize(mBag, credFactory);
 
         Job j = new Job();
+        j.condorVariables.construct(
+                edu.isi.pegasus.planner.namespace.Condor.WF_SUBMIT_DIR_KEY, TEST_WF_SUBMIT_DIR);
         j.setTXName("pegasus-keg");
         j.setName("pegasus-keg");
         j.setRemoteExecutable("/bin/remote/exec");
@@ -523,6 +530,8 @@ public class CondorTest {
                 new edu.isi.pegasus.planner.namespace.Condor();
         condorVar.construct("+WantIOProxy", "True");
         condorVar.construct("universe", "vanilla");
+        condorVar.construct(
+                edu.isi.pegasus.planner.namespace.Condor.WF_SUBMIT_DIR_KEY, TEST_WF_SUBMIT_DIR);
         return condorVar;
     }
 
@@ -530,6 +539,8 @@ public class CondorTest {
         edu.isi.pegasus.planner.namespace.Condor condorVar =
                 new edu.isi.pegasus.planner.namespace.Condor();
         condorVar.construct("universe", "local");
+        condorVar.construct(
+                edu.isi.pegasus.planner.namespace.Condor.WF_SUBMIT_DIR_KEY, TEST_WF_SUBMIT_DIR);
         return condorVar;
     }
 
