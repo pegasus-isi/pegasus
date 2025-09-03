@@ -1741,12 +1741,17 @@ fi
                 if my_job.wf_submit_dir:
                     # make sure we substitute
                     my_file = my_file.replace("$(wf_submit_dir)", "${wf_submit_dir}")
-                if len(my_job.initial_dir):
+
+                if len(my_job.initial_dir) and not (
+                    my_file.startswith("/") or my_file.startswith("${wf_submit_dir}")
+                ):
                     # Add the initial dir to all files to be copied
+                    # as long as they dont start with / or ${wf_submit_dir}
                     my_file = os.path.join(my_job.initial_dir, my_file)
+
                 debug_script.write(f"cp {my_file} {debug_dir}\n")
 
-        # Extra newline before executing the jobq
+        # Extra newline before executing the job
         debug_script.write("\n")
         debug_script.write('echo "copying input files completed."\n')
         debug_script.write("\n")
