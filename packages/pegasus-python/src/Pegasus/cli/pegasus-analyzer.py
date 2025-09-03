@@ -95,6 +95,7 @@ class Job:
         self.dagman_out = ""  # dagman.out file for this job (only for clustered jobs)
         self.pre_script = ""  # SCRIPT PRE line from the dag file
         self.condor_subs = {}  # Lits of condor substitutions rom DAG VARS line
+        self.wf_submit_dir = None  # the value of the variable wf_submit_dir indicating  wf submit directory in the submit file
 
     def set_state(self, new_state):
         """
@@ -571,6 +572,9 @@ def parse_submit_file(my_job):
 
                     if k == "transfer_output_files":
                         my_job.transfer_output_files = v
+
+                if k == "wf_submit_dir":
+                    my_job.wf_submit_dir = v
         SUB.close()
         # If initialdir was specified, we need to make both error and output files relative to that
         if len(my_job.initial_dir):
@@ -1721,6 +1725,9 @@ fi
          """
         )
         debug_script.write("\n")
+        if my_job.wf_submit_dir:
+            debug_script.write("wf_submit_dir=%s" % my_job.wf_submit_dir)
+            debug_script.write("\n")
 
         debug_script.write("export pegasus_lite_work_dir=%s" % debug_dir)
         debug_script.write("\n")
@@ -1731,12 +1738,15 @@ fi
         # Copy all files that we need
         for my_file in my_job.transfer_input_files.split(","):
             if len(my_file):
+                if my_job.wf_submit_dir:
+                    # make sure we substitute
+                    my_file = my_file.replace("$(wf_submit_dir)", "${wf_submit_dir}")
                 if len(my_job.initial_dir):
                     # Add the initial dir to all files to be copied
                     my_file = os.path.join(my_job.initial_dir, my_file)
                 debug_script.write(f"cp {my_file} {debug_dir}\n")
 
-        # Extra newline before executing the job
+        # Extra newline before executing the jobq
         debug_script.write("\n")
         debug_script.write('echo "copying input files completed."\n')
         debug_script.write("\n")
