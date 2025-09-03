@@ -755,7 +755,10 @@ pegasus_lite_get_system()
         # /etc/issue and /etc/os-release works most of the time, but there are exceptions
         if [ -e /etc/os-release ]; then
             osname=`grep -w ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
-            osversion=`grep -w VERSION_ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
+
+            # Try to find better OS Version
+            osv=`grep -w VERSION_ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
+            [ -n "$osv" ] && osversion="$osv"
             
             case $osname in
                 "debian") osname="deb" ;;
