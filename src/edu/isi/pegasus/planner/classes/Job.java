@@ -343,12 +343,6 @@ public class Job extends Data implements GraphNodeContent {
     /** The directory in which the job should run. */
     private String mDirectory;
 
-    /**
-     * The relative path to the submit directory for the job, from the workflows base submit
-     * directory.
-     */
-    //    private String submitDirectory;
-
     /** The credential to use for job submission if required. */
     private CredentialHandler.TYPE mSubmissionCredential;
 
@@ -364,7 +358,11 @@ public class Job extends Data implements GraphNodeContent {
     /** The node label */
     private String mNodeLabel;
 
-    private String mSubmitDir;
+    /**
+     * the relative submit directory for the job to write out the job submit file w.r.t to the top
+     * level directory for the workflow, where the .dag file is placed.
+     */
+    private String mRelativeSubmitDirectory;
 
     /** The node containing the job. */
     private GraphNode mGraphNode;
@@ -2209,7 +2207,7 @@ public class Job extends Data implements GraphNodeContent {
      * @param dir the directory
      */
     public void setRelativeSubmitDirectory(String dir) {
-        mSubmitDir = dir;
+        mRelativeSubmitDirectory = dir;
     }
 
     /**
@@ -2219,7 +2217,7 @@ public class Job extends Data implements GraphNodeContent {
      * @param dir the directory
      */
     public void setRelativeSubmitDirectory(File dir) {
-        mSubmitDir = dir.getPath();
+        mRelativeSubmitDirectory = dir.getPath();
     }
 
     /**
@@ -2228,7 +2226,7 @@ public class Job extends Data implements GraphNodeContent {
      * @return
      */
     public String getRelativeSubmitDirectory() {
-        return mSubmitDir;
+        return mRelativeSubmitDirectory;
     }
 
     /**
@@ -2315,6 +2313,24 @@ public class Job extends Data implements GraphNodeContent {
                 && this.getJobType() == Job.COMPUTE_JOB
                 && universe != null
                 && universe.equals(Condor.CONTAINER_UNIVERSE);
+    }
+
+    /**
+     * Sets the workflow submit directory as a classad internally in the job
+     *
+     * @param dir the workflow submit dir where the .dag file is generated.
+     */
+    public void setWFSubmitDirClassAd(String dir) {
+        this.condorVariables.construct(Condor.WF_SUBMIT_DIR_KEY, dir);
+    }
+
+    /**
+     * Returns the workflow submit directory as a classad internally in the job
+     *
+     * @returnthe workflow submit dir where the .dag file is generated.
+     */
+    public String getWFSubmitDirClassAd() {
+        return (String) this.condorVariables.get(Condor.WF_SUBMIT_DIR_KEY);
     }
 
     /**

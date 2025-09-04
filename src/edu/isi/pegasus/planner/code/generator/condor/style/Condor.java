@@ -371,10 +371,7 @@ public class Condor extends Abstract {
         }
 
         // GH-2120 always check for workflow submit dir classad key
-        String wfSumitDirClassAd =
-                (String)
-                        job.condorVariables.get(
-                                edu.isi.pegasus.planner.namespace.Condor.WF_SUBMIT_DIR_KEY);
+        String wfSumitDirClassAd = job.getWFSubmitDirClassAd();
         if (wfSumitDirClassAd == null) {
             throw new CondorStyleException(
                     "Condor classad "

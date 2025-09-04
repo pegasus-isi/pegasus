@@ -637,7 +637,7 @@ public class CondorGenerator extends Abstract {
         writer.println(fragment);
 
         // GH-2120 set the submit directory classad for the job
-        job.condorVariables.construct(Condor.WF_SUBMIT_DIR_KEY, this.mSubmitFileDir);
+        job.setWFSubmitDirClassAd(this.mSubmitFileDir);
 
         // handle environment settings
         // before we apply any styles
