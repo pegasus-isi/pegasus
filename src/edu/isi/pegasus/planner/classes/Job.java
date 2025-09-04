@@ -364,7 +364,7 @@ public class Job extends Data implements GraphNodeContent {
     /** The node label */
     private String mNodeLabel;
 
-    private String mSubmitDir;
+    private String mRelativeSubmitDirectory;
 
     /** The node containing the job. */
     private GraphNode mGraphNode;
@@ -2209,7 +2209,7 @@ public class Job extends Data implements GraphNodeContent {
      * @param dir the directory
      */
     public void setRelativeSubmitDirectory(String dir) {
-        mSubmitDir = dir;
+        mRelativeSubmitDirectory = dir;
     }
 
     /**
@@ -2219,7 +2219,7 @@ public class Job extends Data implements GraphNodeContent {
      * @param dir the directory
      */
     public void setRelativeSubmitDirectory(File dir) {
-        mSubmitDir = dir.getPath();
+        mRelativeSubmitDirectory = dir.getPath();
     }
 
     /**
@@ -2228,7 +2228,7 @@ public class Job extends Data implements GraphNodeContent {
      * @return
      */
     public String getRelativeSubmitDirectory() {
-        return mSubmitDir;
+        return mRelativeSubmitDirectory;
     }
 
     /**
