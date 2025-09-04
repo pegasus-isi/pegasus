@@ -436,8 +436,7 @@ public class CondorTest {
         mCS.initialize(mBag, credFactory);
 
         Job j = new Job();
-        j.condorVariables.construct(
-                edu.isi.pegasus.planner.namespace.Condor.WF_SUBMIT_DIR_KEY, TEST_WF_SUBMIT_DIR);
+        j.setWFSubmitDirClassAd(TEST_WF_SUBMIT_DIR);
         j.setTXName("pegasus-keg");
         j.setName("pegasus-keg");
         j.setRemoteExecutable("/bin/remote/exec");

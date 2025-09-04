@@ -144,6 +144,25 @@ public class AggregatedJob extends Job implements Graph {
     }
 
     /**
+     * Sets the workflow submit directory as a classad internally in the job
+     *
+     * @param dir the workflow submit dir where the .dag file is generated.
+     */
+    @Override
+    public void setWFSubmitDirClassAd(String dir) {
+        super.setWFSubmitDirClassAd(dir);
+        // GH-2120 traverse through the internal list
+        for (Iterator it = this.nodeIterator(); it.hasNext(); ) {
+            GraphNode node = (GraphNode) it.next();
+            Job constituentJob = (Job) node.getContent();
+            constituentJob.setWFSubmitDirClassAd(dir);
+            if (constituentJob instanceof AggregatedJob) {
+                ((AggregatedJob) constituentJob).setWFSubmitDirClassAd(dir);
+            }
+        }
+    }
+
+    /**
      * Clustered jobs never originate in the DAX. Always return null.
      *
      * @return null
