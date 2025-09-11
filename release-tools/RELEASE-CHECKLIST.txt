@@ -39,7 +39,7 @@ NOTE: Do not copy and paste the commands below without double checking.
 
 7.  git push --tags
 
-8.  Build with Bamboo
+8.  Build with GitLab CI
 
 9.  Build dnf/apt repos. First copy the debs and rpms into
     their final place in the debian/rhel/ubuntu top level
@@ -54,4 +54,4 @@ NOTE: Do not copy and paste the commands below without double checking.
 
 12. Send announce email to pegasus-announce@mailman.isi.edu
 
-13. Add release notes to the GitHub Release (https://github.com/mayani/TEST/releases) and Discussions (https://github.com/mayani/TEST/discussions)
+13. Add release notes to the GitHub Release (https://github.com/pegasus-isi/pegasus/releases) and Discussions (https://github.com/pegasus-isi/pegasus/discussions)
