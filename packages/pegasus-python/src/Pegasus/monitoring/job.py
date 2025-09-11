@@ -984,6 +984,19 @@ class Job:
             for key in event.keys():
                 if key == "multipart":
                     continue
-                kwargs[key] = event[key]
+
+                # GH-2123 the key may already exist (need to merge then). for example multiple transfer_attempts and
+                # integrity_verification_attempts multipart records in the same job.out file
+                if key in kwargs:
+                    logger.debug(
+                        "key %s exists already. Need to merge into existing composite event for job %s"
+                        % (key, self._exec_job_id)
+                    )
+                    existing = kwargs[key]
+                    for subevent in event[key]:
+                        # print(subevent) only print for debugging. too verbose for debug too
+                        existing.append(subevent)
+                else:
+                    kwargs[key] = event[key]
 
         return kwargs
