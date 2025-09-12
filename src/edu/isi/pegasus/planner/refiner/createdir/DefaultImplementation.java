@@ -93,8 +93,8 @@ public class DefaultImplementation implements Implementation {
     /** The submit directory where the output files have to be written. */
     private String mSubmitDirectory;
 
-    /** Whether we want to use dirmanager or mkdir directly. */
-    protected boolean mUseMkdir;
+    /** Whether we want to launch the create dir job via PegasusLite. */
+    protected boolean mLaunchViaPegasusLite;
 
     /**
      * Handle to the Submit directory factory, that returns the relative submit directory for a job
@@ -114,7 +114,7 @@ public class DefaultImplementation implements Implementation {
         mSubmitDirectory = bag.getPlannerOptions().getSubmitDirectory();
         // in case of staging of executables/worker package
         // we use mkdir directly
-        mUseMkdir = bag.getPegasusProperties().transferWorkerPackage();
+        mLaunchViaPegasusLite = bag.getPegasusProperties().transferWorkerPackage();
 
         mSubmitDirFactory = bag.getSubmitMapper();
     }
@@ -185,7 +185,7 @@ public class DefaultImplementation implements Implementation {
 
         StringBuffer argString = new StringBuffer();
         String targetURL = "";
-        if (mUseMkdir) {
+        if (mLaunchViaPegasusLite) {
 
             // PM-1552 after 5.0 worker package organization, we cannot just
             // transfer pegasus-transfer using transfer_executable. Instead we
