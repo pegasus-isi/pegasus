@@ -73,7 +73,7 @@ def _main(
     noeoln=False,
 ):
     """."""
-    _version = "@PEGASUS_VERSION@"
+    _version = "5.1.2-dev.0"
 
     bin_dir = _get_bin_dir(sys.argv[0])
     base_dir = dirname(bin_dir)
@@ -180,7 +180,9 @@ def main():
         help="Dumps all settings in python format.",
     )
     parser.add_argument(
-        "--sh-dump", action="store_true", help="Dumps all settings in shell format.",
+        "--sh-dump",
+        action="store_true",
+        help="Dumps all settings in shell format.",
     )
 
     parser.add_argument(
@@ -194,7 +196,9 @@ def main():
         help="Print the directory containing configuration files.",
     )
     parser.add_argument(
-        "--java", action="store_true", help="Print the directory containing the jars.",
+        "--java",
+        action="store_true",
+        help="Print the directory containing the jars.",
     )
     parser.add_argument(
         "--python",
@@ -207,7 +211,9 @@ def main():
         help="Print the directory to the external Python libraries.",
     )
     parser.add_argument(
-        "--schema", action="store_true", help="Print the directory containing schemas.",
+        "--schema",
+        action="store_true",
+        help="Print the directory containing schemas.",
     )
     parser.add_argument(
         "--r",

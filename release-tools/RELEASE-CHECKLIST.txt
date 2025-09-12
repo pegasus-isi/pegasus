@@ -13,7 +13,8 @@ NOTE: Do not copy and paste the commands below without double checking.
 
 2.  Set the version number in build.properties and commit:
 
-       vim build.properties
+       # Install cz: https://commitizen-tools.github.io/commitizen/#installation
+       cz bump --yes --files-only <MAJOR>.<MINOR>.<PATCH>-(dev|alpha|beta|rc).<BUILD> # Example: cz bump --yes --files-only 5.1.2-dev.0
        git commit -a -m "Setting version for tag"
 
 3.  Update the Release Date in the release notes doc:

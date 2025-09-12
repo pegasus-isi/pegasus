@@ -1,0 +1,13 @@
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "semver2"
+version = "5.1.2-dev.0"
+version_files = [
+    "build.properties",
+    "packages/pegasus-common/pyproject.toml:version",
+    "packages/pegasus-api/pyproject.toml:version",
+    "packages/pegasus-python/pyproject.toml:version",
+    "packages/pegasus-worker/pyproject.toml:version",
+    "packages/pegasus-python/src/Pegasus/cli/pegasus-config.py:_version"
+]

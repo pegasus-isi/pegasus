@@ -1,9 +1,64 @@
+[build-system]
+
+requires = ["setuptools<69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+
+zip-safe = false
+
+[tool.setuptools.packages.find]
+
+where = ["src"]
+namespaces = true
+
+[project]
+
+name = "pegasus-wms.common"
+version = "5.1.2-dev.0"
+authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
+maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
+description = "Pegasus Workflow Management System Python API"
+readme = { file = "README.md", content-type = "text/markdown" }
+license = "Apache-2.0"
+license-files = ["LICENSE.md"]
+requires-python = ">=3.6"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Operating System :: Unix",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Utilities",
+]
+dependencies = ["PyYAML>5.3", "dataclasses;python_version=='3.6'"]
+
+[project.urls]
+
+Homepage = "https://pegasus.isi.edu"
+Documentation = "https://pegasus.isi.edu/documentation/"
+Changes = "https://pegasus.isi.edu/blog/?category_name=Release"
+Repository = "https://github.com/pegasus-isi/pegasus"
+Issues = "https://github.com/pegasus-isi/pegasus/issues"
+
+
 [tool.isort]
 
-profile           = "black"
+profile = "black"
 known_first_party = "Pegasus"
-forced_separate   = "Pegasus"
-skip              = [
+forced_separate = "Pegasus"
+skip = [
   ".eggs",
   ".git",
   ".hg",
@@ -18,7 +73,7 @@ skip              = [
   "dist",
   "node_modules",
   "venv",
-  "Pegasus/cli"
+  "Pegasus/cli",
 ]
 
 
@@ -26,7 +81,7 @@ skip              = [
 
 target-version = ["py36"]
 
-exclude       = '''
+exclude = '''
 /(
     \.eggs
   | \.git
@@ -45,9 +100,9 @@ exclude       = '''
 
 [tool.flake8]
 
-max-line-length        = 88
-ignore                 = ["W503"]
-exclude                = [
+max-line-length = 88
+ignore = ["W503"]
+exclude = [
   ".git",
   ".tox",
   "*.egg-info",
@@ -55,7 +110,7 @@ exclude                = [
   "test-reports",
   ".pytest_cache",
   "__pycache__",
-  "build"
+  "build",
 ]
 
 
@@ -72,5 +127,5 @@ source = ["src"]
 
 [build-system]
 
-requires      = ["setuptools<69", "wheel"]
+requires = ["setuptools<69", "wheel"]
 build-backend = "setuptools.build_meta"
