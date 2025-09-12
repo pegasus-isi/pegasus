@@ -113,7 +113,9 @@ public class DefaultImplementation implements Implementation {
         mProps = bag.getPegasusProperties();
         mSubmitDirectory = bag.getPlannerOptions().getSubmitDirectory();
         // in case of staging of executables/worker package
-        // we use mkdir directly
+        // we need to invoke the create dir job via PegasusLite
+        // as we cannot just do transfer_executable on pegasus-transfer
+        // anylonger after the 5.0 reorganization
         mLaunchViaPegasusLite = bag.getPegasusProperties().transferWorkerPackage();
 
         mSubmitDirFactory = bag.getSubmitMapper();
