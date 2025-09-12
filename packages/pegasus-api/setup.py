@@ -54,7 +54,7 @@ setup(
     description="Pegasus Workflow Management System Python API",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    license="Apache2",
+    license="Apache-2.0",
     url="http://pegasus.isi.edu",
     project_urls={
         "Documentation": "https://pegasus.isi.edu/documentation/",
@@ -82,7 +82,6 @@ setup(
         "Programming Language :: Python :: 3.13",
         "Topic :: Scientific/Engineering",
         "Topic :: Utilities",
-        "License :: OSI Approved :: Apache Software License",
     ],
     package_dir={"": "src"},
     packages=find_namespace_packages(where="src"),
