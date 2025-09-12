@@ -249,7 +249,6 @@ Debian:
       - x86_64
       - arm64
       OS:
-      - deb_11
       - deb_12
       - deb_13
   image: pegasus/buildenv:${OS}
