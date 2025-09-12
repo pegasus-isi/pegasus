@@ -251,6 +251,7 @@ Debian:
       OS:
       - deb_11
       - deb_12
+      - deb_13
   image: pegasus/buildenv:${OS}
   script:
   - ant dist-worker dist-release dist-deb
