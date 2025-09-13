@@ -144,6 +144,7 @@ Source:
     paths:
     - dist/pegasus-*.tar.gz
     - dist/pegasus_wms*.tar.gz
+    - dist/pegasus_wms*.whl
   dependencies: []
   tags:
   - docker
@@ -406,7 +407,7 @@ Release:
   - |
     twine upload \
       --repository $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "test-pypi" || echo "pypi") \
-      dist/pegasus_wms*.tar.gz
+      dist/pegasus_wms*.tar.gz dist/pegasus_wms*.whl
 
   # Publish to GitHub releases
   # Token is read from the GITHUB_TOKEN environment variable.
