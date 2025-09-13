@@ -87,6 +87,13 @@
   </exec>
   <echo>pip3: ${dist.pip3}</echo>
 
+  <!-- Determine uv -->
+  <exec executable="which"
+        outputproperty="dist.uv"
+        failonerror="true">
+  </exec>
+  <echo>Python: ${dist.uv}</echo>
+
   <!-- Determine the system Python module location -->
   <exec executable="${basedir}/release-tools/python-modules-dir"
         outputproperty="dist.python-lib.subdir"
@@ -631,19 +638,19 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
   <target name="dist-python-source" description="Build source tarball for Pegasus Python Modules">
-    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
+    <exec executable="${dist.uv}" dir="packages/pegasus-common" failonerror="true">
       <arg line="build --out-dir ../../dist"/>
     </exec>
 
-    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
+    <exec executable="${dist.uv}" dir="packages/pegasus-api" failonerror="true">
       <arg line="build --out-dir ../../dist"/>
     </exec>
 
-    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
+    <exec executable="${dist.uv}" dir="packages/pegasus-python" failonerror="true">
       <arg line="build --out-dir ../../dist"/>
     </exec>
 
-    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
+    <exec executable="${dist.uv}" dir="packages/pegasus-worker" failonerror="true">
       <arg line="build --out-dir ../../dist"/>
     </exec>
 
