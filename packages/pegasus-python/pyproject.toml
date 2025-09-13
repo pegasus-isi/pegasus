@@ -3,81 +3,89 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
 
-zip-safe = false
+# TODO: When Python 3.6 support is removed,
+# 1. Uncomment section below
+# 2. Set build-system.requires = ["setuptools>61.0.0", "wheel"]
+# 3. Modify setup.py to be
+#   setuptools import setup
+#   setup()
+# [tool.setuptools]
 
-[tool.setuptools.packages.find]
+# zip-safe = false
 
-where = ["src"]
-namespaces = true
+# [tool.setuptools.packages.find]
 
-[project]
+# where = ["src"]
+# namespaces = true
 
-name = "pegasus-wms"
-version = "5.1.2-dev.0"
-authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
-maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
-description = "Pegasus Workflow Management System Python API"
-readme = { file = "README.md", content-type = "text/markdown" }
-license = "Apache-2.0"
-license-files = ["LICENSE"]
-requires-python = ">=3.6"
-classifiers = [
-  "Development Status :: 5 - Production/Stable",
-  "Intended Audience :: Developers",
-  "Intended Audience :: Science/Research",
-  "Operating System :: Unix",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.6",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Topic :: Scientific/Engineering",
-  "Topic :: Utilities",
-]
-dependencies = [ # Utils
-  # DAX/Workflow
-  "PyYAML>5.3",
-  # pegasus-init
-  "GitPython>1.0",
-  "pamela>=1.0,<1.1.0",
-  "pika>=1.1.0",
-  "werkzeug<3.1.0",
-  "Flask>1.1,<2.3",
-  "Flask-Caching>1.8",
-  "requests>2.23",
-  "sqlalchemy>1.3,<1.4",
-  "dataclasses;python_version=='3.6'",
-  "pegasus-wms.api",
-  "pegasus-wms.common",
-  "pegasus-wms.worker",
-]
+# [project]
 
-[project.optional-dependencies]
+# name = "pegasus-wms"
+# version = "5.1.2-dev.0"
+# authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
+# maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
+# description = "Pegasus Workflow Management System Python API"
+# readme = { file = "README.md", content-type = "text/markdown" }
+# license = "Apache-2.0"
+# license-files = ["LICENSE"]
+# requires-python = ">=3.6"
+# classifiers = [
+#   "Development Status :: 5 - Production/Stable",
+#   "Intended Audience :: Developers",
+#   "Intended Audience :: Science/Research",
+#   "Operating System :: Unix",
+#   "Programming Language :: Python",
+#   "Programming Language :: Python :: 3",
+#   "Programming Language :: Python :: 3 :: Only",
+#   "Programming Language :: Python :: 3.6",
+#   "Programming Language :: Python :: 3.7",
+#   "Programming Language :: Python :: 3.8",
+#   "Programming Language :: Python :: 3.9",
+#   "Programming Language :: Python :: 3.10",
+#   "Programming Language :: Python :: 3.11",
+#   "Programming Language :: Python :: 3.12",
+#   "Programming Language :: Python :: 3.13",
+#   "Topic :: Scientific/Engineering",
+#   "Topic :: Utilities",
+# ]
+# dependencies = [ # Utils
+#   # DAX/Workflow
+#   "PyYAML>5.3",
+#   # pegasus-init
+#   "GitPython>1.0",
+#   "pamela>=1.0,<1.1.0",
+#   "pika>=1.1.0",
+#   "werkzeug<3.1.0",
+#   "Flask>1.1,<2.3",
+#   "Flask-Caching>1.8",
+#   "requests>2.23",
+#   "sqlalchemy>1.3,<1.4",
+#   "dataclasses;python_version=='3.6'",
+#   "pegasus-wms.api",
+#   "pegasus-wms.common",
+#   "pegasus-wms.worker",
+# ]
+# keywords=["scientific workflows"]
 
-postgresql = ["psycopg2"]
-mysql = ["pymysql<=0.10.1"]
-cwl = ["cwl-utils==0.11", "jsonschema==3.2.0"]
+# [project.optional-dependencies]
+
+# postgresql = ["psycopg2"]
+# mysql = ["pymysql<=0.10.1"]
+# cwl = ["cwl-utils==0.11", "jsonschema==3.2.0"]
 
 
-[dependency-groups]
+# [dependency-groups]
 
-dev = ["ruff", "tox"]
+# dev = ["ruff", "tox"]
 
-[project.urls]
+# [project.urls]
 
-Homepage = "https://pegasus.isi.edu"
-Documentation = "https://pegasus.isi.edu/documentation/"
-Changes = "https://pegasus.isi.edu/blog/?category_name=Release"
-Repository = "https://github.com/pegasus-isi/pegasus"
-Issues = "https://github.com/pegasus-isi/pegasus/issues"
+# Homepage = "https://pegasus.isi.edu"
+# Documentation = "https://pegasus.isi.edu/documentation/"
+# Changes = "https://pegasus.isi.edu/blog/?category_name=Release"
+# Repository = "https://github.com/pegasus-isi/pegasus"
+# Issues = "https://github.com/pegasus-isi/pegasus/issues"
 
 
 [tool.isort]

@@ -3,58 +3,66 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
 
-zip-safe = false
+# TODO: When Python 3.6 support is removed,
+# 1. Uncomment section below
+# 2. Set build-system.requires = ["setuptools>61.0.0", "wheel"]
+# 3. Modify setup.py to be
+#   setuptools import setup
+#   setup()
+# [tool.setuptools]
 
-[tool.setuptools.packages.find]
+# zip-safe = false
 
-where = ["src"]
-namespaces = true
+# [tool.setuptools.packages.find]
 
-[project]
+# where = ["src"]
+# namespaces = true
 
-name = "pegasus-wms.api"
-version = "5.1.2-dev.0"
-authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
-maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
-description = "Pegasus Workflow Management System Python API"
-readme = { file = "README.md", content-type = "text/markdown" }
-license = "Apache-2.0"
-license-files = ["LICENSE"]
-requires-python = ">=3.6"
-classifiers = [
-  "Development Status :: 5 - Production/Stable",
-  "Intended Audience :: Developers",
-  "Intended Audience :: Science/Research",
-  "Operating System :: Unix",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.6",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Topic :: Scientific/Engineering",
-  "Topic :: Utilities",
-]
-dependencies = ["pegasus-wms.common"]
+# [project]
 
-[dependency-groups]
+# name = "pegasus-wms.api"
+# version = "5.1.2-dev.0"
+# authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
+# maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
+# description = "Pegasus Workflow Management System Python API"
+# readme = { file = "README.md", content-type = "text/markdown" }
+# license = "Apache-2.0"
+# license-files = ["LICENSE"]
+# requires-python = ">=3.6"
+# classifiers = [
+#   "Development Status :: 5 - Production/Stable",
+#   "Intended Audience :: Developers",
+#   "Intended Audience :: Science/Research",
+#   "Operating System :: Unix",
+#   "Programming Language :: Python",
+#   "Programming Language :: Python :: 3",
+#   "Programming Language :: Python :: 3 :: Only",
+#   "Programming Language :: Python :: 3.6",
+#   "Programming Language :: Python :: 3.7",
+#   "Programming Language :: Python :: 3.8",
+#   "Programming Language :: Python :: 3.9",
+#   "Programming Language :: Python :: 3.10",
+#   "Programming Language :: Python :: 3.11",
+#   "Programming Language :: Python :: 3.12",
+#   "Programming Language :: Python :: 3.13",
+#   "Topic :: Scientific/Engineering",
+#   "Topic :: Utilities",
+# ]
+# dependencies = ["pegasus-wms.common"]
+# keywords = ["scientific workflows"]
 
-dev = ["ruff", "tox"]
+# [dependency-groups]
 
-[project.urls]
+# dev = ["ruff", "tox"]
 
-Homepage = "https://pegasus.isi.edu"
-Documentation = "https://pegasus.isi.edu/documentation/"
-Changes = "https://pegasus.isi.edu/blog/?category_name=Release"
-Repository = "https://github.com/pegasus-isi/pegasus"
-Issues = "https://github.com/pegasus-isi/pegasus/issues"
+# [project.urls]
+
+# Homepage = "https://pegasus.isi.edu"
+# Documentation = "https://pegasus.isi.edu/documentation/"
+# Changes = "https://pegasus.isi.edu/blog/?category_name=Release"
+# Repository = "https://github.com/pegasus-isi/pegasus"
+# Issues = "https://github.com/pegasus-isi/pegasus/issues"
 
 
 [tool.isort]
