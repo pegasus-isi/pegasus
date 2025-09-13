@@ -1,6 +1,6 @@
 [build-system]
 
-requires = ["setuptools<69", "wheel"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -123,9 +123,3 @@ testpaths = ["test"]
 [tool.coverage.run]
 
 source = ["src"]
-
-
-[build-system]
-
-requires = ["setuptools<69", "wheel"]
-build-backend = "setuptools.build_meta"

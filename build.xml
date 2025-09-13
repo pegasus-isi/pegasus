@@ -632,19 +632,19 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="dist-python-source" description="Build source tarball for Pegasus Python Modules">
     <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
+      <arg line="setup.py sdist bdist_wheel --dist-dir ../../dist"/>
     </exec>
 
     <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
+      <arg line="setup.py sdist bdist_wheel --dist-dir ../../dist"/>
     </exec>
 
     <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
+      <arg line="setup.py sdist bdist_wheel --dist-dir ../../dist"/>
     </exec>
 
     <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
+      <arg line="setup.py sdist bdist_wheel --dist-dir ../../dist"/>
     </exec>
 
     <!-- Rename files to be PEP-625 compliant -->
