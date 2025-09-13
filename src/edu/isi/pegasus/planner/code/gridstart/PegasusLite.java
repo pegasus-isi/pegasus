@@ -50,6 +50,7 @@ import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
+import edu.isi.pegasus.planner.refiner.RemoveDirectory;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
@@ -437,14 +438,20 @@ public class PegasusLite implements GridStart {
                             == null) {
                         // yes we need to add from the location in the worker package map
                         String location = this.mWorkerPackageMap.get(job.getSiteHandle());
-
                         if (location == null) {
-                            throw new RuntimeException(
-                                    "Unable to figure out worker package location for job "
-                                            + job.getID());
+                            // GH-2124 check to see if we can ignore the error
+                            // we can only do for a small subset of jobs
+                            if (!ignoreNullWorkerPackageLocationOnSubmitHost(job)) {
+                                throw new RuntimeException(
+                                        "Unable to figure out worker package location for job "
+                                                + job.getID());
+                            }
                         }
-                        workerPackageStagingForJob = true;
-                        job.condorVariables.addIPFileForTransferFromWFSubmitDir(location);
+                        if (location != null) {
+                            // GH-2124 only add worker package from submit job if we find it
+                            workerPackageStagingForJob = true;
+                            job.condorVariables.addIPFileForTransferFromWFSubmitDir(location);
+                        }
                     } else {
                         mLogger.log(
                                 "No worker package staging for job "
@@ -1437,5 +1444,38 @@ public class PegasusLite implements GridStart {
             strict = false;
         }
         return strict;
+    }
+
+    /**
+     * Look at the job to determine if we can safely ignore the null worker package location on the
+     * submit host.
+     *
+     * <p>We can only safely ignore in the sharedfs case, where worker package staging is turned on
+     * and the following auxillary jobs have to run remotely (because the compute site only have a
+     * file server url)
+     *
+     * <pre>
+     *  create dir job that has to run remotely (non-local site)
+     *  stage worker job has to run remotely (non-local site)
+     *  remove scratch dir job has to run remotely (non-local site)
+     * </pre>
+     *
+     * @param job
+     * @return
+     */
+    public boolean ignoreNullWorkerPackageLocationOnSubmitHost(Job job) {
+        boolean ignore =
+                // create dir job
+                job.getJobType() == Job.CREATE_DIR_JOB
+                        ||
+                        // stage_worker job
+                        (job.getJobType() == Job.STAGE_IN_JOB
+                                && job.getID().startsWith(DeployWorkerPackage.DEPLOY_WORKER_PREFIX))
+                        ||
+                        // cleanup job that removes the whole directory
+                        (job.getJobType() == Job.CLEANUP_JOB
+                                && job.getID().startsWith(RemoveDirectory.CLEANUP_PREFIX));
+
+        return ignore;
     }
 }
