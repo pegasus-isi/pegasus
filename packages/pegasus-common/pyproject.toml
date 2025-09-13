@@ -44,6 +44,10 @@ classifiers = [
 ]
 dependencies = ["PyYAML>5.3", "dataclasses;python_version=='3.6'"]
 
+[dependency-groups]
+
+dev = ["ruff", "tox"]
+
 [project.urls]
 
 Homepage = "https://pegasus.isi.edu"

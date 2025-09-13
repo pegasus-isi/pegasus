@@ -44,6 +44,10 @@ classifiers = [
 ]
 dependencies = ["pegasus-wms.common"]
 
+[dependency-groups]
+
+dev = ["ruff", "tox"]
+
 [project.urls]
 
 Homepage = "https://pegasus.isi.edu"

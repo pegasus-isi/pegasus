@@ -48,6 +48,10 @@ dependencies = [
   "globus-sdk>=3.23.0;python_version>='3.7'",
 ]
 
+[dependency-groups]
+
+dev = ["ruff", "tox"]
+
 [project.urls]
 
 Homepage = "https://pegasus.isi.edu"
