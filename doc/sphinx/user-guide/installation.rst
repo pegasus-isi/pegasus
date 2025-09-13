@@ -131,6 +131,13 @@ Debian
 
 .. tabs::
 
+   .. code-tab:: bash Debian 13 (Trixie)
+
+      wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/debian trixie main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
+      apt-get install pegasus
+
    .. code-tab:: bash Debian 12 (Bookworm)
 
       wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
@@ -265,5 +272,3 @@ Then install the following packages:
       urllib3
 
 You should now be able to use the Pegasus command line tools.
-
-
