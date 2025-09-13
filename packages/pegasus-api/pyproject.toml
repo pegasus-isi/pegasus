@@ -21,7 +21,7 @@ maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
 description = "Pegasus Workflow Management System Python API"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = "Apache-2.0"
-license-files = ["LICENSE.md"]
+license-files = ["LICENSE"]
 requires-python = ">=3.6"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
