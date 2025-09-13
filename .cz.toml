@@ -10,6 +10,7 @@ version_files = [
     "packages/pegasus-python/pyproject.toml:version",
     "packages/pegasus-worker/pyproject.toml:version",
     "packages/pegasus-python/src/Pegasus/cli/pegasus-config.py:_version",
+    # TODO: Remove these when Python 3.6 support is removed
     "packages/pegasus-common/setup.py:version",
     "packages/pegasus-api/setup.py:version",
     "packages/pegasus-python/setup.py:version",
