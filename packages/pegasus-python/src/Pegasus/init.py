@@ -427,7 +427,8 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
     --login-host \"{}\" \\
     --transfer-endpoint \"{}\" \\
     --scratch-parent-dir {} \\
-    --storage-parent-dir {}""".format(
+    --storage-parent-dir {} \\
+    --remote-scratch-parent-dir {}""".format(
         wf_sites,
         site.name,
         str(project_name),
@@ -437,6 +438,7 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
         transfer_endpoint,
         shared_scratch,
         storage_dir,
+        remote_shared_scratch,
     )
     commands.append(generate_sites_cmd)
 
