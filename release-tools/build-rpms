@@ -20,11 +20,10 @@ trap cleanup EXIT
 
 mkdir -p $TOP_DIR/build/rpm/BUILD $TOP_DIR/build/rpm/RPMS $TOP_DIR/build/rpm/SOURCES $TOP_DIR/build/rpm/SPECS $TOP_DIR/build/rpm/SRPMS
 
-cp dist/pegasus-$VERSION.tar.gz $TOP_DIR/build/rpm/SOURCES/
-
 # create a new spec file with the custom version
 BASEVER=`echo "$VERSION" | perl -p -e 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
 EXTRAVER=`echo "$VERSION" | perl -p -e 's/[0-9]+\.[0-9]+\.[0-9]+//'`
+EXTRAVER=${EXTRAVER/#-/_}
 RELEASE_VERSION="1%{?dist}"
 if [ "x$EXTRAVER" != "x" ]; then
     # add timestamp - the goal is a version number like:
@@ -32,9 +31,10 @@ if [ "x$EXTRAVER" != "x" ]; then
     RELEASE_VERSION="0.1."`date +'%Y%m%d%H%M'`"%{?dist}"
 fi
 
+cp dist/pegasus-$VERSION.tar.gz $TOP_DIR/build/rpm/SOURCES/pegasus-$BASEVER$EXTRAVER.tar.gz
 cp pegasus.spec.in pegasus.spec
 DATE_RPM=`date +'%a %b %d %Y'`
-perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$VERSION/g" pegasus.spec
+perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$BASEVER$EXTRAVER/g" pegasus.spec
 perl -p -i -e "s/\\@DATE\\@/$DATE_RPM/g" pegasus.spec
 perl -p -i -e "s/^Release:.*/Release:        $RELEASE_VERSION/g" pegasus.spec
 
@@ -42,7 +42,12 @@ cp pegasus.spec $TOP_DIR/build/rpm/SPECS/
 
 DIST=`./release-tools/getosid | perl -pe 's/rhel/.el/'`
 
-rpmbuild -ba --define "_topdir $TOP_DIR/build/rpm" --define "dist $DIST" pegasus.spec
+rpmbuild \
+    -ba \
+    --define "_topdir $TOP_DIR/build/rpm" \
+    --define "dist $DIST" \
+    --define "_version $VERSION" \
+    pegasus.spec
 
 find $TOP_DIR/build/rpm -name \*.rpm -exec cp {} dist/ \;
 rm -f dist/*debug*
